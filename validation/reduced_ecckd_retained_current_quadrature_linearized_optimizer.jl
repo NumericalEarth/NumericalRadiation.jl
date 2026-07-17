@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -6,11 +8,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_retained_post_weight_bounded_weight_re
 include(joinpath(@__DIR__, "reduced_ecckd_retained_quadrature_linearized_optimizer.jl"))
 
 const RETAINED_CURRENT_QUADRATURE_LINEARIZED_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_quadrature_linearized_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_current_quadrature_linearized_optimizer.json")
 const RETAINED_CURRENT_QUADRATURE_LINEARIZED_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_quadrature_linearized_optimizer.md")
+    validation_results_path("reduced_ecckd_retained_current_quadrature_linearized_optimizer.md")
 
 current_quadrature_linearized_surface_cap() =
     parse(Float64, get(ENV, "RH_REDUCED_CURRENT_QUADRATURE_SURFACE_CAP", "2.03"))

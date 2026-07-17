@@ -1,6 +1,6 @@
 {
   "case": "ecckd_recovery_metrics",
-  "timestamp_utc": "2026-05-22T20:49:27.506",
+  "timestamp_utc": "2026-06-03T01:04:32.070",
   "status": "passed",
   "recovery_mode": "published_self_recovery_sanity",
   "metrics": {

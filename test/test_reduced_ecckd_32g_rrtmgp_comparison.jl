@@ -4,7 +4,7 @@ using Test
 @testset "32-g ecCKD RRTMGP comparison artifact" begin
     script = joinpath(@__DIR__, "..", "validation",
                       "reduced_ecckd_32g_rrtmgp_comparison.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     output = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
 
     @test occursin("32-g ecCKD RRTMGP Comparison", output)

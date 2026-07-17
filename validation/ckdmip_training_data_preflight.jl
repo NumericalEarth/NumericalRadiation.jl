@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 include(joinpath(@__DIR__, "ecckd_published_training_manifest.jl"))
 
 const CKDMIP_PREFLIGHT_JSON =
-    joinpath(@__DIR__, "results", "ckdmip_training_data_preflight.json")
+    validation_results_path("ckdmip_training_data_preflight.json")
 const CKDMIP_PREFLIGHT_MD =
-    joinpath(@__DIR__, "results", "ckdmip_training_data_preflight.md")
+    validation_results_path("ckdmip_training_data_preflight.md")
 
 function ckdmip_data_root()
     root = get(ENV, "RH_CKDMIP_DATA_PATH", "")

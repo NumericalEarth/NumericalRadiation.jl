@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_retained_quadrature_pareto_scan.jl"))
 
 const RETAINED_QUADRATURE_PAIR_PARETO_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_quadrature_pair_pareto_scan.json")
+    validation_results_path("reduced_ecckd_retained_quadrature_pair_pareto_scan.json")
 const RETAINED_QUADRATURE_PAIR_PARETO_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_quadrature_pair_pareto_scan.md")
+    validation_results_path("reduced_ecckd_retained_quadrature_pair_pareto_scan.md")
 
 function quadrature_pair_scan_max_pairs()
     return parse(Int, get(ENV, "RH_REDUCED_QUADRATURE_PAIR_SCAN_MAX_PAIRS", "120"))

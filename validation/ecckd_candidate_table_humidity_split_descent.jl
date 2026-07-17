@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_humidity_split_probe.jl"))
 
 const CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_humidity_split_descent.json")
+    validation_results_path("ecckd_candidate_table_humidity_split_descent.json")
 const CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_humidity_split_descent.md")
+    validation_results_path("ecckd_candidate_table_humidity_split_descent.md")
 const CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_humidity_split_descent_sw32_candidate.nc")
+    validation_results_path("ecckd_table_humidity_split_descent_sw32_candidate.nc")
 
 function humidity_split_probe_parameters(kind)
     if isfile(CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON)

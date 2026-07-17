@@ -1,0 +1,14 @@
+{
+  "preflight_ready": true,
+  "timestamp_utc": "2026-05-28T00:24:53.698",
+  "ready_for_reconstruction": true,
+  "objective_goal": "capture_fixed objective contract and training-script inputs for optimizer-only 16-g recovery",
+  "manifest_present": true,
+  "ckdmip_preflight": "validation/results/ckdmip_training_data_preflight.json",
+  "status": "objective_terms_contract_ready_16g",
+  "ckdmip_manifest": "validation/results/ecckd_published_training_manifest.json",
+  "block_reasons": String[],
+  "case": "ckdmip_original_objective_terms_16",
+  "implementation_notes": ["Fixed contract captured in-script for 16-g objective workflow.", "Next step is solver-only recovery; this file is not an optimization result."],
+  "target_gpoints": 16
+}

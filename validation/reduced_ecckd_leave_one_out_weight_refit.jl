@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_hardgate_subset_search.jl"))
 
 const LEAVE_ONE_OUT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_weight_refit.json")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_refit.json")
 const LEAVE_ONE_OUT_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_weight_refit.md")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_refit.md")
 
 leave_one_out_weight_refit_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_LEAVE_ONE_OUT_WEIGHT_REFIT_ITERATIONS", "5000"))

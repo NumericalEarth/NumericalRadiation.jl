@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const PRESSURE_BAND_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_pressure_band_refinement_preflight.json")
+    validation_results_path("reduced_ecckd_pressure_band_refinement_preflight.json")
 const PRESSURE_BAND_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_pressure_band_refinement_preflight.md")
+    validation_results_path("reduced_ecckd_pressure_band_refinement_preflight.md")
 
 function final_parameters_from_section(section_key; path = PREFLIGHT_JSON)
     isfile(path) || return nothing

@@ -1,6 +1,6 @@
 {
   "case": "reduced_ecckd_32g_rrtmgp_comparison",
-  "timestamp_utc": "2026-05-22T19:11:12.786",
+  "timestamp_utc": "2026-06-03T01:19:53.194",
   "status": "passed",
   "production_target": "official ecCKD 32-g gas optics and canonical 32x31 boundary-polished reduced model",
   "frozen_diagnostic": "16-g canonical model remains a failing diagnostic; 32x31 boundary-polished model is the current passing reduced row",
@@ -16,20 +16,20 @@
   "reference_suffix": "",
   "candidate_suffix": "",
   "candidate_vs_ecckd_reference": {
-  "flux_rmse": 0.003811152500358516,
-  "flux_max_abs": 0.008867579104276047,
-  "heating_rate_rmse": 5.7606203954942366e-8,
-  "heating_rate_max_abs": 1.120044346288634e-6,
-  "toa_forcing_abs_error": 0.006113778272379022,
-  "surface_forcing_abs_error": 0.014039696250051747
+  "flux_rmse": 0.0,
+  "flux_max_abs": 0.0,
+  "heating_rate_rmse": 0.0,
+  "heating_rate_max_abs": 0.0,
+  "toa_forcing_abs_error": 0.0,
+  "surface_forcing_abs_error": 0.0
 },
   "candidate_vs_rrtmgp": {
-  "flux_rmse": 152.0251145171889,
-  "flux_max_abs": 425.64105159421337,
-  "heating_rate_rmse": 0.0005268270788724363,
-  "heating_rate_max_abs": 0.006302874572164247,
-  "toa_forcing_abs_error": 336.86879079434675,
-  "surface_forcing_abs_error": 184.73591810699622
+  "flux_rmse": 152.02469995247742,
+  "flux_max_abs": 425.6466369628906,
+  "heating_rate_rmse": 0.0005268275343154652,
+  "heating_rate_max_abs": 0.006302899584071097,
+  "toa_forcing_abs_error": 336.8731645686328,
+  "surface_forcing_abs_error": 184.74924113796442
 },
   "reduced_32x31_vs_ecckd_reference": {
   "flux_rmse": 0.07430115800951345,
@@ -40,12 +40,12 @@
   "surface_forcing_abs_error": 0.2781916122328312
 },
   "reduced_32x31_vs_rrtmgp": {
-  "flux_rmse": 152.01612709832023,
+  "flux_rmse": 152.0161270983203,
   "flux_max_abs": 425.641061891874,
-  "heating_rate_rmse": 0.0005268102909822005,
-  "heating_rate_max_abs": 0.006303159143376043,
-  "toa_forcing_abs_error": 336.89404090308926,
-  "surface_forcing_abs_error": 184.87133941160562
+  "heating_rate_rmse": 0.0005268102909821999,
+  "heating_rate_max_abs": 0.006303159143376024,
+  "toa_forcing_abs_error": 336.8940409030897,
+  "surface_forcing_abs_error": 184.87133941160585
 }
 }, {
   "case": "ecckd_rcemip_style_column_subset",
@@ -54,20 +54,20 @@
   "reference_suffix": "",
   "candidate_suffix": "",
   "candidate_vs_ecckd_reference": {
-  "flux_rmse": 0.003091082578274033,
-  "flux_max_abs": 0.009717230830688095,
-  "heating_rate_rmse": 4.414842734456189e-8,
-  "heating_rate_max_abs": 1.120044346288634e-6,
-  "toa_forcing_abs_error": 0.006113778272379022,
-  "surface_forcing_abs_error": 0.014039696250051747
+  "flux_rmse": 0.0,
+  "flux_max_abs": 0.0,
+  "heating_rate_rmse": 0.0,
+  "heating_rate_max_abs": 0.0,
+  "toa_forcing_abs_error": 0.0,
+  "surface_forcing_abs_error": 0.0
 },
   "candidate_vs_rrtmgp": {
-  "flux_rmse": 108.88202830204654,
-  "flux_max_abs": 425.64105159421337,
-  "heating_rate_rmse": 0.00036152850314755125,
-  "heating_rate_max_abs": 0.006302874572164247,
-  "toa_forcing_abs_error": 336.86879079434675,
-  "surface_forcing_abs_error": 184.73591810699622
+  "flux_rmse": 108.88158071048596,
+  "flux_max_abs": 425.6466369628906,
+  "heating_rate_rmse": 0.0003615286107027048,
+  "heating_rate_max_abs": 0.006302899584071097,
+  "toa_forcing_abs_error": 336.8731645686328,
+  "surface_forcing_abs_error": 184.74924113796442
 },
   "reduced_32x31_vs_ecckd_reference": {
   "flux_rmse": 0.07736762086904196,
@@ -78,12 +78,12 @@
   "surface_forcing_abs_error": 0.2781916122328312
 },
   "reduced_32x31_vs_rrtmgp": {
-  "flux_rmse": 108.88063961307002,
+  "flux_rmse": 108.88063961307007,
   "flux_max_abs": 425.641061891874,
-  "heating_rate_rmse": 0.00036147990325423654,
-  "heating_rate_max_abs": 0.006303159143376043,
-  "toa_forcing_abs_error": 336.89404090308926,
-  "surface_forcing_abs_error": 184.87133941160562
+  "heating_rate_rmse": 0.00036147990325423584,
+  "heating_rate_max_abs": 0.006303159143376024,
+  "toa_forcing_abs_error": 336.8940409030897,
+  "surface_forcing_abs_error": 184.87133941160585
 }
 }, {
   "case": "ecckd_all_sky_tropical_column_clear_projection",
@@ -92,20 +92,20 @@
   "reference_suffix": "_clear",
   "candidate_suffix": "_clear",
   "candidate_vs_ecckd_reference": {
-  "flux_rmse": 0.058640145211035916,
+  "flux_rmse": 0.05864014521103504,
   "flux_max_abs": 0.7390923332422972,
-  "heating_rate_rmse": 6.939025622549833e-8,
-  "heating_rate_max_abs": 9.44765449708971e-7,
-  "toa_forcing_abs_error": 0.23800490103576522,
-  "surface_forcing_abs_error": 0.7527218787017773
+  "heating_rate_rmse": 6.939025628083044e-8,
+  "heating_rate_max_abs": 9.447654527322959e-7,
+  "toa_forcing_abs_error": 0.23800490104122218,
+  "surface_forcing_abs_error": 0.7527218786904086
 },
   "candidate_vs_rrtmgp": {
-  "flux_rmse": 153.58570629559782,
+  "flux_rmse": 153.5857062955978,
   "flux_max_abs": 427.4878218512607,
-  "heating_rate_rmse": 0.0005263210783335854,
-  "heating_rate_max_abs": 0.00628893030957502,
-  "toa_forcing_abs_error": 329.80817928662736,
-  "surface_forcing_abs_error": 162.75209664506286
+  "heating_rate_rmse": 0.0005263210783335769,
+  "heating_rate_max_abs": 0.0062889303095750295,
+  "toa_forcing_abs_error": 329.8081792866277,
+  "surface_forcing_abs_error": 162.75209664506156
 },
   "reduced_32x31_vs_ecckd_reference": {
   "flux_rmse": 8.364759524165482,
@@ -116,12 +116,12 @@
   "surface_forcing_abs_error": 32.9098580309834
 },
   "reduced_32x31_vs_rrtmgp": {
-  "flux_rmse": 152.00292991782428,
+  "flux_rmse": 152.0029299178243,
   "flux_max_abs": 425.641061891874,
-  "heating_rate_rmse": 0.000526801608443438,
-  "heating_rate_max_abs": 0.0063031201590268825,
-  "toa_forcing_abs_error": 336.8395117633992,
-  "surface_forcing_abs_error": 184.69312622404982
+  "heating_rate_rmse": 0.0005268016084434375,
+  "heating_rate_max_abs": 0.0063031201590268635,
+  "toa_forcing_abs_error": 336.8395117633996,
+  "surface_forcing_abs_error": 184.69312622405005
 }
 }]
 }

@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_TOPOLOGY_CONSTRAINED_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_topology_constrained_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_topology_constrained_optimizer.json")
 const RETAINED_TOPOLOGY_CONSTRAINED_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_topology_constrained_optimizer.md")
+    validation_results_path("reduced_ecckd_retained_topology_constrained_optimizer.md")
 
 const RETAINED_TOPOLOGY_PAIR_SW_INDICES =
     [1, 4, 9, 10, 12, 13, 14, 16, 19, 22, 26, 27, 28, 30, 31, 32]

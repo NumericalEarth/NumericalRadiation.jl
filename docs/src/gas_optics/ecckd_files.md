@@ -39,7 +39,8 @@ directory.
 using NumericalRadiation
 
 official_ecckd_model_inventory()
-paths = official_ecckd_definition_paths()
+spec = official_ecckd_model_spec("32x32")
+paths = official_ecckd_definition_paths(spec)
 paths.longwave
 paths.shortwave
 ```
@@ -53,6 +54,21 @@ Resolution order is:
 Individual files can be addressed by filename or by stable keys:
 `:longwave_32`, `:shortwave_32`, `:longwave_64`, `:shortwave_64`, and
 `:shortwave_96`.
+
+Published model pairs can be selected with compact names:
+
+```julia
+official_ecckd_model_specs()
+read_official_ecckd_gas_optics("64x32";
+    gas_names = (:h2o, :co2),
+    h2o_mole_fraction = 0.005,
+)
+```
+
+Path lookup with `require=false` is non-mutating: it checks environment paths,
+installed artifacts, and local validation data without downloading the lazy
+artifact. Use the default `require=true` in production workflows when the
+official files should be downloaded automatically if needed.
 
 ## Official ecCKD Source
 

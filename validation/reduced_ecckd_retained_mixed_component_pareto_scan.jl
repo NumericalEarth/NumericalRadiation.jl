@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -5,9 +7,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_mixed_pressure_temperature_component_r
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_MIXED_COMPONENT_PARETO_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_mixed_component_pareto_scan.json")
+    validation_results_path("reduced_ecckd_retained_mixed_component_pareto_scan.json")
 const RETAINED_MIXED_COMPONENT_PARETO_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_mixed_component_pareto_scan.md")
+    validation_results_path("reduced_ecckd_retained_mixed_component_pareto_scan.md")
 
 retained_mixed_component_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_RETAINED_MIXED_COMPONENT_ITERATIONS", "1"))

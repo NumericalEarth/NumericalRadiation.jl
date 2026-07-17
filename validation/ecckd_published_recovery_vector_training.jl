@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_published_recovery_vector.jl"))
 
 const PUBLISHED_RECOVERY_VECTOR_TRAINING_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_recovery_vector_training.json")
+    validation_results_path("ecckd_published_recovery_vector_training.json")
 const PUBLISHED_RECOVERY_VECTOR_TRAINING_MD =
-    joinpath(@__DIR__, "results", "ecckd_published_recovery_vector_training.md")
+    validation_results_path("ecckd_published_recovery_vector_training.md")
 const PUBLISHED_RECOVERY_VECTOR_TRAINING_CANDIDATE =
-    joinpath(@__DIR__, "results", "ecckd_vector_trained_sw32_candidate.nc")
+    validation_results_path("ecckd_vector_trained_sw32_candidate.nc")
 
 function log_parameterization(values)
     positive = [value for value in values if value > 0]

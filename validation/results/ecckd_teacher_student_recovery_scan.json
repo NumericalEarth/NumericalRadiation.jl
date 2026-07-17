@@ -1,12 +1,12 @@
 {
   "case": "ecckd_teacher_student_recovery_scan",
-  "timestamp_utc": "2026-05-19T19:54:30.135",
+  "timestamp_utc": "2026-06-03T14:27:11.286",
   "status": "passed",
   "recovery_count": 6,
   "results": [{
   "filename": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
   "case": "ecckd_teacher_student_recovery",
-  "timestamp_utc": "2026-05-19T19:54:15.097",
+  "timestamp_utc": "2026-06-03T14:27:05.830",
   "status": "passed",
   "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
   "candidate_path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_1.0_lw_climate_fsck_32b_recovered_candidate.nc",
@@ -32,19 +32,19 @@
   "coefficient_count": 8,
   "coefficients": [{
   "name": "cfc11_molar_absorption_coeff",
-  "log_rmse": 1.030124431618948e-5,
+  "log_rmse": 1.0301244316189482e-5,
   "median_relative_error": 5.7250782450892224e-6,
   "p99_relative_error": 2.322517684660852e-5,
   "max_relative_error": 2.376597249534764e-5
 }, {
   "name": "cfc12_molar_absorption_coeff",
-  "log_rmse": 1.046615835054902e-5,
+  "log_rmse": 1.0466158350549019e-5,
   "median_relative_error": 6.222412867030782e-6,
   "p99_relative_error": 2.327548713203868e-5,
   "max_relative_error": 2.3774764052875076e-5
 }, {
   "name": "ch4_molar_absorption_coeff",
-  "log_rmse": 1.2555893318537054e-5,
+  "log_rmse": 1.2555893318537052e-5,
   "median_relative_error": 9.836654371955309e-6,
   "p99_relative_error": 2.343775376972281e-5,
   "max_relative_error": 2.3790339629807175e-5
@@ -62,7 +62,7 @@
   "max_relative_error": 2.5810315851277413e-5
 }, {
   "name": "h2o_molar_absorption_coeff",
-  "log_rmse": 1.252716778417063e-5,
+  "log_rmse": 1.2527167784170628e-5,
   "median_relative_error": 9.810420829458004e-6,
   "p99_relative_error": 2.3420913147295486e-5,
   "max_relative_error": 2.3803170582321565e-5
@@ -74,7 +74,7 @@
   "max_relative_error": 2.3784461887612333e-5
 }, {
   "name": "o3_molar_absorption_coeff",
-  "log_rmse": 1.2497754331173616e-5,
+  "log_rmse": 1.2497754331173618e-5,
   "median_relative_error": 9.784951510677815e-6,
   "p99_relative_error": 2.34099263801461e-5,
   "max_relative_error": 2.380074295290041e-5
@@ -95,7 +95,7 @@
 }, {
   "filename": "ecckd-1.0_sw_climate_rgb-32b_ckd-definition.nc",
   "case": "ecckd_teacher_student_recovery",
-  "timestamp_utc": "2026-05-19T19:54:17.456",
+  "timestamp_utc": "2026-06-03T14:27:07.685",
   "status": "passed",
   "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_sw_climate_rgb-32b_ckd-definition.nc",
   "candidate_path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_1.0_sw_climate_rgb_32b_recovered_candidate.nc",
@@ -121,7 +121,7 @@
   "coefficient_count": 6,
   "coefficients": [{
   "name": "ch4_molar_absorption_coeff",
-  "log_rmse": 1.1799941467540392e-5,
+  "log_rmse": 1.1799941467540394e-5,
   "median_relative_error": 8.635646929124616e-6,
   "p99_relative_error": 2.3357562312393534e-5,
   "max_relative_error": 2.378656618694348e-5
@@ -172,7 +172,7 @@
 }, {
   "filename": "ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
   "case": "ecckd_teacher_student_recovery",
-  "timestamp_utc": "2026-05-19T19:54:22.980",
+  "timestamp_utc": "2026-06-03T14:27:08.955",
   "status": "passed",
   "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
   "candidate_path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_1.2_lw_climate_narrow_64b_recovered_candidate.nc",
@@ -204,25 +204,25 @@
   "max_relative_error": 2.3755861548124813e-5
 }, {
   "name": "cfc12_molar_absorption_coeff",
-  "log_rmse": 9.157662716245678e-6,
+  "log_rmse": 9.157662716245676e-6,
   "median_relative_error": 1.8493661286811403e-6,
   "p99_relative_error": 2.30891218961915e-5,
   "max_relative_error": 2.3755774236633442e-5
 }, {
   "name": "ch4_molar_absorption_coeff",
-  "log_rmse": 1.2349607768126396e-5,
+  "log_rmse": 1.2349607768126397e-5,
   "median_relative_error": 9.488804757176425e-6,
   "p99_relative_error": 2.342368316021748e-5,
   "max_relative_error": 2.4042849010391163e-5
 }, {
   "name": "co2_molar_absorption_coeff",
-  "log_rmse": 1.2484166851593078e-5,
+  "log_rmse": 1.2484166851593075e-5,
   "median_relative_error": 9.76033976366137e-6,
   "p99_relative_error": 2.341067437502596e-5,
   "max_relative_error": 2.379657932521877e-5
 }, {
   "name": "composite_molar_absorption_coeff",
-  "log_rmse": 1.2536905174778595e-5,
+  "log_rmse": 1.2536905174778592e-5,
   "median_relative_error": 9.89561217582531e-6,
   "p99_relative_error": 2.3706280711422934e-5,
   "max_relative_error": 4.4882487794700054e-5
@@ -234,7 +234,7 @@
   "max_relative_error": 2.380177965251367e-5
 }, {
   "name": "n2o_molar_absorption_coeff",
-  "log_rmse": 1.2225418633740335e-5,
+  "log_rmse": 1.2225418633740333e-5,
   "median_relative_error": 9.3481617325545e-6,
   "p99_relative_error": 2.3397928470351502e-5,
   "max_relative_error": 2.3798605690174504e-5
@@ -245,7 +245,7 @@
   "p99_relative_error": 2.3432782729572694e-5,
   "max_relative_error": 2.38017158392485e-5
 }],
-  "worst_log_coefficient_rmse": 1.2536905174778595e-5,
+  "worst_log_coefficient_rmse": 1.2536905174778592e-5,
   "worst_median_relative_coefficient_error": 9.89561217582531e-6,
   "worst_p99_relative_coefficient_error": 2.3706280711422934e-5,
   "gpoint_weight_max_abs_error": 0.0,
@@ -261,7 +261,7 @@
 }, {
   "filename": "ecckd-1.2_sw_climate_window-64b_ckd-definition.nc",
   "case": "ecckd_teacher_student_recovery",
-  "timestamp_utc": "2026-05-19T19:54:24.523",
+  "timestamp_utc": "2026-06-03T14:27:09.751",
   "status": "passed",
   "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_sw_climate_window-64b_ckd-definition.nc",
   "candidate_path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_1.2_sw_climate_window_64b_recovered_candidate.nc",
@@ -299,7 +299,7 @@
   "max_relative_error": 2.37938803069299e-5
 }, {
   "name": "composite_molar_absorption_coeff",
-  "log_rmse": 1.221747358724401e-5,
+  "log_rmse": 1.2217473587244008e-5,
   "median_relative_error": 9.354523164665715e-6,
   "p99_relative_error": 2.3405133713704883e-5,
   "max_relative_error": 2.3789959500225582e-5
@@ -338,7 +338,7 @@
 }, {
   "filename": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
   "case": "ecckd_teacher_student_recovery",
-  "timestamp_utc": "2026-05-19T19:54:26.925",
+  "timestamp_utc": "2026-06-03T14:27:10.367",
   "status": "passed",
   "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
   "candidate_path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_1.4_sw_climate_rgb_32b_recovered_candidate.nc",
@@ -364,7 +364,7 @@
   "coefficient_count": 6,
   "coefficients": [{
   "name": "ch4_molar_absorption_coeff",
-  "log_rmse": 1.1800034649094114e-5,
+  "log_rmse": 1.1800034649094116e-5,
   "median_relative_error": 8.637153616510519e-6,
   "p99_relative_error": 2.335855064229728e-5,
   "max_relative_error": 2.378657989146735e-5
@@ -376,7 +376,7 @@
   "max_relative_error": 2.3808129848674446e-5
 }, {
   "name": "composite_molar_absorption_coeff",
-  "log_rmse": 1.257141927960235e-5,
+  "log_rmse": 1.2571419279602349e-5,
   "median_relative_error": 9.84644077338493e-6,
   "p99_relative_error": 2.3427731855160456e-5,
   "max_relative_error": 2.386929038214042e-5
@@ -394,12 +394,12 @@
   "max_relative_error": 2.378878007643837e-5
 }, {
   "name": "o3_molar_absorption_coeff",
-  "log_rmse": 1.2295040618373228e-5,
+  "log_rmse": 1.2295040618373226e-5,
   "median_relative_error": 9.479776484036647e-6,
   "p99_relative_error": 2.3421617626740995e-5,
   "max_relative_error": 2.3781978577781567e-5
 }],
-  "worst_log_coefficient_rmse": 1.257141927960235e-5,
+  "worst_log_coefficient_rmse": 1.2571419279602349e-5,
   "worst_median_relative_coefficient_error": 9.84644077338493e-6,
   "worst_p99_relative_coefficient_error": 2.3427731855160456e-5,
   "gpoint_weight_max_abs_error": 0.0,
@@ -415,7 +415,7 @@
 }, {
   "filename": "ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
   "case": "ecckd_teacher_student_recovery",
-  "timestamp_utc": "2026-05-19T19:54:30.120",
+  "timestamp_utc": "2026-06-03T14:27:11.286",
   "status": "passed",
   "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
   "candidate_path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_1.4_sw_climate_vfine_96b_recovered_candidate.nc",
@@ -441,7 +441,7 @@
   "coefficient_count": 6,
   "coefficients": [{
   "name": "ch4_molar_absorption_coeff",
-  "log_rmse": 1.0870292070726948e-5,
+  "log_rmse": 1.0870292070726946e-5,
   "median_relative_error": 7.025890100067623e-6,
   "p99_relative_error": 2.332544136152137e-5,
   "max_relative_error": 2.3800030154084717e-5
@@ -465,18 +465,18 @@
   "max_relative_error": 2.380589991757207e-5
 }, {
   "name": "n2o_molar_absorption_coeff",
-  "log_rmse": 1.0482391204371429e-5,
+  "log_rmse": 1.048239120437143e-5,
   "median_relative_error": 6.436662944532426e-6,
   "p99_relative_error": 2.3238010294546645e-5,
   "max_relative_error": 2.3790994794631576e-5
 }, {
   "name": "o3_molar_absorption_coeff",
-  "log_rmse": 1.223028570106797e-5,
+  "log_rmse": 1.2230285701067969e-5,
   "median_relative_error": 9.361495425274505e-6,
   "p99_relative_error": 2.340870777995569e-5,
   "max_relative_error": 2.378628484045365e-5
 }],
-  "worst_log_coefficient_rmse": 1.223028570106797e-5,
+  "worst_log_coefficient_rmse": 1.2230285701067969e-5,
   "worst_median_relative_coefficient_error": 9.361495425274505e-6,
   "worst_p99_relative_coefficient_error": 2.3468907725509056e-5,
   "gpoint_weight_max_abs_error": 0.0,

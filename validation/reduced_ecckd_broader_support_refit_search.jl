@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_retained_current_pressure_component_scan.jl"))
 
 const BROADER_SUPPORT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_broader_support_refit_search.json")
+    validation_results_path("reduced_ecckd_broader_support_refit_search.json")
 const BROADER_SUPPORT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_broader_support_refit_search.md")
+    validation_results_path("reduced_ecckd_broader_support_refit_search.md")
 
 broader_support_refit_radius() =
     parse(Int, get(ENV, "RH_REDUCED_BROADER_SUPPORT_REFIT_RADIUS", "2"))

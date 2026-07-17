@@ -37,7 +37,7 @@ include(joinpath(@__DIR__, "..", "validation", "ecckd_published_model_accuracy.j
     @test model_32["boundary_compatibility"]["all_longwave_spectral_boundaries_match"]
     @test model_32["boundary_compatibility"]["all_shortwave_surface_albedo_boundaries_match"]
     @test !model_32["boundary_compatibility"]["all_shortwave_direct_albedo_boundaries_match"]
-    @test !model_32["boundary_compatibility"]["all_shortwave_incoming_spectral_boundaries_match"]
+    @test model_32["boundary_compatibility"]["all_shortwave_incoming_spectral_boundaries_match"]
     @test model_32x64["passed_hard_thresholds"]
     @test model_32x96["passed_hard_thresholds"]
     @test model_64x32["passed_hard_thresholds"]

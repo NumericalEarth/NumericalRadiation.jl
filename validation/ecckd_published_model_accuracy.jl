@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -6,9 +8,9 @@ using NCDatasets
 include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 
 const PUBLISHED_MODEL_ACCURACY_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_model_accuracy.json")
+    validation_results_path("ecckd_published_model_accuracy.json")
 const PUBLISHED_MODEL_ACCURACY_MD =
-    joinpath(@__DIR__, "results", "ecckd_published_model_accuracy.md")
+    validation_results_path("ecckd_published_model_accuracy.md")
 
 const PUBLISHED_MODEL_SPECS = (
     (

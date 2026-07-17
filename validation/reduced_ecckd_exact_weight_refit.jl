@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_post_table_weight_refit.jl"))
 
 const EXACT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_exact_weight_refit.json")
+    validation_results_path("reduced_ecckd_exact_weight_refit.json")
 const EXACT_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_exact_weight_refit.md")
+    validation_results_path("reduced_ecckd_exact_weight_refit.md")
 
 exact_weight_refit_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_EXACT_WEIGHT_REFIT_ITERATIONS", "8"))

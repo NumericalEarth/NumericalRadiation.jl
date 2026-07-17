@@ -1,13 +1,13 @@
 # ecRad Cloudless Accuracy Gate
 
-Status: **passed**
+Status: **missing_candidate_outputs**
 
 This focused hard gate compares only cloudless/no-aerosol reference cases. It is the first required accuracy step before the full all-sky ecRad gate.
 
 | Case | Status | Passed | Path |
 |---|---|---:|---|
-| ecckd_clear_sky_tropical_column | passed | true | `validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc` |
-| ecckd_rcemip_style_column_subset | passed | true | `validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc` |
+| ecckd_clear_sky_tropical_column | missing_candidate_outputs | false | `validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc` |
+| ecckd_rcemip_style_column_subset | missing_candidate_outputs | false | `validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc` |
 
 ## Scope
 

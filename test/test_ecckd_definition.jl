@@ -76,7 +76,12 @@
         read_ecckd_definition("missing-ecckd.nc")
         @test false
     catch err
-        @test err isa ArgumentError
-        @test occursin("load NCDatasets.jl", sprint(showerror, err))
+        message = sprint(showerror, err)
+        if isnothing(Base.get_extension(NumericalRadiation, :NumericalRadiationNCDatasetsExt))
+            @test err isa ArgumentError
+            @test occursin("load NCDatasets.jl", message)
+        else
+            @test occursin("missing-ecckd.nc", message)
+        end
     end
 end

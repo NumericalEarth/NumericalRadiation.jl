@@ -9,7 +9,7 @@ using JSON
     md_path = joinpath(root, "validation", "results",
                        "reduced_ecckd_leave_one_out_weight_coordinate_descent.md")
     if !isfile(json_path) || stat(json_path).mtime < stat(script).mtime
-        test_project = joinpath(@__DIR__, "Project.toml")
+        test_project = Base.active_project()
         read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     end
 

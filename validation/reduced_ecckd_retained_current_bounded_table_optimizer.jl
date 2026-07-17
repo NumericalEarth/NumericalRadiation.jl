@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -5,11 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_retained_current_quadrature_linearized_optimizer.jl"))
 
 const RETAINED_CURRENT_BOUNDED_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_bounded_table_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_current_bounded_table_optimizer.json")
 const RETAINED_CURRENT_BOUNDED_TABLE_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_bounded_table_optimizer.md")
+    validation_results_path("reduced_ecckd_retained_current_bounded_table_optimizer.md")
 
 current_bounded_table_candidates() =
     parse(Int, get(ENV, "RH_REDUCED_CURRENT_BOUNDED_TABLE_CANDIDATES", "16"))

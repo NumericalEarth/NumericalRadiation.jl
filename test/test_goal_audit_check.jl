@@ -2,7 +2,7 @@ using JSON
 
 @testset "goal audit check artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "goal_audit_check.jl")
-    output = read(`$(Base.julia_cmd()) --project=$(dirname(@__DIR__)) $script`, String)
+    output = read(`$(Base.julia_cmd()) --project=$(Base.active_project()) $script`, String)
     @test occursin("Radiative Heating Goal Audit Check", output)
     @test occursin("Status: **not_complete**", output)
     @test occursin("old ABR Breeze extension removed", output)

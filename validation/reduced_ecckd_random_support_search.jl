@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 using Random
@@ -5,9 +7,9 @@ using Random
 include(joinpath(@__DIR__, "reduced_ecckd_support_swap_scan.jl"))
 
 const RANDOM_SUPPORT_SEARCH_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_random_support_search.json")
+    validation_results_path("reduced_ecckd_random_support_search.json")
 const RANDOM_SUPPORT_SEARCH_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_random_support_search.md")
+    validation_results_path("reduced_ecckd_random_support_search.md")
 
 random_support_seed_count() =
     parse(Int, get(ENV, "RH_REDUCED_RANDOM_SUPPORT_SEEDS", "64"))

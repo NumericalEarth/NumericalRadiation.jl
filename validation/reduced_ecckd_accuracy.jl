@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -42,127 +44,123 @@ const REDUCED_BREEZE_DIR = joinpath(ABR_ROOT, "..", "BreezeRadiativeHeatingDev",
                                     "Breeze.jl", "benchmarking", "results",
                                     "reduced_accuracy")
 const REDUCED_OPTIMIZATION_PREFLIGHT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_optimization_preflight.json")
+    validation_results_path("reduced_ecckd_optimization_preflight.json")
 const REDUCED_TARGETED_ENTRY_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_targeted_entry_refinement.json")
+    validation_results_path("reduced_ecckd_targeted_entry_refinement.json")
 const REDUCED_GLOBAL_ENTRY_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_entry_refinement.json")
+    validation_results_path("reduced_ecckd_global_entry_refinement.json")
 const REDUCED_GLOBAL_BLOCK_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_block_refinement.json")
+    validation_results_path("reduced_ecckd_global_block_refinement.json")
 const REDUCED_GLOBAL_BLOCK_LINEARIZED_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_block_linearized_refit.json")
+    validation_results_path("reduced_ecckd_global_block_linearized_refit.json")
 const REDUCED_EXACT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_exact_weight_refit.json")
+    validation_results_path("reduced_ecckd_exact_weight_refit.json")
 const REDUCED_JOINT_WEIGHT_BLOCK_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_joint_weight_block_refit.json")
+    validation_results_path("reduced_ecckd_joint_weight_block_refit.json")
 const REDUCED_BOUNDARY_COLUMN_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_column_refinement.json")
+    validation_results_path("reduced_ecckd_boundary_column_refinement.json")
 const REDUCED_SLOT_BLEND_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_slot_blend_refinement.json")
+    validation_results_path("reduced_ecckd_slot_blend_refinement.json")
 const REDUCED_BOUNDARY_COLUMN_BLOCK_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_column_block_refinement.json")
+    validation_results_path("reduced_ecckd_boundary_column_block_refinement.json")
 const REDUCED_GAS_PRESSURE_BAND_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_pressure_band_refinement.json")
+    validation_results_path("reduced_ecckd_gas_pressure_band_refinement.json")
 const REDUCED_CONSTRAINED_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_constrained_table_optimizer.json")
+    validation_results_path("reduced_ecckd_constrained_table_optimizer.json")
 const REDUCED_BOUNDARY_BASE_CONSTRAINED_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_base_constrained_table_optimizer.json")
+    validation_results_path("reduced_ecckd_boundary_base_constrained_table_optimizer.json")
 const REDUCED_BOUNDARY_TABLE_CONTINUATION_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_continuation_optimizer.json")
+    validation_results_path("reduced_ecckd_boundary_table_continuation_optimizer.json")
 const REDUCED_BOUNDARY_TABLE_COORDINATE_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_coordinate_scan.json")
+    validation_results_path("reduced_ecckd_boundary_table_coordinate_scan.json")
 const REDUCED_BOUNDARY_TABLE_PAIR_COORDINATE_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_pair_coordinate_scan.json")
+    validation_results_path("reduced_ecckd_boundary_table_pair_coordinate_scan.json")
 const REDUCED_BOUNDARY_TABLE_COORDINATE_DESCENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_coordinate_descent.json")
+    validation_results_path("reduced_ecckd_boundary_table_coordinate_descent.json")
 const REDUCED_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_component_scale_refit.json")
 const REDUCED_PRESSURE_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_pressure_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_pressure_component_scale_refit.json")
 const REDUCED_TEMPERATURE_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_temperature_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_temperature_component_scale_refit.json")
 const REDUCED_H2O_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_h2o_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_h2o_component_scale_refit.json")
 const REDUCED_GAS_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_gas_component_scale_refit.json")
 const REDUCED_PRESSURE_TEMPERATURE_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_pressure_temperature_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_pressure_temperature_component_scale_refit.json")
 const REDUCED_GAS_PRESSURE_TEMPERATURE_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_pressure_temperature_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_gas_pressure_temperature_component_scale_refit.json")
 const REDUCED_H2O_PRESSURE_TEMPERATURE_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_h2o_pressure_temperature_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_h2o_pressure_temperature_component_scale_refit.json")
 const REDUCED_MIXED_PRESSURE_TEMPERATURE_COMPONENT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_mixed_pressure_temperature_component_refit.json")
+    validation_results_path("reduced_ecckd_mixed_pressure_temperature_component_refit.json")
 const REDUCED_RETAINED_MIXED_COMPONENT_PARETO_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_mixed_component_pareto_scan.json")
+    validation_results_path("reduced_ecckd_retained_mixed_component_pareto_scan.json")
 const REDUCED_RETAINED_CAPPED_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_capped_table_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_capped_table_optimizer.json")
 const REDUCED_RETAINED_CAPPED_TABLE_CONTINUATION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_capped_table_continuation.json")
+    validation_results_path("reduced_ecckd_retained_capped_table_continuation.json")
 const REDUCED_RETAINED_POST_CAPPED_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_capped_weight_refit.json")
+    validation_results_path("reduced_ecckd_retained_post_capped_weight_refit.json")
 const REDUCED_RETAINED_POST_WEIGHT_SURFACE_TABLE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_weight_surface_table_refit.json")
+    validation_results_path("reduced_ecckd_retained_post_weight_surface_table_refit.json")
 const REDUCED_RETAINED_POST_WEIGHT_BOUNDED_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_weight_bounded_weight_refit.json")
+    validation_results_path("reduced_ecckd_retained_post_weight_bounded_weight_refit.json")
 const REDUCED_RETAINED_CURRENT_COMPONENT_SCALE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_component_scale_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_current_component_scale_optimizer.json")
 const REDUCED_RETAINED_CURRENT_COMPONENT_SCALE_OPTIMIZER2_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_component_scale_optimizer2.json")
+    validation_results_path("reduced_ecckd_retained_current_component_scale_optimizer2.json")
 const REDUCED_RETAINED_CURRENT_COMPONENT_SCALE_OPTIMIZER3_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_component_scale_optimizer3.json")
+    validation_results_path("reduced_ecckd_retained_current_component_scale_optimizer3.json")
 const REDUCED_RETAINED_CURRENT_COMPONENT_SCALE_OPTIMIZER4_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_component_scale_optimizer4.json")
+    validation_results_path("reduced_ecckd_retained_current_component_scale_optimizer4.json")
 const REDUCED_RETAINED_CURRENT_PRESSURE_COMPONENT_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_pressure_component_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_optimizer.json")
 const REDUCED_RETAINED_CURRENT_PRESSURE_COMPONENT_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_pressure_component_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_scan.json")
 const REDUCED_RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_current_gas_pressure_component_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_scan.json")
 const REDUCED_RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation_scan.json")
 const REDUCED_RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION2_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation2_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation2_scan.json")
 const REDUCED_RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION3_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation3_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation3_scan.json")
 const REDUCED_RETAINED_STRUCTURAL_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_structural_optimizer.json")
 const REDUCED_RETAINED_STRUCTURAL_CONTINUATION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_continuation.json")
+    validation_results_path("reduced_ecckd_retained_structural_continuation.json")
 const REDUCED_RETAINED_STRUCTURAL_CONTINUATION2_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_continuation2.json")
+    validation_results_path("reduced_ecckd_retained_structural_continuation2.json")
 const REDUCED_RETAINED_STRUCTURAL_CONTINUATION3_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_continuation3.json")
+    validation_results_path("reduced_ecckd_retained_structural_continuation3.json")
 const REDUCED_RETAINED_STRUCTURAL_CONTINUATION4_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_continuation4.json")
+    validation_results_path("reduced_ecckd_retained_structural_continuation4.json")
 const REDUCED_RETAINED_OBJECTIVE_PROBE_EXPANSION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_objective_probe_expansion.json")
+    validation_results_path("reduced_ecckd_retained_objective_probe_expansion.json")
 const REDUCED_RETAINED_OBJECTIVE_PROBE_EXPANSION2_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_objective_probe_expansion2.json")
+    validation_results_path("reduced_ecckd_retained_objective_probe_expansion2.json")
 const REDUCED_RETAINED_OBJECTIVE_PROBE_EXPANSION3_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_objective_probe_expansion3.json")
+    validation_results_path("reduced_ecckd_retained_objective_probe_expansion3.json")
 const REDUCED_RETAINED_OBJECTIVE_PROBE_EXPANSION4_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_objective_probe_expansion4.json")
+    validation_results_path("reduced_ecckd_retained_objective_probe_expansion4.json")
 const REDUCED_RETAINED_SURFACE_PROBE_EXPANSION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_surface_probe_expansion.json")
+    validation_results_path("reduced_ecckd_retained_surface_probe_expansion.json")
 const REDUCED_RETAINED_SURFACE_PROBE_EXPANSION2_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_surface_probe_expansion2.json")
+    validation_results_path("reduced_ecckd_retained_surface_probe_expansion2.json")
 const REDUCED_RETAINED_SURFACE_PROBE_EXPANSION3_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_surface_probe_expansion3.json")
+    validation_results_path("reduced_ecckd_retained_surface_probe_expansion3.json")
 const REDUCED_RETAINED_TOA_PROBE_EXPANSION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_toa_probe_expansion.json")
+    validation_results_path("reduced_ecckd_retained_toa_probe_expansion.json")
 const REDUCED_POST_CONSTRAINED_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_post_constrained_weight_refit.json")
+    validation_results_path("reduced_ecckd_post_constrained_weight_refit.json")
 const REDUCED_POST_CONSTRAINED_BOUNDARY_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_post_constrained_boundary_weight_refit.json")
+    validation_results_path("reduced_ecckd_post_constrained_boundary_weight_refit.json")
 const REDUCED_POST_SLOT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_post_slot_weight_refit.json")
+    validation_results_path("reduced_ecckd_post_slot_weight_refit.json")
 const REDUCED_LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json")
 const GREEDY_SW_16_INDICES = [1, 3, 4, 5, 6, 9, 10, 12, 13, 14, 16, 18, 21, 22, 27, 28]
 const WEIGHTED_GREEDY_SW_16_INDICES = [1, 4, 9, 10, 12, 13, 14, 16, 21, 22, 25, 27, 28, 30, 31, 32]
 const WEIGHTED_GREEDY_SW_16_WEIGHTS = [
@@ -3234,7 +3232,7 @@ function reduced_accuracy_main()
         acceptance_thresholds = ACCEPTANCE_THRESHOLDS,
         models = models,
     )
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     abr_json = joinpath(results_dir, "reduced_ecckd_accuracy.json")
     abr_md = joinpath(results_dir, "reduced_ecckd_accuracy.md")

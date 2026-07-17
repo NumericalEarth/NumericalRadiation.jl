@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_grouped_quadrature_search.jl"))
 
 const GROUPED_QUADRATURE_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_grouped_quadrature_weight_refit.json")
+    validation_results_path("reduced_ecckd_grouped_quadrature_weight_refit.json")
 const GROUPED_QUADRATURE_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_grouped_quadrature_weight_refit.md")
+    validation_results_path("reduced_ecckd_grouped_quadrature_weight_refit.md")
 
 function grouped_weight_refit_iterations()
     parse(Int, get(ENV, "RH_REDUCED_GROUPED_WEIGHT_REFIT_ITERATIONS", "3000"))

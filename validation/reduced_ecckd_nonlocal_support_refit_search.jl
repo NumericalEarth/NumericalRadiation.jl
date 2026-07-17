@@ -1,32 +1,34 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_broader_support_refit_search.jl"))
 
 const NONLOCAL_SUPPORT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_nonlocal_support_refit_search.json")
+    validation_results_path("reduced_ecckd_nonlocal_support_refit_search.json")
 const NONLOCAL_SUPPORT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_nonlocal_support_refit_search.md")
+    validation_results_path("reduced_ecckd_nonlocal_support_refit_search.md")
 
 const NONLOCAL_SUPPORT_SOURCES = (
     (
         label = "random_support_best",
-        path = joinpath(@__DIR__, "results", "reduced_ecckd_random_support_search.json"),
+        path = validation_results_path("reduced_ecckd_random_support_search.json"),
         key = "best_indices",
     ),
     (
         label = "support_swap_best",
-        path = joinpath(@__DIR__, "results", "reduced_ecckd_support_swap_scan.json"),
+        path = validation_results_path("reduced_ecckd_support_swap_scan.json"),
         key = "best_overall_indices",
     ),
     (
         label = "support_swap_continuation_best",
-        path = joinpath(@__DIR__, "results", "reduced_ecckd_support_swap_continuation_scan.json"),
+        path = validation_results_path("reduced_ecckd_support_swap_continuation_scan.json"),
         key = "best_indices",
     ),
     (
         label = "hardgate_subset_best",
-        path = joinpath(@__DIR__, "results", "reduced_ecckd_hardgate_subset_search.json"),
+        path = validation_results_path("reduced_ecckd_hardgate_subset_search.json"),
         key = "selected_shortwave_gpoints",
     ),
 )

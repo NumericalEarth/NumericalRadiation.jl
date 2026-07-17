@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_written_minimax_descent.jl"))
 
 const CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_humidity_split_probe.json")
+    validation_results_path("ecckd_candidate_table_humidity_split_probe.json")
 const CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_humidity_split_probe.md")
+    validation_results_path("ecckd_candidate_table_humidity_split_probe.md")
 const CANDIDATE_TABLE_HUMIDITY_SPLIT_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_humidity_split_sw32_candidate.nc")
+    validation_results_path("ecckd_table_humidity_split_sw32_candidate.nc")
 
 function coordinate_descent_parameters()
     if isfile(CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON)

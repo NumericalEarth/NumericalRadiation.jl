@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -5,9 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_subset_search.jl"))
 
 const HARDGATE_SUBSET_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_hardgate_subset_search.json")
+    validation_results_path("reduced_ecckd_hardgate_subset_search.json")
 const HARDGATE_SUBSET_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_hardgate_subset_search.md")
+    validation_results_path("reduced_ecckd_hardgate_subset_search.md")
 
 function hardgate_full_design(context)
     nfull = length(context[1].basis)

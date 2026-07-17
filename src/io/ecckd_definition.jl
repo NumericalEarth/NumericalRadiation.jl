@@ -57,6 +57,26 @@ struct EcCKDSchemaSummary
     rayleigh_tables_present::Bool
 end
 
+"""
+$(TYPEDEF)
+
+Named pair of official ecCKD longwave and shortwave CKD-definition files.
+
+Fields are
+
+$(TYPEDFIELDS)
+"""
+struct EcCKDModelSpec
+    "Public model-pair selector, for example `:climate_32x32`."
+    name::Symbol
+    "Official longwave CKD-definition key."
+    longwave::Symbol
+    "Official shortwave CKD-definition key."
+    shortwave::Symbol
+    "Human-readable summary for docs and logging."
+    description::String
+end
+
 const _OFFICIAL_ECCKD_MODELS = (
     "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "ecckd-1.0_sw_climate_rgb-32b_ckd-definition.nc",
@@ -72,6 +92,21 @@ const _OFFICIAL_ECCKD_DEFAULTS = (
     longwave_64 = "ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
     shortwave_64 = "ecckd-1.2_sw_climate_window-64b_ckd-definition.nc",
     shortwave_96 = "ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
+)
+
+const _OFFICIAL_ECCKD_MODEL_SPECS = (
+    climate_32x32 = EcCKDModelSpec(:climate_32x32, :longwave_32, :shortwave_32,
+                                   "ecCKD climate model with 32 longwave and 32 shortwave g-points"),
+    climate_32x64 = EcCKDModelSpec(:climate_32x64, :longwave_32, :shortwave_64,
+                                   "ecCKD climate model with 32 longwave and 64 shortwave g-points"),
+    climate_32x96 = EcCKDModelSpec(:climate_32x96, :longwave_32, :shortwave_96,
+                                   "ecCKD climate model with 32 longwave and 96 shortwave g-points"),
+    climate_64x32 = EcCKDModelSpec(:climate_64x32, :longwave_64, :shortwave_32,
+                                   "ecCKD climate model with 64 longwave and 32 shortwave g-points"),
+    climate_64x64 = EcCKDModelSpec(:climate_64x64, :longwave_64, :shortwave_64,
+                                   "ecCKD climate model with 64 longwave and 64 shortwave g-points"),
+    climate_64x96 = EcCKDModelSpec(:climate_64x96, :longwave_64, :shortwave_96,
+                                   "ecCKD climate model with 64 longwave and 96 shortwave g-points"),
 )
 
 const _ECRAD_DATA_DIR_CACHE = Ref(Dict{String, String}())
@@ -91,9 +126,22 @@ function _first_existing_directory(paths)
     return nothing
 end
 
-function _ecrad_artifact_root()
+function _artifact_root(name::String; require::Bool)
     toml_path = _artifact_toml_path()
     isfile(toml_path) || return nothing
+    if !require
+        hash = artifact_hash(name, toml_path)
+        hash === nothing && return nothing
+        path = artifact_path(hash)
+        return isdir(path) ? normpath(path) : nothing
+    end
+    return nothing
+end
+
+function _ecrad_artifact_root(; require::Bool = false)
+    root = _artifact_root("ecrad_data"; require)
+    root === nothing || return root
+    require || return nothing
     try
         path = @artifact_str("ecrad_data")
         return isdir(path) ? normpath(path) : nothing
@@ -103,9 +151,10 @@ function _ecrad_artifact_root()
     end
 end
 
-function _ecckd_source_artifact_root()
-    toml_path = _artifact_toml_path()
-    isfile(toml_path) || return nothing
+function _ecckd_source_artifact_root(; require::Bool = false)
+    root = _artifact_root("ecckd_source"; require)
+    root === nothing || return root
+    require || return nothing
     try
         path = @artifact_str("ecckd_source")
         return isdir(path) ? normpath(path) : nothing
@@ -139,7 +188,7 @@ file resolution handles both `<root>/data` and `<root>/<archive>/data`.
 function ecrad_data_path(; require::Bool = false)
     root = _first_existing_directory((
         get(ENV, "RH_ECRAD_DATA_PATH", nothing),
-        _ecrad_artifact_root(),
+        _ecrad_artifact_root(; require),
         joinpath(_package_root(), "validation", "external", "ecrad"),
     ))
     if root === nothing && require
@@ -184,7 +233,7 @@ order is `RH_ECCKD_SOURCE_PATH`, the lazy `ecckd_source` artifact in
 """
 function ecckd_source_path(; require::Bool = false)
     root = _source_root_with_file(get(ENV, "RH_ECCKD_SOURCE_PATH", nothing), "README.md")
-    root === nothing && (root = _source_root_with_file(_ecckd_source_artifact_root(), "README.md"))
+    root === nothing && (root = _source_root_with_file(_ecckd_source_artifact_root(; require), "README.md"))
     root === nothing && (root = _source_root_with_file(
         joinpath(_package_root(), "validation", "external", "ecckd"), "README.md"))
     if root === nothing && require
@@ -212,6 +261,39 @@ Return the official ecCKD CKD-definition filenames distributed with the pinned
 ecRad data artifact.
 """
 official_ecckd_model_inventory() = collect(_OFFICIAL_ECCKD_MODELS)
+
+"""
+    official_ecckd_model_specs()
+
+Return the named official ecCKD model pairs supported by the high-level
+selection interface. Each value is an [`EcCKDModelSpec`](@ref).
+"""
+official_ecckd_model_specs() = _OFFICIAL_ECCKD_MODEL_SPECS
+
+function _normalize_ecckd_model_name(name)
+    key = lowercase(replace(String(name), '-' => '_'))
+    if occursin('x', key) && !isempty(key) && isdigit(first(key))
+        key = "climate_" * key
+    end
+    return Symbol(key)
+end
+
+"""
+    official_ecckd_model_spec(name=:climate_64x32)
+
+Return an [`EcCKDModelSpec`](@ref) for an official ecCKD model pair. `name` may
+be a full selector such as `:climate_32x32` or a compact string such as
+`"32x32"`.
+"""
+function official_ecckd_model_spec(name = :climate_64x32)
+    name isa EcCKDModelSpec && return name
+    key = _normalize_ecckd_model_name(name)
+    if !haskey(_OFFICIAL_ECCKD_MODEL_SPECS, key)
+        available = join(keys(_OFFICIAL_ECCKD_MODEL_SPECS), ", ")
+        throw(ArgumentError("unknown official ecCKD model pair: $(name). Available pairs are $(available)"))
+    end
+    return getproperty(_OFFICIAL_ECCKD_MODEL_SPECS, key)
+end
 
 """
     official_ecckd_definition_path(name; require=true)
@@ -244,6 +326,23 @@ function official_ecckd_definition_paths(; longwave = :longwave_64,
     return (
         longwave = official_ecckd_definition_path(longwave; require),
         shortwave = official_ecckd_definition_path(shortwave; require),
+    )
+end
+
+"""
+    official_ecckd_definition_paths(model; require=true)
+
+Return `(longwave=..., shortwave=...)` paths for an official ecCKD model pair.
+`model` accepts the same selectors as [`official_ecckd_model_spec`](@ref).
+With `require=false`, this function returns `nothing` paths instead of
+downloading lazy artifacts or throwing when the data are not already installed.
+"""
+function official_ecckd_definition_paths(model; require::Bool = true)
+    spec = official_ecckd_model_spec(model)
+    return official_ecckd_definition_paths(;
+        longwave = spec.longwave,
+        shortwave = spec.shortwave,
+        require,
     )
 end
 
@@ -359,6 +458,27 @@ extension.
 function read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
                                          shortwave_path::AbstractString; kwargs...)
     throw(ArgumentError("read_ecckd_tabulated_gas_optics requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
+end
+
+"""
+    read_official_ecckd_gas_optics(model=:climate_64x32; kwargs...)
+
+Load an official ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref).
+`model` accepts selectors such as `:climate_32x32`, `:climate_64x32`, or
+`"32x96"`. Keyword arguments are forwarded to
+[`read_ecckd_tabulated_gas_optics`](@ref), for example `gas_names` and
+`h2o_mole_fraction`.
+
+This method resolves the package's lazy ecRad artifact when needed. Load
+`NCDatasets.jl` before calling it so the NetCDF reader extension is active.
+"""
+function read_official_ecckd_gas_optics(model = :climate_64x32; require::Bool = true,
+                                        kwargs...)
+    paths = official_ecckd_definition_paths(model; require)
+    if paths.longwave === nothing || paths.shortwave === nothing
+        return nothing
+    end
+    return read_ecckd_tabulated_gas_optics(paths.longwave, paths.shortwave; kwargs...)
 end
 
 """

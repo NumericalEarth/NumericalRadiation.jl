@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -9,9 +11,9 @@ using NCDatasets
 using RRTMGP
 
 const CALIBRATION_JSON =
-    joinpath(@__DIR__, "results", "rrtmgp_target_16g_ad_calibration.json")
+    validation_results_path("rrtmgp_target_16g_ad_calibration.json")
 const CALIBRATION_MD =
-    joinpath(@__DIR__, "results", "rrtmgp_target_16g_ad_calibration.md")
+    validation_results_path("rrtmgp_target_16g_ad_calibration.md")
 
 json_escape(text) = replace(string(text), "\\" => "\\\\", "\"" => "\\\"",
                             "\n" => "\\n")

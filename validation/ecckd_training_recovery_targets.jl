@@ -1,16 +1,18 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
 
-const TRAINING_TARGETS_JSON = joinpath(@__DIR__, "results", "ecckd_training_recovery_targets.json")
-const TRAINING_TARGETS_MD = joinpath(@__DIR__, "results", "ecckd_training_recovery_targets.md")
-const OFFICIAL_TRAINING_JSON = joinpath(@__DIR__, "results", "official_ecckd_training.json")
+const TRAINING_TARGETS_JSON = validation_results_path("ecckd_training_recovery_targets.json")
+const TRAINING_TARGETS_MD = validation_results_path("ecckd_training_recovery_targets.md")
+const OFFICIAL_TRAINING_JSON = validation_results_path("official_ecckd_training.json")
 const BOUNDARY_POLISH_JSON = joinpath(
     @__DIR__,
     "results",
     "reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json",
 )
-const REDUCED_ACCURACY_JSON = joinpath(@__DIR__, "results", "reduced_ecckd_accuracy.json")
+const REDUCED_ACCURACY_JSON = validation_results_path("reduced_ecckd_accuracy.json")
 
 function artifact_or_empty(path)
     isfile(path) ? JSON.parsefile(path) : Dict{String,Any}()

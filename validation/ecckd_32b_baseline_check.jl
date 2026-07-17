@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 push!(LOAD_PATH, normpath(joinpath(@__DIR__, "..")))
 
 include(joinpath(@__DIR__, "write_ecrad_candidates.jl"))
 
-const ECCKD_32B_JSON = joinpath(@__DIR__, "results", "ecckd_32b_baseline_check.json")
-const ECCKD_32B_MD = joinpath(@__DIR__, "results", "ecckd_32b_baseline_check.md")
-const REDUCED_ACCURACY_JSON = joinpath(@__DIR__, "results", "reduced_ecckd_accuracy.json")
+const ECCKD_32B_JSON = validation_results_path("ecckd_32b_baseline_check.json")
+const ECCKD_32B_MD = validation_results_path("ecckd_32b_baseline_check.md")
+const REDUCED_ACCURACY_JSON = validation_results_path("reduced_ecckd_accuracy.json")
 
 function json_escape(text)
     return replace(text, "\\" => "\\\\", "\"" => "\\\"", "\n" => "\\n")

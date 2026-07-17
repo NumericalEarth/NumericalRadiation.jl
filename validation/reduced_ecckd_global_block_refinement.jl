@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_global_entry_refinement.jl"))
 
 const GLOBAL_BLOCK_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_block_refinement.json")
+    validation_results_path("reduced_ecckd_global_block_refinement.json")
 const GLOBAL_BLOCK_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_block_refinement.md")
+    validation_results_path("reduced_ecckd_global_block_refinement.md")
 
 global_block_group_limit() =
     parse(Int, get(ENV, "RH_REDUCED_GLOBAL_BLOCK_GROUPS", "16"))

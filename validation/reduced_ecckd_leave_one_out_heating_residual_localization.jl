@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
@@ -5,13 +7,11 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_leave_one_out_weight_refit.jl"))
 
 const LEAVE_ONE_OUT_HEATING_RESIDUAL_LOCALIZATION_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_heating_residual_localization.json")
+    validation_results_path("reduced_ecckd_leave_one_out_heating_residual_localization.json")
 const LEAVE_ONE_OUT_HEATING_RESIDUAL_LOCALIZATION_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_heating_residual_localization.md")
+    validation_results_path("reduced_ecckd_leave_one_out_heating_residual_localization.md")
 const LEAVE_ONE_OUT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_weight_refit.json")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_refit.json")
 
 json_get(object, key) = object[key]
 json_get(object, key, default) = haskey(object, key) ? object[key] : default

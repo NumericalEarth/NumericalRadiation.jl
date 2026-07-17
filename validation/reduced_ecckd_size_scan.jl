@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -65,7 +67,7 @@ function reduced_size_scan_main()
         rows = rows,
     )
 
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "reduced_ecckd_size_scan.json")
     md_path = joinpath(results_dir, "reduced_ecckd_size_scan.md")

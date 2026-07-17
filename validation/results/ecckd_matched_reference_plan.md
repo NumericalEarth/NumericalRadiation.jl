@@ -5,7 +5,7 @@ Status: **ready_for_published_parity_validation**
 Published 64/96 ecCKD parity cannot be established against the current 32-g package-native references because spectral boundary arrays do not match the target g-point grids; the projection diagnostic reduces SW surface forcing but still fails TOA forcing and invalidates LW boundaries.
 
 - Missing matched reference cases: 0
-- Existing ecRad output files inspected: 21
+- Existing ecRad output files inspected: 26
 
 ## Required Matched References
 

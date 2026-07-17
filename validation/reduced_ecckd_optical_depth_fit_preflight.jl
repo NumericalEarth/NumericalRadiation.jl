@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -5,9 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 
 const OPTICAL_DEPTH_FIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_optical_depth_fit_preflight.json")
+    validation_results_path("reduced_ecckd_optical_depth_fit_preflight.json")
 const OPTICAL_DEPTH_FIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_optical_depth_fit_preflight.md")
+    validation_results_path("reduced_ecckd_optical_depth_fit_preflight.md")
 
 function json_escape(text)
     return replace(text, "\\" => "\\\\", "\"" => "\\\"", "\n" => "\\n")

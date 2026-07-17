@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -6,11 +8,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_component_scale_refit.jl"))
 include(joinpath(@__DIR__, "reduced_ecckd_retained_current_heating_profile_optimizer.jl"))
 
 const RETAINED_CURRENT_COMPONENT_SCALE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_component_scale_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_current_component_scale_optimizer.json")
 const RETAINED_CURRENT_COMPONENT_SCALE_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_component_scale_optimizer.md")
+    validation_results_path("reduced_ecckd_retained_current_component_scale_optimizer.md")
 
 current_component_scale_probe_step() =
     parse(Float64,

@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 const ABR_ROOT = normpath(joinpath(@__DIR__, ".."))
@@ -698,7 +700,7 @@ const REQUIRED_ARTIFACTS = (
     (
         name = "reduced ecCKD gap report",
         path = joinpath(ABR_ROOT, "validation", "results", "reduced_ecckd_gap_report.json"),
-        required_text = "\"status\": \"reduced_shortwave_blocked\"",
+        required_text = "\"status\": \"reduced_shortwave_passed\"",
         forbidden_text = "",
         expected_present = true,
         completion_blocker = false,
@@ -1098,7 +1100,7 @@ function main()
         artifacts = artifacts,
     )
 
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "goal_audit_check.json")
     md_path = joinpath(results_dir, "goal_audit_check.md")

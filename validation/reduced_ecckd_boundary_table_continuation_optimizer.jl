@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const BOUNDARY_TABLE_CONTINUATION_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_continuation_optimizer.json")
+    validation_results_path("reduced_ecckd_boundary_table_continuation_optimizer.json")
 const BOUNDARY_TABLE_CONTINUATION_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_continuation_optimizer.md")
+    validation_results_path("reduced_ecckd_boundary_table_continuation_optimizer.md")
 
 function set_boundary_table_continuation_default!(key, value)
     haskey(ENV, key) || (ENV[key] = value)

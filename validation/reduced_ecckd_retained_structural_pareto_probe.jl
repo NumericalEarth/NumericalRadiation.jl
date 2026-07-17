@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_STRUCTURAL_PARETO_PROBE_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_pareto_probe.json")
+    validation_results_path("reduced_ecckd_retained_structural_pareto_probe.json")
 const RETAINED_STRUCTURAL_PARETO_PROBE_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_pareto_probe.md")
+    validation_results_path("reduced_ecckd_retained_structural_pareto_probe.md")
 
 function retained_structural_pareto_probe_configs()
     return (

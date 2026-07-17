@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
@@ -5,11 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_leave_one_out_heating_table_optimizer.jl"))
 
 const LEAVE_ONE_OUT_WEIGHT_COORDINATE_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_weight_coordinate_scan.json")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_coordinate_scan.json")
 const LEAVE_ONE_OUT_WEIGHT_COORDINATE_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_weight_coordinate_scan.md")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_coordinate_scan.md")
 
 weight_coordinate_omitted_gpoint(prior) =
     lowercase(strip(get(ENV, "RH_REDUCED_LOO_WEIGHT_COORDINATE_OMIT", "best"))) == "best" ?

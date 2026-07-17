@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_recovery_metrics.jl"))
 
 const PUBLISHED_RECOVERY_VECTOR_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_recovery_vector.json")
+    validation_results_path("ecckd_published_recovery_vector.json")
 const PUBLISHED_RECOVERY_VECTOR_MD =
-    joinpath(@__DIR__, "results", "ecckd_published_recovery_vector.md")
+    validation_results_path("ecckd_published_recovery_vector.md")
 const PUBLISHED_RECOVERY_VECTOR_CANDIDATE =
-    joinpath(@__DIR__, "results", "ecckd_vector_roundtrip_sw32_candidate.nc")
+    validation_results_path("ecckd_vector_roundtrip_sw32_candidate.nc")
 
 const FLOAT_SUPPORT_ARRAY_NAMES = (
     "gpoint_fraction",

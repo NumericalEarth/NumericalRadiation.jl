@@ -1,6 +1,6 @@
 {
   "case": "ecckd_band_accuracy_pareto",
-  "timestamp_utc": "2026-05-22T20:38:12.611",
+  "timestamp_utc": "2026-06-03T01:06:28.191",
   "status": "passed",
   "point_count": 109,
   "passed_point_count": 11,
@@ -406,13 +406,13 @@
   "ng_sw": 32,
   "total_gpoints": 64,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.00806408713606288,
-  "worst_surface_forcing_error_w_m2": 0.014033547037456628,
-  "worst_boundary_forcing_error_w_m2": 0.014033547037456628,
-  "normalized_objective": 0.04677849012485543,
+  "worst_toa_forcing_error_w_m2": 0.008064087136517628,
+  "worst_surface_forcing_error_w_m2": 0.014033547037911376,
+  "worst_boundary_forcing_error_w_m2": 0.014033547037911376,
+  "normalized_objective": 0.04677849012637125,
   "objective_source": "maximum_reported_threshold_ratio",
   "limiting_metric": "surface_forcing",
-  "limiting_metric_ratio": 0.04677849012485543
+  "limiting_metric_ratio": 0.04677849012637125
 }, {
   "source": "size_scan",
   "label": "size scan: weighted_bins",
@@ -448,7 +448,7 @@
   "ng_sw": 24,
   "total_gpoints": 56,
   "passed": false,
-  "worst_toa_forcing_error_w_m2": 16.846960645833974,
+  "worst_toa_forcing_error_w_m2": 16.84696064583352,
   "worst_surface_forcing_error_w_m2": 48.483310792222824,
   "worst_boundary_forcing_error_w_m2": 48.483310792222824,
   "normalized_objective": 161.6110359740761,
@@ -476,13 +476,13 @@
   "ng_sw": 30,
   "total_gpoints": 62,
   "passed": false,
-  "worst_toa_forcing_error_w_m2": 4.483267039245902,
-  "worst_surface_forcing_error_w_m2": 13.791003017723483,
-  "worst_boundary_forcing_error_w_m2": 13.791003017723483,
-  "normalized_objective": 45.97001005907828,
+  "worst_toa_forcing_error_w_m2": 4.483267039245675,
+  "worst_surface_forcing_error_w_m2": 13.791003017723938,
+  "worst_boundary_forcing_error_w_m2": 13.791003017723938,
+  "normalized_objective": 45.9700100590798,
   "objective_source": "maximum_reported_threshold_ratio",
   "limiting_metric": "surface_forcing",
-  "limiting_metric_ratio": 45.97001005907828
+  "limiting_metric_ratio": 45.9700100590798
 }, {
   "source": "size_scan",
   "label": "size scan: weighted_bins",
@@ -490,13 +490,13 @@
   "ng_sw": 32,
   "total_gpoints": 64,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.00806408713606288,
-  "worst_surface_forcing_error_w_m2": 0.014033547037456628,
-  "worst_boundary_forcing_error_w_m2": 0.014033547037456628,
-  "normalized_objective": 0.04677849012485543,
+  "worst_toa_forcing_error_w_m2": 0.008064087136517628,
+  "worst_surface_forcing_error_w_m2": 0.014033547037911376,
+  "worst_boundary_forcing_error_w_m2": 0.014033547037911376,
+  "normalized_objective": 0.04677849012637125,
   "objective_source": "maximum_reported_threshold_ratio",
   "limiting_metric": "surface_forcing",
-  "limiting_metric_ratio": 0.04677849012485543
+  "limiting_metric_ratio": 0.04677849012637125
 }, {
   "source": "leave_one_out_scan",
   "label": "leave-one-out official SW g-point scan: omit g1",
@@ -1456,13 +1456,13 @@
   "ng_sw": 32,
   "total_gpoints": 64,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.00806408713606288,
-  "worst_surface_forcing_error_w_m2": 0.014033547037797689,
-  "worst_boundary_forcing_error_w_m2": 0.014033547037797689,
-  "normalized_objective": 0.18218668324947096,
+  "worst_toa_forcing_error_w_m2": 0.008063265919417972,
+  "worst_surface_forcing_error_w_m2": 0.01403340276021936,
+  "worst_boundary_forcing_error_w_m2": 0.01403340276021936,
+  "normalized_objective": 0.18218645425029933,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.18218668324947096
+  "limiting_metric_ratio": 0.18218645425029933
 }, {
   "source": "published_model_accuracy",
   "label": "official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model",
@@ -1470,13 +1470,13 @@
   "ng_sw": 64,
   "total_gpoints": 96,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.008052858255155115,
-  "worst_surface_forcing_error_w_m2": 0.01414186779402371,
-  "worst_boundary_forcing_error_w_m2": 0.01414186779402371,
-  "normalized_objective": 0.18835331030003566,
+  "worst_toa_forcing_error_w_m2": 0.008052182080518833,
+  "worst_surface_forcing_error_w_m2": 0.014140170863811363,
+  "worst_boundary_forcing_error_w_m2": 0.014140170863811363,
+  "normalized_objective": 0.18835377474169768,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.18835331030003566
+  "limiting_metric_ratio": 0.18835377474169768
 }, {
   "source": "published_model_accuracy",
   "label": "official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model",
@@ -1484,13 +1484,13 @@
   "ng_sw": 96,
   "total_gpoints": 128,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.008011320117589094,
-  "worst_surface_forcing_error_w_m2": 0.01417032475637825,
-  "worst_boundary_forcing_error_w_m2": 0.01417032475637825,
-  "normalized_objective": 0.16390863960176993,
+  "worst_toa_forcing_error_w_m2": 0.00801151785105958,
+  "worst_surface_forcing_error_w_m2": 0.014171316708711856,
+  "worst_boundary_forcing_error_w_m2": 0.014171316708711856,
+  "normalized_objective": 0.16390848252401113,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.16390863960176993
+  "limiting_metric_ratio": 0.16390848252401113
 }, {
   "source": "published_model_accuracy",
   "label": "official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model",
@@ -1498,13 +1498,13 @@
   "ng_sw": 32,
   "total_gpoints": 96,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.008081227188768025,
-  "worst_surface_forcing_error_w_m2": 0.013716479902541323,
-  "worst_boundary_forcing_error_w_m2": 0.013716479902541323,
-  "normalized_objective": 0.18482392946556025,
+  "worst_toa_forcing_error_w_m2": 0.008080405972123117,
+  "worst_surface_forcing_error_w_m2": 0.013716335624962994,
+  "worst_boundary_forcing_error_w_m2": 0.013716335624962994,
+  "normalized_objective": 0.18482408271215256,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.18482392946556025
+  "limiting_metric_ratio": 0.18482408271215256
 }, {
   "source": "published_model_accuracy",
   "label": "official ecCKD 1.2 64-LW x 64-SW climate model",
@@ -1512,13 +1512,13 @@
   "ng_sw": 64,
   "total_gpoints": 128,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.00806999830786026,
-  "worst_surface_forcing_error_w_m2": 0.013824800658767344,
-  "worst_boundary_forcing_error_w_m2": 0.013824800658767344,
-  "normalized_objective": 0.15586068441068335,
+  "worst_toa_forcing_error_w_m2": 0.008069322133223977,
+  "worst_surface_forcing_error_w_m2": 0.013823103728554997,
+  "worst_boundary_forcing_error_w_m2": 0.013823103728554997,
+  "normalized_objective": 0.15586021526713623,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.15586068441068335
+  "limiting_metric_ratio": 0.15586021526713623
 }, {
   "source": "published_model_accuracy",
   "label": "official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model",
@@ -1526,13 +1526,13 @@
   "ng_sw": 96,
   "total_gpoints": 160,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.008028460170294238,
-  "worst_surface_forcing_error_w_m2": 0.013853257621121884,
-  "worst_boundary_forcing_error_w_m2": 0.013853257621121884,
-  "normalized_objective": 0.17309316782723094,
+  "worst_toa_forcing_error_w_m2": 0.008028657903764724,
+  "worst_surface_forcing_error_w_m2": 0.01385424957345549,
+  "worst_boundary_forcing_error_w_m2": 0.01385424957345549,
+  "normalized_objective": 0.17309291218405143,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.17309316782723094
+  "limiting_metric_ratio": 0.17309291218405143
 }],
   "pareto_front": [{
   "source": "reduced_accuracy",
@@ -1577,19 +1577,19 @@
   "limiting_metric": "reported_refit_hardgate_objective",
   "limiting_metric_ratio": 12.33245448795476
 }, {
-  "source": "size_scan",
-  "label": "size scan: even_select",
+  "source": "published_model_accuracy",
+  "label": "official ecCKD 1.0 32-LW x 32-SW climate model",
   "ng_lw": 32,
   "ng_sw": 32,
   "total_gpoints": 64,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.00806408713606288,
-  "worst_surface_forcing_error_w_m2": 0.014033547037456628,
-  "worst_boundary_forcing_error_w_m2": 0.014033547037456628,
-  "normalized_objective": 0.04677849012485543,
-  "objective_source": "maximum_reported_threshold_ratio",
-  "limiting_metric": "surface_forcing",
-  "limiting_metric_ratio": 0.04677849012485543
+  "worst_toa_forcing_error_w_m2": 0.008063265919417972,
+  "worst_surface_forcing_error_w_m2": 0.01403340276021936,
+  "worst_boundary_forcing_error_w_m2": 0.01403340276021936,
+  "normalized_objective": 0.18218645425029933,
+  "objective_source": "published_model_accuracy_hard_objective",
+  "limiting_metric": "heating_rate_max_abs",
+  "limiting_metric_ratio": 0.18218645425029933
 }, {
   "source": "published_model_accuracy",
   "label": "official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model",
@@ -1597,13 +1597,13 @@
   "ng_sw": 32,
   "total_gpoints": 96,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.008081227188768025,
-  "worst_surface_forcing_error_w_m2": 0.013716479902541323,
-  "worst_boundary_forcing_error_w_m2": 0.013716479902541323,
-  "normalized_objective": 0.18482392946556025,
+  "worst_toa_forcing_error_w_m2": 0.008080405972123117,
+  "worst_surface_forcing_error_w_m2": 0.013716335624962994,
+  "worst_boundary_forcing_error_w_m2": 0.013716335624962994,
+  "normalized_objective": 0.18482408271215256,
   "objective_source": "published_model_accuracy_hard_objective",
   "limiting_metric": "heating_rate_max_abs",
-  "limiting_metric_ratio": 0.18482392946556025
+  "limiting_metric_ratio": 0.18482408271215256
 }],
   "objective_front": [{
   "source": "reduced_accuracy",
@@ -1654,13 +1654,13 @@
   "ng_sw": 32,
   "total_gpoints": 64,
   "passed": true,
-  "worst_toa_forcing_error_w_m2": 0.00806408713606288,
-  "worst_surface_forcing_error_w_m2": 0.014033547037456628,
-  "worst_boundary_forcing_error_w_m2": 0.014033547037456628,
-  "normalized_objective": 0.04677849012485543,
+  "worst_toa_forcing_error_w_m2": 0.008064087136517628,
+  "worst_surface_forcing_error_w_m2": 0.014033547037911376,
+  "worst_boundary_forcing_error_w_m2": 0.014033547037911376,
+  "normalized_objective": 0.04677849012637125,
   "objective_source": "maximum_reported_threshold_ratio",
   "limiting_metric": "surface_forcing",
-  "limiting_metric_ratio": 0.04677849012485543
+  "limiting_metric_ratio": 0.04677849012637125
 }],
   "published_inventory": [{
   "filename": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",

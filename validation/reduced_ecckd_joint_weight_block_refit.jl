@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
@@ -5,9 +7,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_global_block_linearized_refit.jl"))
 include(joinpath(@__DIR__, "reduced_ecckd_exact_weight_refit.jl"))
 
 const JOINT_WEIGHT_BLOCK_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_joint_weight_block_refit.json")
+    validation_results_path("reduced_ecckd_joint_weight_block_refit.json")
 const JOINT_WEIGHT_BLOCK_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_joint_weight_block_refit.md")
+    validation_results_path("reduced_ecckd_joint_weight_block_refit.md")
 
 joint_weight_block_group_limit() =
     parse(Int, get(ENV, "RH_REDUCED_JOINT_WEIGHT_BLOCK_GROUPS", "24"))

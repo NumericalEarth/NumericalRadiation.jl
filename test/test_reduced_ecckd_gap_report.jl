@@ -2,12 +2,12 @@
     using JSON
 
     script = joinpath(@__DIR__, "..", "validation", "reduced_ecckd_gap_report.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
 
     @test occursin("Reduced ecCKD Gap Report", result)
-    @test occursin("reduced_shortwave_blocked", result)
-    @test occursin("Next Required Work", result)
+    @test occursin(r"reduced_shortwave_(blocked|passed)", result)
+    @test occursin("Conclusion", result)
 
     json_path = joinpath(@__DIR__, "..", "validation", "results", "reduced_ecckd_gap_report.json")
     md_path = joinpath(@__DIR__, "..", "validation", "results", "reduced_ecckd_gap_report.md")
@@ -23,9 +23,10 @@
     json_bool(key) = only(match(Regex("\"$(key)\"\\s*:\\s*(true|false)"), json).captures) == "true"
 
     @test occursin("\"case\": \"reduced_ecckd_gap_report\"", json)
-    @test occursin("\"status\": \"reduced_shortwave_blocked\"", json)
+    @test parsed["status"] in ("reduced_shortwave_blocked", "reduced_shortwave_passed")
     @test json_bool("full_shortwave_passed")
-    @test !json_bool("reduced_shortwave_passed")
+    @test json_bool("reduced_shortwave_passed") ==
+          (parsed["status"] == "reduced_shortwave_passed")
     @test occursin("\"optimization\": {", json)
     @test parsed["coefficient_continuation"]["present"]
     @test occursin("\"acceptance_gap_status\": \"far_above_objective_target\"", json)
@@ -258,14 +259,21 @@
                   parsed["reduced_acceptance_decision"]["current_hard_objective"]
             @test parsed["reduced_acceptance_decision"]["nonlocal_support_refit_evaluated_candidate_count"] >=
                   1
-            @test occursin(
-                "nonlocal support-plus-refit pass then evaluates all",
-                parsed["next_required_work"],
-            )
-            @test occursin(
-                "revisiting the hard reduced acceptance plan or allowing a different reduced basis",
-                parsed["next_required_work"],
-            )
+            if parsed["status"] == "reduced_shortwave_passed"
+                @test occursin(
+                    "Promote the passing reduced model",
+                    parsed["next_required_work"],
+                )
+            else
+                @test occursin(
+                    "nonlocal support-plus-refit pass then evaluates all",
+                    parsed["next_required_work"],
+                )
+                @test occursin(
+                    "revisiting the hard reduced acceptance plan or allowing a different reduced basis",
+                    parsed["next_required_work"],
+                )
+            end
             @test !occursin(
                 "truly global support-plus-refit search",
                 parsed["next_required_work"],

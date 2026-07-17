@@ -1,6 +1,6 @@
 {
   "case": "reduced_ecckd_optimization_preflight",
-  "timestamp_utc": "2026-05-17T13:22:40.289",
+  "timestamp_utc": "2026-06-03T01:35:08.252",
   "status": "preflight_ready",
   "reference_scope": ["ecckd_clear_sky_tropical_column", "ecckd_rcemip_style_column_subset"],
   "parameterization": "softmax weights plus per-g-point absorption and Rayleigh log-scales",
@@ -8,51 +8,51 @@
   "parameter_count": 48,
   "objective": "maximum normalized clean ecCKD shortwave/heating/forcing hard-gate residual",
   "objective_target": 1.0,
-  "initial_objective": 214.26452989359106,
-  "directional_derivative": -47.93366478949679,
+  "initial_objective": 214.26452989359112,
+  "directional_derivative": -47.93366478935468,
   "best_trial_step": 0.01,
-  "best_trial_objective": 213.78538866725114,
+  "best_trial_objective": 213.785388667251,
   "trial_improved_objective": true,
   "trial_line_search": [{
   "step": 0.0001,
-  "objective": 214.25973654661243,
+  "objective": 214.2597365466125,
   "improved": true
 }, {
   "step": 0.0003,
-  "objective": 214.25014996887458,
+  "objective": 214.25014996887447,
   "improved": true
 }, {
   "step": 0.001,
-  "objective": 214.216598172978,
+  "objective": 214.21659817297794,
   "improved": true
 }, {
   "step": 0.003,
-  "objective": 214.12074641902194,
+  "objective": 214.12074641902203,
   "improved": true
 }, {
   "step": 0.01,
-  "objective": 213.78538866725114,
+  "objective": 213.785388667251,
   "improved": true
 }],
   "optimization_smoke": {
   "method": "deterministic finite-difference directional line search",
   "iterations": 1,
-  "initial_objective": 214.26452989359106,
-  "final_objective": 213.78538866725114,
-  "objective_reduction": 0.4791412263399195,
+  "initial_objective": 214.26452989359112,
+  "final_objective": 213.785388667251,
+  "objective_reduction": 0.47914122634011846,
   "improved": true
 },
   "directional_search": {
   "method": "deterministic repeated directional search",
   "iterations": 2,
-  "initial_objective": 214.26452989359106,
+  "initial_objective": 214.26452989359112,
   "final_objective": 213.30664255797396,
-  "objective_reduction": 0.9578873356171016,
+  "objective_reduction": 0.9578873356171584,
   "improved": true,
   "steps": [{
   "iteration": 1,
   "best_step": 0.01,
-  "objective": 213.78538866725114,
+  "objective": 213.785388667251,
   "improved": true
 }, {
   "iteration": 2,
@@ -63,47 +63,47 @@
 },
   "block_trial_scan": {
   "step": 0.01,
-  "initial_objective": 214.26452989359106,
+  "initial_objective": 214.26452989359112,
   "rows": [{
   "block": "weights",
-  "forward_objective": 213.4966133882832,
-  "backward_objective": 215.03318383263604,
-  "best_objective": 213.4966133882832,
-  "best_improvement": 0.767916505307852,
+  "forward_objective": 213.49661338828332,
+  "backward_objective": 215.03318383263598,
+  "best_objective": 213.49661338828332,
+  "best_improvement": 0.7679165053077952,
   "improved": true
 }, {
   "block": "absorption",
-  "forward_objective": 213.74493772197886,
-  "backward_objective": 214.78484900859664,
-  "best_objective": 213.74493772197886,
-  "best_improvement": 0.519592171612203,
+  "forward_objective": 213.74493772197874,
+  "backward_objective": 214.7848490085966,
+  "best_objective": 213.74493772197874,
+  "best_improvement": 0.5195921716123735,
   "improved": true
 }, {
   "block": "rayleigh",
-  "forward_objective": 214.26459490237994,
-  "backward_objective": 214.2644647336743,
-  "best_objective": 214.2644647336743,
+  "forward_objective": 214.2645949023799,
+  "backward_objective": 214.26446473367434,
+  "best_objective": 214.26446473367434,
   "best_improvement": 6.515991677247257e-5,
   "improved": true
 }],
   "best_block": "weights",
-  "best_objective": 213.4966133882832,
-  "best_improvement": 0.767916505307852
+  "best_objective": 213.49661338828332,
+  "best_improvement": 0.7679165053077952
 },
   "coordinate_coefficient_scan": {
   "method": "bounded one-coordinate absorption/Rayleigh log-scale scan",
-  "initial_objective": 214.26452989359106,
+  "initial_objective": 214.26452989359112,
   "candidate_count": 64,
   "rows": [{
   "block": "absorption",
   "gpoint": 1,
   "local_index": 1,
   "step": 0.25,
-  "forward_objective": 214.29963664110304,
+  "forward_objective": 214.29963664110292,
   "backward_objective": 214.250159280645,
   "best_direction": "negative",
   "best_objective": 214.250159280645,
-  "best_improvement": 0.014370612946066785,
+  "best_improvement": 0.014370612946123629,
   "improved": true
 }, {
   "block": "absorption",
@@ -111,64 +111,64 @@
   "local_index": 1,
   "step": 1.0,
   "forward_objective": 214.64448697784584,
-  "backward_objective": 214.26195290813405,
+  "backward_objective": 214.26195290813413,
   "best_direction": "negative",
-  "best_objective": 214.26195290813405,
-  "best_improvement": 0.0025769854570114603,
+  "best_objective": 214.26195290813413,
+  "best_improvement": 0.0025769854569830386,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 4,
   "local_index": 2,
   "step": 0.25,
-  "forward_objective": 214.26786027457476,
-  "backward_objective": 214.26547634340687,
+  "forward_objective": 214.26786027457487,
+  "backward_objective": 214.26547634340685,
   "best_direction": "negative",
-  "best_objective": 214.26547634340687,
-  "best_improvement": -0.0009464498158138213,
+  "best_objective": 214.26547634340685,
+  "best_improvement": -0.0009464498157285561,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 4,
   "local_index": 2,
   "step": 1.0,
-  "forward_objective": 214.31826747169214,
-  "backward_objective": 214.2781014918623,
+  "forward_objective": 214.31826747169205,
+  "backward_objective": 214.27810149186243,
   "best_direction": "negative",
-  "best_objective": 214.2781014918623,
-  "best_improvement": -0.013571598271227003,
+  "best_objective": 214.27810149186243,
+  "best_improvement": -0.013571598271312268,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 9,
   "local_index": 3,
   "step": 0.25,
-  "forward_objective": 214.26780748836245,
+  "forward_objective": 214.2678074883624,
   "backward_objective": 214.2635601166008,
   "best_direction": "negative",
   "best_objective": 214.2635601166008,
-  "best_improvement": 0.0009697769902743403,
+  "best_improvement": 0.0009697769903311837,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 9,
   "local_index": 3,
   "step": 1.0,
-  "forward_objective": 214.2891822980699,
+  "forward_objective": 214.28918229806996,
   "backward_objective": 214.27171321615958,
   "best_direction": "negative",
   "best_objective": 214.27171321615958,
-  "best_improvement": -0.007183322568522499,
+  "best_improvement": -0.007183322568465655,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 10,
   "local_index": 4,
   "step": 0.25,
-  "forward_objective": 214.26315134759292,
+  "forward_objective": 214.26315134759298,
   "backward_objective": 214.26583034083833,
   "best_direction": "positive",
-  "best_objective": 214.26315134759292,
+  "best_objective": 214.26315134759298,
   "best_improvement": 0.0013785459981363601,
   "improved": true
 }, {
@@ -180,29 +180,29 @@
   "backward_objective": 214.26878351079927,
   "best_direction": "positive",
   "best_objective": 214.2609957469053,
-  "best_improvement": 0.0035341466857516934,
+  "best_improvement": 0.003534146685808537,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 12,
   "local_index": 5,
   "step": 0.25,
-  "forward_objective": 214.2676957637922,
-  "backward_objective": 214.26909221724728,
+  "forward_objective": 214.26769576379215,
+  "backward_objective": 214.26909221724736,
   "best_direction": "positive",
-  "best_objective": 214.2676957637922,
-  "best_improvement": -0.0031658702011441164,
+  "best_objective": 214.26769576379215,
+  "best_improvement": -0.0031658702010304296,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 12,
   "local_index": 5,
   "step": 1.0,
-  "forward_objective": 214.34579834693852,
-  "backward_objective": 214.28683116404005,
+  "forward_objective": 214.34579834693855,
+  "backward_objective": 214.28683116404002,
   "best_direction": "negative",
-  "best_objective": 214.28683116404005,
-  "best_improvement": -0.022301270448991772,
+  "best_objective": 214.28683116404002,
+  "best_improvement": -0.022301270448906507,
   "improved": false
 }, {
   "block": "absorption",
@@ -210,75 +210,75 @@
   "local_index": 6,
   "step": 0.25,
   "forward_objective": 214.27066479847937,
-  "backward_objective": 214.26040921944082,
+  "backward_objective": 214.26040921944073,
   "best_direction": "negative",
-  "best_objective": 214.26040921944082,
-  "best_improvement": 0.004120674150243531,
+  "best_objective": 214.26040921944073,
+  "best_improvement": 0.004120674150385639,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 13,
   "local_index": 6,
   "step": 1.0,
-  "forward_objective": 214.29764679398363,
-  "backward_objective": 214.26005847383777,
+  "forward_objective": 214.2976467939836,
+  "backward_objective": 214.2600584738378,
   "best_direction": "negative",
-  "best_objective": 214.26005847383777,
-  "best_improvement": 0.004471419753286909,
+  "best_objective": 214.2600584738378,
+  "best_improvement": 0.004471419753315331,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 14,
   "local_index": 7,
   "step": 0.25,
-  "forward_objective": 214.26929920088307,
-  "backward_objective": 214.2611820100918,
+  "forward_objective": 214.26929920088315,
+  "backward_objective": 214.26118201009174,
   "best_direction": "negative",
-  "best_objective": 214.2611820100918,
-  "best_improvement": 0.0033478834992592965,
+  "best_objective": 214.26118201009174,
+  "best_improvement": 0.0033478834993729834,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 14,
   "local_index": 7,
   "step": 1.0,
-  "forward_objective": 214.2881894402545,
-  "backward_objective": 214.26049885233985,
+  "forward_objective": 214.28818944025443,
+  "backward_objective": 214.26049885233988,
   "best_direction": "negative",
-  "best_objective": 214.26049885233985,
-  "best_improvement": 0.004031041251209899,
+  "best_objective": 214.26049885233988,
+  "best_improvement": 0.004031041251238321,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 16,
   "local_index": 8,
   "step": 0.25,
-  "forward_objective": 214.25958268413558,
-  "backward_objective": 214.27186206404338,
+  "forward_objective": 214.25958268413567,
+  "backward_objective": 214.27186206404346,
   "best_direction": "positive",
-  "best_objective": 214.25958268413558,
-  "best_improvement": 0.004947209455480106,
+  "best_objective": 214.25958268413567,
+  "best_improvement": 0.004947209455451684,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 16,
   "local_index": 8,
   "step": 1.0,
-  "forward_objective": 214.26983864467758,
-  "backward_objective": 214.2992715305967,
+  "forward_objective": 214.2698386446776,
+  "backward_objective": 214.29927153059683,
   "best_direction": "positive",
-  "best_objective": 214.26983864467758,
-  "best_improvement": -0.00530875108651685,
+  "best_objective": 214.2698386446776,
+  "best_improvement": -0.005308751086488428,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 21,
   "local_index": 9,
   "step": 0.25,
-  "forward_objective": 214.3671395471425,
-  "backward_objective": 214.20062456881163,
+  "forward_objective": 214.36713954714253,
+  "backward_objective": 214.2006245688117,
   "best_direction": "negative",
-  "best_objective": 214.20062456881163,
+  "best_objective": 214.2006245688117,
   "best_improvement": 0.06390532477942656,
   "improved": true
 }, {
@@ -286,11 +286,11 @@
   "gpoint": 21,
   "local_index": 9,
   "step": 1.0,
-  "forward_objective": 215.09773705011682,
-  "backward_objective": 214.13729132342445,
+  "forward_objective": 215.09773705011688,
+  "backward_objective": 214.13729132342453,
   "best_direction": "negative",
-  "best_objective": 214.13729132342445,
-  "best_improvement": 0.127238570166611,
+  "best_objective": 214.13729132342453,
+  "best_improvement": 0.12723857016658258,
   "improved": true
 }, {
   "block": "absorption",
@@ -298,21 +298,21 @@
   "local_index": 10,
   "step": 0.25,
   "forward_objective": 214.3147892654958,
-  "backward_objective": 214.2564210507865,
+  "backward_objective": 214.25642105078654,
   "best_direction": "negative",
-  "best_objective": 214.2564210507865,
-  "best_improvement": 0.008108842804546157,
+  "best_objective": 214.25642105078654,
+  "best_improvement": 0.008108842804574579,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 22,
   "local_index": 10,
   "step": 1.0,
-  "forward_objective": 215.04345455820422,
-  "backward_objective": 214.33236374048215,
+  "forward_objective": 215.04345455820436,
+  "backward_objective": 214.33236374048226,
   "best_direction": "negative",
-  "best_objective": 214.33236374048215,
-  "best_improvement": -0.06783384689109084,
+  "best_objective": 214.33236374048226,
+  "best_improvement": -0.06783384689114769,
   "improved": false
 }, {
   "block": "absorption",
@@ -323,7 +323,7 @@
   "backward_objective": 178.4993459177068,
   "best_direction": "negative",
   "best_objective": 178.4993459177068,
-  "best_improvement": 35.76518397588427,
+  "best_improvement": 35.76518397588433,
   "improved": true
 }, {
   "block": "absorption",
@@ -331,64 +331,64 @@
   "local_index": 11,
   "step": 1.0,
   "forward_objective": 450.8548582131861,
-  "backward_objective": 93.92571708861936,
+  "backward_objective": 93.92571708861941,
   "best_direction": "negative",
-  "best_objective": 93.92571708861936,
-  "best_improvement": 120.3388128049717,
+  "best_objective": 93.92571708861941,
+  "best_improvement": 120.33881280497171,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 27,
   "local_index": 12,
   "step": 0.25,
-  "forward_objective": 214.2240469480958,
-  "backward_objective": 214.33592301785356,
+  "forward_objective": 214.22404694809572,
+  "backward_objective": 214.33592301785362,
   "best_direction": "positive",
-  "best_objective": 214.2240469480958,
-  "best_improvement": 0.04048294549525622,
+  "best_objective": 214.22404694809572,
+  "best_improvement": 0.040482945495398326,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 27,
   "local_index": 12,
   "step": 1.0,
-  "forward_objective": 214.84456682638046,
-  "backward_objective": 214.5639983339423,
+  "forward_objective": 214.84456682638034,
+  "backward_objective": 214.56399833394215,
   "best_direction": "negative",
-  "best_objective": 214.5639983339423,
-  "best_improvement": -0.29946844035123377,
+  "best_objective": 214.56399833394215,
+  "best_improvement": -0.2994684403510348,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 28,
   "local_index": 13,
   "step": 0.25,
-  "forward_objective": 214.25560100869038,
+  "forward_objective": 214.2556010086904,
   "backward_objective": 214.2721581604946,
   "best_direction": "positive",
-  "best_objective": 214.25560100869038,
-  "best_improvement": 0.008928884900683443,
+  "best_objective": 214.2556010086904,
+  "best_improvement": 0.008928884900711864,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 28,
   "local_index": 13,
   "step": 1.0,
-  "forward_objective": 214.22524158531834,
+  "forward_objective": 214.22524158531832,
   "backward_objective": 214.2879039878538,
   "best_direction": "positive",
-  "best_objective": 214.22524158531834,
-  "best_improvement": 0.03928830827271668,
+  "best_objective": 214.22524158531832,
+  "best_improvement": 0.03928830827280194,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 30,
   "local_index": 14,
   "step": 0.25,
-  "forward_objective": 214.21538978882015,
-  "backward_objective": 214.3398673310602,
+  "forward_objective": 214.2153897888202,
+  "backward_objective": 214.33986733106028,
   "best_direction": "positive",
-  "best_objective": 214.21538978882015,
+  "best_objective": 214.2153897888202,
   "best_improvement": 0.04914010477091324,
   "improved": true
 }, {
@@ -396,77 +396,77 @@
   "gpoint": 30,
   "local_index": 14,
   "step": 1.0,
-  "forward_objective": 214.46583656452083,
-  "backward_objective": 214.59385407187207,
+  "forward_objective": 214.46583656452086,
+  "backward_objective": 214.59385407187202,
   "best_direction": "positive",
-  "best_objective": 214.46583656452083,
-  "best_improvement": -0.2013066709297675,
+  "best_objective": 214.46583656452086,
+  "best_improvement": -0.20130667092973908,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 31,
   "local_index": 15,
   "step": 0.25,
-  "forward_objective": 214.3804405003234,
-  "backward_objective": 214.3409859209941,
+  "forward_objective": 214.38044050032332,
+  "backward_objective": 214.34098592099406,
   "best_direction": "negative",
-  "best_objective": 214.3409859209941,
-  "best_improvement": -0.07645602740302593,
+  "best_objective": 214.34098592099406,
+  "best_improvement": -0.07645602740294066,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 31,
   "local_index": 15,
   "step": 1.0,
-  "forward_objective": 216.937236081804,
-  "backward_objective": 215.07609185341403,
+  "forward_objective": 216.9372360818041,
+  "backward_objective": 215.07609185341397,
   "best_direction": "negative",
-  "best_objective": 215.07609185341403,
-  "best_improvement": -0.8115619598229671,
+  "best_objective": 215.07609185341397,
+  "best_improvement": -0.8115619598228534,
   "improved": false
 }, {
   "block": "absorption",
   "gpoint": 32,
   "local_index": 16,
   "step": 0.25,
-  "forward_objective": 216.82130257888113,
-  "backward_objective": 212.94201661576145,
+  "forward_objective": 216.82130257888122,
+  "backward_objective": 212.94201661576156,
   "best_direction": "negative",
-  "best_objective": 212.94201661576145,
-  "best_improvement": 1.3225132778296143,
+  "best_objective": 212.94201661576156,
+  "best_improvement": 1.3225132778295574,
   "improved": true
 }, {
   "block": "absorption",
   "gpoint": 32,
   "local_index": 16,
   "step": 1.0,
-  "forward_objective": 236.1318368665061,
-  "backward_objective": 213.13469236327825,
+  "forward_objective": 236.13183686650618,
+  "backward_objective": 213.13469236327833,
   "best_direction": "negative",
-  "best_objective": 213.13469236327825,
-  "best_improvement": 1.1298375303128125,
+  "best_objective": 213.13469236327833,
+  "best_improvement": 1.129837530312784,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 1,
   "local_index": 1,
   "step": 0.25,
-  "forward_objective": 214.26453444219936,
-  "backward_objective": 214.26452635096936,
+  "forward_objective": 214.26453444219925,
+  "backward_objective": 214.26452635096925,
   "best_direction": "negative",
-  "best_objective": 214.26452635096936,
-  "best_improvement": 3.542621698215953e-6,
+  "best_objective": 214.26452635096925,
+  "best_improvement": 3.5426218687462097e-6,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 1,
   "local_index": 1,
   "step": 1.0,
-  "forward_objective": 214.26455740775637,
-  "backward_objective": 214.26451976938046,
+  "forward_objective": 214.2645574077563,
+  "backward_objective": 214.26451976938048,
   "best_direction": "negative",
-  "best_objective": 214.26451976938046,
-  "best_improvement": 1.0124210604089967e-5,
+  "best_objective": 214.26451976938048,
+  "best_improvement": 1.0124210632511677e-5,
   "improved": true
 }, {
   "block": "rayleigh",
@@ -474,10 +474,10 @@
   "local_index": 2,
   "step": 0.25,
   "forward_objective": 214.26452857571292,
-  "backward_objective": 214.264530925827,
+  "backward_objective": 214.26453092582707,
   "best_direction": "positive",
   "best_objective": 214.26452857571292,
-  "best_improvement": 1.3178781443912158e-6,
+  "best_improvement": 1.3178782012346346e-6,
   "improved": true
 }, {
   "block": "rayleigh",
@@ -485,32 +485,32 @@
   "local_index": 2,
   "step": 1.0,
   "forward_objective": 214.26452204994038,
-  "backward_objective": 214.2645328570683,
+  "backward_objective": 214.2645328570682,
   "best_direction": "positive",
   "best_objective": 214.26452204994038,
-  "best_improvement": 7.843650678296399e-6,
+  "best_improvement": 7.843650735139818e-6,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 9,
   "local_index": 3,
   "step": 0.25,
-  "forward_objective": 214.2645308582569,
+  "forward_objective": 214.26453085825688,
   "backward_objective": 214.26452916140326,
   "best_direction": "negative",
   "best_objective": 214.26452916140326,
-  "best_improvement": 7.321878001675941e-7,
+  "best_improvement": 7.32187857011013e-7,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 9,
   "local_index": 3,
   "step": 1.0,
-  "forward_objective": 214.26453614572148,
-  "backward_objective": 214.26452784591106,
+  "forward_objective": 214.26453614572142,
+  "backward_objective": 214.26452784591098,
   "best_direction": "negative",
-  "best_objective": 214.26452784591106,
-  "best_improvement": 2.0476799988955463e-6,
+  "best_objective": 214.26452784591098,
+  "best_improvement": 2.0476801410040935e-6,
   "improved": true
 }, {
   "block": "rayleigh",
@@ -518,54 +518,54 @@
   "local_index": 4,
   "step": 0.25,
   "forward_objective": 214.26450027153885,
-  "backward_objective": 214.26455311184696,
+  "backward_objective": 214.26455311184688,
   "best_direction": "positive",
   "best_objective": 214.26450027153885,
-  "best_improvement": 2.9622052210243055e-5,
+  "best_improvement": 2.9622052267086474e-5,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 10,
   "local_index": 4,
   "step": 1.0,
-  "forward_objective": 214.2643538715447,
-  "backward_objective": 214.26459659484982,
+  "forward_objective": 214.2643538715446,
+  "backward_objective": 214.2645965948499,
   "best_direction": "positive",
-  "best_objective": 214.2643538715447,
-  "best_improvement": 0.000176022046360913,
+  "best_objective": 214.2643538715446,
+  "best_improvement": 0.00017602204650302156,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 12,
   "local_index": 5,
   "step": 0.25,
-  "forward_objective": 214.2644462313873,
-  "backward_objective": 214.2645978787328,
+  "forward_objective": 214.26444623138738,
+  "backward_objective": 214.26459787873273,
   "best_direction": "positive",
-  "best_objective": 214.2644462313873,
-  "best_improvement": 8.3662203763879e-5,
+  "best_objective": 214.26444623138738,
+  "best_improvement": 8.36622037354573e-5,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 12,
   "local_index": 5,
   "step": 1.0,
-  "forward_objective": 214.26408420408555,
+  "forward_objective": 214.26408420408558,
   "backward_objective": 214.26473084938473,
   "best_direction": "positive",
-  "best_objective": 214.26408420408555,
-  "best_improvement": 0.00044568950551138187,
+  "best_objective": 214.26408420408558,
+  "best_improvement": 0.0004456895055398036,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 13,
   "local_index": 6,
   "step": 0.25,
-  "forward_objective": 214.26452959217713,
-  "backward_objective": 214.26453013269602,
+  "forward_objective": 214.26452959217715,
+  "backward_objective": 214.26453013269594,
   "best_direction": "positive",
-  "best_objective": 214.26452959217713,
-  "best_improvement": 3.014139338120003e-7,
+  "best_objective": 214.26452959217715,
+  "best_improvement": 3.0141396223370975e-7,
   "improved": true
 }, {
   "block": "rayleigh",
@@ -573,20 +573,20 @@
   "local_index": 6,
   "step": 1.0,
   "forward_objective": 214.2645281662494,
-  "backward_objective": 214.26453058710126,
+  "backward_objective": 214.26453058710118,
   "best_direction": "positive",
   "best_objective": 214.2645281662494,
-  "best_improvement": 1.7273416688112775e-6,
+  "best_improvement": 1.7273417256546963e-6,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 14,
   "local_index": 7,
   "step": 0.25,
-  "forward_objective": 214.26452540168805,
-  "backward_objective": 214.26453339579075,
+  "forward_objective": 214.2645254016881,
+  "backward_objective": 214.26453339579092,
   "best_direction": "positive",
-  "best_objective": 214.26452540168805,
+  "best_objective": 214.2645254016881,
   "best_improvement": 4.491903013104093e-6,
   "improved": true
 }, {
@@ -594,87 +594,87 @@
   "gpoint": 14,
   "local_index": 7,
   "step": 1.0,
-  "forward_objective": 214.26450280285326,
-  "backward_objective": 214.26453991064665,
+  "forward_objective": 214.26450280285317,
+  "backward_objective": 214.26453991064668,
   "best_direction": "positive",
-  "best_objective": 214.26450280285326,
-  "best_improvement": 2.7090737802382137e-5,
+  "best_objective": 214.26450280285317,
+  "best_improvement": 2.7090737944490684e-5,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 16,
   "local_index": 8,
   "step": 0.25,
-  "forward_objective": 214.26452321352627,
-  "backward_objective": 214.26453509903246,
+  "forward_objective": 214.26452321352636,
+  "backward_objective": 214.26453509903249,
   "best_direction": "positive",
-  "best_objective": 214.26452321352627,
-  "best_improvement": 6.680064785768991e-6,
+  "best_objective": 214.26452321352636,
+  "best_improvement": 6.6800647573472816e-6,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 16,
   "local_index": 8,
   "step": 1.0,
-  "forward_objective": 214.26448954718902,
-  "backward_objective": 214.26454477620476,
+  "forward_objective": 214.26448954718896,
+  "backward_objective": 214.26454477620481,
   "best_direction": "positive",
-  "best_objective": 214.26448954718902,
-  "best_improvement": 4.0346402045088325e-5,
+  "best_objective": 214.26448954718896,
+  "best_improvement": 4.034640215877516e-5,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 21,
   "local_index": 9,
   "step": 0.25,
-  "forward_objective": 214.26453079748185,
-  "backward_objective": 214.26452918965433,
+  "forward_objective": 214.26453079748177,
+  "backward_objective": 214.26452918965447,
   "best_direction": "negative",
-  "best_objective": 214.26452918965433,
-  "best_improvement": 7.039367346806102e-7,
+  "best_objective": 214.26452918965447,
+  "best_improvement": 7.03936649415482e-7,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 21,
   "local_index": 9,
   "step": 1.0,
-  "forward_objective": 214.26453536179542,
-  "backward_objective": 214.26452788191855,
+  "forward_objective": 214.26453536179545,
+  "backward_objective": 214.26452788191853,
   "best_direction": "negative",
-  "best_objective": 214.26452788191855,
-  "best_improvement": 2.011672506796458e-6,
+  "best_objective": 214.26452788191853,
+  "best_improvement": 2.0116725920615863e-6,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 22,
   "local_index": 10,
   "step": 0.25,
-  "forward_objective": 214.26452994608488,
-  "backward_objective": 214.26452985271183,
+  "forward_objective": 214.26452994608496,
+  "backward_objective": 214.26452985271177,
   "best_direction": "negative",
-  "best_objective": 214.26452985271183,
-  "best_improvement": 4.087922889084439e-8,
+  "best_objective": 214.26452985271177,
+  "best_improvement": 4.087934257768211e-8,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 22,
   "local_index": 10,
   "step": 1.0,
-  "forward_objective": 214.26453021117533,
+  "forward_objective": 214.26453021117538,
   "backward_objective": 214.26452977675103,
   "best_direction": "negative",
   "best_objective": 214.26452977675103,
-  "best_improvement": 1.1684002743095334e-7,
+  "best_improvement": 1.168400842743722e-7,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 25,
   "local_index": 11,
   "step": 0.25,
-  "forward_objective": 214.2645300194133,
-  "backward_objective": 214.2645297955994,
+  "forward_objective": 214.26453001941334,
+  "backward_objective": 214.26452979559946,
   "best_direction": "negative",
-  "best_objective": 214.2645297955994,
+  "best_objective": 214.26452979559946,
   "best_improvement": 9.799165923141118e-8,
   "improved": true
 }, {
@@ -682,66 +682,66 @@
   "gpoint": 25,
   "local_index": 11,
   "step": 1.0,
-  "forward_objective": 214.26453065485407,
-  "backward_objective": 214.26452961354218,
+  "forward_objective": 214.26453065485418,
+  "backward_objective": 214.2645296135423,
   "best_direction": "negative",
-  "best_objective": 214.26452961354218,
-  "best_improvement": 2.8004888008581474e-7,
+  "best_objective": 214.2645296135423,
+  "best_improvement": 2.800488232423959e-7,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 27,
   "local_index": 12,
   "step": 0.25,
-  "forward_objective": 214.26035142257447,
-  "backward_objective": 214.2680316015657,
+  "forward_objective": 214.26035142257427,
+  "backward_objective": 214.26803160156575,
   "best_direction": "positive",
-  "best_objective": 214.26035142257447,
-  "best_improvement": 0.004178471016587082,
+  "best_objective": 214.26035142257427,
+  "best_improvement": 0.004178471016842877,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 27,
   "local_index": 12,
   "step": 1.0,
-  "forward_objective": 214.2438860609636,
-  "backward_objective": 214.27516112124366,
+  "forward_objective": 214.2438860609635,
+  "backward_objective": 214.27516112124354,
   "best_direction": "positive",
-  "best_objective": 214.2438860609636,
-  "best_improvement": 0.020643832627456504,
+  "best_objective": 214.2438860609635,
+  "best_improvement": 0.020643832627627035,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 28,
   "local_index": 13,
   "step": 0.25,
-  "forward_objective": 214.26342678056812,
-  "backward_objective": 214.26544693707262,
+  "forward_objective": 214.26342678056807,
+  "backward_objective": 214.26544693707265,
   "best_direction": "positive",
-  "best_objective": 214.26342678056812,
-  "best_improvement": 0.0011031130229355313,
+  "best_objective": 214.26342678056807,
+  "best_improvement": 0.001103113023049218,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 28,
   "local_index": 13,
   "step": 1.0,
-  "forward_objective": 214.2588691917848,
+  "forward_objective": 214.2588691917847,
   "backward_objective": 214.2673030655371,
   "best_direction": "positive",
-  "best_objective": 214.2588691917848,
-  "best_improvement": 0.005660701806249335,
+  "best_objective": 214.2588691917847,
+  "best_improvement": 0.0056607018064198655,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 30,
   "local_index": 14,
   "step": 0.25,
-  "forward_objective": 214.26444735299185,
-  "backward_objective": 214.26458439405522,
+  "forward_objective": 214.26444735299188,
+  "backward_objective": 214.2645843940553,
   "best_direction": "positive",
-  "best_objective": 214.26444735299185,
-  "best_improvement": 8.254059920886903e-5,
+  "best_objective": 214.26444735299188,
+  "best_improvement": 8.254059923729073e-5,
   "improved": true
 }, {
   "block": "rayleigh",
@@ -749,10 +749,10 @@
   "local_index": 14,
   "step": 1.0,
   "forward_objective": 214.26392163896702,
-  "backward_objective": 214.264652067747,
+  "backward_objective": 214.26465206774714,
   "best_direction": "positive",
   "best_objective": 214.26392163896702,
-  "best_improvement": 0.0006082546240406828,
+  "best_improvement": 0.0006082546240975262,
   "improved": true
 }, {
   "block": "rayleigh",
@@ -760,43 +760,43 @@
   "local_index": 15,
   "step": 0.25,
   "forward_objective": 214.26576887686147,
-  "backward_objective": 214.26356485626357,
+  "backward_objective": 214.26356485626346,
   "best_direction": "negative",
-  "best_objective": 214.26356485626357,
-  "best_improvement": 0.0009650373274894264,
+  "best_objective": 214.26356485626346,
+  "best_improvement": 0.0009650373276599566,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 31,
   "local_index": 15,
   "step": 1.0,
-  "forward_objective": 214.2720229440667,
-  "backward_objective": 214.2617718298382,
+  "forward_objective": 214.27202294406678,
+  "backward_objective": 214.26177182983824,
   "best_direction": "negative",
-  "best_objective": 214.2617718298382,
-  "best_improvement": 0.0027580637528501484,
+  "best_objective": 214.26177182983824,
+  "best_improvement": 0.00275806375287857,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 32,
   "local_index": 16,
   "step": 0.25,
-  "forward_objective": 214.27007135502853,
+  "forward_objective": 214.27007135502862,
   "backward_objective": 214.26021238847505,
   "best_direction": "negative",
   "best_objective": 214.26021238847505,
-  "best_improvement": 0.004317505116006259,
+  "best_improvement": 0.004317505116063103,
   "improved": true
 }, {
   "block": "rayleigh",
   "gpoint": 32,
   "local_index": 16,
   "step": 1.0,
-  "forward_objective": 214.29801448597473,
+  "forward_objective": 214.29801448597476,
   "backward_objective": 214.25218755549778,
   "best_direction": "negative",
   "best_objective": 214.25218755549778,
-  "best_improvement": 0.01234233809327634,
+  "best_improvement": 0.012342338093333183,
   "improved": true
 }],
   "best_block": "absorption",
@@ -804,16 +804,16 @@
   "best_local_index": 11,
   "best_step": 1.0,
   "best_direction": "negative",
-  "best_objective": 93.92571708861936,
-  "best_improvement": 120.3388128049717
+  "best_objective": 93.92571708861941,
+  "best_improvement": 120.33881280497171
 },
   "greedy_coordinate_descent": {
   "method": "cached greedy bounded coordinate descent checkpoint over absorption/Rayleigh log-scales",
   "iterations_requested": 18,
   "iterations_completed": 18,
-  "initial_objective": 214.26452989359106,
+  "initial_objective": 214.26452989359112,
   "final_objective": 9.013189709136755,
-  "objective_reduction": 205.2513401844543,
+  "objective_reduction": 205.25134018445436,
   "improved": true,
   "trajectory": [],
   "final_parameters": [-1.7314684665527909, -3.2661225167229007, -4.161812049538057, -1.5912110589444275, -3.1698652897503816, -4.107096061670137, -3.9248454957318715, -3.630503710690628, -4.083034873551649, -5.928191689682959, -7.282997522647702, -1.5771443186140166, -1.497507427687566, -5.422944709555126, -5.802514085325057, -5.822937857533313, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5, 0.0, 0.5, -0.25, 1.5, -3.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
@@ -822,7 +822,7 @@
   "greedy_coordinate_descent_checkpoint_used": true,
   "coefficient_joint_direction_scan": {
   "method": "joint coefficient direction scan over nonzero optimized scales",
-  "initial_objective": 9.013189709136755,
+  "initial_objective": 9.01318970913676,
   "candidate_count": 12,
   "rows": [{
   "direction": "nonzero_absorption_scales",
@@ -832,7 +832,7 @@
   "minus_objective": 9.553414594528249,
   "best_direction": "positive",
   "best_objective": 8.945449449832559,
-  "best_improvement": 0.06774025930419647,
+  "best_improvement": 0.0677402593042018,
   "improved": true
 }, {
   "direction": "nonzero_absorption_scales",
@@ -842,7 +842,7 @@
   "minus_objective": 10.054635446037235,
   "best_direction": "positive",
   "best_objective": 9.533541851057333,
-  "best_improvement": -0.5203521419205774,
+  "best_improvement": -0.5203521419205721,
   "improved": false
 }, {
   "direction": "nonzero_absorption_scales",
@@ -852,16 +852,16 @@
   "minus_objective": 10.868244617494536,
   "best_direction": "negative",
   "best_objective": 10.868244617494536,
-  "best_improvement": -1.855054908357781,
+  "best_improvement": -1.8550549083577756,
   "improved": false
 }, {
   "direction": "nonzero_absorption_scales",
   "active_parameter_count": 5,
   "step": 1.0,
   "plus_objective": 19.72996715991485,
-  "minus_objective": 14.69329564099282,
+  "minus_objective": 14.693295640992826,
   "best_direction": "negative",
-  "best_objective": 14.69329564099282,
+  "best_objective": 14.693295640992826,
   "best_improvement": -5.680105931856065,
   "improved": false
 }, {
@@ -872,7 +872,7 @@
   "minus_objective": 9.575154040192805,
   "best_direction": "negative",
   "best_objective": 9.575154040192805,
-  "best_improvement": -0.5619643310560498,
+  "best_improvement": -0.5619643310560445,
   "improved": false
 }, {
   "direction": "nonzero_rayleigh_scales",
@@ -882,7 +882,7 @@
   "minus_objective": 10.719394163447003,
   "best_direction": "negative",
   "best_objective": 10.719394163447003,
-  "best_improvement": -1.7062044543102477,
+  "best_improvement": -1.7062044543102424,
   "improved": false
 }, {
   "direction": "nonzero_rayleigh_scales",
@@ -892,7 +892,7 @@
   "minus_objective": 12.913622846353595,
   "best_direction": "negative",
   "best_objective": 12.913622846353595,
-  "best_improvement": -3.90043313721684,
+  "best_improvement": -3.900433137216835,
   "improved": false
 }, {
   "direction": "nonzero_rayleigh_scales",
@@ -902,7 +902,7 @@
   "minus_objective": 16.58273466954673,
   "best_direction": "negative",
   "best_objective": 16.58273466954673,
-  "best_improvement": -7.569544960409976,
+  "best_improvement": -7.569544960409971,
   "improved": false
 }, {
   "direction": "all_nonzero_coefficient_scales",
@@ -912,7 +912,7 @@
   "minus_objective": 9.193534672676076,
   "best_direction": "positive",
   "best_objective": 9.169596175434833,
-  "best_improvement": -0.15640646629807797,
+  "best_improvement": -0.15640646629807264,
   "improved": false
 }, {
   "direction": "all_nonzero_coefficient_scales",
@@ -922,7 +922,7 @@
   "minus_objective": 9.950357085018975,
   "best_direction": "positive",
   "best_objective": 9.60585454419089,
-  "best_improvement": -0.5926648350541353,
+  "best_improvement": -0.5926648350541299,
   "improved": false
 }, {
   "direction": "all_nonzero_coefficient_scales",
@@ -932,7 +932,7 @@
   "minus_objective": 11.4878145081002,
   "best_direction": "positive",
   "best_objective": 10.516668286947683,
-  "best_improvement": -1.5034785778109274,
+  "best_improvement": -1.503478577810922,
   "improved": false
 }, {
   "direction": "all_nonzero_coefficient_scales",
@@ -942,14 +942,14 @@
   "minus_objective": 14.247948901144127,
   "best_direction": "positive",
   "best_objective": 12.723896604560471,
-  "best_improvement": -3.7107068954237157,
+  "best_improvement": -3.7107068954237103,
   "improved": false
 }],
   "best_direction_name": "nonzero_absorption_scales",
   "best_step": 0.125,
   "best_step_direction": "positive",
   "best_objective": 8.945449449832559,
-  "best_improvement": 0.06774025930419647,
+  "best_improvement": 0.0677402593042018,
   "final_parameters": [-1.7314684665527909, -3.2661225167229007, -4.161812049538057, -1.5912110589444275, -3.1698652897503816, -4.107096061670137, -3.9248454957318715, -3.630503710690628, -4.083034873551649, -5.928191689682959, -7.282997522647702, -1.5771443186140166, -1.497507427687566, -5.422944709555126, -5.802514085325057, -5.822937857533313, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5559016994374948, 0.0, 0.5559016994374948, -0.30590169943749473, 1.5559016994374948, -3.0559016994374946, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0]
 },
   "post_joint_coordinate_refinement": {
@@ -1122,8 +1122,8 @@
   "local_index": 16,
   "block": "absorption",
   "forward_objective": 8.628736407551543,
-  "backward_objective": 8.72743807678982,
-  "central_gradient": -1.5792267078124382
+  "backward_objective": 8.727438076789818,
+  "central_gradient": -1.5792267078124098
 }, {
   "parameter_index": 33,
   "local_index": 1,
@@ -1332,9 +1332,9 @@
   "parameter_index": 23,
   "local_index": 7,
   "block": "absorption",
-  "forward_objective": 8.770428597257343,
+  "forward_objective": 8.770428597257345,
   "backward_objective": 8.76894353551794,
-  "central_gradient": 0.02376098783045677
+  "central_gradient": 0.023760987830485192
 }, {
   "parameter_index": 24,
   "local_index": 8,
@@ -1540,109 +1540,109 @@
 }
 },
   "final_objective_breakdown": {
-  "method": "component pressure-band table refinement hard-gate breakdown",
+  "method": "active coefficient-table entry refinement hard-gate breakdown",
   "sw_indices": [1, 4, 9, 10, 12, 13, 14, 16, 21, 22, 25, 27, 28, 30, 31, 32],
-  "objective": 8.605007336077506,
+  "objective": 8.605003990705882,
   "worst_case": "ecckd_clear_sky_tropical_column",
   "worst_metric": "toa_forcing_max_abs",
-  "worst_value": 2.5815022008232518,
+  "worst_value": 2.5815011972117645,
   "worst_threshold": 0.3,
   "rows": [{
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "sw_up_rmse",
-  "value": 1.9745666981468915,
+  "value": 1.9745639534750825,
   "threshold": 1.0,
-  "normalized_value": 1.9745666981468915
+  "normalized_value": 1.9745639534750825
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "sw_up_max_abs",
-  "value": 3.562845019596651,
+  "value": 3.562844015513889,
   "threshold": 5.0,
-  "normalized_value": 0.7125690039193302
+  "normalized_value": 0.7125688031027778
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "sw_down_rmse",
-  "value": 1.09821050570889,
+  "value": 1.0979569060852152,
   "threshold": 1.0,
-  "normalized_value": 1.09821050570889
+  "normalized_value": 1.0979569060852152
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "sw_down_max_abs",
-  "value": 3.6707829358838353,
+  "value": 3.6692599785546918,
   "threshold": 5.0,
-  "normalized_value": 0.734156587176767
+  "normalized_value": 0.7338519957109384
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "heating_rate_rmse",
-  "value": 0.42069068387331693,
+  "value": 0.420688196187849,
   "threshold": 0.05,
-  "normalized_value": 8.413813677466338
+  "normalized_value": 8.41376392375698
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "value": 1.5765572019017675,
+  "value": 1.5765572012782547,
   "threshold": 0.5,
-  "normalized_value": 3.153114403803535
+  "normalized_value": 3.1531144025565094
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "toa_forcing_max_abs",
-  "value": 2.5815022008232518,
+  "value": 2.5815011972117645,
   "threshold": 0.3,
-  "normalized_value": 8.605007336077506
+  "normalized_value": 8.605003990705882
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "surface_forcing_max_abs",
-  "value": 2.5732503065208903,
+  "value": 2.5729842378715375,
   "threshold": 0.3,
-  "normalized_value": 8.577501021736301
+  "normalized_value": 8.576614126238459
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "sw_up_rmse",
-  "value": 1.6759376155858159,
+  "value": 1.6759367497491289,
   "threshold": 1.0,
-  "normalized_value": 1.6759376155858159
+  "normalized_value": 1.6759367497491289
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "sw_up_max_abs",
-  "value": 3.562845019596651,
+  "value": 3.562844015513889,
   "threshold": 5.0,
-  "normalized_value": 0.7125690039193302
+  "normalized_value": 0.7125688031027778
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "sw_down_rmse",
-  "value": 1.0299046145232997,
+  "value": 1.0298443438997913,
   "threshold": 1.0,
-  "normalized_value": 1.0299046145232997
+  "normalized_value": 1.0298443438997913
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "sw_down_max_abs",
-  "value": 3.6707829358838353,
+  "value": 3.6692599785546918,
   "threshold": 5.0,
-  "normalized_value": 0.734156587176767
+  "normalized_value": 0.7338519957109384
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "heating_rate_rmse",
-  "value": 0.39056405004035427,
+  "value": 0.39056390371536465,
   "threshold": 0.05,
-  "normalized_value": 7.811281000807085
+  "normalized_value": 7.8112780743072925
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "heating_rate_max_abs",
-  "value": 2.1002665596906587,
+  "value": 2.1002665682070996,
   "threshold": 0.5,
-  "normalized_value": 4.200533119381317
+  "normalized_value": 4.200533136414199
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "toa_forcing_max_abs",
-  "value": 2.5815022008232518,
+  "value": 2.5815011972117645,
   "threshold": 0.3,
-  "normalized_value": 8.605007336077506
+  "normalized_value": 8.605003990705882
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "surface_forcing_max_abs",
-  "value": 2.5732503065208903,
+  "value": 2.5729842378715375,
   "threshold": 0.3,
-  "normalized_value": 8.577501021736301
+  "normalized_value": 8.576614126238459
 }]
 },
   "targeted_worst_metric_refinement": {
@@ -2657,9 +2657,9 @@
   "rows": [{
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "sw_up_rmse",
-  "value": 1.9745666981468915,
+  "value": 1.9745666981468912,
   "threshold": 1.0,
-  "normalized_value": 1.9745666981468915
+  "normalized_value": 1.9745666981468912
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "sw_up_max_abs",
@@ -2681,9 +2681,9 @@
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "heating_rate_rmse",
-  "value": 0.42069068387331693,
+  "value": 0.4206906838733172,
   "threshold": 0.05,
-  "normalized_value": 8.413813677466338
+  "normalized_value": 8.413813677466344
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
@@ -2717,9 +2717,9 @@
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "sw_down_rmse",
-  "value": 1.0299046145232997,
+  "value": 1.0299046145233,
   "threshold": 1.0,
-  "normalized_value": 1.0299046145232997
+  "normalized_value": 1.0299046145233
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "sw_down_max_abs",
@@ -2729,9 +2729,9 @@
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "heating_rate_rmse",
-  "value": 0.39056405004035427,
+  "value": 0.3905640500403544,
   "threshold": 0.05,
-  "normalized_value": 7.811281000807085
+  "normalized_value": 7.811281000807087
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "metric": "heating_rate_max_abs",
@@ -2755,8 +2755,8 @@
 },
   "active_table_entry_refinement": {
   "method": "active coefficient-table entry refinement after accepted pressure-band moves",
-  "iterations_requested": 0,
-  "iterations_completed": 0,
+  "iterations_requested": 2,
+  "iterations_completed": 2,
   "max_candidates_per_iteration": 96,
   "progress_interval": 0,
   "max_seconds": 0.0,
@@ -2764,22 +2764,78 @@
   "targeted_candidates_enabled": true,
   "targeted_candidate_count": 584,
   "initial_full_objective": 8.605007336077506,
-  "final_objective": 8.605007336077506,
-  "objective_reduction": 0.0,
-  "improved": false,
-  "accepted_move_count": 0,
-  "accepted_moves": [],
-  "trajectory": []
+  "final_objective": 8.605003990705882,
+  "objective_reduction": 3.3453716241638176e-6,
+  "improved": true,
+  "accepted_move_count": 2,
+  "accepted_moves": [{
+  "component": "static_absorption",
+  "local_gpoint_index": 2,
+  "gpoint": 4,
+  "gas_index": 1,
+  "pressure_index": 47,
+  "temperature_index": 4,
+  "h2o_index": 0,
+  "log_scale": -0.125,
+  "scale": 0.8824969025845955
+}, {
+  "component": "static_absorption",
+  "local_gpoint_index": 2,
+  "gpoint": 4,
+  "gas_index": 1,
+  "pressure_index": 47,
+  "temperature_index": 4,
+  "h2o_index": 0,
+  "log_scale": -0.125,
+  "scale": 0.8824969025845955
+}],
+  "trajectory": [{
+  "iteration": 1,
+  "candidate_count": 96,
+  "initial_full_objective": 8.605007336077506,
+  "best_full_objective": 8.605005559021492,
+  "best_metric_objective": 8.605005559021492,
+  "accepted": true,
+  "accepted_move": {
+  "component": "static_absorption",
+  "local_gpoint_index": 2,
+  "gpoint": 4,
+  "gas_index": 1,
+  "pressure_index": 47,
+  "temperature_index": 4,
+  "h2o_index": 0,
+  "log_scale": -0.125,
+  "scale": 0.8824969025845955
+}
+}, {
+  "iteration": 2,
+  "candidate_count": 96,
+  "initial_full_objective": 8.605005559021492,
+  "best_full_objective": 8.605003990705882,
+  "best_metric_objective": 8.605003990705882,
+  "accepted": true,
+  "accepted_move": {
+  "component": "static_absorption",
+  "local_gpoint_index": 2,
+  "gpoint": 4,
+  "gas_index": 1,
+  "pressure_index": 47,
+  "temperature_index": 4,
+  "h2o_index": 0,
+  "log_scale": -0.125,
+  "scale": 0.8824969025845955
+}
+}]
 },
   "constrained_table_optimizer_target": {
   "method": "constrained table/quadrature optimizer target from dominant hard-gate residual",
   "target_case": "ecckd_clear_sky_tropical_column",
   "target_metric": "toa_forcing_max_abs",
-  "target_value": 2.5815022008232518,
+  "target_value": 2.5815011972117645,
   "target_threshold": 0.3,
-  "target_normalized_value": 8.605007336077506,
-  "required_absolute_reduction": 2.281502200823252,
-  "required_relative_reduction": 0.8837885941354888,
+  "target_normalized_value": 8.605003990705882,
+  "required_absolute_reduction": 2.2815011972117647,
+  "required_relative_reduction": 0.8837885489559235,
   "rejected_local_parameterizations": ["48-parameter weights/static-plus-H2O absorption/Rayleigh scalar scan", "targeted worst-metric scalar coordinate scan", "64-parameter separated static-absorption/H2O/Rayleigh scalar scan", "weighted 32-to-16 optical-depth projection target"],
   "recommended_next_parameterization": "nonnegative shortwave coefficient-table or quadrature-bin optimizer with objective terms for TOA forcing, surface forcing, flux profiles, and heating rates",
   "acceptance_rule": "accept only candidates that reduce the full normalized hard-gate objective and keep all clean ecCKD cases within the final hard thresholds"
@@ -2848,39 +2904,39 @@
   "added_gpoint": 20,
   "indices": [1, 4, 9, 10, 12, 13, 14, 16, 20, 22, 25, 27, 28, 30, 31, 32],
   "initial_objective": 12.25022186347322,
-  "refined_objective": 10.449200496489008,
+  "refined_objective": 10.449200496489006,
   "refinement_iterations": 1,
-  "improvement": -1.8203573487855529,
+  "improvement": -1.820357348785551,
   "improved": false
 }, {
   "local_index": 8,
   "removed_gpoint": 16,
   "added_gpoint": 17,
   "indices": [1, 4, 9, 10, 12, 13, 14, 17, 21, 22, 25, 27, 28, 30, 31, 32],
-  "initial_objective": 13.82276498164892,
-  "refined_objective": 12.397530349130243,
+  "initial_objective": 13.822764981648929,
+  "refined_objective": 12.397530349130239,
   "refinement_iterations": 1,
-  "improvement": -3.768687201426788,
+  "improvement": -3.7686872014267845,
   "improved": false
 }, {
   "local_index": 11,
   "removed_gpoint": 25,
   "added_gpoint": 24,
   "indices": [1, 4, 9, 10, 12, 13, 14, 16, 21, 22, 24, 27, 28, 30, 31, 32],
-  "initial_objective": 19.63288065997279,
-  "refined_objective": 16.62096886381943,
+  "initial_objective": 19.6328806599728,
+  "refined_objective": 16.620968863819428,
   "refinement_iterations": 1,
-  "improvement": -7.992125716115977,
+  "improvement": -7.992125716115973,
   "improved": false
 }, {
   "local_index": 11,
   "removed_gpoint": 25,
   "added_gpoint": 26,
   "indices": [1, 4, 9, 10, 12, 13, 14, 16, 21, 22, 26, 27, 28, 30, 31, 32],
-  "initial_objective": 20.728803623423836,
-  "refined_objective": 17.128847192627447,
+  "initial_objective": 20.728803623423826,
+  "refined_objective": 17.128847192627443,
   "refinement_iterations": 1,
-  "improvement": -8.500004044923992,
+  "improvement": -8.500004044923989,
   "improved": false
 }]
 },
@@ -2968,7 +3024,7 @@
   "topology_candidate_scan": {
   "status": "all_32x16_topologies_fail_forcing_gate",
   "source": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-  "candidate_count": 17,
+  "candidate_count": 18,
   "rows": [{
   "ng_lw": 32,
   "ng_sw": 16,
@@ -3030,33 +3086,41 @@
   "ng_sw": 16,
   "reduction_method": "weighted greedy 16 shortwave g-point subset with latest preflight-optimized weights and coefficient scales",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 2.5844642548484273,
-  "max_surface_forcing_abs": 2.5662210926151374,
-  "forcing_objective_lower_bound": 8.614880849494758
+  "max_toa_forcing_abs": 2.588652944311036,
+  "max_surface_forcing_abs": 2.5662214073375935,
+  "forcing_objective_lower_bound": 8.628843147703455
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
   "reduction_method": "weighted greedy 16 shortwave g-point subset with latest preflight-optimized weights, coefficient scales, and pressure-band table moves",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 2.2256780831991705,
-  "max_surface_forcing_abs": 2.0369115736599497,
-  "forcing_objective_lower_bound": 7.418926943997235
+  "max_toa_forcing_abs": 2.311709885137816,
+  "max_surface_forcing_abs": 2.757902059324806,
+  "forcing_objective_lower_bound": 9.19300686441602
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
   "reduction_method": "weighted greedy 16 shortwave g-point subset with latest preflight table moves and reduced incoming shortwave spectral weights",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 2.2256780831991705,
-  "max_surface_forcing_abs": 2.0369115736599497,
-  "forcing_objective_lower_bound": 7.418926943997235
+  "max_toa_forcing_abs": 2.311709885137816,
+  "max_surface_forcing_abs": 2.757902059324806,
+  "forcing_objective_lower_bound": 9.19300686441602
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
   "reduction_method": "weighted greedy 16 shortwave g-point subset with boundary-aware post-constrained weight refit",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 2.2067736840600105,
-  "max_surface_forcing_abs": 2.2039669617279287,
-  "forcing_objective_lower_bound": 7.355912280200036
+  "max_toa_forcing_abs": 2.325872432747474,
+  "max_surface_forcing_abs": 2.751094395294672,
+  "forcing_objective_lower_bound": 9.17031465098224
+}, {
+  "ng_lw": 32,
+  "ng_sw": 16,
+  "reduction_method": "weighted greedy 16 shortwave g-point subset with boundary-aware table, component, structural, objective-probe, surface-probe, capped table, continuation, post-capped weight, post-weight surface-table, bounded weight, four current component-scale refits, selected current gas-pressure component scan refit, gas-pressure continuation refit, weighted gas-pressure continuation refit, and high-weight gas-pressure continuation refit",
+  "passed_hard_thresholds": false,
+  "max_toa_forcing_abs": 2.075241671208687,
+  "max_surface_forcing_abs": 2.026956688318073,
+  "forcing_objective_lower_bound": 6.91747223736229
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
@@ -3106,8 +3170,8 @@
   "max_surface_forcing_abs": 125.54176578960312,
   "forcing_objective_lower_bound": 418.47255263201043
 }],
-  "best_method": "weighted greedy 16 shortwave g-point subset with boundary-aware post-constrained weight refit",
-  "best_forcing_objective_lower_bound": 7.355912280200036,
+  "best_method": "weighted greedy 16 shortwave g-point subset with boundary-aware table, component, structural, objective-probe, surface-probe, capped table, continuation, post-capped weight, post-weight surface-table, bounded weight, four current component-scale refits, selected current gas-pressure component scan refit, gas-pressure continuation refit, weighted gas-pressure continuation refit, and high-weight gas-pressure continuation refit",
+  "best_forcing_objective_lower_bound": 6.91747223736229,
   "best_passed_hard_thresholds": false
 },
   "subset_search_topology_scan": {
@@ -3119,56 +3183,56 @@
   "ng_sw": 16,
   "reduction_method": "heating-aware greedy subset with official weights",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 7.377799040740456,
-  "max_surface_forcing_abs": 7.02576997550932,
-  "forcing_objective_lower_bound": 24.592663469134855
+  "max_toa_forcing_abs": 43.645370764489144,
+  "max_surface_forcing_abs": 83.70435533493048,
+  "forcing_objective_lower_bound": 279.0145177831016
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
   "reduction_method": "heating-aware weighted subset with fitted weights",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 6.989554379306014,
-  "max_surface_forcing_abs": 6.839429304331475,
-  "forcing_objective_lower_bound": 23.298514597686715
+  "max_toa_forcing_abs": 297.63748943061137,
+  "max_surface_forcing_abs": 412.9367206491155,
+  "forcing_objective_lower_bound": 1376.4557354970518
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
   "reduction_method": "heating-aware full-fit-pruned subset with fitted weights",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 7.803637488539266,
-  "max_surface_forcing_abs": 23.798867018642454,
-  "forcing_objective_lower_bound": 79.32955672880819
+  "max_toa_forcing_abs": 184.80381101869682,
+  "max_surface_forcing_abs": 368.5805517233766,
+  "forcing_objective_lower_bound": 1228.601839077922
 }, {
   "ng_lw": 32,
   "ng_sw": 16,
   "reduction_method": "heating-aware hard-gate max-norm weighted subset",
   "passed_hard_thresholds": false,
-  "max_toa_forcing_abs": 6.9889970081887896,
-  "max_surface_forcing_abs": 6.834021514189203,
-  "forcing_objective_lower_bound": 23.296656693962632
+  "max_toa_forcing_abs": 43.6453707644888,
+  "max_surface_forcing_abs": 83.70435533493048,
+  "forcing_objective_lower_bound": 279.0145177831016
 }],
-  "best_method": "heating-aware hard-gate max-norm weighted subset",
-  "best_forcing_objective_lower_bound": 23.296656693962632,
+  "best_method": "heating-aware greedy subset with official weights",
+  "best_forcing_objective_lower_bound": 279.0145177831016,
   "best_passed_hard_thresholds": false
 },
-  "final_objective_target_ratio": 8.605007336077506,
+  "final_objective_target_ratio": 8.605003990705882,
   "acceptance_gap_status": "far_above_objective_target",
   "next_required_work": "Move beyond bounded pressure-band table scales: run a stronger joint coefficient/table optimizer against flux and heating residuals or jointly optimize the reduced quadrature definition; the current table-refined 48-parameter path remains far above the hard-gate target.",
   "finite_directional_derivative": true,
-  "reactant_status": "skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS",
-  "enzyme_status": "skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS",
+  "reactant_status": "available",
+  "enzyme_status": "available",
   "reactant_check": {
-  "status": "skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS",
+  "status": "passed",
   "check": "official_reduced_parameter_surrogate",
-  "passed": false,
+  "passed": true,
   "error": null
 },
   "enzyme_check": {
-  "status": "skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS",
+  "status": "passed",
   "check": "official_reduced_parameter_surrogate",
-  "relative_error": null,
+  "relative_error": 4.195996440670387e-11,
   "threshold": 0.0001,
-  "passed": false,
+  "passed": true,
   "error": null
 }
 }

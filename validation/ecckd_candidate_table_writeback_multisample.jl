@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_writeback_continuation.jl"))
 
 const CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_writeback_multisample.json")
+    validation_results_path("ecckd_candidate_table_writeback_multisample.json")
 const CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_writeback_multisample.md")
+    validation_results_path("ecckd_candidate_table_writeback_multisample.md")
 
 function shortwave_projected_loss_for_file(candidate_path, sw_path; column = 1, mu0_index = 1)
     sw_dataset = NCDataset(sw_path)

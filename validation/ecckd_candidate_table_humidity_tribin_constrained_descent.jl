@@ -1,17 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_humidity_tribin_descent.jl"))
 
 const CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_JSON =
-    joinpath(@__DIR__, "results",
-             "ecckd_candidate_table_humidity_tribin_constrained_descent.json")
+    validation_results_path("ecckd_candidate_table_humidity_tribin_constrained_descent.json")
 const CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_MD =
-    joinpath(@__DIR__, "results",
-             "ecckd_candidate_table_humidity_tribin_constrained_descent.md")
+    validation_results_path("ecckd_candidate_table_humidity_tribin_constrained_descent.md")
 const CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_FILE =
-    joinpath(@__DIR__, "results",
-             "ecckd_table_humidity_tribin_constrained_descent_sw32_candidate.nc")
+    validation_results_path("ecckd_table_humidity_tribin_constrained_descent_sw32_candidate.nc")
 
 function constrained_aggregate_better(candidate, incumbent, worst_ratio_limit)
     candidate.worst_loss_ratio <= worst_ratio_limit || return false

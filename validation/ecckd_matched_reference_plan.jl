@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "ecrad_reference_manifest.jl"))
 
 const MATCHED_REFERENCE_PLAN_JSON =
-    joinpath(@__DIR__, "results", "ecckd_matched_reference_plan.json")
+    validation_results_path("ecckd_matched_reference_plan.json")
 const MATCHED_REFERENCE_PLAN_MD =
-    joinpath(@__DIR__, "results", "ecckd_matched_reference_plan.md")
+    validation_results_path("ecckd_matched_reference_plan.md")
 
 const MATCHED_REFERENCE_CASES = (
     (

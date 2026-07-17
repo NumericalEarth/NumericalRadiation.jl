@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_boundary_topology_replacement.jl"))
 
 const BOUNDARY_TOPOLOGY_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_topology_weight_refit.json")
+    validation_results_path("reduced_ecckd_boundary_topology_weight_refit.json")
 const BOUNDARY_TOPOLOGY_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_topology_weight_refit.md")
+    validation_results_path("reduced_ecckd_boundary_topology_weight_refit.md")
 
 boundary_topology_weight_radius() =
     parse(Int, get(ENV, "RH_BOUNDARY_TOPOLOGY_WEIGHT_RADIUS", "2"))

@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 const ABR_ROOT = normpath(joinpath(@__DIR__, ".."))
@@ -8,8 +10,8 @@ end
 using NumericalRadiation
 using NCDatasets
 
-const INVENTORY_JSON = joinpath(@__DIR__, "results", "ecckd_model_inventory.json")
-const INVENTORY_MD = joinpath(@__DIR__, "results", "ecckd_model_inventory.md")
+const INVENTORY_JSON = validation_results_path("ecckd_model_inventory.json")
+const INVENTORY_MD = validation_results_path("ecckd_model_inventory.md")
 
 function json_escape(text)
     return replace(text, "\\" => "\\\\", "\"" => "\\\"", "\n" => "\\n")

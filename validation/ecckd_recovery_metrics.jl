@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Statistics
 
@@ -9,8 +11,8 @@ end
 using NumericalRadiation
 using NCDatasets
 
-const RECOVERY_JSON = joinpath(@__DIR__, "results", "ecckd_recovery_metrics.json")
-const RECOVERY_MD = joinpath(@__DIR__, "results", "ecckd_recovery_metrics.md")
+const RECOVERY_JSON = validation_results_path("ecckd_recovery_metrics.json")
+const RECOVERY_MD = validation_results_path("ecckd_recovery_metrics.md")
 
 const COEFFICIENT_LOG_RMSE_THRESHOLD = 1.0e-3
 const MEDIAN_RELATIVE_ERROR_THRESHOLD = 1.0e-3

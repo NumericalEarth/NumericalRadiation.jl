@@ -14,3 +14,6 @@ Breeze = "0.4"
 ClimaComms = "0.6"
 Oceananigans = "0.107"
 RRTMGP = "0.21"
+
+[sources]
+NumericalRadiation = {path = ".."}

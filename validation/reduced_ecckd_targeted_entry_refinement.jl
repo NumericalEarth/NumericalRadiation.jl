@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const TARGETED_ENTRY_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_targeted_entry_refinement.json")
+    validation_results_path("reduced_ecckd_targeted_entry_refinement.json")
 const TARGETED_ENTRY_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_targeted_entry_refinement.md")
+    validation_results_path("reduced_ecckd_targeted_entry_refinement.md")
 
 function targeted_entry_candidate_limit()
     return parse(Int, get(ENV, "RH_REDUCED_TARGETED_ENTRY_CANDIDATES", "256"))

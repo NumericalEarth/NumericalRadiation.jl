@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_written_coordinate_scan.jl"))
 
 const CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_written_coordinate_descent.json")
+    validation_results_path("ecckd_candidate_table_written_coordinate_descent.json")
 const CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_written_coordinate_descent.md")
+    validation_results_path("ecckd_candidate_table_written_coordinate_descent.md")
 const CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_written_coordinate_descent_sw32_candidate.nc")
+    validation_results_path("ecckd_table_written_coordinate_descent_sw32_candidate.nc")
 
 function written_coordinate_scan_seed_parameters()
     if isfile(CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON)

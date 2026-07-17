@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_BOUNDARY_PROBE_EXPANSION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_boundary_probe_expansion.json")
+    validation_results_path("reduced_ecckd_retained_boundary_probe_expansion.json")
 const RETAINED_BOUNDARY_PROBE_EXPANSION_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_boundary_probe_expansion.md")
+    validation_results_path("reduced_ecckd_retained_boundary_probe_expansion.md")
 
 function with_boundary_probe_env(f; candidates, probe_step, max_log_scale,
                                  scope = "all_global_objective_probe")

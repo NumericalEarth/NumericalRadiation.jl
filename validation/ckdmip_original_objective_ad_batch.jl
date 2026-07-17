@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using LinearAlgebra
@@ -5,9 +7,9 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "ckdmip_original_objective_dataset.jl"))
 
 const CKDMIP_OBJECTIVE_AD_BATCH_JSON =
-    joinpath(@__DIR__, "results", "ckdmip_original_objective_ad_batch.json")
+    validation_results_path("ckdmip_original_objective_ad_batch.json")
 const CKDMIP_OBJECTIVE_AD_BATCH_MD =
-    joinpath(@__DIR__, "results", "ckdmip_original_objective_ad_batch.md")
+    validation_results_path("ckdmip_original_objective_ad_batch.md")
 
 function deterministic_flux_perturbation(n)
     return [0.01 * sin(0.37 * i) + 0.005 * cos(0.11 * i) for i in 1:n]

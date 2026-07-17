@@ -1,0 +1,12 @@
+{
+  "coverage_metric":{"has_shortwave_only":true, "has_longwave_only":false, "complete_pair":false},
+  "candidate_count":1,
+  "status":"available",
+  "candidate_sizes_gib":{"validation/results/ecckd_1.4_sw_climate_vfine_96b_recovered_candidate.nc":0.002320},
+  "candidate_paths":["validation/results/ecckd_1.4_sw_climate_vfine_96b_recovered_candidate.nc"],
+  "target_status":"historical_candidate_available",
+  "timestamp":"2026-05-27T00:36:44.445",
+  "target_gpoints":"96",
+  "coverage_notes":"candidate_inventory",
+  "candidate_total_gib":0.002320
+}

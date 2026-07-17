@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const GLOBAL_ENTRY_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_entry_refinement.json")
+    validation_results_path("reduced_ecckd_global_entry_refinement.json")
 const GLOBAL_ENTRY_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_entry_refinement.md")
+    validation_results_path("reduced_ecckd_global_entry_refinement.md")
 
 function global_entry_candidate_limit()
     return parse(Int, get(ENV, "RH_REDUCED_GLOBAL_ENTRY_CANDIDATES", "256"))

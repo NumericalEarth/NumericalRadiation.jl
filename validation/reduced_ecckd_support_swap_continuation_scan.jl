@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_support_swap_scan.jl"))
 
 const SUPPORT_SWAP_CONTINUATION_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_support_swap_continuation_scan.json")
+    validation_results_path("reduced_ecckd_support_swap_continuation_scan.json")
 const SUPPORT_SWAP_CONTINUATION_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_support_swap_continuation_scan.md")
+    validation_results_path("reduced_ecckd_support_swap_continuation_scan.md")
 
 function json_int_array_field(text, key)
     match = Base.match(Regex("\"$key\"\\s*:\\s*\\[([^\\]]*)\\]"), text)

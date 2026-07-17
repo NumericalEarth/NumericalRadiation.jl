@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using NumericalRadiation
 using Dates
 using Printf
@@ -232,7 +234,7 @@ function main()
         errors = errors,
     )
 
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     write(joinpath(results_dir, "latest.json"), json_object(result))
     write(joinpath(results_dir, "latest.md"), markdown_report(result))

@@ -3,7 +3,7 @@ using JSON
 @testset "official ecCKD files validation artifact" begin
     root = normpath(joinpath(@__DIR__, ".."))
     script = joinpath(root, "validation", "ecckd_official_files_check.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     output = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
 
     @test occursin("Official ecCKD Definition Files Check", output)

@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_TABLE_COORDINATE_PARETO_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_table_coordinate_pareto_scan.json")
+    validation_results_path("reduced_ecckd_retained_table_coordinate_pareto_scan.json")
 const RETAINED_TABLE_COORDINATE_PARETO_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_table_coordinate_pareto_scan.md")
+    validation_results_path("reduced_ecckd_retained_table_coordinate_pareto_scan.md")
 
 function retained_table_coordinate_candidate_count()
     return parse(Int, get(ENV, "RH_REDUCED_TABLE_COORDINATE_PARETO_CANDIDATES", "64"))

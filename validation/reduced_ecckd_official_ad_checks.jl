@@ -1,9 +1,11 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
-const OFFICIAL_AD_CHECK_JSON = joinpath(@__DIR__, "results", "reduced_ecckd_official_ad_checks.json")
-const OFFICIAL_AD_CHECK_MD = joinpath(@__DIR__, "results", "reduced_ecckd_official_ad_checks.md")
+const OFFICIAL_AD_CHECK_JSON = validation_results_path("reduced_ecckd_official_ad_checks.json")
+const OFFICIAL_AD_CHECK_MD = validation_results_path("reduced_ecckd_official_ad_checks.md")
 
 function official_reduced_ad_checks(; parameters = initial_parameters())
     reactant_status = optional_dependency_status("Reactant")

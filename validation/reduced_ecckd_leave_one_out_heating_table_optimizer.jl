@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using LinearAlgebra
@@ -6,13 +8,11 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_retained_current_heating_profile_optimizer.jl"))
 
 const LEAVE_ONE_OUT_HEATING_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_heating_table_optimizer.json")
+    validation_results_path("reduced_ecckd_leave_one_out_heating_table_optimizer.json")
 const LEAVE_ONE_OUT_HEATING_TABLE_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_heating_table_optimizer.md")
+    validation_results_path("reduced_ecckd_leave_one_out_heating_table_optimizer.md")
 const LEAVE_ONE_OUT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_weight_refit.json")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_refit.json")
 
 json_get(object, key) = object[key]
 json_get(object, key, default) = haskey(object, key) ? object[key] : default

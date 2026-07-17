@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_slot_blend_refinement.jl"))
 
 const POST_SLOT_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_post_slot_weight_refit.json")
+    validation_results_path("reduced_ecckd_post_slot_weight_refit.json")
 const POST_SLOT_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_post_slot_weight_refit.md")
+    validation_results_path("reduced_ecckd_post_slot_weight_refit.md")
 
 post_slot_weight_refit_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_POST_SLOT_WEIGHT_REFIT_ITERATIONS", "12"))

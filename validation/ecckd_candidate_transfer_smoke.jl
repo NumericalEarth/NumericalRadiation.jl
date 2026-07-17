@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using NCDatasets
@@ -12,9 +14,9 @@ using NumericalRadiation
 include(joinpath(@__DIR__, "ecckd_candidate_original_objective_score.jl"))
 
 const CANDIDATE_TRANSFER_SMOKE_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_transfer_smoke.json")
+    validation_results_path("ecckd_candidate_transfer_smoke.json")
 const CANDIDATE_TRANSFER_SMOKE_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_transfer_smoke.md")
+    validation_results_path("ecckd_candidate_transfer_smoke.md")
 
 function layer_midpoints(values)
     return 0.5 .* (values[1:(end - 1)] .+ values[2:end])

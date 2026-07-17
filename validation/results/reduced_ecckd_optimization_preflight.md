@@ -7,7 +7,7 @@ Status: **preflight_ready**
 | Trainable shortwave g-points | 16 |
 | Parameter count | 48 |
 | Initial normalized objective | 214.264529894 |
-| Directional derivative | -47.9336647895 |
+| Directional derivative | -47.9336647894 |
 | Best trial objective | 213.785388667 |
 | Best trial step | 0.01 |
 | Optimization smoke final objective | 213.785388667 |
@@ -41,16 +41,16 @@ Status: **preflight_ready**
 | Best topology-neighbor move | g9 -> g8 |
 | Best topology-neighbor objective | 52.5845357307 |
 | Topology scan status | all_32x16_topologies_fail_forcing_gate |
-| Topology candidates | 17 |
-| Best topology forcing lower bound | 7.3559122802 |
+| Topology candidates | 18 |
+| Best topology forcing lower bound | 6.91747223736 |
 | Subset-search scan status | all_subset_topologies_fail_forcing_gate |
 | Subset-search candidates | 4 |
-| Best subset-search forcing lower bound | 23.296656694 |
+| Best subset-search forcing lower bound | 279.014517783 |
 | Hard threshold objective target | 1.0 |
-| Final objective / target | 8.60500733608 |
+| Final objective / target | 8.60500399071 |
 | Final worst case | ecckd_clear_sky_tropical_column |
 | Final worst metric | toa_forcing_max_abs |
-| Final worst metric value | 2.58150220082 |
+| Final worst metric value | 2.58150119721 |
 | Final worst metric threshold | 0.3 |
 | Targeted worst-metric candidates | 96 |
 | Targeted worst-metric objective | 8.59324259754 |
@@ -65,14 +65,14 @@ Status: **preflight_ready**
 | Table-refinement accepted moves | 2 |
 | Table-refinement final objective | 8.60500733608 |
 | Table-refinement improved | true |
-| Active table-entry iterations | 0 |
-| Active table-entry accepted moves | 0 |
+| Active table-entry iterations | 2 |
+| Active table-entry accepted moves | 2 |
 | Active table-entry targeted candidates | 584 |
-| Active table-entry final objective | 8.60500733608 |
-| Active table-entry improved | false |
+| Active table-entry final objective | 8.60500399071 |
+| Active table-entry improved | true |
 | Next optimizer target case | ecckd_clear_sky_tropical_column |
 | Next optimizer target metric | toa_forcing_max_abs |
-| Required absolute reduction | 2.28150220082 |
+| Required absolute reduction | 2.28150119721 |
 | Required relative reduction | 0.883789 |
 | Warm-start topology radius | 1 |
 | Warm-start topology candidates | 2 / 16 |
@@ -92,10 +92,10 @@ The topology scan ranks the existing official 32x16 reduced-accuracy candidates 
 
 Next required work: Move beyond bounded pressure-band table scales: run a stronger joint coefficient/table optimizer against flux and heating residuals or jointly optimize the reduced quadrature definition; the current table-refined 48-parameter path remains far above the hard-gate target.
 
-Reactant status: `skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS`
+Reactant status: `available`
 
-Reactant surrogate check: `skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS`
+Reactant surrogate check: `passed`
 
-Enzyme status: `skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS`
+Enzyme status: `available`
 
-Enzyme surrogate check: `skipped_by_RH_SKIP_OPTIONAL_AD_CHECKS`
+Enzyme surrogate check: `passed`

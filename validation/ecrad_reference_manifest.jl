@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -301,7 +303,7 @@ function main()
         cases = cases,
     )
 
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_reference_manifest.json")
     md_path = joinpath(results_dir, "ecrad_reference_manifest.md")

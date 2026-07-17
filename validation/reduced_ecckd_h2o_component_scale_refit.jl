@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_temperature_component_scale_refit.jl"))
 
 const H2O_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_h2o_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_h2o_component_scale_refit.json")
 const H2O_COMPONENT_SCALE_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_h2o_component_scale_refit.md")
+    validation_results_path("reduced_ecckd_h2o_component_scale_refit.md")
 
 h2o_component_band_count() =
     parse(Int, get(ENV, "RH_REDUCED_H2O_COMPONENT_BANDS", "8"))

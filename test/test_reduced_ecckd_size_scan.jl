@@ -1,6 +1,6 @@
 @testset "reduced ecCKD size scan artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "reduced_ecckd_size_scan.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
 
     @test occursin("Reduced ecCKD Size Scan", result)

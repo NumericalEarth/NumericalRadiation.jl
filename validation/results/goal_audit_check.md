@@ -10,7 +10,7 @@ Status: **not_complete**
 | ecRad reference manifest | verified | false |
 | upstream ecRad checkout | verified | false |
 | ecRad hard-threshold accuracy gate | verified | false |
-| ecRad cloudless/no-aerosol first hard gate | verified | false |
+| ecRad cloudless/no-aerosol first hard gate | missing_or_unexpected | false |
 | ecRad accuracy diagnostics | verified | false |
 | ecRad all-sky cloud-effect diagnostics | verified | false |
 | ecRad all-sky cloud parameter sweep | verified | false |
@@ -95,7 +95,7 @@ Status: **not_complete**
 | Requirement | Status | Completion criteria | Evidence |
 |---|---|---|---|
 | Plan reviewed and concrete three-step /goal captured | `satisfied` | The project plan and audit list the three concrete goal gates with current status. | ecRad convention gap report (`verified`)<br>ecRad hard-threshold accuracy gate (`verified`)<br>reduced ecCKD gap report (`verified`) |
-| Hard cloudless/no-aerosol official ecCKD accuracy thresholds | `satisfied` | Official ecCKD clear/cloudless hard-gate artifacts pass. | ecRad hard-threshold accuracy gate (`verified`)<br>ecRad cloudless/no-aerosol first hard gate (`verified`) |
+| Hard cloudless/no-aerosol official ecCKD accuracy thresholds | `uncovered` | Official ecCKD clear/cloudless hard-gate artifacts pass. | ecRad hard-threshold accuracy gate (`verified`)<br>ecRad cloudless/no-aerosol first hard gate (`missing_or_unexpected`) |
 | NetCDF/ecRad/ecCKD references discovered and usable | `satisfied` | Reference manifest, upstream ecRad checkout, candidate schema, and official ecCKD files are present and valid. | ecRad reference manifest (`verified`)<br>upstream ecRad checkout (`verified`)<br>ecRad candidate schema preflight (`verified`)<br>official ecCKD definition files recognized (`verified`) |
 | Direct RRTMGP comparison through ColumnAtmosphere/RadiativeFluxes | `satisfied` | The package-native RRTMGP extension and direct comparison test are implemented. | package-native RRTMGP comparison extension (`verified`)<br>package-native RRTMGP comparison test (`verified`) |
 | Fresh dedicated Breeze checkout and Breeze-owned extension | `uncovered` | Old ABR Breeze extension is absent and the fresh Breeze checkout owns BreezeRadiativeHeatingExt. | old ABR Breeze extension removed (`verified`)<br>dedicated BreezeRadiativeHeatingExt present (`missing_or_unexpected`)<br>Breeze tabulated ecCKD column amount conversion (`missing_or_unexpected`) |

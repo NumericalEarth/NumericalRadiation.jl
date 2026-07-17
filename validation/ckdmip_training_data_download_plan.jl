@@ -1,9 +1,11 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 const DOWNLOAD_PLAN_JSON =
-    joinpath(@__DIR__, "results", "ckdmip_training_data_download_plan.json")
+    validation_results_path("ckdmip_training_data_download_plan.json")
 const DOWNLOAD_PLAN_MD =
-    joinpath(@__DIR__, "results", "ckdmip_training_data_download_plan.md")
+    validation_results_path("ckdmip_training_data_download_plan.md")
 
 const CKDMIP_BASE_URL = "https://aux.ecmwf.int/ecpds/home/ckdmip"
 

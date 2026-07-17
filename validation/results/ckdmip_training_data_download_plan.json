@@ -1,6 +1,6 @@
 {
   "case": "ckdmip_training_data_download_plan",
-  "timestamp_utc": "2026-05-19T20:28:02.174",
+  "timestamp_utc": "2026-06-03T01:12:14.155",
   "status": "manual_or_batch_download_required",
   "base_url": "https://aux.ecmwf.int/ecpds/home/ckdmip",
   "target_env": "RH_CKDMIP_DATA_PATH",

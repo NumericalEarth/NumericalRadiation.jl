@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -5,9 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const CONSTRAINED_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_constrained_table_optimizer.json")
+    validation_results_path("reduced_ecckd_constrained_table_optimizer.json")
 const CONSTRAINED_TABLE_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_constrained_table_optimizer.md")
+    validation_results_path("reduced_ecckd_constrained_table_optimizer.md")
 
 constrained_table_candidate_count() =
     parse(Int, get(ENV, "RH_REDUCED_CONSTRAINED_TABLE_CANDIDATES", "8"))

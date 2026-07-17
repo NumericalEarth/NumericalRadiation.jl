@@ -1,6 +1,6 @@
 @testset "ecRad reference manifest artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "ecrad_reference_manifest.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     @test occursin("ecRad Reference Manifest", result)
     @test occursin("clear_sky_tropical_column", result)

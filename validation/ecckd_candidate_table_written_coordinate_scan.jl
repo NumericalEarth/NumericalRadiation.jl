@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_multisample_optimizer.jl"))
 
 const CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_written_coordinate_scan.json")
+    validation_results_path("ecckd_candidate_table_written_coordinate_scan.json")
 const CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_written_coordinate_scan.md")
+    validation_results_path("ecckd_candidate_table_written_coordinate_scan.md")
 const CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_written_coordinate_sw32_candidate.nc")
+    validation_results_path("ecckd_table_written_coordinate_sw32_candidate.nc")
 
 function selected_multisample_parameters()
     if isfile(CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON)

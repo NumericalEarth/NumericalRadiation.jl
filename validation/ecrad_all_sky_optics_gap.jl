@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 using Statistics
@@ -676,7 +678,7 @@ end
 
 function all_sky_optics_gap_main()
     result = run_all_sky_optics_gap()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     output_basename = get(ENV, "RH_ALL_SKY_OPTICS_OUTPUT_BASENAME",
                           ALL_SKY_OPTICS_OUTPUT_BASENAME)

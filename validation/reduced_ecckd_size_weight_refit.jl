@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_subset_search.jl"))
 
 const SIZE_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_size_weight_refit.json")
+    validation_results_path("reduced_ecckd_size_weight_refit.json")
 const SIZE_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_size_weight_refit.md")
+    validation_results_path("reduced_ecckd_size_weight_refit.md")
 
 const SIZE_WEIGHT_REFIT_METHODS = ("even_select", "weighted_bins")
 const SIZE_WEIGHT_REFIT_SW_GPOINTS = (16, 20, 24, 28, 30)

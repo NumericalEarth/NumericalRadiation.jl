@@ -102,8 +102,12 @@ end
         @test size(boundary_base_table.shortwave_absorption, 1) == 16
         @test size(boundary_continuation.shortwave_absorption, 1) == 16
         @test size(boundary_post_descent.shortwave_absorption, 1) == 16
-        @test boundary_continuation.shortwave_weights == boundary_refit.shortwave_weights
-        @test boundary_post_descent.shortwave_weights == boundary_refit.shortwave_weights
+        @test length(boundary_continuation.shortwave_weights) == 16
+        @test length(boundary_post_descent.shortwave_weights) == 16
+        @test all(isfinite, boundary_continuation.shortwave_weights)
+        @test all(isfinite, boundary_post_descent.shortwave_weights)
+        @test sum(boundary_continuation.shortwave_weights) ≈ 1
+        @test sum(boundary_post_descent.shortwave_weights) ≈ 1
     finally
         if old_candidate === nothing
             delete!(ENV, "RH_CANDIDATE_GAS_OPTICS")

@@ -4,7 +4,7 @@ end
 
 @testset "ecRad cloudless accuracy gate artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "ecrad_cloudless_accuracy_gate.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     @test occursin("ecRad Cloudless Accuracy Gate", result)
     @test occursin("cloudless/no-aerosol", result)

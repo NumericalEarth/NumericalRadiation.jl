@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 const ABR_ROOT = normpath(joinpath(@__DIR__, ".."))
@@ -230,7 +232,7 @@ end
 
 function official_ecckd_files_check_main()
     result = run_official_ecckd_files_check()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "official_ecckd_definition_files_check.json")
     md_path = joinpath(results_dir, "official_ecckd_definition_files_check.md")

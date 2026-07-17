@@ -1,6 +1,6 @@
 {
   "case": "reduced_ecckd_leave_one_out_refit_breakdown",
-  "timestamp_utc": "2026-05-22T17:37:23.329",
+  "timestamp_utc": "2026-06-03T01:06:52.418",
   "status": "failed_threshold",
   "omitted_gpoint": 25,
   "ng_lw": 32,
@@ -40,8 +40,8 @@
   "threshold": 0.3
 }, {
   "metric": "sw_down_rmse",
-  "ratio": 0.033130967112910234,
-  "value": 0.033130967112910234,
+  "ratio": 0.033130967112910255,
+  "value": 0.033130967112910255,
   "threshold": 1.0
 }, {
   "metric": "sw_down_max_abs",
@@ -50,8 +50,8 @@
   "threshold": 5.0
 }, {
   "metric": "sw_up_rmse",
-  "ratio": 0.008783973531295546,
-  "value": 0.008783973531295546,
+  "ratio": 0.008783973531295543,
+  "value": 0.008783973531295543,
   "threshold": 1.0
 }, {
   "metric": "sw_up_max_abs",
@@ -90,8 +90,8 @@
   "threshold": 1.0
 }, {
   "metric": "sw_up_rmse",
-  "ratio": 0.009307309317078202,
-  "value": 0.009307309317078202,
+  "ratio": 0.0093073093170782,
+  "value": 0.0093073093170782,
   "threshold": 1.0
 }, {
   "metric": "sw_down_max_abs",
@@ -109,7 +109,7 @@
   "comparison_omitted_gpoints": [25, 23],
   "comparison_breakdowns": [{
   "case": "reduced_ecckd_leave_one_out_refit_breakdown",
-  "timestamp_utc": "2026-05-22T17:37:23.761",
+  "timestamp_utc": "2026-06-03T01:06:52.948",
   "status": "failed_threshold",
   "omitted_gpoint": 25,
   "ng_lw": 32,
@@ -149,8 +149,8 @@
   "threshold": 0.3
 }, {
   "metric": "sw_down_rmse",
-  "ratio": 0.033130967112910234,
-  "value": 0.033130967112910234,
+  "ratio": 0.033130967112910255,
+  "value": 0.033130967112910255,
   "threshold": 1.0
 }, {
   "metric": "sw_down_max_abs",
@@ -159,8 +159,8 @@
   "threshold": 5.0
 }, {
   "metric": "sw_up_rmse",
-  "ratio": 0.008783973531295546,
-  "value": 0.008783973531295546,
+  "ratio": 0.008783973531295543,
+  "value": 0.008783973531295543,
   "threshold": 1.0
 }, {
   "metric": "sw_up_max_abs",
@@ -199,8 +199,8 @@
   "threshold": 1.0
 }, {
   "metric": "sw_up_rmse",
-  "ratio": 0.009307309317078202,
-  "value": 0.009307309317078202,
+  "ratio": 0.0093073093170782,
+  "value": 0.0093073093170782,
   "threshold": 1.0
 }, {
   "metric": "sw_down_max_abs",
@@ -216,28 +216,28 @@
 }]
 }, {
   "case": "reduced_ecckd_leave_one_out_refit_breakdown",
-  "timestamp_utc": "2026-05-22T17:37:24.184",
+  "timestamp_utc": "2026-06-03T01:06:53.460",
   "status": "failed_threshold",
   "omitted_gpoint": 23,
   "ng_lw": 32,
   "ng_sw": 31,
   "selected_shortwave_gpoints": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32],
   "saved_refit_objective": 1.624423143786563,
-  "recomputed_objective": 1.624423143786563,
-  "objective_difference": 0.0,
+  "recomputed_objective": 1.6244231437865624,
+  "objective_difference": 6.661338147750939e-16,
   "worst_case": "ecckd_clear_sky_tropical_column",
   "limiting_metric": "heating_rate_rmse",
-  "limiting_metric_ratio": 1.624423143786563,
-  "limiting_metric_value": 0.08122115718932815,
+  "limiting_metric_ratio": 1.6244231437865624,
+  "limiting_metric_value": 0.08122115718932812,
   "limiting_metric_threshold": 0.05,
   "case_breakdowns": [{
   "case": "ecckd_clear_sky_tropical_column",
   "passed_hard_thresholds": false,
-  "objective": 1.624423143786563,
+  "objective": 1.6244231437865624,
   "metrics": [{
   "metric": "heating_rate_rmse",
-  "ratio": 1.624423143786563,
-  "value": 0.08122115718932815,
+  "ratio": 1.6244231437865624,
+  "value": 0.08122115718932812,
   "threshold": 0.05
 }, {
   "metric": "heating_rate_max_abs",
@@ -256,8 +256,8 @@
   "threshold": 0.3
 }, {
   "metric": "sw_down_rmse",
-  "ratio": 0.07556999111886738,
-  "value": 0.07556999111886738,
+  "ratio": 0.07556999111886735,
+  "value": 0.07556999111886735,
   "threshold": 1.0
 }, {
   "metric": "sw_down_max_abs",
@@ -266,8 +266,8 @@
   "threshold": 5.0
 }, {
   "metric": "sw_up_rmse",
-  "ratio": 0.014080028599890047,
-  "value": 0.014080028599890047,
+  "ratio": 0.014080028599890049,
+  "value": 0.014080028599890049,
   "threshold": 1.0
 }, {
   "metric": "sw_up_max_abs",
@@ -278,11 +278,11 @@
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "passed_hard_thresholds": false,
-  "objective": 1.5281932462540098,
+  "objective": 1.5281932462540095,
   "metrics": [{
   "metric": "heating_rate_rmse",
-  "ratio": 1.5281932462540098,
-  "value": 0.0764096623127005,
+  "ratio": 1.5281932462540095,
+  "value": 0.07640966231270048,
   "threshold": 0.05
 }, {
   "metric": "heating_rate_max_abs",
@@ -301,8 +301,8 @@
   "threshold": 0.3
 }, {
   "metric": "sw_down_rmse",
-  "ratio": 0.06181319361669799,
-  "value": 0.06181319361669799,
+  "ratio": 0.06181319361669798,
+  "value": 0.06181319361669798,
   "threshold": 1.0
 }, {
   "metric": "sw_down_max_abs",
@@ -311,8 +311,8 @@
   "threshold": 5.0
 }, {
   "metric": "sw_up_rmse",
-  "ratio": 0.01985933266519347,
-  "value": 0.01985933266519347,
+  "ratio": 0.019859332665193463,
+  "value": 0.019859332665193463,
   "threshold": 1.0
 }, {
   "metric": "sw_up_max_abs",

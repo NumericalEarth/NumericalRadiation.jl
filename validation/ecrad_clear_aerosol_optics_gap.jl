@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -93,7 +95,7 @@ end
 
 function clear_aerosol_optics_gap_main()
     result = run_clear_aerosol_optics_gap()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_clear_aerosol_optics_gap.json")
     md_path = joinpath(results_dir, "ecrad_clear_aerosol_optics_gap.md")

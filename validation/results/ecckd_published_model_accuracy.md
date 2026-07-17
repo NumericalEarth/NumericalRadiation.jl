@@ -6,23 +6,23 @@ Reference scope: clean ecCKD cloudless/no-aerosol tropical and RCEMIP-style case
 
 | Model | LW | SW | Passed | Worst TOA forcing | Worst surface forcing | Hard objective | Limiting metric |
 |---|---:|---:|---:|---:|---:|---:|---|
-| official ecCKD 1.0 32-LW x 32-SW climate model | 32 | 32 | true | 0.00806408713606 W m^-2 | 0.0140335470378 W m^-2 | 0.182186683249 | heating_rate_max_abs |
-| official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model | 32 | 64 | true | 0.00805285825516 W m^-2 | 0.014141867794 W m^-2 | 0.1883533103 | heating_rate_max_abs |
-| official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model | 32 | 96 | true | 0.00801132011759 W m^-2 | 0.0141703247564 W m^-2 | 0.163908639602 | heating_rate_max_abs |
-| official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model | 64 | 32 | true | 0.00808122718877 W m^-2 | 0.0137164799025 W m^-2 | 0.184823929466 | heating_rate_max_abs |
-| official ecCKD 1.2 64-LW x 64-SW climate model | 64 | 64 | true | 0.00806999830786 W m^-2 | 0.0138248006588 W m^-2 | 0.155860684411 | heating_rate_max_abs |
-| official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model | 64 | 96 | true | 0.00802846017029 W m^-2 | 0.0138532576211 W m^-2 | 0.173093167827 | heating_rate_max_abs |
+| official ecCKD 1.0 32-LW x 32-SW climate model | 32 | 32 | true | 0.00806326591942 W m^-2 | 0.0140334027602 W m^-2 | 0.18218645425 | heating_rate_max_abs |
+| official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model | 32 | 64 | true | 0.00805218208052 W m^-2 | 0.0141401708638 W m^-2 | 0.188353774742 | heating_rate_max_abs |
+| official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model | 32 | 96 | true | 0.00801151785106 W m^-2 | 0.0141713167087 W m^-2 | 0.163908482524 | heating_rate_max_abs |
+| official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model | 64 | 32 | true | 0.00808040597212 W m^-2 | 0.013716335625 W m^-2 | 0.184824082712 | heating_rate_max_abs |
+| official ecCKD 1.2 64-LW x 64-SW climate model | 64 | 64 | true | 0.00806932213322 W m^-2 | 0.0138231037286 W m^-2 | 0.155860215267 | heating_rate_max_abs |
+| official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model | 64 | 96 | true | 0.00802865790376 W m^-2 | 0.0138542495735 W m^-2 | 0.173092912184 | heating_rate_max_abs |
 
 ## Boundary compatibility
 
 | Model | LW surface spectral matches | SW surface albedo matches | SW direct albedo matches | SW incoming spectral matches |
 |---|---:|---:|---:|---:|
-| official ecCKD 1.0 32-LW x 32-SW climate model | true | true | false | false |
-| official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model | true | true | false | false |
-| official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model | true | true | false | false |
-| official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model | true | true | false | false |
-| official ecCKD 1.2 64-LW x 64-SW climate model | true | true | false | false |
-| official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model | true | true | false | false |
+| official ecCKD 1.0 32-LW x 32-SW climate model | true | true | false | true |
+| official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model | true | true | false | true |
+| official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model | true | true | false | true |
+| official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model | true | true | false | true |
+| official ecCKD 1.2 64-LW x 64-SW climate model | true | true | false | true |
+| official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model | true | true | false | true |
 
 ## Mixed-component isolation diagnostics
 
@@ -30,7 +30,7 @@ Reference scope: clean ecCKD cloudless/no-aerosol tropical and RCEMIP-style case
 |---|---:|---:|---:|---:|---:|---:|---|
 | 32-LW reference with 64-SW published component | 32 | 64 | false | 1.03319239342 W m^-2 | 3.37183442967 W m^-2 | 11.2394480989 | surface_forcing |
 | 32-LW reference with 96-SW published component | 32 | 96 | false | 0.989270364656 W m^-2 | 3.27806404982 W m^-2 | 10.9268801661 | surface_forcing |
-| 64-LW published component with 32-SW reference | 64 | 32 | false | 3.56125541041 W m^-2 | 0.752565639935 W m^-2 | 28.102842578 | heating_rate_max_abs |
+| 64-LW published component with 32-SW reference | 64 | 32 | false | 3.5612560348 W m^-2 | 0.752567612576 W m^-2 | 28.1028425343 | heating_rate_max_abs |
 
 ## Boundary-projection experiment
 

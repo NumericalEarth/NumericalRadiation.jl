@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 using Statistics
@@ -149,7 +151,7 @@ end
 
 function flux_bias_diagnostics_main()
     result = run_flux_bias_diagnostics()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_flux_bias_diagnostics.json")
     md_path = joinpath(results_dir, "ecrad_flux_bias_diagnostics.md")

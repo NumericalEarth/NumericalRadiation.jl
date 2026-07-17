@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using NCDatasets
@@ -6,9 +8,9 @@ include(joinpath(@__DIR__, "ckdmip_training_data_preflight.jl"))
 include(joinpath(@__DIR__, "ecckd_original_objective_loss.jl"))
 
 const CKDMIP_OBJECTIVE_DATASET_JSON =
-    joinpath(@__DIR__, "results", "ckdmip_original_objective_dataset.json")
+    validation_results_path("ckdmip_original_objective_dataset.json")
 const CKDMIP_OBJECTIVE_DATASET_MD =
-    joinpath(@__DIR__, "results", "ckdmip_original_objective_dataset.md")
+    validation_results_path("ckdmip_original_objective_dataset.md")
 
 const ECCKD_GRAVITY = 9.80665
 const ECCKD_SPECIFIC_HEAT_AIR = 1004.0

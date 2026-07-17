@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
@@ -5,9 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_leave_one_out_weight_refit.jl"))
 
 const LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_refit_breakdown.json")
+    validation_results_path("reduced_ecckd_leave_one_out_refit_breakdown.json")
 const LEAVE_ONE_OUT_REFIT_BREAKDOWN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_refit_breakdown.md")
+    validation_results_path("reduced_ecckd_leave_one_out_refit_breakdown.md")
 
 target_omitted_gpoint() =
     parse(Int, get(ENV, "RH_REDUCED_LEAVE_ONE_OUT_BREAKDOWN_OMIT", "25"))

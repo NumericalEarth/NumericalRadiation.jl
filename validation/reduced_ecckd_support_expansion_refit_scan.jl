@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_support_expansion_scan.jl"))
 
 const SUPPORT_EXPANSION_REFIT_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_support_expansion_refit_scan.json")
+    validation_results_path("reduced_ecckd_support_expansion_refit_scan.json")
 const SUPPORT_EXPANSION_REFIT_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_support_expansion_refit_scan.md")
+    validation_results_path("reduced_ecckd_support_expansion_refit_scan.md")
 
 support_expansion_refit_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_SUPPORT_EXPANSION_REFIT_ITERATIONS", "4000"))

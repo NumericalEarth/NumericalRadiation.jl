@@ -1,6 +1,6 @@
 {
   "case": "ecckd_published_model_accuracy",
-  "timestamp_utc": "2026-05-22T20:49:21.240",
+  "timestamp_utc": "2026-06-03T01:03:22.703",
   "status": "passed",
   "reference_scope": "published rows use matched package-native ecRad references for every promoted non-32x32 combination; 32x32 uses ecckd_clear_sky_tropical_column, ecckd_rcemip_style_column_subset",
   "acceptance_thresholds": {
@@ -22,20 +22,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
   "passed_hard_thresholds": true,
-  "worst_toa_forcing_abs_error_w_m2": 0.00806408713606288,
-  "worst_surface_forcing_abs_error_w_m2": 0.014033547037797689,
+  "worst_toa_forcing_abs_error_w_m2": 0.008063265919417972,
+  "worst_surface_forcing_abs_error_w_m2": 0.01403340276021936,
   "hard_objective": {
-  "value": 0.18218668324947096,
+  "value": 0.18218645425029933,
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "metric_value": 0.09109334162473548,
+  "metric_value": 0.09109322712514967,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": true,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_clear_sky_tropical_column",
@@ -44,11 +44,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_rcemip_style_column_subset",
@@ -57,11 +57,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -71,28 +71,28 @@
   "passed_hard_thresholds": true,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.0054701302755537995,
-  "max_abs": 0.0076393392451166164
+  "rmse": 0.005469867271546258,
+  "max_abs": 0.007638518028443286
 },
   "sw_down": {
-  "rmse": 0.004300734655109106,
-  "max_abs": 0.008867579104276047
+  "rmse": 0.004300211187433556,
+  "max_abs": 0.008864178673093193
 },
   "heating_rate": {
-  "rmse": 0.005750188731356344,
-  "max_abs": 0.09109334162473548
+  "rmse": 0.005750190803338514,
+  "max_abs": 0.09109322712514967
 }
 },
-  "toa_forcing_max_abs": 0.00806408713606288,
-  "surface_forcing_max_abs": 0.014033547037797689
+  "toa_forcing_max_abs": 0.008063265919417972,
+  "surface_forcing_max_abs": 0.01403340276021936
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc",
@@ -107,20 +107,20 @@
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.004264585070065071,
-  "max_abs": 0.007825877709521478
+  "rmse": 0.004264521373191186,
+  "max_abs": 0.007826296507914776
 },
   "sw_down": {
-  "rmse": 0.003544917383454724,
-  "max_abs": 0.009717230830688095
+  "rmse": 0.003544535358500373,
+  "max_abs": 0.009715073606230362
 },
   "heating_rate": {
-  "rmse": 0.004569756255209099,
-  "max_abs": 0.09109334162473548
+  "rmse": 0.004569757951831493,
+  "max_abs": 0.09109322712514967
 }
 },
-  "toa_forcing_max_abs": 0.00806408713606288,
-  "surface_forcing_max_abs": 0.014033547037797689
+  "toa_forcing_max_abs": 0.008063265919417972,
+  "surface_forcing_max_abs": 0.01403340276021936
 }]
 }, {
   "label": "official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model",
@@ -133,20 +133,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_sw_climate_window-64b_ckd-definition.nc",
   "passed_hard_thresholds": true,
-  "worst_toa_forcing_abs_error_w_m2": 0.008052858255155115,
-  "worst_surface_forcing_abs_error_w_m2": 0.01414186779402371,
+  "worst_toa_forcing_abs_error_w_m2": 0.008052182080518833,
+  "worst_surface_forcing_abs_error_w_m2": 0.014140170863811363,
   "hard_objective": {
-  "value": 0.18835331030003566,
+  "value": 0.18835377474169768,
   "case": "ecckd_32x64_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "metric_value": 0.09417665515001783,
+  "metric_value": 0.09417688737084884,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": true,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_32x64_clear_sky_tropical_column",
@@ -155,11 +155,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 64,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 64,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_32x64_rcemip_style_column_subset",
@@ -168,11 +168,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 64,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 64,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -182,28 +182,28 @@
   "passed_hard_thresholds": true,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.005473034466008073,
-  "max_abs": 0.007631290266672863
+  "rmse": 0.005473020955463441,
+  "max_abs": 0.007630614154820137
 },
   "sw_down": {
-  "rmse": 0.00433420062475782,
-  "max_abs": 0.008971713179789731
+  "rmse": 0.004334246720847573,
+  "max_abs": 0.008972731790777289
 },
   "heating_rate": {
-  "rmse": 0.00600274817512058,
-  "max_abs": 0.09417665515001783
+  "rmse": 0.00600275016561841,
+  "max_abs": 0.09417688737084884
 }
 },
-  "toa_forcing_max_abs": 0.008052858255155115,
-  "surface_forcing_max_abs": 0.01414186779402371
+  "toa_forcing_max_abs": 0.008052182080518833,
+  "surface_forcing_max_abs": 0.014140170863811363
 }, {
   "case": "ecckd_32x64_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_32x64_rcemip_style_column_subset.nc",
@@ -218,20 +218,20 @@
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.004259890965724259,
-  "max_abs": 0.007799373803848653
+  "rmse": 0.004259868255292262,
+  "max_abs": 0.007800133318468738
 },
   "sw_down": {
-  "rmse": 0.0035907103988497904,
-  "max_abs": 0.009861860567184522
+  "rmse": 0.003590806658199013,
+  "max_abs": 0.009865886205830066
 },
   "heating_rate": {
-  "rmse": 0.004661140032648547,
-  "max_abs": 0.09417665515001783
+  "rmse": 0.004661140578244725,
+  "max_abs": 0.09417688737084884
 }
 },
-  "toa_forcing_max_abs": 0.008052858255155115,
-  "surface_forcing_max_abs": 0.01414186779402371
+  "toa_forcing_max_abs": 0.008052182080518833,
+  "surface_forcing_max_abs": 0.014140170863811363
 }]
 }, {
   "label": "official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model",
@@ -244,20 +244,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
   "passed_hard_thresholds": true,
-  "worst_toa_forcing_abs_error_w_m2": 0.008011320117589094,
-  "worst_surface_forcing_abs_error_w_m2": 0.01417032475637825,
+  "worst_toa_forcing_abs_error_w_m2": 0.00801151785105958,
+  "worst_surface_forcing_abs_error_w_m2": 0.014171316708711856,
   "hard_objective": {
-  "value": 0.16390863960176993,
+  "value": 0.16390848252401113,
   "case": "ecckd_32x96_rcemip_style_column_subset",
   "metric": "heating_rate_max_abs",
-  "metric_value": 0.08195431980088497,
+  "metric_value": 0.08195424126200557,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": true,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_32x96_clear_sky_tropical_column",
@@ -266,11 +266,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 96,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 96,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_32x96_rcemip_style_column_subset",
@@ -279,11 +279,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 96,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 96,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -293,28 +293,28 @@
   "passed_hard_thresholds": true,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.005415018694753856,
-  "max_abs": 0.007589628199383469
+  "rmse": 0.005414957668122162,
+  "max_abs": 0.007589825893589364
 },
   "sw_down": {
-  "rmse": 0.004359352239389562,
-  "max_abs": 0.009093046527254955
+  "rmse": 0.004359640703155814,
+  "max_abs": 0.009093412479728613
 },
   "heating_rate": {
-  "rmse": 0.005666952372203452,
-  "max_abs": 0.06640828771136764
+  "rmse": 0.005666952417192849,
+  "max_abs": 0.06640854709864019
 }
 },
-  "toa_forcing_max_abs": 0.008011320117589094,
-  "surface_forcing_max_abs": 0.01417032475637825
+  "toa_forcing_max_abs": 0.00801151785105958,
+  "surface_forcing_max_abs": 0.014171316708711856
 }, {
   "case": "ecckd_32x96_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_32x96_rcemip_style_column_subset.nc",
@@ -329,20 +329,20 @@
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.004222747774950939,
-  "max_abs": 0.007760921563829015
+  "rmse": 0.0042226987648558666,
+  "max_abs": 0.007760960999220856
 },
   "sw_down": {
-  "rmse": 0.0036006110179628674,
-  "max_abs": 0.009870537561937454
+  "rmse": 0.0036007938689471895,
+  "max_abs": 0.009871658159227081
 },
   "heating_rate": {
-  "rmse": 0.004551709828056055,
-  "max_abs": 0.08195431980088497
+  "rmse": 0.0045517093880984485,
+  "max_abs": 0.08195424126200557
 }
 },
-  "toa_forcing_max_abs": 0.008011320117589094,
-  "surface_forcing_max_abs": 0.01417032475637825
+  "toa_forcing_max_abs": 0.00801151785105958,
+  "surface_forcing_max_abs": 0.014171316708711856
 }]
 }, {
   "label": "official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model",
@@ -355,20 +355,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
   "passed_hard_thresholds": true,
-  "worst_toa_forcing_abs_error_w_m2": 0.008081227188768025,
-  "worst_surface_forcing_abs_error_w_m2": 0.013716479902541323,
+  "worst_toa_forcing_abs_error_w_m2": 0.008080405972123117,
+  "worst_surface_forcing_abs_error_w_m2": 0.013716335624962994,
   "hard_objective": {
-  "value": 0.18482392946556025,
+  "value": 0.18482408271215256,
   "case": "ecckd_64x32_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "metric_value": 0.09241196473278013,
+  "metric_value": 0.09241204135607628,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": true,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_64x32_clear_sky_tropical_column",
@@ -377,11 +377,11 @@
   "surface_longwave_up_spectral_gpoints": 64,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_64x32_rcemip_style_column_subset",
@@ -390,11 +390,11 @@
   "surface_longwave_up_spectral_gpoints": 64,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -404,7 +404,7 @@
   "passed_hard_thresholds": true,
   "variables": {
   "lw_up": {
-  "rmse": 0.0008460865287696262,
+  "rmse": 0.0008460865287696266,
   "max_abs": 0.002139761592616196
 },
   "lw_down": {
@@ -412,20 +412,20 @@
   "max_abs": 0.00590143777759522
 },
   "sw_up": {
-  "rmse": 0.0054701302755537995,
-  "max_abs": 0.0076393392451166164
+  "rmse": 0.005469867271546258,
+  "max_abs": 0.007638518028443286
 },
   "sw_down": {
-  "rmse": 0.004300734655109106,
-  "max_abs": 0.008867579104276047
+  "rmse": 0.004300211187433556,
+  "max_abs": 0.008864178673093193
 },
   "heating_rate": {
-  "rmse": 0.00573799741338225,
-  "max_abs": 0.09241196473278013
+  "rmse": 0.0057379976497294845,
+  "max_abs": 0.09241204135607628
 }
 },
-  "toa_forcing_max_abs": 0.008081227188768025,
-  "surface_forcing_max_abs": 0.013716479902541323
+  "toa_forcing_max_abs": 0.008080405972123117,
+  "surface_forcing_max_abs": 0.013716335624962994
 }, {
   "case": "ecckd_64x32_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_64x32_rcemip_style_column_subset.nc",
@@ -440,20 +440,20 @@
   "max_abs": 0.00590143777759522
 },
   "sw_up": {
-  "rmse": 0.004264585070065071,
-  "max_abs": 0.007825877709521478
+  "rmse": 0.004264521373191186,
+  "max_abs": 0.007826296507914776
 },
   "sw_down": {
-  "rmse": 0.003544917383454724,
-  "max_abs": 0.009717230830688095
+  "rmse": 0.003544535358500373,
+  "max_abs": 0.009715073606230362
 },
   "heating_rate": {
-  "rmse": 0.00458529932252462,
-  "max_abs": 0.09241196473278013
+  "rmse": 0.004585299941510965,
+  "max_abs": 0.09241204135607628
 }
 },
-  "toa_forcing_max_abs": 0.008081227188768025,
-  "surface_forcing_max_abs": 0.013716479902541323
+  "toa_forcing_max_abs": 0.008080405972123117,
+  "surface_forcing_max_abs": 0.013716335624962994
 }]
 }, {
   "label": "official ecCKD 1.2 64-LW x 64-SW climate model",
@@ -466,20 +466,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_sw_climate_window-64b_ckd-definition.nc",
   "passed_hard_thresholds": true,
-  "worst_toa_forcing_abs_error_w_m2": 0.00806999830786026,
-  "worst_surface_forcing_abs_error_w_m2": 0.013824800658767344,
+  "worst_toa_forcing_abs_error_w_m2": 0.008069322133223977,
+  "worst_surface_forcing_abs_error_w_m2": 0.013823103728554997,
   "hard_objective": {
-  "value": 0.15586068441068335,
+  "value": 0.15586021526713623,
   "case": "ecckd_64x64_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "metric_value": 0.07793034220534167,
+  "metric_value": 0.07793010763356811,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": true,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_64x64_clear_sky_tropical_column",
@@ -488,11 +488,11 @@
   "surface_longwave_up_spectral_gpoints": 64,
   "surface_albedo_spectral_gpoints": 64,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 64,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_64x64_rcemip_style_column_subset",
@@ -501,11 +501,11 @@
   "surface_longwave_up_spectral_gpoints": 64,
   "surface_albedo_spectral_gpoints": 64,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 64,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -515,7 +515,7 @@
   "passed_hard_thresholds": true,
   "variables": {
   "lw_up": {
-  "rmse": 0.0008460865287696262,
+  "rmse": 0.0008460865287696266,
   "max_abs": 0.002139761592616196
 },
   "lw_down": {
@@ -523,20 +523,20 @@
   "max_abs": 0.00590143777759522
 },
   "sw_up": {
-  "rmse": 0.005473034466008073,
-  "max_abs": 0.007631290266672863
+  "rmse": 0.005473020955463441,
+  "max_abs": 0.007630614154820137
 },
   "sw_down": {
-  "rmse": 0.00433420062475782,
-  "max_abs": 0.008971713179789731
+  "rmse": 0.004334246720847573,
+  "max_abs": 0.008972731790777289
 },
   "heating_rate": {
-  "rmse": 0.005675987171647592,
-  "max_abs": 0.07793034220534167
+  "rmse": 0.005675987687509875,
+  "max_abs": 0.07793010763356811
 }
 },
-  "toa_forcing_max_abs": 0.00806999830786026,
-  "surface_forcing_max_abs": 0.013824800658767344
+  "toa_forcing_max_abs": 0.008069322133223977,
+  "surface_forcing_max_abs": 0.013823103728554997
 }, {
   "case": "ecckd_64x64_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_64x64_rcemip_style_column_subset.nc",
@@ -551,20 +551,20 @@
   "max_abs": 0.00590143777759522
 },
   "sw_up": {
-  "rmse": 0.004259890965724259,
-  "max_abs": 0.007799373803848653
+  "rmse": 0.004259868255292262,
+  "max_abs": 0.007800133318468738
 },
   "sw_down": {
-  "rmse": 0.0035907103988497904,
-  "max_abs": 0.009861860567184522
+  "rmse": 0.003590806658199013,
+  "max_abs": 0.009865886205830066
 },
   "heating_rate": {
-  "rmse": 0.004395992274422905,
-  "max_abs": 0.07793034220534167
+  "rmse": 0.004395992022229275,
+  "max_abs": 0.07793010763356811
 }
 },
-  "toa_forcing_max_abs": 0.00806999830786026,
-  "surface_forcing_max_abs": 0.013824800658767344
+  "toa_forcing_max_abs": 0.008069322133223977,
+  "surface_forcing_max_abs": 0.013823103728554997
 }]
 }, {
   "label": "official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model",
@@ -577,20 +577,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
   "passed_hard_thresholds": true,
-  "worst_toa_forcing_abs_error_w_m2": 0.008028460170294238,
-  "worst_surface_forcing_abs_error_w_m2": 0.013853257621121884,
+  "worst_toa_forcing_abs_error_w_m2": 0.008028657903764724,
+  "worst_surface_forcing_abs_error_w_m2": 0.01385424957345549,
   "hard_objective": {
-  "value": 0.17309316782723094,
+  "value": 0.17309291218405143,
   "case": "ecckd_64x96_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "metric_value": 0.08654658391361547,
+  "metric_value": 0.08654645609202571,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": true,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_64x96_clear_sky_tropical_column",
@@ -599,11 +599,11 @@
   "surface_longwave_up_spectral_gpoints": 64,
   "surface_albedo_spectral_gpoints": 96,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 96,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_64x96_rcemip_style_column_subset",
@@ -612,11 +612,11 @@
   "surface_longwave_up_spectral_gpoints": 64,
   "surface_albedo_spectral_gpoints": 96,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 96,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -626,7 +626,7 @@
   "passed_hard_thresholds": true,
   "variables": {
   "lw_up": {
-  "rmse": 0.0008460865287696262,
+  "rmse": 0.0008460865287696266,
   "max_abs": 0.002139761592616196
 },
   "lw_down": {
@@ -634,20 +634,20 @@
   "max_abs": 0.00590143777759522
 },
   "sw_up": {
-  "rmse": 0.005415018694753856,
-  "max_abs": 0.007589628199383469
+  "rmse": 0.005414957668122162,
+  "max_abs": 0.007589825893589364
 },
   "sw_down": {
-  "rmse": 0.004359352239389562,
-  "max_abs": 0.009093046527254955
+  "rmse": 0.004359640703155814,
+  "max_abs": 0.009093412479728613
 },
   "heating_rate": {
-  "rmse": 0.006375637320351183,
-  "max_abs": 0.08654658391361547
+  "rmse": 0.0063756377600598475,
+  "max_abs": 0.08654645609202571
 }
 },
-  "toa_forcing_max_abs": 0.008028460170294238,
-  "surface_forcing_max_abs": 0.013853257621121884
+  "toa_forcing_max_abs": 0.008028657903764724,
+  "surface_forcing_max_abs": 0.01385424957345549
 }, {
   "case": "ecckd_64x96_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_64x96_rcemip_style_column_subset.nc",
@@ -662,20 +662,20 @@
   "max_abs": 0.00590143777759522
 },
   "sw_up": {
-  "rmse": 0.004222747774950939,
-  "max_abs": 0.007760921563829015
+  "rmse": 0.0042226987648558666,
+  "max_abs": 0.007760960999220856
 },
   "sw_down": {
-  "rmse": 0.0036006110179628674,
-  "max_abs": 0.009870537561937454
+  "rmse": 0.0036007938689471895,
+  "max_abs": 0.009871658159227081
 },
   "heating_rate": {
-  "rmse": 0.004797520066589438,
-  "max_abs": 0.08654658391361547
+  "rmse": 0.004797519999329354,
+  "max_abs": 0.08654645609202571
 }
 },
-  "toa_forcing_max_abs": 0.008028460170294238,
-  "surface_forcing_max_abs": 0.013853257621121884
+  "toa_forcing_max_abs": 0.008028657903764724,
+  "surface_forcing_max_abs": 0.01385424957345549
 }]
 }],
   "isolation_diagnostics": [{
@@ -711,7 +711,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -724,7 +724,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -738,11 +738,11 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
@@ -750,11 +750,11 @@
   "max_abs": 3.557551649902507
 },
   "sw_down": {
-  "rmse": 0.9830864005916559,
+  "rmse": 0.9830864005916561,
   "max_abs": 4.133180824973465
 },
   "heating_rate": {
-  "rmse": 0.10928827026866891,
+  "rmse": 0.10928827026866887,
   "max_abs": 1.2171481492623197
 }
 },
@@ -774,7 +774,7 @@
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.8315309293986053,
+  "rmse": 0.8315309293986054,
   "max_abs": 3.557551649902507
 },
   "sw_down": {
@@ -782,7 +782,7 @@
   "max_abs": 4.133180824973465
 },
   "heating_rate": {
-  "rmse": 0.09533821056306482,
+  "rmse": 0.09533821056306481,
   "max_abs": 1.2171481492623197
 }
 },
@@ -822,7 +822,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -835,7 +835,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -849,15 +849,15 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.8082222009529336,
+  "rmse": 0.808222200952934,
   "max_abs": 3.3744292882734044
 },
   "sw_down": {
@@ -885,7 +885,7 @@
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.8697341345907151,
+  "rmse": 0.869734134590715,
   "max_abs": 3.8953982664079376
 },
   "sw_down": {
@@ -911,20 +911,20 @@
   "longwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
   "shortwave_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
   "passed_hard_thresholds": false,
-  "worst_toa_forcing_abs_error_w_m2": 3.5612554104114906,
-  "worst_surface_forcing_abs_error_w_m2": 0.7525656399350282,
+  "worst_toa_forcing_abs_error_w_m2": 3.5612560348019997,
+  "worst_surface_forcing_abs_error_w_m2": 0.7525676125757172,
   "hard_objective": {
-  "value": 28.10284257797892,
+  "value": 28.10284253427899,
   "case": "ecckd_clear_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "metric_value": 14.05142128898946,
+  "metric_value": 14.051421267139496,
   "threshold": 0.5
 },
   "boundary_compatibility": {
   "all_longwave_spectral_boundaries_match": false,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_clear_sky_tropical_column",
@@ -933,11 +933,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_rcemip_style_column_subset",
@@ -946,11 +946,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -960,28 +960,28 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 1.4967231965129357,
+  "rmse": 1.4967231965129362,
   "max_abs": 5.7546563779202415
 },
   "lw_down": {
-  "rmse": 0.17738715520040035,
+  "rmse": 0.17738715520040033,
   "max_abs": 2.165490542672245
 },
   "sw_up": {
-  "rmse": 0.0054701302755537995,
-  "max_abs": 0.0076393392451166164
+  "rmse": 0.005469867271546258,
+  "max_abs": 0.007638518028443286
 },
   "sw_down": {
-  "rmse": 0.004300734655109106,
-  "max_abs": 0.008867579104276047
+  "rmse": 0.004300211187433556,
+  "max_abs": 0.008864178673093193
 },
   "heating_rate": {
-  "rmse": 0.5708252735169405,
-  "max_abs": 14.05142128898946
+  "rmse": 0.5708252732774278,
+  "max_abs": 14.051421267139496
 }
 },
-  "toa_forcing_max_abs": 3.0758481096517016,
-  "surface_forcing_max_abs": 0.31004633961117634
+  "toa_forcing_max_abs": 3.0758479961519924,
+  "surface_forcing_max_abs": 0.31005021457372095
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc",
@@ -996,20 +996,20 @@
   "max_abs": 2.165490542672245
 },
   "sw_up": {
-  "rmse": 0.004264585070065071,
-  "max_abs": 0.007825877709521478
+  "rmse": 0.004264521373191186,
+  "max_abs": 0.007826296507914776
 },
   "sw_down": {
-  "rmse": 0.003544917383454724,
-  "max_abs": 0.009717230830688095
+  "rmse": 0.003544535358500373,
+  "max_abs": 0.009715073606230362
 },
   "heating_rate": {
-  "rmse": 0.36127087015504566,
-  "max_abs": 14.05142128898946
+  "rmse": 0.36127086997553015,
+  "max_abs": 14.051421267139496
 }
 },
-  "toa_forcing_max_abs": 3.5612554104114906,
-  "surface_forcing_max_abs": 0.7525656399350282
+  "toa_forcing_max_abs": 3.5612560348019997,
+  "surface_forcing_max_abs": 0.7525676125757172
 }]
 }],
   "boundary_projection_diagnostics": [{
@@ -1045,7 +1045,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1058,7 +1058,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1076,19 +1076,19 @@
   "max_abs": 820.1035523098058
 },
   "lw_down": {
-  "rmse": 0.17738715520040035,
+  "rmse": 0.17738715520040033,
   "max_abs": 2.165490542672245
 },
   "sw_up": {
-  "rmse": 0.1610063073005558,
+  "rmse": 0.1610063073005557,
   "max_abs": 0.3604664218603659
 },
   "sw_down": {
-  "rmse": 0.20854357750445968,
+  "rmse": 0.2085435775044597,
   "max_abs": 0.8910144747958384
 },
   "heating_rate": {
-  "rmse": 73.2801588957123,
+  "rmse": 73.28015889571229,
   "max_abs": 945.8613580067946
 }
 },
@@ -1100,7 +1100,7 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 114.295743174449,
+  "rmse": 114.29574317444902,
   "max_abs": 820.1035523098058
 },
   "lw_down": {
@@ -1112,7 +1112,7 @@
   "max_abs": 0.8690582888805807
 },
   "sw_down": {
-  "rmse": 0.22275227198205047,
+  "rmse": 0.2227522719820505,
   "max_abs": 0.8910144747958384
 },
   "heating_rate": {
@@ -1156,7 +1156,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1169,7 +1169,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1187,15 +1187,15 @@
   "max_abs": 820.1035523098058
 },
   "lw_down": {
-  "rmse": 0.17738715520040035,
+  "rmse": 0.17738715520040033,
   "max_abs": 2.165490542672245
 },
   "sw_up": {
-  "rmse": 0.2116338869817291,
+  "rmse": 0.21163388698172908,
   "max_abs": 0.6411397569952157
 },
   "sw_down": {
-  "rmse": 0.2283402430166449,
+  "rmse": 0.22834024301664482,
   "max_abs": 1.0597585109487682
 },
   "heating_rate": {
@@ -1211,7 +1211,7 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 114.295743174449,
+  "rmse": 114.29574317444902,
   "max_abs": 820.1035523098058
 },
   "lw_down": {
@@ -1223,11 +1223,11 @@
   "max_abs": 1.2843771674627078
 },
   "sw_down": {
-  "rmse": 0.23714434636601328,
+  "rmse": 0.23714434636601323,
   "max_abs": 1.0597585109487682
 },
   "heating_rate": {
-  "rmse": 48.801569688377356,
+  "rmse": 48.80156968837737,
   "max_abs": 945.8506527619459
 }
 },
@@ -1267,7 +1267,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1280,7 +1280,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1294,23 +1294,23 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.1610063073005558,
+  "rmse": 0.1610063073005557,
   "max_abs": 0.3604664218603659
 },
   "sw_down": {
-  "rmse": 0.20854357750445968,
+  "rmse": 0.2085435775044597,
   "max_abs": 0.8910144747958384
 },
   "heating_rate": {
-  "rmse": 0.09475374800529056,
+  "rmse": 0.09475374800529059,
   "max_abs": 1.202965798684648
 }
 },
@@ -1334,7 +1334,7 @@
   "max_abs": 0.8690582888805807
 },
   "sw_down": {
-  "rmse": 0.22275227198205047,
+  "rmse": 0.2227522719820505,
   "max_abs": 0.8910144747958384
 },
   "heating_rate": {
@@ -1378,7 +1378,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1391,7 +1391,7 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": true,
   "shortwave_surface_albedo_matches": false,
   "shortwave_direct_albedo_matches": false,
@@ -1405,23 +1405,23 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 0.0009104498592883523,
+  "rmse": 0.0009104498592883526,
   "max_abs": 0.0024817111501533873
 },
   "lw_down": {
-  "rmse": 0.0021114544504658764,
+  "rmse": 0.0021114544504658773,
   "max_abs": 0.006100340468435661
 },
   "sw_up": {
-  "rmse": 0.2116338869817291,
+  "rmse": 0.21163388698172908,
   "max_abs": 0.6411397569952157
 },
   "sw_down": {
-  "rmse": 0.2283402430166449,
+  "rmse": 0.22834024301664482,
   "max_abs": 1.0597585109487682
 },
   "heating_rate": {
-  "rmse": 0.06621274084190779,
+  "rmse": 0.06621274084190783,
   "max_abs": 0.6786885101703213
 }
 },
@@ -1445,7 +1445,7 @@
   "max_abs": 1.2843771674627078
 },
   "sw_down": {
-  "rmse": 0.23714434636601328,
+  "rmse": 0.23714434636601323,
   "max_abs": 1.0597585109487682
 },
   "heating_rate": {
@@ -1480,7 +1480,7 @@
   "all_longwave_spectral_boundaries_match": false,
   "all_shortwave_surface_albedo_boundaries_match": true,
   "all_shortwave_direct_albedo_boundaries_match": false,
-  "all_shortwave_incoming_spectral_boundaries_match": false,
+  "all_shortwave_incoming_spectral_boundaries_match": true,
   "all_shortwave_spectral_boundaries_match": false,
   "cases": [{
   "case": "ecckd_clear_sky_tropical_column",
@@ -1489,11 +1489,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }, {
   "case": "ecckd_rcemip_style_column_subset",
@@ -1502,11 +1502,11 @@
   "surface_longwave_up_spectral_gpoints": 32,
   "surface_albedo_spectral_gpoints": 32,
   "surface_albedo_direct_spectral_gpoints": 6,
-  "toa_shortwave_down_spectral_gpoints": null,
+  "toa_shortwave_down_spectral_gpoints": 32,
   "longwave_spectral_boundary_matches": false,
   "shortwave_surface_albedo_matches": true,
   "shortwave_direct_albedo_matches": false,
-  "shortwave_incoming_spectral_matches": false,
+  "shortwave_incoming_spectral_matches": true,
   "shortwave_spectral_boundary_matches": false
 }]
 },
@@ -1520,7 +1520,7 @@
   "max_abs": 820.1035523098058
 },
   "lw_down": {
-  "rmse": 0.17738715520040035,
+  "rmse": 0.17738715520040033,
   "max_abs": 2.165490542672245
 },
   "sw_up": {
@@ -1528,7 +1528,7 @@
   "max_abs": 0.0076393392451166164
 },
   "sw_down": {
-  "rmse": 0.004300734655109106,
+  "rmse": 0.004300734655109105,
   "max_abs": 0.008867579104276047
 },
   "heating_rate": {
@@ -1544,7 +1544,7 @@
   "passed_hard_thresholds": false,
   "variables": {
   "lw_up": {
-  "rmse": 114.295743174449,
+  "rmse": 114.29574317444902,
   "max_abs": 820.1035523098058
 },
   "lw_down": {
@@ -1552,15 +1552,15 @@
   "max_abs": 2.165490542672245
 },
   "sw_up": {
-  "rmse": 0.004264585070065071,
+  "rmse": 0.004264585070065072,
   "max_abs": 0.007825877709521478
 },
   "sw_down": {
-  "rmse": 0.003544917383454724,
+  "rmse": 0.0035449173834547244,
   "max_abs": 0.009717230830688095
 },
   "heating_rate": {
-  "rmse": 48.79790873454915,
+  "rmse": 48.797908734549154,
   "max_abs": 945.8466185132385
 }
 },

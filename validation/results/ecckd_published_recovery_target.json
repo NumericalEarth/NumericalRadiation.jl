@@ -1,6 +1,6 @@
 {
   "case": "ecckd_published_recovery_target",
-  "timestamp_utc": "2026-05-23T00:11:26.748",
+  "timestamp_utc": "2026-06-03T01:09:13.693",
   "status": "published_recovery_target_ready",
   "model_count": 6,
   "target_models": [
@@ -64,7 +64,7 @@
           "positive_count": 10116,
           "min": 0.0,
           "max": 210.5294189453125,
-          "sum": 29055.91279500525
+          "sum": 29055.912795005246
         },
         {
           "name": "co2_molar_absorption_coeff",
@@ -77,7 +77,7 @@
           "positive_count": 10167,
           "min": 0.0,
           "max": 1622.3875732421875,
-          "sum": 107392.24657654192
+          "sum": 107392.24657654193
         },
         {
           "name": "composite_molar_absorption_coeff",
@@ -90,7 +90,7 @@
           "positive_count": 10176,
           "min": 2.1495536267298644e-15,
           "max": 0.0004846341907978058,
-          "sum": 0.08539379453895513
+          "sum": 0.08539379453895511
         },
         {
           "name": "h2o_molar_absorption_coeff",
@@ -117,7 +117,7 @@
           "positive_count": 10176,
           "min": 7.19395376602705e-10,
           "max": 45.790374755859375,
-          "sum": 13375.96320861001
+          "sum": 13375.963208610012
         },
         {
           "name": "o3_molar_absorption_coeff",
@@ -216,7 +216,7 @@
           "positive_count": 7950,
           "min": 0.0,
           "max": 183.77760314941406,
-          "sum": 10139.075351784313
+          "sum": 10139.075351784311
         },
         {
           "name": "composite_molar_absorption_coeff",
@@ -243,7 +243,7 @@
           "positive_count": 110664,
           "min": 0.0,
           "max": 190.04806518554688,
-          "sum": 197971.52783455042
+          "sum": 197971.52783455045
         },
         {
           "name": "n2o_molar_absorption_coeff",
@@ -681,7 +681,7 @@
           "positive_count": 7950,
           "min": 0.0,
           "max": 183.98757934570312,
-          "sum": 10128.11851230203
+          "sum": 10128.118512302028
         },
         {
           "name": "composite_molar_absorption_coeff",
@@ -694,7 +694,7 @@
           "positive_count": 10176,
           "min": 1.789770622559559e-14,
           "max": 0.00014448314323090017,
-          "sum": 0.015506219543138737
+          "sum": 0.015506219543138739
         },
         {
           "name": "h2o_molar_absorption_coeff",
@@ -830,7 +830,7 @@
           "positive_count": 15900,
           "min": 0.0,
           "max": 386.7075500488281,
-          "sum": 25363.55169132922
+          "sum": 25363.551691329223
         },
         {
           "name": "composite_molar_absorption_coeff",
@@ -843,7 +843,7 @@
           "positive_count": 26365,
           "min": 0.0,
           "max": 0.0018849101616069674,
-          "sum": 0.33407084226395567
+          "sum": 0.3340708422639556
         },
         {
           "name": "h2o_molar_absorption_coeff",
@@ -981,7 +981,7 @@
           "positive_count": 7950,
           "min": 0.0,
           "max": 183.98757934570312,
-          "sum": 10128.11851230203
+          "sum": 10128.118512302028
         },
         {
           "name": "composite_molar_absorption_coeff",
@@ -994,7 +994,7 @@
           "positive_count": 10176,
           "min": 1.789770622559559e-14,
           "max": 0.00014448314323090017,
-          "sum": 0.015506219543138737
+          "sum": 0.015506219543138739
         },
         {
           "name": "h2o_molar_absorption_coeff",
@@ -1145,7 +1145,7 @@
           "positive_count": 10116,
           "min": 0.0,
           "max": 210.5294189453125,
-          "sum": 29055.91279500525
+          "sum": 29055.912795005246
         },
         {
           "name": "co2_molar_absorption_coeff",
@@ -1158,7 +1158,7 @@
           "positive_count": 10167,
           "min": 0.0,
           "max": 1622.3875732421875,
-          "sum": 107392.24657654192
+          "sum": 107392.24657654193
         },
         {
           "name": "composite_molar_absorption_coeff",
@@ -1171,7 +1171,7 @@
           "positive_count": 10176,
           "min": 2.1495536267298644e-15,
           "max": 0.0004846341907978058,
-          "sum": 0.08539379453895513
+          "sum": 0.08539379453895511
         },
         {
           "name": "h2o_molar_absorption_coeff",
@@ -1198,7 +1198,7 @@
           "positive_count": 10176,
           "min": 7.19395376602705e-10,
           "max": 45.790374755859375,
-          "sum": 13375.96320861001
+          "sum": 13375.963208610012
         },
         {
           "name": "o3_molar_absorption_coeff",

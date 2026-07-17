@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
@@ -5,11 +7,11 @@ include(joinpath(@__DIR__, "ckdmip_original_objective_dataset.jl"))
 include(joinpath(@__DIR__, "ecckd_recovery_metrics.jl"))
 
 const CANDIDATE_OBJECTIVE_SCORE_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_original_objective_score.json")
+    validation_results_path("ecckd_candidate_original_objective_score.json")
 const CANDIDATE_OBJECTIVE_SCORE_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_original_objective_score.md")
+    validation_results_path("ecckd_candidate_original_objective_score.md")
 const VECTOR_TRAINING_CANDIDATE =
-    joinpath(@__DIR__, "results", "ecckd_vector_trained_sw32_candidate.nc")
+    validation_results_path("ecckd_vector_trained_sw32_candidate.nc")
 
 function candidate_forward_loss(sample; flux_dn_fwd, flux_up_fwd,
                                 flux_profile_weight = 0.0,

@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_mixed_pressure_temperature_component_refit.jl"))
 
 const RETAINED_TOPOLOGY_NEIGHBOR_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_topology_neighbor_scan.json")
+    validation_results_path("reduced_ecckd_retained_topology_neighbor_scan.json")
 const RETAINED_TOPOLOGY_NEIGHBOR_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_topology_neighbor_scan.md")
+    validation_results_path("reduced_ecckd_retained_topology_neighbor_scan.md")
 
 retained_topology_neighbor_radius() =
     parse(Int, get(ENV, "RH_REDUCED_RETAINED_TOPOLOGY_RADIUS", "2"))

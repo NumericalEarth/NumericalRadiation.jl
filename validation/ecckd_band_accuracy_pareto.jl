@@ -1,8 +1,10 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
 
-const RESULTS_DIR = joinpath(@__DIR__, "results")
+const RESULTS_DIR = validation_results_dir()
 const REDUCED_ACCURACY_JSON = joinpath(RESULTS_DIR, "reduced_ecckd_accuracy.json")
 const REDUCED_SIZE_SCAN_JSON = joinpath(RESULTS_DIR, "reduced_ecckd_size_scan.json")
 const REDUCED_LEAVE_ONE_OUT_JSON =

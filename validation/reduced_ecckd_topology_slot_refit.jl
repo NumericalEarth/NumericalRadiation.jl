@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const TOPOLOGY_SLOT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_topology_slot_refit.json")
+    validation_results_path("reduced_ecckd_topology_slot_refit.json")
 const TOPOLOGY_SLOT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_topology_slot_refit.md")
+    validation_results_path("reduced_ecckd_topology_slot_refit.md")
 
 topology_slot_radius() =
     parse(Int, get(ENV, "RH_REDUCED_TOPOLOGY_SLOT_RADIUS", "2"))

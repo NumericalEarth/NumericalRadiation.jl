@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_subset_search.jl"))
 
 const LEAVE_ONE_OUT_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_scan.json")
+    validation_results_path("reduced_ecckd_leave_one_out_scan.json")
 const LEAVE_ONE_OUT_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_scan.md")
+    validation_results_path("reduced_ecckd_leave_one_out_scan.md")
 
 function leave_one_out_row(full_model, omitted_gpoint)
     sw_indices = [ig for ig in 1:size(full_model.shortwave_absorption, 1)

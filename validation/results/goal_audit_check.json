@@ -1,8 +1,8 @@
 {
   "case": "radiative_heating_goal_audit_check",
-  "date": "2026-05-22T19:37:57.032",
+  "date": "2026-06-03T01:35:35.215",
   "status": "not_complete",
-  "missing_or_unexpected_artifact_count": 12,
+  "missing_or_unexpected_artifact_count": 13,
   "completion_blocker_count": 1,
   "goal_steps": [{
   "name": "cloudless official ecCKD ecRad accuracy",
@@ -40,7 +40,7 @@
 }, {
   "requirement": "Hard cloudless/no-aerosol official ecCKD accuracy thresholds",
   "completion_criteria": "Official ecCKD clear/cloudless hard-gate artifacts pass.",
-  "status": "satisfied",
+  "status": "uncovered",
   "evidence": [{
   "artifact": "ecRad hard-threshold accuracy gate",
   "present_in_audit": true,
@@ -49,7 +49,7 @@
 }, {
   "artifact": "ecRad cloudless/no-aerosol first hard gate",
   "present_in_audit": true,
-  "status": "verified",
+  "status": "missing_or_unexpected",
   "completion_blocker_active": false
 }]
 }, {
@@ -441,7 +441,7 @@
 },
   "artifacts": [{
   "name": "old ABR Breeze extension removed",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/ext/LightfluxBreezeExt.jl",
+  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/ext/NumericalRadiationBreezeExt.jl",
   "present": false,
   "expected_present": false,
   "presence_matches": true,
@@ -530,13 +530,13 @@
   "expected_present": true,
   "presence_matches": true,
   "required_text": "\"status\": \"passed\"",
-  "required_text_found": true,
+  "required_text_found": false,
   "forbidden_text": "",
   "forbidden_text_found": false,
   "completion_blocker": false,
   "completion_blocker_active": false,
   "blocker_reason": "",
-  "status": "verified"
+  "status": "missing_or_unexpected"
 }, {
   "name": "ecRad accuracy diagnostics",
   "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_accuracy_diagnostics.json",
@@ -777,11 +777,11 @@
   "status": "verified"
 }, {
   "name": "package-native RRTMGP comparison extension",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/ext/LightfluxRRTMGPExt.jl",
+  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/ext/NumericalRadiationRRTMGPExt.jl",
   "present": true,
   "expected_present": true,
   "presence_matches": true,
-  "required_text": "module LightfluxRRTMGPExt",
+  "required_text": "module NumericalRadiationRRTMGPExt",
   "required_text_found": true,
   "forbidden_text": "",
   "forbidden_text_found": false,
@@ -1243,7 +1243,7 @@
   "present": true,
   "expected_present": true,
   "presence_matches": true,
-  "required_text": "\"status\": \"reduced_shortwave_blocked\"",
+  "required_text": "\"status\": \"reduced_shortwave_passed\"",
   "required_text_found": true,
   "forbidden_text": "",
   "forbidden_text_found": false,

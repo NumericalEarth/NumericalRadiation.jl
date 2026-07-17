@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -6,47 +8,33 @@ include(joinpath(@__DIR__,
                  "reduced_ecckd_retained_current_pressure_component_optimizer.jl"))
 
 const RETAINED_CURRENT_PRESSURE_COMPONENT_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_scan.json")
 const RETAINED_CURRENT_PRESSURE_COMPONENT_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_scan.md")
 const RETAINED_CURRENT_PRESSURE_COMPONENT_RAYLEIGH_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_rayleigh_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_rayleigh_scan.json")
 const RETAINED_CURRENT_PRESSURE_COMPONENT_RAYLEIGH_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_rayleigh_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_rayleigh_scan.md")
 const RETAINED_CURRENT_PRESSURE_COMPONENT_SURFACE_GUARD_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_surface_guard_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_surface_guard_scan.json")
 const RETAINED_CURRENT_PRESSURE_COMPONENT_SURFACE_GUARD_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_surface_guard_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_surface_guard_scan.md")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_scan.json")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_scan.md")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation_scan.json")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation_scan.md")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION2_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation2_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation2_scan.json")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION2_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation2_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation2_scan.md")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION3_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation3_scan.json")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation3_scan.json")
 const RETAINED_CURRENT_GAS_PRESSURE_COMPONENT_CONTINUATION3_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_gas_pressure_component_continuation3_scan.md")
+    validation_results_path("reduced_ecckd_retained_current_gas_pressure_component_continuation3_scan.md")
 
 function pressure_component_scan_band_counts()
     raw = get(ENV, "RH_REDUCED_CURRENT_PRESSURE_COMPONENT_SCAN_BANDS", "2,4,8,16")

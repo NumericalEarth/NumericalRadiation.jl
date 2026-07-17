@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_retained_post_weight_surface_table_refit.jl"))
 
 const RETAINED_POST_WEIGHT_BOUNDED_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_weight_bounded_weight_refit.json")
+    validation_results_path("reduced_ecckd_retained_post_weight_bounded_weight_refit.json")
 const RETAINED_POST_WEIGHT_BOUNDED_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_weight_bounded_weight_refit.md")
+    validation_results_path("reduced_ecckd_retained_post_weight_bounded_weight_refit.md")
 
 post_weight_bounded_weight_refit_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_POST_WEIGHT_BOUNDED_WEIGHT_REFIT_ITERATIONS", "50000"))

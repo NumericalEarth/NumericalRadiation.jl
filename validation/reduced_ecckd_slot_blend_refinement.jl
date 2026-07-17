@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_boundary_column_refinement.jl"))
 
 const SLOT_BLEND_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_slot_blend_refinement.json")
+    validation_results_path("reduced_ecckd_slot_blend_refinement.json")
 const SLOT_BLEND_REFINEMENT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_slot_blend_refinement.md")
+    validation_results_path("reduced_ecckd_slot_blend_refinement.md")
 
 slot_blend_radius() =
     parse(Int, get(ENV, "RH_REDUCED_SLOT_BLEND_RADIUS", "2"))

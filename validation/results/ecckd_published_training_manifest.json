@@ -1,6 +1,6 @@
 {
   "case": "ecckd_published_training_manifest",
-  "timestamp_utc": "2026-05-22T23:10:14.668",
+  "timestamp_utc": "2026-06-03T01:06:57.535",
   "status": "passed",
   "ecckd_source_root": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
   "objective_contract": "Keep these ecCKD source files, script modes, data selections, gases, weights, regularization, and stopping settings fixed; replace only the optimizer implementation/settings in the Julia Reactant/Enzyme recovery pipeline.",

@@ -1,0 +1,12 @@
+{
+  "coverage_metric":{"has_shortwave_only":true, "has_longwave_only":true, "complete_pair":true},
+  "candidate_count":2,
+  "status":"available",
+  "candidate_sizes_gib":{"validation/results/ecckd_1.2_sw_climate_window_64b_recovered_candidate.nc":0.001553, "validation/results/ecckd_1.2_lw_climate_narrow_64b_recovered_candidate.nc":0.004480},
+  "candidate_paths":["validation/results/ecckd_1.2_lw_climate_narrow_64b_recovered_candidate.nc", "validation/results/ecckd_1.2_sw_climate_window_64b_recovered_candidate.nc"],
+  "target_status":"historical_candidates_available",
+  "timestamp":"2026-05-27T00:36:44.439",
+  "target_gpoints":"64",
+  "coverage_notes":"candidate_inventory",
+  "candidate_total_gib":0.006033
+}

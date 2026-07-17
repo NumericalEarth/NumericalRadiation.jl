@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const STRUCTURAL_OPTIMIZER_SWEEP_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_structural_optimizer_sweep.json")
+    validation_results_path("reduced_ecckd_structural_optimizer_sweep.json")
 const STRUCTURAL_OPTIMIZER_SWEEP_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_structural_optimizer_sweep.md")
+    validation_results_path("reduced_ecckd_structural_optimizer_sweep.md")
 
 function structural_optimizer_sweep_configs()
     return (

@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 
 const FLUX_PAIR_BINS_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_flux_pair_bins.json")
+    validation_results_path("reduced_ecckd_flux_pair_bins.json")
 const FLUX_PAIR_BINS_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_flux_pair_bins.md")
+    validation_results_path("reduced_ecckd_flux_pair_bins.md")
 
 function flux_pair_case_objective(case)
     return max(

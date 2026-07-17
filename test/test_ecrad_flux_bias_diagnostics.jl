@@ -1,6 +1,6 @@
 @testset "ecRad flux bias diagnostics artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "ecrad_flux_bias_diagnostics.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     @test occursin("ecRad Flux Bias Diagnostics", result)
     @test occursin("Boundary Net-Flux Bias", result)

@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_h2o_component_scale_refit.jl"))
 
 const GAS_COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_gas_component_scale_refit.json")
 const GAS_COMPONENT_SCALE_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_component_scale_refit.md")
+    validation_results_path("reduced_ecckd_gas_component_scale_refit.md")
 
 gas_component_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_GAS_COMPONENT_ITERATIONS", "1"))

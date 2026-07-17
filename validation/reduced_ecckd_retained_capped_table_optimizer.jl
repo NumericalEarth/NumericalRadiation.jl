@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_CAPPED_TABLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_capped_table_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_capped_table_optimizer.json")
 const RETAINED_CAPPED_TABLE_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_capped_table_optimizer.md")
+    validation_results_path("reduced_ecckd_retained_capped_table_optimizer.md")
 
 retained_capped_table_surface_cap() =
     parse(Float64, get(ENV, "RH_REDUCED_RETAINED_CAPPED_TABLE_SURFACE_CAP", "2.03"))

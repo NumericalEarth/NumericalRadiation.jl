@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_hardgate_subset_search.jl"))
 
 const IMPORTANCE_GROUP_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_importance_group_scan.json")
+    validation_results_path("reduced_ecckd_importance_group_scan.json")
 const IMPORTANCE_GROUP_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_importance_group_scan.md")
+    validation_results_path("reduced_ecckd_importance_group_scan.md")
 const LEAVE_ONE_OUT_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_leave_one_out_scan.json")
+    validation_results_path("reduced_ecckd_leave_one_out_scan.json")
 
 const FALLBACK_LEAVE_ONE_OUT_IMPORTANCE_OBJECTIVES = [
     16.822848913694394,

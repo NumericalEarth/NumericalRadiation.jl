@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -55,12 +57,16 @@ end
 
 function summarize_by_case(rows)
     cases = unique(row.case for row in rows)
-    return [(
-        case = case,
-        failed_metric_count = count(row -> row.case == case && !row.passed, rows),
-        worst_ratio = maximum(row.ratio for row in rows
-                              if row.case == case && row.ratio !== nothing),
-    ) for case in cases]
+    summaries = NamedTuple[]
+    for case in cases
+        ratios = [row.ratio for row in rows if row.case == case && row.ratio !== nothing]
+        push!(summaries, (
+            case = case,
+            failed_metric_count = count(row -> row.case == case && !row.passed, rows),
+            worst_ratio = isempty(ratios) ? nothing : maximum(ratios),
+        ))
+    end
+    return summaries
 end
 
 function run_accuracy_diagnostics()
@@ -93,7 +99,8 @@ function markdown_diagnostics_report(result)
         "|---|---:|---:|",
     ]
     for row in result.case_summary
-        push!(lines, "| $(row.case) | $(row.failed_metric_count) | $(@sprintf("%.6g", row.worst_ratio)) |")
+        worst_ratio = row.worst_ratio === nothing ? "missing" : @sprintf("%.6g", row.worst_ratio)
+        push!(lines, "| $(row.case) | $(row.failed_metric_count) | $worst_ratio |")
     end
     append!(lines, [
         "",
@@ -113,7 +120,7 @@ end
 
 function diagnostics_main()
     result = run_accuracy_diagnostics()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_accuracy_diagnostics.json")
     md_path = joinpath(results_dir, "ecrad_accuracy_diagnostics.md")

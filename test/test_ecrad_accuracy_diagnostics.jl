@@ -1,6 +1,6 @@
 @testset "ecRad accuracy diagnostics artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "ecrad_accuracy_diagnostics.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     @test occursin("ecRad Accuracy Diagnostics", result)
     @test occursin("Worst Metrics", result)

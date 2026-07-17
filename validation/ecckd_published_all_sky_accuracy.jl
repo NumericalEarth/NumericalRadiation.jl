@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 using Statistics
@@ -6,9 +8,9 @@ include(joinpath(@__DIR__, "write_ecrad_candidates.jl"))
 include(joinpath(@__DIR__, "ecrad_accuracy_gate.jl"))
 
 const PUBLISHED_ALL_SKY_ACCURACY_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_all_sky_accuracy.json")
+    validation_results_path("ecckd_published_all_sky_accuracy.json")
 const PUBLISHED_ALL_SKY_ACCURACY_MD =
-    joinpath(@__DIR__, "results", "ecckd_published_all_sky_accuracy.md")
+    validation_results_path("ecckd_published_all_sky_accuracy.md")
 
 const PUBLISHED_ALL_SKY_CONFIG = Dict(
     "RH_CANDIDATE_GAS_OPTICS" => "official_ecckd",

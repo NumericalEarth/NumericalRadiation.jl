@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_gas_pressure_band_refinement.jl"))
 
 const GAS_PRESSURE_BAND_LINEARIZED_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_pressure_band_linearized_refit.json")
+    validation_results_path("reduced_ecckd_gas_pressure_band_linearized_refit.json")
 const GAS_PRESSURE_BAND_LINEARIZED_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_pressure_band_linearized_refit.md")
+    validation_results_path("reduced_ecckd_gas_pressure_band_linearized_refit.md")
 
 gas_pressure_band_linearized_candidate_count() =
     parse(Int, get(ENV, "RH_REDUCED_GAS_PRESSURE_BAND_LINEARIZED_CANDIDATES", "32"))

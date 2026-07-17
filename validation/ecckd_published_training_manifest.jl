@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
@@ -9,11 +11,11 @@ end
 using NumericalRadiation
 
 const TRAINING_MANIFEST_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_training_manifest.json")
+    validation_results_path("ecckd_published_training_manifest.json")
 const TRAINING_MANIFEST_MD =
-    joinpath(@__DIR__, "results", "ecckd_published_training_manifest.md")
+    validation_results_path("ecckd_published_training_manifest.md")
 const CKDMIP_PREFLIGHT_JSON =
-    joinpath(@__DIR__, "results", "ckdmip_training_data_preflight.json")
+    validation_results_path("ckdmip_training_data_preflight.json")
 
 function json_escape(text)
     return replace(text, "\\" => "\\\\", "\"" => "\\\"", "\n" => "\\n")

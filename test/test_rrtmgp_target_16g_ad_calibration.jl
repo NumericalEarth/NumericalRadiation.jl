@@ -3,7 +3,7 @@ using JSON
 @testset "RRTMGP-target 16-g AD calibration artifact" begin
     script = joinpath(@__DIR__, "..", "validation",
                       "rrtmgp_target_16g_ad_calibration.jl")
-    output = read(`$(Base.julia_cmd()) --project=$(@__DIR__) $script`, String)
+    output = read(`$(Base.julia_cmd()) --project=$(Base.active_project()) $script`, String)
     @test occursin("RRTMGP-Target 16-g AD Calibration", output)
     @test occursin("Status: `passed`", output)
 

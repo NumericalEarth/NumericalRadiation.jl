@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_OBJECTIVE_PROBE_EXPANSION3_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_objective_probe_expansion3.json")
+    validation_results_path("reduced_ecckd_retained_objective_probe_expansion3.json")
 const RETAINED_OBJECTIVE_PROBE_EXPANSION3_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_objective_probe_expansion3.md")
+    validation_results_path("reduced_ecckd_retained_objective_probe_expansion3.md")
 
 function with_objective_probe3_env(f; candidates, probe_step, max_log_scale)
     keys = (

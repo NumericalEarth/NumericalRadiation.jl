@@ -1,13 +1,15 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
 
 const ORIGINAL_OBJECTIVE_TERMS_JSON =
-    joinpath(@__DIR__, "results", "ecckd_original_objective_terms.json")
+    validation_results_path("ecckd_original_objective_terms.json")
 const ORIGINAL_OBJECTIVE_TERMS_MD =
-    joinpath(@__DIR__, "results", "ecckd_original_objective_terms.md")
+    validation_results_path("ecckd_original_objective_terms.md")
 const TRAINING_MANIFEST_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_training_manifest.json")
+    validation_results_path("ecckd_published_training_manifest.json")
 
 function manifest_or_error()
     isfile(TRAINING_MANIFEST_JSON) ||

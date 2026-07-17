@@ -581,6 +581,21 @@ function add_cloud_optical_depths!(longwave::LongwaveOpticalProperties,
     return longwave, shortwave
 end
 
+"""
+    add_mapped_cloud_scattering!(shortwave, liquid_properties, ice_properties,
+                                 liquid_water_path, ice_water_path, cloud_fraction; kwargs...)
+
+Add g-point mapped liquid and ice cloud scattering to shortwave optical
+properties. The input `liquid_properties` and `ice_properties` are per-g-point
+scattering tables, while the water paths and cloud fraction are layer fields.
+The function adds absorptive optical depth to `shortwave.optical_depth` and
+mixes scattering optical depth/asymmetry into `shortwave.rayleigh_optical_depth`
+and `shortwave.scattering_asymmetry`.
+
+Keyword scale factors can adjust liquid extinction, ice extinction, scattering,
+cloud-fraction weighting, and optional delta-Eddington forward-scattering
+scaling.
+"""
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOpticalProperties{<:Any, <:AbstractMatrix},
                                       liquid_properties,
                                       ice_properties,

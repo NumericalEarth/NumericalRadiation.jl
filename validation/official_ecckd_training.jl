@@ -1,10 +1,12 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
-const OFFICIAL_TRAINING_JSON = joinpath(@__DIR__, "results", "official_ecckd_training.json")
-const OFFICIAL_TRAINING_MD = joinpath(@__DIR__, "results", "official_ecckd_training.md")
+const OFFICIAL_TRAINING_JSON = validation_results_path("official_ecckd_training.json")
+const OFFICIAL_TRAINING_MD = validation_results_path("official_ecckd_training.md")
 
 function official_training_status(preflight)
     improved = preflight.final_objective_target_ratio <

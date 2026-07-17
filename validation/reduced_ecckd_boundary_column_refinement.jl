@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_joint_weight_block_refit.jl"))
 
 const BOUNDARY_COLUMN_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_column_refinement.json")
+    validation_results_path("reduced_ecckd_boundary_column_refinement.json")
 const BOUNDARY_COLUMN_REFINEMENT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_column_refinement.md")
+    validation_results_path("reduced_ecckd_boundary_column_refinement.md")
 
 boundary_column_candidate_limit() =
     parse(Int, get(ENV, "RH_REDUCED_BOUNDARY_COLUMN_CANDIDATES", "128"))

@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 include(joinpath(@__DIR__, "ckdmip_training_data_preflight.jl"))
 
 const DERIVED_FLUX_PLAN_JSON =
-    joinpath(@__DIR__, "results", "ecckd_derived_flux_generation_plan.json")
+    validation_results_path("ecckd_derived_flux_generation_plan.json")
 const DERIVED_FLUX_PLAN_MD =
-    joinpath(@__DIR__, "results", "ecckd_derived_flux_generation_plan.md")
+    validation_results_path("ecckd_derived_flux_generation_plan.md")
 
 function derived_flux_descriptor(path)
     m = match(r"^(evaluation[12])/(lw|sw)_fluxes/(ckdmip_[^/]+_fluxes_([A-Za-z0-9-]+)\.h5)$", path)

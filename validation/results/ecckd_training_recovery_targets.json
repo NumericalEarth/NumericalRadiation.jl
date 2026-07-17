@@ -1,6 +1,6 @@
 {
   "case": "ecckd_training_recovery_targets",
-  "timestamp_utc": "2026-05-22T23:10:34.865",
+  "timestamp_utc": "2026-06-03T01:35:30.867",
   "status": "partial",
   "targets": {
   "fixed_inputs": ["same CKDMIP/ecCKD source files", "same representative atmosphere states", "same objective terms and hard thresholds", "same trainable parameterization unless the row is explicitly labelled as a new band-count scheme"],

@@ -8,7 +8,7 @@ end
 
 @testset "ecRad candidate schema artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "ecrad_candidate_schema.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     @test occursin("ecRad Candidate Schema Check", result)
     @test occursin("radiative_heating_lw_up", result)

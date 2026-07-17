@@ -1,7 +1,7 @@
 {
   "case": "ecrad_cloudless_accuracy_gate",
-  "date": "2026-05-15T06:18:55.576",
-  "status": "passed",
+  "date": "2026-06-03T01:13:38.064",
+  "status": "missing_candidate_outputs",
   "candidate_prefix": "radiative_heating_",
   "reference_scope": "cloudless/no-aerosol first hard gate",
   "included_cases": ["ecckd_clear_sky_tropical_column", "ecckd_rcemip_style_column_subset"],
@@ -22,86 +22,86 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.0009104498592883523,
-  "max_abs": 0.0024817111501533873,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.0021114544504658764,
-  "max_abs": 0.006100340468435661,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.0054701302755537995,
-  "max_abs": 0.0076393392451166164,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.004300734655109106,
-  "max_abs": 0.008867579104276047,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.005750188731356344,
-  "max_abs": 0.09109334162473548,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 0.05,
   "max_abs_threshold": 0.5,
   "units": "K day^-1",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }],
   "forcing_comparisons": [{
   "metric": "toa_forcing_abs_error",
   "boundary": "toa",
   "missing_reference_variables": [],
-  "missing_candidate_variables": [],
-  "max_abs": 0.00806408713606288,
+  "missing_candidate_variables": ["radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down"],
+  "max_abs": null,
   "threshold": 0.3,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "metric": "surface_forcing_abs_error",
   "boundary": "surface",
   "missing_reference_variables": [],
-  "missing_candidate_variables": [],
-  "max_abs": 0.014033547037797689,
+  "missing_candidate_variables": ["radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down"],
+  "max_abs": null,
   "threshold": 0.3,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_candidate_outputs"
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc",
@@ -110,85 +110,85 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.000849242176774232,
-  "max_abs": 0.0024817111501533873,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.0013873154398463894,
-  "max_abs": 0.006100340468435661,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.004264585070065071,
-  "max_abs": 0.007825877709521478,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.003544917383454724,
-  "max_abs": 0.009717230830688095,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 1.0,
   "max_abs_threshold": 5.0,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
-  "rmse": 0.004569756255209099,
-  "max_abs": 0.09109334162473548,
+  "candidate_present": false,
+  "rmse": null,
+  "max_abs": null,
   "rmse_threshold": 0.05,
   "max_abs_threshold": 0.5,
   "units": "K day^-1",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }],
   "forcing_comparisons": [{
   "metric": "toa_forcing_abs_error",
   "boundary": "toa",
   "missing_reference_variables": [],
-  "missing_candidate_variables": [],
-  "max_abs": 0.00806408713606288,
+  "missing_candidate_variables": ["radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down"],
+  "max_abs": null,
   "threshold": 0.3,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }, {
   "metric": "surface_forcing_abs_error",
   "boundary": "surface",
   "missing_reference_variables": [],
-  "missing_candidate_variables": [],
-  "max_abs": 0.014033547037797689,
+  "missing_candidate_variables": ["radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down"],
+  "max_abs": null,
   "threshold": 0.3,
   "units": "W m^-2",
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_comparison_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_candidate_outputs"
 }]
 }

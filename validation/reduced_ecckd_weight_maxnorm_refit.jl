@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_subset_search.jl"))
 
 const WEIGHT_MAXNORM_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_weight_maxnorm_refit.json")
+    validation_results_path("reduced_ecckd_weight_maxnorm_refit.json")
 const WEIGHT_MAXNORM_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_weight_maxnorm_refit.md")
+    validation_results_path("reduced_ecckd_weight_maxnorm_refit.md")
 
 weight_maxnorm_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_WEIGHT_MAXNORM_ITERATIONS", "50000"))

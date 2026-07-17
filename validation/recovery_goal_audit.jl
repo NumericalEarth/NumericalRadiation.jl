@@ -1,7 +1,9 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
-const RESULTS_DIR = joinpath(@__DIR__, "results")
+const RESULTS_DIR = validation_results_dir()
 const RECOVERY_GOAL_AUDIT_JSON = joinpath(RESULTS_DIR, "recovery_goal_audit.json")
 const RECOVERY_GOAL_AUDIT_MD = joinpath(RESULTS_DIR, "recovery_goal_audit.md")
 

@@ -1,281 +1,91 @@
 {
   "case": "ecrad_flux_bias_diagnostics",
-  "date": "2026-05-14T21:00:07.640",
+  "date": "2026-06-03T01:13:54.361",
   "candidate_prefix": "radiative_heating_",
   "cases": [{
   "case": "clear_sky_tropical_column",
   "path": "validation/reference/ecrad/clear_sky_tropical_column.nc",
   "status": "diagnosed",
-  "variable_biases": [{
-  "variable": "lw_up",
-  "units": "W m^-2",
-  "mean_bias": 1.4605330127405618,
-  "min_bias": -0.37688906947749956,
-  "max_bias": 6.046105321548907,
-  "mean_abs": 1.4789392047088241
-}, {
-  "variable": "lw_down",
-  "units": "W m^-2",
-  "mean_bias": -0.04861999180566907,
-  "min_bias": -5.740285764375983,
-  "max_bias": 1.7700685015728368,
-  "mean_abs": 0.37568354281029676
-}, {
-  "variable": "sw_up",
-  "units": "W m^-2",
-  "mean_bias": -0.8216741825774775,
-  "min_bias": -1.8746361131916842,
-  "max_bias": 2.476274869606698,
-  "mean_abs": 1.0409267745178798
-}, {
-  "variable": "sw_down",
-  "units": "W m^-2",
-  "mean_bias": 1.2161632656410806,
-  "min_bias": -3.9420012460110456,
-  "max_bias": 4.149921897035938,
-  "mean_abs": 1.9192658420557789
-}, {
-  "variable": "heating_rate",
-  "units": "K day^-1",
-  "mean_bias": -0.35990639157754034,
-  "min_bias": -13.169636017063794,
-  "max_bias": 9.471048240361718,
-  "mean_abs": 0.5003869584533911
-}],
-  "boundary_biases": [{
-  "boundary": "toa",
-  "units": "W m^-2",
-  "mean_bias": -0.03834879093627706,
-  "min_bias": -1.8531127012033721,
-  "max_bias": 0.989114527617744,
-  "mean_abs": 0.8115712467910157
-}, {
-  "boundary": "surface",
-  "units": "W m^-2",
-  "mean_bias": -2.8327423309652544,
-  "min_bias": -4.019374471010792,
-  "max_bias": -1.5897072918977528,
-  "mean_abs": 2.8327423309652544
-}]
+  "variable_biases": [],
+  "boundary_biases": []
 }, {
   "case": "all_sky_tropical_column",
   "path": "validation/reference/ecrad/all_sky_tropical_column.nc",
   "status": "diagnosed",
-  "variable_biases": [{
-  "variable": "lw_up",
-  "units": "W m^-2",
-  "mean_bias": -5.038969167916504,
-  "min_bias": -48.8410838611337,
-  "max_bias": 14.948126949643495,
-  "mean_abs": 7.784837216823751
-}, {
-  "variable": "lw_down",
-  "units": "W m^-2",
-  "mean_bias": 3.0152414533284286,
-  "min_bias": -8.731285303849972,
-  "max_bias": 59.481216128080234,
-  "mean_abs": 3.7015750687517692
-}, {
-  "variable": "sw_up",
-  "units": "W m^-2",
-  "mean_bias": -66.87996295000387,
-  "min_bias": -260.45472664105034,
-  "max_bias": 17.21114612053472,
-  "mean_abs": 68.21691494191197
-}, {
-  "variable": "sw_down",
-  "units": "W m^-2",
-  "mean_bias": -6.429305639587034,
-  "min_bias": -425.7974675742845,
-  "max_bias": 212.66793585350422,
-  "mean_abs": 37.49525360658766
-}, {
-  "variable": "heating_rate",
-  "units": "K day^-1",
-  "mean_bias": -0.12035283880378152,
-  "min_bias": -14.322925732234467,
-  "max_bias": 45.28510876672405,
-  "mean_abs": 1.2841212852669943
-}],
-  "boundary_biases": [{
-  "boundary": "toa",
-  "units": "W m^-2",
-  "mean_bias": 92.92188187330756,
-  "min_bias": 20.345994577782903,
-  "max_bias": 217.42965321298635,
-  "mean_abs": 92.92188187330756
-}, {
-  "boundary": "surface",
-  "units": "W m^-2",
-  "mean_bias": 31.365992533261203,
-  "min_bias": -164.624931578628,
-  "max_bias": 208.00775023608458,
-  "mean_abs": 84.11493369455148
-}]
+  "variable_biases": [],
+  "boundary_biases": []
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "path": "validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc",
   "status": "diagnosed",
+  "variable_biases": [],
+  "boundary_biases": []
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "path": "validation/reference/ecrad/ecckd_all_sky_tropical_column.nc",
+  "status": "diagnosed",
   "variable_biases": [{
   "variable": "lw_up",
   "units": "W m^-2",
-  "mean_bias": 0.00020022792592763616,
-  "min_bias": -0.0017846679678541477,
-  "max_bias": 0.0024817111501533873,
-  "mean_abs": 0.0007428449872706331
+  "mean_bias": 0.01613966945966526,
+  "min_bias": -0.005401313787103845,
+  "max_bias": 0.1475124837447197,
+  "mean_abs": 0.017494307428408913
 }, {
   "variable": "lw_down",
   "units": "W m^-2",
-  "mean_bias": -0.00047107172503101254,
-  "min_bias": -0.006100340468435661,
-  "max_bias": 0.002256558762809391,
-  "mean_abs": 0.0012728177460784038
+  "mean_bias": -0.0003380232901908043,
+  "min_bias": -0.007354324084474229,
+  "max_bias": 0.002212105563557998,
+  "mean_abs": 0.0010386833981589935
 }, {
   "variable": "sw_up",
   "units": "W m^-2",
-  "mean_bias": 0.01946289576824233,
-  "min_bias": -0.0007680447201892093,
-  "max_bias": 0.031772227652595575,
-  "mean_abs": 0.019490305339629106
+  "mean_bias": 0.0026420480366719326,
+  "min_bias": -0.0017201490970819577,
+  "max_bias": 0.0068748393913153905,
+  "mean_abs": 0.002939899927642549
 }, {
   "variable": "sw_down",
   "units": "W m^-2",
-  "mean_bias": -0.0016372880350033576,
-  "min_bias": -0.005768066108089442,
-  "max_bias": 9.866777531897242e-5,
-  "mean_abs": 0.0016408340894436743
+  "mean_bias": -0.0022287497044920653,
+  "min_bias": -0.008614471461328321,
+  "max_bias": 0.00010460443400006625,
+  "mean_abs": 0.0022313161486954497
 }, {
   "variable": "heating_rate",
   "units": "K day^-1",
-  "mean_bias": -6.038995785957447e-5,
-  "min_bias": -0.054007108291333594,
-  "max_bias": 0.09110751710872034,
-  "mean_abs": 0.001314811578796939
+  "mean_bias": -0.00011188280723980725,
+  "min_bias": -0.07689327932362122,
+  "max_bias": 0.05665868191753898,
+  "mean_abs": 0.0014897961094099059
 }],
   "boundary_biases": [{
   "boundary": "toa",
   "units": "W m^-2",
-  "mean_bias": -0.028149930377952614,
-  "min_bias": -0.03138328094064491,
-  "max_bias": -0.026143752669156584,
-  "mean_abs": 0.028149930377952614
+  "mean_bias": -0.020480333729608446,
+  "min_bias": -0.11618825657467369,
+  "max_bias": 0.0011074173054339553,
+  "mean_abs": 0.020827406529326707
 }, {
   "boundary": "surface",
   "units": "W m^-2",
-  "mean_bias": -0.009951037366300852,
-  "min_bias": -0.011339478422996763,
-  "max_bias": -0.00506376069495218,
-  "mean_abs": 0.009951037366300852
+  "mean_bias": -0.009099342288831736,
+  "min_bias": -0.012853624456056423,
+  "max_bias": -0.0029374701890390043,
+  "mean_abs": 0.009099342288831736
 }]
 }, {
   "case": "rcemip_style_column_subset",
   "path": "validation/reference/ecrad/rcemip_style_column_subset.nc",
   "status": "diagnosed",
-  "variable_biases": [{
-  "variable": "lw_up",
-  "units": "W m^-2",
-  "mean_bias": 1.2000357352240971,
-  "min_bias": -1.1542300067834503,
-  "max_bias": 6.046105321548907,
-  "mean_abs": 1.2102636582123731
-}, {
-  "variable": "lw_down",
-  "units": "W m^-2",
-  "mean_bias": 0.22130111613523093,
-  "min_bias": -5.740285764375983,
-  "max_bias": 2.483489388728657,
-  "mean_abs": 0.42615088224832026
-}, {
-  "variable": "sw_up",
-  "units": "W m^-2",
-  "mean_bias": -0.7222878737476707,
-  "min_bias": -2.9310572373358355,
-  "max_bias": 2.476274869606698,
-  "mean_abs": 0.818815992451482
-}, {
-  "variable": "sw_down",
-  "units": "W m^-2",
-  "mean_bias": 0.7362403926472558,
-  "min_bias": -3.9420012460110456,
-  "max_bias": 4.149921897035938,
-  "mean_abs": 1.3007621966815275
-}, {
-  "variable": "heating_rate",
-  "units": "K day^-1",
-  "mean_bias": -0.26437794545653975,
-  "min_bias": -13.169636017063794,
-  "max_bias": 9.471048240361718,
-  "mean_abs": 0.3562824264093502
-}],
-  "boundary_biases": [{
-  "boundary": "toa",
-  "units": "W m^-2",
-  "mean_bias": -0.12225346391163017,
-  "min_bias": -1.8531127012033721,
-  "max_bias": 0.989114527617744,
-  "mean_abs": 0.5845191368160267
-}, {
-  "boundary": "surface",
-  "units": "W m^-2",
-  "mean_bias": -0.4960858532161794,
-  "min_bias": -4.019374471010792,
-  "max_bias": 2.483489388728657,
-  "mean_abs": 1.5875800313755448
-}]
+  "variable_biases": [],
+  "boundary_biases": []
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc",
   "status": "diagnosed",
-  "variable_biases": [{
-  "variable": "lw_up",
-  "units": "W m^-2",
-  "mean_bias": -0.0003221391995213212,
-  "min_bias": -0.0021996962918251484,
-  "max_bias": 0.0024817111501533873,
-  "mean_abs": 0.0006540387357354856
-}, {
-  "variable": "lw_down",
-  "units": "W m^-2",
-  "mean_bias": 0.0003167076602177613,
-  "min_bias": -0.006100340468435661,
-  "max_bias": 0.0022836464067097495,
-  "mean_abs": 0.0009061825570182016
-}, {
-  "variable": "sw_up",
-  "units": "W m^-2",
-  "mean_bias": 0.018716221769868126,
-  "min_bias": -0.0008322977927548436,
-  "max_bias": 0.07428178615566594,
-  "mean_abs": 0.01874302233537341
-}, {
-  "variable": "sw_down",
-  "units": "W m^-2",
-  "mean_bias": -0.0008194633251022147,
-  "min_bias": -0.006780739216424081,
-  "max_bias": 0.007668619109381325,
-  "mean_abs": 0.0013815604615762896
-}, {
-  "variable": "heating_rate",
-  "units": "K day^-1",
-  "mean_bias": -0.00013000724405511186,
-  "min_bias": -0.05775650773963292,
-  "max_bias": 0.09110751710872034,
-  "mean_abs": 0.0010228924372006295
-}],
-  "boundary_biases": [{
-  "boundary": "toa",
-  "units": "W m^-2",
-  "mean_bias": -0.026610892198791092,
-  "min_bias": -0.0719878208336695,
-  "max_bias": 0.0005499839242872895,
-  "mean_abs": 0.026698408905037496
-}, {
-  "boundary": "surface",
-  "units": "W m^-2",
-  "mean_bias": -0.004526611955602666,
-  "min_bias": -0.011339478422996763,
-  "max_bias": 0.002071540795554938,
-  "mean_abs": 0.005404587591337995
-}]
+  "variable_biases": [],
+  "boundary_biases": []
 }]
 }

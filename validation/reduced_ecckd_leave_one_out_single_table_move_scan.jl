@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using LinearAlgebra
@@ -6,11 +8,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_leave_one_out_heating_table_optimizer.jl"))
 
 const LEAVE_ONE_OUT_SINGLE_TABLE_MOVE_SCAN_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_single_table_move_scan.json")
+    validation_results_path("reduced_ecckd_leave_one_out_single_table_move_scan.json")
 const LEAVE_ONE_OUT_SINGLE_TABLE_MOVE_SCAN_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_single_table_move_scan.md")
+    validation_results_path("reduced_ecckd_leave_one_out_single_table_move_scan.md")
 
 single_move_candidate_count() =
     parse(Int, get(ENV, "RH_REDUCED_LOO_SINGLE_MOVE_CANDIDATES", "8"))

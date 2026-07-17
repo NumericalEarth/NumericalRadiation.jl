@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using NumericalRadiation
 using Dates
 using LinearAlgebra: norm
@@ -430,7 +432,7 @@ function main()
         notes = "Finite-difference training fixture is always run; Enzyme/Reactant checks run only when those packages are available. Full radiative-transfer Enzyme differentiation remains open.",
     )
 
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     write(joinpath(results_dir, "toy_ecckd_training.json"), json_object(result))
     write(joinpath(results_dir, "toy_ecckd_training.md"), markdown_report(result))

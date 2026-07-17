@@ -1,6 +1,6 @@
 {
   "case": "ecrad_reference_manifest",
-  "date": "2026-05-15T12:41:12.017",
+  "date": "2026-06-03T01:13:09.882",
   "status": "references_present_schema_valid",
   "reference_readme": "validation/reference/ecrad/README.md",
   "missing_reference_count": 0,
@@ -22,7 +22,7 @@
   "schema_checked": true,
   "schema_valid": true,
   "required_variables": ["pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "co2", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate"],
-  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "surface_albedo_direct_spectral", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
+  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "toa_shortwave_down_spectral", "surface_albedo_direct_spectral"],
   "missing_variables": [],
   "schema_error": null,
   "status": "present_schema_valid"
@@ -34,7 +34,7 @@
   "schema_checked": true,
   "schema_valid": true,
   "required_variables": ["pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "co2", "cloud_fraction", "liquid_water_path", "ice_water_path", "re_liquid", "re_ice", "inv_cloud_effective_size", "fractional_std", "overlap_param", "aerosol_mmr", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "lw_up_clear", "lw_down_clear", "sw_up_clear", "sw_down_clear", "heating_rate_clear"],
-  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_albedo_direct_spectral", "surface_albedo_spectral", "surface_albedo_direct_gpoint", "h2o_sat_liq", "toa_shortwave_down_spectral", "lw_up_clear", "lw_down_clear", "sw_up_clear", "sw_down_clear", "heating_rate_clear", "cloud_fraction", "liquid_water_path", "ice_water_path", "re_liquid", "re_ice", "inv_cloud_effective_size", "fractional_std", "overlap_param", "aerosol_mmr", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
+  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_albedo_direct_spectral", "surface_albedo_spectral", "surface_albedo_direct_gpoint", "toa_shortwave_down_spectral", "h2o_sat_liq", "lw_up_clear", "lw_down_clear", "sw_up_clear", "sw_down_clear", "heating_rate_clear", "cloud_fraction", "liquid_water_path", "ice_water_path", "re_liquid", "re_ice", "inv_cloud_effective_size", "fractional_std", "overlap_param", "aerosol_mmr"],
   "missing_variables": [],
   "schema_error": null,
   "status": "present_schema_valid"
@@ -46,7 +46,7 @@
   "schema_checked": true,
   "schema_valid": true,
   "required_variables": ["pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate"],
-  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "surface_albedo_direct_spectral", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
+  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "toa_shortwave_down_spectral", "surface_albedo_direct_spectral"],
   "missing_variables": [],
   "schema_error": null,
   "status": "present_schema_valid"
@@ -58,7 +58,7 @@
   "schema_checked": true,
   "schema_valid": true,
   "required_variables": ["pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cloud_fraction", "liquid_water_path", "ice_water_path", "re_liquid", "re_ice", "inv_cloud_effective_size", "fractional_std", "overlap_param", "aerosol_mmr", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "lw_up_clear", "lw_down_clear", "sw_up_clear", "sw_down_clear", "heating_rate_clear"],
-  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "surface_albedo_direct_spectral", "surface_albedo_direct_gpoint", "h2o_sat_liq", "toa_shortwave_down_spectral", "lw_up_clear", "lw_down_clear", "sw_up_clear", "sw_down_clear", "heating_rate_clear", "cloud_fraction", "liquid_water_path", "ice_water_path", "re_liquid", "re_ice", "inv_cloud_effective_size", "fractional_std", "overlap_param", "aerosol_mmr", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
+  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "toa_shortwave_down_spectral", "surface_albedo_direct_spectral", "surface_albedo_direct_gpoint", "h2o_sat_liq", "lw_up_clear", "lw_down_clear", "sw_up_clear", "sw_down_clear", "heating_rate_clear", "cloud_fraction", "liquid_water_path", "ice_water_path", "re_liquid", "re_ice", "inv_cloud_effective_size", "fractional_std", "overlap_param", "aerosol_mmr", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
   "missing_variables": [],
   "schema_error": null,
   "status": "present_schema_valid"
@@ -70,7 +70,7 @@
   "schema_checked": true,
   "schema_valid": true,
   "required_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "co2", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate"],
-  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "surface_albedo_direct_spectral", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
+  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "toa_shortwave_down_spectral", "surface_albedo_direct_spectral"],
   "missing_variables": [],
   "schema_error": null,
   "status": "present_schema_valid"
@@ -82,7 +82,7 @@
   "schema_checked": true,
   "schema_valid": true,
   "required_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate"],
-  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "surface_albedo_direct_spectral", "radiative_heating_lw_up", "radiative_heating_lw_down", "radiative_heating_sw_up", "radiative_heating_sw_down", "radiative_heating_heating_rate", "radiative_heating_lw_up_clear", "radiative_heating_lw_down_clear", "radiative_heating_sw_up_clear", "radiative_heating_sw_down_clear", "radiative_heating_heating_rate_clear"],
+  "present_variables": ["column", "pressure_layer", "pressure_interface", "temperature_layer", "temperature_interface", "h2o", "o3", "co2", "ch4", "n2o", "cfc11", "cfc12", "cos_solar_zenith_angle", "solar_irradiance", "surface_temperature", "surface_albedo", "lw_up", "lw_down", "sw_up", "sw_down", "heating_rate", "surface_longwave_up_spectral", "surface_albedo_spectral", "toa_shortwave_down_spectral", "surface_albedo_direct_spectral"],
   "missing_variables": [],
   "schema_error": null,
   "status": "present_schema_valid"

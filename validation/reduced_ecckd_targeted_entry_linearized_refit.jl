@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const TARGETED_LINEARIZED_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_targeted_entry_linearized_refit.json")
+    validation_results_path("reduced_ecckd_targeted_entry_linearized_refit.json")
 const TARGETED_LINEARIZED_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_targeted_entry_linearized_refit.md")
+    validation_results_path("reduced_ecckd_targeted_entry_linearized_refit.md")
 
 linearized_candidate_count() =
     parse(Int, get(ENV, "RH_REDUCED_LINEARIZED_ENTRY_CANDIDATES", "16"))

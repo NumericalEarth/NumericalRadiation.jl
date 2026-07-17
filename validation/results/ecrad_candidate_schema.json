@@ -1,7 +1,7 @@
 {
   "case": "ecrad_candidate_schema",
-  "date": "2026-05-15T09:06:54.382",
-  "status": "passed",
+  "date": "2026-06-03T01:13:19.211",
+  "status": "missing_or_mismatched_candidate_variables",
   "candidate_prefix": "radiative_heating_",
   "cases": [{
   "case": "clear_sky_tropical_column",
@@ -11,50 +11,50 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [137, 10],
-  "candidate_shape": [137, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_or_mismatched_candidate_variables"
 }, {
   "case": "all_sky_tropical_column",
   "path": "validation/reference/ecrad/all_sky_tropical_column.nc",
@@ -63,50 +63,50 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [137, 10],
-  "candidate_shape": [137, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_or_mismatched_candidate_variables"
 }, {
   "case": "ecckd_clear_sky_tropical_column",
   "path": "validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc",
@@ -115,50 +115,50 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 10],
-  "candidate_shape": [138, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [137, 10],
-  "candidate_shape": [137, 10],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_or_mismatched_candidate_variables"
 }, {
   "case": "ecckd_all_sky_tropical_column",
   "path": "validation/reference/ecrad/ecckd_all_sky_tropical_column.nc",
@@ -219,50 +219,50 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [137, 32],
-  "candidate_shape": [137, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_or_mismatched_candidate_variables"
 }, {
   "case": "ecckd_rcemip_style_column_subset",
   "path": "validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc",
@@ -271,49 +271,49 @@
   "variable": "lw_up",
   "candidate_variable": "radiative_heating_lw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "lw_down",
   "candidate_variable": "radiative_heating_lw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_up",
   "candidate_variable": "radiative_heating_sw_up",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "sw_down",
   "candidate_variable": "radiative_heating_sw_down",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [138, 32],
-  "candidate_shape": [138, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }, {
   "variable": "heating_rate",
   "candidate_variable": "radiative_heating_heating_rate",
   "reference_present": true,
-  "candidate_present": true,
+  "candidate_present": false,
   "reference_shape": [137, 32],
-  "candidate_shape": [137, 32],
-  "shape_matches": true,
-  "status": "passed"
+  "candidate_shape": [],
+  "shape_matches": false,
+  "status": "missing_candidate_variable"
 }],
-  "passed": true,
-  "status": "passed"
+  "passed": false,
+  "status": "missing_or_mismatched_candidate_variables"
 }]
 }

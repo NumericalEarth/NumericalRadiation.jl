@@ -1,13 +1,15 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 
-const PREFLIGHT_JSON = joinpath(@__DIR__, "results", "reduced_ecckd_optimization_preflight.json")
-const PREFLIGHT_MD = joinpath(@__DIR__, "results", "reduced_ecckd_optimization_preflight.md")
-const REDUCED_ACCURACY_JSON = joinpath(@__DIR__, "results", "reduced_ecckd_accuracy.json")
-const REDUCED_SUBSET_SEARCH_JSON = joinpath(@__DIR__, "results", "reduced_ecckd_subset_search.json")
+const PREFLIGHT_JSON = validation_results_path("reduced_ecckd_optimization_preflight.json")
+const PREFLIGHT_MD = validation_results_path("reduced_ecckd_optimization_preflight.md")
+const REDUCED_ACCURACY_JSON = validation_results_path("reduced_ecckd_accuracy.json")
+const REDUCED_SUBSET_SEARCH_JSON = validation_results_path("reduced_ecckd_subset_search.json")
 const PREFLIGHT_DIRECTION = [
     sin(0.37i) + 0.5cos(0.19i) for i in 1:(3length(WEIGHTED_GREEDY_SW_16_INDICES))
 ]

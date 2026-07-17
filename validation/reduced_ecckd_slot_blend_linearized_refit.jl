@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
@@ -5,9 +7,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 include(joinpath(@__DIR__, "reduced_ecckd_slot_blend_refinement.jl"))
 
 const SLOT_BLEND_LINEARIZED_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_slot_blend_linearized_refit.json")
+    validation_results_path("reduced_ecckd_slot_blend_linearized_refit.json")
 const SLOT_BLEND_LINEARIZED_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_slot_blend_linearized_refit.md")
+    validation_results_path("reduced_ecckd_slot_blend_linearized_refit.md")
 
 slot_blend_linearized_candidate_count() =
     parse(Int, get(ENV, "RH_REDUCED_SLOT_BLEND_LINEARIZED_CANDIDATES", "48"))

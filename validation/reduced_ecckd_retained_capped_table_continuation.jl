@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_retained_capped_table_optimizer.jl"))
 
 const RETAINED_CAPPED_TABLE_CONTINUATION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_capped_table_continuation.json")
+    validation_results_path("reduced_ecckd_retained_capped_table_continuation.json")
 const RETAINED_CAPPED_TABLE_CONTINUATION_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_capped_table_continuation.md")
+    validation_results_path("reduced_ecckd_retained_capped_table_continuation.md")
 
 function with_retained_capped_table_continuation_environment(f)
     keys = (

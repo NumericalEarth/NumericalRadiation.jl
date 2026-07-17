@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using LinearAlgebra
@@ -5,11 +7,11 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "ecckd_candidate_table_writeback_multisample.jl"))
 
 const CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_multisample_optimizer.json")
+    validation_results_path("ecckd_candidate_table_multisample_optimizer.json")
 const CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_multisample_optimizer.md")
+    validation_results_path("ecckd_candidate_table_multisample_optimizer.md")
 const CANDIDATE_TABLE_MULTISAMPLE_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_multisample_sw32_candidate.nc")
+    validation_results_path("ecckd_table_multisample_sw32_candidate.nc")
 
 function table_multisample_seed_parameters()
     if isfile(CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON)

@@ -1,108 +1,60 @@
 {
   "case": "ecrad_accuracy_diagnostics",
-  "date": "2026-05-15T12:51:30.607",
-  "gate_status": "passed",
+  "date": "2026-06-03T01:13:47.011",
+  "gate_status": "missing_candidate_outputs",
   "candidate_prefix": "radiative_heating_",
-  "failed_metric_count": 0,
+  "failed_metric_count": 24,
   "case_summary": [{
   "case": "ecckd_clear_sky_tropical_column",
-  "failed_metric_count": 0,
-  "worst_ratio": 0.18254195169116194
+  "failed_metric_count": 12,
+  "worst_ratio": null
 }, {
   "case": "ecckd_all_sky_tropical_column",
   "failed_metric_count": 0,
-  "worst_ratio": 0.38729418855268705
+  "worst_ratio": 0.3872941885822456
 }, {
   "case": "ecckd_rcemip_style_column_subset",
-  "failed_metric_count": 0,
-  "worst_ratio": 0.18254195169116194
+  "failed_metric_count": 12,
+  "worst_ratio": null
 }],
   "worst_metrics": [{
   "case": "ecckd_all_sky_tropical_column",
   "metric": "toa_forcing_abs_error",
-  "value": 0.11618825656580611,
+  "value": 0.11618825657467369,
   "threshold": 0.3,
-  "ratio": 0.38729418855268705,
+  "ratio": 0.3872941885822456,
   "units": "W m^-2",
-  "passed": true
-}, {
-  "case": "ecckd_clear_sky_tropical_column",
-  "metric": "heating_rate_max_abs",
-  "value": 0.09127097584558097,
-  "threshold": 0.5,
-  "ratio": 0.18254195169116194,
-  "units": "K day^-1",
-  "passed": true
-}, {
-  "case": "ecckd_rcemip_style_column_subset",
-  "metric": "heating_rate_max_abs",
-  "value": 0.09127097584558097,
-  "threshold": 0.5,
-  "ratio": 0.18254195169116194,
-  "units": "K day^-1",
   "passed": true
 }, {
   "case": "ecckd_all_sky_tropical_column",
   "metric": "heating_rate_max_abs",
-  "value": 0.07689327914947697,
+  "value": 0.07689327932362122,
   "threshold": 0.5,
-  "ratio": 0.15378655829895393,
+  "ratio": 0.15378655864724244,
   "units": "K day^-1",
   "passed": true
 }, {
   "case": "ecckd_all_sky_tropical_column",
   "metric": "heating_rate_rmse",
-  "value": 0.00575848422016231,
+  "value": 0.005758484222278752,
   "threshold": 0.05,
-  "ratio": 0.1151696844032462,
+  "ratio": 0.11516968444557504,
   "units": "K day^-1",
-  "passed": true
-}, {
-  "case": "ecckd_clear_sky_tropical_column",
-  "metric": "heating_rate_rmse",
-  "value": 0.00575159066875469,
-  "threshold": 0.05,
-  "ratio": 0.11503181337509379,
-  "units": "K day^-1",
-  "passed": true
-}, {
-  "case": "ecckd_rcemip_style_column_subset",
-  "metric": "heating_rate_rmse",
-  "value": 0.004571539577497291,
-  "threshold": 0.05,
-  "ratio": 0.09143079154994581,
-  "units": "K day^-1",
-  "passed": true
-}, {
-  "case": "ecckd_clear_sky_tropical_column",
-  "metric": "surface_forcing_abs_error",
-  "value": 0.014039696250051747,
-  "threshold": 0.3,
-  "ratio": 0.046798987500172494,
-  "units": "W m^-2",
-  "passed": true
-}, {
-  "case": "ecckd_rcemip_style_column_subset",
-  "metric": "surface_forcing_abs_error",
-  "value": 0.014039696250051747,
-  "threshold": 0.3,
-  "ratio": 0.046798987500172494,
-  "units": "W m^-2",
   "passed": true
 }, {
   "case": "ecckd_all_sky_tropical_column",
   "metric": "surface_forcing_abs_error",
-  "value": 0.01285362445435112,
+  "value": 0.012853624456056423,
   "threshold": 0.3,
-  "ratio": 0.04284541484783707,
+  "ratio": 0.04284541485352141,
   "units": "W m^-2",
   "passed": true
 }, {
   "case": "ecckd_all_sky_tropical_column",
   "metric": "lw_up_rmse",
-  "value": 0.03757815067419145,
+  "value": 0.03757815067419265,
   "threshold": 1.0,
-  "ratio": 0.03757815067419145,
+  "ratio": 0.03757815067419265,
   "units": "W m^-2",
   "passed": true
 }, {
@@ -111,6 +63,54 @@
   "value": 0.1475124837447197,
   "threshold": 5.0,
   "ratio": 0.02950249674894394,
+  "units": "W m^-2",
+  "passed": true
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "metric": "sw_up_rmse",
+  "value": 0.003734861703788345,
+  "threshold": 1.0,
+  "ratio": 0.003734861703788345,
+  "units": "W m^-2",
+  "passed": true
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "metric": "sw_down_rmse",
+  "value": 0.003271323947118847,
+  "threshold": 1.0,
+  "ratio": 0.003271323947118847,
+  "units": "W m^-2",
+  "passed": true
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "metric": "lw_down_rmse",
+  "value": 0.0018031836520409127,
+  "threshold": 1.0,
+  "ratio": 0.0018031836520409127,
+  "units": "W m^-2",
+  "passed": true
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "metric": "sw_down_max_abs",
+  "value": 0.008614471461328321,
+  "threshold": 5.0,
+  "ratio": 0.0017228942922656643,
+  "units": "W m^-2",
+  "passed": true
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "metric": "lw_down_max_abs",
+  "value": 0.007354324084474229,
+  "threshold": 5.0,
+  "ratio": 0.0014708648168948457,
+  "units": "W m^-2",
+  "passed": true
+}, {
+  "case": "ecckd_all_sky_tropical_column",
+  "metric": "sw_up_max_abs",
+  "value": 0.0068748393913153905,
+  "threshold": 5.0,
+  "ratio": 0.001374967878263078,
   "units": "W m^-2",
   "passed": true
 }]

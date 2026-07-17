@@ -16,7 +16,7 @@ Status: **passed**
 | Enzyme used for training | true |
 | Reactant compile check | passed |
 | Recovery metrics status | passed |
-| Worst log-coefficient RMSE | 1.257141927960235e-5 |
+| Worst log-coefficient RMSE | 1.2571419279602349e-5 |
 | Worst p99 relative coefficient error | 2.3427731855160456e-5 |
 | G-point weight max abs error | 0.0 |
 | Band weight max abs error | 0.0 |

@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_optimization_preflight.jl"))
 
 const COEFFICIENT_CONTINUATION_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_coefficient_continuation.json")
+    validation_results_path("reduced_ecckd_coefficient_continuation.json")
 const COEFFICIENT_CONTINUATION_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_coefficient_continuation.md")
+    validation_results_path("reduced_ecckd_coefficient_continuation.md")
 
 function coefficient_continuation_saved_states(f)
     states = NamedTuple[]

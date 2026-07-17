@@ -1,9 +1,9 @@
 {
   "case": "recovery_goal_audit",
-  "timestamp_utc": "2026-05-23T02:53:52.047",
+  "timestamp_utc": "2026-06-03T01:35:41.623",
   "status": "not_complete",
-  "blocked_count": 0,
-  "partial_count": 3,
+  "blocked_count": 1,
+  "partial_count": 2,
   "unmet_requirement_count": 3,
   "unmet_requirement_ids": [
     "ecrad_full_and_reduced_parity",
@@ -64,7 +64,7 @@
     "model_count": 6,
     "passed_count": 6,
     "failed_labels": [],
-    "worst_hard_objective": 0.7713039286371289
+    "worst_hard_objective": 0.7713039286443291
   },
   "reduced_near_miss_summary": {
     "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_refit_breakdown.json",
@@ -80,10 +80,10 @@
     "limiting_metric_value": 0.616622724397738,
     "limiting_metric_threshold": 0.05,
     "objective_best_omitted_gpoint": 23,
-    "objective_best_objective": 1.624423143786563,
+    "objective_best_objective": 1.6244231437865624,
     "objective_best_limiting_metric": "heating_rate_rmse",
-    "objective_best_limiting_metric_ratio": 1.624423143786563,
-    "objective_best_limiting_metric_value": 0.08122115718932815,
+    "objective_best_limiting_metric_ratio": 1.6244231437865624,
+    "objective_best_limiting_metric_value": 0.08122115718932812,
     "objective_best_limiting_metric_threshold": 0.05
   },
   "reduced_weight_coordinate_summary": {
@@ -152,8 +152,8 @@
     "ncu_report": "/shared/home/greg/Projects/BreezeRadiativeHeatingDev/Breeze.jl/benchmarking/results/rcemip_h100_32x32x64/nsight/radiative_heating_rcemip_ncu.ncu-rep"
   },
   "ckdmip_preflight_status": "ready_for_original_ecckd_objective",
-  "derived_flux_plan_status": "ready_for_original_ecckd_objective",
-  "objective_reconstruction_status": "ready_to_reconstruct_original_objective",
+  "derived_flux_plan_status": "missing_ckdmip_data_root",
+  "objective_reconstruction_status": "blocked_missing_original_training_assets",
   "original_objective_terms_summary": {
     "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_original_objective_terms.json",
     "present": true,
@@ -450,25 +450,25 @@
   },
   "derived_flux_progress": {
     "expected": 18,
-    "final_present": 18,
+    "final_present": 0,
     "products_with_raw_chunks": 0,
-    "expected_raw_chunks": 90,
+    "expected_raw_chunks": 0,
     "present_raw_chunks": 0,
-    "completed_equivalent_raw_chunks": 90,
+    "completed_equivalent_raw_chunks": 0,
     "observed_raw_chunk_rate_per_hour": null,
     "estimated_raw_chunk_hours_remaining": null,
-    "missing": 0
+    "missing": 18
   },
   "derived_flux_plan_summary": {
     "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_derived_flux_generation_plan.json",
     "present": true,
-    "status": "ready_for_original_ecckd_objective",
+    "status": "missing_ckdmip_data_root",
     "expected_derived_flux_count": 18,
-    "present_derived_flux_count": 18,
+    "present_derived_flux_count": 0,
     "raw_chunk_product_count": 0,
     "present_raw_chunk_count": 0,
-    "expected_raw_chunk_count": 90,
-    "completed_equivalent_raw_chunk_count": 90,
+    "expected_raw_chunk_count": 0,
+    "completed_equivalent_raw_chunk_count": 0,
     "raw_chunk_rate": {
       "first_raw_chunk_at_utc": null,
       "latest_raw_chunk_at_utc": null,
@@ -489,7 +489,7 @@
     {
       "id": "ecrad_full_and_reduced_parity",
       "requirement": "Demonstrate parity with ecRad for full-accuracy models and reduced ecCKD models such as 16- and 32-band variants.",
-      "status": "partial",
+      "status": "blocked",
       "evidence": [
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_accuracy_gate.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_all_sky_ifs_gate.json",
@@ -573,7 +573,7 @@
     {
       "requirement_id": "ecrad_full_and_reduced_parity",
       "prompt_requirement": "Demonstrate parity with ecRad for full-accuracy models and reduced ecCKD models such as 16- and 32-band variants.",
-      "coverage_status": "partial",
+      "coverage_status": "blocked",
       "evidence": [
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_accuracy_gate.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_all_sky_ifs_gate.json",

@@ -3,7 +3,7 @@ using JSON
 @testset "reduced ecCKD leave-one-out refit breakdown" begin
     root = normpath(joinpath(@__DIR__, ".."))
     script = joinpath(root, "validation", "reduced_ecckd_leave_one_out_refit_breakdown.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     output = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
 
     @test occursin("Reduced ecCKD Leave-One-Out Refit Breakdown", output)

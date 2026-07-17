@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
@@ -5,9 +7,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_global_block_refinement.jl"))
 include(joinpath(@__DIR__, "reduced_ecckd_targeted_entry_linearized_refit.jl"))
 
 const GLOBAL_BLOCK_LINEARIZED_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_block_linearized_refit.json")
+    validation_results_path("reduced_ecckd_global_block_linearized_refit.json")
 const GLOBAL_BLOCK_LINEARIZED_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_block_linearized_refit.md")
+    validation_results_path("reduced_ecckd_global_block_linearized_refit.md")
 
 global_block_linearized_group_limit() =
     parse(Int, get(ENV, "RH_REDUCED_GLOBAL_BLOCK_LINEARIZED_GROUPS", "12"))

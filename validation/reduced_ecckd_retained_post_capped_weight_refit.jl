@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -5,9 +7,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_retained_capped_table_continuation.jl"
 include(joinpath(@__DIR__, "reduced_ecckd_subset_search.jl"))
 
 const RETAINED_POST_CAPPED_WEIGHT_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_capped_weight_refit.json")
+    validation_results_path("reduced_ecckd_retained_post_capped_weight_refit.json")
 const RETAINED_POST_CAPPED_WEIGHT_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_post_capped_weight_refit.md")
+    validation_results_path("reduced_ecckd_retained_post_capped_weight_refit.md")
 
 retained_post_capped_weight_refit_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_RETAINED_POST_CAPPED_WEIGHT_REFIT_ITERATIONS", "25000"))

@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 include(joinpath(@__DIR__, "ecrad_accuracy_gate.jl"))
@@ -121,7 +123,7 @@ end
 
 function candidate_schema_main()
     result = run_candidate_schema_check()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_candidate_schema.json")
     md_path = joinpath(results_dir, "ecrad_candidate_schema.md")

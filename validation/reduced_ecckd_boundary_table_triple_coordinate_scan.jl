@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_boundary_table_coordinate_descent.jl"))
 
 const BOUNDARY_TABLE_TRIPLE_COORDINATE_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_triple_coordinate_scan.json")
+    validation_results_path("reduced_ecckd_boundary_table_triple_coordinate_scan.json")
 const BOUNDARY_TABLE_TRIPLE_COORDINATE_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_table_triple_coordinate_scan.md")
+    validation_results_path("reduced_ecckd_boundary_table_triple_coordinate_scan.md")
 
 boundary_table_triple_single_limit() =
     parse(Int, get(ENV, "RH_BOUNDARY_TABLE_TRIPLE_SINGLE_LIMIT", "16"))

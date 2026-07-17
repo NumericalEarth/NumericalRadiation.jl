@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -617,7 +619,7 @@ function subset_search_main()
         best_pruned_full_fit_subset = pruned_exact,
         best_hardgate_weighted_subset = hardgate_exact,
     )
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "reduced_ecckd_subset_search.json")
     md_path = joinpath(results_dir, "reduced_ecckd_subset_search.md")

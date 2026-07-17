@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
@@ -14,11 +16,11 @@ include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 end
 
 const RESULT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_32g_rrtmgp_comparison.json")
+    validation_results_path("reduced_ecckd_32g_rrtmgp_comparison.json")
 const RESULT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_32g_rrtmgp_comparison.md")
+    validation_results_path("reduced_ecckd_32g_rrtmgp_comparison.md")
 const REDUCED_ACCURACY_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_accuracy.json")
+    validation_results_path("reduced_ecckd_accuracy.json")
 
 const CASES = (
     (
@@ -69,11 +71,14 @@ function json_object(object)
 end
 
 function fluxes_from_dataset(ds, prefix, suffix, column)
+    variable(name) = haskey(ds, "$(prefix)$(name)$(suffix)") ?
+                     "$(prefix)$(name)$(suffix)" :
+                     "$(name)$(suffix)"
     return RadiativeFluxes(
-        longwave_up = Array(ds["$(prefix)lw_up$(suffix)"])[:, column],
-        longwave_down = Array(ds["$(prefix)lw_down$(suffix)"])[:, column],
-        shortwave_up = Array(ds["$(prefix)sw_up$(suffix)"])[:, column],
-        shortwave_down = Array(ds["$(prefix)sw_down$(suffix)"])[:, column],
+        longwave_up = Array(ds[variable("lw_up")])[:, column],
+        longwave_down = Array(ds[variable("lw_down")])[:, column],
+        shortwave_up = Array(ds[variable("sw_up")])[:, column],
+        shortwave_down = Array(ds[variable("sw_down")])[:, column],
     )
 end
 

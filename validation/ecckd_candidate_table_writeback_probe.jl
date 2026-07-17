@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_parameter_probe.jl"))
 
 const CANDIDATE_TABLE_WRITEBACK_PROBE_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_writeback_probe.json")
+    validation_results_path("ecckd_candidate_table_writeback_probe.json")
 const CANDIDATE_TABLE_WRITEBACK_PROBE_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_writeback_probe.md")
+    validation_results_path("ecckd_candidate_table_writeback_probe.md")
 const CANDIDATE_TABLE_WRITEBACK_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_scaled_sw32_candidate.nc")
+    validation_results_path("ecckd_table_scaled_sw32_candidate.nc")
 
 local_json_get(object, key, default = nothing) =
     haskey(object, key) ? object[key] : default

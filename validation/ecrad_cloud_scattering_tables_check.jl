@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 
 const ABR_ROOT = normpath(joinpath(@__DIR__, ".."))
@@ -238,7 +240,7 @@ end
 
 function ecrad_cloud_scattering_tables_check_main()
     result = run_ecrad_cloud_scattering_tables_check()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_cloud_scattering_tables_check.json")
     md_path = joinpath(results_dir, "ecrad_cloud_scattering_tables_check.md")

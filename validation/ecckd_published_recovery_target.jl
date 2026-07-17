@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_recovery_metrics.jl"))
 
 const PUBLISHED_RECOVERY_TARGET_JSON =
-    joinpath(@__DIR__, "results", "ecckd_published_recovery_target.json")
+    validation_results_path("ecckd_published_recovery_target.json")
 const PUBLISHED_RECOVERY_TARGET_MD =
-    joinpath(@__DIR__, "results", "ecckd_published_recovery_target.md")
+    validation_results_path("ecckd_published_recovery_target.md")
 const TRAINING_TARGETS_JSON =
-    joinpath(@__DIR__, "results", "ecckd_training_recovery_targets.json")
+    validation_results_path("ecckd_training_recovery_targets.json")
 
 const SUPPORT_ARRAY_NAMES = (
     "gpoint_fraction",

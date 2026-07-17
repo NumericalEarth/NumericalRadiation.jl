@@ -1,6 +1,6 @@
 {
   "case": "ecckd_original_objective_terms",
-  "timestamp_utc": "2026-05-22T23:42:32.736",
+  "timestamp_utc": "2026-06-03T01:06:59.922",
   "status": "objective_terms_captured",
   "ecckd_source_root": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
   "objective_contract": "These terms and pass settings are fixed inputs for the Reactant/Enzyme original-objective recovery; optimizer settings may vary, but source data, loss terms, gases, weights, band mappings, and pass order may not.",

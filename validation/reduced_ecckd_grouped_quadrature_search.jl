@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_flux_pair_bins.jl"))
 
 const GROUPED_QUADRATURE_SEARCH_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_grouped_quadrature_search.json")
+    validation_results_path("reduced_ecckd_grouped_quadrature_search.json")
 const GROUPED_QUADRATURE_SEARCH_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_grouped_quadrature_search.md")
+    validation_results_path("reduced_ecckd_grouped_quadrature_search.md")
 
 function grouped_quadrature_feature(full_model, gpoint;
                                     flux_weight,

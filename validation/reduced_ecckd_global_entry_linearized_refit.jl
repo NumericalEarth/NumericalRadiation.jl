@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
@@ -5,9 +7,9 @@ include(joinpath(@__DIR__, "reduced_ecckd_global_entry_refinement.jl"))
 include(joinpath(@__DIR__, "reduced_ecckd_targeted_entry_linearized_refit.jl"))
 
 const GLOBAL_LINEARIZED_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_entry_linearized_refit.json")
+    validation_results_path("reduced_ecckd_global_entry_linearized_refit.json")
 const GLOBAL_LINEARIZED_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_global_entry_linearized_refit.md")
+    validation_results_path("reduced_ecckd_global_entry_linearized_refit.md")
 
 global_linearized_candidate_count() =
     parse(Int, get(ENV, "RH_REDUCED_GLOBAL_LINEARIZED_ENTRY_CANDIDATES", "24"))

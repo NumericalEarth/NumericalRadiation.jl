@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Statistics
 
 include(joinpath(@__DIR__, "ecckd_recovery_metrics.jl"))
 
-const TEACHER_STUDENT_JSON = joinpath(@__DIR__, "results", "ecckd_teacher_student_recovery.json")
-const TEACHER_STUDENT_MD = joinpath(@__DIR__, "results", "ecckd_teacher_student_recovery.md")
-const TEACHER_STUDENT_SCAN_JSON = joinpath(@__DIR__, "results", "ecckd_teacher_student_recovery_scan.json")
-const TEACHER_STUDENT_SCAN_MD = joinpath(@__DIR__, "results", "ecckd_teacher_student_recovery_scan.md")
+const TEACHER_STUDENT_JSON = validation_results_path("ecckd_teacher_student_recovery.json")
+const TEACHER_STUDENT_MD = validation_results_path("ecckd_teacher_student_recovery.md")
+const TEACHER_STUDENT_SCAN_JSON = validation_results_path("ecckd_teacher_student_recovery_scan.json")
+const TEACHER_STUDENT_SCAN_MD = validation_results_path("ecckd_teacher_student_recovery_scan.md")
 const TEACHER_STUDENT_CANDIDATE =
-    joinpath(@__DIR__, "results", "ecckd_recovered_sw32_candidate.nc")
+    validation_results_path("ecckd_recovered_sw32_candidate.nc")
 
 function coefficient_names(path)
     NCDataset(path) do ds
@@ -151,7 +153,7 @@ end
 
 function run_ecckd_teacher_student_recovery_for_filename(filename; iterations = 32, step_fraction = 0.2)
     reference = official_ecckd_definition_path(filename)
-    candidate = joinpath(@__DIR__, "results", safe_candidate_filename(filename))
+    candidate = validation_results_path(safe_candidate_filename(filename))
     result = run_ecckd_teacher_student_recovery(; reference, candidate, iterations, step_fraction)
     return merge((filename = filename,), result)
 end

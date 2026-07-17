@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using LinearAlgebra
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_boundary_table_continuation_optimizer.jl"))
 
 const COMPONENT_SCALE_REFIT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_component_scale_refit.json")
+    validation_results_path("reduced_ecckd_component_scale_refit.json")
 const COMPONENT_SCALE_REFIT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_component_scale_refit.md")
+    validation_results_path("reduced_ecckd_component_scale_refit.md")
 
 component_scale_probe_step() =
     parse(Float64, get(ENV, "RH_REDUCED_COMPONENT_SCALE_PROBE_STEP", "0.00390625"))

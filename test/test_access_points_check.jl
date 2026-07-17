@@ -1,6 +1,6 @@
 @testset "host-model access points artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "access_points_check.jl")
-    output = read(`$(Base.julia_cmd()) --project=$(dirname(@__DIR__)) $script`, String)
+    output = read(`$(Base.julia_cmd()) --project=$(Base.active_project()) $script`, String)
     @test occursin("Host-Model Access Points Check", output)
     @test occursin("Status: **passed**", output)
     @test occursin("Host can stop after gas optics", output)

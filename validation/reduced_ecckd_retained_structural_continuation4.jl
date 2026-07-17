@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_constrained_table_optimizer.jl"))
 
 const RETAINED_STRUCTURAL_CONTINUATION4_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_continuation4.json")
+    validation_results_path("reduced_ecckd_retained_structural_continuation4.json")
 const RETAINED_STRUCTURAL_CONTINUATION4_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_retained_structural_continuation4.md")
+    validation_results_path("reduced_ecckd_retained_structural_continuation4.md")
 
 function set_retained_structural_continuation4_default!(key, value)
     haskey(ENV, key) || (ENV[key] = value)

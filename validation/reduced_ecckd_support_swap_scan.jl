@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_subset_search.jl"))
 
 const SUPPORT_SWAP_SCAN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_support_swap_scan.json")
+    validation_results_path("reduced_ecckd_support_swap_scan.json")
 const SUPPORT_SWAP_SCAN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_support_swap_scan.md")
+    validation_results_path("reduced_ecckd_support_swap_scan.md")
 
 const SUBSET_HARDGATE_SW_16_INDICES =
     [2, 4, 7, 10, 11, 12, 14, 16, 18, 21, 22, 27, 28, 30, 31, 32]

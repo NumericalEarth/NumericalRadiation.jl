@@ -1,14 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_writeback_probe.jl"))
 
 const CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_writeback_continuation.json")
+    validation_results_path("ecckd_candidate_table_writeback_continuation.json")
 const CANDIDATE_TABLE_WRITEBACK_CONTINUATION_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_table_writeback_continuation.md")
+    validation_results_path("ecckd_candidate_table_writeback_continuation.md")
 const CANDIDATE_TABLE_WRITEBACK_CONTINUATION_FILE =
-    joinpath(@__DIR__, "results", "ecckd_table_scaled_sw32_continuation_candidate.nc")
+    validation_results_path("ecckd_table_scaled_sw32_continuation_candidate.nc")
 
 function table_parameter_continuation(f, initial_parameters; iterations = 4)
     parameters = copy(initial_parameters)

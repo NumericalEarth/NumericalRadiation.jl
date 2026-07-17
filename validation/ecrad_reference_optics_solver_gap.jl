@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 using Statistics
@@ -356,7 +358,7 @@ end
 
 function main()
     result = run_reference_optics_solver_gap()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     output_basename = get(ENV, "RH_REFERENCE_OPTICS_OUTPUT_BASENAME",
                           REFERENCE_OPTICS_OUTPUT_BASENAME)

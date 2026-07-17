@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 
 const CURRENT_METRIC_BREAKDOWN_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_current_metric_breakdown.json")
+    validation_results_path("reduced_ecckd_current_metric_breakdown.json")
 const CURRENT_METRIC_BREAKDOWN_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_current_metric_breakdown.md")
+    validation_results_path("reduced_ecckd_current_metric_breakdown.md")
 
 const CURRENT_REDUCED_SPEC = (
     ng_lw = 32,

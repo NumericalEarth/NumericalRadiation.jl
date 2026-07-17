@@ -1,11 +1,13 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_slot_blend_refinement.jl"))
 
 const GAS_PRESSURE_BAND_REFINEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_pressure_band_refinement.json")
+    validation_results_path("reduced_ecckd_gas_pressure_band_refinement.json")
 const GAS_PRESSURE_BAND_REFINEMENT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_gas_pressure_band_refinement.md")
+    validation_results_path("reduced_ecckd_gas_pressure_band_refinement.md")
 
 gas_pressure_band_count() =
     parse(Int, get(ENV, "RH_REDUCED_GAS_PRESSURE_BANDS", "4"))

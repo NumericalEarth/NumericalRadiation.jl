@@ -7,7 +7,7 @@ using JSON
     script = joinpath(root, "validation", "ecckd_teacher_student_recovery.jl")
 
     if !isfile(json_path) || !isfile(md_path) || stat(json_path).mtime < stat(script).mtime
-        test_project = joinpath(@__DIR__, "Project.toml")
+        test_project = Base.active_project()
         output = read(setenv(
             `$(Base.julia_cmd()) --project=$test_project $script`,
             "RH_ECCKD_TEACHER_STUDENT_SCAN" => "true",

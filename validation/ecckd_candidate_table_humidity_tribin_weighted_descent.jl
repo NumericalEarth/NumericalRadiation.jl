@@ -1,17 +1,16 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 
 include(joinpath(@__DIR__, "ecckd_candidate_table_humidity_tribin_descent.jl"))
 
 const CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_JSON =
-    joinpath(@__DIR__, "results",
-             "ecckd_candidate_table_humidity_tribin_weighted_descent.json")
+    validation_results_path("ecckd_candidate_table_humidity_tribin_weighted_descent.json")
 const CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_MD =
-    joinpath(@__DIR__, "results",
-             "ecckd_candidate_table_humidity_tribin_weighted_descent.md")
+    validation_results_path("ecckd_candidate_table_humidity_tribin_weighted_descent.md")
 const CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_FILE =
-    joinpath(@__DIR__, "results",
-             "ecckd_table_humidity_tribin_weighted_descent_sw32_candidate.nc")
+    validation_results_path("ecckd_table_humidity_tribin_weighted_descent_sw32_candidate.nc")
 
 function weighted_loss_ratio(score, scenario_weights)
     present_rows = filter(row -> row.present, score.rows)

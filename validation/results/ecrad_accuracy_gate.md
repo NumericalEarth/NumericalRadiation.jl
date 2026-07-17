@@ -1,6 +1,6 @@
 # ecRad Accuracy Gate
 
-Status: **passed**
+Status: **missing_candidate_outputs**
 
 This report applies hard acceptance thresholds to official ecCKD ecRad reference variables and `radiative_heating_*` candidate variables in the same NetCDF files. It does not run ecRad.
 
@@ -8,9 +8,9 @@ Hard gate scope: `official_ecCKD_hard_gate`. Legacy non-ecCKD references remain 
 
 | Case | Status | Passed | Path |
 |---|---|---:|---|
-| ecckd_clear_sky_tropical_column | passed | true | `validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc` |
+| ecckd_clear_sky_tropical_column | missing_candidate_outputs | false | `validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc` |
 | ecckd_all_sky_tropical_column | passed | true | `validation/reference/ecrad/ecckd_all_sky_tropical_column.nc` |
-| ecckd_rcemip_style_column_subset | passed | true | `validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc` |
+| ecckd_rcemip_style_column_subset | missing_candidate_outputs | false | `validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc` |
 
 ## Variable Thresholds
 

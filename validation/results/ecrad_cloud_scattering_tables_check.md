@@ -14,6 +14,6 @@ This check verifies that the package can ingest the official ecRad cloud scatter
 | Kind | Status | Intervals | G-points | Shape OK | Fractions nonnegative | Liquid max extinction | Ice max extinction |
 |---|---|---:|---:|---:|---:|---:|---:|
 | shortwave | passed | 995 | 32 | true | true | 184.35586677556356 | 56.10563625683885 |
-| longwave | passed | 326 | 64 | true | true | 204.33824669783726 | 62.68914236652619 |
+| longwave | passed | 326 | 64 | true | true | 204.32733732722625 | 62.64665824313908 |
 
 Next implementation step: use these mapped g-point scattering properties in cloudy-region optical-depth construction and then carry cloud fraction/overlap through the all-sky solver instead of tuning broadband cloud coefficients.

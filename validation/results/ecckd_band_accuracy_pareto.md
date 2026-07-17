@@ -19,8 +19,8 @@ The plot keeps boundary forcing on the y-axis because that is the user-facing ra
 | 32 | 16 | 16 | false | 156.746 | 522.488 | surface_forcing | adjacent official ecCKD g-point bins with spectral-weighted coefficient averages |
 | 48 | 32 | 16 | false | 2.07524 | 6.91747 | toa_forcing | weighted greedy 16 shortwave g-point subset with boundary-aware table, component, structural, objective-probe, surface-probe, capped table, continuation, post-capped weight, post-weight surface-table, bounded weight, four current component-scale refits, selected current gas-pressure component scan refit, gas-pressure continuation refit, weighted gas-pressure continuation refit, and high-weight gas-pressure continuation refit |
 | 63 | 32 | 31 | false | 0.0242812 | 12.3325 | reported_refit_hardgate_objective | leave-one-out official SW g-point scan with weight refit: omit g25 |
-| 64 | 32 | 32 | true | 0.0140335 | 0.0467785 | surface_forcing | size scan: even_select |
-| 96 | 64 | 32 | true | 0.0137165 | 0.184824 | heating_rate_max_abs | official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model |
+| 64 | 32 | 32 | true | 0.0140334 | 0.182186 | heating_rate_max_abs | official ecCKD 1.0 32-LW x 32-SW climate model |
+| 96 | 64 | 32 | true | 0.0137163 | 0.184824 | heating_rate_max_abs | official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model |
 
 ## Normalized-Objective Pareto Front
 

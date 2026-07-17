@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
@@ -86,7 +88,7 @@ end
 
 function cloudless_accuracy_gate_main()
     result = run_cloudless_accuracy_gate()
-    results_dir = joinpath(@__DIR__, "results")
+    results_dir = validation_results_dir()
     mkpath(results_dir)
     json_path = joinpath(results_dir, "ecrad_cloudless_accuracy_gate.json")
     md_path = joinpath(results_dir, "ecrad_cloudless_accuracy_gate.md")

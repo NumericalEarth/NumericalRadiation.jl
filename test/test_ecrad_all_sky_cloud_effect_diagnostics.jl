@@ -1,6 +1,6 @@
 @testset "ecRad all-sky cloud-effect diagnostics artifact" begin
     script = joinpath(@__DIR__, "..", "validation", "ecrad_all_sky_cloud_effect_diagnostics.jl")
-    test_project = joinpath(@__DIR__, "Project.toml")
+    test_project = Base.active_project()
     result = read(`$(Base.julia_cmd()) --project=$test_project $script`, String)
     @test occursin("ecRad All-Sky Cloud-Effect Diagnostics", result)
     @test occursin("Boundary Cloud Effect Error", result)

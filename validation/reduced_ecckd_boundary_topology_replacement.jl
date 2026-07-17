@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
 include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
 
 const BOUNDARY_TOPOLOGY_REPLACEMENT_JSON =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_topology_replacement.json")
+    validation_results_path("reduced_ecckd_boundary_topology_replacement.json")
 const BOUNDARY_TOPOLOGY_REPLACEMENT_MD =
-    joinpath(@__DIR__, "results", "reduced_ecckd_boundary_topology_replacement.md")
+    validation_results_path("reduced_ecckd_boundary_topology_replacement.md")
 
 function topology_replacement_candidates(indices; radius = 2)
     selected = Set(indices)

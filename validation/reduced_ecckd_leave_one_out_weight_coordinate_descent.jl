@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using Printf
@@ -5,11 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_leave_one_out_weight_coordinate_scan.jl"))
 
 const LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_weight_coordinate_descent.json")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_coordinate_descent.json")
 const LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_leave_one_out_weight_coordinate_descent.md")
+    validation_results_path("reduced_ecckd_leave_one_out_weight_coordinate_descent.md")
 
 weight_coordinate_descent_iterations() =
     parse(Int, get(ENV, "RH_REDUCED_LOO_WEIGHT_COORDINATE_DESCENT_ITERATIONS", "6"))

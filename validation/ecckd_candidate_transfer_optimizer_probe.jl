@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using JSON
 using LinearAlgebra
@@ -5,9 +7,9 @@ using LinearAlgebra
 include(joinpath(@__DIR__, "ecckd_candidate_transfer_smoke.jl"))
 
 const CANDIDATE_TRANSFER_OPTIMIZER_PROBE_JSON =
-    joinpath(@__DIR__, "results", "ecckd_candidate_transfer_optimizer_probe.json")
+    validation_results_path("ecckd_candidate_transfer_optimizer_probe.json")
 const CANDIDATE_TRANSFER_OPTIMIZER_PROBE_MD =
-    joinpath(@__DIR__, "results", "ecckd_candidate_transfer_optimizer_probe.md")
+    validation_results_path("ecckd_candidate_transfer_optimizer_probe.md")
 
 function scaled_longwave_optics(optics, log_parameters)
     tau_scale = exp(log_parameters[1])

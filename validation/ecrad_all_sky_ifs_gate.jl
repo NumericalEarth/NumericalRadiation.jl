@@ -1,12 +1,14 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using Printf
 
-const ALL_SKY_IFS_GATE_JSON = joinpath(@__DIR__, "results", "ecrad_all_sky_ifs_gate.json")
-const ALL_SKY_IFS_GATE_MD = joinpath(@__DIR__, "results", "ecrad_all_sky_ifs_gate.md")
-const ACCURACY_GATE_JSON = joinpath(@__DIR__, "results", "ecrad_accuracy_gate.json")
-const CLOUD_SWEEP_JSON = joinpath(@__DIR__, "results", "ecrad_all_sky_cloud_sweep.json")
-const REFERENCE_OPTICS_JSON = joinpath(@__DIR__, "results", "ecrad_reference_optics_solver_gap.json")
-const CLOUD_TABLES_JSON = joinpath(@__DIR__, "results", "ecrad_cloud_scattering_tables_check.json")
+const ALL_SKY_IFS_GATE_JSON = validation_results_path("ecrad_all_sky_ifs_gate.json")
+const ALL_SKY_IFS_GATE_MD = validation_results_path("ecrad_all_sky_ifs_gate.md")
+const ACCURACY_GATE_JSON = validation_results_path("ecrad_accuracy_gate.json")
+const CLOUD_SWEEP_JSON = validation_results_path("ecrad_all_sky_cloud_sweep.json")
+const REFERENCE_OPTICS_JSON = validation_results_path("ecrad_reference_optics_solver_gap.json")
+const CLOUD_TABLES_JSON = validation_results_path("ecrad_cloud_scattering_tables_check.json")
 
 function json_escape(text)
     return replace(text, "\\" => "\\\\", "\"" => "\\\"", "\n" => "\\n")

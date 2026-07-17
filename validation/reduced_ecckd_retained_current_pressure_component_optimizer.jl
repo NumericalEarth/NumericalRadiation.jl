@@ -1,3 +1,5 @@
+include(joinpath(@__DIR__, "validation_results.jl"))
+
 using Dates
 using LinearAlgebra
 using Printf
@@ -5,11 +7,9 @@ using Printf
 include(joinpath(@__DIR__, "reduced_ecckd_retained_current_component_scale_optimizer4.jl"))
 
 const RETAINED_CURRENT_PRESSURE_COMPONENT_OPTIMIZER_JSON =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_optimizer.json")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_optimizer.json")
 const RETAINED_CURRENT_PRESSURE_COMPONENT_OPTIMIZER_MD =
-    joinpath(@__DIR__, "results",
-             "reduced_ecckd_retained_current_pressure_component_optimizer.md")
+    validation_results_path("reduced_ecckd_retained_current_pressure_component_optimizer.md")
 
 current_pressure_component_band_count() =
     parse(Int, get(ENV, "RH_REDUCED_CURRENT_PRESSURE_COMPONENT_BANDS", "4"))
