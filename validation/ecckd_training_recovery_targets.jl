@@ -7,45 +7,15 @@ using Printf
 const TRAINING_TARGETS_JSON = validation_results_path("ecckd_training_recovery_targets.json")
 const TRAINING_TARGETS_MD = validation_results_path("ecckd_training_recovery_targets.md")
 const OFFICIAL_TRAINING_JSON = validation_results_path("official_ecckd_training.json")
-const BOUNDARY_POLISH_JSON = joinpath(
-    @__DIR__,
-    "results",
-    "reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json",
-)
-const REDUCED_ACCURACY_JSON = validation_results_path("reduced_ecckd_accuracy.json")
 
 function artifact_or_empty(path)
     isfile(path) ? JSON.parsefile(path) : Dict{String,Any}()
 end
 
-function find_canonical_boundary_polish_row(rows)
-    for row in rows
-        method = string(get(row, "reduction_method", ""))
-        if get(row, "ng_lw", 0) == 32 &&
-           get(row, "ng_sw", 0) == 31 &&
-           occursin("boundary-polished", method)
-            return row
-        end
-    end
-    return Dict{String,Any}()
-end
-
-function max_case_value(row, key)
-    cases = get(row, "cases", Any[])
-    isempty(cases) && return nothing
-    return maximum(case -> get(case, key, 0.0), cases)
-end
-
 function training_recovery_targets()
     official = artifact_or_empty(OFFICIAL_TRAINING_JSON)
-    boundary_polish = artifact_or_empty(BOUNDARY_POLISH_JSON)
-    reduced_accuracy = artifact_or_empty(REDUCED_ACCURACY_JSON)
-    reduced_rows = get(reduced_accuracy, "models", Any[])
-    canonical_row = find_canonical_boundary_polish_row(reduced_rows)
 
     official_ratio = get(official, "final_objective_target_ratio", Inf)
-    boundary_objective = get(boundary_polish, "final_objective", Inf)
-    canonical_passed = get(canonical_row, "passed_hard_thresholds", false)
 
     targets = (
         fixed_inputs = [
@@ -56,6 +26,8 @@ function training_recovery_targets()
         ],
         optimizer_only_delta_rule =
             "published-model recovery experiments may vary optimizer settings, schedules, and initialization seeds, but not source data, objective terms, or evaluation cases",
+        new_band_scheme_rule =
+            "new band-count rows only count when produced by the recovered training pipeline with source data, objective terms, and evaluation cases fixed; greedy/forward-evaluation candidates are frozen as evidence (validation/FROZEN_DIAGNOSTICS.md) and do not satisfy these targets",
         published_model_recovery_metrics = (
             final_objective_target_ratio_max = 1.05,
             weight_l1_relative_error_max = 0.02,
@@ -68,12 +40,13 @@ function training_recovery_targets()
             toa_forcing_abs_error_w_m2_max = 0.30,
             surface_forcing_abs_error_w_m2_max = 0.30,
             heating_rate_rmse_k_day_max = 0.05,
-            required_band_counts = [48, 63, 96],
+            required_band_counts = [48, 96],
         ),
     )
 
-    status = official_ratio <= targets.published_model_recovery_metrics.final_objective_target_ratio_max &&
-             canonical_passed ? "passed" : "partial"
+    status = official_ratio <=
+             targets.published_model_recovery_metrics.final_objective_target_ratio_max ?
+             "passed" : "partial"
 
     return (
         case = "ecckd_training_recovery_targets",
@@ -87,17 +60,8 @@ function training_recovery_targets()
             final_objective_target_ratio = official_ratio,
             hard_accuracy_target_met = get(official, "hard_accuracy_target_met", false),
         ),
-        current_in_house_reduced_scheme = (
-            model = "canonical 32x31 boundary-polished reduced ecCKD",
-            total_gpoints = get(canonical_row, "ng_lw", 0) + get(canonical_row, "ng_sw", 0),
-            hard_accuracy_target_met = canonical_passed,
-            final_objective_target_ratio = boundary_objective,
-            toa_forcing_abs_error_w_m2 = max_case_value(canonical_row, "toa_forcing_max_abs"),
-            surface_forcing_abs_error_w_m2 =
-                max_case_value(canonical_row, "surface_forcing_max_abs"),
-        ),
         interpretation =
-            "The 32x31 reduced scheme now passes the hard radiation gate, but published-model recovery remains partial until the Reactant/Enzyme training pipeline recovers a published ecCKD definition under the optimizer-only-delta rule.",
+            "Published-model recovery remains partial until the Reactant/Enzyme training pipeline recovers a published ecCKD definition under the optimizer-only-delta rule; new band-count schemes only count when produced by that recovered pipeline.",
         next_required_work = [
             "Run the original-objective Reactant/Enzyme recovery with source data/objective/evaluation fixed and only optimizer settings varied.",
             "Compare recovered weights and optical-depth tables against the published ecCKD model using the quantitative recovery metrics above.",
@@ -150,7 +114,6 @@ end
 
 function markdown_report(result)
     official = result.current_official_recovery
-    reduced = result.current_in_house_reduced_scheme
     recovery = result.targets.published_model_recovery_metrics
     scheme = result.targets.new_band_scheme_metrics
     lines = String[
@@ -164,12 +127,6 @@ function markdown_report(result)
         "|---|---:|",
         "| Official recovery final objective / target | $(@sprintf("%.12g", official.final_objective_target_ratio)) |",
         "| Official recovery hard target met | $(official.hard_accuracy_target_met) |",
-        "| Canonical reduced model | $(reduced.model) |",
-        "| Canonical reduced total g-points | $(reduced.total_gpoints) |",
-        "| Canonical reduced hard target met | $(reduced.hard_accuracy_target_met) |",
-        "| Canonical reduced objective / target | $(@sprintf("%.12g", reduced.final_objective_target_ratio)) |",
-        "| Canonical reduced TOA forcing error | $(reduced.toa_forcing_abs_error_w_m2) W m^-2 |",
-        "| Canonical reduced surface forcing error | $(reduced.surface_forcing_abs_error_w_m2) W m^-2 |",
         "",
         "## Recovery Criteria",
         "",
@@ -190,6 +147,8 @@ function markdown_report(result)
         "| Surface forcing absolute error | <= $(scheme.surface_forcing_abs_error_w_m2_max) W m^-2 |",
         "| Heating-rate RMSE | <= $(scheme.heating_rate_rmse_k_day_max) K day^-1 |",
         "| Required band-count points | $(join(string.(scheme.required_band_counts), ", ")) |",
+        "",
+        result.targets.new_band_scheme_rule,
         "",
         result.interpretation,
         "",

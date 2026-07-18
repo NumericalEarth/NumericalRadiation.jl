@@ -21,7 +21,7 @@ using JSON
 
     result = JSON.parsefile(json_path)
     @test result["status"] == "passed"
-    @test result["point_count"] >= 10
+    @test result["point_count"] >= 5
     @test result["published_inventory_count"] == 6
     @test result["passed_point_count"] >= 1
     @test haskey(result, "objective_front")
@@ -30,15 +30,8 @@ using JSON
               result["accuracy_points"])
     @test any(row -> row["source"] == "reduced_accuracy" &&
                      row["ng_lw"] == 32 &&
-                     row["ng_sw"] == 31 &&
-                     row["passed"] &&
-                     occursin("boundary-polished", row["label"]),
-              result["accuracy_points"])
-    @test any(row -> row["ng_lw"] == 32 && row["ng_sw"] == 16,
-              result["accuracy_points"])
-    @test any(row -> row["source"] == "leave_one_out_weight_coordinate_boundary_polish" &&
-                     row["ng_lw"] == 32 &&
-                     row["ng_sw"] == 31,
+                     row["ng_sw"] == 32 &&
+                     row["passed"],
               result["accuracy_points"])
     @test any(row -> row["source"] == "published_model_accuracy" &&
                      row["ng_lw"] == 64 &&
@@ -50,24 +43,6 @@ using JSON
                      row["ng_sw"] == 96 &&
                      row["passed"],
               result["accuracy_points"])
-
-    weight_polish_31 =
-        only(filter(row -> row["source"] ==
-                           "leave_one_out_weight_coordinate_boundary_polish",
-                    result["accuracy_points"]))
-    @test weight_polish_31["passed"]
-    @test weight_polish_31["worst_boundary_forcing_error_w_m2"] < 0.3
-    @test 0.99 < weight_polish_31["normalized_objective"] < 1.0
-    @test weight_polish_31["limiting_metric"] in
-          ("reported_weight_coordinate_boundary_polish_objective", "boundary_forcing")
-    canonical_polish_31 =
-        only(filter(row -> row["source"] == "reduced_accuracy" &&
-                           row["ng_lw"] == 32 &&
-                           row["ng_sw"] == 31,
-                    result["accuracy_points"]))
-    @test canonical_polish_31["passed"]
-    @test any(row -> row["label"] == canonical_polish_31["label"],
-              result["objective_front"])
 
     md = read(md_path, String)
     @test occursin("Boundary-Forcing Pareto Front", md)

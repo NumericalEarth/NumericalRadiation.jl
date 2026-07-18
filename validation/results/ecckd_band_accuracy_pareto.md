@@ -2,36 +2,30 @@
 
 Status: **passed**
 
-- Accuracy points: 30
-- Passing accuracy points: 9
+- Accuracy points: 7
+- Passing accuracy points: 7
 - Published ecCKD inventory entries: 6
 - Plot: `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.svg`
 - CSV: `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.csv`
 
-This artifact plots the currently tracked ecCKD accuracy rows: registered reduced candidates, the boundary-polished 32x31 candidate, and direct published-model accuracy diagnostics for the promoted official 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 combinations. Promoted published combinations are inventoried, recovered by the teacher-student scan, and pass the package-native clean reference gate against matched ecRad reference products; newly trained intermediate models remain future work.
+This artifact plots the currently tracked ecCKD accuracy rows: the official 32x32 anchor from the reduced-accuracy registry and direct published-model accuracy diagnostics for the promoted official 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 combinations. Promoted published combinations are inventoried, recovered by the teacher-student scan, and pass the package-native clean reference gate against matched ecRad reference products. Frozen greedy-era reduced candidates are recorded in validation/FROZEN_DIAGNOSTICS.md; new band-count rows only count when produced by the recovered training pipeline.
 
-The plot keeps boundary forcing on the y-axis because that is the user-facing radiative forcing criterion. The JSON and CSV also report `normalized_objective`, `objective_source`, and `limiting_metric`; for leave-one-out reduced models, the reported ecCKD hard-gate objective can remain above threshold even when boundary forcing is small because the scan artifact does not expose every max-abs/heating component separately.
+The plot keeps boundary forcing on the y-axis because that is the user-facing radiative forcing criterion. The JSON and CSV also report `normalized_objective`, `objective_source`, and `limiting_metric`.
 
 ## Boundary-Forcing Pareto Front
 
 | Total g-points | LW | SW | Passed | Worst boundary forcing error | Normalized objective | Limiting metric | Method |
 |---:|---:|---:|---:|---:|---:|---|---|
-| 32 | 16 | 16 | false | 156.746 | 522.488 | surface_forcing | adjacent official ecCKD g-point bins with spectral-weighted coefficient averages |
-| 48 | 32 | 16 | false | 2.07524 | 6.91747 | toa_forcing | weighted greedy 16 shortwave g-point subset with boundary-aware table, component, structural, objective-probe, surface-probe, capped table, continuation, post-capped weight, post-weight surface-table, bounded weight, four current component-scale refits, selected current gas-pressure component scan refit, gas-pressure continuation refit, weighted gas-pressure continuation refit, and high-weight gas-pressure continuation refit |
-| 63 | 32 | 31 | true | 0.299827 | 0.999422 | toa_forcing | official ecCKD 32x31 leave-one-out g23 support with exact boundary-polished quadrature weights |
-| 64 | 32 | 32 | true | 0.0140334 | 0.182186 | heating_rate_max_abs | official ecCKD 1.0 32-LW x 32-SW climate model |
+| 64 | 32 | 32 | true | 0.0140334 | 0.182186 | heating_rate_max_abs | official ecCKD 32x32 baseline without shortwave reduction |
 | 96 | 64 | 32 | true | 0.0137163 | 0.184824 | heating_rate_max_abs | official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model |
 
 ## Normalized-Objective Pareto Front
 
-This front ranks the same rows by the full reported hard-gate objective when available. It can disagree with the boundary-forcing front: the 32×31 omitted-g25 row has the smallest boundary forcing, while the omitted-g23 row is the closest 32×31 row to satisfying the full hard gate.
+This front ranks the same rows by the full reported hard-gate objective when available. It can disagree with the boundary-forcing front when a row's limiting metric is not boundary forcing.
 
 | Total g-points | LW | SW | Passed | Worst boundary forcing error | Normalized objective | Limiting metric | Method |
 |---:|---:|---:|---:|---:|---:|---|---|
-| 32 | 16 | 16 | false | 156.746 | 522.488 | surface_forcing | adjacent official ecCKD g-point bins with spectral-weighted coefficient averages |
-| 48 | 32 | 16 | false | 2.07524 | 6.91747 | toa_forcing | weighted greedy 16 shortwave g-point subset with boundary-aware table, component, structural, objective-probe, surface-probe, capped table, continuation, post-capped weight, post-weight surface-table, bounded weight, four current component-scale refits, selected current gas-pressure component scan refit, gas-pressure continuation refit, weighted gas-pressure continuation refit, and high-weight gas-pressure continuation refit |
-| 63 | 32 | 31 | true | 0.299827 | 0.999422 | toa_forcing | official ecCKD 32x31 leave-one-out g23 support with exact boundary-polished quadrature weights |
-| 64 | 32 | 32 | true | 0.0140334 | 0.182186 | heating_rate_max_abs | official ecCKD 1.0 32-LW x 32-SW climate model |
+| 64 | 32 | 32 | true | 0.0140334 | 0.182186 | heating_rate_max_abs | official ecCKD 32x32 baseline without shortwave reduction |
 | 128 | 64 | 64 | true | 0.0138231 | 0.15586 | heating_rate_max_abs | official ecCKD 1.2 64-LW x 64-SW climate model |
 
 ## Published Inventory

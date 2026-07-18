@@ -16,7 +16,7 @@ Status: **not_complete**
 - Official training artifact status: `partial`
 - Official training final objective / target: `8.605003990705882`
 - Training recovery target status: `partial`
-- Training target reduced scheme objective / target: `0.9994223340489347`
+- Training target reduced scheme objective / target: `nothing`
 - CKDMIP preflight status: `ready_for_original_ecckd_objective`
 - Derived flux generation plan status: `missing_ckdmip_data_root`
 - Original objective assets ready: true
@@ -26,9 +26,9 @@ Status: **not_complete**
 - Observed derived raw chunk rate: `nothing` chunks/hour
 - Estimated derived raw chunk hours remaining: `nothing`
 - `ncrcat` concat tool: `present=true, path=/shared/home/greg/.local/bin/ncrcat, julia_concat_shim=true`
-- Pareto points: 30
+- Pareto points: 7
 - Hard boundary forcing threshold: `0.3` W m^-2
-- Official 32x32 worst boundary forcing error: `0.014033547037797689` W m^-2
+- Official 32x32 worst boundary forcing error: `0.01403340276021936` W m^-2
 - Published model accuracy status: `passed` (6/6 passing)
 - Published model boundary compatibility: `6/6` rows with matching LW surface spectral and SW surface-albedo g-point boundaries; isolation diagnostics: `3`; boundary-projection diagnostics: `5`
 
@@ -36,8 +36,8 @@ Status: **not_complete**
 
 | Requirement | Status | Finding | Evidence |
 |---|---|---|---|
-| Demonstrate parity with ecRad for full-accuracy models and reduced ecCKD models such as 16- and 32-band variants. | blocked | The promoted 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 published ecCKD combinations and at least one reduced candidate pass the clean package-native hard thresholds; 6/6 all-sky promoted-combination reference products are present with matching spectral boundaries, and package all-sky comparisons currently pass 6/6 promoted rows, while lower-band reduced variants remain incomplete. | `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_accuracy_gate.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_all_sky_ifs_gate.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_model_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_all_sky_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_matched_reference_plan.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json` |
-| Demonstrate that reduced models meet accuracy criteria when compared to RRTMGP for representative atmosphere states. | partial | RRTMGP comparison metrics are emitted and at least one reduced candidate passes hard thresholds. | `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_32g_rrtmgp_comparison.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json` |
+| Demonstrate parity with ecRad for full-accuracy models and reduced ecCKD models such as 16- and 32-band variants. | blocked | Full official ecCKD 32x32 passes, but currently measured reduced shortwave candidates fail the hard thresholds. | `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_accuracy_gate.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecrad_all_sky_ifs_gate.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_model_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_all_sky_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_matched_reference_plan.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json` |
+| Demonstrate that reduced models meet accuracy criteria when compared to RRTMGP for representative atmosphere states. | partial | RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria. | `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_32g_rrtmgp_comparison.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json` |
 | Demonstrate that the new radiation models can be integrated into Breeze simulations dynamically without blowing them up. | passed | The dedicated Breeze RCEMIP-style H100 artifact records a supported official ecCKD 32/32 runtime, passed gas-model accuracy status, and a finite >=4x RRTMGP speedup. | `/shared/home/greg/Projects/BreezeRadiativeHeatingDev/Breeze.jl/benchmarking/results/rcemip_h100_32x32x64/radiative_heating_rcemip_latest.json` |
 | Reimplement the ecCKD training pipeline and demonstrate success by recovering one published model while varying only optimizer settings. | partial | Reactant/Enzyme checks pass and the current official/reduced optimizer reduces the objective, but the final objective remains 8.605003990705882x the hard target; CKDMIP assets are ready, representative LW/SW training samples feed the Julia loss with zero self-loss, the compact real-data optimizer probe reduces loss, and the official objective terms have been captured. | `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_teacher_student_recovery_scan.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/official_ecckd_training.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_training_recovery_targets.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_objective_reconstruction_check.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_original_objective_terms.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ckdmip_original_objective_dataset.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ckdmip_original_objective_ad_batch.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_recovery_target.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_recovery_vector.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_recovery_vector_training.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ckdmip_training_data_preflight.json`<br>`/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_derived_flux_generation_plan.json` |
 
@@ -45,17 +45,14 @@ Status: **not_complete**
 
 | Requirement ID | Covered | Status | Evidence Count | Gap |
 |---|---:|---|---:|---|
-| `ecrad_full_and_reduced_parity` | false | blocked | 8 | The promoted 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 published ecCKD combinations and at least one reduced candidate pass the clean package-native hard thresholds; 6/6 all-sky promoted-combination reference products are present with matching spectral boundaries, and package all-sky comparisons currently pass 6/6 promoted rows, while lower-band reduced variants remain incomplete. |
-| `reduced_vs_rrtmgp_representative_states` | false | partial | 4 | RRTMGP comparison metrics are emitted and at least one reduced candidate passes hard thresholds. |
+| `ecrad_full_and_reduced_parity` | false | blocked | 7 | Full official ecCKD 32x32 passes, but currently measured reduced shortwave candidates fail the hard thresholds. |
+| `reduced_vs_rrtmgp_representative_states` | false | partial | 3 | RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria. |
 | `breeze_dynamic_integration` | true | passed | 1 |  |
 | `reactant_enzyme_ecckd_training_recovery` | false | partial | 12 | Reactant/Enzyme checks pass and the current official/reduced optimizer reduces the objective, but the final objective remains 8.605003990705882x the hard target; CKDMIP assets are ready, representative LW/SW training samples feed the Julia loss with zero self-loss, the compact real-data optimizer probe reduces loss, and the official objective terms have been captured. |
 
 ## Quantitative Reduced-Model Status
 
-- Best reduced candidate so far: 32x31 (63 total g-points), passed=true.
-- Worst boundary forcing error: 0.2998267002146804 W m^-2 (TOA 0.2998267002146804, surface 0.2781916122328312).
-- Method: official ecCKD 32x31 leave-one-out g23 support with exact boundary-polished quadrature weights
-- Exact weight-coordinate boundary polish: omitted SW g-point 23, accepted moves=17, passed=true, objective 1.083385303619408 -> 0.9994223340489347, boundary 0.2998267002146804 W m^-2, heating RMSE 0.04987699106081957 K day^-1.
+No reduced candidate metrics are currently available.
 
 ## Quantitative Training-Recovery Status
 

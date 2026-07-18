@@ -21,9 +21,9 @@ using Test
     parsed = JSON.parsefile(json_path)
     @test parsed["case"] == "reduced_ecckd_32g_rrtmgp_comparison"
     @test parsed["status"] == "passed"
-    @test occursin("canonical 32x31", parsed["production_target"])
+    @test occursin("official ecCKD 32-g", parsed["production_target"])
+    @test occursin("FROZEN_DIAGNOSTICS.md", parsed["frozen_diagnostic"])
     @test parsed["official_32g_ecckd_hard_gate_passed"]
-    @test parsed["reduced_32x31_ecckd_hard_gate_passed"]
     @test parsed["rrtmgp_comparison_emitted"]
     @test occursin("not line-by-line truth", parsed["rrtmgp_role"])
     @test length(parsed["cases"]) >= 3
@@ -38,12 +38,5 @@ using Test
         @test case["candidate_vs_ecckd_reference"]["heating_rate_rmse"] < 0.05
         @test isfinite(case["candidate_vs_rrtmgp"]["flux_rmse"])
         @test isfinite(case["candidate_vs_rrtmgp"]["heating_rate_rmse"])
-        @test isfinite(case["reduced_32x31_vs_rrtmgp"]["flux_rmse"])
-        @test isfinite(case["reduced_32x31_vs_rrtmgp"]["heating_rate_rmse"])
-        if case["case"] in ("ecckd_clear_sky_tropical_column",
-                            "ecckd_rcemip_style_column_subset")
-            @test case["reduced_32x31_vs_ecckd_reference"]["flux_rmse"] < 0.30
-            @test case["reduced_32x31_vs_ecckd_reference"]["heating_rate_rmse"] < 0.05
-        end
     end
 end

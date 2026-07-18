@@ -107,16 +107,6 @@ using JSON
     @test occursin("\"name\": \"Breeze reduced accuracy scaffold\"", json)
     @test occursin("\"name\": \"official ecCKD 32b baseline\"", json)
     @test occursin("\"name\": \"32-g ecCKD/RRTMGP comparison\"", json)
-    @test occursin("\"name\": \"reduced 16-g diagnostic hard-threshold record\"", json)
-    @test occursin("\"name\": \"reduced 16-g diagnostic optimization objective record\"", json)
-    @test occursin("\"name\": \"reduced ecCKD optimization block scan\"", json)
-    @test occursin("\"required_text\": \"\\\"block_trial_scan\\\"\"", json)
-    @test occursin("\"name\": \"reduced ecCKD coefficient coordinate scan\"", json)
-    @test occursin("\"required_text\": \"\\\"coordinate_coefficient_scan\\\"\"", json)
-    @test occursin("\"name\": \"reduced ecCKD topology candidate scan\"", json)
-    @test occursin("\"required_text\": \"\\\"topology_candidate_scan\\\"\"", json)
-    @test occursin("\"name\": \"reduced ecCKD subset-search topology scan\"", json)
-    @test occursin("\"required_text\": \"\\\"subset_search_topology_scan\\\"\"", json)
 
     steps = Dict(step["name"] => step for step in parsed["goal_steps"])
     @test steps["cloudless official ecCKD ecRad accuracy"]["status"] == "passed"
@@ -137,7 +127,6 @@ using JSON
                     checklist["32-g ecCKD/RRTMGP-compatible production gas optics"]["evidence"])
     @test evidence["32-g ecCKD/RRTMGP comparison"]["status"] == "verified"
     @test !evidence["32-g ecCKD/RRTMGP comparison"]["completion_blocker_active"]
-    @test evidence["reduced 16-g diagnostic hard-threshold record"]["status"] == "verified"
     ad_evidence = Dict(item["artifact"] => item for item in
                        checklist["Reactant and Enzyme optimization path"]["evidence"])
     @test ad_evidence["full Reactant/Enzyme RRTMGP-target 16-g calibration"]["status"] ==

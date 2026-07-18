@@ -11,10 +11,6 @@ using NumericalRadiation
 using NCDatasets
 using RRTMGP
 
-module ReducedEcCKDCanonical
-include(joinpath(@__DIR__, "reduced_ecckd_accuracy.jl"))
-end
-
 const RESULT_JSON =
     validation_results_path("reduced_ecckd_32g_rrtmgp_comparison.json")
 const RESULT_MD =
@@ -79,15 +75,6 @@ function fluxes_from_dataset(ds, prefix, suffix, column)
         longwave_down = Array(ds[variable("lw_down")])[:, column],
         shortwave_up = Array(ds[variable("sw_up")])[:, column],
         shortwave_down = Array(ds[variable("sw_down")])[:, column],
-    )
-end
-
-function fluxes_from_arrays(arrays, column)
-    return RadiativeFluxes(
-        longwave_up = arrays.lw_up[:, column],
-        longwave_down = arrays.lw_down[:, column],
-        shortwave_up = arrays.sw_up[:, column],
-        shortwave_down = arrays.sw_down[:, column],
     )
 end
 
@@ -157,23 +144,10 @@ function aggregate_metrics(metrics)
     )
 end
 
-function reduced_boundary_polish_model()
-    ENV["RH_CANDIDATE_GAS_OPTICS"] = "official_ecckd"
-    full_model = ReducedEcCKDCanonical.candidate_gas_optics(Float64)
-    return ReducedEcCKDCanonical.reduced_tabulated_model(full_model, (
-        ng_lw = 32,
-        ng_sw = 31,
-        method = "leave_one_out_weight_coordinate_boundary_polish",
-    ))
-end
-
-function case_result(spec, model, reduced_model)
+function case_result(spec, model)
     candidate_vs_ecckd = RadiationErrorMetrics[]
     candidate_vs_rrtmgp = RadiationErrorMetrics[]
-    reduced_vs_ecckd = RadiationErrorMetrics[]
-    reduced_vs_rrtmgp = RadiationErrorMetrics[]
     ncolumns = 0
-    reduced_arrays = ReducedEcCKDCanonical.candidate_arrays(spec.path, reduced_model)
     NCDataset(spec.path) do ds
         ncolumns = length(ds["column"])
         rrtmgp = empty_fluxes(size(ds["pressure_interface"], 1))
@@ -184,21 +158,12 @@ function case_result(spec, model, reduced_model)
             candidate = fluxes_from_dataset(ds, "radiative_heating_", spec.candidate_suffix, column)
             reference = fluxes_from_dataset(ds, "", spec.reference_suffix, column)
             rrtmgp_fluxes!(rrtmgp, model, atmosphere, ds, column, workspace)
-            reduced = fluxes_from_arrays(reduced_arrays, column)
             push!(candidate_vs_ecckd,
                   radiative_flux_error_metrics(candidate, reference, atmosphere;
                                                gravity = 9.80665,
                                                heat_capacity = 1004.0))
             push!(candidate_vs_rrtmgp,
                   radiative_flux_error_metrics(candidate, rrtmgp, atmosphere;
-                                               gravity = 9.80665,
-                                               heat_capacity = 1004.0))
-            push!(reduced_vs_ecckd,
-                  radiative_flux_error_metrics(reduced, reference, atmosphere;
-                                               gravity = 9.80665,
-                                               heat_capacity = 1004.0))
-            push!(reduced_vs_rrtmgp,
-                  radiative_flux_error_metrics(reduced, rrtmgp, atmosphere;
                                                gravity = 9.80665,
                                                heat_capacity = 1004.0))
         end
@@ -211,8 +176,6 @@ function case_result(spec, model, reduced_model)
         candidate_suffix = spec.candidate_suffix,
         candidate_vs_ecckd_reference = aggregate_metrics(candidate_vs_ecckd),
         candidate_vs_rrtmgp = aggregate_metrics(candidate_vs_rrtmgp),
-        reduced_32x31_vs_ecckd_reference = aggregate_metrics(reduced_vs_ecckd),
-        reduced_32x31_vs_rrtmgp = aggregate_metrics(reduced_vs_rrtmgp),
     )
 end
 
@@ -231,34 +194,27 @@ function run_comparison()
     ext = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
     ext === nothing && error("NumericalRadiationRRTMGPExt did not load")
     model = ext.RRTMGPClearSkyModel(Float64)
-    reduced_model = reduced_boundary_polish_model()
-    cases = [case_result(spec, model, reduced_model) for spec in CASES]
+    cases = [case_result(spec, model) for spec in CASES]
     all_finite = all(cases) do case
         values = (
             case.candidate_vs_ecckd_reference.flux_rmse,
             case.candidate_vs_ecckd_reference.heating_rate_rmse,
             case.candidate_vs_rrtmgp.flux_rmse,
             case.candidate_vs_rrtmgp.heating_rate_rmse,
-            case.reduced_32x31_vs_ecckd_reference.flux_rmse,
-            case.reduced_32x31_vs_ecckd_reference.heating_rate_rmse,
-            case.reduced_32x31_vs_rrtmgp.flux_rmse,
-            case.reduced_32x31_vs_rrtmgp.heating_rate_rmse,
         )
         all(isfinite, values)
     end
     ecckd_passed = model_passed_in_reduced_accuracy(32, 32, "official ecCKD 32x32")
-    reduced_passed = model_passed_in_reduced_accuracy(32, 31, "boundary-polished")
-    status = ecckd_passed && reduced_passed && all_finite ? "passed" : "failed"
+    status = ecckd_passed && all_finite ? "passed" : "failed"
     return (
         case = "reduced_ecckd_32g_rrtmgp_comparison",
         timestamp_utc = string(Dates.now()),
         status = status,
-        production_target = "official ecCKD 32-g gas optics and canonical 32x31 boundary-polished reduced model",
-        frozen_diagnostic = "16-g canonical model remains a failing diagnostic; 32x31 boundary-polished model is the current passing reduced row",
+        production_target = "official ecCKD 32-g gas optics",
+        frozen_diagnostic = "greedy-era reduced candidates (16-g canonical chain, 32x31 boundary polish) are frozen as evidence in validation/FROZEN_DIAGNOSTICS.md; no reduced row is tracked here",
         rrtmgp_role = "direct CKD compatibility baseline, not line-by-line truth",
-        candidate_source = "radiative_heating_* NetCDF variables for official ecCKD 32/32 plus live recomputation of the canonical 32x31 boundary-polished reduced model",
+        candidate_source = "radiative_heating_* NetCDF variables for official ecCKD 32/32",
         official_32g_ecckd_hard_gate_passed = ecckd_passed,
-        reduced_32x31_ecckd_hard_gate_passed = reduced_passed,
         rrtmgp_comparison_emitted = all_finite,
         cases = cases,
     )
@@ -275,19 +231,18 @@ function write_markdown(result)
         "- RRTMGP role: $(result.rrtmgp_role)",
         "- candidate source: $(result.candidate_source)",
         "- official 32-g ecCKD hard gate passed: $(result.official_32g_ecckd_hard_gate_passed)",
-        "- reduced 32x31 ecCKD hard gate passed: $(result.reduced_32x31_ecckd_hard_gate_passed)",
         "- RRTMGP comparison emitted: $(result.rrtmgp_comparison_emitted)",
         "",
-        "| Case | Columns | Official ecCKD flux RMSE | Official ecCKD heating RMSE | Official RRTMGP flux RMSE | Official RRTMGP heating RMSE | Reduced ecCKD flux RMSE | Reduced ecCKD heating RMSE | Reduced RRTMGP flux RMSE | Reduced RRTMGP heating RMSE |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Case | Columns | Official ecCKD flux RMSE | Official ecCKD heating RMSE | Official RRTMGP flux RMSE | Official RRTMGP heating RMSE |",
+        "|---|---:|---:|---:|---:|---:|",
     ]
     for case in result.cases
         push!(lines,
-              "| $(case.case) | $(case.columns) | $(@sprintf("%.12g", case.candidate_vs_ecckd_reference.flux_rmse)) | $(@sprintf("%.12g", case.candidate_vs_ecckd_reference.heating_rate_rmse)) | $(@sprintf("%.12g", case.candidate_vs_rrtmgp.flux_rmse)) | $(@sprintf("%.12g", case.candidate_vs_rrtmgp.heating_rate_rmse)) | $(@sprintf("%.12g", case.reduced_32x31_vs_ecckd_reference.flux_rmse)) | $(@sprintf("%.12g", case.reduced_32x31_vs_ecckd_reference.heating_rate_rmse)) | $(@sprintf("%.12g", case.reduced_32x31_vs_rrtmgp.flux_rmse)) | $(@sprintf("%.12g", case.reduced_32x31_vs_rrtmgp.heating_rate_rmse)) |")
+              "| $(case.case) | $(case.columns) | $(@sprintf("%.12g", case.candidate_vs_ecckd_reference.flux_rmse)) | $(@sprintf("%.12g", case.candidate_vs_ecckd_reference.heating_rate_rmse)) | $(@sprintf("%.12g", case.candidate_vs_rrtmgp.flux_rmse)) | $(@sprintf("%.12g", case.candidate_vs_rrtmgp.heating_rate_rmse)) |")
     end
     push!(lines, "")
     push!(lines,
-          "The official 32-g ecCKD production target and the canonical 32x31 boundary-polished reduced model are accepted against the ecRad/ecCKD hard gate. RRTMGP is reported as a compatibility comparison between CKD models, not as the absolute-accuracy reference.")
+          "The official 32-g ecCKD production target is accepted against the ecRad/ecCKD hard gate. RRTMGP is reported as a compatibility comparison between CKD models, not as the absolute-accuracy reference.")
     return join(lines, "\n") * "\n"
 end
 

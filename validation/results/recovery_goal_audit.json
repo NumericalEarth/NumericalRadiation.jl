@@ -1,6 +1,6 @@
 {
   "case": "recovery_goal_audit",
-  "timestamp_utc": "2026-07-17T23:53:01.697",
+  "timestamp_utc": "2026-07-18T16:51:03.768",
   "status": "not_complete",
   "blocked_count": 1,
   "partial_count": 2,
@@ -14,28 +14,15 @@
     "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
     "present": true,
     "full_32x32_passed": true,
-    "reduced_candidates_present": true,
-    "reduced_candidates_passed": true,
+    "reduced_candidates_present": false,
+    "reduced_candidates_passed": false,
     "hard_boundary_forcing_threshold_w_m2": 0.3,
-    "official_32x32_worst_boundary_forcing_error_w_m2": 0.014033547037797689,
-    "best_reduced_candidate": {
-      "ng_lw": 32,
-      "ng_sw": 31,
-      "total_gpoints": 63,
-      "reduction_method": "official ecCKD 32x31 leave-one-out g23 support with exact boundary-polished quadrature weights",
-      "passed": true,
-      "worst_toa_forcing_error_w_m2": 0.2998267002146804,
-      "worst_surface_forcing_error_w_m2": 0.2781916122328312,
-      "worst_boundary_forcing_error_w_m2": 0.2998267002146804
-    },
+    "official_32x32_worst_boundary_forcing_error_w_m2": 0.01403340276021936,
+    "best_reduced_candidate": null,
     "passing_band_counts": [
-      63,
       64
     ],
-    "failing_reduced_band_counts": [
-      32,
-      48
-    ]
+    "failing_reduced_band_counts": []
   },
   "published_model_accuracy_summary": {
     "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_model_accuracy.json",
@@ -65,20 +52,6 @@
     "passed_count": 6,
     "failed_labels": [],
     "worst_hard_objective": 0.7713039286443291
-  },
-  "reduced_weight_coordinate_boundary_polish_summary": {
-    "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json",
-    "present": true,
-    "status": "weight_coordinate_boundary_polish_passed",
-    "accepted": true,
-    "passed": true,
-    "omitted_gpoint": 23,
-    "accepted_move_count": 17,
-    "initial_objective": 1.083385303619408,
-    "final_objective": 0.9994223340489347,
-    "objective_reduction": 0.08396296957047344,
-    "final_worst_boundary_forcing_error_w_m2": 0.2998267002146804,
-    "final_worst_heating_rate_rmse_k_day": 0.04987699106081957
   },
   "breeze_summary": {
     "artifact": "/shared/home/greg/Projects/BreezeRadiativeHeatingDev/Breeze.jl/benchmarking/results/rcemip_h100_32x32x64/radiative_heating_rcemip_latest.json",
@@ -182,8 +155,8 @@
     "present": true,
     "status": "partial",
     "official_final_objective_target_ratio": 8.605003990705882,
-    "reduced_hard_accuracy_target_met": true,
-    "reduced_final_objective_target_ratio": 0.9994223340489347
+    "reduced_hard_accuracy_target_met": false,
+    "reduced_final_objective_target_ratio": null
   },
   "derived_flux_progress": {
     "expected": 18,
@@ -221,7 +194,7 @@
     }
   },
   "teacher_student_recovery_status": "passed",
-  "pareto_point_count": 30,
+  "pareto_point_count": 7,
   "requirements": [
     {
       "id": "ecrad_full_and_reduced_parity",
@@ -234,10 +207,9 @@
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_all_sky_accuracy.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_matched_reference_plan.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json"
+        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json"
       ],
-      "finding": "The promoted 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 published ecCKD combinations and at least one reduced candidate pass the clean package-native hard thresholds; 6/6 all-sky promoted-combination reference products are present with matching spectral boundaries, and package all-sky comparisons currently pass 6/6 promoted rows, while lower-band reduced variants remain incomplete."
+      "finding": "Full official ecCKD 32x32 passes, but currently measured reduced shortwave candidates fail the hard thresholds."
     },
     {
       "id": "reduced_vs_rrtmgp_representative_states",
@@ -246,10 +218,9 @@
       "evidence": [
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_32g_rrtmgp_comparison.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json"
+        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json"
       ],
-      "finding": "RRTMGP comparison metrics are emitted and at least one reduced candidate passes hard thresholds."
+      "finding": "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria."
     },
     {
       "id": "breeze_dynamic_integration",
@@ -293,11 +264,10 @@
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_all_sky_accuracy.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_matched_reference_plan.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json"
+        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json"
       ],
       "covered": false,
-      "gap": "The promoted 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 published ecCKD combinations and at least one reduced candidate pass the clean package-native hard thresholds; 6/6 all-sky promoted-combination reference products are present with matching spectral boundaries, and package all-sky comparisons currently pass 6/6 promoted rows, while lower-band reduced variants remain incomplete."
+      "gap": "Full official ecCKD 32x32 passes, but currently measured reduced shortwave candidates fail the hard thresholds."
     },
     {
       "requirement_id": "reduced_vs_rrtmgp_representative_states",
@@ -306,11 +276,10 @@
       "evidence": [
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_32g_rrtmgp_comparison.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json",
-        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json"
+        "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_band_accuracy_pareto.json"
       ],
       "covered": false,
-      "gap": "RRTMGP comparison metrics are emitted and at least one reduced candidate passes hard thresholds."
+      "gap": "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria."
     },
     {
       "requirement_id": "breeze_dynamic_integration",

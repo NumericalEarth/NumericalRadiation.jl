@@ -60,14 +60,6 @@ Status: **not_complete**
 | Breeze reduced 32x16 proxy accuracy | verified | false |
 | official ecCKD 32b baseline | verified | false |
 | 32-g ecCKD/RRTMGP comparison | verified | false |
-| reduced 16-g diagnostic hard-threshold record | verified | false |
-| reduced ecCKD optimization preflight | verified | false |
-| reduced ecCKD optimization gap status | verified | false |
-| reduced 16-g diagnostic optimization objective record | verified | false |
-| reduced ecCKD optimization block scan | verified | false |
-| reduced ecCKD coefficient coordinate scan | verified | false |
-| reduced ecCKD topology candidate scan | verified | false |
-| reduced ecCKD subset-search topology scan | verified | false |
 | Breeze GPU environment check | verified | false |
 | Breeze H100 acceptance runbook | verified | false |
 | Breeze H100 acceptance local preflight | verified | false |
@@ -91,7 +83,7 @@ Status: **not_complete**
 | Direct RRTMGP comparison through ColumnAtmosphere/RadiativeFluxes | `satisfied` | The package-native RRTMGP extension and direct comparison test are implemented. | package-native RRTMGP comparison extension (`verified`)<br>package-native RRTMGP comparison test (`verified`) |
 | Fresh dedicated Breeze checkout and Breeze-owned extension | `uncovered` | Old ABR Breeze extension is absent and the fresh Breeze checkout owns BreezeRadiativeHeatingExt. | old ABR Breeze extension removed (`verified`)<br>dedicated BreezeRadiativeHeatingExt present (`missing_or_unexpected`)<br>Breeze tabulated ecCKD column amount conversion (`missing_or_unexpected`) |
 | Host-model access points for external solvers and vertical integrals | `satisfied` | Access-point validation passes without unexported required APIs. | host-model access points (`verified`) |
-| 32-g ecCKD/RRTMGP-compatible production gas optics | `satisfied` | The official ecCKD 32-g production path passes ecRad/ecCKD hard thresholds, the 16-g model is frozen as diagnostic evidence, and direct RRTMGP comparison metrics are emitted on the same column ensemble. | official ecCKD 32b baseline (`verified`)<br>32-g ecCKD/RRTMGP comparison (`verified`)<br>reduced 16-g diagnostic hard-threshold record (`verified`)<br>reduced ecCKD optimization preflight (`verified`)<br>reduced ecCKD optimization gap status (`verified`)<br>reduced 16-g diagnostic optimization objective record (`verified`)<br>reduced ecCKD optimization block scan (`verified`)<br>reduced ecCKD coefficient coordinate scan (`verified`)<br>reduced ecCKD topology candidate scan (`verified`)<br>reduced ecCKD subset-search topology scan (`verified`) |
+| 32-g ecCKD/RRTMGP-compatible production gas optics | `satisfied` | The official ecCKD 32-g production path passes ecRad/ecCKD hard thresholds, the 16-g model is frozen as diagnostic evidence, and direct RRTMGP comparison metrics are emitted on the same column ensemble. | official ecCKD 32b baseline (`verified`)<br>32-g ecCKD/RRTMGP comparison (`verified`) |
 | Reactant and Enzyme optimization path | `satisfied` | Toy and official reduced optimization checks show Reactant and Enzyme availability, and full 16-g calibration against the RRTMGP/package reference is demonstrated. | toy ecCKD Reactant check (`verified`)<br>toy ecCKD Enzyme check (`verified`)<br>full Reactant/Enzyme RRTMGP-target 16-g calibration (`verified`) |
 | End-to-end gas-optics training demonstration | `blocked` | Toy training passes, and an official/reduced ecCKD gas-optics training artifact demonstrates the production path. | toy ecCKD training (`verified`)<br>toy ecCKD training RMSE improvement (`verified`)<br>official/reduced ecCKD gas-optics training (`verified`, blocker) |
 | Current IFS all-sky cloud/aerosol/scattering/overlap semantics | `satisfied` | Cloud/scattering diagnostics, final IFS all-sky gate, and all-sky solver/reference-optics evidence pass. | ecRad all-sky IFS gate (`verified`)<br>toy cloud validation (`verified`)<br>ecRad all-sky cloud-effect diagnostics (`verified`)<br>ecRad all-sky cloud parameter sweep (`verified`)<br>ecRad all-sky optics gap diagnostic (`verified`)<br>ecRad reference-optics solver gap diagnostic (`verified`)<br>ecRad cloud scattering table ingestion (`verified`) |

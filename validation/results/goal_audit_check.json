@@ -1,6 +1,6 @@
 {
   "case": "radiative_heating_goal_audit_check",
-  "date": "2026-07-17T23:52:54.391",
+  "date": "2026-07-18T16:51:12.837",
   "status": "not_complete",
   "missing_or_unexpected_artifact_count": 13,
   "completion_blocker_count": 1,
@@ -128,46 +128,6 @@
   "completion_blocker_active": false
 }, {
   "artifact": "32-g ecCKD/RRTMGP comparison",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced 16-g diagnostic hard-threshold record",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD optimization preflight",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD optimization gap status",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced 16-g diagnostic optimization objective record",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD optimization block scan",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD coefficient coordinate scan",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD topology candidate scan",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD subset-search topology scan",
   "present_in_audit": true,
   "status": "verified",
   "completion_blocker_active": false
@@ -1128,7 +1088,7 @@
   "present": true,
   "expected_present": true,
   "presence_matches": true,
-  "required_text": "\"status\": \"failed_threshold\"",
+  "required_text": "\"status\": \"passed\"",
   "required_text_found": true,
   "forbidden_text": "",
   "forbidden_text_found": false,
@@ -1177,118 +1137,6 @@
   "completion_blocker": true,
   "completion_blocker_active": false,
   "blocker_reason": "32-g ecCKD production path has not emitted direct RRTMGP comparison metrics",
-  "status": "verified"
-}, {
-  "name": "reduced 16-g diagnostic hard-threshold record",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"status\": \"failed_threshold\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD optimization preflight",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"status\": \"preflight_ready\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD optimization gap status",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"acceptance_gap_status\": \"far_above_objective_target\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced 16-g diagnostic optimization objective record",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"acceptance_gap_status\": \"far_above_objective_target\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD optimization block scan",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"block_trial_scan\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD coefficient coordinate scan",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"coordinate_coefficient_scan\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD topology candidate scan",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"topology_candidate_scan\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD subset-search topology scan",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_optimization_preflight.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"subset_search_topology_scan\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
   "status": "verified"
 }, {
   "name": "Breeze GPU environment check",

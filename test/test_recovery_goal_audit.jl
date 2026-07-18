@@ -148,14 +148,6 @@ end
     @test result["published_all_sky_accuracy_summary"]["passed_count"] >= 1
     @test result["published_all_sky_accuracy_summary"]["passed_count"] <= 6
     @test result["published_all_sky_accuracy_summary"]["worst_hard_objective"] > 0
-    @test haskey(result, "reduced_weight_coordinate_boundary_polish_summary")
-    @test result["reduced_weight_coordinate_boundary_polish_summary"]["present"]
-    @test result["reduced_weight_coordinate_boundary_polish_summary"]["accepted"]
-    @test result["reduced_weight_coordinate_boundary_polish_summary"]["passed"]
-    @test result["reduced_weight_coordinate_boundary_polish_summary"]["omitted_gpoint"] == 23
-    @test result["reduced_weight_coordinate_boundary_polish_summary"]["accepted_move_count"] == 17
-    @test 0.99 < result["reduced_weight_coordinate_boundary_polish_summary"]["final_objective"] < 1.0
-    @test result["reduced_weight_coordinate_boundary_polish_summary"]["final_worst_boundary_forcing_error_w_m2"] < 0.3
     @test result["breeze_summary"]["runtime_supported"]
     @test result["breeze_summary"]["final_4x_claim_supported"]
 
@@ -186,9 +178,7 @@ end
     @test occursin("ncrcat", markdown)
     @test occursin("Observed derived raw chunk rate", markdown)
     @test occursin("Quantitative Reduced-Model Status", markdown)
-    @test occursin("64x96", markdown) || occursin("64x64", markdown)
     @test occursin("boundary-projection diagnostics", markdown)
-    @test occursin("omitted SW g-point 23", markdown)
     @test occursin("Quantitative Training-Recovery Status", markdown)
     @test occursin("Original objective terms:", markdown)
     @test occursin("CKDMIP objective dataset:", markdown)

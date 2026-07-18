@@ -1,13 +1,12 @@
 {
   "case": "reduced_ecckd_32g_rrtmgp_comparison",
-  "timestamp_utc": "2026-06-03T01:19:53.194",
+  "timestamp_utc": "2026-07-18T16:51:45.147",
   "status": "passed",
-  "production_target": "official ecCKD 32-g gas optics and canonical 32x31 boundary-polished reduced model",
-  "frozen_diagnostic": "16-g canonical model remains a failing diagnostic; 32x31 boundary-polished model is the current passing reduced row",
+  "production_target": "official ecCKD 32-g gas optics",
+  "frozen_diagnostic": "greedy-era reduced candidates (16-g canonical chain, 32x31 boundary polish) are frozen as evidence in validation/FROZEN_DIAGNOSTICS.md; no reduced row is tracked here",
   "rrtmgp_role": "direct CKD compatibility baseline, not line-by-line truth",
-  "candidate_source": "radiative_heating_* NetCDF variables for official ecCKD 32/32 plus live recomputation of the canonical 32x31 boundary-polished reduced model",
+  "candidate_source": "radiative_heating_* NetCDF variables for official ecCKD 32/32",
   "official_32g_ecckd_hard_gate_passed": true,
-  "reduced_32x31_ecckd_hard_gate_passed": true,
   "rrtmgp_comparison_emitted": true,
   "cases": [{
   "case": "ecckd_clear_sky_tropical_column",
@@ -24,28 +23,12 @@
   "surface_forcing_abs_error": 0.0
 },
   "candidate_vs_rrtmgp": {
-  "flux_rmse": 152.02469995247742,
+  "flux_rmse": 152.0246999524774,
   "flux_max_abs": 425.6466369628906,
-  "heating_rate_rmse": 0.0005268275343154652,
-  "heating_rate_max_abs": 0.006302899584071097,
-  "toa_forcing_abs_error": 336.8731645686328,
-  "surface_forcing_abs_error": 184.74924113796442
-},
-  "reduced_32x31_vs_ecckd_reference": {
-  "flux_rmse": 0.07430115800951345,
-  "flux_max_abs": 0.3531864394199147,
-  "heating_rate_rmse": 5.760837410373651e-7,
-  "heating_rate_max_abs": 3.181902701053625e-6,
-  "toa_forcing_abs_error": 0.12942092909611347,
-  "surface_forcing_abs_error": 0.2781916122328312
-},
-  "reduced_32x31_vs_rrtmgp": {
-  "flux_rmse": 152.0161270983203,
-  "flux_max_abs": 425.641061891874,
-  "heating_rate_rmse": 0.0005268102909821999,
-  "heating_rate_max_abs": 0.006303159143376024,
-  "toa_forcing_abs_error": 336.8940409030897,
-  "surface_forcing_abs_error": 184.87133941160585
+  "heating_rate_rmse": 0.0005268275343154659,
+  "heating_rate_max_abs": 0.006302899584071116,
+  "toa_forcing_abs_error": 336.8731645686323,
+  "surface_forcing_abs_error": 184.7492411379642
 }
 }, {
   "case": "ecckd_rcemip_style_column_subset",
@@ -62,28 +45,12 @@
   "surface_forcing_abs_error": 0.0
 },
   "candidate_vs_rrtmgp": {
-  "flux_rmse": 108.88158071048596,
+  "flux_rmse": 108.88158071048593,
   "flux_max_abs": 425.6466369628906,
-  "heating_rate_rmse": 0.0003615286107027048,
-  "heating_rate_max_abs": 0.006302899584071097,
-  "toa_forcing_abs_error": 336.8731645686328,
-  "surface_forcing_abs_error": 184.74924113796442
-},
-  "reduced_32x31_vs_ecckd_reference": {
-  "flux_rmse": 0.07736762086904196,
-  "flux_max_abs": 0.3531864394199147,
-  "heating_rate_rmse": 5.761821617070166e-7,
-  "heating_rate_max_abs": 3.823269090309816e-6,
-  "toa_forcing_abs_error": 0.2998267002146804,
-  "surface_forcing_abs_error": 0.2781916122328312
-},
-  "reduced_32x31_vs_rrtmgp": {
-  "flux_rmse": 108.88063961307007,
-  "flux_max_abs": 425.641061891874,
-  "heating_rate_rmse": 0.00036147990325423584,
-  "heating_rate_max_abs": 0.006303159143376024,
-  "toa_forcing_abs_error": 336.8940409030897,
-  "surface_forcing_abs_error": 184.87133941160585
+  "heating_rate_rmse": 0.0003615286107027055,
+  "heating_rate_max_abs": 0.006302899584071116,
+  "toa_forcing_abs_error": 336.8731645686323,
+  "surface_forcing_abs_error": 184.7492411379642
 }
 }, {
   "case": "ecckd_all_sky_tropical_column_clear_projection",
@@ -100,28 +67,12 @@
   "surface_forcing_abs_error": 0.7527218786904086
 },
   "candidate_vs_rrtmgp": {
-  "flux_rmse": 153.5857062955978,
+  "flux_rmse": 153.58570629559773,
   "flux_max_abs": 427.4878218512607,
-  "heating_rate_rmse": 0.0005263210783335769,
-  "heating_rate_max_abs": 0.0062889303095750295,
-  "toa_forcing_abs_error": 329.8081792866277,
-  "surface_forcing_abs_error": 162.75209664506156
-},
-  "reduced_32x31_vs_ecckd_reference": {
-  "flux_rmse": 8.364759524165482,
-  "flux_max_abs": 40.91871275658707,
-  "heating_rate_rmse": 2.7306334663823255e-6,
-  "heating_rate_max_abs": 1.630552163985646e-5,
-  "toa_forcing_abs_error": 20.59921197877884,
-  "surface_forcing_abs_error": 32.9098580309834
-},
-  "reduced_32x31_vs_rrtmgp": {
-  "flux_rmse": 152.0029299178243,
-  "flux_max_abs": 425.641061891874,
-  "heating_rate_rmse": 0.0005268016084434375,
-  "heating_rate_max_abs": 0.0063031201590268635,
-  "toa_forcing_abs_error": 336.8395117633996,
-  "surface_forcing_abs_error": 184.69312622405005
+  "heating_rate_rmse": 0.0005263210783335775,
+  "heating_rate_max_abs": 0.006288930309575049,
+  "toa_forcing_abs_error": 329.80817928662725,
+  "surface_forcing_abs_error": 162.75209664506139
 }
 }]
 }

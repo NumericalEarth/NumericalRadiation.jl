@@ -6,9 +6,6 @@ using Printf
 
 const RESULTS_DIR = validation_results_dir()
 const REDUCED_ACCURACY_JSON = joinpath(RESULTS_DIR, "reduced_ecckd_accuracy.json")
-const REDUCED_LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON =
-    joinpath(RESULTS_DIR,
-             "reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json")
 const PUBLISHED_MODEL_ACCURACY_JSON =
     joinpath(RESULTS_DIR, "ecckd_published_model_accuracy.json")
 const INVENTORY_JSON = joinpath(RESULTS_DIR, "ecckd_model_inventory.json")
@@ -155,48 +152,6 @@ function parse_reduced_accuracy_rows(path = REDUCED_ACCURACY_JSON)
         ))
     end
     return rows
-end
-
-
-function parse_leave_one_out_weight_coordinate_boundary_polish_rows(
-    path = REDUCED_LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON)
-    isfile(path) || return NamedTuple[]
-    result = JSON.parsefile(path)
-    thresholds = acceptance_thresholds()
-    accepted_move_count = Int(json_get(result, "accepted_move_count", 0))
-    accepted_move_count > 0 || return NamedTuple[]
-    omitted = Int(json_get(result, "omitted_gpoint"))
-    ng_lw = Int(json_get(result, "ng_lw"))
-    ng_sw = Int(json_get(result, "ng_sw"))
-    toa = Float64(json_get(result, "final_worst_toa_forcing_error_w_m2"))
-    surface = Float64(json_get(result, "final_worst_surface_forcing_error_w_m2"))
-    boundary = Float64(json_get(result, "final_worst_boundary_forcing_error_w_m2"))
-    heating_rmse = Float64(json_get(result, "final_worst_heating_rate_rmse_k_day"))
-    objective = Float64(json_get(result, "final_objective"))
-    limiting_metric, limiting_ratio = metric_choice((
-        ("heating_rate_rmse", heating_rmse / thresholds.heating_rate_rmse_k_day),
-        ("reported_weight_coordinate_boundary_polish_objective", objective),
-        ("boundary_forcing", boundary / thresholds.toa_forcing_abs_error_w_m2),
-    ))
-    if objective > limiting_ratio
-        limiting_metric = "reported_weight_coordinate_boundary_polish_objective"
-        limiting_ratio = objective
-    end
-    return [(
-        source = "leave_one_out_weight_coordinate_boundary_polish",
-        label = "leave-one-out official SW g-point scan with exact weight coordinate boundary polish: omit g$(omitted)",
-        ng_lw = ng_lw,
-        ng_sw = ng_sw,
-        total_gpoints = ng_lw + ng_sw,
-        passed = objective <= 1.0,
-        worst_toa_forcing_error_w_m2 = toa,
-        worst_surface_forcing_error_w_m2 = surface,
-        worst_boundary_forcing_error_w_m2 = boundary,
-        normalized_objective = objective,
-        objective_source = "accepted_exact_weight_coordinate_boundary_polish_objective",
-        limiting_metric = limiting_metric,
-        limiting_metric_ratio = limiting_ratio,
-    )]
 end
 
 function parse_published_model_accuracy_rows(path = PUBLISHED_MODEL_ACCURACY_JSON)
@@ -360,7 +315,6 @@ end
 function run_band_accuracy_pareto()
     rows = vcat(
         parse_reduced_accuracy_rows(),
-        parse_leave_one_out_weight_coordinate_boundary_polish_rows(),
         parse_published_model_accuracy_rows(),
     )
     front = pareto_front(rows)
@@ -380,7 +334,7 @@ function run_band_accuracy_pareto()
         pareto_front = front,
         objective_front = objective,
         published_inventory = inventory,
-        notes = "This artifact plots the currently tracked ecCKD accuracy rows: registered reduced candidates, the boundary-polished 32x31 candidate, and direct published-model accuracy diagnostics for the promoted official 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 combinations. Promoted published combinations are inventoried, recovered by the teacher-student scan, and pass the package-native clean reference gate against matched ecRad reference products; newly trained intermediate models remain future work.",
+        notes = "This artifact plots the currently tracked ecCKD accuracy rows: the official 32x32 anchor from the reduced-accuracy registry and direct published-model accuracy diagnostics for the promoted official 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 combinations. Promoted published combinations are inventoried, recovered by the teacher-student scan, and pass the package-native clean reference gate against matched ecRad reference products. Frozen greedy-era reduced candidates are recorded in validation/FROZEN_DIAGNOSTICS.md; new band-count rows only count when produced by the recovered training pipeline.",
     )
 end
 
@@ -398,7 +352,7 @@ function markdown_pareto(result)
         "",
         result.notes,
         "",
-        "The plot keeps boundary forcing on the y-axis because that is the user-facing radiative forcing criterion. The JSON and CSV also report `normalized_objective`, `objective_source`, and `limiting_metric`; for leave-one-out reduced models, the reported ecCKD hard-gate objective can remain above threshold even when boundary forcing is small because the scan artifact does not expose every max-abs/heating component separately.",
+        "The plot keeps boundary forcing on the y-axis because that is the user-facing radiative forcing criterion. The JSON and CSV also report `normalized_objective`, `objective_source`, and `limiting_metric`.",
         "",
         "## Boundary-Forcing Pareto Front",
         "",
@@ -412,7 +366,7 @@ function markdown_pareto(result)
         "",
         "## Normalized-Objective Pareto Front",
         "",
-        "This front ranks the same rows by the full reported hard-gate objective when available. It can disagree with the boundary-forcing front: the 32×31 omitted-g25 row has the smallest boundary forcing, while the omitted-g23 row is the closest 32×31 row to satisfying the full hard gate.",
+        "This front ranks the same rows by the full reported hard-gate objective when available. It can disagree with the boundary-forcing front when a row's limiting metric is not boundary forcing.",
         "",
         "| Total g-points | LW | SW | Passed | Worst boundary forcing error | Normalized objective | Limiting metric | Method |",
         "|---:|---:|---:|---:|---:|---:|---|---|",

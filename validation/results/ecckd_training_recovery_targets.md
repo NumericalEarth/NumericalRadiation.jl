@@ -8,12 +8,6 @@ Status: **partial**
 |---|---:|
 | Official recovery final objective / target | 8.60500399071 |
 | Official recovery hard target met | false |
-| Canonical reduced model | canonical 32x31 boundary-polished reduced ecCKD |
-| Canonical reduced total g-points | 63 |
-| Canonical reduced hard target met | true |
-| Canonical reduced objective / target | 0.999422334049 |
-| Canonical reduced TOA forcing error | 0.2998267002146804 W m^-2 |
-| Canonical reduced surface forcing error | 0.2781916122328312 W m^-2 |
 
 ## Recovery Criteria
 
@@ -33,9 +27,11 @@ Status: **partial**
 | TOA forcing absolute error | <= 0.3 W m^-2 |
 | Surface forcing absolute error | <= 0.3 W m^-2 |
 | Heating-rate RMSE | <= 0.05 K day^-1 |
-| Required band-count points | 48, 63, 96 |
+| Required band-count points | 48, 96 |
 
-The 32x31 reduced scheme now passes the hard radiation gate, but published-model recovery remains partial until the Reactant/Enzyme training pipeline recovers a published ecCKD definition under the optimizer-only-delta rule.
+new band-count rows only count when produced by the recovered training pipeline with source data, objective terms, and evaluation cases fixed; greedy/forward-evaluation candidates are frozen as evidence (validation/FROZEN_DIAGNOSTICS.md) and do not satisfy these targets
+
+Published-model recovery remains partial until the Reactant/Enzyme training pipeline recovers a published ecCKD definition under the optimizer-only-delta rule; new band-count schemes only count when produced by that recovered pipeline.
 
 Next required work:
 - Run the original-objective Reactant/Enzyme recovery with source data/objective/evaluation fixed and only optimizer settings varied.

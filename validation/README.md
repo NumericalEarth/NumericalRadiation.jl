@@ -129,10 +129,13 @@ Reference-file placement and schema expectations are summarized in
 ## Artifact policy (post-cleanup)
 
 `validation/results/` holds only artifacts that surviving code reads: gate and
-audit evidence, the model inventory, and the compact accepted-move records that
-`reduced_ecckd_accuracy.jl` replays to reconstruct the registered reduced
-candidates. Bulky per-iteration optimizer logs must not be committed here —
-write them outside the repo (or to S3) and commit only the accepted
-moves/weights and the final summary. The complete pre-cleanup experiment
-history (~120 optimizer scripts and ~480k lines of scan logs) is preserved on
-the archived ref `audit-trail-2026-07-17` (branch `audit-trail-pre-cleanup`).
+audit evidence and the model inventory. The greedy reduced-model program
+(accepted-move replay chains, 16-g subset scans, the 32x31 boundary polish)
+was demoted on 2026-07-18; its quantitative endpoints are frozen as prose in
+`validation/FROZEN_DIAGNOSTICS.md`, and new band-count schemes only count when
+produced by the recovered training pipeline. Bulky per-iteration optimizer
+logs must not be committed here — write them outside the repo (or to S3) and
+commit only the final summary. The complete pre-cleanup experiment history
+(~120 optimizer scripts and ~480k lines of scan logs, plus every greedy-era
+accepted-move artifact) is preserved on the archived ref
+`audit-trail-2026-07-17` (branch `audit-trail-pre-cleanup`).

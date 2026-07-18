@@ -31,9 +31,6 @@ const TRAINING_TARGETS_JSON = joinpath(RESULTS_DIR, "ecckd_training_recovery_tar
 const CKDMIP_PREFLIGHT_JSON = joinpath(RESULTS_DIR, "ckdmip_training_data_preflight.json")
 const DERIVED_FLUX_PLAN_JSON = joinpath(RESULTS_DIR, "ecckd_derived_flux_generation_plan.json")
 const BAND_PARETO_JSON = joinpath(RESULTS_DIR, "ecckd_band_accuracy_pareto.json")
-const LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON =
-    joinpath(RESULTS_DIR,
-             "reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json")
 const DEFAULT_BREEZE_RCEMIP_JSON =
     "/shared/home/greg/Projects/BreezeRadiativeHeatingDev/Breeze.jl/benchmarking/results/rcemip_h100_32x32x64/radiative_heating_rcemip_latest.json"
 
@@ -217,37 +214,6 @@ function published_all_sky_accuracy_summary()
         passed_count = Int(json_get(data, "passed_count", 0)),
         failed_labels = failed,
         worst_hard_objective = isempty(objectives) ? nothing : maximum(objectives),
-    )
-end
-
-function reduced_weight_coordinate_boundary_polish_summary()
-    data = json_present(LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON)
-    data === nothing && return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON,
-        present = false,
-        accepted = false,
-        passed = false,
-        omitted_gpoint = nothing,
-        final_objective = nothing,
-        final_worst_boundary_forcing_error_w_m2 = nothing,
-        final_worst_heating_rate_rmse_k_day = nothing,
-    )
-    final_objective = json_get(data, "final_objective", nothing)
-    return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        accepted = Int(json_get(data, "accepted_move_count", 0)) > 0,
-        passed = final_objective !== nothing && Float64(final_objective) <= 1.0,
-        omitted_gpoint = json_get(data, "omitted_gpoint", nothing),
-        accepted_move_count = json_get(data, "accepted_move_count", nothing),
-        initial_objective = json_get(data, "initial_objective", nothing),
-        final_objective = final_objective,
-        objective_reduction = json_get(data, "objective_reduction", nothing),
-        final_worst_boundary_forcing_error_w_m2 =
-            json_get(data, "final_worst_boundary_forcing_error_w_m2", nothing),
-        final_worst_heating_rate_rmse_k_day =
-            json_get(data, "final_worst_heating_rate_rmse_k_day", nothing),
     )
 end
 
@@ -677,7 +643,6 @@ function run_recovery_goal_audit()
     published_accuracy = published_model_accuracy_summary()
     matched_references = matched_reference_summary()
     published_all_sky = published_all_sky_accuracy_summary()
-    weight_polish = reduced_weight_coordinate_boundary_polish_summary()
     breeze = breeze_summary()
     official_training = official_training_summary()
     training_targets = training_targets_summary()
@@ -718,12 +683,9 @@ function run_recovery_goal_audit()
             MATCHED_REFERENCE_PLAN_JSON,
             REDUCED_ACCURACY_JSON,
             BAND_PARETO_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON,
         ],
         finding = reduced.reduced_candidates_passed ?
             "The promoted 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 published ecCKD combinations and at least one reduced candidate pass the clean package-native hard thresholds; $(matched_references.all_sky_ready_count)/$(matched_references.all_sky_case_count) all-sky promoted-combination reference products are present with matching spectral boundaries, and package all-sky comparisons currently pass $(published_all_sky.passed_count)/$(published_all_sky.model_count) promoted rows, while lower-band reduced variants remain incomplete." :
-            weight_polish.passed ?
-            "Full official ecCKD 32x32 passes and the exact g$(weight_polish.omitted_gpoint) 32x31 weight-coordinate boundary polish now passes the hard objective at $(weight_polish.final_objective)x while keeping boundary forcing at $(weight_polish.final_worst_boundary_forcing_error_w_m2) W m^-2." :
             "Full official ecCKD 32x32 passes, but currently measured reduced shortwave candidates fail the hard thresholds.",
     ))
 
@@ -737,12 +699,9 @@ function run_recovery_goal_audit()
             RRTMGP_COMPARISON_JSON,
             REDUCED_ACCURACY_JSON,
             BAND_PARETO_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON,
         ],
         finding = reduced.reduced_candidates_passed ?
             "RRTMGP comparison metrics are emitted and at least one reduced candidate passes hard thresholds." :
-            weight_polish.passed ?
-            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, and the best tracked 31-SW row now passes the exact hard objective at $(weight_polish.final_objective)x with boundary forcing $(weight_polish.final_worst_boundary_forcing_error_w_m2) W m^-2." :
             "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria.",
     ))
 
@@ -811,7 +770,6 @@ function run_recovery_goal_audit()
         published_model_accuracy_summary = published_accuracy,
         matched_reference_summary = matched_references,
         published_all_sky_accuracy_summary = published_all_sky,
-        reduced_weight_coordinate_boundary_polish_summary = weight_polish,
         breeze_summary = breeze,
         ckdmip_preflight_status = ckdmip_preflight_status,
         derived_flux_plan_status = derived_plan.status,
@@ -901,7 +859,6 @@ function markdown_audit(result)
     end
     push!(lines, "", "## Quantitative Reduced-Model Status", "")
     best = result.reduced_model_summary.best_reduced_candidate
-    weight_polish = result.reduced_weight_coordinate_boundary_polish_summary
     if best === nothing
         push!(lines, "No reduced candidate metrics are currently available.")
     else
@@ -910,10 +867,6 @@ function markdown_audit(result)
         push!(lines,
             "- Worst boundary forcing error: $(best.worst_boundary_forcing_error_w_m2) W m^-2 (TOA $(best.worst_toa_forcing_error_w_m2), surface $(best.worst_surface_forcing_error_w_m2)).")
         push!(lines, "- Method: $(best.reduction_method)")
-    end
-    if weight_polish.present
-        push!(lines,
-            "- Exact weight-coordinate boundary polish: omitted SW g-point $(weight_polish.omitted_gpoint), accepted moves=$(weight_polish.accepted_move_count), passed=$(weight_polish.passed), objective $(weight_polish.initial_objective) -> $(weight_polish.final_objective), boundary $(weight_polish.final_worst_boundary_forcing_error_w_m2) W m^-2, heating RMSE $(weight_polish.final_worst_heating_rate_rmse_k_day) K day^-1.")
     end
     push!(lines, "", "## Quantitative Training-Recovery Status", "")
     terms = result.original_objective_terms_summary

@@ -4,11 +4,10 @@ using JSON
 include(joinpath(@__DIR__, "..", "validation", "official_ecckd_training.jl"))
 
 @testset "official reduced ecCKD gas-optics training artifact" begin
-    script = joinpath(@__DIR__, "..", "validation", "official_ecckd_training.jl")
-    if !isfile(OFFICIAL_TRAINING_JSON) || !isfile(OFFICIAL_TRAINING_MD) ||
-       stat(OFFICIAL_TRAINING_JSON).mtime < stat(script).mtime
-        main()
-    end
+    # The committed artifact is frozen evidence from the demoted greedy
+    # optimizer chain (see validation/FROZEN_DIAGNOSTICS.md); main() only
+    # verifies its presence and never recomputes it.
+    main()
     @test isfile(OFFICIAL_TRAINING_JSON)
     @test isfile(OFFICIAL_TRAINING_MD)
     json = read(OFFICIAL_TRAINING_JSON, String)

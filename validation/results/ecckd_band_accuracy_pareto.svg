@@ -6,76 +6,23 @@
 <text x="450" y="496" text-anchor="middle" font-family="sans-serif" font-size="14">total g-points (LW + SW)</text>
 <text x="20" y="260" text-anchor="middle" font-family="sans-serif" font-size="14" transform="rotate(-90 20 260)">worst boundary forcing error (W m^-2, log scale)</text>
 <line x1="80.0" y1="440" x2="80.0" y2="445" stroke="black"/>
-<text x="80.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">32</text>
-<line x1="177.5" y1="440" x2="177.5" y2="445" stroke="black"/>
-<text x="177.5" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">48</text>
-<line x1="268.90625" y1="440" x2="268.90625" y2="445" stroke="black"/>
-<text x="268.90625" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">63</text>
-<line x1="275.0" y1="440" x2="275.0" y2="445" stroke="black"/>
-<text x="275.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">64</text>
-<line x1="470.0" y1="440" x2="470.0" y2="445" stroke="black"/>
-<text x="470.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">96</text>
-<line x1="665.0" y1="440" x2="665.0" y2="445" stroke="black"/>
-<text x="665.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">128</text>
+<text x="80.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">64</text>
+<line x1="340.0" y1="440" x2="340.0" y2="445" stroke="black"/>
+<text x="340.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">96</text>
+<line x1="600.0" y1="440" x2="600.0" y2="445" stroke="black"/>
+<text x="600.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">128</text>
 <line x1="860.0" y1="440" x2="860.0" y2="445" stroke="black"/>
 <text x="860.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">160</text>
-<line x1="75" y1="407.59566022356177" x2="80" y2="407.59566022356177" stroke="black"/>
-<line x1="80" y1="407.59566022356177" x2="860" y2="407.59566022356177" stroke="#dddddd"/>
-<text x="70" y="411.59566022356177" text-anchor="end" font-family="sans-serif" font-size="12">0.03</text>
-<line x1="75" y1="357.7445850693152" x2="80" y2="357.7445850693152" stroke="black"/>
-<line x1="80" y1="357.7445850693152" x2="860" y2="357.7445850693152" stroke="#dddddd"/>
-<text x="70" y="361.7445850693152" text-anchor="end" font-family="sans-serif" font-size="12">0.1</text>
-<line x1="75" y1="312.25601292632973" x2="80" y2="312.25601292632973" stroke="black"/>
-<line x1="80" y1="312.25601292632973" x2="860" y2="312.25601292632973" stroke="#dddddd"/>
-<text x="70" y="316.25601292632973" text-anchor="end" font-family="sans-serif" font-size="12">0.3</text>
-<line x1="75" y1="262.40493777208314" x2="80" y2="262.40493777208314" stroke="black"/>
-<line x1="80" y1="262.40493777208314" x2="860" y2="262.40493777208314" stroke="#dddddd"/>
-<text x="70" y="266.40493777208314" text-anchor="end" font-family="sans-serif" font-size="12">1.0</text>
-<line x1="75" y1="216.91636562909775" x2="80" y2="216.91636562909775" stroke="black"/>
-<line x1="80" y1="216.91636562909775" x2="860" y2="216.91636562909775" stroke="#dddddd"/>
-<text x="70" y="220.91636562909775" text-anchor="end" font-family="sans-serif" font-size="12">3.0</text>
-<line x1="75" y1="167.06529047485117" x2="80" y2="167.06529047485117" stroke="black"/>
-<line x1="80" y1="167.06529047485117" x2="860" y2="167.06529047485117" stroke="#dddddd"/>
-<text x="70" y="171.06529047485117" text-anchor="end" font-family="sans-serif" font-size="12">10.0</text>
-<line x1="75" y1="121.57671833186578" x2="80" y2="121.57671833186578" stroke="black"/>
-<line x1="80" y1="121.57671833186578" x2="860" y2="121.57671833186578" stroke="#dddddd"/>
-<text x="70" y="125.57671833186578" text-anchor="end" font-family="sans-serif" font-size="12">30.0</text>
-<line x1="75" y1="71.72564317761919" x2="80" y2="71.72564317761919" stroke="black"/>
-<line x1="80" y1="71.72564317761919" x2="860" y2="71.72564317761919" stroke="#dddddd"/>
-<text x="70" y="75.72564317761919" text-anchor="end" font-family="sans-serif" font-size="12">100.0</text>
-<line x1="80" y1="312.25601292632973" x2="860" y2="312.25601292632973" stroke="#2f7d32" stroke-dasharray="6 4"/>
-<text x="852" y="304.25601292632973" text-anchor="end" font-family="sans-serif" font-size="12" fill="#2f7d32">0.3 W m^-2 hard threshold</text>
-<circle cx="271.4" cy="439.05333914634076" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 32x32 baseline without shortwave reduction: 0.014033547037797689 W m^-2</title></circle>
-<circle cx="266.50625" cy="312.27993837501305" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 32x31 leave-one-out g23 support with exact boundary-polished quadrature weights: 0.2998267002146804 W m^-2</title></circle>
-<circle cx="176.3" cy="88.57575113841504" r="5" fill="#d95f02" opacity="0.8"><title>evenly selected official ecCKD g-points with renormalized weights: 66.56751138054426 W m^-2</title></circle>
-<circle cx="177.5" cy="180.7985634130297" r="5" fill="#d95f02" opacity="0.8"><title>greedy searched 16 shortwave g-point subset with official weights renormalized: 7.17718646855576 W m^-2</title></circle>
-<circle cx="178.7" cy="88.51011477132553" r="5" fill="#d95f02" opacity="0.8"><title>greedy searched 16 shortwave g-point subset with least-squares fitted shortwave weights: 66.67311851863076 W m^-2</title></circle>
-<circle cx="179.9" cy="191.3874041966487" r="5" fill="#d95f02" opacity="0.8"><title>greedy searched 16 shortwave g-point subset with projected boundary-weighted fitted shortwave weights: 5.557632544628063 W m^-2</title></circle>
-<circle cx="181.1" cy="191.66643434156018" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with projected simplex weights: 5.520305760481278 W m^-2</title></circle>
-<circle cx="182.3" cy="191.6774013157805" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with projected hard-gate max-norm weights: 5.518843803513278 W m^-2</title></circle>
-<circle cx="172.7" cy="189.0407345367992" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with diagnostic fitted coefficient scales: 5.881710097857763 W m^-2</title></circle>
-<circle cx="173.9" cy="223.02262457727122" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with latest preflight-optimized weights and coefficient scales: 2.588652944311036 W m^-2</title></circle>
-<circle cx="175.1" cy="220.4003066433698" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with latest preflight-optimized weights, coefficient scales, and pressure-band table moves: 2.757902059324806 W m^-2</title></circle>
-<circle cx="176.3" cy="220.4003066433698" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with latest preflight table moves and reduced incoming shortwave spectral weights: 2.757902059324806 W m^-2</title></circle>
-<circle cx="177.5" cy="220.50263916843733" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with boundary-aware post-constrained weight refit: 2.751094395294672 W m^-2</title></circle>
-<circle cx="178.7" cy="232.1757216961937" r="5" fill="#d95f02" opacity="0.8"><title>weighted greedy 16 shortwave g-point subset with boundary-aware table, component, structural, objective-probe, surface-probe, capped table, continuation, post-capped weight, post-weight surface-table, bounded weight, four current component-scale refits, selected current gas-pressure component scan refit, gas-pressure continuation refit, weighted gas-pressure continuation refit, and high-weight gas-pressure continuation refit: 2.075241671208687 W m^-2</title></circle>
-<circle cx="179.9" cy="64.53755667006189" r="5" fill="#d95f02" opacity="0.8"><title>evenly selected official ecCKD g-points with least-squares fitted shortwave weights: 118.95823596929245 W m^-2</title></circle>
-<circle cx="83.6" cy="49.348792714767846" r="5" fill="#d95f02" opacity="0.8"><title>evenly selected official ecCKD g-points with renormalized weights: 171.6748445980652 W m^-2</title></circle>
-<circle cx="182.3" cy="50.99500790445242" r="5" fill="#d95f02" opacity="0.8"><title>adjacent official ecCKD g-point bins with spectral-weighted coefficient averages: 164.9832350029278 W m^-2</title></circle>
-<circle cx="75.2" cy="53.11560602131725" r="5" fill="#d95f02" opacity="0.8"><title>adjacent official ecCKD g-point bins with spectral-weighted coefficient averages: 156.746283353722 W m^-2</title></circle>
-<circle cx="173.9" cy="40.0" r="5" fill="#d95f02" opacity="0.8"><title>cumulative spectral-weight bins with coefficient averages: 215.16143285594512 W m^-2</title></circle>
-<circle cx="77.6" cy="41.681269646204726" r="5" fill="#d95f02" opacity="0.8"><title>cumulative spectral-weight bins with coefficient averages: 206.5998016028641 W m^-2</title></circle>
-<circle cx="176.3" cy="84.41198715418342" r="5" fill="#d95f02" opacity="0.8"><title>non-adjacent coefficient-similarity shortwave g-point pairs with spectral-weighted coefficient averages: 73.6097384691634 W m^-2</title></circle>
-<circle cx="177.5" cy="63.14050958489307" r="5" fill="#d95f02" opacity="0.8"><title>weighted-greedy anchor g-points plus nearest-neighbor coefficient-similarity bins: 123.04044267584152 W m^-2</title></circle>
-<circle cx="178.7" cy="62.30720789924289" r="5" fill="#d95f02" opacity="0.8"><title>weighted-greedy anchor g-points plus nearest spectral-order Voronoi bins: 125.54176578960312 W m^-2</title></circle>
-<circle cx="271.30625" cy="312.27993837501305" r="5" fill="#1b9e77" opacity="0.8"><title>leave-one-out official SW g-point scan with exact weight coordinate boundary polish: omit g23: 0.2998267002146804 W m^-2</title></circle>
-<circle cx="278.6" cy="439.05376483440597" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0 32-LW x 32-SW climate model: 0.01403340276021936 W m^-2</title></circle>
-<circle cx="474.8" cy="438.73993840320213" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model: 0.014140170863811363 W m^-2</title></circle>
-<circle cx="660.2" cy="438.64883691939514" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model: 0.014171316708711856 W m^-2</title></circle>
-<circle cx="466.4" cy="440.0" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model: 0.013716335624962994 W m^-2</title></circle>
-<circle cx="662.6" cy="439.6789472028498" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2 64-LW x 64-SW climate model: 0.013823103728554997 W m^-2</title></circle>
-<circle cx="858.8" cy="439.58575843054484" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model: 0.01385424957345549 W m^-2</title></circle>
-<polyline points="80.0,53.11560602131725 177.5,232.1757216961937 268.90625,312.27993837501305 275.0,439.05376483440597 470.0,440.0" fill="none" stroke="#7570b3" stroke-width="2"/>
+<line x1="80" y1="-37377.488919692034" x2="860" y2="-37377.488919692034" stroke="#2f7d32" stroke-dasharray="6 4"/>
+<text x="852" y="-37385.488919692034" text-anchor="end" font-family="sans-serif" font-size="12" fill="#2f7d32">0.3 W m^-2 hard threshold</text>
+<circle cx="76.4" cy="159.87536392114396" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 32x32 baseline without shortwave reduction: 0.01403340276021936 W m^-2</title></circle>
+<circle cx="77.6" cy="159.87536392114396" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0 32-LW x 32-SW climate model: 0.01403340276021936 W m^-2</title></circle>
+<circle cx="338.8" cy="66.96979664843944" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model: 0.014140170863811363 W m^-2</title></circle>
+<circle cx="600.0" cy="40.0" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model: 0.014171316708711856 W m^-2</title></circle>
+<circle cx="341.2" cy="440.0" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model: 0.013716335624962994 W m^-2</title></circle>
+<circle cx="602.4" cy="344.9551303588002" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2 64-LW x 64-SW climate model: 0.013823103728554997 W m^-2</title></circle>
+<circle cx="863.6" cy="317.3674102256451" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model: 0.01385424957345549 W m^-2</title></circle>
+<polyline points="80.0,159.87536392114396 340.0,440.0" fill="none" stroke="#7570b3" stroke-width="2"/>
 <circle cx="710" cy="55" r="5" fill="#1b9e77"/><text x="722" y="59" font-family="sans-serif" font-size="12">passed</text>
 <circle cx="710" cy="75" r="5" fill="#d95f02"/><text x="722" y="79" font-family="sans-serif" font-size="12">failed reduced candidate</text>
 </svg>

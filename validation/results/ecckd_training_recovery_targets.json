@@ -1,10 +1,11 @@
 {
   "case": "ecckd_training_recovery_targets",
-  "timestamp_utc": "2026-06-03T01:35:30.867",
+  "timestamp_utc": "2026-07-18T16:49:25.864",
   "status": "partial",
   "targets": {
   "fixed_inputs": ["same CKDMIP/ecCKD source files", "same representative atmosphere states", "same objective terms and hard thresholds", "same trainable parameterization unless the row is explicitly labelled as a new band-count scheme"],
   "optimizer_only_delta_rule": "published-model recovery experiments may vary optimizer settings, schedules, and initialization seeds, but not source data, objective terms, or evaluation cases",
+  "new_band_scheme_rule": "new band-count rows only count when produced by the recovered training pipeline with source data, objective terms, and evaluation cases fixed; greedy/forward-evaluation candidates are frozen as evidence (validation/FROZEN_DIAGNOSTICS.md) and do not satisfy these targets",
   "published_model_recovery_metrics": {
   "final_objective_target_ratio_max": 1.05,
   "weight_l1_relative_error_max": 0.02,
@@ -17,7 +18,7 @@
   "toa_forcing_abs_error_w_m2_max": 0.3,
   "surface_forcing_abs_error_w_m2_max": 0.3,
   "heating_rate_rmse_k_day_max": 0.05,
-  "required_band_counts": [48, 63, 96]
+  "required_band_counts": [48, 96]
 }
 },
   "current_official_recovery": {
@@ -27,14 +28,6 @@
   "final_objective_target_ratio": 8.605003990705882,
   "hard_accuracy_target_met": false
 },
-  "current_in_house_reduced_scheme": {
-  "model": "canonical 32x31 boundary-polished reduced ecCKD",
-  "total_gpoints": 63,
-  "hard_accuracy_target_met": true,
-  "final_objective_target_ratio": 0.9994223340489347,
-  "toa_forcing_abs_error_w_m2": 0.2998267002146804,
-  "surface_forcing_abs_error_w_m2": 0.2781916122328312
-},
-  "interpretation": "The 32x31 reduced scheme now passes the hard radiation gate, but published-model recovery remains partial until the Reactant/Enzyme training pipeline recovers a published ecCKD definition under the optimizer-only-delta rule.",
+  "interpretation": "Published-model recovery remains partial until the Reactant/Enzyme training pipeline recovers a published ecCKD definition under the optimizer-only-delta rule; new band-count schemes only count when produced by that recovered pipeline.",
   "next_required_work": ["Run the original-objective Reactant/Enzyme recovery with source data/objective/evaluation fixed and only optimizer settings varied.", "Compare recovered weights and optical-depth tables against the published ecCKD model using the quantitative recovery metrics above.", "Use the recovered pipeline to generate missing band-count rows, starting with 48-g and 96-g, then refresh the accuracy-vs-band plot."]
 }

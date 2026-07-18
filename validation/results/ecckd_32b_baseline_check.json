@@ -1,6 +1,6 @@
 {
   "case": "ecckd_32b_baseline_check",
-  "timestamp_utc": "2026-06-03T01:19:04.386",
+  "timestamp_utc": "2026-07-18T16:55:02.707",
   "status": "passed",
   "longwave_definition": "validation/external/ecrad/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
   "shortwave_definition": "validation/external/ecrad/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
