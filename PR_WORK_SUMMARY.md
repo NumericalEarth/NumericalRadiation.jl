@@ -12,11 +12,11 @@ substantially advanced; exact Reactant/Enzyme original-objective recovery is now
 unblocked by data availability but still has to quantitatively recover a
 published ecCKD model.
 
-`radiative_heating.md` is the design contract; `validation/goal_audit.md` and
-`validation/prompt_to_artifact_checklist.md` are the working audit trail. The
-full pass-numbered working log and the complete experiment artifact history
-live on the archived pre-cleanup ref `audit-trail-2026-07-17`. This document
-is the PR narrative.
+`radiative_heating.md` is the design contract. The campaign-era audit trail
+(goal audit, recovery-goal audit, prompt-to-artifact checklist), the full
+pass-numbered working log, and the complete experiment artifact history live
+on the archived pre-cleanup ref `audit-trail-2026-07-17`. This document is
+the PR narrative.
 
 ---
 
@@ -405,13 +405,8 @@ gate in `validation/`.
   `validation/generate_ecckd_derived_fluxes.sh`,
   `validation/install_ecckd_derived_fluxes.sh`,
   `validation/concat_ckdmip_flux_chunks.jl`.
-- **Top-level audits.** `validation/goal_audit.md`,
-  `validation/prompt_to_artifact_checklist.md`,
-  `validation/goal_audit_check.jl`, and
-  `validation/recovery_goal_audit.jl`. The latter is the canonical
-  prompt-to-artifact audit for the active 4-requirement recovery `/goal`.
 
-`validation/results/` contains the current JSON + Markdown audit outputs. The
+`validation/results/` contains the current JSON + Markdown gate outputs. The
 recovered ecCKD candidate NetCDFs are gitignored
 (`*_recovered_candidate.nc` and `ecckd_recovered_sw32_candidate.nc`).
 
@@ -466,8 +461,9 @@ checkout (see §4.2). The Project.toml drops the weak `Breeze` /
 
 ## 3. Acceptance gate status
 
-Source of truth: `validation/results/recovery_goal_audit.{json,md}` and
-`validation/results/goal_audit_check.{json,md}`.
+Source of truth: the per-gate JSON + Markdown artifacts under
+`validation/results/` (the retired campaign audit ledger is preserved on the
+archived ref `audit-trail-2026-07-17`).
 
 | Gate | Status |
 |---|---|
@@ -541,12 +537,10 @@ julia --project=test validation/ecckd_teacher_student_recovery_scan.jl
 julia --project=test validation/reduced_ecckd_accuracy.jl
 julia --project=test validation/reduced_ecckd_32g_rrtmgp_comparison.jl
 julia --project=test validation/rrtmgp_target_16g_ad_calibration.jl
-julia --project=test validation/recovery_goal_audit.jl
-julia --project=test validation/goal_audit_check.jl
 ```
 
 Each script writes a `<name>.json` and a `<name>.md` under
-`validation/results/`. The audit scripts are idempotent and can be re-run
+`validation/results/`. The scripts are idempotent and can be re-run
 after a fix without committing to a heavy data path.
 
 ### 4.3 Reproduce the ecCKD original-objective recovery (heavy)
@@ -691,8 +685,6 @@ RH_CKDMIP_DATA_PATH=$RH_CKDMIP_DATA_PATH \
     julia --project=test validation/ecckd_original_objective_terms.jl
 RH_CKDMIP_DATA_PATH=$RH_CKDMIP_DATA_PATH \
     julia --project=test validation/official_ecckd_training.jl
-RH_CKDMIP_DATA_PATH=$RH_CKDMIP_DATA_PATH \
-    julia --project=test validation/recovery_goal_audit.jl
 ```
 
 Recovery acceptance criteria (in `radiative_heating.md` §0.1):

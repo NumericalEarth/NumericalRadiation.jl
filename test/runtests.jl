@@ -163,8 +163,6 @@ with_temporary_validation_results() do
     include_test("test_reduced_ecckd_optical_depth_fit_preflight.jl")
     include_test("test_official_ecckd_training.jl")
     include_test("test_ecckd_training_recovery_targets.jl")
-    include_test("test_goal_audit_check.jl")
-    include_test("test_recovery_goal_audit.jl")
 end
 
 @testset "SpeedyWeather Extension" begin

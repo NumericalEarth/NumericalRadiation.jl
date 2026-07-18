@@ -85,9 +85,10 @@ Current active recovery `/goal`, updated 2026-05-20:
    then use the same pipeline to fill band-count gaps and plot accuracy versus
    band count.
 
-The active recovery goal is **not complete**. The refreshed
-`validation/results/recovery_goal_audit.*` report records one passed
-requirement, two partial requirements, and one blocked requirement. Public
+The active recovery goal is **not complete**: one passed requirement, two
+partial requirements, and one blocked requirement (the retired campaign audit
+ledger recording this is preserved on the archived ref
+`audit-trail-2026-07-17`). Public
 CKDMIP input data is present at the dedicated data root, but exact
 published-objective recovery is blocked until the locally derived ecCKD
 `5gas-*` and `rel-*` training flux products are generated from the CKDMIP
@@ -171,12 +172,11 @@ that preflight reaches `ready_for_original_ecckd_objective`, the
 Reactant/Enzyme pipeline is verified only as a fixed-topology teacher-student
 recovery and not as a reproduction of the original published ecCKD optimization
 objective.
-`validation/recovery_goal_audit.jl` is the current prompt-to-artifact audit for
-the four latest recovery deliverables; it writes
-`validation/results/recovery_goal_audit.*` and currently records the Breeze
-integration evidence as passed, the full/reduced parity and reduced/RRTMGP
-requirements as partial, and exact original-objective recovery as blocked on
-the missing CKDMIP training tree.
+The campaign-era prompt-to-artifact audit of the four latest recovery
+deliverables (retired; preserved on the archived ref `audit-trail-2026-07-17`)
+last recorded the Breeze integration evidence as passed, the full/reduced
+parity and reduced/RRTMGP requirements as partial, and exact
+original-objective recovery as blocked on the missing CKDMIP training tree.
 
 Radiative-output recovery metrics on held-out atmosphere columns:
 
@@ -198,8 +198,9 @@ trained intermediate points, and RRTMGP as a reference. At minimum, the plot
 must report TOA forcing error, surface forcing error, flux RMSE, heating-rate
 RMSE, runtime, memory/workspace size, and H100 throughput.
 
-Latest Step 2 audit note, 2026-05-19: `validation/results/goal_audit_check.*`
-marks the goal `complete` under the updated criterion: production uses the
+Latest Step 2 audit note, 2026-05-19 (campaign audit ledger retired; archived
+ref `audit-trail-2026-07-17`): the goal is `complete` under the updated
+criterion: production uses the
 validated official ecCKD 32-g model, and
 `validation/results/reduced_ecckd_32g_rrtmgp_comparison.*` provides the direct
 RRTMGP comparison axis. The frozen 16-g diagnostic remains documented because
@@ -2826,20 +2827,16 @@ and HDF5 libraries, and it generated
 ecCKD cloudless/no-aerosol reference files from that output, and the focused
 hard gate includes the clean ecCKD tropical/RCEMIP-style cases.
 
-Current completion audit: `validation/results/goal_audit_check.*` maps the full
-`/goal` deliverables to implemented evidence and remaining blockers. It
-currently marks the goal as not complete because the reduced 16-g ecCKD/RRTMG
+Current completion status (the campaign audit ledger that tracked this is
+retired; it is preserved on the archived ref `audit-trail-2026-07-17`): the
+goal was last recorded as not complete because the reduced 16-g ecCKD/RRTMG
 accuracy threshold and optimization target still fail. The official ecCKD hard
 gate, all-sky ecRad accuracy diagnostics, package-native RRTMGP comparison
 extension, Reactant/Enzyme path, end-to-end gas-optics training, dedicated Breeze
 extension, H100 environment check, Nsight reports, and realistic RCEMIP-style
-H100 >=4x RRTMGP benchmark are present. The remaining audit blockers are
+H100 >=4x RRTMGP benchmark are present. The remaining blockers are
 downstream of the reduced-model hard-threshold failure and are summarized by the
 `decision_required` reduced acceptance artifact.
-The executable audit command
-`julia --project=. validation/goal_audit_check.jl` writes
-`validation/results/goal_audit_check.json` and `.md`, verifies the current
-scaffold artifacts, and currently reports status `not_complete`.
 
 The remaining ecRad work must proceed through three concrete implementation
 steps:

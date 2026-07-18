@@ -48,37 +48,11 @@ julia --project=. validation/access_points_check.jl
 
 It writes `validation/results/access_points_check.json` and `.md`.
 
-The project-level completion audit is maintained in
-`validation/goal_audit.md`. It maps each `/goal` deliverable to current
-evidence and explicitly lists the remaining blockers before the goal can be
-marked complete.
+The campaign-era completion audits (goal audit, recovery-goal audit, and the
+prompt-to-artifact checklist) were retired on 2026-07-18; they are preserved
+on the archived ref `audit-trail-2026-07-17`.
 
-The executable audit check verifies that the current scaffold artifacts are
-present and that known blockers are still recorded:
-
-```sh
-julia --project=. validation/goal_audit_check.jl
-```
-
-It writes `validation/results/goal_audit_check.json` and `.md`.
-
-The recovery-goal audit is the current prompt-to-artifact checklist for the
-latest ecCKD/Breeze recovery criteria: ecRad parity for full and reduced
-models, RRTMGP comparisons on representative states, dynamic Breeze
-integration, and Reactant/Enzyme recovery of a published ecCKD model:
-
-```sh
-julia --project=test validation/recovery_goal_audit.jl
-```
-
-It writes `validation/results/recovery_goal_audit.json` and `.md`. A
-`not_complete` status is expected until reduced candidates pass hard
-thresholds, `RH_CKDMIP_DATA_PATH` points at a complete public CKDMIP
-line-by-line training tree, and the derived ecCKD `5gas-*` / `rel-*` training
-flux products referenced by the published optimizer scripts have been generated
-locally.
-
-The derived ecCKD flux generation plan inventories those generated `5gas-*`
+The derived ecCKD flux generation plan inventories the generated `5gas-*`
 and `rel-*` products separately from the public CKDMIP files and maps each
 missing product back to the upstream ecCKD LBL evaluation script and scenario
 batch:
@@ -128,8 +102,9 @@ Reference-file placement and schema expectations are summarized in
 
 ## Artifact policy (post-cleanup)
 
-`validation/results/` holds only artifacts that surviving code reads: gate and
-audit evidence and the model inventory. The greedy reduced-model program
+`validation/results/` holds only artifacts that surviving code reads: gate
+evidence, training-pipeline evidence, and the model inventory. The greedy
+reduced-model program
 (accepted-move replay chains, 16-g subset scans, the 32x31 boundary polish)
 was demoted on 2026-07-18; its quantitative endpoints are frozen as prose in
 `validation/FROZEN_DIAGNOSTICS.md`, and new band-count schemes only count when
