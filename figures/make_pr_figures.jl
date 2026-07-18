@@ -6,6 +6,9 @@ using Statistics
 const REPO_ROOT = abspath(joinpath(@__DIR__, ".."))
 const OUT_DIR = @__DIR__
 const LOCAL_BENCH_RESULTS = joinpath(REPO_ROOT, "benchmarking", "results")
+
+# Provides validation_reference_dir() for the artifact-backed reference data.
+include(joinpath(REPO_ROOT, "validation", "validation_results.jl"))
 const BREEZE_RESULTS = "/shared/home/greg/Projects/BreezeRadiativeHeatingDev/Breeze.jl/benchmarking/results"
 
 set_theme!(theme_minimal())
@@ -15,7 +18,8 @@ set_theme!(theme_minimal())
 # -----------------------------------------------------------------------------
 
 function figure_flux_profiles()
-    path = joinpath(REPO_ROOT, "validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc")
+    path = joinpath(validation_reference_dir(), "ecrad",
+                    "ecckd_clear_sky_tropical_column.nc")
     ds = NCDataset(path)
 
     p_iface = ds["pressure_interface"][:, :] ./ 100.0  # hPa

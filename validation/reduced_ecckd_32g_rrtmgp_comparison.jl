@@ -21,21 +21,21 @@ const REDUCED_ACCURACY_JSON =
 const CASES = (
     (
         case = "ecckd_clear_sky_tropical_column",
-        path = joinpath(@__DIR__, "reference", "ecrad",
+        path = joinpath(validation_reference_dir(), "ecrad",
                         "ecckd_clear_sky_tropical_column.nc"),
         reference_suffix = "",
         candidate_suffix = "",
     ),
     (
         case = "ecckd_rcemip_style_column_subset",
-        path = joinpath(@__DIR__, "reference", "ecrad",
+        path = joinpath(validation_reference_dir(), "ecrad",
                         "ecckd_rcemip_style_column_subset.nc"),
         reference_suffix = "",
         candidate_suffix = "",
     ),
     (
         case = "ecckd_all_sky_tropical_column_clear_projection",
-        path = joinpath(@__DIR__, "reference", "ecrad",
+        path = joinpath(validation_reference_dir(), "ecrad",
                         "ecckd_all_sky_tropical_column.nc"),
         reference_suffix = "_clear",
         candidate_suffix = "_clear",

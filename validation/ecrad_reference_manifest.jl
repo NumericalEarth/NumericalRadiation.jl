@@ -184,7 +184,17 @@ const ACCEPTANCE_THRESHOLDS = (
     surface_forcing_abs_error_w_m2 = 0.3,
 )
 
-reference_path(path) = isabspath(path) ? path : joinpath(ABR_ROOT, path)
+# Repo-relative paths under `validation/reference` resolve through
+# `validation_reference_dir()` so the artifact-backed reference data are
+# materialized on demand; all other repo-relative paths stay rooted at the
+# checkout.
+function reference_path(path)
+    isabspath(path) && return path
+    prefix = "validation/reference/"
+    startswith(path, prefix) &&
+        return joinpath(validation_reference_dir(), chopprefix(path, prefix))
+    return joinpath(ABR_ROOT, path)
+end
 
 function netcdf_variables(path)
     NCDATASETS === nothing && return (nothing, "NCDatasets not available")

@@ -308,35 +308,35 @@ function materialize_references()
         (
             output_reference_path =
                 joinpath(ECRAD_IFS, "ecrad_meridian_ecckd_32x64_all_sky_out.nc"),
-            output_path = joinpath(@__DIR__, "reference", "ecrad",
+            output_path = joinpath(validation_reference_dir(), "ecrad",
                                    "ecckd_32x64_all_sky_tropical_column.nc"),
             properties_path = joinpath(ECRAD_IFS, "radiative_properties_ecckd_32x64.nc"),
         ),
         (
             output_reference_path =
                 joinpath(ECRAD_IFS, "ecrad_meridian_ecckd_32x96_all_sky_out.nc"),
-            output_path = joinpath(@__DIR__, "reference", "ecrad",
+            output_path = joinpath(validation_reference_dir(), "ecrad",
                                    "ecckd_32x96_all_sky_tropical_column.nc"),
             properties_path = joinpath(ECRAD_IFS, "radiative_properties_ecckd_32x96.nc"),
         ),
         (
             output_reference_path =
                 joinpath(ECRAD_IFS, "ecrad_meridian_ecckd_64x32_all_sky_out.nc"),
-            output_path = joinpath(@__DIR__, "reference", "ecrad",
+            output_path = joinpath(validation_reference_dir(), "ecrad",
                                    "ecckd_64x32_all_sky_tropical_column.nc"),
             properties_path = joinpath(ECRAD_IFS, "radiative_properties_ecckd_64x32.nc"),
         ),
         (
             output_reference_path =
                 joinpath(ECRAD_IFS, "ecrad_meridian_ecckd_64x64_all_sky_out.nc"),
-            output_path = joinpath(@__DIR__, "reference", "ecrad",
+            output_path = joinpath(validation_reference_dir(), "ecrad",
                                    "ecckd_64x64_all_sky_tropical_column.nc"),
             properties_path = joinpath(ECRAD_IFS, "radiative_properties_ecckd_64x64.nc"),
         ),
         (
             output_reference_path =
                 joinpath(ECRAD_IFS, "ecrad_meridian_ecckd_64x96_all_sky_out.nc"),
-            output_path = joinpath(@__DIR__, "reference", "ecrad",
+            output_path = joinpath(validation_reference_dir(), "ecrad",
                                    "ecckd_64x96_all_sky_tropical_column.nc"),
             properties_path = joinpath(ECRAD_IFS, "radiative_properties_ecckd_64x96.nc"),
         ),
@@ -346,28 +346,28 @@ function materialize_references()
 
     outputs = String[]
     push!(outputs, write_reference_case(
-        joinpath(@__DIR__, "reference", "ecrad", "clear_sky_tropical_column.nc");
+        joinpath(validation_reference_dir(), "ecrad", "clear_sky_tropical_column.nc");
         input_path,
         output_reference_path = clear_output,
         columns = tropical_columns,
         all_sky = false,
     ))
     push!(outputs, write_reference_case(
-        joinpath(@__DIR__, "reference", "ecrad", "ecckd_clear_sky_tropical_column.nc");
+        joinpath(validation_reference_dir(), "ecrad", "ecckd_clear_sky_tropical_column.nc");
         input_path,
         output_reference_path = ecckd_cloudless_noaer_output,
         columns = tropical_columns,
         all_sky = false,
     ))
     push!(outputs, write_reference_case(
-        joinpath(@__DIR__, "reference", "ecrad", "all_sky_tropical_column.nc");
+        joinpath(validation_reference_dir(), "ecrad", "all_sky_tropical_column.nc");
         input_path,
         output_reference_path = all_sky_output,
         columns = tropical_columns,
         all_sky = true,
     ))
     push!(outputs, write_reference_case(
-        joinpath(@__DIR__, "reference", "ecrad", "ecckd_all_sky_tropical_column.nc");
+        joinpath(validation_reference_dir(), "ecrad", "ecckd_all_sky_tropical_column.nc");
         input_path,
         output_reference_path = ecckd_all_sky_tc_output,
         columns = tropical_columns,
@@ -386,14 +386,14 @@ function materialize_references()
         end
     end
     push!(outputs, write_reference_case(
-        joinpath(@__DIR__, "reference", "ecrad", "rcemip_style_column_subset.nc");
+        joinpath(validation_reference_dir(), "ecrad", "rcemip_style_column_subset.nc");
         input_path,
         output_reference_path = clear_output,
         columns = rcemip_style_columns,
         all_sky = false,
     ))
     push!(outputs, write_reference_case(
-        joinpath(@__DIR__, "reference", "ecrad", "ecckd_rcemip_style_column_subset.nc");
+        joinpath(validation_reference_dir(), "ecrad", "ecckd_rcemip_style_column_subset.nc");
         input_path,
         output_reference_path = ecckd_cloudless_noaer_output,
         columns = rcemip_style_columns,
@@ -401,7 +401,7 @@ function materialize_references()
     ))
     if isfile(ecckd_32x64_cloudless_noaer_output)
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x64_clear_sky_tropical_column.nc");
             input_path,
             output_reference_path = ecckd_32x64_cloudless_noaer_output,
@@ -409,7 +409,7 @@ function materialize_references()
             all_sky = false,
         ))
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x64_rcemip_style_column_subset.nc");
             input_path,
             output_reference_path = ecckd_32x64_cloudless_noaer_output,
@@ -419,7 +419,7 @@ function materialize_references()
     end
     if isfile(ecckd_32x96_cloudless_noaer_output)
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x96_clear_sky_tropical_column.nc");
             input_path,
             output_reference_path = ecckd_32x96_cloudless_noaer_output,
@@ -427,7 +427,7 @@ function materialize_references()
             all_sky = false,
         ))
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x96_rcemip_style_column_subset.nc");
             input_path,
             output_reference_path = ecckd_32x96_cloudless_noaer_output,
@@ -437,7 +437,7 @@ function materialize_references()
     end
     if isfile(ecckd_64x32_cloudless_noaer_output)
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x32_clear_sky_tropical_column.nc");
             input_path,
             output_reference_path = ecckd_64x32_cloudless_noaer_output,
@@ -445,7 +445,7 @@ function materialize_references()
             all_sky = false,
         ))
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x32_rcemip_style_column_subset.nc");
             input_path,
             output_reference_path = ecckd_64x32_cloudless_noaer_output,
@@ -455,7 +455,7 @@ function materialize_references()
     end
     if isfile(ecckd_64x64_cloudless_noaer_output)
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x64_clear_sky_tropical_column.nc");
             input_path,
             output_reference_path = ecckd_64x64_cloudless_noaer_output,
@@ -463,7 +463,7 @@ function materialize_references()
             all_sky = false,
         ))
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x64_rcemip_style_column_subset.nc");
             input_path,
             output_reference_path = ecckd_64x64_cloudless_noaer_output,
@@ -473,7 +473,7 @@ function materialize_references()
     end
     if isfile(ecckd_64x96_cloudless_noaer_output)
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x96_clear_sky_tropical_column.nc");
             input_path,
             output_reference_path = ecckd_64x96_cloudless_noaer_output,
@@ -481,7 +481,7 @@ function materialize_references()
             all_sky = false,
         ))
         push!(outputs, write_reference_case(
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x96_rcemip_style_column_subset.nc");
             input_path,
             output_reference_path = ecckd_64x96_cloudless_noaer_output,

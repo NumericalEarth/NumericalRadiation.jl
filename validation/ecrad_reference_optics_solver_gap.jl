@@ -197,7 +197,11 @@ function run_reference_optics_solver_gap()
         (name = "tripleclouds_alpha_p12", overlap = :tripleclouds_alpha, inhomogeneity_overlap_exponent = 12.0),
         (name = "tripleclouds_alpha_p16", overlap = :tripleclouds_alpha, inhomogeneity_overlap_exponent = 16.0),
     )
-    reference_path = normpath(joinpath(@__DIR__, "..", reference_case))
+    reference_prefix = "validation/reference/"
+    reference_path = startswith(reference_case, reference_prefix) ?
+        joinpath(validation_reference_dir(),
+                 chopprefix(reference_case, reference_prefix)) :
+        normpath(joinpath(@__DIR__, "..", reference_case))
     properties_path = normpath(joinpath(@__DIR__, "..", properties_case))
     output_path = normpath(joinpath(@__DIR__, "..", output_case))
     rows = NamedTuple[]

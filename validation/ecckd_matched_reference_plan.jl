@@ -15,7 +15,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x64_clear_sky_tropical_column",
         existing_reference_case = "ecckd_clear_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x64_clear_sky_tropical_column.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_64",
@@ -30,7 +30,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x96_clear_sky_tropical_column",
         existing_reference_case = "ecckd_clear_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x96_clear_sky_tropical_column.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_96",
@@ -45,7 +45,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x32_clear_sky_tropical_column",
         existing_reference_case = "ecckd_clear_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x32_clear_sky_tropical_column.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_32",
@@ -60,7 +60,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x64_clear_sky_tropical_column",
         existing_reference_case = "ecckd_clear_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x64_clear_sky_tropical_column.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_64",
@@ -75,7 +75,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x96_clear_sky_tropical_column",
         existing_reference_case = "ecckd_clear_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x96_clear_sky_tropical_column.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_96",
@@ -90,7 +90,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x64_rcemip_style_column_subset",
         existing_reference_case = "ecckd_rcemip_style_column_subset",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x64_rcemip_style_column_subset.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_64",
@@ -105,7 +105,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x96_rcemip_style_column_subset",
         existing_reference_case = "ecckd_rcemip_style_column_subset",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x96_rcemip_style_column_subset.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_96",
@@ -120,7 +120,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x32_rcemip_style_column_subset",
         existing_reference_case = "ecckd_rcemip_style_column_subset",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x32_rcemip_style_column_subset.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_32",
@@ -135,7 +135,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x64_rcemip_style_column_subset",
         existing_reference_case = "ecckd_rcemip_style_column_subset",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x64_rcemip_style_column_subset.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_64",
@@ -150,7 +150,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x96_rcemip_style_column_subset",
         existing_reference_case = "ecckd_rcemip_style_column_subset",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x96_rcemip_style_column_subset.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_96",
@@ -165,7 +165,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x32_all_sky_tropical_column",
         existing_reference_case = "ecckd_all_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_all_sky_tropical_column.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_32",
@@ -180,7 +180,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x64_all_sky_tropical_column",
         existing_reference_case = "ecckd_all_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x64_all_sky_tropical_column.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_64",
@@ -195,7 +195,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_32x96_all_sky_tropical_column",
         existing_reference_case = "ecckd_all_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_32x96_all_sky_tropical_column.nc"),
         longwave_key = "longwave_32",
         shortwave_key = "shortwave_96",
@@ -210,7 +210,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x32_all_sky_tropical_column",
         existing_reference_case = "ecckd_all_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x32_all_sky_tropical_column.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_32",
@@ -225,7 +225,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x64_all_sky_tropical_column",
         existing_reference_case = "ecckd_all_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x64_all_sky_tropical_column.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_64",
@@ -240,7 +240,7 @@ const MATCHED_REFERENCE_CASES = (
         case = "ecckd_64x96_all_sky_tropical_column",
         existing_reference_case = "ecckd_all_sky_tropical_column",
         output_path =
-            joinpath(@__DIR__, "reference", "ecrad",
+            joinpath(validation_reference_dir(), "ecrad",
                      "ecckd_64x96_all_sky_tropical_column.nc"),
         longwave_key = "longwave_64",
         shortwave_key = "shortwave_96",

@@ -60,7 +60,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
 
     @test temperature_layer_from_interfaces(p_interface, t_interface) ≈ expected
 
-    reference_path = joinpath(@__DIR__, "..", "validation", "reference", "ecrad",
+    reference_path = joinpath(validation_reference_dir(), "ecrad",
                               "clear_sky_tropical_column.nc")
     if isfile(reference_path)
         NCDatasets.NCDataset(reference_path) do dataset
@@ -74,7 +74,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
         end
     end
 
-    ecckd_reference_path = joinpath(@__DIR__, "..", "validation", "reference", "ecrad",
+    ecckd_reference_path = joinpath(validation_reference_dir(), "ecrad",
                                     "ecckd_clear_sky_tropical_column.nc")
     if isfile(ecckd_reference_path)
         NCDatasets.NCDataset(ecckd_reference_path) do dataset
@@ -89,7 +89,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
     end
 
     matched_64x64_reference_path =
-        joinpath(@__DIR__, "..", "validation", "reference", "ecrad",
+        joinpath(validation_reference_dir(), "ecrad",
                  "ecckd_64x64_clear_sky_tropical_column.nc")
     if isfile(matched_64x64_reference_path)
         NCDatasets.NCDataset(matched_64x64_reference_path) do dataset
@@ -101,7 +101,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
     end
 
     matched_64x96_reference_path =
-        joinpath(@__DIR__, "..", "validation", "reference", "ecrad",
+        joinpath(validation_reference_dir(), "ecrad",
                  "ecckd_64x96_clear_sky_tropical_column.nc")
     if isfile(matched_64x96_reference_path)
         NCDatasets.NCDataset(matched_64x96_reference_path) do dataset
@@ -118,7 +118,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
         ("ecckd_64x32_clear_sky_tropical_column.nc", 64, 32),
     )
         matched_reference_path =
-            joinpath(@__DIR__, "..", "validation", "reference", "ecrad", case_name)
+            joinpath(validation_reference_dir(), "ecrad", case_name)
         if isfile(matched_reference_path)
             NCDatasets.NCDataset(matched_reference_path) do dataset
                 @test haskey(dataset, "surface_longwave_up_spectral")
@@ -129,7 +129,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
         end
     end
 
-    all_sky_reference_path = joinpath(@__DIR__, "..", "validation", "reference", "ecrad",
+    all_sky_reference_path = joinpath(validation_reference_dir(), "ecrad",
                                       "all_sky_tropical_column.nc")
     if isfile(all_sky_reference_path)
         NCDatasets.NCDataset(all_sky_reference_path) do dataset
@@ -149,7 +149,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
         end
     end
 
-    ecckd_all_sky_reference_path = joinpath(@__DIR__, "..", "validation", "reference", "ecrad",
+    ecckd_all_sky_reference_path = joinpath(validation_reference_dir(), "ecrad",
                                             "ecckd_all_sky_tropical_column.nc")
     if isfile(ecckd_all_sky_reference_path)
         NCDatasets.NCDataset(ecckd_all_sky_reference_path) do dataset
@@ -174,7 +174,7 @@ include(joinpath(@__DIR__, "..", "validation", "materialize_ecrad_references.jl"
         ("ecckd_64x96_all_sky_tropical_column.nc", 64, 96),
     )
         matched_all_sky_path =
-            joinpath(@__DIR__, "..", "validation", "reference", "ecrad", case_name)
+            joinpath(validation_reference_dir(), "ecrad", case_name)
         if isfile(matched_all_sky_path)
             NCDatasets.NCDataset(matched_all_sky_path) do dataset
                 @test dataset.attrib["source_flux_scope"] == "total"

@@ -57,6 +57,11 @@ Both boundary diagnostics are checked against the hard absolute-error
 thresholds in `validation/ecrad_reference_manifest.jl`.
 
 These files are external scientific reference artifacts and should not be
-replaced with toy fixtures. If the files are too large for the repository,
-store them through the project artifact/data mechanism and materialize them at
-these paths before running validation.
+replaced with toy fixtures. The NetCDF files are not tracked in git: they are
+distributed as the lazy `ecrad_reference_data` artifact in `Artifacts.toml`
+(release asset `validation-data-v1`) and are materialized on demand as a
+writable working copy at this path by `validation_reference_dir()` in
+`validation/validation_results.jl`. Validation runs write candidate variables
+into these files in place, which is why they live in the working tree rather
+than being read from the artifact store. Set
+`NUMERICAL_RADIATION_VALIDATION_REFERENCE_DIR` to override the location.

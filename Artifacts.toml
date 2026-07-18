@@ -13,3 +13,14 @@ lazy = true
     [[ecckd_source.download]]
     url = "https://github.com/ecmwf-ifs/ecckd/archive/6115f9b8e29a55cb0f48916857bdc77fec41badd.tar.gz"
     sha256 = "f22280bcdf657ab1d6faa4ff9f365a0fffb6951541454a387671857e17ce4c0b"
+
+# ecRad reference NetCDF products for validation/reference. The download URL
+# becomes live once the validation-data-v1 release asset is published; local
+# checkouts that still carry validation/reference data never hit it.
+[ecrad_reference_data]
+git-tree-sha1 = "6070697d4ab162dc2180c2187d855e711fb3ad38"
+lazy = true
+
+    [[ecrad_reference_data.download]]
+    url = "https://github.com/NumericalEarth/AnalyticBandRadiation.jl/releases/download/validation-data-v1/ecrad_reference_data.tar.gz"
+    sha256 = "91e6ff211a8936c7bc9befac32f27baafeed05b1370f516466ed90848d9bfe4f"
