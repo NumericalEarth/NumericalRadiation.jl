@@ -102,11 +102,20 @@ Reference-file placement and schema expectations are summarized in
 
 ## Artifact policy (post-cleanup)
 
-`validation/results/` holds only artifacts that surviving code reads: gate
-evidence, training-pipeline evidence, and the model inventory. The greedy
-reduced-model program
-(accepted-move replay chains, 16-g subset scans, the 32x31 boundary polish)
-was demoted on 2026-07-18; its quantitative endpoints are frozen as prose in
+Committed files under `validation/results/` are only (1) external-data or
+frozen evidence — artifacts whose producer needs data or hardware unavailable
+in CI (the `~/data/ckdmip` tree, an ecCKD/Breeze checkout, an H100), is
+skipped by default as a slow validation test, or is never recomputed (e.g.
+`official_ecckd_training.json`, `rrtmgp_target_16g_ad_calibration.json`) —
+or (2) inputs read outside the test harness by docs, examples, figures, or
+benchmark scripts (e.g. `reduced_ecckd_rrtmgp_accuracy_vs_bands.csv` and the
+artifacts the literate reports read), including artifacts whose committed
+copy tests assert on directly at the repo path. Everything else regenerates
+in the temporary results directory during the default test suite and must not
+be committed; if a script's committed input is missing, run its producer
+script first. The greedy reduced-model program (accepted-move replay chains,
+16-g subset scans, the 32x31 boundary polish) was demoted on 2026-07-18; its
+quantitative endpoints are frozen as prose in
 `validation/FROZEN_DIAGNOSTICS.md`, and new band-count schemes only count when
 produced by the recovered training pipeline. Bulky per-iteration optimizer
 logs must not be committed here — write them outside the repo (or to S3) and
