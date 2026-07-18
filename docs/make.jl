@@ -37,6 +37,7 @@ makedocs(
     ),
     pages = [
         "Home" => "index.md",
+        "Design" => "design.md",
         "Architecture" => "architecture.md",
         "Radiative transfer" => "radiative_transfer.md",
         "Gas optics" => [

@@ -340,8 +340,9 @@ end
 # -----------------------------------------------------------------------------
 
 function figure_reduced_descent()
-    # Time-ordered chain extracted from radiative_heating.md §0.1; each entry
-    # is (step label, hard-gate objective after the accepted move).
+    # Time-ordered chain from the retired campaign narrative (archived ref
+    # audit-trail-2026-07-17; frozen endpoints in validation/FROZEN_DIAGNOSTICS.md);
+    # each entry is (step label, hard-gate objective after the accepted move).
     chain = [
         ("baseline (no shortwave subset)", 0.014033547037797689),  # passing 32x32 reference
         ("weighted-greedy 16-g subset",     7.17718646855576),
