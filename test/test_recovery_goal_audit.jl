@@ -114,202 +114,6 @@ end
     @test !result["published_recovery_vector_training_summary"]["enzyme_requested"]
     @test !result["published_recovery_vector_training_summary"]["reactant_check_requested"]
     @test result["published_recovery_vector_training_summary"]["recovery_metrics_status"] == "passed"
-    @test haskey(result, "candidate_objective_score_summary")
-    @test result["candidate_objective_score_summary"]["present"]
-    @test result["candidate_objective_score_summary"]["status"] ==
-          "candidate_objective_score_ready"
-    @test result["candidate_objective_score_summary"]["candidate_metrics_status"] == "passed"
-    @test result["candidate_objective_score_summary"]["sample_count"] == 2
-    @test result["candidate_objective_score_summary"]["zero_forward_losses_zero"]
-    @test result["candidate_objective_score_summary"]["perturbation_increases_loss"]
-    @test haskey(result, "candidate_transfer_smoke_summary")
-    @test result["candidate_transfer_smoke_summary"]["present"]
-    @test result["candidate_transfer_smoke_summary"]["status"] ==
-          "candidate_transfer_smoke_ready"
-    @test result["candidate_transfer_smoke_summary"]["layer_count"] == 54
-    @test result["candidate_transfer_smoke_summary"]["longwave_gpoints"] == 32
-    @test result["candidate_transfer_smoke_summary"]["shortwave_gpoints"] == 32
-    @test result["candidate_transfer_smoke_summary"]["longwave_loss"] > 0
-    @test result["candidate_transfer_smoke_summary"]["shortwave_loss"] > 0
-    @test result["candidate_transfer_smoke_summary"]["longwave_projection_band_count"] > 0
-    @test result["candidate_transfer_smoke_summary"]["shortwave_projection_band_count"] > 0
-    @test result["candidate_transfer_smoke_summary"]["longwave_projection_loss"] > 0
-    @test result["candidate_transfer_smoke_summary"]["shortwave_projection_loss"] > 0
-    @test haskey(result, "candidate_transfer_optimizer_probe_summary")
-    @test result["candidate_transfer_optimizer_probe_summary"]["present"]
-    @test result["candidate_transfer_optimizer_probe_summary"]["status"] ==
-          "optimizer_probe_passed"
-    @test result["candidate_transfer_optimizer_probe_summary"]["parameter_count"] == 4
-    @test result["candidate_transfer_optimizer_probe_summary"]["accepted_step"]
-    @test result["candidate_transfer_optimizer_probe_summary"]["final_loss"] <
-          result["candidate_transfer_optimizer_probe_summary"]["initial_loss"]
-    @test result["candidate_transfer_optimizer_probe_summary"]["loss_reduction_factor"] > 1
-    @test haskey(result, "candidate_table_parameter_probe_summary")
-    @test result["candidate_table_parameter_probe_summary"]["present"]
-    @test result["candidate_table_parameter_probe_summary"]["status"] ==
-          "table_parameter_probe_passed"
-    @test result["candidate_table_parameter_probe_summary"]["parameter_count"] == 4
-    @test result["candidate_table_parameter_probe_summary"]["accepted_step"]
-    @test result["candidate_table_parameter_probe_summary"]["final_loss"] <
-          result["candidate_table_parameter_probe_summary"]["initial_loss"]
-    @test result["candidate_table_parameter_probe_summary"]["loss_reduction_factor"] > 1
-    @test haskey(result, "candidate_table_writeback_probe_summary")
-    @test result["candidate_table_writeback_probe_summary"]["present"]
-    @test result["candidate_table_writeback_probe_summary"]["status"] ==
-          "table_writeback_probe_passed"
-    @test result["candidate_table_writeback_probe_summary"]["accepted_writeback"]
-    @test result["candidate_table_writeback_probe_summary"]["written_projected_loss"] <
-          result["candidate_table_writeback_probe_summary"]["baseline_projected_loss"]
-    @test result["candidate_table_writeback_probe_summary"]["loss_reduction_factor"] > 1
-    @test haskey(result, "candidate_table_writeback_continuation_summary")
-    @test result["candidate_table_writeback_continuation_summary"]["present"]
-    @test result["candidate_table_writeback_continuation_summary"]["status"] ==
-          "table_writeback_continuation_passed"
-    @test result["candidate_table_writeback_continuation_summary"]["accepted_writeback"]
-    @test result["candidate_table_writeback_continuation_summary"]["accepted_steps"] >= 1
-    @test result["candidate_table_writeback_continuation_summary"]["final_in_memory_loss"] <=
-          result["candidate_table_writeback_continuation_summary"]["initial_in_memory_loss"]
-    @test result["candidate_table_writeback_continuation_summary"]["written_projected_loss"] <
-          result["candidate_table_writeback_continuation_summary"]["baseline_projected_loss"]
-    @test result["candidate_table_writeback_continuation_summary"]["writeback_loss_reduction_factor"] > 1
-    @test haskey(result, "candidate_table_writeback_multisample_summary")
-    @test result["candidate_table_writeback_multisample_summary"]["present"]
-    @test result["candidate_table_writeback_multisample_summary"]["status"] in
-          ("table_writeback_multisample_passed", "table_writeback_multisample_partial")
-    @test result["candidate_table_writeback_multisample_summary"]["scenario_count"] >= 1
-    @test result["candidate_table_writeback_multisample_summary"]["present_count"] >= 1
-    @test result["candidate_table_writeback_multisample_summary"]["improved_count"] >= 0
-    @test result["candidate_table_writeback_multisample_summary"]["worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_multisample_optimizer_summary")
-    @test result["candidate_table_multisample_optimizer_summary"]["present"]
-    @test result["candidate_table_multisample_optimizer_summary"]["status"] in (
-        "table_multisample_optimizer_passed",
-        "table_multisample_optimizer_seed_passed",
-        "table_multisample_optimizer_partial",
-        "table_multisample_optimizer_failed",
-    )
-    @test result["candidate_table_multisample_optimizer_summary"]["present_count"] >= 1
-    @test result["candidate_table_multisample_optimizer_summary"]["accepted_steps"] >= 0
-    @test result["candidate_table_multisample_optimizer_summary"]["writeback_improved_count"] >= 0
-    @test result["candidate_table_multisample_optimizer_summary"]["writeback_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_written_coordinate_scan_summary")
-    @test result["candidate_table_written_coordinate_scan_summary"]["present"]
-    @test result["candidate_table_written_coordinate_scan_summary"]["status"] in (
-        "written_coordinate_scan_improved",
-        "written_coordinate_scan_no_descent",
-        "written_coordinate_scan_failed",
-    )
-    @test result["candidate_table_written_coordinate_scan_summary"]["present_count"] >= 1
-    @test result["candidate_table_written_coordinate_scan_summary"]["tested_move_count"] >= 1
-    @test result["candidate_table_written_coordinate_scan_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_written_coordinate_scan_summary"]["best_improved_count"] >= 0
-    @test result["candidate_table_written_coordinate_scan_summary"]["best_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_written_coordinate_descent_summary")
-    @test result["candidate_table_written_coordinate_descent_summary"]["present"]
-    @test result["candidate_table_written_coordinate_descent_summary"]["status"] in (
-        "written_coordinate_descent_improved",
-        "written_coordinate_descent_no_descent",
-        "written_coordinate_descent_failed",
-    )
-    @test result["candidate_table_written_coordinate_descent_summary"]["present_count"] >= 1
-    @test result["candidate_table_written_coordinate_descent_summary"]["accepted_move_count"] >= 0
-    @test result["candidate_table_written_coordinate_descent_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_written_coordinate_descent_summary"]["final_improved_count"] >= 0
-    @test result["candidate_table_written_coordinate_descent_summary"]["final_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_written_minimax_descent_summary")
-    @test result["candidate_table_written_minimax_descent_summary"]["present"]
-    @test result["candidate_table_written_minimax_descent_summary"]["status"] in (
-        "written_minimax_descent_improved",
-        "written_minimax_descent_no_descent",
-        "written_minimax_descent_failed",
-    )
-    @test result["candidate_table_written_minimax_descent_summary"]["present_count"] >= 1
-    @test result["candidate_table_written_minimax_descent_summary"]["tested_move_count"] >= 1
-    @test result["candidate_table_written_minimax_descent_summary"]["accepted_move_count"] >= 0
-    @test result["candidate_table_written_minimax_descent_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_written_minimax_descent_summary"]["worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_written_minimax_descent_summary"]["final_improved_count"] >= 0
-    @test result["candidate_table_written_minimax_descent_summary"]["final_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_humidity_split_probe_summary")
-    @test result["candidate_table_humidity_split_probe_summary"]["present"]
-    @test result["candidate_table_humidity_split_probe_summary"]["status"] in (
-        "humidity_split_probe_improved",
-        "humidity_split_probe_no_descent",
-    )
-    @test result["candidate_table_humidity_split_probe_summary"]["present_count"] >= 1
-    @test result["candidate_table_humidity_split_probe_summary"]["tested_move_count"] >= 1
-    @test result["candidate_table_humidity_split_probe_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_split_probe_summary"]["worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_split_probe_summary"]["best_aggregate_worst_loss_ratio"] >= 0
-    @test result["candidate_table_humidity_split_probe_summary"]["best_minimax_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_humidity_split_descent_summary")
-    @test result["candidate_table_humidity_split_descent_summary"]["present"]
-    @test result["candidate_table_humidity_split_descent_summary"]["status"] in (
-        "humidity_split_descent_improved",
-        "humidity_split_descent_no_descent",
-        "humidity_split_descent_failed",
-    )
-    @test result["candidate_table_humidity_split_descent_summary"]["present_count"] >= 1
-    @test result["candidate_table_humidity_split_descent_summary"]["tested_move_count"] >= 1
-    @test result["candidate_table_humidity_split_descent_summary"]["accepted_move_count"] >= 0
-    @test result["candidate_table_humidity_split_descent_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_split_descent_summary"]["worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_split_descent_summary"]["final_improved_count"] >= 0
-    @test result["candidate_table_humidity_split_descent_summary"]["final_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_humidity_tribin_probe_summary")
-    @test result["candidate_table_humidity_tribin_probe_summary"]["present"]
-    @test result["candidate_table_humidity_tribin_probe_summary"]["status"] in (
-        "humidity_tribin_probe_improved",
-        "humidity_tribin_probe_no_descent",
-    )
-    @test result["candidate_table_humidity_tribin_probe_summary"]["present_count"] >= 1
-    @test result["candidate_table_humidity_tribin_probe_summary"]["tested_move_count"] >= 1
-    @test result["candidate_table_humidity_tribin_probe_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_probe_summary"]["worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_probe_summary"]["best_aggregate_worst_loss_ratio"] >= 0
-    @test result["candidate_table_humidity_tribin_probe_summary"]["best_minimax_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_humidity_tribin_descent_summary")
-    @test result["candidate_table_humidity_tribin_descent_summary"]["present"]
-    @test result["candidate_table_humidity_tribin_descent_summary"]["status"] in (
-        "humidity_tribin_descent_improved",
-        "humidity_tribin_descent_no_descent",
-        "humidity_tribin_descent_failed",
-    )
-    @test result["candidate_table_humidity_tribin_descent_summary"]["present_count"] >= 1
-    @test result["candidate_table_humidity_tribin_descent_summary"]["tested_move_count"] >= 1
-    @test result["candidate_table_humidity_tribin_descent_summary"]["accepted_move_count"] >= 0
-    @test result["candidate_table_humidity_tribin_descent_summary"]["aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_descent_summary"]["worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_descent_summary"]["final_improved_count"] >= 0
-    @test result["candidate_table_humidity_tribin_descent_summary"]["final_worst_loss_ratio"] >= 0
-    @test haskey(result, "candidate_table_humidity_tribin_weighted_descent_summary")
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["present"]
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["status"] in (
-        "humidity_tribin_weighted_descent_improved",
-        "humidity_tribin_weighted_descent_no_descent",
-    )
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["present_count"] >= 1
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["tested_weight_set_count"] >= 1
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_accepted_move_count"] >= 0
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_weighted_loss_ratio"] >= 0
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_weighted_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_worst_loss_ratio"] >= 0
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_weighted_descent_summary"]["best_final_improved_count"] >= 0
-    @test haskey(result, "candidate_table_humidity_tribin_constrained_descent_summary")
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["present"]
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["status"] in (
-        "humidity_tribin_constrained_descent_improved",
-        "humidity_tribin_constrained_descent_no_descent",
-    )
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["present_count"] >= 1
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["tested_tolerance_count"] >= 1
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["best_accepted_move_count"] >= 0
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["best_aggregate_loss_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["best_worst_loss_ratio"] >= 0
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["best_worst_loss_ratio_reduction_factor"] >= 0
-    @test result["candidate_table_humidity_tribin_constrained_descent_summary"]["best_final_improved_count"] >= 0
     @test result["ckdmip_preflight_status"] in (
         "missing_ckdmip_data_root",
         "incomplete_ckdmip_upstream_data",
@@ -320,16 +124,6 @@ end
     @test result["reduced_model_summary"]["hard_boundary_forcing_threshold_w_m2"] == 0.3
     @test result["reduced_model_summary"]["official_32x32_worst_boundary_forcing_error_w_m2"] < 0.3
     @test haskey(result["reduced_model_summary"], "best_reduced_candidate")
-    @test haskey(result, "reduced_near_miss_summary")
-    @test result["reduced_near_miss_summary"]["present"]
-    @test result["reduced_near_miss_summary"]["ng_lw"] == 32
-    @test result["reduced_near_miss_summary"]["ng_sw"] == 31
-    @test result["reduced_near_miss_summary"]["limiting_metric"] == "heating_rate_rmse"
-    @test result["reduced_near_miss_summary"]["limiting_metric_ratio"] > 12
-    @test result["reduced_near_miss_summary"]["objective_best_omitted_gpoint"] == 23
-    @test result["reduced_near_miss_summary"]["objective_best_limiting_metric"] ==
-          "heating_rate_rmse"
-    @test 1.6 < result["reduced_near_miss_summary"]["objective_best_objective"] < 1.7
     @test haskey(result, "published_model_accuracy_summary")
     @test result["published_model_accuracy_summary"]["present"]
     @test result["published_model_accuracy_summary"]["status"] == "passed"
@@ -354,26 +148,6 @@ end
     @test result["published_all_sky_accuracy_summary"]["passed_count"] >= 1
     @test result["published_all_sky_accuracy_summary"]["passed_count"] <= 6
     @test result["published_all_sky_accuracy_summary"]["worst_hard_objective"] > 0
-    @test haskey(result, "reduced_weight_coordinate_summary")
-    @test result["reduced_weight_coordinate_summary"]["present"]
-    @test result["reduced_weight_coordinate_summary"]["accepted"]
-    @test result["reduced_weight_coordinate_summary"]["omitted_gpoint"] == 23
-    @test 1.48 < result["reduced_weight_coordinate_summary"]["accepted_objective"] < 1.49
-    @test result["reduced_weight_coordinate_summary"]["accepted_worst_boundary_forcing_error_w_m2"] < 0.3
-    @test haskey(result, "reduced_weight_coordinate_descent_summary")
-    @test result["reduced_weight_coordinate_descent_summary"]["present"]
-    @test result["reduced_weight_coordinate_descent_summary"]["accepted"]
-    @test result["reduced_weight_coordinate_descent_summary"]["omitted_gpoint"] == 23
-    @test result["reduced_weight_coordinate_descent_summary"]["accepted_move_count"] == 6
-    @test 1.26 < result["reduced_weight_coordinate_descent_summary"]["final_objective"] < 1.27
-    @test result["reduced_weight_coordinate_descent_summary"]["final_worst_boundary_forcing_error_w_m2"] < 0.3
-    @test haskey(result, "reduced_weight_coordinate_descent_continuation_summary")
-    @test result["reduced_weight_coordinate_descent_continuation_summary"]["present"]
-    @test result["reduced_weight_coordinate_descent_continuation_summary"]["accepted"]
-    @test result["reduced_weight_coordinate_descent_continuation_summary"]["omitted_gpoint"] == 23
-    @test result["reduced_weight_coordinate_descent_continuation_summary"]["accepted_move_count"] == 8
-    @test 1.08 < result["reduced_weight_coordinate_descent_continuation_summary"]["final_objective"] < 1.09
-    @test result["reduced_weight_coordinate_descent_continuation_summary"]["final_worst_boundary_forcing_error_w_m2"] < 0.3
     @test haskey(result, "reduced_weight_coordinate_boundary_polish_summary")
     @test result["reduced_weight_coordinate_boundary_polish_summary"]["present"]
     @test result["reduced_weight_coordinate_boundary_polish_summary"]["accepted"]
@@ -414,12 +188,7 @@ end
     @test occursin("Quantitative Reduced-Model Status", markdown)
     @test occursin("64x96", markdown) || occursin("64x64", markdown)
     @test occursin("boundary-projection diagnostics", markdown)
-    @test occursin("Reduced near-miss limiter", markdown)
-    @test occursin("Objective-best dense leave-one-out diagnostic", markdown)
     @test occursin("omitted SW g-point 23", markdown)
-    @test occursin("Exact weight-coordinate improvement", markdown)
-    @test occursin("Exact weight-coordinate descent", markdown)
-    @test occursin("heating_rate_rmse", markdown)
     @test occursin("Quantitative Training-Recovery Status", markdown)
     @test occursin("Original objective terms:", markdown)
     @test occursin("CKDMIP objective dataset:", markdown)
@@ -427,26 +196,6 @@ end
     @test occursin("Published recovery target:", markdown)
     @test occursin("Published recovery vector:", markdown)
     @test occursin("Published recovery vector training:", markdown)
-    @test occursin("Candidate original-objective score:", markdown)
-    @test occursin("Candidate transfer smoke:", markdown)
-    @test occursin("Candidate transfer optimizer probe:", markdown)
-    @test occursin("Candidate table-parameter probe:", markdown)
-    @test occursin("Candidate table-writeback probe:", markdown)
-    @test occursin("Candidate table-writeback continuation:", markdown)
-    @test occursin("Candidate table-writeback multisample:", markdown)
-    @test occursin("Candidate table multisample optimizer:", markdown)
-    @test occursin("Candidate table written-coordinate scan:", markdown)
-    @test occursin("Candidate table written-coordinate descent:", markdown)
-    @test occursin("Candidate table written minimax descent:", markdown)
-    @test occursin("Candidate table humidity-split probe:", markdown)
-    @test occursin("Candidate table humidity-split descent:", markdown)
-    @test occursin("Candidate table humidity-tribin probe:", markdown)
-    @test occursin("Candidate table humidity-tribin descent:", markdown)
-    @test occursin("Candidate table humidity-tribin weighted descent:",
-                   markdown)
-    @test occursin("Candidate table humidity-tribin constrained descent:",
-                   markdown)
-    @test occursin("projected loss", markdown)
     @test occursin("final/target", markdown)
     @test occursin("RH_CKDMIP_DATA_PATH", markdown) ||
           occursin("derived ecCKD", markdown)

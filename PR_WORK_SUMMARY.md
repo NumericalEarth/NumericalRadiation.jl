@@ -12,9 +12,11 @@ substantially advanced; exact Reactant/Enzyme original-objective recovery is now
 unblocked by data availability but still has to quantitatively recover a
 published ecCKD model.
 
-`radiative_heating.md` is the design contract; `validation/goal_audit.md`,
-`validation/prompt_to_artifact_checklist.md`, and `RUNNING_REVIEW.md` are the
-working audit trail. This document is the PR narrative.
+`radiative_heating.md` is the design contract; `validation/goal_audit.md` and
+`validation/prompt_to_artifact_checklist.md` are the working audit trail. The
+full pass-numbered working log and the complete experiment artifact history
+live on the archived pre-cleanup ref `audit-trail-2026-07-17`. This document
+is the PR narrative.
 
 ---
 
@@ -237,22 +239,21 @@ gate in `validation/`.
   `ecrad_accuracy_diagnostics.jl`, `ecrad_flux_bias_diagnostics.jl`,
   `ecrad_all_sky_cloud_effect_diagnostics.jl`,
   `ecrad_all_sky_cloud_sweep.jl`, `ecrad_all_sky_optics_gap.jl`,
-  `ecrad_clear_aerosol_optics_gap.jl`,
   `ecrad_reference_optics_solver_gap.jl`, and
   `ecrad_cloud_scattering_tables_check.jl`.
 - **Reduced-model accuracy and band-count Pareto.**
   `validation/reduced_ecckd_accuracy.jl`,
-  `validation/reduced_ecckd_size_scan.jl`,
   `validation/ecckd_band_accuracy_pareto.jl`,
-  `validation/ecckd_32b_baseline_check.jl`, and a deep family of optimizer
-  scripts (`reduced_ecckd_constrained_table_optimizer.jl`,
-  `reduced_ecckd_optimization_preflight.jl`,
-  `reduced_ecckd_pressure_band_refinement_preflight.jl`, and ~80 more
-  fine-grained refinement / continuation / scan variants — all driven from
-  `validation/reduced_ecckd_gap_report.jl`).
+  `validation/ecckd_32b_baseline_check.jl`, and the optimization preflights
+  (`reduced_ecckd_optimization_preflight.jl`,
+  `reduced_ecckd_pressure_band_refinement_preflight.jl`). The ~120
+  fine-grained refinement / continuation / scan experiment scripts that
+  produced the current best candidates were removed during cleanup and are
+  preserved on the archived ref `audit-trail-2026-07-17`; their accepted
+  moves survive as compact committed artifacts consumed by
+  `reduced_ecckd_accuracy.jl`.
   The current Pareto artifact combines the bespoke reduced-candidate rows,
-  simple size-scan rows, leave-one-out official shortwave g-point scans,
-  exact weight-coordinate continuation diagnostics, and direct published-model
+  the boundary-polished 32×31 candidate, and direct published-model
   accuracy diagnostics for the promoted official 32×32, 32×64, 32×96, 64×32,
   64×64, and 64×96 combinations, giving 109 accuracy-vs-band-count points in
   `validation/results/ecckd_band_accuracy_pareto.{json,md,csv,svg}`.
@@ -1032,9 +1033,10 @@ launcher in §4.3 — it is restart-safe.
   Code review can scope to `src/`, `ext/`, `test/`, `docs/`, and
   `examples/`; the `validation/results/*.{json,md}` are evidence rather than
   code. The `*_recovered_candidate.nc` files are gitignored.
-- `RUNNING_REVIEW.md` is the working pass-numbered log. It is verbose
-  (~1.9 MB) and intentionally not curated; treat it as the audit trail, not
-  as the PR description.
+- The uncurated pass-numbered working log (`RUNNING_REVIEW.md`) and the full
+  optimizer-experiment artifact history were removed from the branch during
+  cleanup; both are preserved on the archived ref `audit-trail-2026-07-17`
+  (branch `audit-trail-pre-cleanup`).
 - `radiative_heating.md` is the design contract and acceptance criteria.
 - `FUTURE_WORK.md` scopes two extensions outside the current goal: an
   all-sky longwave variant of the Williams (2026) scheme and a two-band

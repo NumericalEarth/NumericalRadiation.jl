@@ -26,56 +26,11 @@ const PUBLISHED_RECOVERY_VECTOR_JSON =
     joinpath(RESULTS_DIR, "ecckd_published_recovery_vector.json")
 const PUBLISHED_RECOVERY_VECTOR_TRAINING_JSON =
     joinpath(RESULTS_DIR, "ecckd_published_recovery_vector_training.json")
-const CANDIDATE_OBJECTIVE_SCORE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_original_objective_score.json")
-const CANDIDATE_TRANSFER_SMOKE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_transfer_smoke.json")
-const CANDIDATE_TRANSFER_OPTIMIZER_PROBE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_transfer_optimizer_probe.json")
-const CANDIDATE_TABLE_PARAMETER_PROBE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_parameter_probe.json")
-const CANDIDATE_TABLE_WRITEBACK_PROBE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_writeback_probe.json")
-const CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_writeback_continuation.json")
-const CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_writeback_multisample.json")
-const CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_multisample_optimizer.json")
-const CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_written_coordinate_scan.json")
-const CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_written_coordinate_descent.json")
-const CANDIDATE_TABLE_WRITTEN_MINIMAX_DESCENT_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_written_minimax_descent.json")
-const CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_humidity_split_probe.json")
-const CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_humidity_split_descent.json")
-const CANDIDATE_TABLE_HUMIDITY_TRIBIN_PROBE_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_humidity_tribin_probe.json")
-const CANDIDATE_TABLE_HUMIDITY_TRIBIN_DESCENT_JSON =
-    joinpath(RESULTS_DIR, "ecckd_candidate_table_humidity_tribin_descent.json")
-const CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_JSON =
-    joinpath(RESULTS_DIR,
-             "ecckd_candidate_table_humidity_tribin_weighted_descent.json")
-const CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_JSON =
-    joinpath(RESULTS_DIR,
-             "ecckd_candidate_table_humidity_tribin_constrained_descent.json")
 const OFFICIAL_TRAINING_JSON = joinpath(RESULTS_DIR, "official_ecckd_training.json")
 const TRAINING_TARGETS_JSON = joinpath(RESULTS_DIR, "ecckd_training_recovery_targets.json")
 const CKDMIP_PREFLIGHT_JSON = joinpath(RESULTS_DIR, "ckdmip_training_data_preflight.json")
 const DERIVED_FLUX_PLAN_JSON = joinpath(RESULTS_DIR, "ecckd_derived_flux_generation_plan.json")
 const BAND_PARETO_JSON = joinpath(RESULTS_DIR, "ecckd_band_accuracy_pareto.json")
-const LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON =
-    joinpath(RESULTS_DIR, "reduced_ecckd_leave_one_out_refit_breakdown.json")
-const LEAVE_ONE_OUT_WEIGHT_COORDINATE_JSON =
-    joinpath(RESULTS_DIR, "reduced_ecckd_leave_one_out_weight_coordinate_scan.json")
-const LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON =
-    joinpath(RESULTS_DIR, "reduced_ecckd_leave_one_out_weight_coordinate_descent.json")
-const LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_CONTINUATION_JSON =
-    joinpath(RESULTS_DIR,
-             "reduced_ecckd_leave_one_out_weight_coordinate_descent_continuation.json")
 const LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON =
     joinpath(RESULTS_DIR,
              "reduced_ecckd_leave_one_out_weight_coordinate_boundary_polish.json")
@@ -262,143 +217,6 @@ function published_all_sky_accuracy_summary()
         passed_count = Int(json_get(data, "passed_count", 0)),
         failed_labels = failed,
         worst_hard_objective = isempty(objectives) ? nothing : maximum(objectives),
-    )
-end
-
-function reduced_near_miss_summary()
-    data = json_present(LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON)
-    data === nothing && return (
-        artifact = LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON,
-        present = false,
-        status = "missing",
-        omitted_gpoint = nothing,
-        ng_lw = 0,
-        ng_sw = 0,
-        recomputed_objective = nothing,
-        worst_case = "",
-        limiting_metric = "",
-        limiting_metric_ratio = nothing,
-        limiting_metric_value = nothing,
-        limiting_metric_threshold = nothing,
-        objective_best_omitted_gpoint = nothing,
-        objective_best_objective = nothing,
-        objective_best_limiting_metric = "",
-        objective_best_limiting_metric_ratio = nothing,
-        objective_best_limiting_metric_value = nothing,
-        objective_best_limiting_metric_threshold = nothing,
-    )
-    comparisons = json_get(data, "comparison_breakdowns", Any[])
-    objective_best = isempty(comparisons) ? nothing :
-        comparisons[argmin([Float64(json_get(row, "recomputed_objective", Inf))
-                            for row in comparisons])]
-    return (
-        artifact = LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        omitted_gpoint = json_get(data, "omitted_gpoint", nothing),
-        ng_lw = Int(json_get(data, "ng_lw", 0)),
-        ng_sw = Int(json_get(data, "ng_sw", 0)),
-        recomputed_objective = json_get(data, "recomputed_objective", nothing),
-        worst_case = String(json_get(data, "worst_case", "")),
-        limiting_metric = String(json_get(data, "limiting_metric", "")),
-        limiting_metric_ratio = json_get(data, "limiting_metric_ratio", nothing),
-        limiting_metric_value = json_get(data, "limiting_metric_value", nothing),
-        limiting_metric_threshold = json_get(data, "limiting_metric_threshold", nothing),
-        objective_best_omitted_gpoint = objective_best === nothing ? nothing :
-            json_get(objective_best, "omitted_gpoint", nothing),
-        objective_best_objective = objective_best === nothing ? nothing :
-            json_get(objective_best, "recomputed_objective", nothing),
-        objective_best_limiting_metric = objective_best === nothing ? "" :
-            String(json_get(objective_best, "limiting_metric", "")),
-        objective_best_limiting_metric_ratio = objective_best === nothing ? nothing :
-            json_get(objective_best, "limiting_metric_ratio", nothing),
-        objective_best_limiting_metric_value = objective_best === nothing ? nothing :
-            json_get(objective_best, "limiting_metric_value", nothing),
-        objective_best_limiting_metric_threshold = objective_best === nothing ? nothing :
-            json_get(objective_best, "limiting_metric_threshold", nothing),
-    )
-end
-
-function reduced_weight_coordinate_summary()
-    data = json_present(LEAVE_ONE_OUT_WEIGHT_COORDINATE_JSON)
-    data === nothing && return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_JSON,
-        present = false,
-        accepted = false,
-        omitted_gpoint = nothing,
-        accepted_objective = nothing,
-        accepted_worst_boundary_forcing_error_w_m2 = nothing,
-        accepted_worst_heating_rate_rmse_k_day = nothing,
-    )
-    return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        accepted = Bool(json_get(data, "accepted", false)),
-        omitted_gpoint = json_get(data, "omitted_gpoint", nothing),
-        base_objective = json_get(data, "base_objective", nothing),
-        accepted_objective = json_get(data, "accepted_objective", nothing),
-        accepted_objective_reduction = json_get(data, "accepted_objective_reduction", nothing),
-        accepted_worst_boundary_forcing_error_w_m2 =
-            json_get(data, "accepted_worst_boundary_forcing_error_w_m2", nothing),
-        accepted_worst_heating_rate_rmse_k_day =
-            json_get(data, "accepted_worst_heating_rate_rmse_k_day", nothing),
-    )
-end
-
-function reduced_weight_coordinate_descent_summary()
-    data = json_present(LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON)
-    data === nothing && return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON,
-        present = false,
-        accepted = false,
-        omitted_gpoint = nothing,
-        final_objective = nothing,
-        final_worst_boundary_forcing_error_w_m2 = nothing,
-        final_worst_heating_rate_rmse_k_day = nothing,
-    )
-    return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        accepted = Int(json_get(data, "accepted_move_count", 0)) > 0,
-        omitted_gpoint = json_get(data, "omitted_gpoint", nothing),
-        accepted_move_count = json_get(data, "accepted_move_count", nothing),
-        initial_objective = json_get(data, "initial_objective", nothing),
-        final_objective = json_get(data, "final_objective", nothing),
-        objective_reduction = json_get(data, "objective_reduction", nothing),
-        final_worst_boundary_forcing_error_w_m2 =
-            json_get(data, "final_worst_boundary_forcing_error_w_m2", nothing),
-        final_worst_heating_rate_rmse_k_day =
-            json_get(data, "final_worst_heating_rate_rmse_k_day", nothing),
-    )
-end
-
-function reduced_weight_coordinate_descent_continuation_summary()
-    data = json_present(LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_CONTINUATION_JSON)
-    data === nothing && return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_CONTINUATION_JSON,
-        present = false,
-        accepted = false,
-        omitted_gpoint = nothing,
-        final_objective = nothing,
-        final_worst_boundary_forcing_error_w_m2 = nothing,
-        final_worst_heating_rate_rmse_k_day = nothing,
-    )
-    return (
-        artifact = LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_CONTINUATION_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        accepted = Int(json_get(data, "accepted_move_count", 0)) > 0,
-        omitted_gpoint = json_get(data, "omitted_gpoint", nothing),
-        accepted_move_count = json_get(data, "accepted_move_count", nothing),
-        initial_objective = json_get(data, "initial_objective", nothing),
-        final_objective = json_get(data, "final_objective", nothing),
-        objective_reduction = json_get(data, "objective_reduction", nothing),
-        final_worst_boundary_forcing_error_w_m2 =
-            json_get(data, "final_worst_boundary_forcing_error_w_m2", nothing),
-        final_worst_heating_rate_rmse_k_day =
-            json_get(data, "final_worst_heating_rate_rmse_k_day", nothing),
     )
 end
 
@@ -701,521 +519,6 @@ function published_recovery_vector_training_summary()
     )
 end
 
-function candidate_objective_score_summary()
-    data = json_present(CANDIDATE_OBJECTIVE_SCORE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_OBJECTIVE_SCORE_JSON,
-        present = false,
-        status = "missing",
-        candidate_metrics_status = "missing",
-        sample_count = 0,
-        zero_forward_losses_zero = false,
-        perturbation_increases_loss = false,
-    )
-    metrics = json_get(data, "candidate_metrics", Dict{String, Any}())
-    samples = json_get(data, "sample_scores", Any[])
-    return (
-        artifact = CANDIDATE_OBJECTIVE_SCORE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        candidate_metrics_status = String(json_get(metrics, "status", "unknown")),
-        sample_count = length(samples),
-        zero_forward_losses_zero = !isempty(samples) &&
-            all(row -> Float64(json_get(row, "zero_forward_loss", Inf)) == 0.0,
-                samples),
-        perturbation_increases_loss = !isempty(samples) &&
-            all(row -> Bool(json_get(row, "loss_increases_under_perturbation", false)),
-                samples),
-    )
-end
-
-function candidate_transfer_smoke_summary()
-    data = json_present(CANDIDATE_TRANSFER_SMOKE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TRANSFER_SMOKE_JSON,
-        present = false,
-        status = "missing",
-        layer_count = 0,
-        longwave_gpoints = 0,
-        shortwave_gpoints = 0,
-        longwave_loss = nothing,
-        shortwave_loss = nothing,
-        longwave_projection_band_count = 0,
-        shortwave_projection_band_count = 0,
-        longwave_projection_loss = nothing,
-        shortwave_projection_loss = nothing,
-    )
-    scores = json_get(data, "objective_scores", Dict{String, Any}())
-    lw = json_get(scores, "longwave", Dict{String, Any}())
-    sw = json_get(scores, "shortwave", Dict{String, Any}())
-    projection_scores =
-        json_get(data, "spectral_projection_objective_scores", Dict{String, Any}())
-    projected_lw = json_get(projection_scores, "longwave", Dict{String, Any}())
-    projected_sw = json_get(projection_scores, "shortwave", Dict{String, Any}())
-    return (
-        artifact = CANDIDATE_TRANSFER_SMOKE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        layer_count = Int(json_get(data, "layer_count", 0)),
-        longwave_gpoints = Int(json_get(data, "longwave_gpoints", 0)),
-        shortwave_gpoints = Int(json_get(data, "shortwave_gpoints", 0)),
-        longwave_loss = json_get(lw, "loss", nothing),
-        shortwave_loss = json_get(sw, "loss", nothing),
-        longwave_projection_band_count =
-            Int(json_get(data, "longwave_projection_band_count", 0)),
-        shortwave_projection_band_count =
-            Int(json_get(data, "shortwave_projection_band_count", 0)),
-        longwave_projection_loss = json_get(projected_lw, "loss", nothing),
-        shortwave_projection_loss = json_get(projected_sw, "loss", nothing),
-    )
-end
-
-function candidate_transfer_optimizer_probe_summary()
-    data = json_present(CANDIDATE_TRANSFER_OPTIMIZER_PROBE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TRANSFER_OPTIMIZER_PROBE_JSON,
-        present = false,
-        status = "missing",
-        parameter_count = 0,
-        initial_loss = nothing,
-        final_loss = nothing,
-        accepted_step = false,
-        loss_reduction_factor = nothing,
-        gradient_method = "",
-    )
-    return (
-        artifact = CANDIDATE_TRANSFER_OPTIMIZER_PROBE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        parameter_count = Int(json_get(data, "parameter_count", 0)),
-        initial_loss = json_get(data, "initial_loss", nothing),
-        final_loss = json_get(data, "final_loss", nothing),
-        accepted_step = Bool(json_get(data, "accepted_step", false)),
-        loss_reduction_factor = json_get(data, "loss_reduction_factor", nothing),
-        gradient_method = String(json_get(data, "gradient_method", "")),
-    )
-end
-
-function candidate_table_parameter_probe_summary()
-    data = json_present(CANDIDATE_TABLE_PARAMETER_PROBE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_PARAMETER_PROBE_JSON,
-        present = false,
-        status = "missing",
-        parameter_count = 0,
-        initial_loss = nothing,
-        final_loss = nothing,
-        accepted_step = false,
-        loss_reduction_factor = nothing,
-        gradient_method = "",
-    )
-    return (
-        artifact = CANDIDATE_TABLE_PARAMETER_PROBE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        parameter_count = Int(json_get(data, "parameter_count", 0)),
-        initial_loss = json_get(data, "initial_loss", nothing),
-        final_loss = json_get(data, "final_loss", nothing),
-        accepted_step = Bool(json_get(data, "accepted_step", false)),
-        loss_reduction_factor = json_get(data, "loss_reduction_factor", nothing),
-        gradient_method = String(json_get(data, "gradient_method", "")),
-    )
-end
-
-function candidate_table_writeback_probe_summary()
-    data = json_present(CANDIDATE_TABLE_WRITEBACK_PROBE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_WRITEBACK_PROBE_JSON,
-        present = false,
-        status = "missing",
-        baseline_projected_loss = nothing,
-        written_projected_loss = nothing,
-        accepted_writeback = false,
-        loss_reduction_factor = nothing,
-        candidate_metrics_status = "missing",
-    )
-    return (
-        artifact = CANDIDATE_TABLE_WRITEBACK_PROBE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        baseline_projected_loss = json_get(data, "baseline_projected_loss", nothing),
-        written_projected_loss = json_get(data, "written_projected_loss", nothing),
-        accepted_writeback = Bool(json_get(data, "accepted_writeback", false)),
-        loss_reduction_factor = json_get(data, "loss_reduction_factor", nothing),
-        candidate_metrics_status = String(json_get(data, "candidate_metrics_status", "unknown")),
-    )
-end
-
-function candidate_table_writeback_continuation_summary()
-    data = json_present(CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON,
-        present = false,
-        status = "missing",
-        iterations = 0,
-        accepted_steps = 0,
-        initial_in_memory_loss = nothing,
-        final_in_memory_loss = nothing,
-        baseline_projected_loss = nothing,
-        written_projected_loss = nothing,
-        accepted_writeback = false,
-        writeback_loss_reduction_factor = nothing,
-        candidate_metrics_status = "missing",
-    )
-    return (
-        artifact = CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        iterations = Int(json_get(data, "iterations", 0)),
-        accepted_steps = Int(json_get(data, "accepted_steps", 0)),
-        initial_in_memory_loss = json_get(data, "initial_in_memory_loss", nothing),
-        final_in_memory_loss = json_get(data, "final_in_memory_loss", nothing),
-        baseline_projected_loss = json_get(data, "baseline_projected_loss", nothing),
-        written_projected_loss = json_get(data, "written_projected_loss", nothing),
-        accepted_writeback = Bool(json_get(data, "accepted_writeback", false)),
-        writeback_loss_reduction_factor =
-            json_get(data, "writeback_loss_reduction_factor", nothing),
-        candidate_metrics_status = String(json_get(data, "candidate_metrics_status", "unknown")),
-    )
-end
-
-function candidate_table_writeback_multisample_summary()
-    data = json_present(CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_JSON,
-        present = false,
-        status = "missing",
-        scenario_count = 0,
-        present_count = 0,
-        improved_count = 0,
-        worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        present_count = Int(json_get(data, "present_count", 0)),
-        improved_count = Int(json_get(data, "improved_count", 0)),
-        worst_loss_ratio = json_get(data, "worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_multisample_optimizer_summary()
-    data = json_present(CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        accepted_steps = 0,
-        aggregate_loss_reduction_factor = nothing,
-        writeback_status = "missing",
-        writeback_improved_count = 0,
-        writeback_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        accepted_steps = Int(json_get(data, "accepted_steps", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        writeback_status = String(json_get(data, "writeback_status", "unknown")),
-        writeback_improved_count = Int(json_get(data, "writeback_improved_count", 0)),
-        writeback_worst_loss_ratio = json_get(data, "writeback_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_written_coordinate_scan_summary()
-    data = json_present(CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        tested_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        best_improved_count = 0,
-        best_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_move_count = Int(json_get(data, "tested_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        best_improved_count = Int(json_get(data, "best_improved_count", 0)),
-        best_worst_loss_ratio = json_get(data, "best_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_written_coordinate_descent_summary()
-    data = json_present(CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        accepted_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        final_improved_count = 0,
-        final_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        accepted_move_count = Int(json_get(data, "accepted_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        final_improved_count = Int(json_get(data, "final_improved_count", 0)),
-        final_worst_loss_ratio = json_get(data, "final_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_written_minimax_descent_summary()
-    data = json_present(CANDIDATE_TABLE_WRITTEN_MINIMAX_DESCENT_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_WRITTEN_MINIMAX_DESCENT_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        tested_move_count = 0,
-        accepted_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        worst_loss_ratio_reduction_factor = nothing,
-        final_improved_count = 0,
-        final_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_WRITTEN_MINIMAX_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_move_count = Int(json_get(data, "tested_move_count", 0)),
-        accepted_move_count = Int(json_get(data, "accepted_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        worst_loss_ratio_reduction_factor =
-            json_get(data, "worst_loss_ratio_reduction_factor", nothing),
-        final_improved_count = Int(json_get(data, "final_improved_count", 0)),
-        final_worst_loss_ratio = json_get(data, "final_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_humidity_split_probe_summary()
-    data = json_present(CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        tested_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        worst_loss_ratio_reduction_factor = nothing,
-        best_aggregate_worst_loss_ratio = nothing,
-        best_minimax_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_move_count = Int(json_get(data, "tested_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        worst_loss_ratio_reduction_factor =
-            json_get(data, "worst_loss_ratio_reduction_factor", nothing),
-        best_aggregate_worst_loss_ratio =
-            json_get(data, "best_aggregate_worst_loss_ratio", nothing),
-        best_minimax_worst_loss_ratio =
-            json_get(data, "best_minimax_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_humidity_split_descent_summary()
-    data = json_present(CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_JSON,
-        present = false,
-        status = "missing",
-        mode = "",
-        present_count = 0,
-        scenario_count = 0,
-        tested_move_count = 0,
-        accepted_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        worst_loss_ratio_reduction_factor = nothing,
-        final_improved_count = 0,
-        final_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        mode = String(json_get(data, "mode", "")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_move_count = Int(json_get(data, "tested_move_count", 0)),
-        accepted_move_count = Int(json_get(data, "accepted_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        worst_loss_ratio_reduction_factor =
-            json_get(data, "worst_loss_ratio_reduction_factor", nothing),
-        final_improved_count = Int(json_get(data, "final_improved_count", 0)),
-        final_worst_loss_ratio = json_get(data, "final_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_humidity_tribin_probe_summary()
-    data = json_present(CANDIDATE_TABLE_HUMIDITY_TRIBIN_PROBE_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_PROBE_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        tested_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        worst_loss_ratio_reduction_factor = nothing,
-        best_aggregate_worst_loss_ratio = nothing,
-        best_minimax_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_PROBE_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_move_count = Int(json_get(data, "tested_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        worst_loss_ratio_reduction_factor =
-            json_get(data, "worst_loss_ratio_reduction_factor", nothing),
-        best_aggregate_worst_loss_ratio =
-            json_get(data, "best_aggregate_worst_loss_ratio", nothing),
-        best_minimax_worst_loss_ratio =
-            json_get(data, "best_minimax_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_humidity_tribin_descent_summary()
-    data = json_present(CANDIDATE_TABLE_HUMIDITY_TRIBIN_DESCENT_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_DESCENT_JSON,
-        present = false,
-        status = "missing",
-        mode = "",
-        present_count = 0,
-        scenario_count = 0,
-        tested_move_count = 0,
-        accepted_move_count = 0,
-        aggregate_loss_reduction_factor = nothing,
-        worst_loss_ratio_reduction_factor = nothing,
-        final_improved_count = 0,
-        final_worst_loss_ratio = nothing,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        mode = String(json_get(data, "mode", "")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_move_count = Int(json_get(data, "tested_move_count", 0)),
-        accepted_move_count = Int(json_get(data, "accepted_move_count", 0)),
-        aggregate_loss_reduction_factor =
-            json_get(data, "aggregate_loss_reduction_factor", nothing),
-        worst_loss_ratio_reduction_factor =
-            json_get(data, "worst_loss_ratio_reduction_factor", nothing),
-        final_improved_count = Int(json_get(data, "final_improved_count", 0)),
-        final_worst_loss_ratio = json_get(data, "final_worst_loss_ratio", nothing),
-    )
-end
-
-function candidate_table_humidity_tribin_weighted_descent_summary()
-    data = json_present(CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        tested_weight_set_count = 0,
-        best_accepted_move_count = 0,
-        best_weighted_loss_ratio = nothing,
-        best_weighted_loss_ratio_reduction_factor = nothing,
-        best_aggregate_loss_reduction_factor = nothing,
-        best_worst_loss_ratio = nothing,
-        best_worst_loss_ratio_reduction_factor = nothing,
-        best_final_improved_count = 0,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_weight_set_count = Int(json_get(data, "tested_weight_set_count", 0)),
-        best_accepted_move_count = Int(json_get(data, "best_accepted_move_count", 0)),
-        best_weighted_loss_ratio = json_get(data, "best_weighted_loss_ratio", nothing),
-        best_weighted_loss_ratio_reduction_factor =
-            json_get(data, "best_weighted_loss_ratio_reduction_factor", nothing),
-        best_aggregate_loss_reduction_factor =
-            json_get(data, "best_aggregate_loss_reduction_factor", nothing),
-        best_worst_loss_ratio = json_get(data, "best_worst_loss_ratio", nothing),
-        best_worst_loss_ratio_reduction_factor =
-            json_get(data, "best_worst_loss_ratio_reduction_factor", nothing),
-        best_final_improved_count = Int(json_get(data, "best_final_improved_count", 0)),
-    )
-end
-
-function candidate_table_humidity_tribin_constrained_descent_summary()
-    data = json_present(CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_JSON)
-    data === nothing && return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_JSON,
-        present = false,
-        status = "missing",
-        present_count = 0,
-        scenario_count = 0,
-        tested_tolerance_count = 0,
-        best_accepted_move_count = 0,
-        best_aggregate_loss_reduction_factor = nothing,
-        best_worst_loss_ratio = nothing,
-        best_worst_loss_ratio_reduction_factor = nothing,
-        best_final_improved_count = 0,
-    )
-    return (
-        artifact = CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_JSON,
-        present = true,
-        status = String(json_get(data, "status", "unknown")),
-        present_count = Int(json_get(data, "present_count", 0)),
-        scenario_count = Int(json_get(data, "scenario_count", 0)),
-        tested_tolerance_count = Int(json_get(data, "tested_tolerance_count", 0)),
-        best_accepted_move_count = Int(json_get(data, "best_accepted_move_count", 0)),
-        best_aggregate_loss_reduction_factor =
-            json_get(data, "best_aggregate_loss_reduction_factor", nothing),
-        best_worst_loss_ratio = json_get(data, "best_worst_loss_ratio", nothing),
-        best_worst_loss_ratio_reduction_factor =
-            json_get(data, "best_worst_loss_ratio_reduction_factor", nothing),
-        best_final_improved_count = Int(json_get(data, "best_final_improved_count", 0)),
-    )
-end
 
 function raw_derived_chunk_count(root, relative_path)
     root isa AbstractString || return 0
@@ -1371,13 +674,9 @@ end
 
 function run_recovery_goal_audit()
     reduced = reduced_model_summary()
-    near_miss = reduced_near_miss_summary()
     published_accuracy = published_model_accuracy_summary()
     matched_references = matched_reference_summary()
     published_all_sky = published_all_sky_accuracy_summary()
-    weight_coordinate = reduced_weight_coordinate_summary()
-    weight_descent = reduced_weight_coordinate_descent_summary()
-    weight_continuation = reduced_weight_coordinate_descent_continuation_summary()
     weight_polish = reduced_weight_coordinate_boundary_polish_summary()
     breeze = breeze_summary()
     official_training = official_training_summary()
@@ -1388,35 +687,6 @@ function run_recovery_goal_audit()
     published_recovery_target = published_recovery_target_summary()
     published_recovery_vector = published_recovery_vector_summary()
     published_recovery_vector_training = published_recovery_vector_training_summary()
-    candidate_objective_score = candidate_objective_score_summary()
-    candidate_transfer_smoke = candidate_transfer_smoke_summary()
-    candidate_transfer_optimizer_probe = candidate_transfer_optimizer_probe_summary()
-    candidate_table_parameter_probe = candidate_table_parameter_probe_summary()
-    candidate_table_writeback_probe = candidate_table_writeback_probe_summary()
-    candidate_table_writeback_continuation =
-        candidate_table_writeback_continuation_summary()
-    candidate_table_writeback_multisample =
-        candidate_table_writeback_multisample_summary()
-    candidate_table_multisample_optimizer =
-        candidate_table_multisample_optimizer_summary()
-    candidate_table_written_coordinate_scan =
-        candidate_table_written_coordinate_scan_summary()
-    candidate_table_written_coordinate_descent =
-        candidate_table_written_coordinate_descent_summary()
-    candidate_table_written_minimax_descent =
-        candidate_table_written_minimax_descent_summary()
-    candidate_table_humidity_split_probe =
-        candidate_table_humidity_split_probe_summary()
-    candidate_table_humidity_split_descent =
-        candidate_table_humidity_split_descent_summary()
-    candidate_table_humidity_tribin_probe =
-        candidate_table_humidity_tribin_probe_summary()
-    candidate_table_humidity_tribin_descent =
-        candidate_table_humidity_tribin_descent_summary()
-    candidate_table_humidity_tribin_weighted_descent =
-        candidate_table_humidity_tribin_weighted_descent_summary()
-    candidate_table_humidity_tribin_constrained_descent =
-        candidate_table_humidity_tribin_constrained_descent_summary()
     teacher = json_present(TEACHER_STUDENT_SCAN_JSON)
     objective = json_present(OBJECTIVE_RECONSTRUCTION_JSON)
     ckdmip = json_present(CKDMIP_PREFLIGHT_JSON)
@@ -1448,25 +718,13 @@ function run_recovery_goal_audit()
             MATCHED_REFERENCE_PLAN_JSON,
             REDUCED_ACCURACY_JSON,
             BAND_PARETO_JSON,
-            LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_CONTINUATION_JSON,
             LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON,
         ],
         finding = reduced.reduced_candidates_passed ?
             "The promoted 32x32, 32x64, 32x96, 64x32, 64x64, and 64x96 published ecCKD combinations and at least one reduced candidate pass the clean package-native hard thresholds; $(matched_references.all_sky_ready_count)/$(matched_references.all_sky_case_count) all-sky promoted-combination reference products are present with matching spectral boundaries, and package all-sky comparisons currently pass $(published_all_sky.passed_count)/$(published_all_sky.model_count) promoted rows, while lower-band reduced variants remain incomplete." :
             weight_polish.passed ?
             "Full official ecCKD 32x32 passes and the exact g$(weight_polish.omitted_gpoint) 32x31 weight-coordinate boundary polish now passes the hard objective at $(weight_polish.final_objective)x while keeping boundary forcing at $(weight_polish.final_worst_boundary_forcing_error_w_m2) W m^-2." :
-            weight_continuation.accepted ?
-            "Full official ecCKD 32x32 passes, but reduced candidates still fail the hard thresholds; exact g$(weight_continuation.omitted_gpoint) weight-coordinate descent continuation improves the 32x31 objective to $(weight_continuation.final_objective)x while keeping boundary forcing at $(weight_continuation.final_worst_boundary_forcing_error_w_m2) W m^-2." :
-            weight_descent.accepted ?
-            "Full official ecCKD 32x32 passes, but reduced candidates still fail the hard thresholds; exact g$(weight_descent.omitted_gpoint) weight-coordinate descent improves the 32x31 objective to $(weight_descent.final_objective)x while keeping boundary forcing at $(weight_descent.final_worst_boundary_forcing_error_w_m2) W m^-2." :
-            weight_coordinate.accepted ?
-            "Full official ecCKD 32x32 passes, but reduced candidates still fail the hard thresholds; an exact g$(weight_coordinate.omitted_gpoint) weight-coordinate move improves the 32x31 objective to $(weight_coordinate.accepted_objective)x while keeping boundary forcing at $(weight_coordinate.accepted_worst_boundary_forcing_error_w_m2) W m^-2." :
-            near_miss.present ?
-            "Full official ecCKD 32x32 passes, but reduced candidates still fail the hard thresholds; the 32x$(near_miss.ng_sw) boundary-best leave-one-out row is limited by $(near_miss.limiting_metric) at $(near_miss.limiting_metric_ratio)x threshold, while the objective-best omitted-g$(near_miss.objective_best_omitted_gpoint) row is at $(near_miss.objective_best_objective)x." :
-            "Full official ecCKD 32x32 passes, but currently measured reduced 16-g shortwave candidates fail the hard thresholds.",
+            "Full official ecCKD 32x32 passes, but currently measured reduced shortwave candidates fail the hard thresholds.",
     ))
 
     rrtmgp_status = json_status(RRTMGP_COMPARISON_JSON) == "passed" &&
@@ -1479,25 +737,13 @@ function run_recovery_goal_audit()
             RRTMGP_COMPARISON_JSON,
             REDUCED_ACCURACY_JSON,
             BAND_PARETO_JSON,
-            LEAVE_ONE_OUT_REFIT_BREAKDOWN_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_JSON,
-            LEAVE_ONE_OUT_WEIGHT_COORDINATE_DESCENT_CONTINUATION_JSON,
             LEAVE_ONE_OUT_WEIGHT_COORDINATE_BOUNDARY_POLISH_JSON,
         ],
         finding = reduced.reduced_candidates_passed ?
             "RRTMGP comparison metrics are emitted and at least one reduced candidate passes hard thresholds." :
             weight_polish.passed ?
             "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, and the best tracked 31-SW row now passes the exact hard objective at $(weight_polish.final_objective)x with boundary forcing $(weight_polish.final_worst_boundary_forcing_error_w_m2) W m^-2." :
-            weight_continuation.accepted ?
-            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria; the best tracked 31-SW row is heating-rate limited at $(weight_continuation.final_objective)x after exact weight-coordinate descent continuation." :
-            weight_descent.accepted ?
-            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria; the best tracked 31-SW row is heating-rate limited at $(weight_descent.final_objective)x after exact weight-coordinate descent." :
-            weight_coordinate.accepted ?
-            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria; the best tracked 31-SW row is heating-rate limited at $(weight_coordinate.accepted_objective)x after an exact weight-coordinate improvement." :
-            near_miss.present ?
-            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria; the objective-best 31-SW near-miss is heating-rate limited at $(near_miss.objective_best_limiting_metric_ratio)x." :
-            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced 16-g candidates do not yet pass hard accuracy criteria.",
+            "RRTMGP comparison metrics are emitted for the official 32x32 path on representative states, but reduced candidates do not yet pass hard accuracy criteria.",
     ))
 
     breeze_passed = breeze.present && breeze.runtime_supported &&
@@ -1530,23 +776,6 @@ function run_recovery_goal_audit()
             PUBLISHED_RECOVERY_TARGET_JSON,
             PUBLISHED_RECOVERY_VECTOR_JSON,
             PUBLISHED_RECOVERY_VECTOR_TRAINING_JSON,
-            CANDIDATE_OBJECTIVE_SCORE_JSON,
-            CANDIDATE_TRANSFER_SMOKE_JSON,
-            CANDIDATE_TRANSFER_OPTIMIZER_PROBE_JSON,
-            CANDIDATE_TABLE_PARAMETER_PROBE_JSON,
-            CANDIDATE_TABLE_WRITEBACK_PROBE_JSON,
-            CANDIDATE_TABLE_WRITEBACK_CONTINUATION_JSON,
-            CANDIDATE_TABLE_WRITEBACK_MULTISAMPLE_JSON,
-            CANDIDATE_TABLE_MULTISAMPLE_OPTIMIZER_JSON,
-            CANDIDATE_TABLE_WRITTEN_COORDINATE_SCAN_JSON,
-            CANDIDATE_TABLE_WRITTEN_COORDINATE_DESCENT_JSON,
-            CANDIDATE_TABLE_WRITTEN_MINIMAX_DESCENT_JSON,
-            CANDIDATE_TABLE_HUMIDITY_SPLIT_PROBE_JSON,
-            CANDIDATE_TABLE_HUMIDITY_SPLIT_DESCENT_JSON,
-            CANDIDATE_TABLE_HUMIDITY_TRIBIN_PROBE_JSON,
-            CANDIDATE_TABLE_HUMIDITY_TRIBIN_DESCENT_JSON,
-            CANDIDATE_TABLE_HUMIDITY_TRIBIN_WEIGHTED_DESCENT_JSON,
-            CANDIDATE_TABLE_HUMIDITY_TRIBIN_CONSTRAINED_DESCENT_JSON,
             CKDMIP_PREFLIGHT_JSON,
             DERIVED_FLUX_PLAN_JSON,
         ],
@@ -1582,10 +811,6 @@ function run_recovery_goal_audit()
         published_model_accuracy_summary = published_accuracy,
         matched_reference_summary = matched_references,
         published_all_sky_accuracy_summary = published_all_sky,
-        reduced_near_miss_summary = near_miss,
-        reduced_weight_coordinate_summary = weight_coordinate,
-        reduced_weight_coordinate_descent_summary = weight_descent,
-        reduced_weight_coordinate_descent_continuation_summary = weight_continuation,
         reduced_weight_coordinate_boundary_polish_summary = weight_polish,
         breeze_summary = breeze,
         ckdmip_preflight_status = ckdmip_preflight_status,
@@ -1597,35 +822,6 @@ function run_recovery_goal_audit()
         published_recovery_target_summary = published_recovery_target,
         published_recovery_vector_summary = published_recovery_vector,
         published_recovery_vector_training_summary = published_recovery_vector_training,
-        candidate_objective_score_summary = candidate_objective_score,
-        candidate_transfer_smoke_summary = candidate_transfer_smoke,
-        candidate_transfer_optimizer_probe_summary = candidate_transfer_optimizer_probe,
-        candidate_table_parameter_probe_summary = candidate_table_parameter_probe,
-        candidate_table_writeback_probe_summary = candidate_table_writeback_probe,
-        candidate_table_writeback_continuation_summary =
-            candidate_table_writeback_continuation,
-        candidate_table_writeback_multisample_summary =
-            candidate_table_writeback_multisample,
-        candidate_table_multisample_optimizer_summary =
-            candidate_table_multisample_optimizer,
-        candidate_table_written_coordinate_scan_summary =
-            candidate_table_written_coordinate_scan,
-        candidate_table_written_coordinate_descent_summary =
-            candidate_table_written_coordinate_descent,
-        candidate_table_written_minimax_descent_summary =
-            candidate_table_written_minimax_descent,
-        candidate_table_humidity_split_probe_summary =
-            candidate_table_humidity_split_probe,
-        candidate_table_humidity_split_descent_summary =
-            candidate_table_humidity_split_descent,
-        candidate_table_humidity_tribin_probe_summary =
-            candidate_table_humidity_tribin_probe,
-        candidate_table_humidity_tribin_descent_summary =
-            candidate_table_humidity_tribin_descent,
-        candidate_table_humidity_tribin_weighted_descent_summary =
-            candidate_table_humidity_tribin_weighted_descent,
-        candidate_table_humidity_tribin_constrained_descent_summary =
-            candidate_table_humidity_tribin_constrained_descent,
         original_objective_assets_ready = original_objective_assets_ready,
         official_training_summary = official_training,
         training_recovery_targets_summary = training_targets,
@@ -1666,23 +862,6 @@ function markdown_audit(result)
         "- Published recovery target status: `$(result.published_recovery_target_summary.status)`",
         "- Published recovery vector status: `$(result.published_recovery_vector_summary.status)`",
         "- Published recovery vector training status: `$(result.published_recovery_vector_training_summary.status)`",
-        "- Candidate original-objective score status: `$(result.candidate_objective_score_summary.status)`",
-        "- Candidate transfer smoke status: `$(result.candidate_transfer_smoke_summary.status)`",
-        "- Candidate transfer optimizer probe status: `$(result.candidate_transfer_optimizer_probe_summary.status)`",
-        "- Candidate table-parameter probe status: `$(result.candidate_table_parameter_probe_summary.status)`",
-        "- Candidate table-writeback probe status: `$(result.candidate_table_writeback_probe_summary.status)`",
-        "- Candidate table-writeback continuation status: `$(result.candidate_table_writeback_continuation_summary.status)`",
-        "- Candidate table-writeback multisample status: `$(result.candidate_table_writeback_multisample_summary.status)`",
-        "- Candidate table multisample optimizer status: `$(result.candidate_table_multisample_optimizer_summary.status)`",
-        "- Candidate table written-coordinate scan status: `$(result.candidate_table_written_coordinate_scan_summary.status)`",
-        "- Candidate table written-coordinate descent status: `$(result.candidate_table_written_coordinate_descent_summary.status)`",
-        "- Candidate table written minimax descent status: `$(result.candidate_table_written_minimax_descent_summary.status)`",
-        "- Candidate table humidity-split probe status: `$(result.candidate_table_humidity_split_probe_summary.status)`",
-        "- Candidate table humidity-split descent status: `$(result.candidate_table_humidity_split_descent_summary.status)`",
-        "- Candidate table humidity-tribin probe status: `$(result.candidate_table_humidity_tribin_probe_summary.status)`",
-        "- Candidate table humidity-tribin descent status: `$(result.candidate_table_humidity_tribin_descent_summary.status)`",
-        "- Candidate table humidity-tribin weighted descent status: `$(result.candidate_table_humidity_tribin_weighted_descent_summary.status)`",
-        "- Candidate table humidity-tribin constrained descent status: `$(result.candidate_table_humidity_tribin_constrained_descent_summary.status)`",
         "- Official training artifact status: `$(result.official_training_summary.status)`",
         "- Official training final objective / target: `$(result.official_training_summary.final_objective_target_ratio)`",
         "- Training recovery target status: `$(result.training_recovery_targets_summary.status)`",
@@ -1701,7 +880,6 @@ function markdown_audit(result)
         "- Official 32x32 worst boundary forcing error: `$(result.reduced_model_summary.official_32x32_worst_boundary_forcing_error_w_m2)` W m^-2",
         "- Published model accuracy status: `$(result.published_model_accuracy_summary.status)` ($(result.published_model_accuracy_summary.passed_count)/$(result.published_model_accuracy_summary.model_count) passing)",
         "- Published model boundary compatibility: `$(result.published_model_accuracy_summary.boundary_compatible_count)/$(result.published_model_accuracy_summary.model_count)` rows with matching LW surface spectral and SW surface-albedo g-point boundaries; isolation diagnostics: `$(result.published_model_accuracy_summary.isolation_diagnostic_count)`; boundary-projection diagnostics: `$(result.published_model_accuracy_summary.boundary_projection_diagnostic_count)`",
-        "- Reduced near-miss limiter: `$(result.reduced_near_miss_summary.limiting_metric)` at `$(result.reduced_near_miss_summary.limiting_metric_ratio)`x threshold",
         "",
         "## Requirements",
         "",
@@ -1723,10 +901,6 @@ function markdown_audit(result)
     end
     push!(lines, "", "## Quantitative Reduced-Model Status", "")
     best = result.reduced_model_summary.best_reduced_candidate
-    near_miss = result.reduced_near_miss_summary
-    weight_coordinate = result.reduced_weight_coordinate_summary
-    weight_descent = result.reduced_weight_coordinate_descent_summary
-    weight_continuation = result.reduced_weight_coordinate_descent_continuation_summary
     weight_polish = result.reduced_weight_coordinate_boundary_polish_summary
     if best === nothing
         push!(lines, "No reduced candidate metrics are currently available.")
@@ -1736,26 +910,6 @@ function markdown_audit(result)
         push!(lines,
             "- Worst boundary forcing error: $(best.worst_boundary_forcing_error_w_m2) W m^-2 (TOA $(best.worst_toa_forcing_error_w_m2), surface $(best.worst_surface_forcing_error_w_m2)).")
         push!(lines, "- Method: $(best.reduction_method)")
-    end
-    if near_miss.present
-        push!(lines,
-            "- Boundary-best dense leave-one-out diagnostic: $(near_miss.ng_lw)x$(near_miss.ng_sw), omitted SW g-point $(near_miss.omitted_gpoint), status=$(near_miss.status).")
-        push!(lines,
-            "- Near-miss limiter: $(near_miss.worst_case) $(near_miss.limiting_metric) = $(near_miss.limiting_metric_value) / $(near_miss.limiting_metric_threshold) = $(near_miss.limiting_metric_ratio)x.")
-        push!(lines,
-            "- Objective-best dense leave-one-out diagnostic: omitted SW g-point $(near_miss.objective_best_omitted_gpoint), objective=$(near_miss.objective_best_objective)x, limiter $(near_miss.objective_best_limiting_metric) = $(near_miss.objective_best_limiting_metric_value) / $(near_miss.objective_best_limiting_metric_threshold) = $(near_miss.objective_best_limiting_metric_ratio)x.")
-    end
-    if weight_coordinate.present
-        push!(lines,
-            "- Exact weight-coordinate improvement: omitted SW g-point $(weight_coordinate.omitted_gpoint), accepted=$(weight_coordinate.accepted), objective $(weight_coordinate.base_objective) -> $(weight_coordinate.accepted_objective), boundary $(weight_coordinate.accepted_worst_boundary_forcing_error_w_m2) W m^-2, heating RMSE $(weight_coordinate.accepted_worst_heating_rate_rmse_k_day) K day^-1.")
-    end
-    if weight_descent.present
-        push!(lines,
-            "- Exact weight-coordinate descent: omitted SW g-point $(weight_descent.omitted_gpoint), accepted moves=$(weight_descent.accepted_move_count), objective $(weight_descent.initial_objective) -> $(weight_descent.final_objective), boundary $(weight_descent.final_worst_boundary_forcing_error_w_m2) W m^-2, heating RMSE $(weight_descent.final_worst_heating_rate_rmse_k_day) K day^-1.")
-    end
-    if weight_continuation.present
-        push!(lines,
-            "- Exact weight-coordinate descent continuation: omitted SW g-point $(weight_continuation.omitted_gpoint), accepted moves=$(weight_continuation.accepted_move_count), objective $(weight_continuation.initial_objective) -> $(weight_continuation.final_objective), boundary $(weight_continuation.final_worst_boundary_forcing_error_w_m2) W m^-2, heating RMSE $(weight_continuation.final_worst_heating_rate_rmse_k_day) K day^-1.")
     end
     if weight_polish.present
         push!(lines,
@@ -1780,59 +934,6 @@ function markdown_audit(result)
     recovery_vector_training = result.published_recovery_vector_training_summary
     push!(lines,
         "- Published recovery vector training: status=$(recovery_vector_training.status), trained parameters=$(recovery_vector_training.trained_parameter_count)/$(recovery_vector_training.parameter_count), final loss=$(recovery_vector_training.final_loss), loss reduction=$(recovery_vector_training.loss_reduction_factor), Enzyme requested=$(recovery_vector_training.enzyme_requested), Reactant requested=$(recovery_vector_training.reactant_check_requested), metrics=$(recovery_vector_training.recovery_metrics_status).")
-    candidate_score = result.candidate_objective_score_summary
-    push!(lines,
-        "- Candidate original-objective score: status=$(candidate_score.status), candidate metrics=$(candidate_score.candidate_metrics_status), samples=$(candidate_score.sample_count), zero-forward losses zero=$(candidate_score.zero_forward_losses_zero), perturbation increases loss=$(candidate_score.perturbation_increases_loss).")
-    transfer_smoke = result.candidate_transfer_smoke_summary
-    push!(lines,
-        "- Candidate transfer smoke: status=$(transfer_smoke.status), layers=$(transfer_smoke.layer_count), LW g-points=$(transfer_smoke.longwave_gpoints), SW g-points=$(transfer_smoke.shortwave_gpoints), LW broadband loss=$(transfer_smoke.longwave_loss), SW broadband loss=$(transfer_smoke.shortwave_loss), LW projected bands=$(transfer_smoke.longwave_projection_band_count), SW projected bands=$(transfer_smoke.shortwave_projection_band_count), LW projected loss=$(transfer_smoke.longwave_projection_loss), SW projected loss=$(transfer_smoke.shortwave_projection_loss).")
-    transfer_optimizer = result.candidate_transfer_optimizer_probe_summary
-    push!(lines,
-        "- Candidate transfer optimizer probe: status=$(transfer_optimizer.status), parameters=$(transfer_optimizer.parameter_count), initial projected loss=$(transfer_optimizer.initial_loss), final projected loss=$(transfer_optimizer.final_loss), accepted step=$(transfer_optimizer.accepted_step), loss reduction=$(transfer_optimizer.loss_reduction_factor), gradient=$(transfer_optimizer.gradient_method).")
-    table_probe = result.candidate_table_parameter_probe_summary
-    push!(lines,
-        "- Candidate table-parameter probe: status=$(table_probe.status), parameters=$(table_probe.parameter_count), initial SW projected loss=$(table_probe.initial_loss), final SW projected loss=$(table_probe.final_loss), accepted step=$(table_probe.accepted_step), loss reduction=$(table_probe.loss_reduction_factor), gradient=$(table_probe.gradient_method).")
-    writeback_probe = result.candidate_table_writeback_probe_summary
-    push!(lines,
-        "- Candidate table-writeback probe: status=$(writeback_probe.status), baseline SW projected loss=$(writeback_probe.baseline_projected_loss), written SW projected loss=$(writeback_probe.written_projected_loss), accepted writeback=$(writeback_probe.accepted_writeback), loss reduction=$(writeback_probe.loss_reduction_factor), candidate metrics=$(writeback_probe.candidate_metrics_status).")
-    writeback_continuation = result.candidate_table_writeback_continuation_summary
-    push!(lines,
-        "- Candidate table-writeback continuation: status=$(writeback_continuation.status), iterations=$(writeback_continuation.iterations), accepted steps=$(writeback_continuation.accepted_steps), in-memory loss $(writeback_continuation.initial_in_memory_loss) -> $(writeback_continuation.final_in_memory_loss), written SW projected loss $(writeback_continuation.baseline_projected_loss) -> $(writeback_continuation.written_projected_loss), accepted writeback=$(writeback_continuation.accepted_writeback), writeback reduction=$(writeback_continuation.writeback_loss_reduction_factor), candidate metrics=$(writeback_continuation.candidate_metrics_status).")
-    writeback_multisample = result.candidate_table_writeback_multisample_summary
-    push!(lines,
-        "- Candidate table-writeback multisample: status=$(writeback_multisample.status), scenarios=$(writeback_multisample.present_count)/$(writeback_multisample.scenario_count), improved=$(writeback_multisample.improved_count), worst loss ratio=$(writeback_multisample.worst_loss_ratio).")
-    table_multisample_optimizer = result.candidate_table_multisample_optimizer_summary
-    push!(lines,
-        "- Candidate table multisample optimizer: status=$(table_multisample_optimizer.status), scenarios=$(table_multisample_optimizer.present_count)/$(table_multisample_optimizer.scenario_count), accepted steps=$(table_multisample_optimizer.accepted_steps), aggregate reduction=$(table_multisample_optimizer.aggregate_loss_reduction_factor), writeback=$(table_multisample_optimizer.writeback_status), writeback improved=$(table_multisample_optimizer.writeback_improved_count), worst writeback loss ratio=$(table_multisample_optimizer.writeback_worst_loss_ratio).")
-    table_written_scan = result.candidate_table_written_coordinate_scan_summary
-    push!(lines,
-        "- Candidate table written-coordinate scan: status=$(table_written_scan.status), scenarios=$(table_written_scan.present_count)/$(table_written_scan.scenario_count), tested moves=$(table_written_scan.tested_move_count), aggregate reduction=$(table_written_scan.aggregate_loss_reduction_factor), best improved=$(table_written_scan.best_improved_count), best worst loss ratio=$(table_written_scan.best_worst_loss_ratio).")
-    table_written_descent = result.candidate_table_written_coordinate_descent_summary
-    push!(lines,
-        "- Candidate table written-coordinate descent: status=$(table_written_descent.status), scenarios=$(table_written_descent.present_count)/$(table_written_descent.scenario_count), accepted moves=$(table_written_descent.accepted_move_count), aggregate reduction=$(table_written_descent.aggregate_loss_reduction_factor), final improved=$(table_written_descent.final_improved_count), final worst loss ratio=$(table_written_descent.final_worst_loss_ratio).")
-    table_written_minimax = result.candidate_table_written_minimax_descent_summary
-    push!(lines,
-        "- Candidate table written minimax descent: status=$(table_written_minimax.status), scenarios=$(table_written_minimax.present_count)/$(table_written_minimax.scenario_count), tested moves=$(table_written_minimax.tested_move_count), accepted moves=$(table_written_minimax.accepted_move_count), aggregate reduction=$(table_written_minimax.aggregate_loss_reduction_factor), worst-ratio reduction=$(table_written_minimax.worst_loss_ratio_reduction_factor), final improved=$(table_written_minimax.final_improved_count), final worst loss ratio=$(table_written_minimax.final_worst_loss_ratio).")
-    humidity_split = result.candidate_table_humidity_split_probe_summary
-    push!(lines,
-        "- Candidate table humidity-split probe: status=$(humidity_split.status), scenarios=$(humidity_split.present_count)/$(humidity_split.scenario_count), tested moves=$(humidity_split.tested_move_count), aggregate reduction=$(humidity_split.aggregate_loss_reduction_factor), worst-ratio reduction=$(humidity_split.worst_loss_ratio_reduction_factor), best aggregate worst ratio=$(humidity_split.best_aggregate_worst_loss_ratio), best minimax worst ratio=$(humidity_split.best_minimax_worst_loss_ratio).")
-    humidity_descent = result.candidate_table_humidity_split_descent_summary
-    push!(lines,
-        "- Candidate table humidity-split descent: status=$(humidity_descent.status), mode=$(humidity_descent.mode), scenarios=$(humidity_descent.present_count)/$(humidity_descent.scenario_count), tested moves=$(humidity_descent.tested_move_count), accepted moves=$(humidity_descent.accepted_move_count), aggregate reduction=$(humidity_descent.aggregate_loss_reduction_factor), worst-ratio reduction=$(humidity_descent.worst_loss_ratio_reduction_factor), final improved=$(humidity_descent.final_improved_count), final worst loss ratio=$(humidity_descent.final_worst_loss_ratio).")
-    humidity_tribin = result.candidate_table_humidity_tribin_probe_summary
-    push!(lines,
-        "- Candidate table humidity-tribin probe: status=$(humidity_tribin.status), scenarios=$(humidity_tribin.present_count)/$(humidity_tribin.scenario_count), tested moves=$(humidity_tribin.tested_move_count), aggregate reduction=$(humidity_tribin.aggregate_loss_reduction_factor), worst-ratio reduction=$(humidity_tribin.worst_loss_ratio_reduction_factor), best aggregate worst ratio=$(humidity_tribin.best_aggregate_worst_loss_ratio), best minimax worst ratio=$(humidity_tribin.best_minimax_worst_loss_ratio).")
-    humidity_tribin_descent = result.candidate_table_humidity_tribin_descent_summary
-    push!(lines,
-        "- Candidate table humidity-tribin descent: status=$(humidity_tribin_descent.status), mode=$(humidity_tribin_descent.mode), scenarios=$(humidity_tribin_descent.present_count)/$(humidity_tribin_descent.scenario_count), tested moves=$(humidity_tribin_descent.tested_move_count), accepted moves=$(humidity_tribin_descent.accepted_move_count), aggregate reduction=$(humidity_tribin_descent.aggregate_loss_reduction_factor), worst-ratio reduction=$(humidity_tribin_descent.worst_loss_ratio_reduction_factor), final improved=$(humidity_tribin_descent.final_improved_count), final worst loss ratio=$(humidity_tribin_descent.final_worst_loss_ratio).")
-    humidity_tribin_weighted =
-        result.candidate_table_humidity_tribin_weighted_descent_summary
-    push!(lines,
-        "- Candidate table humidity-tribin weighted descent: status=$(humidity_tribin_weighted.status), scenarios=$(humidity_tribin_weighted.present_count)/$(humidity_tribin_weighted.scenario_count), weight sets=$(humidity_tribin_weighted.tested_weight_set_count), accepted moves=$(humidity_tribin_weighted.best_accepted_move_count), weighted-ratio reduction=$(humidity_tribin_weighted.best_weighted_loss_ratio_reduction_factor), aggregate reduction=$(humidity_tribin_weighted.best_aggregate_loss_reduction_factor), worst-ratio reduction=$(humidity_tribin_weighted.best_worst_loss_ratio_reduction_factor), final worst loss ratio=$(humidity_tribin_weighted.best_worst_loss_ratio).")
-    humidity_tribin_constrained =
-        result.candidate_table_humidity_tribin_constrained_descent_summary
-    push!(lines,
-        "- Candidate table humidity-tribin constrained descent: status=$(humidity_tribin_constrained.status), scenarios=$(humidity_tribin_constrained.present_count)/$(humidity_tribin_constrained.scenario_count), tolerances=$(humidity_tribin_constrained.tested_tolerance_count), accepted moves=$(humidity_tribin_constrained.best_accepted_move_count), aggregate reduction=$(humidity_tribin_constrained.best_aggregate_loss_reduction_factor), worst-ratio reduction=$(humidity_tribin_constrained.best_worst_loss_ratio_reduction_factor), final worst loss ratio=$(humidity_tribin_constrained.best_worst_loss_ratio).")
     training = result.official_training_summary
     if !training.present
         push!(lines, "No official/reduced ecCKD training artifact is currently available.")

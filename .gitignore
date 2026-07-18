@@ -5,6 +5,7 @@ benchmarking/Manifest.toml
 benchmarking/results/cpu_smoke*/
 docs/build/
 docs/site/
+docs/src/generated/
 *.jl.*.cov
 *.jl.cov
 *.jl.mem

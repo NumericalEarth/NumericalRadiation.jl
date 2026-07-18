@@ -1,6 +1,6 @@
 {
   "case": "radiative_heating_goal_audit_check",
-  "date": "2026-06-03T01:35:35.215",
+  "date": "2026-07-17T23:52:54.391",
   "status": "not_complete",
   "missing_or_unexpected_artifact_count": 13,
   "completion_blocker_count": 1,
@@ -28,11 +28,6 @@
   "completion_blocker_active": false
 }, {
   "artifact": "ecRad hard-threshold accuracy gate",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD gap report",
   "present_in_audit": true,
   "status": "verified",
   "completion_blocker_active": false
@@ -137,27 +132,7 @@
   "status": "verified",
   "completion_blocker_active": false
 }, {
-  "artifact": "reduced ecCKD gap report",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD acceptance decision",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
   "artifact": "reduced 16-g diagnostic hard-threshold record",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD subset search",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "reduced ecCKD subset search threshold status",
   "present_in_audit": true,
   "status": "verified",
   "completion_blocker_active": false
@@ -208,26 +183,6 @@
   "completion_blocker_active": false
 }, {
   "artifact": "toy ecCKD Enzyme check",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "official reduced optimization Reactant dependency",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "official reduced optimization Reactant check",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "official reduced optimization Enzyme dependency",
-  "present_in_audit": true,
-  "status": "verified",
-  "completion_blocker_active": false
-}, {
-  "artifact": "official reduced optimization Enzyme check",
   "present_in_audit": true,
   "status": "verified",
   "completion_blocker_active": false
@@ -1196,20 +1151,6 @@
   "blocker_reason": "",
   "status": "verified"
 }, {
-  "name": "reduced ecCKD size scan",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_size_scan.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"status\": \"only_full_32_sw_passes\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
   "name": "official ecCKD 32b baseline",
   "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_32b_baseline_check.json",
   "present": true,
@@ -1238,64 +1179,8 @@
   "blocker_reason": "32-g ecCKD production path has not emitted direct RRTMGP comparison metrics",
   "status": "verified"
 }, {
-  "name": "reduced ecCKD gap report",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_gap_report.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"status\": \"reduced_shortwave_passed\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD acceptance decision",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_gap_report.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"status\": \"decision_required\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
   "name": "reduced 16-g diagnostic hard-threshold record",
   "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_accuracy.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"status\": \"failed_threshold\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD subset search",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_subset_search.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"case\": \"radiative_heating_reduced_subset_search\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "reduced ecCKD subset search threshold status",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_subset_search.json",
   "present": true,
   "expected_present": true,
   "presence_matches": true,
@@ -1398,62 +1283,6 @@
   "expected_present": true,
   "presence_matches": true,
   "required_text": "\"subset_search_topology_scan\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "official reduced optimization Reactant dependency",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_official_ad_checks.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"reactant_status\": \"available\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "official reduced optimization Reactant check",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_official_ad_checks.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"reactant_check\": {\n  \"status\": \"passed\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "official reduced optimization Enzyme dependency",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_official_ad_checks.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"enzyme_status\": \"available\"",
-  "required_text_found": true,
-  "forbidden_text": "",
-  "forbidden_text_found": false,
-  "completion_blocker": false,
-  "completion_blocker_active": false,
-  "blocker_reason": "",
-  "status": "verified"
-}, {
-  "name": "official reduced optimization Enzyme check",
-  "path": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/reduced_ecckd_official_ad_checks.json",
-  "present": true,
-  "expected_present": true,
-  "presence_matches": true,
-  "required_text": "\"enzyme_check\": {\n  \"status\": \"passed\"",
   "required_text_found": true,
   "forbidden_text": "",
   "forbidden_text_found": false,

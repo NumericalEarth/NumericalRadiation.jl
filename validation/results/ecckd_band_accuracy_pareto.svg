@@ -9,14 +9,6 @@
 <text x="80.0" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">32</text>
 <line x1="177.5" y1="440" x2="177.5" y2="445" stroke="black"/>
 <text x="177.5" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">48</text>
-<line x1="201.875" y1="440" x2="201.875" y2="445" stroke="black"/>
-<text x="201.875" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">52</text>
-<line x1="226.25" y1="440" x2="226.25" y2="445" stroke="black"/>
-<text x="226.25" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">56</text>
-<line x1="250.625" y1="440" x2="250.625" y2="445" stroke="black"/>
-<text x="250.625" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">60</text>
-<line x1="262.8125" y1="440" x2="262.8125" y2="445" stroke="black"/>
-<text x="262.8125" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">62</text>
 <line x1="268.90625" y1="440" x2="268.90625" y2="445" stroke="black"/>
 <text x="268.90625" y="462" text-anchor="middle" font-family="sans-serif" font-size="12">63</text>
 <line x1="275.0" y1="440" x2="275.0" y2="445" stroke="black"/>
@@ -76,93 +68,14 @@
 <circle cx="176.3" cy="84.41198715418342" r="5" fill="#d95f02" opacity="0.8"><title>non-adjacent coefficient-similarity shortwave g-point pairs with spectral-weighted coefficient averages: 73.6097384691634 W m^-2</title></circle>
 <circle cx="177.5" cy="63.14050958489307" r="5" fill="#d95f02" opacity="0.8"><title>weighted-greedy anchor g-points plus nearest-neighbor coefficient-similarity bins: 123.04044267584152 W m^-2</title></circle>
 <circle cx="178.7" cy="62.30720789924289" r="5" fill="#d95f02" opacity="0.8"><title>weighted-greedy anchor g-points plus nearest spectral-order Voronoi bins: 125.54176578960312 W m^-2</title></circle>
-<circle cx="179.9" cy="88.57575113841504" r="5" fill="#d95f02" opacity="0.8"><title>size scan: even_select: 66.56751138054426 W m^-2</title></circle>
-<circle cx="205.475" cy="55.427730838998585" r="5" fill="#d95f02" opacity="0.8"><title>size scan: even_select: 148.23330804039813 W m^-2</title></circle>
-<circle cx="231.05" cy="108.1717288639573" r="5" fill="#d95f02" opacity="0.8"><title>size scan: even_select: 41.46901503510492 W m^-2</title></circle>
-<circle cx="245.825" cy="127.96925764258535" r="5" fill="#d95f02" opacity="0.8"><title>size scan: even_select: 25.7081655144259 W m^-2</title></circle>
-<circle cx="259.2125" cy="154.85009361441968" r="5" fill="#d95f02" opacity="0.8"><title>size scan: even_select: 13.431451554171417 W m^-2</title></circle>
-<circle cx="272.6" cy="439.0533391460053" r="5" fill="#1b9e77" opacity="0.8"><title>size scan: even_select: 0.014033547037911376 W m^-2</title></circle>
-<circle cx="176.3" cy="50.99500790445242" r="5" fill="#d95f02" opacity="0.8"><title>size scan: weighted_bins: 164.9832350029278 W m^-2</title></circle>
-<circle cx="201.875" cy="57.585567496278415" r="5" fill="#d95f02" opacity="0.8"><title>size scan: weighted_bins: 140.70601047023467 W m^-2</title></circle>
-<circle cx="227.45" cy="101.7011653635411" r="5" fill="#d95f02" opacity="0.8"><title>size scan: weighted_bins: 48.483310792222824 W m^-2</title></circle>
-<circle cx="253.025" cy="128.81104478138664" r="5" fill="#d95f02" opacity="0.8"><title>size scan: weighted_bins: 25.19078707638414 W m^-2</title></circle>
-<circle cx="266.4125" cy="153.7562710378558" r="5" fill="#d95f02" opacity="0.8"><title>size scan: weighted_bins: 13.791003017723938 W m^-2</title></circle>
-<circle cx="279.8" cy="439.0533391460053" r="5" fill="#1b9e77" opacity="0.8"><title>size scan: weighted_bins: 0.014033547037911376 W m^-2</title></circle>
-<circle cx="264.10625" cy="195.3791827283157" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g1: 5.046854674108317 W m^-2</title></circle>
-<circle cx="265.30625" cy="152.4773382049684" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g2: 14.223626658455942 W m^-2</title></circle>
-<circle cx="266.50625" cy="159.9081406517048" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g3: 11.886938785890266 W m^-2</title></circle>
-<circle cx="267.70625" cy="143.95400406948292" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g4: 17.474711974933598 W m^-2</title></circle>
-<circle cx="268.90625" cy="163.6738682266382" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g5: 10.853554798432128 W m^-2</title></circle>
-<circle cx="270.10625" cy="163.573317478029" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g6: 10.879944039181055 W m^-2</title></circle>
-<circle cx="271.30625" cy="143.4499390855231" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g7: 17.68874702935466 W m^-2</title></circle>
-<circle cx="272.50625" cy="180.53621403763853" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g8: 7.222806229543494 W m^-2</title></circle>
-<circle cx="273.70625" cy="155.2599923578597" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g9: 13.299141215256554 W m^-2</title></circle>
-<circle cx="264.10625" cy="107.15859124820798" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g10: 42.49622316758871 W m^-2</title></circle>
-<circle cx="265.30625" cy="181.128225024927" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g11: 7.120270121047383 W m^-2</title></circle>
-<circle cx="266.50625" cy="151.6807476958568" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g12: 14.49992098247617 W m^-2</title></circle>
-<circle cx="267.70625" cy="146.49960673501505" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g13: 16.43272807777919 W m^-2</title></circle>
-<circle cx="268.90625" cy="151.8886519661763" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g14: 14.427296790321748 W m^-2</title></circle>
-<circle cx="270.10625" cy="222.5947838454376" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g15: 2.6155400348058038 W m^-2</title></circle>
-<circle cx="271.30625" cy="144.70232678247456" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g16: 17.16172771149536 W m^-2</title></circle>
-<circle cx="272.50625" cy="278.1622617309194" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g17: 0.6834776717041677 W m^-2</title></circle>
-<circle cx="273.70625" cy="160.22075230554822" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g18: 11.797530265782825 W m^-2</title></circle>
-<circle cx="264.10625" cy="226.88338585161156" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g19: 2.358191205598928 W m^-2</title></circle>
-<circle cx="265.30625" cy="236.89373102063823" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g20: 1.8517499804387398 W m^-2</title></circle>
-<circle cx="266.50625" cy="225.38748290430823" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g21: 2.4449459680888594 W m^-2</title></circle>
-<circle cx="267.70625" cy="282.1779309139996" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g22: 0.6203041931047437 W m^-2</title></circle>
-<circle cx="268.90625" cy="369.54357233346485" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g23: 0.07520428660029665 W m^-2</title></circle>
-<circle cx="270.10625" cy="350.6874496458032" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g24: 0.11858260691121814 W m^-2</title></circle>
-<circle cx="271.30625" cy="415.31540852210566" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g25: 0.024897184446103893 W m^-2</title></circle>
-<circle cx="272.50625" cy="117.75889078654292" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g26: 32.897715813901186 W m^-2</title></circle>
-<circle cx="273.70625" cy="110.4733098504336" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g27: 39.226798191017224 W m^-2</title></circle>
-<circle cx="264.10625" cy="113.27745057327576" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g28: 36.6581670209041 W m^-2</title></circle>
-<circle cx="265.30625" cy="148.68194515736081" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g29: 15.589045442399083 W m^-2</title></circle>
-<circle cx="266.50625" cy="188.85560486714093" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g30: 5.9080669200075135 W m^-2</title></circle>
-<circle cx="267.70625" cy="205.49244210235094" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g31: 3.9531626590237465 W m^-2</title></circle>
-<circle cx="268.90625" cy="206.93499668383433" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan: omit g32: 3.817807221742214 W m^-2</title></circle>
-<circle cx="270.10625" cy="195.37938191964093" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g1: 5.04683039502288 W m^-2</title></circle>
-<circle cx="271.30625" cy="152.47740506258322" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g2: 14.223603691522044 W m^-2</title></circle>
-<circle cx="272.50625" cy="159.90821430656982" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g3: 11.886917640620709 W m^-2</title></circle>
-<circle cx="273.70625" cy="143.9540576403005" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g4: 17.474689365995346 W m^-2</title></circle>
-<circle cx="264.10625" cy="163.67394963916757" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g5: 10.853533457913386 W m^-2</title></circle>
-<circle cx="265.30625" cy="163.57339301192863" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g6: 10.87992419147497 W m^-2</title></circle>
-<circle cx="266.50625" cy="143.44998775777555" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g7: 17.688726236198818 W m^-2</title></circle>
-<circle cx="267.70625" cy="180.5363138070876" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g8: 7.222788825700263 W m^-2</title></circle>
-<circle cx="268.90625" cy="155.26007045043912" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g9: 13.299116132509198 W m^-2</title></circle>
-<circle cx="270.10625" cy="107.15861146710157" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g10: 42.4962024160759 W m^-2</title></circle>
-<circle cx="271.30625" cy="181.12832078526395" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g11: 7.120253653694931 W m^-2</title></circle>
-<circle cx="272.50625" cy="151.68081280844655" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g12: 14.499898180504033 W m^-2</title></circle>
-<circle cx="273.70625" cy="146.4996705026419" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g13: 16.43270277013403 W m^-2</title></circle>
-<circle cx="264.10625" cy="151.88872492612336" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g14: 14.427271368232368 W m^-2</title></circle>
-<circle cx="265.30625" cy="222.5949344227462" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g15: 2.61553052301565 W m^-2</title></circle>
-<circle cx="266.50625" cy="144.702388120755" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g16: 17.16170228804856 W m^-2</title></circle>
-<circle cx="267.70625" cy="278.1638095437213" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g17: 0.6834521225341632 W m^-2</title></circle>
-<circle cx="268.90625" cy="160.22084153378123" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g18: 11.797504842298395 W m^-2</title></circle>
-<circle cx="270.10625" cy="226.88383254852917" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g19: 2.358165764739624 W m^-2</title></circle>
-<circle cx="271.30625" cy="236.8942994852875" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g20: 1.8517245575452534 W m^-2</title></circle>
-<circle cx="272.50625" cy="225.38791484926818" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g21: 2.4449204623705327 W m^-2</title></circle>
-<circle cx="273.70625" cy="282.1796279299243" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g22: 0.6202787702753767 W m^-2</title></circle>
-<circle cx="264.10625" cy="369.5794225566071" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g23: 0.07513920044664246 W m^-2</title></circle>
-<circle cx="265.30625" cy="350.6963796849026" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g24: 0.118557034618334 W m^-2</title></circle>
-<circle cx="266.50625" cy="416.3527690956784" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g25: 0.024281166820060207 W m^-2</title></circle>
-<circle cx="267.70625" cy="117.75891364895739" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g26: 32.89769764913274 W m^-2</title></circle>
-<circle cx="268.90625" cy="110.47332840510808" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g27: 39.2267806126614 W m^-2</title></circle>
-<circle cx="270.10625" cy="113.27747031137191" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g28: 36.658149545869264 W m^-2</title></circle>
-<circle cx="271.30625" cy="148.68194554544144" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g29: 15.58904529628785 W m^-2</title></circle>
-<circle cx="272.50625" cy="188.85578346542962" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g30: 5.908041436223812 W m^-2</title></circle>
-<circle cx="273.70625" cy="205.49250303697738" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g31: 3.953156841332543 W m^-2</title></circle>
-<circle cx="264.10625" cy="206.9351017266358" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with weight refit: omit g32: 3.8177975362457346 W m^-2</title></circle>
-<circle cx="265.30625" cy="319.0261492062223" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with exact weight coordinate move: omit g23: 0.2547478587356409 W m^-2</title></circle>
-<circle cx="266.50625" cy="312.27334140067927" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with exact weight coordinate descent: omit g23: 0.29987447424105085 W m^-2</title></circle>
-<circle cx="267.70625" cy="312.334282843579" r="5" fill="#d95f02" opacity="0.8"><title>leave-one-out official SW g-point scan with exact weight coordinate descent continuation: omit g23: 0.2994334374521941 W m^-2</title></circle>
-<circle cx="268.90625" cy="312.27993837501305" r="5" fill="#1b9e77" opacity="0.8"><title>leave-one-out official SW g-point scan with exact weight coordinate boundary polish: omit g23: 0.2998267002146804 W m^-2</title></circle>
-<circle cx="276.2" cy="439.05376483440597" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0 32-LW x 32-SW climate model: 0.01403340276021936 W m^-2</title></circle>
-<circle cx="472.4" cy="438.73993840320213" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model: 0.014140170863811363 W m^-2</title></circle>
-<circle cx="668.6" cy="438.64883691939514" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model: 0.014171316708711856 W m^-2</title></circle>
-<circle cx="474.8" cy="440.0" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model: 0.013716335624962994 W m^-2</title></circle>
-<circle cx="660.2" cy="439.6789472028498" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2 64-LW x 64-SW climate model: 0.013823103728554997 W m^-2</title></circle>
-<circle cx="856.4" cy="439.58575843054484" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model: 0.01385424957345549 W m^-2</title></circle>
-<polyline points="80.0,53.11560602131725 177.5,232.1757216961937 268.90625,416.3527690956784 275.0,439.05376483440597 470.0,440.0" fill="none" stroke="#7570b3" stroke-width="2"/>
+<circle cx="271.30625" cy="312.27993837501305" r="5" fill="#1b9e77" opacity="0.8"><title>leave-one-out official SW g-point scan with exact weight coordinate boundary polish: omit g23: 0.2998267002146804 W m^-2</title></circle>
+<circle cx="278.6" cy="439.05376483440597" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0 32-LW x 32-SW climate model: 0.01403340276021936 W m^-2</title></circle>
+<circle cx="474.8" cy="438.73993840320213" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.2 32-LW x 64-SW climate/window model: 0.014140170863811363 W m^-2</title></circle>
+<circle cx="660.2" cy="438.64883691939514" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.0/1.4 32-LW x 96-SW climate/vfine model: 0.014171316708711856 W m^-2</title></circle>
+<circle cx="466.4" cy="440.0" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 32-SW narrow/rgb model: 0.013716335624962994 W m^-2</title></circle>
+<circle cx="662.6" cy="439.6789472028498" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2 64-LW x 64-SW climate model: 0.013823103728554997 W m^-2</title></circle>
+<circle cx="858.8" cy="439.58575843054484" r="5" fill="#1b9e77" opacity="0.8"><title>official ecCKD 1.2/1.4 64-LW x 96-SW climate/vfine model: 0.01385424957345549 W m^-2</title></circle>
+<polyline points="80.0,53.11560602131725 177.5,232.1757216961937 268.90625,312.27993837501305 275.0,439.05376483440597 470.0,440.0" fill="none" stroke="#7570b3" stroke-width="2"/>
 <circle cx="710" cy="55" r="5" fill="#1b9e77"/><text x="722" y="59" font-family="sans-serif" font-size="12">passed</text>
 <circle cx="710" cy="75" r="5" fill="#d95f02"/><text x="722" y="79" font-family="sans-serif" font-size="12">failed reduced candidate</text>
 </svg>
