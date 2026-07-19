@@ -30,6 +30,9 @@ using NumericalRadiation
 
 const G1_REFERENCE_NC =
     "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc"
+const G1_SW_REFERENCE_NC =
+    "/shared/home/greg/ecckd-derived-flux-work/g1-references/sw32_run_ckd_smoke.nc"
+const G1_SW_REFERENCE_COS_SZA = 0.5   # run_ckd REFERENCE_COS_SZA (run_ckd.cpp)
 const G1_RESULTS_JSON = validation_results_path("gate4_forward_map_g1.json")
 const G1_RESULTS_MD = validation_results_path("gate4_forward_map_g1.md")
 
@@ -292,6 +295,25 @@ function g1_parity_stats_flux(ours::AbstractArray, ref::AbstractArray)
         "neg_residuals" => neg, "signed_bias_fraction" => signed)
 end
 
+function g1_load_sw_reference(path, fails)
+    ref = Dict{String, Any}()
+    NCDatasets.NCDataset(path) do ds
+        for (n, want) in (("spectral_flux_dn_direct_sw",
+                           ["g_point", "half_level", "column"]),
+                          ("optical_depth", ["g_point", "level", "column"]),
+                          ("rayleigh_optical_depth", ["g_point", "level", "column"]),
+                          ("incoming_sw", ["g_point", "column"]),
+                          ("flux_dn_direct_sw", ["half_level", "column"]))
+            v = ds[n]
+            dn = collect(String.(NCDatasets.dimnames(v)))
+            dn == want ||
+                push!(fails, "orientation: SW $n dims $(dn) != $(want)")
+            ref[n] = Float64.(Array(v))
+        end
+    end
+    return ref
+end
+
 function main()
     fails = String[]
     timings = Dict{String, Float64}()
@@ -409,20 +431,64 @@ function main()
             push!(fails, "derived heating cross-check max rel $max_rel_hr")
     end
 
-    status = isempty(fails) ? "g1_od_and_lw_flux_parity_passed" :
+    # --- increment 3: SW DIRECT-DOWN parity (target-split: the ONLY external
+    # SW target; upwelling/heating/objective parity stay against the
+    # cost-function recurrences + G0 fixtures; never 4-angle products) --------
+    sw_stats = Dict{String, Any}()
+    timings["sw_direct_parity_seconds"] = @elapsed begin
+        swref = g1_load_sw_reference(G1_SW_REFERENCE_NC, fails)
+        odsw = swref["optical_depth"] .+ swref["rayleigh_optical_depth"]
+        ngس, nlaysw, ncolsw = size(odsw)
+        sp = zeros(ngس, nlaysw + 1, ncolsw)
+        for c in 1:ncolsw, g in 1:ngس
+            sp[g, :, c] = g4_sw_direct(view(odsw, g, :, c),
+                                       G1_SW_REFERENCE_COS_SZA,
+                                       swref["incoming_sw"][g, c])
+        end
+        # explicit TOA scaling assertion (reviewer): g4_sw_direct applies
+        # cos_sza internally (flux_dn[1] = cos_sza*ssi), and incoming_sw is the
+        # per-g SSI run_ckd used — so ours[g,1,c] must equal the reference TOA
+        # row to storage precision; any factor-2/half error fails HERE, not in
+        # downstream residual interpretation.
+        toa_max = maximum(abs.(sp[:, 1, :] .-
+                               swref["spectral_flux_dn_direct_sw"][:, 1, :]))
+        sw_stats["toa_scaling_max_abs"] = toa_max
+        gates["sw_toa_scaling_check"] = toa_max <= 1e-4 ? "passed" : "failed"
+        toa_max <= 1e-4 ||
+            push!(fails, "SW TOA scaling check failed: max_abs=$toa_max " *
+                         "(cos_sza/ssi double- or un-scaling suspected)")
+        for (name, ours, target) in (
+                ("spectral_flux_dn_direct_sw", sp,
+                 swref["spectral_flux_dn_direct_sw"]),
+                ("flux_dn_direct_sw", dropdims(sum(sp; dims = 1); dims = 1),
+                 swref["flux_dn_direct_sw"]))
+            st = g1_parity_stats_flux(ours, target)
+            sw_stats[name] = st
+            pass = st["max_abs"] <= 1e-3 || st["max_rel_above_abs_floor"] <= 1e-6
+            bias_ok = abs(st["signed_bias_fraction"]) < 0.9 || st["max_abs"] <= 1e-9
+            gates["sw_direct_$(name)"] = pass && bias_ok ? "passed" : "failed"
+            pass || push!(fails, "SW direct parity $name: " *
+                "max_abs=$(st["max_abs"]) max_rel=$(st["max_rel_above_abs_floor"])")
+            bias_ok || push!(fails,
+                "SW direct parity $name signed bias: $(st["signed_bias_fraction"])")
+        end
+    end
+
+    status = isempty(fails) ? "g1_od_lw_flux_and_sw_direct_parity_passed" :
                               "g1_parity_failed"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
     result = Dict(
         "case" => "gate4_forward_map_g1",
-        "increment" => "1_od_parity_plus_2_lw_flux_parity",
+        "increment" => "1_od_2_lw_flux_3_sw_direct_parity",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates,
         "failures" => fails,
         "gas_stats" => gas_stats,
         "flux_stats" => flux_stats,
+        "sw_direct_stats" => sw_stats,
         "orientation_check" => orientation_ok ? "passed" : "failed",
         "thresholds" => Dict("od_abs" => G1_OD_ABS_TOL, "od_rel" => G1_OD_REL_TOL),
         "timings_seconds" => timings,
@@ -432,6 +498,16 @@ function main()
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit",
             "reference_nc" => G1_REFERENCE_NC,
+            "sw_reference_nc" => G1_SW_REFERENCE_NC,
+            "sw32_path_authority" => "resolved via " *
+                "NumericalRadiation.official_ecckd_definition_path(:shortwave_32) " *
+                "-> ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc (the repo " *
+                "API is the authoritative published SW32; no 1.0-versioned " *
+                "SW rgb file exists in the pinned ecrad_data artifact)",
+            "sw_reference_command" => "run_ckd ckd_model=<SW32 published " *
+                "ecckd-1.4_sw_climate_rgb-32b> input=<evaluation1 present " *
+                "conc> gases=composite,h2o,o3,co2,ch4,n2o tsi=1361.0 " *
+                "(direct SW at REFERENCE_COS_SZA=0.5, OD + Rayleigh)",
             "reference_tool" => "pinned run_ckd (ecckd source artifact " *
                 "6115f9b8, May-2026 build in ecckd-derived-flux-work)",
             "reference_command" => "run_ckd ckd_model=<LW32 published> " *
@@ -496,7 +572,7 @@ function main()
         println("  $k: $(gates[k])")
     end
     isempty(fails) || foreach(f -> println("  FAIL: $f"), first(fails, 12))
-    return status == "g1_od_and_lw_flux_parity_passed" ? 0 : 1
+    return status == "g1_od_lw_flux_and_sw_direct_parity_passed" ? 0 : 1
 end
 
 exit(main())

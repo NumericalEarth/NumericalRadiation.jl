@@ -1,6 +1,6 @@
 # Gate-4 forward map G1 (increments 1-2: per-gas OD + LW flux parity)
 
-Status: **g1_od_and_lw_flux_parity_passed**
+Status: **g1_od_lw_flux_and_sw_direct_parity_passed**
 
 term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, or recovery claims; SW parity limited to direct-down in a later increment.
 
@@ -26,4 +26,4 @@ term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, 
 
 Derived-heating cross-check (both sides via the LW net-flux convention; NO external heating target exists in the reference): max rel above the propagated Float32-storage bound (g/cp)/dp*4*eps32*F = 0.0 (gate passed). Flux thresholds: abs <= 1e-3 W m^-2 or rel <= 1e-6, plus signed-bias check.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `899b187` (pre-own-commit); reference: pinned run_ckd smoke output.
+Provenance: branch `glw/gate4-recovery`, generated_from_head `aa0b394` (pre-own-commit); reference: pinned run_ckd smoke output.

@@ -140,31 +140,57 @@
     "od_composite": "passed",
     "od_h2o": "passed",
     "od_n2o": "passed",
-    "od_o3": "passed"
+    "od_o3": "passed",
+    "sw_direct_flux_dn_direct_sw": "passed",
+    "sw_direct_spectral_flux_dn_direct_sw": "passed",
+    "sw_toa_scaling_check": "passed"
   },
-  "increment": "1_od_parity_plus_2_lw_flux_parity",
-  "maxrss_bytes": 534024192,
+  "increment": "1_od_2_lw_flux_3_sw_direct_parity",
+  "maxrss_bytes": 538959872,
   "orientation_check": "passed",
   "provenance": {
     "branch": "glw/gate4-recovery",
     "ckd_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
-    "generated_from_head": "899b187",
+    "generated_from_head": "aa0b394",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "reference_command": "run_ckd ckd_model=<LW32 published> input=<evaluation1 present conc> output=<smoke nc> gases='composite h2o o3 co2 ch4 n2o cfc11 cfc12'",
     "reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
     "reference_tool": "pinned run_ckd (ecckd source artifact 6115f9b8, May-2026 build in ecckd-derived-flux-work)",
+    "sw32_path_authority": "resolved via NumericalRadiation.official_ecckd_definition_path(:shortwave_32) -> ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc (the repo API is the authoritative published SW32; no 1.0-versioned SW rgb file exists in the pinned ecrad_data artifact)",
+    "sw_reference_command": "run_ckd ckd_model=<SW32 published ecckd-1.4_sw_climate_rgb-32b> input=<evaluation1 present conc> gases=composite,h2o,o3,co2,ch4,n2o tsi=1361.0 (direct SW at REFERENCE_COS_SZA=0.5, OD + Rayleigh)",
+    "sw_reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/sw32_run_ckd_smoke.nc",
     "sw_target_policy": "SW parity restricted to run_ckd direct-down mu0=0.5 in a later increment; *_fluxes-4angle_*/ckdmip_sw products are NEVER G1 targets"
   },
-  "status": "g1_od_and_lw_flux_parity_passed",
+  "status": "g1_od_lw_flux_and_sw_direct_parity_passed",
+  "sw_direct_stats": {
+    "flux_dn_direct_sw": {
+      "max_abs": 3.781414375225722e-5,
+      "max_rel_above_abs_floor": 6.757439420310353e-8,
+      "n": 2750,
+      "neg_residuals": 996,
+      "pos_residuals": 1754,
+      "signed_bias_fraction": 0.2756363636363636
+    },
+    "spectral_flux_dn_direct_sw": {
+      "max_abs": 4.842976736085802e-6,
+      "max_rel_above_abs_floor": 2.1174720185285824e-7,
+      "n": 88000,
+      "neg_residuals": 32781,
+      "pos_residuals": 53619,
+      "signed_bias_fraction": 0.24118055555555556
+    },
+    "toa_scaling_max_abs": 0.0
+  },
   "thresholds": {
     "od_abs": 1.0e-9,
     "od_rel": 1.0e-6
   },
-  "timestamp_utc": "2026-07-19T04:44:55.127",
+  "timestamp_utc": "2026-07-19T04:49:15.422",
   "timings_seconds": {
-    "flux_parity_seconds": 0.500484088,
-    "load_seconds": 2.976041913,
-    "od_parity_seconds": 1.426031754
+    "flux_parity_seconds": 0.512812838,
+    "load_seconds": 2.96934246,
+    "od_parity_seconds": 1.406507785,
+    "sw_direct_parity_seconds": 0.593128232
   }
 }
