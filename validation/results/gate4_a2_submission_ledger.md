@@ -1,30 +1,49 @@
 # Gate-4 A2 submission ledger
 
-Status: **a2_submitted_awaiting_completion**
+Status: **a2_attempt2_submitted_awaiting_completion**
 
 Submission event record only; no floor, proof, objective, or recovery
 computation has run.
 
+## Current: attempt 2
+
 | Field | Value |
 |---|---|
-| Job ID | 4079 (`g4-a2-find-g-points`) |
-| Submitted | 2026-07-19T05:51:51 (state at write: CONFIGURING) |
+| Job ID | 4082 (`g4-a2-find-g-points`) |
+| Submitted | 2026-07-19T06:08:43 (state at write: CONFIGURING) |
 | Partition / limit | cpu-large / 12:00:00 |
 | Excluded node | `cpu-large-dy-cpu-large-1` (4078's node; guardrail) |
 | sbatch | `validation/results/gate4_a2_dryrun.sbatch` |
-| sbatch sha256 | `03a751f0ff827eaabd6860dc25929bd01a022dc5107614b5192b4dd9189e8c3c` |
-| HEAD at submission | `4e6aab7` (branch `glw/gate4-recovery`) |
+| sbatch sha256 | `adeb59a6ea91744c58d13e37ce964fd7a834c39b1346391245304936e7538649` |
+| HEAD at submission | `55e0be7` (branch `glw/gate4-recovery`) |
 
-Guardrail preflight: 4078 RUNNING on `cpu-large-dy-cpu-large-1`; nodes
-`cpu-large-2/3/4` idle, so the monitor's at-least-one-other-idle-node
-condition held and `--exclude` was applied. The sbatch operates only in an
-isolated TESTCOPY (config.h sed-patched absolute); the 4078 working copy is
-never mutated.
+Guardrail preflight: 4078 RUNNING on `cpu-large-dy-cpu-large-1` (3:09
+elapsed); node 2 idle%, nodes 3–4 idle~, so the
+at-least-one-other-node condition held and `--exclude` was applied. The
+sbatch operates only in an isolated TESTCOPY with five config.h vars
+sed-patched absolute (CKDMIP_DATA_DIR, WORK_DIR, BINDIR,
+MMM_SW_SPECTRA_DIR → quarantined overlay, CLOUD_SPECTRUM); the 4078
+working copy and the official data tree are never mutated.
 
-Scope: A2 runs reorder_spectrum + find_g_points ONLY (LW fsck tol 0.0161,
-SW rgb tol 0.047). Candidates are sensitivity-only until all 10 exact
+Delta vs attempt 1: stage-1 `merge_well_mixed_{lw,sw}.sh` before reorders;
+quarantined SW rayleigh input overlay (pinned `make_rayleigh_mmm.sh`
+recipe) with `MMM_SW_SPECTRA_DIR` sed-patch; `CLOUD_SPECTRUM` sed-patched
+absolute; in-job stage-0 binary+input preflight.
+
+Scope: A2 runs merge_well_mixed + reorder_spectrum + find_g_points ONLY
+(LW fsck tol 0.0161, SW rgb tol 0.047), plus quarantined-overlay rayleigh
+input provisioning. Candidates are sensitivity-only until all 10 exact
 comparisons in the reproduction-proof scaffold pass.
 
-Hygiene folded into this commit: stale May-config comment removed from the
-checkpoint generator and the regenerated sbatch (comment-only diff; the
-submitted file is the regenerated one).
+Next steps: monitor 4078 and 4082 (including the 4082 log's stage-0
+preflight lines); on 4082 completion rerun the reproduction-proof scaffold
+(should flip to `a2_proof_scaffold_ready`); on 4078 completion, install
+check then preflight rerun toward G2/G3.
+
+## History: attempt 1 (FAILED)
+
+Job 4079, submitted 2026-07-19T05:51:51 from HEAD `4e6aab7` with the same
+node exclusion; sbatch sha256 `03a751f0ff827eaabd6860dc25929bd01a022dc5107614b5192b4dd9189e8c3c`.
+FAILED at LW reorder — missing stage-1 merge composites in the fresh
+quarantined WORK_DIR; see `gate4_a2_failure_ledger_4079.md`. No candidates
+produced, nothing promoted.

@@ -1,40 +1,52 @@
 {
   "case": "gate4_a2_submission_ledger",
   "data_mode": "submission_event_record_only",
-  "status": "a2_submitted_awaiting_completion",
-  "timestamp_utc": "2026-07-19T05:51:51Z",
-  "authorization": "Codex monitor go (standing no-stopping instruction from Greg; monitor message authorizing A2 execution submission with resource guardrails)",
+  "status": "a2_attempt2_submitted_awaiting_completion",
+  "timestamp_utc": "2026-07-19T06:08:43Z",
+  "authorization": "Codex monitor go (standing no-stopping instruction from Greg; monitor message authorizing A2 execution submission with resource guardrails; recovery resubmission per monitor instruction after 4079 failure)",
   "job": {
-    "job_id": 4079,
+    "job_id": 4082,
+    "attempt": 2,
     "job_name": "g4-a2-find-g-points",
     "partition": "cpu-large",
     "time_limit": "12:00:00",
-    "submit_time": "2026-07-19T05:51:51",
+    "submit_time": "2026-07-19T06:08:43",
     "state_at_ledger_write": "CONFIGURING (autoscaler spinning node)",
     "exclude_node": "cpu-large-dy-cpu-large-1",
-    "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-<jobid>.log"
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-4082.log"
   },
   "guardrail_preflight": {
-    "job_4078_state": "RUNNING on cpu-large-dy-cpu-large-1 (elapsed 2:50:55 at preflight)",
-    "cpu_large_idle_nodes_at_preflight": ["cpu-large-dy-cpu-large-2", "cpu-large-dy-cpu-large-3", "cpu-large-dy-cpu-large-4"],
+    "job_4078_state": "RUNNING on cpu-large-dy-cpu-large-1 (elapsed 3:09:17 at attempt-2 preflight)",
+    "cpu_large_nodes_at_preflight": "node 1 mix (4078), node 2 idle%, nodes 3-4 idle~",
     "exclusion_applied": "sbatch --exclude=cpu-large-dy-cpu-large-1 so A2 never shares the 4078 node",
-    "workcopy_isolation": "sbatch builds an isolated TESTCOPY under g4-init-generation with all three config.h vars sed-patched absolute; the 4078 working copy is never mutated"
+    "workcopy_isolation": "sbatch builds an isolated TESTCOPY under g4-init-generation with five config.h vars sed-patched absolute (CKDMIP_DATA_DIR, WORK_DIR, BINDIR, MMM_SW_SPECTRA_DIR -> quarantined overlay, CLOUD_SPECTRUM); the 4078 working copy and the official data tree are never mutated"
   },
   "sbatch": {
     "path": "validation/results/gate4_a2_dryrun.sbatch",
-    "sha256": "03a751f0ff827eaabd6860dc25929bd01a022dc5107614b5192b4dd9189e8c3c",
+    "sha256": "adeb59a6ea91744c58d13e37ce964fd7a834c39b1346391245304936e7538649",
     "generated_by": "validation/gate4_a2_execution_checkpoint.jl",
-    "hygiene": "stale May-config comment removed from generator and regenerated sbatch in this same commit (deferred item from the proof-scaffold unit); diff vs submitted content is comment-only-empty -- the submitted file IS this regenerated file"
+    "delta_vs_attempt_1": "stage-1 merge_well_mixed_{lw,sw}.sh added before reorders; quarantined SW rayleigh input overlay (pinned make_rayleigh_mmm.sh recipe) with MMM_SW_SPECTRA_DIR sed-patch; CLOUD_SPECTRUM sed-patched absolute; in-job stage-0 binary+input preflight"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "head_at_submission": "4e6aab7",
-    "note": "this ledger and the checkpoint hygiene fix are committed immediately after submission; head_at_submission is the pre-ledger HEAD"
+    "head_at_submission": "55e0be7",
+    "note": "this ledger update is committed immediately after the attempt-2 submission; head_at_submission is the recovery commit the submitted sbatch was generated from"
   },
-  "scope_statement": "A2 runs reorder_spectrum + find_g_points ONLY (LW fsck tol 0.0161, SW rgb tol 0.047). NO create_lut, NO reproduction proof, NO objective, NO floor, and NO recovery computation has run. Candidates produced by 4079 remain sensitivity-only until the reproduction-proof comparisons (gate4_a2_reproduction_proof_scaffold, 10 exact comparisons) all pass.",
+  "scope_statement": "A2 runs merge_well_mixed + reorder_spectrum + find_g_points ONLY (LW fsck tol 0.0161, SW rgb tol 0.047), plus quarantined-overlay rayleigh input provisioning. NO create_lut, NO reproduction proof, NO objective, NO floor, and NO recovery computation has run. Candidates produced by 4082 remain sensitivity-only until the reproduction-proof comparisons (gate4_a2_reproduction_proof_scaffold, 10 exact comparisons) all pass.",
   "next_steps": [
-    "monitor 4078 and 4079",
-    "on 4079 completion: rerun gate4_a2_reproduction_proof_scaffold.jl (should flip to a2_proof_scaffold_ready with candidates found), then execute the proof per mechanism 1 on Slurm",
+    "monitor 4078 and 4082 (including the g4-a2-4082 log stage-0 preflight lines)",
+    "on 4082 completion: rerun gate4_a2_reproduction_proof_scaffold.jl (should flip to a2_proof_scaffold_ready with candidates found), then execute the proof per mechanism 1 on Slurm",
     "on 4078 completion: install check / quarantine on failure, then preflight rerun toward G2/G3"
-  ]
+  ],
+  "attempt_history": {
+    "attempt_1": {
+      "job_id": 4079,
+      "submit_time": "2026-07-19T05:51:51",
+      "exclude_node": "cpu-large-dy-cpu-large-1",
+      "sbatch_sha256": "03a751f0ff827eaabd6860dc25929bd01a022dc5107614b5192b4dd9189e8c3c",
+      "head_at_submission": "4e6aab7",
+      "outcome": "FAILED at LW reorder (missing stage-1 merge composites in the fresh quarantined WORK_DIR); full diagnosis in gate4_a2_failure_ledger_4079.json; produced no candidates, nothing promoted"
+    },
+    "attempt_2": "current top-level record"
+  }
 }
