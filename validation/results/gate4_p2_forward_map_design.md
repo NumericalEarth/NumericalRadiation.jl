@@ -64,7 +64,8 @@ Chain, all Enzyme-reverse differentiable:
       axes)--> per-layer per-g optical depth (54×32)
     --RT recurrence (upstream semantics, sequential over layers)-->
       fluxes at 55 interfaces
-    --flux divergence--> heating rates
+    --upstream heating convention--> heating rates (SW: downwelling-only
+      divergence per Appendix A; LW: per upstream source, net-flux)
     --ecckd_{lw,sw}_ckd_loss--> scalar.
 
 AD boundaries:
@@ -105,7 +106,9 @@ non-stage gases via the mask.
 - G1 forward parity, TERM-RESOLVED: our values for the PUBLISHED model
   vs the upstream tool's own CKD evaluation outputs on shared profiles
   (run the pinned tool once to emit references; provenance-stamped).
-  Compared per term: flux_dn and flux_up profiles, heating rates, and
+  Compared per term: flux_dn and flux_up profiles, heating rates AS THE
+  UPSTREAM CONVENTION DEFINES THEM (SW downwelling-only per Appendix A;
+  never generic net-flux heating), and
   each objective term — with explicit absolute AND relative thresholds
   set per quantity in the implementation PR (initial proposal:
   |Δflux| ≤ 1e-3 W m^-2 or rel ≤ 1e-6, heating rel ≤ 1e-6, objective
@@ -149,3 +152,22 @@ Published-final-initialized runs remain diagnostic-only, labeled.
 3. Dataset generalization (all columns/scenarios; mol m^-2 conversion
    helper WITH the regression test required by the adopted rule).
 4. G2/G3 artifacts (real data).  5. G4 smoke.  6. Staged executor (P4).
+
+## Appendix A — pinned upstream conventions (source-verified, in progress)
+
+- SW heating in the training cost uses DOWNWELLING flux divergence only:
+  calc_cost_function_ckd_sw computes heating via
+  heating_rate(pressure_hl, flux_dn_fwd, aMatrix(), heating_rate_fwd)
+  (~lines 195-198; empty upwelling matrix), even though upwelling flux
+  exists and feeds the surface/TOA/profile cost terms (direct vs
+  norayleigh branch selection ~149-159). HIGH-RISK PARITY REQUIREMENT:
+  gate4_forward_map.jl must encode this convention explicitly — a
+  generic net-flux (dn - up) divergence for SW heating would fail G1
+  with a systematic signed bias. Consistent with the Julia loss port
+  (SW heating targets computed down-only in
+  ckdmip_original_objective_dataset.jl).
+- The 20x multiplier applies to the TOA UPWELLING spectral boundary
+  term (~line 214), matching the Julia port's placement
+  (ecckd_original_objective_loss.jl:137,146).
+- Full anchored inventory lands with the G1 recon brief; this appendix
+  is amended as findings are verified.
