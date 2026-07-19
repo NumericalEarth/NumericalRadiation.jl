@@ -1,0 +1,37 @@
+{
+  "case": "gate4_a2_failure_ledger_4079",
+  "data_mode": "failure_event_record_only",
+  "status": "a2_job_4079_failed_non_acceptance",
+  "timestamp_utc": "2026-07-19T05:59:07Z",
+  "job": {
+    "job_id": 4079,
+    "outcome": "FAILED at the first stage (LW reorder); job left the queue at 2026-07-19T05:59:07Z after ~3 minutes; sacct accounting unavailable on this cluster, evidence is the job log",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-4079.log",
+    "log_evidence": "DataFile.cpp:43 Failed to find .../g4-init-generation/work/lw_spectra/ckdmip_mmm_lw_spectra_composite_present.h5; reorder_spectrum aborted (core dumped)"
+  },
+  "root_cause": {
+    "primary": "the generated A2 sbatch skipped do_all stage 1 (merge_well_mixed_lw.sh / merge_well_mixed_sw.sh); the quarantined WORK_DIR was fresh, so the composite spectra that reorder_spectrum consumes were never created there. NOT a CKDMIP_DATA_DIR problem -- the sed-patched paths were correct and echoed in the log.",
+    "secondary_latent": "the SW chain would have failed even with the merge stage: COMPOSITE_SW_INCLUDES_RAYLEIGH=yes in the pinned config makes merge_well_mixed_sw.sh, reorder_spectrum_sw.sh (GAS_LIST rayleigh_present), and find_g_points_sw.sh consume ckdmip_mmm_sw_spectra_rayleigh_present.h5, which is absent from the local MMM tree and 404 on ECPDS (https://aux.ecmwf.int/ecpds/home/ckdmip/mmm/sw_spectra/...)."
+  },
+  "recovery": {
+    "merge_stage": "gate4_a2_execution_checkpoint.jl regenerates the sbatch with the pinned do_all stage order per band: merge_well_mixed_lw -> reorder_lw -> find_g_points_lw; merge_well_mixed_sw -> reorder_sw -> find_g_points_sw. Still no create_lut/optimize/objective/floor executable lines.",
+    "rayleigh_overlay": {
+      "policy": "COMPOSITE_SW_INCLUDES_RAYLEIGH stays yes (pinned config; no proof the published recipe disabled it). The missing file is generated, not papered over.",
+      "mechanism": "QUARANTINED INPUT OVERLAY at /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/input/mmm/sw_spectra: symlinks to the official per-gas h5 files plus rayleigh generated in the overlay; MMM_SW_SPECTRA_DIR sed-patched in the TESTCOPY config.h to the overlay; the official data tree /shared/home/greg/data/ckdmip is never written to.",
+      "recipe_provenance": "upstream author's own script shipped in the ckdmip-1.0 tarball: /shared/home/greg/build/ckdmip-1.0/work/sw/make_rayleigh_mmm.sh -- ckdmip_tool --grid <mmm sw h2o_median> --rayleigh -o ckdmip_mmm_sw_spectra_rayleigh_present.h5",
+      "tool": "/shared/home/greg/build/ckdmip-1.0/bin/ckdmip_tool sha256=2334730bd2da322b603b5748c4076bba442928a2a9b05a3f2f53c8ad159c44cd",
+      "grid_input": "/shared/home/greg/data/ckdmip/mmm/sw_spectra/ckdmip_mmm_sw_spectra_h2o_median.h5 sha256=3ec549917d2b065803ff63648ce7414791969c8d9c726d34796b659b6098ea40",
+      "generated_file_hash": "echoed to the job log by the sbatch (sha256sum after generation); recorded post-run",
+      "exactness_note": "any residual deviation from the file upstream used is caught downstream by the elementwise-EXACT rayleigh_molar_scattering_coeff and solar_irradiance comparisons in the reproduction-proof scaffold"
+    },
+    "preflight": "in-job stage-0 preflight verifies all merge/reorder/find inputs per band (7 well-mixed gases + h2o_median/o3_median + h2o_minimum/o3_minimum background inputs + MMM SSI extra), the CLOUD_SPECTRUM mie file, the evaluation1 TRAINING_SW_SSI (cloud-reorder wavenumber_input), and all six required binaries (ckdmip_lw/sw/tool, reorder_spectrum, find_g_points, reorder_cloud_spectrum); test -s the overlay rayleigh after generation; checkpoint-side preflight records the same manifest at generation time",
+    "cloud_spectrum_relocation": "third latent bug fixed pre-resubmit: pristine config.h has CLOUD_SPECTRUM=../data/mie_droplet_scattering.nc, which resolves under g4-init-generation/ in the relocated TESTCOPY and does not exist there; sed-patched ABSOLUTE to /shared/home/greg/ecckd-derived-flux-work/ecckd/data/mie_droplet_scattering.nc (used by the cloud reorder at the end of reorder_spectrum_sw.sh)"
+  },
+  "acceptance_impact": "NONE promoted: 4079 produced no gpoints candidates; no create_lut, reproduction proof, objective, floor, or recovery computation has run. The reproduction-proof scaffold remains at a2_proof_scaffold_ready_waiting_for_candidates.",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_failure": "42a74c3",
+    "prior_submission_ledger": "validation/results/gate4_a2_submission_ledger.json (attempt 1)"
+  },
+  "disclaimer": "failure event record only; no generation, objective, floor, or recovery computation in this unit."
+}
