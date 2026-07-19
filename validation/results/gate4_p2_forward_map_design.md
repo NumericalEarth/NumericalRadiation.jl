@@ -103,9 +103,16 @@ non-stage gases via the mask.
 
 - G0 unit: interpolation reproduces table nodes exactly; adjoint of
   each stage vs FD on 32-entry subsets (<1e-6), synthetic inputs.
-- G1 forward parity, TERM-RESOLVED: our values for the PUBLISHED model
-  vs the upstream tool's own CKD evaluation outputs on shared profiles
-  (run the pinned tool once to emit references; provenance-stamped).
+- G1 forward parity, TERM-RESOLVED and TARGET-SPLIT BY BAND: for the
+  PUBLISHED model on shared profiles (pinned tool run once to emit
+  references; provenance-stamped). LW: compare flux_up AND flux_dn
+  directly against run_ckd's emitted spectral/broadband LW fluxes
+  (identical RT). SW: run_ckd emits only the direct-down component at
+  mu0=0.5 — compare that component directly; SW upwelling, heating, and
+  objective-term parity must be established against the cost-function
+  recurrences and internally verified analytic fixtures (G0 hand
+  cases), NEVER against the external *_fluxes-4angle_* / ckdmip_sw
+  two-stream products, which use a different RT.
   Compared per term: flux_dn and flux_up profiles, heating rates AS THE
   UPSTREAM CONVENTION DEFINES THEM (SW downwelling-only per Appendix A;
   never generic net-flux heating), and
@@ -153,7 +160,7 @@ Published-final-initialized runs remain diagnostic-only, labeled.
    helper WITH the regression test required by the adopted rule).
 4. G2/G3 artifacts (real data).  5. G4 smoke.  6. Staged executor (P4).
 
-## Appendix A — pinned upstream conventions (source-verified, in progress)
+## Appendix A — pinned upstream conventions (source-verified)
 
 - SW heating in the training cost uses DOWNWELLING flux divergence only:
   calc_cost_function_ckd_sw computes heating via
@@ -169,5 +176,79 @@ Published-final-initialized runs remain diagnostic-only, labeled.
 - The 20x multiplier applies to the TOA UPWELLING spectral boundary
   term (~line 214), matching the Julia port's placement
   (ecckd_original_objective_loss.jl:137,146).
-- Full anchored inventory lands with the G1 recon brief; this appendix
-  is amended as findings are verified.
+- The full anchored inventory landed as Appendix B (source recon
+  complete); Appendix A is retained for the two highest-risk
+  conventions it pinned first.
+
+## Appendix B — upstream semantics spec (from source recon, anchored)
+
+Parity targets (G1): LW compares directly against run_ckd's
+spectral_flux_{up,dn}_lw / flux_{up,dn}_lw (identical RT: diffusivity
+1.66, black surface, CKD Planck LUT; run_ckd.cpp:340-357). SW has NO
+direct target — run_ckd emits only direct downwelling at mu0=0.5
+(run_ckd.cpp:358-368) and the external ckdmip_sw 4-angle/two-stream
+fluxes use a DIFFERENT RT: replicate the cost-function SW RT and test
+against run_ckd's direct-dn component plus internally-verified
+recurrences. Never target the *_fluxes-4angle_* products for G1.
+
+REQUIRED OBJECTIVE COMPONENTS BEYOND THE PORTED KERNELS (design
+correction): the full training objective adds (a) a PRIOR term
+0.5·(1/bg_err_g^2)·Δx^T S^-1 Δx per active gas/g over the log-coeff LUT
+(S = tcorr^|Δt|·pcorr^|Δp|·ccorr^|Δc|, corr=0.8 climate; prior_error
+8.0 LW / 2.0 SW; ckd_model.cpp:616-849) and (b) a negative-OD penalty
+1e4·Σ od² (1e1 in LW relative-ch4) with od clamped ≥0 after
+(solve_adept.cpp:105-114). ecckd_original_objective_loss.jl covers the
+flux/heating kernels ONLY — G3 floor and recovery runs are invalid
+without (a)+(b).
+
+Reimplementation checklist (values; anchors in the recon brief):
+ 1. LW diffusivity 1.66; emissivity 1-exp(-1.66 τ).
+ 2. LW source factor: 1-(1/1.66)·emiss/τ if emiss>1e-5 else 0.5·emiss.
+ 3. LW recurrences: Fdn(TOA)=0; dn weights (emiss-factor, factor);
+    surface Fup=ε·B_s+(1-ε)·Fdn; up weights swapped.
+ 4. Surface emissivity 1.0 (black) everywhere in training.
+ 5. LW Planck from CKD planck_function LUT (T grid 120:350, linear;
+    T<120 scales to zero); π-integrated band irradiance W m^-2.
+ 6. SW direct: Fdn(0)=cos_sza·ssi; Fdn(l+1)=Fdn(l)·exp(-τ/cos_sza).
+ 7. SW upwelling secant 2.0 (Zdunkowski 60°): Fup(sfc)=albedo·Fdn;
+    Fup(l)=Fup(l+1)·exp(-2τ). No two-stream Rayleigh.
+ 8. SW Rayleigh τ added into total τ; rayleigh_molar_scattering_coeff
+    read fixed from the CKD file; Δmoles=Δp/(g·0.001·M_air), M=28.970.
+ 9. SW albedo = per-band effective_spectral_albedo from LBL up/down
+    ratio, mapped by iband_per_g; zeroed for bands with wavenumber2 >
+    max_no_rayleigh_wavenumber (10000; 15000 minor SW passes).
+10. SW mu0 = LBL mu0[{0,2,4}] = {0.1, 0.5, 0.9}; each col×angle is a
+    training column.
+11. SW TOA normalization: ssi scaled by tsi_lbl/Σ solar_irradiance,
+    tsi_lbl = Fdn(0,0)/mu0(0).
+12. Heating: HR = -(9.80665/1004.0)/Δp · (ΔFdn - ΔFup); SW Fdn ONLY
+    (Appendix A); pressure increases with index (TOA=0).
+13. hr_weight 86400, squared inside the cost.
+14. layer_weight = normalized diff(sqrt(p_hl)); interface_weight =
+    flux_profile_weight·midpoint(layer_weight).
+15. Cost: per-band terms scaled (1-broadband_weight)/nband + broadband
+    blend; SW per-band TOA-up ×20, NO ×20 in broadband part.
+16. Band aggregation via iband_per_g: climate LW FSCK = 1 band;
+    SW rgb = [0 0 0 0 1 2 3 4 4].
+17. OD interpolation: bilinear (log-p, T), + log-conc for LUT gases;
+    LINEAR in coefficient; relative-linear uses (vmr - ref_vmr)
+    [CH4 1921e-9, N2O 332e-9]; indices clamped to [0, n-1.0001].
+18. Negative-OD penalty per Appendix B above.
+19. Prior term per Appendix B above; prior mean = initial log-coeffs.
+20. Bounds [log min, log max] from create_lut min/max arrays; where
+    min==0: x_min = 3x - 2·x_max. Bounded minimization ALWAYS ON (the
+    SW script's bounded_optimization=0 is a dead key/typo).
+21. Optimizer envelope (upstream): L-BFGS, max_step_size 2.0, converge
+    on grad-norm ≤ 0.02 (base passes) / 0.0005 (minor), max_iter 3000
+    LW / 2000 SW. Ours may differ (optimizer-only-delta rule) but must
+    report the same convergence diagnostic.
+22. Fixed arrays never optimized: gpoint_fraction, solar_irradiance,
+    rayleigh_molar_scattering_coeff, planck_function/temperature_planck,
+    coordinates/bands. Trainables per stage: LW relative-base
+    {composite,h2o,o3,co2} (from raw-ckd-definition), then ch4, n2o,
+    {cfc11,cfc12}; SW relative-base {composite,h2o,o3,co2} (from
+    scaled-ckd-definition), then ch4, n2o. Minor-gas passes use
+    relative_to rel-415 flux DIFFERENCES in the cost.
+23. Weights (climate): LW prior 8.0, broadband 0.8, profile 0.2,
+    spectral_boundary 0.1, flux_weight 0.02 base / 0.5 ch4,n2o / 0.2
+    cfc; SW prior 2.0, broadband 0.4, flux 0.4, profile 0.1.
