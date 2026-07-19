@@ -1,0 +1,275 @@
+{
+  "case": "gate4_cost_probe",
+  "data_mode": "synthetic_shapes_only",
+  "status": "probe_complete",
+  "timestamp_utc": "2026-07-19T03:12:50.868",
+  "coefficient_gradient_status": "blocked_no_differentiable_forward_map",
+  "p2_dependency": "coefficients_to_optical_depth_to_flux_forward_map",
+  "disclaimer": "no objective-value or recovery claims; synthetic shapes only; 204,896-vector work is flatten/write/reflatten plumbing plus FD-infeasibility evidence only",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "worktree_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/",
+    "sw32_definition_filename": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "sw32_flattened_array_names": [
+      "ch4_molar_absorption_coeff",
+      "co2_molar_absorption_coeff",
+      "composite_molar_absorption_coeff",
+      "gpoint_fraction",
+      "h2o_molar_absorption_coeff",
+      "n2o_molar_absorption_coeff",
+      "o3_molar_absorption_coeff",
+      "rayleigh_molar_scattering_coeff",
+      "solar_irradiance"
+    ],
+    "julia_version_runtime": "1.12.6",
+    "julia_version_test_manifest": "1.12.6",
+    "enzyme_version_test_manifest": "0.13.153",
+    "reactant_version_test_manifest": "0.2.274"
+  },
+  "synthetic_shapes": {
+    "nlay": 54,
+    "ninterface": 55,
+    "ngpt": 32,
+    "loss_input_vector_length": 5248,
+    "construction": "deterministic index-seeded ramps and sinusoids; no RNG",
+    "layer_weight_construction": "normalized sqrt-pressure increments (ckdmip_layer_weight construction on a synthetic pressure grid)",
+    "flux_magnitude": "O(100) W m^-2",
+    "heating_magnitude": "O(1) K day^-1 (stored in K s^-1 as the loss expects)"
+  },
+  "timing_samples_per_measurement": 5,
+  "timing_protocol": "median of 5 samples after one discarded warmup",
+  "loss_timings": {
+    "shape": {
+      "nlay": 54,
+      "ninterface": 55,
+      "ngpt": 32,
+      "loss_input_vector_length": 5248
+    },
+    "variants": [
+      {
+        "name": "lw_general",
+        "loss_function": "ecckd_lw_ckd_loss",
+        "path": "general",
+        "weights": {
+          "flux_weight": 0.2,
+          "flux_profile_weight": 0.02,
+          "broadband_weight": 0.2
+        },
+        "median_seconds": 4.2912e-5,
+        "samples_seconds": [
+          4.4293e-5,
+          6.2125e-5,
+          4.042e-5,
+          4.1275e-5,
+          4.2912e-5
+        ]
+      },
+      {
+        "name": "sw_general",
+        "loss_function": "ecckd_sw_ckd_loss",
+        "path": "general",
+        "weights": {
+          "flux_weight": 0.4,
+          "flux_profile_weight": 0.02,
+          "broadband_weight": 0.2
+        },
+        "median_seconds": 4.3893e-5,
+        "samples_seconds": [
+          4.4768e-5,
+          4.3317e-5,
+          4.3893e-5,
+          4.0542e-5,
+          5.9002e-5
+        ]
+      },
+      {
+        "name": "sw_fast_path",
+        "loss_function": "ecckd_sw_ckd_loss",
+        "path": "fast (early-return branch, ecckd_original_objective_loss.jl:128)",
+        "weights": {
+          "flux_weight": 0.4,
+          "flux_profile_weight": 0.0,
+          "broadband_weight": 0.0
+        },
+        "median_seconds": 8.762e-6,
+        "samples_seconds": [
+          9.149e-6,
+          8.867e-6,
+          8.56e-6,
+          8.196e-6,
+          8.762e-6
+        ]
+      }
+    ]
+  },
+  "enzyme_loss_input_adjoint_note": "adjoints w.r.t. the assembled candidate heating/flux arrays only; NOT coefficient gradients",
+  "enzyme_loss_input_adjoint_timings": {
+    "shape": {
+      "nlay": 54,
+      "ninterface": 55,
+      "ngpt": 32,
+      "loss_input_vector_length": 5248
+    },
+    "variants": [
+      {
+        "name": "lw_general",
+        "loss_function": "ecckd_lw_ckd_loss",
+        "path": "general",
+        "median_seconds": 0.000217495,
+        "samples_seconds": [
+          0.000217859,
+          0.000217495,
+          0.000207014,
+          0.000235648,
+          0.000211381
+        ]
+      },
+      {
+        "name": "sw_general",
+        "loss_function": "ecckd_sw_ckd_loss",
+        "path": "general",
+        "median_seconds": 0.000210677,
+        "samples_seconds": [
+          0.000197552,
+          0.000210677,
+          0.000273743,
+          0.000217995,
+          0.000208694
+        ]
+      },
+      {
+        "name": "sw_fast_path",
+        "loss_function": "ecckd_sw_ckd_loss",
+        "path": "fast (early-return branch, ecckd_original_objective_loss.jl:128)",
+        "median_seconds": 3.4685e-5,
+        "samples_seconds": [
+          3.7028e-5,
+          6.1377e-5,
+          3.4685e-5,
+          3.3432e-5,
+          3.3883e-5
+        ]
+      }
+    ]
+  },
+  "enzyme_loss_input_adjoint_fd_check": {
+    "gate_threshold": 1.0e-6,
+    "subset_size": 32,
+    "subset_description": "16 heating entries (stride) + 8 surface downwelling + 8 TOA upwelling entries, deterministic",
+    "fd_step_heating_block": 1.0e-6,
+    "fd_step_flux_blocks": 0.01,
+    "step_note": "losses are exactly quadratic in their inputs, so central differences are exact up to roundoff; block-scaled steps control cancellation error",
+    "variants": [
+      {
+        "name": "lw_general",
+        "max_rel_error": 1.0322016925376426e-10,
+        "worst_index": 116,
+        "gate": "passed"
+      },
+      {
+        "name": "sw_general",
+        "max_rel_error": 2.357625469897475e-11,
+        "worst_index": 1266,
+        "gate": "passed"
+      },
+      {
+        "name": "sw_fast_path",
+        "max_rel_error": 3.155810355229452e-11,
+        "worst_index": 1496,
+        "gate": "passed"
+      }
+    ]
+  },
+  "reactant": {
+    "status": "reactant_ok",
+    "backend": "cpu",
+    "shape": {
+      "nlay": 54,
+      "ninterface": 55,
+      "ngpt": 32
+    },
+    "loss_function": "ecckd_sw_ckd_loss",
+    "path": "fast (early-return branch)",
+    "load_seconds": 3.098277639,
+    "compile_seconds": 37.616877022,
+    "first_call_seconds": 0.420969806,
+    "steady_state": {
+      "median_seconds": 2.0141e-5,
+      "samples_seconds": [
+        2.3639e-5,
+        2.0141e-5,
+        1.9075e-5,
+        2.3449e-5,
+        1.8963e-5
+      ]
+    },
+    "plain_julia_relative_difference": 0.0,
+    "matches_plain_julia": true,
+    "error": null
+  },
+  "recovery_vector_plumbing": {
+    "reference_filename": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "flattened_array_names": [
+      "ch4_molar_absorption_coeff",
+      "co2_molar_absorption_coeff",
+      "composite_molar_absorption_coeff",
+      "gpoint_fraction",
+      "h2o_molar_absorption_coeff",
+      "n2o_molar_absorption_coeff",
+      "o3_molar_absorption_coeff",
+      "rayleigh_molar_scattering_coeff",
+      "solar_irradiance"
+    ],
+    "array_count": 9,
+    "parameter_count": 204896,
+    "expected_parameter_count": 204896,
+    "flatten": {
+      "median_seconds": 0.005119181,
+      "samples_seconds": [
+        0.0053219,
+        0.005119181,
+        0.00480476,
+        0.062192351,
+        0.00399509
+      ]
+    },
+    "write_candidate": {
+      "median_seconds": 0.003370933,
+      "samples_seconds": [
+        0.004376156,
+        0.003301956,
+        0.003694896,
+        0.003370933,
+        0.003321002
+      ]
+    },
+    "reflatten": {
+      "median_seconds": 0.004762936,
+      "samples_seconds": [
+        0.004486216,
+        0.003730867,
+        0.004762936,
+        0.005179681,
+        0.005458115
+      ]
+    },
+    "roundtrip_max_abs_error": 0.0,
+    "roundtrip_l1_relative_error": 0.0
+  },
+  "fd_infeasibility": {
+    "basis": "median ecckd_sw_ckd_loss general-path evaluation at synthetic SW32 shapes",
+    "single_loss_median_seconds": 4.3893e-5,
+    "parameter_count": 204896,
+    "loss_evaluations_for_central_fd": 409792,
+    "extrapolated_fd_gradient_seconds": 17.987000256,
+    "extrapolated_fd_gradient_hours": 0.0049963889600000005,
+    "note": "cost of ONE central-finite-difference gradient over the 204,896-parameter SW32 vector at a single-loss-evaluation price; the real objective sums many profiles, so this is a lower bound"
+  },
+  "gates": {
+    "enzyme_loss_input_adjoint_fd_gate": "passed",
+    "sw32_parameter_count_gate": "passed",
+    "sw32_roundtrip_zero_error_gate": "passed",
+    "reactant_compile_gate": "passed"
+  },
+  "failures": []
+}
