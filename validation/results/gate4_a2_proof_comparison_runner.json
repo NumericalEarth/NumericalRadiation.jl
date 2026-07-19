@@ -1,0 +1,12 @@
+{
+  "case": "gate4_a2_proof_comparison_runner",
+  "data_mode": "refusal_no_proof_outputs",
+  "disclaimer": "refuses until the proof raw definitions exist; no create_lut, objective, floor, or recovery computation.",
+  "missing": [
+    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_raw-ckd-definition/ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc"
+  ],
+  "provenance_requirement": "path existence alone is NOT proof provenance: comparisons are valid only after an explicitly authorized proof sbatch completion with log/hash review; raw files of unreviewed origin are unproven and promote nothing",
+  "status": "proof_comparisons_waiting_for_raw_outputs",
+  "timestamp_utc": "2026-07-19T08:33:11.739"
+}
