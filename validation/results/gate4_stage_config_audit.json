@@ -1,0 +1,257 @@
+{
+  "bounded_semantics": {
+    "compiled_default": "Real is_bounded = true (optimize_lut.cpp:148)",
+    "config_key": "bounded_minimization (optimize_lut.cpp:149)",
+    "dead_key_lines": [
+      [
+        57,
+        "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 bounded_optimization=0\""
+      ]
+    ],
+    "sw_script_dead_key": "COMMON_OPTIONS carries bounded_optimization=0 -- a key the code never reads; bounded minimization therefore stays ON in SW passes"
+  },
+  "case": "gate4_stage_config_audit",
+  "common_options_all_assignments_last_wins": {
+    "lw": [
+      [
+        31,
+        "COMMON_OPTIONS=\"prior_error=8.0 broadband_weight=0.8 flux_profile_weight=0.2 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 spectral_boundary_weight=0.1\""
+      ],
+      [
+        35,
+        "#COMMON_OPTIONS=\"min_prior_error=0.5 max_prior_error=8.0 broadband_weight=0.8 flux_profile_weight=0.2 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 spectral_boundary_weight=0.1\""
+      ]
+    ],
+    "sw": [
+      [
+        31,
+        "COMMON_OPTIONS=\"prior_error=8.0 broadband_weight=0.5 flux_weight=0.1 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=1500\""
+      ],
+      [
+        35,
+        "#COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.3 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 spectral_boundary_weight=0.1\""
+      ],
+      [
+        36,
+        "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.3 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 spectral_boundary_weight=0.0\""
+      ],
+      [
+        38,
+        "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.3 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+      ],
+      [
+        40,
+        "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+      ],
+      [
+        57,
+        "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 bounded_optimization=0\""
+      ],
+      [
+        63,
+        "#COMMON_OPTIONS=\"min_prior_error=0.1 max_prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+      ],
+      [
+        65,
+        "#COMMON_OPTIONS=\"min_prior_error=0.2 max_prior_error=2.0 broadband_weight=0.5 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+      ]
+    ]
+  },
+  "data_mode": "pinned_source_configuration_only",
+  "disclaimer": "configuration audit of the pinned upstream staged-training scripts only; no floor, objective-value, or recovery claim.",
+  "failures": [],
+  "gates": {
+    "lw_cfc_gaslist": "passed",
+    "lw_ch4_negative_od_override": "passed",
+    "lw_pass_order": "passed",
+    "optimize_lut_cpp_defaults": "passed",
+    "per_pass_options_explicit": "passed",
+    "relative_to_recorded": "passed",
+    "remove_min_max_final_passes": "passed",
+    "sw_base_from_scaled": "passed",
+    "sw_bounded_optimization_dead_key_flagged": "passed",
+    "sw_pass_order": "passed",
+    "sw_rgb_band_mapping": "passed",
+    "sw_rgb_rewrite_recorded": "passed"
+  },
+  "lw_pass_order": [
+    "relative-base",
+    "relative-ch4",
+    "relative-n2o",
+    "relative-cfc"
+  ],
+  "lw_passes": {
+    "relative-base": {
+      "GASLIST": "composite h2o o3 co2",
+      "INCODE": "raw-ckd-definition",
+      "OUTCODE": "raw2-ckd-definition",
+      "TRAINING": "$TRAINING ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+      "block_lines": [
+        125,
+        152
+      ]
+    },
+    "relative-cfc": {
+      "EXTRA_ARGS": "$EXTRA_ARGS relative_to=ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "GASLIST": "cfc11 cfc12",
+      "INCODE": "raw4-ckd-definition",
+      "OUTCODE": "ckd-definition",
+      "SPECIFIC_OPTIONS": "convergence_criterion=0.0005 flux_weight=0.2 remove_min_max=1",
+      "TRAINING": "ckdmip_evaluation1_lw_fluxes_present.h5 ckdmip_evaluation1_lw_fluxes_cfc11-0.h5 ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5 ckdmip_evaluation1_lw_fluxes_cfc12-0.h5 ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
+      "block_lines": [
+        222,
+        234
+      ],
+      "relative_to": "ckdmip_evaluation1_lw_fluxes_rel-415.h5"
+    },
+    "relative-ch4": {
+      "EXTRA_ARGS": "$EXTRA_ARGS relative_to=ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "GASLIST": "ch4",
+      "INCODE": "raw2-ckd-definition",
+      "OUTCODE": "raw3-ckd-definition",
+      "SPECIFIC_OPTIONS": "convergence_criterion=0.0005 flux_weight=0.5 negative_od_penalty=1.0e1",
+      "TRAINING": "ckdmip_evaluation1_lw_fluxes_present.h5 ckdmip_evaluation1_lw_fluxes_ch4-350.h5 ckdmip_evaluation1_lw_fluxes_ch4-700.h5 ckdmip_evaluation1_lw_fluxes_ch4-1200.h5 ckdmip_evaluation1_lw_fluxes_ch4-2600.h5 ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
+      "block_lines": [
+        154,
+        172
+      ],
+      "relative_to": "ckdmip_evaluation1_lw_fluxes_rel-415.h5"
+    },
+    "relative-n2o": {
+      "EXTRA_ARGS": "$EXTRA_ARGS relative_to=ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "GASLIST": "n2o",
+      "INCODE": "raw3-ckd-definition",
+      "OUTCODE": "raw4-ckd-definition",
+      "SPECIFIC_OPTIONS": "convergence_criterion=0.0005 flux_weight=0.5",
+      "TRAINING": "ckdmip_evaluation1_lw_fluxes_present.h5 ckdmip_evaluation1_lw_fluxes_n2o-190.h5 ckdmip_evaluation1_lw_fluxes_n2o-270.h5 ckdmip_evaluation1_lw_fluxes_n2o-405.h5 ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
+      "block_lines": [
+        192,
+        204
+      ],
+      "relative_to": "ckdmip_evaluation1_lw_fluxes_rel-415.h5"
+    }
+  },
+  "merge_precedence": "SPECIFIC_OPTIONS/EXTRA_ARGS > COMMON_OPTIONS (last assignment wins) > optimize_lut.cpp compiled defaults",
+  "optimize_lut_cpp_defaults": {
+    "bounded_minimization_config_key": [
+      [
+        149,
+        "config.read(is_bounded, \"bounded_minimization\");"
+      ]
+    ],
+    "bounded_minimization_default_true": [
+      [
+        148,
+        "Real is_bounded = true;"
+      ]
+    ],
+    "broadband_weight": [
+      [
+        86,
+        "Real broadband_weight = 0.5;"
+      ]
+    ],
+    "convergence_criterion": [
+      [
+        109,
+        "Real convergence_criterion = 0.02;"
+      ]
+    ],
+    "flux_profile_weight": [
+      [
+        85,
+        "Real flux_profile_weight = 0.0;"
+      ]
+    ],
+    "flux_weight": [
+      [
+        84,
+        "Real flux_weight = 0.02;"
+      ]
+    ],
+    "max_iterations": [
+      [
+        142,
+        "int max_iterations = 3000;"
+      ]
+    ],
+    "negative_od_penalty": [
+      [
+        145,
+        "Real negative_od_penalty = 1.0e4;"
+      ]
+    ],
+    "prior_error": [
+      [
+        94,
+        "Real prior_error = -1.0;"
+      ],
+      [
+        95,
+        "Real min_prior_error = -1.0;"
+      ],
+      [
+        96,
+        "Real max_prior_error = -1.0;"
+      ]
+    ],
+    "spectral_boundary_weight": [
+      [
+        100,
+        "Real spectral_boundary_weight = 0.0;"
+      ]
+    ]
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "33febdc",
+    "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "status": "stage_config_audit_passed",
+  "sw_pass_order": [
+    "relative-base",
+    "relative-ch4",
+    "relative-n2o"
+  ],
+  "sw_passes": {
+    "relative-base": {
+      "GASLIST": "composite h2o o3 co2",
+      "INCODE": "scaled-ckd-definition",
+      "OUTCODE": "raw2-ckd-definition",
+      "SPECIFIC_OPTIONS": "convergence_criterion=0.01 spectral_boundary_weight=0.0",
+      "TRAINING": "$TRAINING ckdmip_evaluation2_sw_fluxes_rel-415.h5",
+      "block_lines": [
+        98,
+        130
+      ]
+    },
+    "relative-ch4": {
+      "EXTRA_ARGS": "$EXTRA_ARGS relative_to=ckdmip_evaluation1_sw_fluxes_rel-415.h5",
+      "GASLIST": "ch4",
+      "INCODE": "raw2-ckd-definition",
+      "OUTCODE": "raw3-ckd-definition",
+      "SPECIFIC_OPTIONS": "convergence_criterion=0.0005 max_no_rayleigh_wavenumber=15000",
+      "TRAINING": "ckdmip_evaluation1_sw_fluxes_present.h5 ckdmip_evaluation1_sw_fluxes_ch4-350.h5 ckdmip_evaluation1_sw_fluxes_ch4-700.h5 ckdmip_evaluation1_sw_fluxes_ch4-1200.h5 ckdmip_evaluation1_sw_fluxes_ch4-2600.h5 ckdmip_evaluation1_sw_fluxes_ch4-3500.h5",
+      "block_lines": [
+        132,
+        147
+      ],
+      "relative_to": "ckdmip_evaluation1_sw_fluxes_rel-415.h5"
+    },
+    "relative-n2o": {
+      "EXTRA_ARGS": "$EXTRA_ARGS relative_to=ckdmip_evaluation1_sw_fluxes_rel-415.h5",
+      "GASLIST": "n2o",
+      "INCODE": "raw3-ckd-definition",
+      "OUTCODE": "ckd-definition",
+      "SPECIFIC_OPTIONS": "convergence_criterion=0.0005 max_no_rayleigh_wavenumber=15000 remove_min_max=1",
+      "TRAINING": "ckdmip_evaluation1_sw_fluxes_present.h5 ckdmip_evaluation1_sw_fluxes_n2o-190.h5 ckdmip_evaluation1_sw_fluxes_n2o-270.h5 ckdmip_evaluation1_sw_fluxes_n2o-405.h5 ckdmip_evaluation1_sw_fluxes_n2o-540.h5",
+      "block_lines": [
+        149,
+        164
+      ],
+      "relative_to": "ckdmip_evaluation1_sw_fluxes_rel-415.h5"
+    }
+  },
+  "timestamp_utc": "2026-07-19T05:14:26.122"
+}
