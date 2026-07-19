@@ -1,0 +1,65 @@
+{
+  "case": "gate4_a1_upstream_recon",
+  "data_mode": "metadata_probes_and_local_scans_only",
+  "disclaimer": "reconnaissance metadata only; nothing downloaded beyond HEAD/listing responses; no generation, objective, floor, or recovery computation.",
+  "exact_candidates": {
+    "github": [],
+    "local": [],
+    "probes": []
+  },
+  "failures": [],
+  "gates": {
+    "github_release_listing_ok": "passed",
+    "local_sources_scanned": "passed",
+    "no_generation_or_objective": "passed",
+    "no_large_downloads": "passed",
+    "upstream_probes_recorded": "passed"
+  },
+  "github_release_assets": [],
+  "local_findings": [],
+  "next_unit_if_not_found": "A2 rerun-with-proof manifest (find_g_points from idealized spectra + exact-reproduction gate against published support arrays)",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "270044e",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "status": "a1_recon_no_exact_upstream_source_found",
+  "timestamp_utc": "2026-07-19T05:35:31.038",
+  "upstream_probes": [
+    {
+      "http_status": "404",
+      "note": "404 0 text/plain",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/gpoints/"
+    },
+    {
+      "http_status": "404",
+      "note": "404 0 text/plain",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/ecckd/"
+    },
+    {
+      "http_status": "200",
+      "note": "200 0 text/html",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/results/"
+    },
+    {
+      "http_status": "404",
+      "note": "404 0 text/plain",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/ckd-definitions/"
+    },
+    {
+      "http_status": "404",
+      "note": "404 0 text/plain",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/gpoints/ecckd-1.0_lw_gpoints_climate_fsck-32b.h5"
+    },
+    {
+      "http_status": "404",
+      "note": "404 0 text/plain",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/ecckd/ecckd-1.0_lw_raw-ckd-definition_climate_fsck-32b.nc"
+    },
+    {
+      "http_status": "404",
+      "note": "404 0 text/plain",
+      "url": "https://aux.ecmwf.int/ecpds/home/ckdmip/ecckd/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-32b.nc"
+    }
+  ]
+}
