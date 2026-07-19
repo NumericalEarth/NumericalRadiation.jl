@@ -1,0 +1,294 @@
+{
+  "case": "gate4_covariance_stride_audit",
+  "data_mode": "synthetic_index_reconstruction_plus_published_shapes",
+  "disclaimer": "index/stride audit only; no floor, objective-value, or recovery claim.",
+  "failures": [],
+  "gates": {
+    "prior_per_g_independent": "passed",
+    "recovery_vector_mapping": "passed",
+    "stride_2d_permutation_conjugate": "passed",
+    "stride_3d_permutation_conjugate": "passed",
+    "support_arrays_not_prior_regularized": "passed"
+  },
+  "maxrss_bytes": 823640064,
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "fee860f",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "source_anchors": {
+    "create_error_covariances": "ckd_model.cpp:615-760 (corrected spread conventions; 2-D reshape dimensions(nt,np) row-major => alpha = it*np+ip; 3-D dimensions(nconc,nt,np) => alpha = ic*nt*np + it*np + ip)",
+    "flatten_recovery_arrays": "vec() over Julia (g,p,t[,c]) column-major == upstream row-major ([c,]t,p,g)",
+    "local_prior": "g4_prior_term/_conc flatten t fastest; compatibility via PROVEN permutation-conjugacy"
+  },
+  "stats": {
+    "conjugacy_2d": {
+      "elementwise_exact": true,
+      "quadratic_mine": 0.11188271604938281,
+      "quadratic_upstream": 0.11188271604938271
+    },
+    "conjugacy_3d": {
+      "elementwise_exact": true,
+      "quadratic_mine": 0.15066762688614457,
+      "quadratic_upstream": 0.1506676268861457
+    },
+    "per_g_independence": {
+      "g1_gradient_nonzero": true,
+      "g2_gradient_max_abs": 0.0
+    },
+    "recovery_vector_mapping": {
+      "note": "Julia column-major vec over (g,p,t[,c]) == upstream row-major ([c,]t,p,g) with g fastest in both; the WHOLE-FILE state order is distinct from the per-g prior order and both are now proven",
+      "published": {
+        "lw32": {
+          "file": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+          "rows": [
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 1,
+              "last_index": 10176,
+              "name": "cfc11_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 10177,
+              "last_index": 20352,
+              "name": "cfc12_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 20353,
+              "last_index": 30528,
+              "name": "ch4_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 30529,
+              "last_index": 40704,
+              "name": "co2_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 40705,
+              "last_index": 50880,
+              "name": "composite_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "support",
+              "element_count": 10432,
+              "first_index": 50881,
+              "last_index": 61312,
+              "name": "gpoint_fraction",
+              "shape": [
+                326,
+                32
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 122112,
+              "first_index": 61313,
+              "last_index": 183424,
+              "name": "h2o_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6,
+                12
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 183425,
+              "last_index": 193600,
+              "name": "n2o_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 193601,
+              "last_index": 203776,
+              "name": "o3_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "support",
+              "element_count": 7392,
+              "first_index": 203777,
+              "last_index": 211168,
+              "name": "planck_function",
+              "shape": [
+                32,
+                231
+              ]
+            }
+          ],
+          "total_parameters": 211168
+        },
+        "sw32": {
+          "file": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+          "rows": [
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 1,
+              "last_index": 10176,
+              "name": "ch4_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 10177,
+              "last_index": 20352,
+              "name": "co2_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 20353,
+              "last_index": 30528,
+              "name": "composite_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "support",
+              "element_count": 31840,
+              "first_index": 30529,
+              "last_index": 62368,
+              "name": "gpoint_fraction",
+              "shape": [
+                995,
+                32
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 122112,
+              "first_index": 62369,
+              "last_index": 184480,
+              "name": "h2o_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6,
+                12
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 184481,
+              "last_index": 194656,
+              "name": "n2o_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "coefficient",
+              "element_count": 10176,
+              "first_index": 194657,
+              "last_index": 204832,
+              "name": "o3_molar_absorption_coeff",
+              "shape": [
+                32,
+                53,
+                6
+              ]
+            },
+            {
+              "class": "support",
+              "element_count": 32,
+              "first_index": 204833,
+              "last_index": 204864,
+              "name": "rayleigh_molar_scattering_coeff",
+              "shape": [
+                32
+              ]
+            },
+            {
+              "class": "support",
+              "element_count": 32,
+              "first_index": 204865,
+              "last_index": 204896,
+              "name": "solar_irradiance",
+              "shape": [
+                32
+              ]
+            }
+          ],
+          "total_parameters": 204896
+        }
+      },
+      "vec_order_3d_proven": true,
+      "vec_order_4d_proven": true
+    },
+    "support_frozen": {
+      "policy": "support arrays appear in the WHOLE-FILE state vector shapes (plumbing) but are fixed per Appendix B item 22; prior regularizes only molar-absorption log-coefficients",
+      "prior_calls_touching_support": [],
+      "support_arrays_in_state_vector": [
+        "gpoint_fraction",
+        "planck_function",
+        "rayleigh_molar_scattering_coeff",
+        "solar_irradiance"
+      ]
+    }
+  },
+  "status": "covariance_stride_audit_passed",
+  "timestamp_utc": "2026-07-19T05:08:56.684"
+}
