@@ -1,8 +1,8 @@
 # Gate-4 forward map G1 (increment 1: per-gas OD parity)
 
-Status: **g1_od_parity_passed**
+Status: **g1_od_and_lw_flux_parity_passed**
 
-term-resolved OD parity only; no objective-value, floor, or recovery claims; flux/heating parity are later increments.
+term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, or recovery claims; SW parity limited to direct-down in a later increment.
 
 | Gas | max_abs | max_rel (above abs floor) | signed bias | gate |
 |---|---|---|---|---|
@@ -15,4 +15,4 @@ term-resolved OD parity only; no objective-value, floor, or recovery claims; flu
 | n2o | 5.81878469019248e-11 | 0.0 | -0.005396732788798133 | passed |
 | o3 | 1.1829560353504576e-7 | 5.7952849428986206e-8 | 0.0003935185185185185 | passed |
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `8fec954` (pre-own-commit); reference: pinned run_ckd smoke output.
+Provenance: branch `glw/gate4-recovery`, generated_from_head `a1a0a68` (pre-own-commit); reference: pinned run_ckd smoke output.

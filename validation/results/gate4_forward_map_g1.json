@@ -1,7 +1,42 @@
 {
   "case": "gate4_forward_map_g1",
-  "disclaimer": "term-resolved OD parity only; no objective-value, floor, or recovery claims; flux/heating parity are later increments.",
+  "disclaimer": "term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, or recovery claims; SW parity limited to direct-down in a later increment.",
   "failures": [],
+  "flux_stats": {
+    "derived_heating_max_rel": 0.0,
+    "flux_dn_lw": {
+      "max_abs": 1.8337017706926417e-5,
+      "max_rel_above_abs_floor": 8.345814425216998e-8,
+      "n": 2750,
+      "neg_residuals": 1375,
+      "pos_residuals": 1325,
+      "signed_bias_fraction": -0.018518518518518517
+    },
+    "flux_up_lw": {
+      "max_abs": 1.96993350982666e-5,
+      "max_rel_above_abs_floor": 6.942703303238334e-8,
+      "n": 2750,
+      "neg_residuals": 1349,
+      "pos_residuals": 1401,
+      "signed_bias_fraction": 0.01890909090909091
+    },
+    "spectral_flux_dn_lw": {
+      "max_abs": 4.790516108243992e-6,
+      "max_rel_above_abs_floor": 1.1059160815325888e-7,
+      "n": 88000,
+      "neg_residuals": 42943,
+      "pos_residuals": 43457,
+      "signed_bias_fraction": 0.0059490740740740745
+    },
+    "spectral_flux_up_lw": {
+      "max_abs": 6.824734484212058e-6,
+      "max_rel_above_abs_floor": 1.1494809846494688e-7,
+      "n": 88000,
+      "neg_residuals": 43037,
+      "pos_residuals": 43363,
+      "signed_bias_fraction": 0.0037731481481481483
+    }
+  },
   "gas_stats": {
     "cfc11": {
       "max_abs": 2.884306920906965e-11,
@@ -93,6 +128,11 @@
     }
   },
   "gates": {
+    "flux_flux_dn_lw": "passed",
+    "flux_flux_up_lw": "passed",
+    "flux_spectral_flux_dn_lw": "passed",
+    "flux_spectral_flux_up_lw": "passed",
+    "heating_derived_crosscheck": "passed",
     "od_cfc11": "passed",
     "od_cfc12": "passed",
     "od_ch4": "passed",
@@ -102,28 +142,29 @@
     "od_n2o": "passed",
     "od_o3": "passed"
   },
-  "increment": "1_per_gas_optical_depth_parity",
-  "maxrss_bytes": 515706880,
+  "increment": "1_od_parity_plus_2_lw_flux_parity",
+  "maxrss_bytes": 532795392,
   "orientation_check": "passed",
   "provenance": {
     "branch": "glw/gate4-recovery",
     "ckd_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
-    "generated_from_head": "8fec954",
+    "generated_from_head": "a1a0a68",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "reference_command": "run_ckd ckd_model=<LW32 published> input=<evaluation1 present conc> output=<smoke nc> gases='composite h2o o3 co2 ch4 n2o cfc11 cfc12'",
     "reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
     "reference_tool": "pinned run_ckd (ecckd source artifact 6115f9b8, May-2026 build in ecckd-derived-flux-work)",
     "sw_target_policy": "SW parity restricted to run_ckd direct-down mu0=0.5 in a later increment; *_fluxes-4angle_*/ckdmip_sw products are NEVER G1 targets"
   },
-  "status": "g1_od_parity_passed",
+  "status": "g1_od_and_lw_flux_parity_passed",
   "thresholds": {
     "od_abs": 1.0e-9,
     "od_rel": 1.0e-6
   },
-  "timestamp_utc": "2026-07-19T04:39:09.748",
+  "timestamp_utc": "2026-07-19T04:43:12.768",
   "timings_seconds": {
-    "load_seconds": 3.347676372,
-    "od_parity_seconds": 1.415951741
+    "flux_parity_seconds": 0.516499392,
+    "load_seconds": 3.021824651,
+    "od_parity_seconds": 1.38915875
   }
 }

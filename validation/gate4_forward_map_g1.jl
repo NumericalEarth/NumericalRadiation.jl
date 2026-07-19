@@ -70,6 +70,21 @@ function g1_load_reference(path, fails)
                 push!(fails, "orientation: $n size $(size(v)) != (55,50)")
             ref[n] = Float64.(Array(v))
         end
+        let v = ds["optical_depth"]
+            dn = collect(String.(NCDatasets.dimnames(v)))
+            dn in (["g_point", "level", "column"],
+                   ["g_point", "level_or_layer", "column"]) ||
+                push!(fails, "orientation: optical_depth dims $(dn) unexpected")
+            ref["optical_depth"] = Float64.(Array(v))   # upstream-clamped total
+        end
+        let v = ds["planck_hl"]
+            size(v) == (32, 55, 50) ||
+                push!(fails, "orientation: planck_hl size $(size(v)) != (32,55,50)")
+        end
+        let v = ds["planck_surf"]
+            size(v) == (32, 50) ||
+                push!(fails, "orientation: planck_surf size $(size(v)) != (32,50)")
+        end
         ref["pressure_hl"] = Float64.(Array(ds["pressure_hl"]))   # (hl, col)
         ref["planck_hl"] = Float64.(Array(ds["planck_hl"]))       # (g, hl, col)
         ref["planck_surf"] = Float64.(Array(ds["planck_surf"]))   # (g, col)
@@ -257,6 +272,26 @@ function g1_parity_stats(ours::AbstractArray, ref::AbstractArray)
     )
 end
 
+function g1_parity_stats_flux(ours::AbstractArray, ref::AbstractArray)
+    max_abs = 0.0; max_rel = 0.0
+    pos = 0; neg = 0
+    for i in eachindex(ref)
+        d = ours[i] - ref[i]
+        ad = abs(d)
+        ad > max_abs && (max_abs = ad)
+        rel = ad / max(abs(ref[i]), abs(ours[i]), 1e-300)
+        if rel > max_rel && ad > 1e-9
+            max_rel = rel
+        end
+        d > 0 && (pos += 1)
+        d < 0 && (neg += 1)
+    end
+    signed = pos + neg == 0 ? 0.0 : (pos - neg) / (pos + neg)
+    return Dict{String, Any}("n" => length(ref), "max_abs" => max_abs,
+        "max_rel_above_abs_floor" => max_rel, "pos_residuals" => pos,
+        "neg_residuals" => neg, "signed_bias_fraction" => signed)
+end
+
 function main()
     fails = String[]
     timings = Dict{String, Float64}()
@@ -304,18 +339,90 @@ function main()
         end
     end
 
-    status = isempty(fails) ? "g1_od_parity_passed" : "g1_od_parity_failed"
+    # --- increment 2: LW flux parity (RT isolation) ------------------------------
+    # Input: run_ckd's emitted total optical_depth (already clamped upstream via
+    # od = max(od, 0)); reference planck_hl/planck_surf; surf_emissivity = 1.0.
+    flux_stats = Dict{String, Any}()
+    timings["flux_parity_seconds"] = @elapsed begin
+        od = ref["optical_depth"]
+        ng, nlay, ncol = size(od)
+        sp_dn = zeros(ng, nlay + 1, ncol)
+        sp_up = zeros(ng, nlay + 1, ncol)
+        for c in 1:ncol, g in 1:ng
+            r = g4_lw_fluxes(view(od, g, :, c), view(ref["planck_hl"], g, :, c),
+                             ref["planck_surf"][g, c], 1.0)
+            sp_dn[g, :, c] = r.flux_dn
+            sp_up[g, :, c] = r.flux_up
+        end
+        for (name, ours, target) in (
+                ("spectral_flux_dn_lw", sp_dn, ref["spectral_flux_dn_lw"]),
+                ("spectral_flux_up_lw", sp_up, ref["spectral_flux_up_lw"]),
+                ("flux_dn_lw", dropdims(sum(sp_dn; dims = 1); dims = 1),
+                 ref["flux_dn_lw"]),
+                ("flux_up_lw", dropdims(sum(sp_up; dims = 1); dims = 1),
+                 ref["flux_up_lw"]))
+            st = g1_parity_stats_flux(ours, target)
+            flux_stats[name] = st
+            pass = st["max_abs"] <= 1e-3 || st["max_rel_above_abs_floor"] <= 1e-6
+            bias_ok = abs(st["signed_bias_fraction"]) < 0.9 || st["max_abs"] <= 1e-9
+            gates["flux_$(name)"] = pass && bias_ok ? "passed" : "failed"
+            pass || push!(fails, "flux parity $name: max_abs=$(st["max_abs"]) " *
+                                 "max_rel=$(st["max_rel_above_abs_floor"])")
+            bias_ok || push!(fails,
+                "flux parity $name signed bias: $(st["signed_bias_fraction"])")
+        end
+        # derived heating cross-check (NO external heating target in the
+        # reference file: this compares heating computed from ref fluxes vs
+        # from our fluxes, both via the item-12 LW net-flux convention)
+        bb_dn_ours = dropdims(sum(sp_dn; dims = 1); dims = 1)
+        bb_up_ours = dropdims(sum(sp_up; dims = 1); dims = 1)
+        max_rel_hr = 0.0
+        for c in 1:ncol
+            hr_ref = g4_heating_rate(view(ref["pressure_hl"], :, c),
+                                     view(ref["flux_dn_lw"], :, c),
+                                     view(ref["flux_up_lw"], :, c))
+            hr_ours = g4_heating_rate(view(ref["pressure_hl"], :, c),
+                                      view(bb_dn_ours, :, c),
+                                      view(bb_up_ours, :, c))
+            p_hl_c = view(ref["pressure_hl"], :, c)
+            for l in 1:nlay
+                ad = abs(hr_ref[l] - hr_ours[l])
+                # propagated Float32-storage bound: the reference NetCDF stores
+                # fluxes in Float32, so heating inherits ~(g/cp)/dp * 4*eps32*F
+                # of quantization noise; differences inside that bound carry no
+                # information about RT parity.
+                fscale = max(abs(ref["flux_dn_lw"][l, c]),
+                             abs(ref["flux_dn_lw"][l+1, c]),
+                             abs(ref["flux_up_lw"][l, c]),
+                             abs(ref["flux_up_lw"][l+1, c]), 1.0)
+                bound = (9.80665 / 1004.0) / (p_hl_c[l+1] - p_hl_c[l]) *
+                        4 * eps(Float32) * fscale + 1e-12
+                ad <= bound && continue
+                denom = max(abs(hr_ref[l]), abs(hr_ours[l]), 1e-300)
+                max_rel_hr = max(max_rel_hr, ad / denom)
+            end
+        end
+        flux_stats["derived_heating_max_rel"] = max_rel_hr
+        gates["heating_derived_crosscheck"] = max_rel_hr <= 1e-5 ?
+            "passed" : "failed"
+        max_rel_hr <= 1e-5 ||
+            push!(fails, "derived heating cross-check max rel $max_rel_hr")
+    end
+
+    status = isempty(fails) ? "g1_od_and_lw_flux_parity_passed" :
+                              "g1_parity_failed"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
     result = Dict(
         "case" => "gate4_forward_map_g1",
-        "increment" => "1_per_gas_optical_depth_parity",
+        "increment" => "1_od_parity_plus_2_lw_flux_parity",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates,
         "failures" => fails,
         "gas_stats" => gas_stats,
+        "flux_stats" => flux_stats,
         "orientation_check" => orientation_ok ? "passed" : "failed",
         "thresholds" => Dict("od_abs" => G1_OD_ABS_TOL, "od_rel" => G1_OD_REL_TOL),
         "timings_seconds" => timings,
@@ -336,9 +443,10 @@ function main()
                 "mu0=0.5 in a later increment; *_fluxes-4angle_*/ckdmip_sw " *
                 "products are NEVER G1 targets",
         ),
-        "disclaimer" => "term-resolved OD parity only; no objective-value, " *
-                        "floor, or recovery claims; flux/heating parity are " *
-                        "later increments.",
+        "disclaimer" => "term-resolved OD and LW flux/derived-heating " *
+                        "parity; no objective-value, floor, or recovery " *
+                        "claims; SW parity limited to direct-down in a later " *
+                        "increment.",
     )
 
     mkpath(dirname(G1_RESULTS_JSON))
@@ -370,7 +478,7 @@ function main()
         println("  $k: $(gates[k])")
     end
     isempty(fails) || foreach(f -> println("  FAIL: $f"), first(fails, 12))
-    return status == "g1_od_parity_passed" ? 0 : 1
+    return status == "g1_od_and_lw_flux_parity_passed" ? 0 : 1
 end
 
 exit(main())
