@@ -7,50 +7,51 @@
   "gates": {
     "independent_blocker_mmm_const_identified": "passed",
     "no_optimization_or_floor_run": "passed",
-    "path_b_barred_from_acceptance": "passed",
     "published_targets_resolved": "passed",
-    "recommendation_is_path_a": "passed"
+    "recommendation_is_path_a": "passed",
+    "unproven_reruns_barred_from_acceptance": "passed"
   },
   "independent_blockers": [
     {
       "blocker": "ckdmip_mmm-const_concentrations.nc",
       "independence": "independent of the g-point provenance decision; required by create_lut composite gas regardless",
       "path": "/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc",
-      "present": false
+      "present": true
     }
   ],
   "path_a": {
-    "extraction_inputs": {
-      "fields": [
-        "gpoint_fraction (g x wavenumber mapping)",
-        "wavenumber1_band / wavenumber2_band",
-        "band arrays and g-point counts"
-      ],
-      "lw32_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
-      "sw32_definition": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
-    },
     "future_outputs": {
       "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/gpoints/extracted_lw_climate_fsck-32b_gpoints.h5",
       "sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/gpoints/extracted_sw_climate_rgb-32b_gpoints.h5"
     },
-    "method": "extract g-point structure from the published target definitions",
-    "rationale": "g-point structure is part of the fixed problem definition under the optimizer-only-delta rule; extraction guarantees structural identity with the recovery target",
+    "method": "SUPERSEDED MECHANISM -- see gate4_gpoint_extraction_feasibility.json: direct argmax-from-gpoint_fraction extraction is PROVEN INVALID (fractional projection arrays; no g_point variable in the published files). The structural-identity POLICY stands; acceptable mechanisms are now: (A1) released find_g_points HDF5 outputs with verified provenance; (A2) exact find_g_points rerun WITH PROOF it reproduces the published gpoint_fraction/band arrays; (A3) existing upstream raw/scaled init definitions from the release history",
+    "rationale": "g-point structure is part of the fixed problem definition under the optimizer-only-delta rule; ANY acceptance mechanism must guarantee structural identity with the recovery target (verified against published support arrays)",
     "role": "ACCEPTANCE (G2/G3 floor and recovery runs)",
-    "schema_anchor": "the gpoints.h5 schema consumed by create_look_up_table (input=...) must be read from create_look_up_table.cpp when the extractor unit lands; extraction is NOT implemented in this policy unit"
+    "schema_anchor": "the gpoints.h5 schema consumed by create_look_up_table (input=...) must be read from create_look_up_table.cpp when the extractor unit lands; extraction is NOT implemented in this policy unit",
+    "verification_support_arrays": {
+      "fields": [
+        "gpoint_fraction (fractional projection)",
+        "wavenumber1_band / wavenumber2_band",
+        "band arrays and g-point counts"
+      ],
+      "lw32_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+      "role": "COMPARISON/VERIFICATION targets for A1/A2 candidates -- NOT extraction sources (see feasibility proof)",
+      "sw32_definition": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+    }
   },
   "path_b": {
-    "constraint": "regenerated g-points CANNOT be used for the main recovery floor unless Greg explicitly changes the optimizer-only-delta rule",
+    "constraint": "a rerun whose output does NOT exactly reproduce the published support arrays CANNOT feed the main recovery floor unless Greg explicitly changes the optimizer-only-delta rule; a rerun WITH exact reproduction proof qualifies as acceptance source A2, not as Path B",
     "method": "rerun upstream find_g_points from idealized spectra (restored on disk) with the pinned tool",
-    "role": "NON-ACCEPTANCE sensitivity / strict reproduction study",
+    "role": "SENSITIVITY-ONLY reruns: find_g_points reruns WITHOUT exact reproduction proof",
     "value": "quantifies partition sensitivity and full-workflow reproducibility; a divergence here is a finding about find_g_points determinism, not about recovery"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "d49618e",
+    "generated_from_head": "1433e9c",
     "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "recommendation": "PATH A for G2/G3 acceptance; PATH B recorded as non-acceptance sensitivity/reproduction path",
   "status": "gpoint_policy_recorded",
-  "timestamp_utc": "2026-07-19T05:24:41.998"
+  "timestamp_utc": "2026-07-19T05:32:32.984"
 }

@@ -129,10 +129,10 @@
       "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
       "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
     ],
-    "generated_from_head": "f88c5c9",
+    "generated_from_head": "2cebde3",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "source_anchor": "create_look_up_table.cpp: input_file.read(g_point, \"g_point\")"
   },
   "status": "extraction_infeasibility_proven",
-  "timestamp_utc": "2026-07-19T05:30:06.728"
+  "timestamp_utc": "2026-07-19T05:32:08.901"
 }

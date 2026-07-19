@@ -19,4 +19,4 @@ published definitions contain NO standalone g_point variable (inventory recorded
 
 Remaining options: A1 locate released find_g_points outputs; A2 rerun find_g_points as fixed-input problem-definition reconstruction (acceptance only if the reconstructed structure exactly reproduces the published gpoint_fraction/band arrays, else requires an explicit rule change); A3 alternative init source from upstream release history.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `f88c5c9` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `2cebde3` (pre-own-commit).
