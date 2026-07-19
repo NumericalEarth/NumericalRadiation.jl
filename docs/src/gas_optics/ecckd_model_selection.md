@@ -25,7 +25,8 @@ triggering lazy artifact downloads during documentation builds or dry runs.
 
 ```@example ecckd_model_selection
 paths = official_ecckd_definition_paths(spec; require = false)
-(longwave = paths.longwave, shortwave = paths.shortwave)
+(longwave = paths.longwave === nothing ? "not installed" : basename(paths.longwave),
+ shortwave = paths.shortwave === nothing ? "not installed" : basename(paths.shortwave))
 ```
 
 For a real run, use the default `require=true`:
@@ -61,8 +62,8 @@ work arrays once, and reuse those arrays every radiation update.
 
 ## Water Vapor Tables
 
-The convenience call above takes `h2o_mole_fraction` because it collapses
-H2O-dependent official tables to a fixed reference value. That is appropriate
-for simple examples and some validation checks. A host model with prognostic
-water vapor should preserve the H2O table dimension and evaluate it from the
-current atmospheric state inside [`optical_properties!`](@ref).
+When `:h2o` is in `gas_names`, the loader keeps the official H2O
+mole-fraction table dimension, and [`optical_properties!`](@ref) evaluates it
+per layer from the `h2o` and `composite` gas amounts of the current
+atmospheric state. The `h2o_mole_fraction` keyword is not a gas input; it is
+accepted for compatibility/fallback sampling of non-dynamic H2O tables.

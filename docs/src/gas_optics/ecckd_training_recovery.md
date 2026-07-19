@@ -30,6 +30,46 @@ upstream inputs from derived ecCKD training fluxes: files named like `5gas-*`
 and `rel-*` are generated products from the ecCKD/CKDMIP toolchain, not public
 CKDMIP archive inputs.
 
+## The Published Training Pipeline
+
+Recovering a published model requires reproducing more than a k-coefficient
+fit. The upstream pipeline (Hogan & Matricardi (2022), *J. Adv. Model. Earth
+Syst.*, DOI 10.1029/2022MS003033; see
+`doc/ecckd_documentation.tex` and the `test/do_all_{lw,sw}.sh` master scripts
+in the [upstream ecCKD repository](https://github.com/ecmwf-ifs/ecckd), pinned
+here as the `ecckd_source` artifact) has four stages after the g-point
+selection described on the [correlated-k page](correlated_k.md):
+
+1. **Initial look-up table.** `create_lut` reads the CKDMIP *Idealized*
+   dataset and averages molar absorption coefficients into each g point —
+   Planck-weighted in the longwave, weighted by the high-resolution solar
+   spectral irradiance in the shortwave — plus one Rayleigh molar scattering
+   coefficient per shortwave g point.
+2. **Shortwave direct-beam scaling.** `scale_lut` computes, from line-by-line
+   direct fluxes for the CKDMIP *MMM* median profile at 60° solar zenith angle
+   (``\mu_0 = 0.5``), the layer optical depths that reproduce the direct-beam
+   profile exactly in each g point, then applies the implied
+   pressure-dependent scaling to all gas tables.
+3. **Coefficient optimization.** `optimize_lut` minimizes CKD-vs-line-by-line
+   flux and heating-rate differences over the 50 profiles of the CKDMIP
+   *Evaluation-1* dataset, using Adept's bounded limited-memory BFGS
+   (quasi-Newton with automatic differentiation) acting on the natural
+   logarithm of the nonzero look-up-table coefficients, with a prior/error
+   covariance term (default prior error 0.25 of the log-coefficient range,
+   correlation 0.8 between adjacent pressure/temperature/concentration
+   entries) and configurable TOA/surface flux, flux-profile, and broadband
+   weights.
+4. **Staged gas optimization.** For the climate application the optimization
+   is *staged*, not simultaneous over all gases: major gases first
+   (`relative-base`: H₂O, O₃, CO₂ and the composite background), then the
+   CH₄ and N₂O forcing differences, plus CFCs in the longwave
+   (`OPTIMIZE_MODE_LIST`: `relative-base relative-ch4 relative-n2o` in the
+   shortwave, with `relative-cfc` appended in the longwave).
+
+Details of the optimization internals beyond what the pinned source and its
+documentation state should be attributed to the ecCKD papers rather than
+asserted independently.
+
 ## Objective Reconstruction
 
 The recovery pipeline should report the objective terms separately. The

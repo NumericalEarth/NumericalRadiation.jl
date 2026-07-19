@@ -448,12 +448,27 @@ function read_ecckd_definition(path::AbstractString)
 end
 
 """
-    read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path; kwargs...)
+    read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path;
+                                    gas_names = (:h2o, :co2),
+                                    h2o_mole_fraction = 0.005)
 
 Read official ecCKD CKD-definition files into a lightweight runtime
 [`EcCKDTabulatedGasOpticsModel`](@ref). The core package does not depend on
 NetCDF libraries, so NetCDF-backed loading is provided by the NCDatasets
 extension.
+
+This loader is a runtime-ingestion bridge, not a full ecRad-equivalent
+ingestion path: it materializes coefficient tables for the requested
+`gas_names` only, together with each gas's reference mole fraction for the
+ecCKD relative-linear convention, the shortwave Rayleigh molar scattering
+table, and the longwave Planck source table. When `:h2o` is requested, the
+official H2O mole-fraction table dimension is kept; at runtime
+[`optical_properties!`](@ref) computes the layer H2O mole fraction from the
+`h2o` and `composite` gas amounts and interpolates the table per layer. The
+`h2o_mole_fraction` keyword is not a gas input on that path — it is accepted
+for compatibility/fallback sampling of non-dynamic four-dimensional H2O
+tables. Longwave spectral weights are uniform over g-points; shortwave weights
+are the file's per-g-point solar irradiance normalized to unit sum.
 """
 function read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
                                          shortwave_path::AbstractString; kwargs...)

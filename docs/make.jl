@@ -35,9 +35,15 @@ makedocs(
     ),
     pages = [
         "Home" => "index.md",
-        "Design" => "design.md",
-        "Architecture" => "architecture.md",
-        "Radiative transfer" => "radiative_transfer.md",
+        "Design & acceptance criteria" => [
+            "Design and acceptance criteria" => "design.md",
+            "Architecture" => "architecture.md",
+        ],
+        "Tutorials" => [
+            "Single-column radiation" => "single_column.md",
+            "CKDMIP data inventory" => "generated/01_ckdmip_data_inventory.md",
+            "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
+        ],
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",
             "ecCKD runtime workflow" => "gas_optics/ecckd_runtime_workflow.md",
@@ -46,16 +52,16 @@ makedocs(
             "CKDMIP training data" => "gas_optics/ckdmip_training_data.md",
             "RRTMGP comparison" => "gas_optics/rrtmgp_comparison.md",
             "Training and recovery" => "gas_optics/ecckd_training_recovery.md",
-        ],
-        "Longwave" => "longwave.md",
-        "Shortwave" => "shortwave.md",
-        "Examples" => [
-            "Single-column examples" => "single_column.md",
-            "CKDMIP inventory" => "generated/01_ckdmip_data_inventory.md",
-            "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
             "Breeze integration" => "gas_optics/breeze_integration.md",
         ],
-        "Notation" => "notation.md",
+        "Solvers & schemes" => [
+            "Radiative transfer" => "radiative_transfer.md",
+            "Column solvers" => "solvers.md",
+            "Cloud and aerosol optics" => "cloud_optics.md",
+            "Longwave" => "longwave.md",
+            "Shortwave" => "shortwave.md",
+            "Notation" => "notation.md",
+        ],
         "API reference" => [
             "Overview" => "api.md",
             "Staged runtime" => "api/staged_runtime.md",
@@ -63,8 +69,9 @@ makedocs(
             "Column schemes" => "api/column_schemes.md",
             "Metrics" => "api/metrics.md",
         ],
+        "Validation" => "validation.md",
     ],
-    warnonly = [:missing_docs, :cross_references],
+    checkdocs = :exports,
 )
 
 deploydocs(

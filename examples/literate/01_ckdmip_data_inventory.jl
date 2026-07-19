@@ -11,8 +11,8 @@ using Printf
 # ## Locate candidate data roots
 #
 # `RH_CKDMIP_DATA_PATH` is the training/recovery path. `CKDMIP_DATA_DIR` is
-# accepted for compatibility with earlier examples, and `~/data/ckdmip` is a
-# conventional local fallback.
+# accepted for compatibility with earlier examples, and `$HOME/data/ckdmip` is
+# a conventional local fallback.
 
 function candidate_ckdmip_roots()
     roots = String[]
@@ -20,7 +20,7 @@ function candidate_ckdmip_roots()
         value = strip(get(ENV, key, ""))
         isempty(value) || push!(roots, abspath(expanduser(value)))
     end
-    push!(roots, abspath(expanduser("~/data/ckdmip")))
+    push!(roots, abspath(joinpath(homedir(), "data", "ckdmip")))
     return unique(roots)
 end
 
@@ -31,7 +31,8 @@ function first_existing_root(roots)
     return first(roots)
 end
 
-ckdmip_root = first_existing_root(candidate_ckdmip_roots())
+ckdmip_root = first_existing_root(candidate_ckdmip_roots());
+nothing #hide
 
 # ## Check the layout
 
@@ -56,9 +57,16 @@ function item_status(root, parts)
     return (path = path, present = isdir(path), files = count_files(path))
 end
 
-println("ecRad data root: ", ecrad_data_path(; require = false))
-println("ecCKD source root: ", ecckd_source_path(; require = false))
-println("CKDMIP data root: ", ckdmip_root)
+ckdmip_configured = any(key -> !isempty(strip(get(ENV, key, ""))),
+                        ("RH_CKDMIP_DATA_PATH", "CKDMIP_DATA_DIR"))
+ckdmip_status = isdir(ckdmip_root) ? "present" :
+    ckdmip_configured ? "configured (missing)" : "missing"
+
+println("ecRad data artifact: ",
+        ecrad_data_path(; require = false) === nothing ? "missing" : "available")
+println("ecCKD source artifact: ",
+        ecckd_source_path(; require = false) === nothing ? "missing" : "available")
+println("CKDMIP data root: ", ckdmip_status)
 println("Official ecCKD definition files: ", length(official_ecckd_model_inventory()))
 
 println()

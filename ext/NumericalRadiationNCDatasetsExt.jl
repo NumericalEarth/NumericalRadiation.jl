@@ -230,10 +230,21 @@ Materialize selected official ecCKD gas coefficient tables into
 `EcCKDTabulatedGasOpticsModel`.
 
 This helper is intentionally a runtime-ingestion bridge, not a claim of full
-ecRad equivalence. Official H2O tables include an H2O mole-fraction dimension;
-this method samples the nearest supplied `h2o_mole_fraction` and compresses
-the pressure-dependent official temperature grid to one representative
-temperature grid so it can feed the existing lightweight bilinear LUT kernel.
+ecRad equivalence. It stacks the `<gas>_molar_absorption_coeff` tables for the
+requested `gas_names` only (gases absent from the shortwave file contribute
+zero), passes the pressure-dependent official temperature grid through as a
+matrix for the runtime interpolation kernel, and reads each gas's
+`<gas>_reference_mole_fraction` so the runtime can apply the ecCKD
+relative-linear convention. When `:h2o` is requested, the official
+four-dimensional H2O table is carried with its mole-fraction dimension intact;
+the runtime computes the layer H2O mole fraction from the `h2o` and
+`composite` gas amounts and interpolates the table per layer. The
+`h2o_mole_fraction` keyword is not a gas input on that path — it is accepted
+for compatibility/fallback nearest-index sampling of non-dynamic
+four-dimensional H2O tables. Longwave weights
+are uniform over g-points and the Planck source table is normalized by them;
+shortwave weights are the file's `solar_irradiance` normalized to unit sum
+(uniform when absent).
 """
 function read_ecckd_tabulated_gas_optics(longwave_path::String,
                                          shortwave_path::String;

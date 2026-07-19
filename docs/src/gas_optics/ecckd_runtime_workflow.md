@@ -35,12 +35,17 @@ gas_optics = read_official_ecckd_gas_optics("32x32";
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
 of NetCDF after loading and can be moved into a host model's radiation state.
-This convenience call preselects a scalar water-vapor mole fraction for the
-official H2O-dependent tables. It is appropriate for simple column examples and
-fixed-reference validation. Host couplings with time-varying or spatially
-varying water vapor should use the lower-level ecCKD table reader/runtime path
-that preserves the H2O dimension, then let `optical_properties!` evaluate H2O
-from the current atmosphere.
+Because `:h2o` is in `gas_names`, the official H2O mole-fraction table
+dimension is kept: at each radiation update, `optical_properties!` computes
+the layer H2O mole fraction from the `h2o` and `composite` gas amounts and
+interpolates the table per layer. The `h2o_mole_fraction` keyword is not a gas
+input — it is accepted for compatibility/fallback sampling of non-dynamic
+H2O tables.
+
+Gas entries in [`ColumnAtmosphere`](@ref) are layer absorber amounts — column
+amounts in mol m⁻² (mole fraction times the layer air column), not mole
+fractions. All layer and interface arrays are ordered top-to-bottom, with
+pressure increasing downward (index 1 = top of atmosphere).
 
 ## Complete Column Script
 
