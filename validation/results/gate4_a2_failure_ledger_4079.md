@@ -52,8 +52,12 @@ in the quarantined WORK_DIR.
 
 ## Acceptance impact
 
-NONE promoted: 4079 produced no gpoints candidates; the reproduction-proof
-scaffold remains at `a2_proof_scaffold_ready_waiting_for_candidates`.
+NONE promoted: 4079 produced no gpoints candidates. (Historical note: at
+the time of this failure the reproduction-proof scaffold was at
+`a2_proof_scaffold_ready_waiting_for_candidates`; superseded by attempt 2
+— job 4082 completed rc=0 and the scaffold is now
+`a2_proof_scaffold_ready`. Current state lives in
+`gate4_a2_submission_ledger`.)
 
 Provenance: branch `glw/gate4-recovery`, HEAD at failure `42a74c3`;
 attempt-1 record in `gate4_a2_submission_ledger.json`.

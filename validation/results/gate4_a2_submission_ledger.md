@@ -52,10 +52,13 @@ Scope: A2 runs merge_well_mixed + reorder_spectrum + find_g_points ONLY
 input provisioning. Candidates are sensitivity-only until all 10 exact
 comparisons in the reproduction-proof scaffold pass.
 
-Next steps: monitor 4078 and 4082 (including the 4082 log's stage-0
-preflight lines); on 4082 completion rerun the reproduction-proof scaffold
-(should flip to `a2_proof_scaffold_ready`); on 4078 completion, install
-check then preflight rerun toward G2/G3.
+Next steps: monitor 4078 (dedicated watcher); proof execution is a
+separate unit requiring explicit review/go — mechanism-1 verification
+(candidates already sit in `WORK_*_GPOINTS_DIR` under the exact
+script-derived filenames, so placement reduces to a sha256 identity
+check), `create_lut_{lw,sw}.sh` on Slurm, then the 10 exact comparisons;
+NO proof has run yet. On 4078 completion: install check, then preflight
+rerun toward G2/G3.
 
 ## History: attempt 1 (FAILED)
 

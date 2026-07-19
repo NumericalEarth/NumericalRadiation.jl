@@ -55,8 +55,8 @@
   },
   "scope_statement": "A2 runs merge_well_mixed + reorder_spectrum + find_g_points ONLY (LW fsck tol 0.0161, SW rgb tol 0.047), plus quarantined-overlay rayleigh input provisioning. NO create_lut, NO reproduction proof, NO objective, NO floor, and NO recovery computation has run. Candidates produced by 4082 remain sensitivity-only until the reproduction-proof comparisons (gate4_a2_reproduction_proof_scaffold, 10 exact comparisons) all pass.",
   "next_steps": [
-    "monitor 4078 and 4082 (including the g4-a2-4082 log stage-0 preflight lines)",
-    "on 4082 completion: rerun gate4_a2_reproduction_proof_scaffold.jl (should flip to a2_proof_scaffold_ready with candidates found), then execute the proof per mechanism 1 on Slurm",
+    "monitor 4078 (dedicated watcher: completion or 45-min log stall)",
+    "proof execution is a SEPARATE unit requiring explicit review/go: mechanism-1 verification (candidates already sit in WORK_*_GPOINTS_DIR under the exact script-derived filenames; placement reduces to sha256 identity check) + create_lut_{lw,sw}.sh on Slurm + the 10 exact comparisons -- NO proof has run yet",
     "on 4078 completion: install check / quarantine on failure, then preflight rerun toward G2/G3"
   ],
   "attempt_history": {

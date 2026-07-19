@@ -27,7 +27,7 @@
     "preflight": "in-job stage-0 preflight verifies all merge/reorder/find inputs per band (7 well-mixed gases + h2o_median/o3_median + h2o_minimum/o3_minimum background inputs + MMM SSI extra), the CLOUD_SPECTRUM mie file, the evaluation1 TRAINING_SW_SSI (cloud-reorder wavenumber_input), and all six required binaries (ckdmip_lw/sw/tool, reorder_spectrum, find_g_points, reorder_cloud_spectrum); test -s the overlay rayleigh after generation; checkpoint-side preflight records the same manifest at generation time",
     "cloud_spectrum_relocation": "third latent bug fixed pre-resubmit: pristine config.h has CLOUD_SPECTRUM=../data/mie_droplet_scattering.nc, which resolves under g4-init-generation/ in the relocated TESTCOPY and does not exist there; sed-patched ABSOLUTE to /shared/home/greg/ecckd-derived-flux-work/ecckd/data/mie_droplet_scattering.nc (used by the cloud reorder at the end of reorder_spectrum_sw.sh)"
   },
-  "acceptance_impact": "NONE promoted: 4079 produced no gpoints candidates; no create_lut, reproduction proof, objective, floor, or recovery computation has run. The reproduction-proof scaffold remains at a2_proof_scaffold_ready_waiting_for_candidates.",
+  "acceptance_impact": "NONE promoted: 4079 produced no gpoints candidates; no create_lut, reproduction proof, objective, floor, or recovery computation has run. [HISTORICAL as of the 4079 failure: the reproduction-proof scaffold was then at a2_proof_scaffold_ready_waiting_for_candidates. SUPERSEDED by attempt 2 (job 4082, completed rc=0): the scaffold is now a2_proof_scaffold_ready -- see gate4_a2_submission_ledger.json for current state.]",
   "provenance": {
     "branch": "glw/gate4-recovery",
     "head_at_failure": "42a74c3",
