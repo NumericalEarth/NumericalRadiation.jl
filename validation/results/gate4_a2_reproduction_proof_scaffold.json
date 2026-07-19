@@ -1,0 +1,93 @@
+{
+  "candidates_found": {
+    "lw": [],
+    "sw": []
+  },
+  "case": "gate4_a2_reproduction_proof_scaffold",
+  "comparisons": [
+    {
+      "band": "both",
+      "name": "g_count",
+      "rule": "exactly 32 g-points in each proof definition"
+    },
+    {
+      "band": "both",
+      "name": "gpoint_fraction",
+      "rule": "shape AND elementwise values EXACT vs published (LW (326,32), SW (995,32) per the feasibility stats)"
+    },
+    {
+      "band": "both",
+      "name": "wavenumber1_band",
+      "rule": "elementwise EXACT"
+    },
+    {
+      "band": "both",
+      "name": "wavenumber2_band",
+      "rule": "elementwise EXACT"
+    },
+    {
+      "band": "both",
+      "name": "band_number",
+      "rule": "elementwise EXACT"
+    },
+    {
+      "band": "sw",
+      "name": "solar_irradiance",
+      "rule": "elementwise EXACT vs published SW32 (per-g SSI is a fixed support array, item 22)"
+    },
+    {
+      "band": "sw",
+      "name": "rayleigh_molar_scattering_coeff",
+      "rule": "elementwise EXACT vs published SW32 (fixed support array produced at create_lut time)"
+    },
+    {
+      "band": "both",
+      "name": "wavenumber1",
+      "rule": "elementwise EXACT (fine per-bin lower bounds of the definition wavenumber grid)"
+    },
+    {
+      "band": "both",
+      "name": "wavenumber2",
+      "rule": "elementwise EXACT (fine per-bin upper bounds)"
+    },
+    {
+      "band": "sw",
+      "name": "solar_spectral_irradiance",
+      "rule": "elementwise EXACT vs published SW32"
+    }
+  ],
+  "data_mode": "dry_run_proof_specification_only",
+  "deferred_hygiene": "gate4_a2_dryrun.sbatch retains a stale comment claiming the May config already localizes paths (superseded by the sed-patch block that follows it); remove at the next checkpoint amend -- not blocking, the executable sed block is authoritative",
+  "disclaimer": "proof specification only; refuses until A2 gpoints candidates exist; no create_lut, objective, floor, or recovery computation.",
+  "failures": [],
+  "gates": {
+    "comparison_spec_complete": "passed",
+    "mismatch_means_sensitivity_only": "passed",
+    "no_execution_in_this_unit": "passed",
+    "proof_commands_recorded": "passed",
+    "published_targets_resolved": "passed",
+    "refuses_without_candidates": "passed"
+  },
+  "proof_commands": {
+    "input_mechanism_1_preferred": "place/symlink the rerun candidate into the TESTCOPY-configured WORK_LW_GPOINTS_DIR / WORK_SW_GPOINTS_DIR under the EXACT filename the script derives (ECCKD_PREFIX + _lw_gpoints_climate_fsck-tol0.0161.h5 / _sw_gpoints_climate_rgb-tol0.047.h5), then run the pristine script",
+    "input_mechanism_2": "call the pinned create_look_up_table binary directly with the generated config and explicit input=<A2 candidate> output=<proof raw definition> (bypasses the driver's filename derivation; config must replicate the script-emitted config block verbatim)",
+    "lw_raw_proof": "in the A2 TESTCOPY (config.h sed-patched absolute): APPLICATION=climate BAND_STRUCTURE=fsck TOLERANCE=0.0161 bash create_lut_lw.sh AFTER mechanism-1 placement -- emits the proof raw-ckd-definition under /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/",
+    "note": "these are PROOF-ONLY builds; they double as acceptance raw inits ONLY if every comparison below is exact; Slurm cpu-large, never the head node",
+    "sw_raw_proof": "APPLICATION=climate BAND_STRUCTURE=rgb TOLERANCE=0.047 bash create_lut_sw.sh AFTER mechanism-1 placement (script resolves ssi from config) -- emits the proof raw-ckd-definition under /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_raw-ckd-definition/"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "3f758d6",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "status": "a2_proof_scaffold_ready_waiting_for_candidates",
+  "timestamp_utc": "2026-07-19T05:46:39.259",
+  "verdict_rule": {
+    "all_exact": "candidates PROMOTED to acceptance raw inits; init-generation proceeds (scale_lut for SW next)",
+    "any_mismatch": "candidates are SENSITIVITY-ONLY; record the mismatch as a finding; the acceptance floor cannot use them unless Greg explicitly changes the optimizer-only-delta rule"
+  },
+  "verification_targets": {
+    "lw32": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+    "sw32": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+  }
+}
