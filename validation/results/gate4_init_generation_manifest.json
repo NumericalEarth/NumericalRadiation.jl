@@ -1,0 +1,183 @@
+{
+  "case": "gate4_init_generation_manifest",
+  "commands": {
+    "lw_raw": {
+      "app": "climate",
+      "band_structure": "fsck",
+      "conc": [
+        "ckdmip_mmm_concentrations.nc",
+        "ckdmip_mmm-const_concentrations.nc (composite)"
+      ],
+      "driver": "test/create_lut_lw.sh with CKDMIP_DATA_DIR=/shared/home/greg/data/ckdmip, WORK_DIR=/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/lw",
+      "gpoint_file": "required input (find_g_points output or the published model's gpoint file) -- see gates",
+      "output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/lw/lw_raw-ckd-definition/ecckd-<VER>_lw_raw-ckd-definition_climate_fsck-<TOL>.nc",
+      "spectra": "/shared/home/greg/data/ckdmip/idealized/lw_spectra",
+      "tool": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/src/ecckd/create_look_up_table (pinned; prebuilt copy in ecckd-derived-flux-work/ecckd)"
+    },
+    "sw_raw": {
+      "app": "climate",
+      "band_structure": "rgb",
+      "conc": [
+        "ckdmip_mmm_concentrations.nc",
+        "ckdmip_mmm-const_concentrations.nc (composite)"
+      ],
+      "driver": "test/create_lut_sw.sh with CKDMIP_DATA_DIR=/shared/home/greg/data/ckdmip, WORK_DIR=/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/sw",
+      "output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/sw/sw_raw-ckd-definition/ecckd-<VER>_sw_raw-ckd-definition_climate_rgb-<TOL>.nc",
+      "spectra": "/shared/home/greg/data/ckdmip/idealized/sw_spectra",
+      "ssi": "/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5"
+    },
+    "sw_scaled": {
+      "driver": "test/scale_lut_sw.sh",
+      "input": "the sw_raw output above",
+      "output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/sw/sw_raw-ckd-definition/ecckd-<VER>_sw_scaled-ckd-definition_climate_rgb-<TOL>.nc",
+      "reference_lbl": "ckdmip_mmm_sw_fluxes-raw_present_1.h5 produced by the CKDMIP tool (ckdmip_sw at /shared/home/greg/build/ckdmip-1.0/bin) with do_write_direct_only=true, cos_solar_zenith_angle=0.5, surf_albedo=0.15, NO Rayleigh in the scale reference (direct-beam-only)"
+    }
+  },
+  "data_mode": "spec_manifest_only_nothing_generated",
+  "disclaimer": "init-generation specification only; nothing is generated; no optimizer, objective, floor, or recovery computation.",
+  "evidence": {
+    "conc_inputs": [
+      [
+        57,
+        "conc_input ckdmip_mmm_concentrations.nc"
+      ],
+      [
+        120,
+        "conc_input ckdmip_mmm_concentrations.nc"
+      ],
+      [
+        185,
+        "conc_input ckdmip_mmm-const_concentrations.nc"
+      ],
+      [
+        214,
+        "conc_input ckdmip_mmm_concentrations.nc"
+      ],
+      [
+        55,
+        "conc_input ckdmip_mmm_concentrations.nc"
+      ],
+      [
+        106,
+        "conc_input ckdmip_mmm_concentrations.nc"
+      ],
+      [
+        163,
+        "conc_input ckdmip_mmm-const_concentrations.nc"
+      ]
+    ],
+    "create_lut_lw_invocation": [],
+    "create_lut_sw_invocation": [],
+    "create_lut_sw_ssi": [
+      [
+        196,
+        "ssi=$MMM_SW_SSI \\"
+      ]
+    ],
+    "raw_output_templates": [
+      [
+        235,
+        "OUTPUT=${WORK_LW_RAW_CKD_DIR}/${ECCKD_PREFIX}_lw_raw-ckd-definition_${MODEL_CODE}.nc"
+      ],
+      [
+        241,
+        "|& tee ${WORK_LW_RAW_CKD_DIR}/${ECCKD_PREFIX}_lw_raw-ckd-definition_${MODEL_CODE}.log"
+      ],
+      [
+        194,
+        "OUTPUT=${WORK_SW_RAW_CKD_DIR}/${ECCKD_PREFIX}_sw_raw-ckd-definition_${MODEL_CODE}.nc"
+      ],
+      [
+        201,
+        "|& tee ${WORK_SW_RAW_CKD_DIR}/${ECCKD_PREFIX}_sw_raw-ckd-definition_${MODEL_CODE}.log"
+      ]
+    ],
+    "scale_lut_invocation": [],
+    "scale_lut_reference_settings": [
+      [
+        54,
+        "do_write_direct_only     = true,"
+      ],
+      [
+        57,
+        "cos_solar_zenith_angle(1) = 0.5,"
+      ],
+      [
+        55,
+        "surf_albedo = 0.15,"
+      ]
+    ],
+    "scaled_output_template": [
+      [
+        36,
+        "OUTCODE=scaled-ckd-definition"
+      ]
+    ]
+  },
+  "failures": [],
+  "gates": {
+    "lw_acceptance_init_is_raw": "passed",
+    "no_generation_executed": "passed",
+    "no_optimizer_or_floor_computation": "passed",
+    "required_inputs_enumerated": "passed",
+    "scale_reference_direct_only_mu05": "passed",
+    "sw_acceptance_init_is_scaled": "passed"
+  },
+  "inputs_expected": 9,
+  "inputs_present": 7,
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "9ce5821",
+    "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "required_inputs": [
+    {
+      "label": "idealized LW spectra",
+      "path": "/shared/home/greg/data/ckdmip/idealized/lw_spectra",
+      "present": true
+    },
+    {
+      "label": "idealized SW spectra",
+      "path": "/shared/home/greg/data/ckdmip/idealized/sw_spectra",
+      "present": true
+    },
+    {
+      "label": "idealized conc",
+      "path": "/shared/home/greg/data/ckdmip/idealized/conc/ckdmip_idealized_concentrations.nc",
+      "present": true
+    },
+    {
+      "label": "MMM conc",
+      "path": "/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm_concentrations.nc",
+      "present": true
+    },
+    {
+      "label": "MMM const conc (composite)",
+      "path": "/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc",
+      "present": false
+    },
+    {
+      "label": "MMM SSI",
+      "path": "/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5",
+      "present": true
+    },
+    {
+      "label": "MMM LW spectra (create_lut averaging)",
+      "path": "/shared/home/greg/data/ckdmip/mmm/lw_spectra",
+      "present": true
+    },
+    {
+      "label": "MMM SW spectra",
+      "path": "/shared/home/greg/data/ckdmip/mmm/sw_spectra",
+      "present": true
+    },
+    {
+      "label": "g-point files (find_g_points output)",
+      "path": "NOT FOUND (must be produced by find_g_points or extracted from the published workflow)",
+      "present": false
+    }
+  ],
+  "status": "init_generation_manifest_ready_waiting_for_inputs",
+  "timestamp_utc": "2026-07-19T05:22:13.504"
+}
