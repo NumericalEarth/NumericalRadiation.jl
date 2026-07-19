@@ -454,7 +454,7 @@ function main()
         JSON.print(io, result, 2)
     end
     open(G1_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 forward map G1 (increment 1: per-gas OD parity)\n")
+        println(io, "# Gate-4 forward map G1 (increments 1-2: per-gas OD + LW flux parity)\n")
         println(io, "Status: **$status**\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gas | max_abs | max_rel (above abs floor) | signed bias | gate |")
@@ -465,6 +465,24 @@ function main()
                         "$(st["max_rel_above_abs_floor"]) | " *
                         "$(st["signed_bias_fraction"]) | $(gates["od_$gas"]) |")
         end
+        println(io, "\n## LW flux parity (RT driven by reference OD + Planck)\n")
+        println(io, "| Term | max_abs (W m^-2) | max_rel (above 1e-9 floor) | signed bias | gate |")
+        println(io, "|---|---|---|---|---|")
+        for name in ("spectral_flux_dn_lw", "spectral_flux_up_lw",
+                     "flux_dn_lw", "flux_up_lw")
+            st = flux_stats[name]
+            println(io, "| $name | $(st["max_abs"]) | " *
+                        "$(st["max_rel_above_abs_floor"]) | " *
+                        "$(st["signed_bias_fraction"]) | $(gates["flux_$name"]) |")
+        end
+        println(io, "\nDerived-heating cross-check (both sides via the LW " *
+                    "net-flux convention; NO external heating target exists " *
+                    "in the reference): max rel above the propagated " *
+                    "Float32-storage bound (g/cp)/dp*4*eps32*F = " *
+                    "$(flux_stats["derived_heating_max_rel"]) " *
+                    "(gate $(gates["heating_derived_crosscheck"])). " *
+                    "Flux thresholds: abs <= 1e-3 W m^-2 or rel <= 1e-6, " *
+                    "plus signed-bias check.")
         println(io, "\nProvenance: branch `$branch`, generated_from_head `$head` " *
                     "(pre-own-commit); reference: pinned run_ckd smoke output.")
         if !isempty(fails)

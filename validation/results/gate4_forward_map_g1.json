@@ -143,13 +143,13 @@
     "od_o3": "passed"
   },
   "increment": "1_od_parity_plus_2_lw_flux_parity",
-  "maxrss_bytes": 532795392,
+  "maxrss_bytes": 534024192,
   "orientation_check": "passed",
   "provenance": {
     "branch": "glw/gate4-recovery",
     "ckd_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
-    "generated_from_head": "a1a0a68",
+    "generated_from_head": "899b187",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "reference_command": "run_ckd ckd_model=<LW32 published> input=<evaluation1 present conc> output=<smoke nc> gases='composite h2o o3 co2 ch4 n2o cfc11 cfc12'",
     "reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
@@ -161,10 +161,10 @@
     "od_abs": 1.0e-9,
     "od_rel": 1.0e-6
   },
-  "timestamp_utc": "2026-07-19T04:43:12.768",
+  "timestamp_utc": "2026-07-19T04:44:55.127",
   "timings_seconds": {
-    "flux_parity_seconds": 0.516499392,
-    "load_seconds": 3.021824651,
-    "od_parity_seconds": 1.38915875
+    "flux_parity_seconds": 0.500484088,
+    "load_seconds": 2.976041913,
+    "od_parity_seconds": 1.426031754
   }
 }
