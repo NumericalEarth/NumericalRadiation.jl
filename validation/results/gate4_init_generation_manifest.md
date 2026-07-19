@@ -13,13 +13,13 @@ init-generation specification only; nothing is generated; no optimizer, objectiv
 | scale_reference_direct_only_mu05 | passed |
 | sw_acceptance_init_is_scaled | passed |
 
-## Required inputs (7/9 present)
+## Required inputs (8/9 present)
 
 - [present] idealized LW spectra: `/shared/home/greg/data/ckdmip/idealized/lw_spectra`
 - [present] idealized SW spectra: `/shared/home/greg/data/ckdmip/idealized/sw_spectra`
 - [present] idealized conc: `/shared/home/greg/data/ckdmip/idealized/conc/ckdmip_idealized_concentrations.nc`
 - [present] MMM conc: `/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm_concentrations.nc`
-- [MISSING] MMM const conc (composite): `/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc`
+- [present] MMM const conc (composite): `/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc`
 - [present] MMM SSI: `/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5`
 - [present] MMM LW spectra (create_lut averaging): `/shared/home/greg/data/ckdmip/mmm/lw_spectra`
 - [present] MMM SW spectra: `/shared/home/greg/data/ckdmip/mmm/sw_spectra`
@@ -27,4 +27,4 @@ init-generation specification only; nothing is generated; no optimizer, objectiv
 
 SW acceptance init resolves to the scaled-ckd-definition output; LW to the raw-ckd-definition output (gated).
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `9ce5821` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `ec05744` (pre-own-commit).

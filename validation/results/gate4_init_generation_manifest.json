@@ -124,10 +124,10 @@
     "sw_acceptance_init_is_scaled": "passed"
   },
   "inputs_expected": 9,
-  "inputs_present": 7,
+  "inputs_present": 8,
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "9ce5821",
+    "generated_from_head": "ec05744",
     "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
@@ -155,7 +155,7 @@
     {
       "label": "MMM const conc (composite)",
       "path": "/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc",
-      "present": false
+      "present": true
     },
     {
       "label": "MMM SSI",
@@ -179,5 +179,5 @@
     }
   ],
   "status": "init_generation_manifest_ready_waiting_for_inputs",
-  "timestamp_utc": "2026-07-19T05:22:13.504"
+  "timestamp_utc": "2026-07-19T05:26:28.533"
 }
