@@ -438,9 +438,9 @@ function main()
     timings["sw_direct_parity_seconds"] = @elapsed begin
         swref = g1_load_sw_reference(G1_SW_REFERENCE_NC, fails)
         odsw = swref["optical_depth"] .+ swref["rayleigh_optical_depth"]
-        ngس, nlaysw, ncolsw = size(odsw)
-        sp = zeros(ngس, nlaysw + 1, ncolsw)
-        for c in 1:ncolsw, g in 1:ngس
+        ngsw, nlaysw, ncolsw = size(odsw)
+        sp = zeros(ngsw, nlaysw + 1, ncolsw)
+        for c in 1:ncolsw, g in 1:ngsw
             sp[g, :, c] = g4_sw_direct(view(odsw, g, :, c),
                                        G1_SW_REFERENCE_COS_SZA,
                                        swref["incoming_sw"][g, c])
@@ -515,14 +515,15 @@ function main()
                 "gases='composite h2o o3 co2 ch4 n2o cfc11 cfc12'",
             "ckd_definition" => basename(lw32),
             "concentrations" => basename(conc_path),
-            "sw_target_policy" => "SW parity restricted to run_ckd direct-down " *
-                "mu0=0.5 in a later increment; *_fluxes-4angle_*/ckdmip_sw " *
-                "products are NEVER G1 targets",
+            "sw_target_policy" => "G1 external SW parity COMPLETE for the " *
+                "direct-down mu0=0.5 component (the only external SW target); " *
+                "SW upwelling/heating/objective checks remain against the " *
+                "cost-function recurrences and internal analytic fixtures; " *
+                "*_fluxes-4angle_*/ckdmip_sw products are NEVER G1 targets",
         ),
-        "disclaimer" => "term-resolved OD and LW flux/derived-heating " *
-                        "parity; no objective-value, floor, or recovery " *
-                        "claims; SW parity limited to direct-down in a later " *
-                        "increment.",
+        "disclaimer" => "term-resolved OD, LW flux/derived-heating, and SW " *
+                        "direct-down parity; no objective-value, floor, or " *
+                        "recovery claims.",
     )
 
     mkpath(dirname(G1_RESULTS_JSON))
@@ -530,7 +531,7 @@ function main()
         JSON.print(io, result, 2)
     end
     open(G1_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 forward map G1 (increments 1-2: per-gas OD + LW flux parity)\n")
+        println(io, "# Gate-4 forward map G1 (increments 1-3: OD + LW flux + SW direct parity)\n")
         println(io, "Status: **$status**\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gas | max_abs | max_rel (above abs floor) | signed bias | gate |")
@@ -559,6 +560,21 @@ function main()
                     "(gate $(gates["heating_derived_crosscheck"])). " *
                     "Flux thresholds: abs <= 1e-3 W m^-2 or rel <= 1e-6, " *
                     "plus signed-bias check.")
+        println(io, "\n## SW direct-down parity (the only external SW target)\n")
+        println(io, "| Term | max_abs (W m^-2) | max_rel (above 1e-9 floor) | signed bias | gate |")
+        println(io, "|---|---|---|---|---|")
+        for name in ("spectral_flux_dn_direct_sw", "flux_dn_direct_sw")
+            st = sw_stats[name]
+            println(io, "| $name | $(st["max_abs"]) | " *
+                        "$(st["max_rel_above_abs_floor"]) | " *
+                        "$(st["signed_bias_fraction"]) | " *
+                        "$(gates["sw_direct_$name"]) |")
+        end
+        println(io, "\nTOA scaling gate (cos_sza/ssi handling asserted in " *
+                    "code): max_abs = $(sw_stats["toa_scaling_max_abs"]) " *
+                    "($(gates["sw_toa_scaling_check"])). SW upwelling/heating/" *
+                    "objective checks remain recurrence/internal-fixture " *
+                    "based; 4-angle products are never targets.")
         println(io, "\nProvenance: branch `$branch`, generated_from_head `$head` " *
                     "(pre-own-commit); reference: pinned run_ckd smoke output.")
         if !isempty(fails)

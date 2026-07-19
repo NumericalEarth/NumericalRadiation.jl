@@ -1,6 +1,6 @@
 {
   "case": "gate4_forward_map_g1",
-  "disclaimer": "term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, or recovery claims; SW parity limited to direct-down in a later increment.",
+  "disclaimer": "term-resolved OD, LW flux/derived-heating, and SW direct-down parity; no objective-value, floor, or recovery claims.",
   "failures": [],
   "flux_stats": {
     "derived_heating_max_rel": 0.0,
@@ -146,13 +146,13 @@
     "sw_toa_scaling_check": "passed"
   },
   "increment": "1_od_2_lw_flux_3_sw_direct_parity",
-  "maxrss_bytes": 538959872,
+  "maxrss_bytes": 541343744,
   "orientation_check": "passed",
   "provenance": {
     "branch": "glw/gate4-recovery",
     "ckd_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
-    "generated_from_head": "aa0b394",
+    "generated_from_head": "77369d0",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "reference_command": "run_ckd ckd_model=<LW32 published> input=<evaluation1 present conc> output=<smoke nc> gases='composite h2o o3 co2 ch4 n2o cfc11 cfc12'",
     "reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
@@ -160,7 +160,7 @@
     "sw32_path_authority": "resolved via NumericalRadiation.official_ecckd_definition_path(:shortwave_32) -> ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc (the repo API is the authoritative published SW32; no 1.0-versioned SW rgb file exists in the pinned ecrad_data artifact)",
     "sw_reference_command": "run_ckd ckd_model=<SW32 published ecckd-1.4_sw_climate_rgb-32b> input=<evaluation1 present conc> gases=composite,h2o,o3,co2,ch4,n2o tsi=1361.0 (direct SW at REFERENCE_COS_SZA=0.5, OD + Rayleigh)",
     "sw_reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/sw32_run_ckd_smoke.nc",
-    "sw_target_policy": "SW parity restricted to run_ckd direct-down mu0=0.5 in a later increment; *_fluxes-4angle_*/ckdmip_sw products are NEVER G1 targets"
+    "sw_target_policy": "G1 external SW parity COMPLETE for the direct-down mu0=0.5 component (the only external SW target); SW upwelling/heating/objective checks remain against the cost-function recurrences and internal analytic fixtures; *_fluxes-4angle_*/ckdmip_sw products are NEVER G1 targets"
   },
   "status": "g1_od_lw_flux_and_sw_direct_parity_passed",
   "sw_direct_stats": {
@@ -186,11 +186,11 @@
     "od_abs": 1.0e-9,
     "od_rel": 1.0e-6
   },
-  "timestamp_utc": "2026-07-19T04:49:15.422",
+  "timestamp_utc": "2026-07-19T04:51:04.442",
   "timings_seconds": {
-    "flux_parity_seconds": 0.512812838,
-    "load_seconds": 2.96934246,
-    "od_parity_seconds": 1.406507785,
-    "sw_direct_parity_seconds": 0.593128232
+    "flux_parity_seconds": 0.502815512,
+    "load_seconds": 3.044557556,
+    "od_parity_seconds": 1.449746764,
+    "sw_direct_parity_seconds": 0.536547647
   }
 }

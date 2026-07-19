@@ -1,8 +1,8 @@
-# Gate-4 forward map G1 (increments 1-2: per-gas OD + LW flux parity)
+# Gate-4 forward map G1 (increments 1-3: OD + LW flux + SW direct parity)
 
 Status: **g1_od_lw_flux_and_sw_direct_parity_passed**
 
-term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, or recovery claims; SW parity limited to direct-down in a later increment.
+term-resolved OD, LW flux/derived-heating, and SW direct-down parity; no objective-value, floor, or recovery claims.
 
 | Gas | max_abs | max_rel (above abs floor) | signed bias | gate |
 |---|---|---|---|---|
@@ -26,4 +26,13 @@ term-resolved OD and LW flux/derived-heating parity; no objective-value, floor, 
 
 Derived-heating cross-check (both sides via the LW net-flux convention; NO external heating target exists in the reference): max rel above the propagated Float32-storage bound (g/cp)/dp*4*eps32*F = 0.0 (gate passed). Flux thresholds: abs <= 1e-3 W m^-2 or rel <= 1e-6, plus signed-bias check.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `aa0b394` (pre-own-commit); reference: pinned run_ckd smoke output.
+## SW direct-down parity (the only external SW target)
+
+| Term | max_abs (W m^-2) | max_rel (above 1e-9 floor) | signed bias | gate |
+|---|---|---|---|---|
+| spectral_flux_dn_direct_sw | 4.842976736085802e-6 | 2.1174720185285824e-7 | 0.24118055555555556 | passed |
+| flux_dn_direct_sw | 3.781414375225722e-5 | 6.757439420310353e-8 | 0.2756363636363636 | passed |
+
+TOA scaling gate (cos_sza/ssi handling asserted in code): max_abs = 0.0 (passed). SW upwelling/heating/objective checks remain recurrence/internal-fixture based; 4-angle products are never targets.
+
+Provenance: branch `glw/gate4-recovery`, generated_from_head `77369d0` (pre-own-commit); reference: pinned run_ckd smoke output.
