@@ -1,0 +1,66 @@
+{
+  "case": "gate4_objective_assembly_g1",
+  "data_mode": "synthetic_objective_assembly_only",
+  "disclaimer": "synthetic objective-assembly gates only; no real-data floor, objective value, or recovery claim.",
+  "failures": [],
+  "gates": {
+    "component_sum_equals_total": "passed",
+    "prior_penalty_gradients": "passed",
+    "spectral_boundary_separable": "passed",
+    "sw_heating_downwelling_only": "passed",
+    "sw_toa_up_20x_placement": "passed",
+    "total_grad_equals_component_sum": "passed"
+  },
+  "maxrss_bytes": 819728384,
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "bbd3996",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "stats": {
+    "assembled_total": 293.5859269109768,
+    "component_sum_abs_err": 0.0,
+    "components": {
+      "lw_kernel": 2.020940676081975,
+      "penalty": 250.0,
+      "prior": 0.00010966435185185192,
+      "sw_kernel": 41.56487657054295
+    },
+    "penalty_grad_max_rel": 8.0566072325561e-11,
+    "prior_conc_grad_max_rel": 4.704791102160608e-11,
+    "prior_grad_max_rel": 4.4860931375933395e-11,
+    "spectral_boundary": {
+      "difference": 112094.29766770094,
+      "independent_term": 112094.29766770094,
+      "with": 112096.31860837703,
+      "without": 2.020940676081975
+    },
+    "sw_heating_dn_only": {
+      "L_dn": 41.73018423364529,
+      "L_net_variant": 43.280595778316595,
+      "assembly_uses_dn": true,
+      "convention_sensitive": true
+    },
+    "toa20": {
+      "expected": 0.24094400000000002,
+      "loss": 0.24094400000000588
+    },
+    "total_vs_component_grad_max_rel": 0.0
+  },
+  "status": "assembly_gates_passed",
+  "term_list": [
+    "ecckd_lw_ckd_loss",
+    "ecckd_sw_ckd_loss",
+    "g4_prior_term",
+    "g4_prior_term_conc (4-D, gated here directly)",
+    "g4_negative_od_penalty"
+  ],
+  "timestamp_utc": "2026-07-19T05:00:38.047",
+  "tolerances": {
+    "component_sum": "exact",
+    "grad_additivity": 1.0e-12,
+    "gradients": 1.0e-6,
+    "spectral_boundary": 1.0e-10,
+    "toa20_analytic": 1.0e-12
+  }
+}
