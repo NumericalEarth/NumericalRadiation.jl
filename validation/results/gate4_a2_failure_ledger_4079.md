@@ -39,9 +39,10 @@ in the quarantined WORK_DIR.
   author's own `ckdmip-1.0/work/sw/make_rayleigh_mmm.sh` —
   `ckdmip_tool --grid <mmm sw h2o_median> --rayleigh`.
   Tool sha256 `2334730b…159c44cd`; grid input sha256 `3ec54991…6098ea40`;
-  generated-file sha256 echoed to the job log. Any residual deviation is
-  caught by the elementwise-EXACT rayleigh/solar comparisons in the
-  reproduction-proof scaffold.
+  generated-file sha256 `36ad9c9a…ebdad2` (recorded post-run from the 4082
+  log; attempt 2 completed rc=0 with this overlay in effect). Any residual
+  deviation is caught by the elementwise-EXACT rayleigh/solar comparisons
+  in the reproduction-proof scaffold.
 - `CLOUD_SPECTRUM` sed-patched absolute to the workcopy's
   `data/mie_droplet_scattering.nc`.
 - Stage-0 in-job preflight: all per-band merge/reorder/find inputs

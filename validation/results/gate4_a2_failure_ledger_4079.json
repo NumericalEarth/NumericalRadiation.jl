@@ -21,7 +21,7 @@
       "recipe_provenance": "upstream author's own script shipped in the ckdmip-1.0 tarball: /shared/home/greg/build/ckdmip-1.0/work/sw/make_rayleigh_mmm.sh -- ckdmip_tool --grid <mmm sw h2o_median> --rayleigh -o ckdmip_mmm_sw_spectra_rayleigh_present.h5",
       "tool": "/shared/home/greg/build/ckdmip-1.0/bin/ckdmip_tool sha256=2334730bd2da322b603b5748c4076bba442928a2a9b05a3f2f53c8ad159c44cd",
       "grid_input": "/shared/home/greg/data/ckdmip/mmm/sw_spectra/ckdmip_mmm_sw_spectra_h2o_median.h5 sha256=3ec549917d2b065803ff63648ce7414791969c8d9c726d34796b659b6098ea40",
-      "generated_file_hash": "echoed to the job log by the sbatch (sha256sum after generation); recorded post-run",
+      "generated_file_hash": "36ad9c9a958aeae60f6bef6115f83ec4e1f49e193b00cf1cf9049b5f66ebdad2 (recorded post-run from the 4082 log; attempt 2 completed rc=0 at 2026-07-19T08:16:07Z with this overlay in effect)",
       "exactness_note": "any residual deviation from the file upstream used is caught downstream by the elementwise-EXACT rayleigh_molar_scattering_coeff and solar_irradiance comparisons in the reproduction-proof scaffold"
     },
     "preflight": "in-job stage-0 preflight verifies all merge/reorder/find inputs per band (7 well-mixed gases + h2o_median/o3_median + h2o_minimum/o3_minimum background inputs + MMM SSI extra), the CLOUD_SPECTRUM mie file, the evaluation1 TRAINING_SW_SSI (cloud-reorder wavenumber_input), and all six required binaries (ckdmip_lw/sw/tool, reorder_spectrum, find_g_points, reorder_cloud_spectrum); test -s the overlay rayleigh after generation; checkpoint-side preflight records the same manifest at generation time",

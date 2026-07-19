@@ -1,7 +1,11 @@
 {
   "candidates_found": {
-    "lw": [],
-    "sw": []
+    "lw": [
+      "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5"
+    ],
+    "sw": [
+      "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5"
+    ]
   },
   "case": "gate4_a2_reproduction_proof_scaffold",
   "comparisons": [
@@ -77,11 +81,11 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "3f758d6",
+    "generated_from_head": "2f45d6f",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
-  "status": "a2_proof_scaffold_ready_waiting_for_candidates",
-  "timestamp_utc": "2026-07-19T05:46:39.259",
+  "status": "a2_proof_scaffold_ready",
+  "timestamp_utc": "2026-07-19T08:17:55.224",
   "verdict_rule": {
     "all_exact": "candidates PROMOTED to acceptance raw inits; init-generation proceeds (scale_lut for SW next)",
     "any_mismatch": "candidates are SENSITIVITY-ONLY; record the mismatch as a finding; the acceptance floor cannot use them unless Greg explicitly changes the optimizer-only-delta rule"

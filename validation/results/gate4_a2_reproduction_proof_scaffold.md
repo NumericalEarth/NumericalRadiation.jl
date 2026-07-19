@@ -1,6 +1,6 @@
 # Gate-4 A2 reproduction-proof scaffold
 
-Status: **a2_proof_scaffold_ready_waiting_for_candidates**
+Status: **a2_proof_scaffold_ready**
 
 proof specification only; refuses until A2 gpoints candidates exist; no create_lut, objective, floor, or recovery computation.
 
@@ -13,7 +13,7 @@ proof specification only; refuses until A2 gpoints candidates exist; no create_l
 | published_targets_resolved | passed |
 | refuses_without_candidates | passed |
 
-Candidates found: LW 0, SW 0
+Candidates found: LW 1, SW 1
 
 ## Exact comparisons (all must pass for acceptance)
 
@@ -32,4 +32,4 @@ Verdict: all exact -> promote to acceptance raw inits; any mismatch -> sensitivi
 
 Deferred hygiene note: gate4_a2_dryrun.sbatch retains a stale comment claiming the May config already localizes paths (superseded by the sed-patch block that follows it); remove at the next checkpoint amend -- not blocking, the executable sed block is authoritative
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `3f758d6` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `2f45d6f` (pre-own-commit).

@@ -1,8 +1,29 @@
 {
   "case": "gate4_a2_submission_ledger",
   "data_mode": "submission_event_record_only",
-  "status": "a2_attempt2_submitted_awaiting_completion",
-  "timestamp_utc": "2026-07-19T06:08:43Z",
+  "status": "a2_attempt2_completed_candidates_collected",
+  "timestamp_utc": "2026-07-19T08:16:07Z",
+  "completion": {
+    "job_id": 4082,
+    "outcome": "COMPLETED, log marker 'A2 done rc=0' at 2026-07-19T08:16:07Z; all stages green (stage-0 preflight, LW/SW merges, 7 LW + 9 SW reorder outputs, LW/SW find_g_points)",
+    "candidates": {
+      "lw": {
+        "path": "g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
+        "size_bytes": 58404939,
+        "sha256": "c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e",
+        "structure": "combined g_point (32,), band_number (32,); per-gas partitions H2O 14 / O3 5 / CH4 3 / N2O 2 / CO2 12 reconciled by the overlap step"
+      },
+      "sw": {
+        "path": "g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5",
+        "size_bytes": 25458368,
+        "sha256": "13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57",
+        "structure": "combined g_point (32,), band_number (32,); overlap wrote global G-points 0-31"
+      }
+    },
+    "rayleigh_overlay_sha256": "36ad9c9a958aeae60f6bef6115f83ec4e1f49e193b00cf1cf9049b5f66ebdad2",
+    "proof_scaffold": "rerun twice post-completion, both exit 0, status flipped to a2_proof_scaffold_ready with exactly one candidate per band",
+    "not_executed": "NO reproduction proof, create_lut, objective, floor, or acceptance use has run; candidates remain sensitivity-only pending the 10 exact comparisons"
+  },
   "authorization": "Codex monitor go (standing no-stopping instruction from Greg; monitor message authorizing A2 execution submission with resource guardrails; recovery resubmission per monitor instruction after 4079 failure)",
   "job": {
     "job_id": 4082,

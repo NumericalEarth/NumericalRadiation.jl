@@ -1,9 +1,26 @@
 # Gate-4 A2 submission ledger
 
-Status: **a2_attempt2_submitted_awaiting_completion**
+Status: **a2_attempt2_completed_candidates_collected**
 
-Submission event record only; no floor, proof, objective, or recovery
-computation has run.
+Submission/completion event record only; no floor, proof, objective, or
+recovery computation has run.
+
+## Completion (2026-07-19T08:16:07Z)
+
+Job 4082 COMPLETED, `A2 done rc=0`. All stages green: stage-0 preflight,
+LW/SW merges (rayleigh overlay sha256 `36ad9c9a…ebdad2`), 7 LW + 9 SW
+reorder outputs, LW/SW find_g_points. Candidates collected:
+
+| Band | Candidate | Size | sha256 |
+|---|---|---|---|
+| LW | `ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5` | 58,404,939 | `c96e6492…a017a3e` |
+| SW | `ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5` | 25,458,368 | `13dd686a…59b9b57` |
+
+Both carry a combined `g_point (32,)` structure (overlap step wrote global
+G-points 0–31). Proof scaffold rerun twice post-completion: status
+`a2_proof_scaffold_ready`, exactly one candidate per band. NO reproduction
+proof, create_lut, objective, floor, or acceptance use has run — candidates
+are sensitivity-only pending the 10 exact comparisons.
 
 ## Current: attempt 2
 
