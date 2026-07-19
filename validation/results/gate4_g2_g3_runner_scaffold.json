@@ -1,0 +1,438 @@
+{
+  "case": "gate4_g2_g3_runner_scaffold",
+  "data_mode": "dry_run_manifest_only",
+  "derived_expected": 18,
+  "derived_present": 0,
+  "disclaimer": "dry-run manifest only; no floor, objective-value, or recovery claim; refuses execution without explicit real-data authorization.",
+  "dry_run_refusal": "execute_g2_g3 errors unless authorize = :real_data_preflight_green; the scaffold never computes objective or floor values",
+  "failures": [],
+  "future_execute_command": "RH_CKDMIP_DATA_PATH=... julia --project=test validation/gate4_g2_g3_runner_scaffold.jl -- once the executor unit lands: execute_g2_g3(manifest; authorize = :real_data_preflight_green) after ckdmip_training_data_preflight reports ready_for_original_ecckd_objective",
+  "gates": {
+    "derived_products_enumerated": "passed",
+    "lw_base_init_raw_ckd": "passed",
+    "minor_pass_relative_to_rel415": "passed",
+    "no_external_sw_4angle_products": "passed",
+    "outcode_chain_continuous": "passed",
+    "support_excluded_from_trainable": "passed",
+    "sw_base_init_scaled_ckd": "passed"
+  },
+  "manifest": {
+    "common_options": {
+      "lw": [
+        [
+          31,
+          "COMMON_OPTIONS=\"prior_error=8.0 broadband_weight=0.8 flux_profile_weight=0.2 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 spectral_boundary_weight=0.1\""
+        ],
+        [
+          35,
+          "#COMMON_OPTIONS=\"min_prior_error=0.5 max_prior_error=8.0 broadband_weight=0.8 flux_profile_weight=0.2 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 spectral_boundary_weight=0.1\""
+        ]
+      ],
+      "sw": [
+        [
+          31,
+          "COMMON_OPTIONS=\"prior_error=8.0 broadband_weight=0.5 flux_weight=0.1 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=1500\""
+        ],
+        [
+          35,
+          "#COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.3 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 spectral_boundary_weight=0.1\""
+        ],
+        [
+          36,
+          "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.3 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 spectral_boundary_weight=0.0\""
+        ],
+        [
+          38,
+          "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.3 flux_profile_weight=0.05 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+        ],
+        [
+          40,
+          "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+        ],
+        [
+          57,
+          "COMMON_OPTIONS=\"prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000 bounded_optimization=0\""
+        ],
+        [
+          63,
+          "#COMMON_OPTIONS=\"min_prior_error=0.1 max_prior_error=2.0 broadband_weight=0.4 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+        ],
+        [
+          65,
+          "#COMMON_OPTIONS=\"min_prior_error=0.2 max_prior_error=2.0 broadband_weight=0.5 flux_weight=0.4 flux_profile_weight=0.1 temperature_corr=0.8 pressure_corr=0.8 conc_corr=0.8 max_iterations=2000\""
+        ]
+      ]
+    },
+    "cpp_defaults": {
+      "bounded_minimization_config_key": [
+        [
+          149,
+          "config.read(is_bounded, \"bounded_minimization\");"
+        ]
+      ],
+      "bounded_minimization_default_true": [
+        [
+          148,
+          "Real is_bounded = true;"
+        ]
+      ],
+      "broadband_weight": [
+        [
+          86,
+          "Real broadband_weight = 0.5;"
+        ]
+      ],
+      "convergence_criterion": [
+        [
+          109,
+          "Real convergence_criterion = 0.02;"
+        ]
+      ],
+      "flux_profile_weight": [
+        [
+          85,
+          "Real flux_profile_weight = 0.0;"
+        ]
+      ],
+      "flux_weight": [
+        [
+          84,
+          "Real flux_weight = 0.02;"
+        ]
+      ],
+      "max_iterations": [
+        [
+          142,
+          "int max_iterations = 3000;"
+        ]
+      ],
+      "negative_od_penalty": [
+        [
+          145,
+          "Real negative_od_penalty = 1.0e4;"
+        ]
+      ],
+      "prior_error": [
+        [
+          94,
+          "Real prior_error = -1.0;"
+        ],
+        [
+          95,
+          "Real min_prior_error = -1.0;"
+        ],
+        [
+          96,
+          "Real max_prior_error = -1.0;"
+        ]
+      ],
+      "spectral_boundary_weight": [
+        [
+          100,
+          "Real spectral_boundary_weight = 0.0;"
+        ]
+      ]
+    },
+    "derived_products": [
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-180.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-280.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-415.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-560.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-1120.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-2240.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-180.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-280.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-415.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-560.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-1120.h5",
+        "present": false
+      },
+      {
+        "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-2240.h5",
+        "present": false
+      }
+    ],
+    "init_templates": {
+      "lw_raw": [
+        "OUTPUT=${WORK_LW_RAW_CKD_DIR}/${ECCKD_PREFIX}_lw_raw-ckd-definition_${MODEL_CODE}.nc"
+      ],
+      "sw_raw": [
+        "OUTPUT=${WORK_SW_RAW_CKD_DIR}/${ECCKD_PREFIX}_sw_raw-ckd-definition_${MODEL_CODE}.nc"
+      ],
+      "sw_scaled": [
+        "OUTCODE=scaled-ckd-definition"
+      ]
+    },
+    "lw": [
+      {
+        "expected_incode_from_chain": "raw-ckd-definition",
+        "incode": "raw-ckd-definition",
+        "outcode": "raw2-ckd-definition",
+        "pass": "relative-base",
+        "relative_to": null,
+        "relative_to_after_rgb_rewrite": null,
+        "specific_options": "",
+        "trainable_arrays": [
+          "composite_molar_absorption_coeff",
+          "h2o_molar_absorption_coeff",
+          "o3_molar_absorption_coeff",
+          "co2_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "composite",
+          "h2o",
+          "o3",
+          "co2"
+        ],
+        "training_files": [
+          "$TRAINING",
+          "ckdmip_evaluation2_lw_fluxes_rel-415.h5"
+        ]
+      },
+      {
+        "expected_incode_from_chain": "raw2-ckd-definition",
+        "incode": "raw2-ckd-definition",
+        "outcode": "raw3-ckd-definition",
+        "pass": "relative-ch4",
+        "relative_to": "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "relative_to_after_rgb_rewrite": "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "specific_options": "convergence_criterion=0.0005 flux_weight=0.5 negative_od_penalty=1.0e1",
+        "trainable_arrays": [
+          "ch4_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "ch4"
+        ],
+        "training_files": [
+          "ckdmip_evaluation1_lw_fluxes_present.h5",
+          "ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
+          "ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
+          "ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
+          "ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
+          "ckdmip_evaluation1_lw_fluxes_ch4-3500.h5"
+        ]
+      },
+      {
+        "expected_incode_from_chain": "raw3-ckd-definition",
+        "incode": "raw3-ckd-definition",
+        "outcode": "raw4-ckd-definition",
+        "pass": "relative-n2o",
+        "relative_to": "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "relative_to_after_rgb_rewrite": "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "specific_options": "convergence_criterion=0.0005 flux_weight=0.5",
+        "trainable_arrays": [
+          "n2o_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "n2o"
+        ],
+        "training_files": [
+          "ckdmip_evaluation1_lw_fluxes_present.h5",
+          "ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
+          "ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
+          "ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
+          "ckdmip_evaluation1_lw_fluxes_n2o-540.h5"
+        ]
+      },
+      {
+        "expected_incode_from_chain": "raw4-ckd-definition",
+        "incode": "raw4-ckd-definition",
+        "outcode": "ckd-definition",
+        "pass": "relative-cfc",
+        "relative_to": "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "relative_to_after_rgb_rewrite": "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "specific_options": "convergence_criterion=0.0005 flux_weight=0.2 remove_min_max=1",
+        "trainable_arrays": [
+          "cfc11_molar_absorption_coeff",
+          "cfc12_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "cfc11",
+          "cfc12"
+        ],
+        "training_files": [
+          "ckdmip_evaluation1_lw_fluxes_present.h5",
+          "ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
+          "ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
+          "ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
+          "ckdmip_evaluation1_lw_fluxes_cfc12-550.h5"
+        ]
+      }
+    ],
+    "merge_precedence": "SPECIFIC_OPTIONS/EXTRA_ARGS > COMMON_OPTIONS (last assignment wins) > optimize_lut.cpp compiled defaults",
+    "sw": [
+      {
+        "expected_incode_from_chain": "scaled-ckd-definition",
+        "incode": "scaled-ckd-definition",
+        "outcode": "raw2-ckd-definition",
+        "pass": "relative-base",
+        "relative_to": null,
+        "relative_to_after_rgb_rewrite": null,
+        "specific_options": "convergence_criterion=0.01 spectral_boundary_weight=0.0",
+        "trainable_arrays": [
+          "composite_molar_absorption_coeff",
+          "h2o_molar_absorption_coeff",
+          "o3_molar_absorption_coeff",
+          "co2_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "composite",
+          "h2o",
+          "o3",
+          "co2"
+        ],
+        "training_files": [
+          "$TRAINING",
+          "ckdmip_evaluation2_sw_fluxes_rel-415.h5"
+        ]
+      },
+      {
+        "expected_incode_from_chain": "raw2-ckd-definition",
+        "incode": "raw2-ckd-definition",
+        "outcode": "raw3-ckd-definition",
+        "pass": "relative-ch4",
+        "relative_to": "ckdmip_evaluation1_sw_fluxes_rel-415.h5",
+        "relative_to_after_rgb_rewrite": "ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
+        "specific_options": "convergence_criterion=0.0005 max_no_rayleigh_wavenumber=15000",
+        "trainable_arrays": [
+          "ch4_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "ch4"
+        ],
+        "training_files": [
+          "ckdmip_evaluation1_sw_fluxes_present.h5",
+          "ckdmip_evaluation1_sw_fluxes_ch4-350.h5",
+          "ckdmip_evaluation1_sw_fluxes_ch4-700.h5",
+          "ckdmip_evaluation1_sw_fluxes_ch4-1200.h5",
+          "ckdmip_evaluation1_sw_fluxes_ch4-2600.h5",
+          "ckdmip_evaluation1_sw_fluxes_ch4-3500.h5"
+        ]
+      },
+      {
+        "expected_incode_from_chain": "raw3-ckd-definition",
+        "incode": "raw3-ckd-definition",
+        "outcode": "ckd-definition",
+        "pass": "relative-n2o",
+        "relative_to": "ckdmip_evaluation1_sw_fluxes_rel-415.h5",
+        "relative_to_after_rgb_rewrite": "ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
+        "specific_options": "convergence_criterion=0.0005 max_no_rayleigh_wavenumber=15000 remove_min_max=1",
+        "trainable_arrays": [
+          "n2o_molar_absorption_coeff"
+        ],
+        "trainable_gases": [
+          "n2o"
+        ],
+        "training_files": [
+          "ckdmip_evaluation1_sw_fluxes_present.h5",
+          "ckdmip_evaluation1_sw_fluxes_n2o-190.h5",
+          "ckdmip_evaluation1_sw_fluxes_n2o-270.h5",
+          "ckdmip_evaluation1_sw_fluxes_n2o-405.h5",
+          "ckdmip_evaluation1_sw_fluxes_n2o-540.h5"
+        ]
+      }
+    ],
+    "sw_band_mapping": "0 0 0 0 1 2 3 4 4",
+    "sw_rgb_rewrite_lines": [
+      [
+        206,
+        "# Assume we are training from the sw_fluxes-rgb LBL files"
+      ],
+      [
+        209,
+        "TRAINING_SW_FLUXES_DIR=$(echo $TRAINING_SW_FLUXES_DIR | sed 's|sw_fluxes$|sw_fluxes-rgb|g')"
+      ],
+      [
+        210,
+        "TRAINING=$(echo $TRAINING | sed 's/sw_fluxes_/sw_fluxes-rgb_/g')"
+      ],
+      [
+        211,
+        "EXTRA_ARGS=$(echo $EXTRA_ARGS | sed 's/sw_fluxes_/sw_fluxes-rgb_/g')"
+      ],
+      [
+        214,
+        "# Assume we are training from the sw_fluxes-rgb LBL files"
+      ],
+      [
+        217,
+        "TRAINING_SW_FLUXES_DIR=$(echo $TRAINING_SW_FLUXES_DIR | sed 's|sw_fluxes$|sw_fluxes-rgb|g')"
+      ],
+      [
+        218,
+        "TRAINING=$(echo $TRAINING | sed 's/sw_fluxes_/sw_fluxes-rgb_/g')"
+      ],
+      [
+        219,
+        "EXTRA_ARGS=$(echo $EXTRA_ARGS | sed 's/sw_fluxes_/sw_fluxes-rgb_/g')"
+      ]
+    ]
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "87a93db",
+    "provenance_note": "artifact generated from the working tree before its own commit",
+    "sources": [
+      "gate4_stage_config_audit.json",
+      "gate4_covariance_stride_audit.json",
+      "pinned create_lut_{lw,sw}.sh / scale_lut_sw.sh / optimize_lut_sw.sh at /shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd"
+    ]
+  },
+  "status": "runner_scaffold_ready_waiting_for_data",
+  "timestamp_utc": "2026-07-19T05:17:07.587"
+}
