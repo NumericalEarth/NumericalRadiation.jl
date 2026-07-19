@@ -250,3 +250,94 @@ function g4_lw_chain_loss(theta_log::AbstractArray{<:Real,3}, ctx::G4LwChainCont
         broadband_weight = ctx.broadband_weight,
     )
 end
+
+# --- Stage 3: objective-completion terms (Appendix B items 18-19) ---------------
+# These complete the training objective beyond the ported flux/heating kernels:
+# REQUIRED before any G3/floor or recovery claim. This is objective-completion
+# plumbing, NOT real-data acceptance.
+
+# Correlation-shape matrix S over a (t, p) log-coefficient LUT slice for one
+# g-point: S[a,b] = tcorr^|Δt| * pcorr^|Δp| (item 19; ckd_model.cpp:678-679).
+# Flatten order: t fastest within p (documented assumption; the quadratic form
+# is invariant to a consistent permutation — exact upstream stride order is
+# re-verified at G1).
+function g4_prior_shape_matrix(nt::Int, np::Int, tcorr::Real, pcorr::Real)
+    n = nt * np
+    S = Matrix{Float64}(undef, n, n)
+    for b in 1:n, a in 1:n
+        ta, pa = mod(a - 1, nt), div(a - 1, nt)
+        tb, pb = mod(b - 1, nt), div(b - 1, nt)
+        S[a, b] = tcorr^abs(ta - tb) * pcorr^abs(pa - pb)
+    end
+    return S
+end
+
+# Prior term for theta (ng, np, nt) against prior mean theta_prior:
+# J = sum_g 0.5 * (1/bg_err^2) * v' * Sinv * v with v the (t fastest) flatten
+# of theta[g,:,:] - theta_prior[g,:,:]. Sinv precomputed (constant, outside
+# any AD tape).
+function g4_prior_term(theta::AbstractArray{<:Real,3},
+                       theta_prior::AbstractArray{<:Real,3},
+                       Sinv::AbstractMatrix, bg_err::Real)
+    ng, np, nt = size(theta)
+    T = eltype(theta)
+    J = zero(T)
+    v = zeros(T, np * nt)
+    for g in 1:ng
+        k = 0
+        for ip in 1:np, it in 1:nt
+            k += 1
+            v[k] = theta[g, ip, it] - theta_prior[g, ip, it]
+        end
+        J += (v' * (Sinv * v))
+    end
+    return T(0.5) / (bg_err^2) * J
+end
+
+# Negative optical-depth penalty (item 18; solve_adept.cpp:105-114): computed
+# on the UNCLAMPED optical depths, which are then clamped to zero for RT.
+function g4_negative_od_penalty(od::AbstractArray, weight::Real)
+    T = eltype(od)
+    acc = zero(T)
+    for x in od
+        acc += x < 0 ? x * x : zero(T)
+    end
+    return weight * acc
+end
+
+g4_clamp_od(od::AbstractArray) = max.(od, zero(eltype(od)))
+
+# 3-D variant for LUT gases with a concentration axis (item 19: optional
+# ccorr^|Δc| factor). Flatten order: t fastest, then p, then c (documented;
+# quadratic form is permutation-invariant given consistent construction).
+function g4_prior_shape_matrix_3d(nt::Int, np::Int, nc::Int,
+                                  tcorr::Real, pcorr::Real, ccorr::Real)
+    n = nt * np * nc
+    S = Matrix{Float64}(undef, n, n)
+    unpack(a) = (mod(a - 1, nt), mod(div(a - 1, nt), np), div(a - 1, nt * np))
+    for b in 1:n, a in 1:n
+        ta, pa, ca = unpack(a)
+        tb, pb, cb = unpack(b)
+        S[a, b] = tcorr^abs(ta - tb) * pcorr^abs(pa - pb) * ccorr^abs(ca - cb)
+    end
+    return S
+end
+
+# Prior term for a concentration-axis LUT gas: theta (ng, nc, np, nt).
+function g4_prior_term_conc(theta::AbstractArray{<:Real,4},
+                            theta_prior::AbstractArray{<:Real,4},
+                            Sinv::AbstractMatrix, bg_err::Real)
+    ng, nc, np, nt = size(theta)
+    T = eltype(theta)
+    J = zero(T)
+    v = zeros(T, nc * np * nt)
+    for g in 1:ng
+        k = 0
+        for ic in 1:nc, ip in 1:np, it in 1:nt
+            k += 1
+            v[k] = theta[g, ic, ip, it] - theta_prior[g, ic, ip, it]
+        end
+        J += (v' * (Sinv * v))
+    end
+    return T(0.5) / (bg_err^2) * J
+end

@@ -256,6 +256,115 @@ function run_gate5()
     )
 end
 
+
+# --- Gate 6 (Stage 3): prior term — analytic + gradient checks --------------------
+function run_gate6()
+    fails = String[]
+    ng, np_, nt_ = 2, 3, 2
+    n = np_ * nt_
+    theta_p = zeros(ng, np_, nt_)
+    theta = zeros(ng, np_, nt_)
+    for g in 1:ng, i in 1:np_, j in 1:nt_
+        theta[g, i, j] = 0.1 * g + 0.03 * i - 0.02 * j
+    end
+    # identity case: tcorr = pcorr = 0 => S = I => J = 0.5/bg^2 * sum(dtheta^2)
+    S0 = g4_prior_shape_matrix(nt_, np_, 0.0, 0.0)
+    J0 = g4_prior_term(theta, theta_p, inv(S0), 2.0)
+    J0_want = 0.5 / 4.0 * sum(abs2, theta)
+    approx_equal(J0, J0_want, 1e-12) ||
+        push!(fails, "gate6 identity prior: $J0 vs $J0_want")
+    # correlated case vs independent quadratic-form arithmetic in the test
+    tc, pc, bg = 0.8, 0.8, 8.0
+    S = [tc^abs(mod(a-1, nt_) - mod(b-1, nt_)) *
+         pc^abs(div(a-1, nt_) - div(b-1, nt_)) for a in 1:n, b in 1:n]
+    Jw = 0.0
+    for g in 1:ng
+        v = [theta[g, ip, it] - theta_p[g, ip, it] for ip in 1:np_ for it in 1:nt_]
+        Jw += 0.5 / bg^2 * (v' * (S \ v))
+    end
+    Sinv = inv(g4_prior_shape_matrix(nt_, np_, tc, pc))
+    J = g4_prior_term(theta, theta_p, Sinv, bg)
+    approx_equal(J, Jw, 1e-10) ||
+        push!(fails, "gate6 correlated prior: $J vs $Jw")
+    # Enzyme gradient vs analytic (1/bg^2) * Sinv * v
+    grad = zero(theta)
+    Enzyme.autodiff(Enzyme.Reverse,
+                    Enzyme.Const(t -> g4_prior_term(t, theta_p, Sinv, bg)),
+                    Enzyme.Active, Enzyme.Duplicated(copy(theta), grad))
+    max_rel = 0.0
+    for g in 1:ng
+        v = [theta[g, ip, it] for ip in 1:np_ for it in 1:nt_]
+        ga = (1 / bg^2) .* (Sinv * v)
+        k = 0
+        for ip in 1:np_, it in 1:nt_
+            k += 1
+            denom = max(abs(ga[k]), abs(grad[g, ip, it]), 1e-300)
+            max_rel = max(max_rel, abs(ga[k] - grad[g, ip, it]) / denom)
+        end
+    end
+    max_rel < 1e-10 ||
+        push!(fails, "gate6 Enzyme vs analytic prior gradient: $max_rel")
+    # 3-D concentration-axis case (ccorr): tiny (2,2,2) LUT per g
+    nc3, np3, nt3 = 2, 2, 2
+    n3 = nc3 * np3 * nt3
+    th3 = zeros(1, nc3, np3, nt3)
+    for c in 1:nc3, i in 1:np3, j in 1:nt3
+        th3[1, c, i, j] = 0.05 * c - 0.02 * i + 0.01 * j
+    end
+    tc3, pc3, cc3, bg3 = 0.8, 0.8, 0.8, 2.0
+    S3t = [tc3^abs(mod(a-1, nt3) - mod(b-1, nt3)) *
+           pc3^abs(mod(div(a-1, nt3), np3) - mod(div(b-1, nt3), np3)) *
+           cc3^abs(div(a-1, nt3*np3) - div(b-1, nt3*np3))
+           for a in 1:n3, b in 1:n3]
+    v3 = [th3[1, ic, ip, it] for ic in 1:nc3 for ip in 1:np3 for it in 1:nt3]
+    J3_want = 0.5 / bg3^2 * (v3' * (S3t \ v3))
+    S3inv = inv(g4_prior_shape_matrix_3d(nt3, np3, nc3, tc3, pc3, cc3))
+    J3 = g4_prior_term_conc(th3, zero(th3), S3inv, bg3)
+    approx_equal(J3, J3_want, 1e-10) ||
+        push!(fails, "gate6 ccorr prior: $J3 vs $J3_want")
+    grad3 = zero(th3)
+    Enzyme.autodiff(Enzyme.Reverse,
+                    Enzyme.Const(t -> g4_prior_term_conc(t, zero(th3), S3inv, bg3)),
+                    Enzyme.Active, Enzyme.Duplicated(copy(th3), grad3))
+    ga3 = (1 / bg3^2) .* (S3inv * v3)
+    max_rel3 = 0.0
+    k3 = 0
+    for ic in 1:nc3, ip in 1:np3, it in 1:nt3
+        k3 += 1
+        denom = max(abs(ga3[k3]), abs(grad3[1, ic, ip, it]), 1e-300)
+        max_rel3 = max(max_rel3, abs(ga3[k3] - grad3[1, ic, ip, it]) / denom)
+    end
+    max_rel3 < 1e-10 ||
+        push!(fails, "gate6 ccorr Enzyme vs analytic gradient: $max_rel3")
+    return fails, Dict{String, Any}("prior_identity" => J0,
+        "prior_correlated" => J, "enzyme_analytic_max_rel_err" => max_rel,
+        "prior_ccorr_3d" => J3, "ccorr_enzyme_analytic_max_rel_err" => max_rel3)
+end
+
+# --- Gate 7 (Stage 3): negative-OD penalty — analytic + gradient + clamp ---------
+function run_gate7()
+    fails = String[]
+    od = [0.5, -0.2, 0.0, -0.1, 1.3]
+    w = 1.0e4
+    pen = g4_negative_od_penalty(od, w)
+    pen_want = w * (0.04 + 0.01)
+    approx_equal(pen, pen_want, 1e-12) ||
+        push!(fails, "gate7 penalty value: $pen vs $pen_want")
+    clamped = g4_clamp_od(od)
+    (clamped == [0.5, 0.0, 0.0, 0.0, 1.3]) ||
+        push!(fails, "gate7 clamp wrong: $clamped")
+    grad = zero(od)
+    Enzyme.autodiff(Enzyme.Reverse,
+                    Enzyme.Const(x -> g4_negative_od_penalty(x, w)),
+                    Enzyme.Active, Enzyme.Duplicated(copy(od), grad))
+    grad_want = [0.0, 2w * (-0.2), 0.0, 2w * (-0.1), 0.0]
+    all(approx_equal(grad[i], grad_want[i], 1e-12) || (grad[i] == grad_want[i])
+        for i in eachindex(od)) ||
+        push!(fails, "gate7 penalty gradient: $grad vs $grad_want")
+    return fails, Dict{String, Any}("penalty_value" => pen,
+        "penalty_gradient" => grad)
+end
+
 function main()
     gates = Dict{String, String}()
     timings = Dict{String, Float64}()
@@ -273,15 +382,24 @@ function main()
     local f5, chain_record
     timings["gate5_enzyme_chain_seconds"] = @elapsed ((f5, chain_record) = run_gate5())
     append!(failures, f5); gates["gate5_enzyme_chain_fd"] = isempty(f5) ? "passed" : "failed"
+    local f6, prior_record
+    timings["gate6_prior_seconds"] = @elapsed ((f6, prior_record) = run_gate6())
+    append!(failures, f6); gates["gate6_prior_term"] = isempty(f6) ? "passed" : "failed"
+    local f7, penalty_record
+    timings["gate7_penalty_seconds"] = @elapsed ((f7, penalty_record) = run_gate7())
+    append!(failures, f7); gates["gate7_negative_od_penalty"] = isempty(f7) ? "passed" : "failed"
 
-    status = isempty(failures) ? "stage2_gates_passed" : "stage2_gates_failed"
+    status = isempty(failures) ? "stage3_gates_passed" : "stage3_gates_failed"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
     result = Dict(
         "case" => "gate4_forward_map_g0",
-        "stage" => "stage2_enzyme_chain",
+        "stage" => "stage3_objective_completion_plumbing",
         "chain_gate" => chain_record,
+        "prior_gate" => prior_record,
+        "penalty_gate" => penalty_record,
+        "objective_scope" => "objective-completion plumbing; NOT real-data acceptance; no floor/recovery claims",
         "data_mode" => "synthetic_and_published_tables_only",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
@@ -291,7 +409,10 @@ function main()
         "maxrss_bytes" => Int(Sys.maxrss()),
         "published_table_load" => record,
         "provenance" => Dict(
-            "branch" => branch, "head" => head,
+            "branch" => branch, "generated_from_head" => head,
+            "provenance_note" => "artifact generated from the working tree " *
+                "before its own commit; generated_from_head is the parent " *
+                "commit at generation time",
             "checklist" => "Appendix B of gate4_p2_forward_map_design.md",
             "sw_heating_convention" => "downwelling_only_per_appendix_a",
             "top_edge_node_semantics" =>
@@ -301,9 +422,11 @@ function main()
         ),
         "coefficient_gradient_status" =>
             "demonstrated_synthetic_single_gas_lw_chain_stage2",
-        "disclaimer" => "no objective-value or recovery claims; synthetic " *
-                        "shapes and published tables only; Stage 1 covers " *
-                        "interpolation and RT recurrences with analytic fixtures.",
+        "disclaimer" => "no objective-value, floor, or recovery claims; synthetic " *
+                        "shapes and published tables only; stages 1-3 cover " *
+                        "interpolation, RT recurrences, the Enzyme chain " *
+                        "gradient, and the prior/negative-OD " *
+                        "objective-completion terms.",
     )
 
     mkpath(dirname(G0_RESULTS_JSON))
@@ -311,7 +434,7 @@ function main()
         JSON.print(io, result, 2)
     end
     open(G0_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 forward map G0 (Stage 1)\n")
+        println(io, "# Gate-4 forward map G0 (", result["stage"], ")\n")
         println(io, "Status: **$(status)**\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gate | Result |")
@@ -324,7 +447,9 @@ function main()
         println(io, "\nTop-edge interpolation nodes follow the upstream index " *
                     "clamp (fractional index <= n-1.0001) and are verified " *
                     "against the analytically clamped value.")
-        println(io, "\nProvenance: branch `$branch`, HEAD `$head`, checklist " *
+        println(io, "\nProvenance: branch `$branch`, generated_from_head " *
+                    "`$head` (artifact generated from the working tree before " *
+                    "its own commit), checklist " *
                     "Appendix B; published SW32 load: $(get(record, "status", "?")).")
         if !isempty(failures)
             println(io, "\n## Failures\n")
@@ -341,7 +466,7 @@ function main()
     isempty(failures) || foreach(f -> println("  FAIL: $f"), failures)
     println("Wrote $G0_RESULTS_JSON")
     println("Wrote $G0_RESULTS_MD")
-    return status == "stage2_gates_passed" ? 0 : 1
+    return status == "stage3_gates_passed" ? 0 : 1
 end
 
 exit(main())
