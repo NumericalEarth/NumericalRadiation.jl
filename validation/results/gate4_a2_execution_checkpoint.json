@@ -1,0 +1,56 @@
+{
+  "case": "gate4_a2_execution_checkpoint",
+  "contention": {
+    "job_4078_running": true,
+    "policy": "A2 may run CONCURRENTLY with 4078 on a different cpu-large node (partition has 4 nodes); do not submit if the partition is saturated; never share the node running 4078"
+  },
+  "data_mode": "dry_run_script_generation_only",
+  "disclaimer": "dry-run script generation only; nothing submitted; no find_g_points/create_lut/objective/floor execution; submission requires explicit authorization per the standing protocol.",
+  "env_localization": {
+    "APPLICATION": "climate",
+    "BAND_STRUCTURE/TOLERANCE": "fsck/0.0161 (LW), rgb/0.047 (SW) first; 16-g sanity later",
+    "BINDIR": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd (sed-patched ABSOLUTE in TESTCOPY; pristine relative ../src/ecckd would break in a relocated copy)",
+    "CKDMIP_DATA_DIR": "/shared/home/greg/data/ckdmip (sed-patched in TESTCOPY)",
+    "WORK_DIR": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work (sed-patched in TESTCOPY; quarantined from 4078's workdir)",
+    "mechanism": "ALL THREE hard-coded config.h path variables are sed-patched ABSOLUTE inside the isolated TESTCOPY; env-only localization is insufficient and gated; the active 4078 working copy is read only as a copy source, never mutated"
+  },
+  "expected_outputs": {
+    "gpoints": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/**/ecckd-*_gpoints_climate_{fsck-tol0.0161,rgb-tol0.047}.h5",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-<jobid>.log",
+    "reorder": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/**/{lw,sw}_order_*_*.h5"
+  },
+  "failures": [],
+  "gates": {
+    "config_copy_patched_not_env_only": "passed",
+    "contention_policy_recorded": "passed",
+    "headnode_refusal_guard": "passed",
+    "no_mutation_of_4078_workcopy": "passed",
+    "reorder_and_find_only": "passed",
+    "sbatch_written_not_submitted": "passed",
+    "target_tolerances_narrowed": "passed",
+    "workdir_quarantined": "passed"
+  },
+  "proof_plan": {
+    "gates": [
+      "g-counts exactly 32/32",
+      "gpoint_fraction elementwise EXACT vs published",
+      "wavenumber1_band/wavenumber2_band/band_number EXACT",
+      "on any mismatch: candidates are sensitivity-only; report, do not proceed to floor"
+    ],
+    "inputs": [
+      "rerun gpoints candidates: /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/**/ecckd-*_{lw,sw}_gpoints_*tol{0.0161,0.047}*.h5",
+      "raw create_lut outputs built FROM those candidates (init-generation manifest commands)",
+      "published LW32/SW32 definitions (verification targets)"
+    ],
+    "refusal": "proof runner refuses when candidate files are absent",
+    "unit": "gate4_a2_reproduction_proof (follow-on; not implemented here)"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "bd4377a",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_dryrun.sbatch",
+  "status": "a2_execution_checkpoint_ready",
+  "timestamp_utc": "2026-07-19T05:44:01.714"
+}
