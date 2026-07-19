@@ -11,6 +11,7 @@
 # No CKDMIP flux data is read here; no objective-value/floor/recovery claims.
 
 include(joinpath(@__DIR__, "validation_results.jl"))
+include(joinpath(@__DIR__, "ecckd_original_objective_loss.jl"))
 
 import NCDatasets
 
@@ -185,4 +186,67 @@ function g4_load_ckd_definition(path::AbstractString)
         end
     end
     return (path = path, coefficients = coeffs, support = support, dims = dims)
+end
+
+# --- Stage 2: differentiable chain loss ∘ RT ∘ interpolation --------------------
+# Single-gas, single-band LW chain: log-coefficient LUT theta (ng, np, nt) ->
+# linear-in-coefficient interpolation of exp(theta) (item 17) -> per-g optical
+# depth -> LW RT (items 1-5) -> band aggregation by summation (item 16; LW
+# climate FSCK is one band) -> net-flux heating (item 12, LW) -> the ported
+# ecckd_lw_ckd_loss kernel. Interpolation stencils live in the context,
+# precomputed OUTSIDE the differentiated path (design section 4).
+struct G4LwChainContext
+    stencils::Vector{G4BilinearStencil}
+    layer_moles::Vector{Float64}     # gas moles per area per layer [mol m^-2]
+    planck_hl::Vector{Float64}
+    surf_planck::Float64
+    pressure_hl::Vector{Float64}
+    layer_weight::Vector{Float64}
+    heating_true::Matrix{Float64}    # (nlay, 1)
+    flux_dn_true::Matrix{Float64}    # (nlay+1, 1)
+    flux_up_true::Matrix{Float64}    # (nlay+1, 1)
+    flux_weight::Float64
+    flux_profile_weight::Float64
+    broadband_weight::Float64
+end
+
+function g4_lw_chain_fluxes(theta_log::AbstractArray{<:Real,3}, ctx::G4LwChainContext)
+    ng = size(theta_log, 1)
+    nlay = length(ctx.stencils)
+    T = eltype(theta_log)
+    flux_dn_band = zeros(T, nlay + 1)
+    flux_up_band = zeros(T, nlay + 1)
+    tau = zeros(T, nlay)
+    for g in 1:ng
+        for l in 1:nlay
+            s = ctx.stencils[l]
+            ip = s.i0p + 1; it = s.i0t + 1
+            c = (1 - s.wp) * ((1 - s.wt) * exp(theta_log[g, ip,   it]) +
+                              s.wt       * exp(theta_log[g, ip,   it+1])) +
+                s.wp       * ((1 - s.wt) * exp(theta_log[g, ip+1, it]) +
+                              s.wt       * exp(theta_log[g, ip+1, it+1]))
+            tau[l] = c * ctx.layer_moles[l]
+        end
+        r = g4_lw_fluxes(tau, ctx.planck_hl, ctx.surf_planck, 1.0)
+        flux_dn_band .+= r.flux_dn
+        flux_up_band .+= r.flux_up
+    end
+    return flux_dn_band, flux_up_band
+end
+
+function g4_lw_chain_loss(theta_log::AbstractArray{<:Real,3}, ctx::G4LwChainContext)
+    flux_dn_band, flux_up_band = g4_lw_chain_fluxes(theta_log, ctx)
+    hr = g4_heating_rate(ctx.pressure_hl, flux_dn_band, flux_up_band)
+    return ecckd_lw_ckd_loss(
+        heating_rate_fwd = reshape(hr, :, 1),
+        heating_rate_true = ctx.heating_true,
+        flux_dn_fwd = reshape(flux_dn_band, :, 1),
+        flux_up_fwd = reshape(flux_up_band, :, 1),
+        flux_dn_true = ctx.flux_dn_true,
+        flux_up_true = ctx.flux_up_true,
+        layer_weight = ctx.layer_weight,
+        flux_weight = ctx.flux_weight,
+        flux_profile_weight = ctx.flux_profile_weight,
+        broadband_weight = ctx.broadband_weight,
+    )
 end

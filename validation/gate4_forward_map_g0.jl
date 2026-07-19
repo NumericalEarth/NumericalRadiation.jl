@@ -12,6 +12,7 @@ include(joinpath(@__DIR__, "gate4_forward_map.jl"))
 using Dates
 using Printf
 import JSON
+import Enzyme
 
 push!(LOAD_PATH, normpath(joinpath(@__DIR__, "..")))
 using NumericalRadiation
@@ -150,6 +151,111 @@ function run_gate_published()
     return fails, record
 end
 
+# --- Gate 5 (Stage 2): Enzyme full-chain adjoint vs central FD --------------------
+# loss ∘ RT ∘ interpolation w.r.t. LOG-COEFFICIENTS on a synthetic single-gas,
+# single-band LW configuration. Self-loss-zero validates array orientation.
+function build_chain_context()
+    nlay = 6
+    np, nt = 5, 4
+    logp_axis = collect(range(log(1000.0), log(100000.0); length = np))
+    t_axis = collect(range(180.0, 320.0; length = nt))
+    p_hl = collect(range(5000.0, 95000.0; length = nlay + 1))
+    p_fl = 0.5 .* (p_hl[1:end-1] .+ p_hl[2:end])
+    t_fl = collect(range(220.0, 300.0; length = nlay))
+    stencils = [g4_bilinear_stencil(logp_axis, t_axis, log(p_fl[l]), t_fl[l])
+                for l in 1:nlay]
+    vmr = 400e-6
+    layer_moles = [g4_simple_weight(p_hl[l+1] - p_hl[l]) * vmr for l in 1:nlay]
+    planck_hl = collect(range(80.0, 130.0; length = nlay + 1))
+    lw_raw = sqrt.(p_hl[2:end]) .- sqrt.(p_hl[1:end-1])
+    layer_weight = lw_raw ./ sum(lw_raw)
+    return (nlay = nlay, np = np, nt = nt, stencils = stencils,
+            layer_moles = layer_moles, planck_hl = planck_hl,
+            p_hl = p_hl, layer_weight = layer_weight)
+end
+
+function run_gate5()
+    fails = String[]
+    ng = 4
+    c = build_chain_context()
+    # deterministic theta_true: coefficients giving tau of order 0.05-1
+    theta_true = Array{Float64}(undef, ng, c.np, c.nt)
+    for g in 1:ng, i in 1:c.np, j in 1:c.nt
+        theta_true[g, i, j] = log(2.0e-4 * (1 + 0.15 * g) *
+                                  (1 + 0.05 * i) * (1 + 0.03 * j))
+    end
+    # targets = chain outputs at theta_true (self-consistent truth)
+    ctx0 = G4LwChainContext(collect(c.stencils), c.layer_moles, c.planck_hl,
+        140.0, c.p_hl, c.layer_weight,
+        zeros(c.nlay, 1), zeros(c.nlay + 1, 1), zeros(c.nlay + 1, 1),
+        0.02, 0.2, 0.8)
+    fdn0, fup0 = g4_lw_chain_fluxes(theta_true, ctx0)
+    hr0 = g4_heating_rate(c.p_hl, fdn0, fup0)
+    ctx = G4LwChainContext(collect(c.stencils), c.layer_moles, c.planck_hl,
+        140.0, c.p_hl, c.layer_weight,
+        reshape(copy(hr0), :, 1), reshape(copy(fdn0), :, 1),
+        reshape(copy(fup0), :, 1), 0.02, 0.2, 0.8)
+    # self-loss must be ~0 at theta_true (validates orientation and wiring)
+    l0 = g4_lw_chain_loss(theta_true, ctx)
+    abs(l0) <= 1e-18 * max(1.0, sum(abs2, hr0)) ||
+        push!(fails, "gate5 self-loss not ~0: $l0")
+    # perturbed point with nonzero loss/gradient
+    theta = copy(theta_true)
+    for g in 1:ng, i in 1:c.np, j in 1:c.nt
+        theta[g, i, j] += 0.1 * sin(3.1 * g + 1.7 * i + 0.9 * j)
+    end
+    l1 = g4_lw_chain_loss(theta, ctx)
+    l1 > 0 || push!(fails, "gate5 perturbed loss not positive: $l1")
+    # Enzyme reverse gradient w.r.t. theta (full chain)
+    grad = zero(theta)
+    Enzyme.autodiff(Enzyme.Reverse,
+                    Enzyme.Const(t -> g4_lw_chain_loss(t, ctx)),
+                    Enzyme.Active,
+                    Enzyme.Duplicated(theta, grad))
+    # central FD on 32 deterministic entries, rel err < 1e-6
+    n = length(theta)
+    # deterministic full-span index set: stride coprime with n gives distinct
+    # entries; fall back to all indices when the space is small
+    idxs = n <= 32 ? collect(1:n) :
+           [1 + mod(k * 7, n) for k in 0:31]
+    length(unique(idxs)) == length(idxs) ||
+        error("gate5 FD index set not unique for n=$n")
+    max_rel = 0.0
+    worst = (index = 0, fd = 0.0, enzyme = 0.0, abs_err = 0.0, rel_err = 0.0)
+    for idx in idxs
+        # near-optimal central-difference step: h ~ cbrt(eps) * scale
+        h = 6.0e-6 * max(1.0, abs(theta[idx]))
+        tp = copy(theta); tm = copy(theta)
+        tp[idx] += h; tm[idx] -= h
+        fd = (g4_lw_chain_loss(tp, ctx) - g4_lw_chain_loss(tm, ctx)) / (2h)
+        denom = max(abs(fd), abs(grad[idx]), 1e-300)
+        rel = abs(fd - grad[idx]) / denom
+        if rel > max_rel
+            max_rel = rel
+            worst = (index = idx, fd = fd, enzyme = grad[idx],
+                     abs_err = abs(fd - grad[idx]), rel_err = rel)
+        end
+    end
+    max_rel < 1e-6 ||
+        push!(fails, "gate5 Enzyme vs FD max rel err $max_rel >= 1e-6")
+    any(!iszero, grad) || push!(fails, "gate5 gradient identically zero")
+    return fails, Dict{String, Any}(
+        "self_loss" => l0, "perturbed_loss" => l1,
+        "enzyme_fd_max_rel_err" => max_rel,
+        "fd_entries_checked" => length(idxs),
+        "worst_index" => worst.index,
+        "worst_fd_value" => worst.fd,
+        "worst_enzyme_value" => worst.enzyme,
+        "worst_abs_err" => worst.abs_err,
+        "worst_rel_err" => worst.rel_err,
+        "theta_parameters" => n,
+        "note" => "synthetic single-gas single-band LW chain; " *
+                  "loss-input-to-coefficient chain gradient DEMONSTRATED on " *
+                  "synthetic configuration; published-model full chain is " *
+                  "later-stage work",
+    )
+end
+
 function main()
     gates = Dict{String, String}()
     timings = Dict{String, Float64}()
@@ -164,14 +270,18 @@ function main()
     local fp, record
     timings["gate4_published_load_seconds"] = @elapsed ((fp, record) = run_gate_published())
     append!(failures, fp); gates["gate4_published_table_load"] = isempty(fp) ? "passed" : "failed"
+    local f5, chain_record
+    timings["gate5_enzyme_chain_seconds"] = @elapsed ((f5, chain_record) = run_gate5())
+    append!(failures, f5); gates["gate5_enzyme_chain_fd"] = isempty(f5) ? "passed" : "failed"
 
-    status = isempty(failures) ? "stage1_gates_passed" : "stage1_gates_failed"
+    status = isempty(failures) ? "stage2_gates_passed" : "stage2_gates_failed"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
     result = Dict(
         "case" => "gate4_forward_map_g0",
-        "stage" => "stage1_loader_interpolation_rt",
+        "stage" => "stage2_enzyme_chain",
+        "chain_gate" => chain_record,
         "data_mode" => "synthetic_and_published_tables_only",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
@@ -189,7 +299,8 @@ function main()
                 "(<= n-1.0001), verified against the analytically clamped " *
                 "value, not the raw table node",
         ),
-        "coefficient_gradient_status" => "blocked_until_stage2_enzyme_gate",
+        "coefficient_gradient_status" =>
+            "demonstrated_synthetic_single_gas_lw_chain_stage2",
         "disclaimer" => "no objective-value or recovery claims; synthetic " *
                         "shapes and published tables only; Stage 1 covers " *
                         "interpolation and RT recurrences with analytic fixtures.",
@@ -230,7 +341,7 @@ function main()
     isempty(failures) || foreach(f -> println("  FAIL: $f"), failures)
     println("Wrote $G0_RESULTS_JSON")
     println("Wrote $G0_RESULTS_MD")
-    return status == "stage1_gates_passed" ? 0 : 1
+    return status == "stage2_gates_passed" ? 0 : 1
 end
 
 exit(main())

@@ -1,6 +1,19 @@
 {
   "case": "gate4_forward_map_g0",
-  "coefficient_gradient_status": "blocked_until_stage2_enzyme_gate",
+  "chain_gate": {
+    "enzyme_fd_max_rel_err": 3.141479180768906e-8,
+    "fd_entries_checked": 32,
+    "note": "synthetic single-gas single-band LW chain; loss-input-to-coefficient chain gradient DEMONSTRATED on synthetic configuration; published-model full chain is later-stage work",
+    "perturbed_loss": 0.0004507189226475546,
+    "self_loss": 0.0,
+    "theta_parameters": 80,
+    "worst_abs_err": 4.0710310122982207e-10,
+    "worst_enzyme_value": 0.012958961846155564,
+    "worst_fd_value": 0.012958962253258665,
+    "worst_index": 57,
+    "worst_rel_err": 3.141479180768906e-8
+  },
+  "coefficient_gradient_status": "demonstrated_synthetic_single_gas_lw_chain_stage2",
   "data_mode": "synthetic_and_published_tables_only",
   "disclaimer": "no objective-value or recovery claims; synthetic shapes and published tables only; Stage 1 covers interpolation and RT recurrences with analytic fixtures.",
   "failures": [],
@@ -8,13 +21,14 @@
     "gate1_interpolation_nodes": "passed",
     "gate2_lw_analytic": "passed",
     "gate3_sw_analytic": "passed",
-    "gate4_published_table_load": "passed"
+    "gate4_published_table_load": "passed",
+    "gate5_enzyme_chain_fd": "passed"
   },
-  "maxrss_bytes": 512356352,
+  "maxrss_bytes": 927404032,
   "provenance": {
     "branch": "glw/gate4-recovery",
     "checklist": "Appendix B of gate4_p2_forward_map_design.md",
-    "head": "5bf8310",
+    "head": "f55adaf",
     "sw_heating_convention": "downwelling_only_per_appendix_a",
     "top_edge_node_semantics": "top-axis nodes follow the upstream fractional-index clamp (<= n-1.0001), verified against the analytically clamped value, not the raw table node"
   },
@@ -40,13 +54,14 @@
       "wavenumber2_band"
     ]
   },
-  "stage": "stage1_loader_interpolation_rt",
-  "status": "stage1_gates_passed",
-  "timestamp_utc": "2026-07-19T03:54:44.071",
+  "stage": "stage2_enzyme_chain",
+  "status": "stage2_gates_passed",
+  "timestamp_utc": "2026-07-19T04:09:08.959",
   "timings_seconds": {
-    "gate1_seconds": 4.899e-6,
-    "gate2_seconds": 1.486e-6,
-    "gate3_seconds": 2.087e-6,
-    "gate4_published_load_seconds": 2.767902113
+    "gate1_seconds": 4.159e-6,
+    "gate2_seconds": 1.204e-6,
+    "gate3_seconds": 1.101e-6,
+    "gate4_published_load_seconds": 2.923040613,
+    "gate5_enzyme_chain_seconds": 0.00034708
   }
 }
