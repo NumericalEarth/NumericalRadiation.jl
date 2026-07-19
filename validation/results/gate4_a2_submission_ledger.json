@@ -1,0 +1,40 @@
+{
+  "case": "gate4_a2_submission_ledger",
+  "data_mode": "submission_event_record_only",
+  "status": "a2_submitted_awaiting_completion",
+  "timestamp_utc": "2026-07-19T05:51:51Z",
+  "authorization": "Codex monitor go (standing no-stopping instruction from Greg; monitor message authorizing A2 execution submission with resource guardrails)",
+  "job": {
+    "job_id": 4079,
+    "job_name": "g4-a2-find-g-points",
+    "partition": "cpu-large",
+    "time_limit": "12:00:00",
+    "submit_time": "2026-07-19T05:51:51",
+    "state_at_ledger_write": "CONFIGURING (autoscaler spinning node)",
+    "exclude_node": "cpu-large-dy-cpu-large-1",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-<jobid>.log"
+  },
+  "guardrail_preflight": {
+    "job_4078_state": "RUNNING on cpu-large-dy-cpu-large-1 (elapsed 2:50:55 at preflight)",
+    "cpu_large_idle_nodes_at_preflight": ["cpu-large-dy-cpu-large-2", "cpu-large-dy-cpu-large-3", "cpu-large-dy-cpu-large-4"],
+    "exclusion_applied": "sbatch --exclude=cpu-large-dy-cpu-large-1 so A2 never shares the 4078 node",
+    "workcopy_isolation": "sbatch builds an isolated TESTCOPY under g4-init-generation with all three config.h vars sed-patched absolute; the 4078 working copy is never mutated"
+  },
+  "sbatch": {
+    "path": "validation/results/gate4_a2_dryrun.sbatch",
+    "sha256": "03a751f0ff827eaabd6860dc25929bd01a022dc5107614b5192b4dd9189e8c3c",
+    "generated_by": "validation/gate4_a2_execution_checkpoint.jl",
+    "hygiene": "stale May-config comment removed from generator and regenerated sbatch in this same commit (deferred item from the proof-scaffold unit); diff vs submitted content is comment-only-empty -- the submitted file IS this regenerated file"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_submission": "4e6aab7",
+    "note": "this ledger and the checkpoint hygiene fix are committed immediately after submission; head_at_submission is the pre-ledger HEAD"
+  },
+  "scope_statement": "A2 runs reorder_spectrum + find_g_points ONLY (LW fsck tol 0.0161, SW rgb tol 0.047). NO create_lut, NO reproduction proof, NO objective, NO floor, and NO recovery computation has run. Candidates produced by 4079 remain sensitivity-only until the reproduction-proof comparisons (gate4_a2_reproduction_proof_scaffold, 10 exact comparisons) all pass.",
+  "next_steps": [
+    "monitor 4078 and 4079",
+    "on 4079 completion: rerun gate4_a2_reproduction_proof_scaffold.jl (should flip to a2_proof_scaffold_ready with candidates found), then execute the proof per mechanism 1 on Slurm",
+    "on 4078 completion: install check / quarantine on failure, then preflight rerun toward G2/G3"
+  ]
+}

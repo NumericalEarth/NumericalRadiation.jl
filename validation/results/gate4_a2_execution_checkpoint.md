@@ -21,4 +21,4 @@ Contention: 4078 running = true; A2 may run CONCURRENTLY with 4078 on a differen
 
 Follow-on proof plan: g-counts 32/32; gpoint_fraction and band arrays elementwise EXACT vs published; any mismatch -> sensitivity-only, no floor.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `bd4377a` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `4e6aab7` (pre-own-commit).

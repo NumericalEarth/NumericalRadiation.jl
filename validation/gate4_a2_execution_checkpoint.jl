@@ -43,8 +43,6 @@ G4WORK=$G4WORK
 mkdir -p "\$G4WORK"
 
 # scoped test-dir copy with WORK_DIR redirected to the quarantined g4 tree
-# (the May working copy's config.h already localizes CKDMIP_DATA_DIR to
-# $CKDMIP_ROOT and BINDIR to the pinned built tools)
 # ISOLATED test-copy: never mutate the 4078 working copy; config.h
 # hard-codes CKDMIP_DATA_DIR/WORK_DIR/BINDIR, so env-only localization is
 # INSUFFICIENT -- all three are sed-patched ABSOLUTE in the copy (BINDIR in
