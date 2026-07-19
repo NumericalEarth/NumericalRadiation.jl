@@ -1,0 +1,52 @@
+{
+  "case": "gate4_forward_map_g0",
+  "coefficient_gradient_status": "blocked_until_stage2_enzyme_gate",
+  "data_mode": "synthetic_and_published_tables_only",
+  "disclaimer": "no objective-value or recovery claims; synthetic shapes and published tables only; Stage 1 covers interpolation and RT recurrences with analytic fixtures.",
+  "failures": [],
+  "gates": {
+    "gate1_interpolation_nodes": "passed",
+    "gate2_lw_analytic": "passed",
+    "gate3_sw_analytic": "passed",
+    "gate4_published_table_load": "passed"
+  },
+  "maxrss_bytes": 512356352,
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "checklist": "Appendix B of gate4_p2_forward_map_design.md",
+    "head": "5bf8310",
+    "sw_heating_convention": "downwelling_only_per_appendix_a",
+    "top_edge_node_semantics": "top-axis nodes follow the upstream fractional-index clamp (<= n-1.0001), verified against the analytically clamped value, not the raw table node"
+  },
+  "published_table_load": {
+    "coefficient_arrays": [
+      "ch4_molar_absorption_coeff",
+      "co2_molar_absorption_coeff",
+      "composite_molar_absorption_coeff",
+      "h2o_molar_absorption_coeff",
+      "n2o_molar_absorption_coeff",
+      "o3_molar_absorption_coeff"
+    ],
+    "file": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "note": "axis-semantics alignment deferred to G1 (Stage 2+)",
+    "status": "loaded",
+    "support_arrays": [
+      "gpoint_fraction",
+      "pressure",
+      "rayleigh_molar_scattering_coeff",
+      "solar_irradiance",
+      "temperature",
+      "wavenumber1_band",
+      "wavenumber2_band"
+    ]
+  },
+  "stage": "stage1_loader_interpolation_rt",
+  "status": "stage1_gates_passed",
+  "timestamp_utc": "2026-07-19T03:54:44.071",
+  "timings_seconds": {
+    "gate1_seconds": 4.899e-6,
+    "gate2_seconds": 1.486e-6,
+    "gate3_seconds": 2.087e-6,
+    "gate4_published_load_seconds": 2.767902113
+  }
+}
