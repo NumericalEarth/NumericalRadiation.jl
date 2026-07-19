@@ -132,6 +132,16 @@ gray-radiation constructor.
 julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
+## Validation platform
+
+The development and validation harness — the ecRad/ecCKD accuracy gates, the
+frozen evidence and diagnostics they produced, and the gate-4 CKDMIP training
+pipeline (published ecCKD model recovery) — lives on the
+[`validation-platform`](https://github.com/NumericalEarth/AnalyticBandRadiation.jl/tree/validation-platform)
+branch. This branch carries only the package. The ecRad reference NetCDF data
+used by that platform is distributed as the `validation-data-v1` release
+(the lazy `ecrad_reference_data` artifact pinned in `Artifacts.toml`).
+
 ## License
 
 MIT. See [LICENSE](./LICENSE).

@@ -1,14 +1,20 @@
 # Design and acceptance criteria
 
 This page is the distilled design contract for the ecRad/ecCKD radiation
-platform built on this branch. It records what the package is, the
-architecture rules the implementation must keep, the quantitative acceptance
-criteria for every gate, and the current gate status with headline numbers.
-The full campaign history — the pass-numbered working log, the goal/recovery
-audits, and every optimizer-experiment artifact — is preserved on the archived
-git ref `audit-trail-2026-07-17` (branch `audit-trail-pre-cleanup`). Frozen
-quantitative endpoints of the retired greedy reduced-model program live in
-`validation/FROZEN_DIAGNOSTICS.md`.
+platform. It records what the package is, the architecture rules the
+implementation must keep, the quantitative acceptance criteria for every gate,
+and the current gate status with headline numbers.
+
+The validation platform itself — the gate scripts under `validation/`, the
+frozen evidence under `validation/results/`, the ecRad reference manifest, and
+`validation/FROZEN_DIAGNOSTICS.md` — lives on the `validation-platform`
+branch; this branch carries only the package. All `validation/...` paths on
+this page refer to that branch. The full campaign history — the pass-numbered
+working log, the goal/recovery audits, and every optimizer-experiment artifact
+— is preserved on the archived git ref `audit-trail-2026-07-17` (branch
+`audit-trail-pre-cleanup`). Frozen quantitative endpoints of the retired
+greedy reduced-model program live in `validation/FROZEN_DIAGNOSTICS.md` on the
+`validation-platform` branch.
 
 ## What the package is
 
@@ -118,9 +124,13 @@ pins `ecmwf-ifs/ecrad` and `ecmwf-ifs/ecckd` snapshots) → local
 
 `src/metrics.jl` (`RadiationErrorMetrics`, `RadiationThresholds`,
 `radiation_error_metrics`, `passes_thresholds`) is the common metric layer
-used by every accuracy gate under `validation/`.
+used by every accuracy gate under `validation/` on the `validation-platform`
+branch.
 
 ## Acceptance criteria
+
+The gate scripts named below, and the evidence they produced, live on the
+`validation-platform` branch.
 
 ### Hard cloudless/no-aerosol ecRad gate
 
@@ -180,8 +190,8 @@ New band-count rows for the accuracy-vs-band-count plot only count when they
 are produced by the **recovered** training pipeline with source data,
 objective terms, and evaluation cases fixed. Greedy/forward-evaluation
 candidates (subset scans, accepted-move replay chains, coordinate polish) are
-frozen as evidence in `validation/FROZEN_DIAGNOSTICS.md` and do not satisfy
-these targets.
+frozen as evidence in `validation/FROZEN_DIAGNOSTICS.md` on the
+`validation-platform` branch and do not satisfy these targets.
 
 | Metric | Acceptance |
 |---|---:|
@@ -210,7 +220,8 @@ package-native RRTMGP comparison
 `Status: passed` with the official 32-g hard gate passed on the tropical,
 RCEMIP-style, and all-sky-clear-projection ensembles. The greedy-era 16-g and
 32×31 reduced candidates are frozen as diagnostics in
-`validation/FROZEN_DIAGNOSTICS.md`, not production rows.
+`validation/FROZEN_DIAGNOSTICS.md` (`validation-platform` branch), not
+production rows.
 
 ### Gate 3 — all-sky + production Breeze H100: **passed**
 
@@ -267,4 +278,4 @@ working summary — is preserved on the archived ref `audit-trail-2026-07-17`
 (branch `audit-trail-pre-cleanup`). The frozen quantitative endpoints of the
 greedy reduced-model program (the failing 16-g canonical diagnostic and the
 passing 32×31 leave-one-out boundary-polished candidate) are recorded in
-`validation/FROZEN_DIAGNOSTICS.md`.
+`validation/FROZEN_DIAGNOSTICS.md` on the `validation-platform` branch.

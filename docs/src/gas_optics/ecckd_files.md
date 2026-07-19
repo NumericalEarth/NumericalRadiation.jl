@@ -49,7 +49,8 @@ Resolution order is:
 
 1. `RH_ECRAD_DATA_PATH`
 2. lazy `ecrad_data` artifact
-3. local validation checkout at `validation/external/ecrad`
+3. a local developer checkout at `validation/external/ecrad` (the layout used
+   by the `validation-platform` branch)
 
 Individual files can be addressed by filename or by stable keys:
 `:longwave_32`, `:shortwave_32`, `:longwave_64`, `:shortwave_64`, and
@@ -88,7 +89,8 @@ Resolution order is:
 
 1. `RH_ECCKD_SOURCE_PATH`
 2. lazy `ecckd_source` artifact
-3. local validation checkout at `validation/external/ecckd`
+3. a local developer checkout at `validation/external/ecckd` (the layout used
+   by the `validation-platform` branch)
 
 Exact reconstruction of the published ecCKD training problem still requires the
 CKDMIP line-by-line training database in addition to this source tree.

@@ -1,7 +1,14 @@
-include(joinpath(@__DIR__, "validation_results.jl"))
-
 using NumericalRadiation
 using Dates
+
+# Reports go to NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR when set (the test
+# harness points it at a temporary directory), otherwise to a fresh temporary
+# directory.
+function validation_results_dir()
+    return normpath(get(ENV, "NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR") do
+        mktempdir()
+    end)
+end
 
 const REQUIRED_EXPORTS = (
     :AbstractAtmosphericState,

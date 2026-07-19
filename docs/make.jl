@@ -14,8 +14,6 @@ mkpath(ASSET_ROOT)
 for example in (
     "01_ckdmip_data_inventory.jl",
     "02_staged_ecckd_column.jl",
-    "03_rrtmgp_validation_report.jl",
-    "04_training_recovery_report.jl",
 )
     Literate.markdown(
         joinpath(LITERATE_ROOT, example),
@@ -55,8 +53,6 @@ makedocs(
             "Single-column examples" => "single_column.md",
             "CKDMIP inventory" => "generated/01_ckdmip_data_inventory.md",
             "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
-            "RRTMGP validation report" => "generated/03_rrtmgp_validation_report.md",
-            "Training recovery report" => "generated/04_training_recovery_report.md",
             "Breeze integration" => "gas_optics/breeze_integration.md",
         ],
         "Notation" => "notation.md",

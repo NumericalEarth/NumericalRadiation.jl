@@ -1,8 +1,5 @@
 Manifest.toml
 docs/Manifest.toml
-figures/Manifest.toml
-benchmarking/Manifest.toml
-benchmarking/results/cpu_smoke*/
 docs/build/
 docs/site/
 docs/src/generated/
@@ -11,16 +8,12 @@ docs/src/generated/
 *.jl.mem
 .DS_Store
 .vscode/
-validation/results/*_recovered_candidate.nc
-validation/results/ecckd_recovered_sw32_candidate.nc
-# External reference checkouts (ecrad, ecckd source, .deb packages).
-# These are user-provided or artifact-backed via Artifacts.toml; do not
-# track them in this repository.
-validation/external/
 
-# ecRad reference NetCDF products are artifact-backed via the lazy
-# ecrad_reference_data artifact in Artifacts.toml (README files stay tracked).
-validation/reference/**/*.nc
+# Local developer checkouts of external reference data (ecrad, ecckd source).
+# These are user-provided or artifact-backed via Artifacts.toml; do not
+# track them in this repository. (This is also where the validation-platform
+# branch keeps its external checkouts.)
+validation/
 
 # Local session/tooling state
 .claude/

@@ -1,6 +1,6 @@
 # Consolidated from the original per-topic test files (Stage R2).
 # Each original file's content is preserved verbatim inside its own module
-# so top-level consts/functions from included validation scripts cannot clash.
+# so top-level consts/functions from included check scripts cannot clash.
 
 module TestPlanck
 using Test
@@ -1632,13 +1632,14 @@ end
 end
 
 @testset "official ecRad cloud scattering files" begin
-    root = normpath(joinpath(@__DIR__, ".."))
-    liquid_path = joinpath(root, "validation", "external", "ecrad", "data",
-                           "mie_droplet_scattering.nc")
-    ice_path = joinpath(root, "validation", "external", "ecrad", "data",
-                        "baum-general-habit-mixture_ice_scattering.nc")
+    # Resolve through the package's official-data path (RH_ECRAD_DATA_PATH,
+    # the lazy ecrad_data artifact, or a local checkout).
+    liquid_path = NumericalRadiation._ecrad_data_file("mie_droplet_scattering.nc";
+                                                      require = false)
+    ice_path = NumericalRadiation._ecrad_data_file(
+        "baum-general-habit-mixture_ice_scattering.nc"; require = false)
 
-    if isfile(liquid_path) && isfile(ice_path)
+    if liquid_path !== nothing && ice_path !== nothing
         liquid = read_cloud_scattering_table(liquid_path)
         ice = read_cloud_scattering_table(ice_path)
         @test liquid.medium == "liquid-water"
@@ -1654,9 +1655,8 @@ end
         @test all(-1 .<= liquid.asymmetry_factor .<= 1)
         @test all(-1 .<= ice.asymmetry_factor .<= 1)
 
-        sw_mapping = read_ecckd_spectral_mapping(joinpath(root, "validation",
-            "external", "ecrad", "data",
-            "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"))
+        sw_mapping = read_ecckd_spectral_mapping(
+            official_ecckd_definition_path("ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"))
         liquid_gpoints = cloud_scattering_gpoint_properties(liquid, sw_mapping, 10.0e-6)
         ice_gpoints = cloud_scattering_gpoint_properties(ice, sw_mapping, 30.0e-6)
         liquid_ecrad_gpoints = cloud_scattering_gpoint_properties(

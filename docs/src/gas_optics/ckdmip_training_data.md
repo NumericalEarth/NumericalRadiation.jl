@@ -52,49 +52,14 @@ $RH_CKDMIP_DATA_PATH/
 ```
 
 Set `RH_CKDMIP_DATA_PATH` to the root of that mounted or downloaded tree before
-running exact ecCKD objective-reconstruction experiments. The validation script
-`validation/ecckd_objective_reconstruction_check.jl` records whether the
-source, published CKD files, and training data prerequisites are present.
-`validation/ckdmip_training_data_download_plan.jl` writes a dry-run
-download plan with resumable `wget` commands and the expected local directory
-layout. `validation/ckdmip_training_data_preflight.jl` checks a mounted or
-downloaded tree against the public upstream CKDMIP files implied by the
-artifact-backed ecCKD training scripts. The preflight also inventories derived
-ecCKD training flux products referenced by those scripts. The `5gas-*` and
+running exact ecCKD objective-reconstruction experiments. The `5gas-*` and
 `rel-*` flux files are not public CKDMIP archive inputs; they must be generated
 locally from the spectra before the exact original ecCKD objective can be
 reconstructed.
 
-Important preflight statuses:
-
-- `missing_ckdmip_data_root`: `RH_CKDMIP_DATA_PATH` is unset or not a
-  directory.
-- `incomplete_ckdmip_upstream_data`: public CKDMIP directories, spectra,
-  concentration files, or public flux inputs are missing.
-- `ready_for_derived_flux_generation`: public upstream CKDMIP inputs are
-  present, but derived ecCKD `5gas-*` or `rel-*` training flux products still
-  need to be generated locally.
-- `ready_for_original_ecckd_objective`: both upstream CKDMIP inputs and derived
-  ecCKD training flux products are present.
-
-For a shell entry point, use:
-
-```bash
-export RH_CKDMIP_DATA_PATH=/path/to/large/ckdmip
-CKDMIP_DRY_RUN=true bash validation/download_ckdmip_training_data.sh
-CKDMIP_DRY_RUN=false bash validation/download_ckdmip_training_data.sh
-julia --project=test validation/ckdmip_training_data_preflight.jl
-```
-
-For a batch job that should validate the tree immediately after downloading,
-set `CKDMIP_RUN_PREFLIGHT=true`. With `CKDMIP_DRY_RUN=true`, this still only
-prints the preflight command:
-
-```bash
-export RH_CKDMIP_DATA_PATH=/path/to/large/ckdmip
-CKDMIP_DRY_RUN=false CKDMIP_RUN_PREFLIGHT=true \
-  bash validation/download_ckdmip_training_data.sh
-```
+The download planner, tree preflight, and objective-reconstruction check
+scripts — the validation platform, its gates, and its evidence — live on the
+`validation-platform` branch.
 
 Do not add the full CKDMIP line-by-line database to the default package
 artifacts. It is large enough that downloads should be explicit, resumable, and

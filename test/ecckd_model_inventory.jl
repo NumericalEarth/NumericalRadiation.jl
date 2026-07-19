@@ -1,5 +1,3 @@
-include(joinpath(@__DIR__, "validation_results.jl"))
-
 using Dates
 
 const ABR_ROOT = normpath(joinpath(@__DIR__, ".."))
@@ -10,8 +8,14 @@ end
 using NumericalRadiation
 using NCDatasets
 
-const INVENTORY_JSON = validation_results_path("ecckd_model_inventory.json")
-const INVENTORY_MD = validation_results_path("ecckd_model_inventory.md")
+# Reports go to NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR when set (the test
+# harness points it at a temporary directory), otherwise to a fresh temporary
+# directory.
+function ecckd_inventory_results_dir()
+    return normpath(get(ENV, "NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR") do
+        mktempdir()
+    end)
+end
 
 function json_escape(text)
     return replace(text, "\\" => "\\\\", "\"" => "\\\"", "\n" => "\\n")
@@ -111,12 +115,15 @@ end
 
 function ecckd_model_inventory_main()
     result = run_ecckd_model_inventory()
-    mkpath(dirname(INVENTORY_JSON))
-    write(INVENTORY_JSON, json_object(result) * "\n")
-    write(INVENTORY_MD, markdown_inventory(result))
+    results_dir = ecckd_inventory_results_dir()
+    inventory_json = joinpath(results_dir, "ecckd_model_inventory.json")
+    inventory_md = joinpath(results_dir, "ecckd_model_inventory.md")
+    mkpath(results_dir)
+    write(inventory_json, json_object(result) * "\n")
+    write(inventory_md, markdown_inventory(result))
     print(markdown_inventory(result))
-    println("Wrote $INVENTORY_JSON")
-    println("Wrote $INVENTORY_MD")
+    println("Wrote $inventory_json")
+    println("Wrote $inventory_md")
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__

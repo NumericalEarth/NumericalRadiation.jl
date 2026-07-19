@@ -23,22 +23,9 @@ The validation metrics API records these quantities through
 
 ## Example Workflow
 
-The generated [RRTMGP validation report](../generated/03_rrtmgp_validation_report.md)
-reads the current validation CSV and plots forcing error versus g-point count:
-
-```bash
-julia --project=docs docs/make.jl
-```
-
-Run the reduced-model comparison script from the repository root:
-
-```bash
-julia --project=test validation/reduced_ecckd_32g_rrtmgp_comparison.jl
-```
-
-The script writes machine-readable and Markdown reports under
-`validation/results/`. Those reports are intended to feed the accuracy-versus-
-g-points plot used by PR review and model-selection discussions.
+The reduced-model comparison script and the machine-readable/Markdown reports
+it writes — the validation platform, its gates, and its evidence — live on the
+`validation-platform` branch.
 
 For a full runtime RRTMGP comparison, run the standalone example:
 

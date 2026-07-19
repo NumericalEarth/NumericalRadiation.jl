@@ -25,37 +25,19 @@ Small inputs are artifact-backed:
 
 Large CKDMIP line-by-line spectra are not default package artifacts. Set
 `RH_CKDMIP_DATA_PATH` to a local or mounted CKDMIP tree before running exact
-training-objective reconstruction:
-
-```bash
-export RH_CKDMIP_DATA_PATH=/path/to/ckdmip
-julia --project=test validation/ckdmip_training_data_preflight.jl
-```
-
-The preflight distinguishes public upstream inputs from derived ecCKD training
-fluxes. Files named like `5gas-*` and `rel-*` are generated products from the
-ecCKD/CKDMIP toolchain, not public CKDMIP archive inputs.
+training-objective reconstruction. The tree preflight distinguishes public
+upstream inputs from derived ecCKD training fluxes: files named like `5gas-*`
+and `rel-*` are generated products from the ecCKD/CKDMIP toolchain, not public
+CKDMIP archive inputs.
 
 ## Objective Reconstruction
 
-The generated [Training and Recovery Report](../generated/04_training_recovery_report.md)
-embeds the current validation status and plots the best available
-boundary-forcing row by total g-point count. Rebuild the docs to refresh it:
-
-```bash
-julia --project=docs docs/make.jl
-```
-
-The recovery pipeline should report the objective terms separately:
-
-```bash
-julia --project=test validation/ecckd_original_objective_terms.jl
-julia --project=test validation/ecckd_training_recovery_targets.jl
-```
-
-The reports under `validation/results/` record which parts of the published
-problem are available, which derived flux products are present, and which
-accuracy gates can be evaluated.
+The recovery pipeline should report the objective terms separately. The
+training/recovery pipeline itself — the objective-term and recovery-target
+scripts, the preflight, and the reports under `validation/results/` that
+record which parts of the published problem are available — lives on the
+`validation-platform` branch together with the rest of the validation platform,
+its gates, and its evidence.
 
 ## Quantitative Recovery Metrics
 

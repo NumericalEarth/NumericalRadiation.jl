@@ -1,6 +1,6 @@
 # Consolidated from the original per-topic test files (Stage R2).
 # Each original file's content is preserved verbatim inside its own module
-# so top-level consts/functions from included validation scripts cannot clash.
+# so top-level consts/functions from included check scripts cannot clash.
 
 module TestMetrics
 using Test
@@ -201,15 +201,18 @@ using Dates
 
 # --- begin content of test_access_points_check.jl ---
 @testset "host-model access points artifact" begin
-    script = joinpath(@__DIR__, "..", "validation", "access_points_check.jl")
-    output = read(`$(Base.julia_cmd()) --project=$(Base.active_project()) $script`, String)
+    script = joinpath(@__DIR__, "access_points_check.jl")
+    results_dir = mktempdir()
+    cmd = addenv(`$(Base.julia_cmd()) --project=$(Base.active_project()) $script`,
+                 "NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR" => results_dir)
+    output = read(cmd, String)
     @test occursin("Host-Model Access Points Check", output)
     @test occursin("Status: **passed**", output)
     @test occursin("Host can stop after gas optics", output)
     @test occursin("Host can replace solver or vertical integral", output)
 
-    json_path = joinpath(@__DIR__, "..", "validation", "results", "access_points_check.json")
-    md_path = joinpath(@__DIR__, "..", "validation", "results", "access_points_check.md")
+    json_path = joinpath(results_dir, "access_points_check.json")
+    md_path = joinpath(results_dir, "access_points_check.md")
     @test isfile(json_path)
     @test isfile(md_path)
 
