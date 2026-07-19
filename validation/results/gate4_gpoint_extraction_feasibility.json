@@ -1,0 +1,138 @@
+{
+  "case": "gate4_gpoint_extraction_feasibility",
+  "data_mode": "published_file_statistics_only",
+  "disclaimer": "feasibility finding only; no extraction, generation, optimization, objective, floor, or recovery computation.",
+  "failures": [],
+  "finding": "published definitions contain NO standalone g_point variable (inventory recorded), and gpoint_fraction is a fractional overlap/projection on the coarse definition grid, not a one-hot assignment; the real per-wavenumber g_point vector required by create_look_up_table cannot be recovered from it; argmax extraction is invalid",
+  "gates": {
+    "argmax_extraction_ruled_out": "passed",
+    "create_lut_requires_g_point_vector": "passed",
+    "gpoint_fraction_is_fractional": "passed",
+    "no_computation_beyond_file_stats": "passed",
+    "no_g_point_variable_in_published": "passed"
+  },
+  "gpoint_fraction_stats": {
+    "lw32": {
+      "exact_one_entries": 0,
+      "has_g_point_variable": false,
+      "max": 0.4488372206687927,
+      "max_colsum": 1.0000000151339918,
+      "max_rowsum": 1.2838834039866924,
+      "min_colsum": 0.999999985244358,
+      "min_rowsum": 0.014900462701916695,
+      "one_hot": false,
+      "positive_fractional_entries": 2537,
+      "size": [
+        326,
+        32
+      ],
+      "variable_inventory": [
+        "band_number",
+        "cfc11_conc_dependence_code",
+        "cfc11_molar_absorption_coeff",
+        "cfc12_conc_dependence_code",
+        "cfc12_molar_absorption_coeff",
+        "ch4_conc_dependence_code",
+        "ch4_molar_absorption_coeff",
+        "ch4_reference_mole_fraction",
+        "co2_conc_dependence_code",
+        "co2_molar_absorption_coeff",
+        "composite_conc_dependence_code",
+        "composite_molar_absorption_coeff",
+        "composite_mole_fraction",
+        "gpoint_fraction",
+        "h2o_conc_dependence_code",
+        "h2o_molar_absorption_coeff",
+        "h2o_mole_fraction",
+        "n2o_conc_dependence_code",
+        "n2o_molar_absorption_coeff",
+        "n2o_reference_mole_fraction",
+        "n_gases",
+        "o3_conc_dependence_code",
+        "o3_molar_absorption_coeff",
+        "planck_function",
+        "pressure",
+        "temperature",
+        "temperature_planck",
+        "wavenumber1",
+        "wavenumber1_band",
+        "wavenumber2",
+        "wavenumber2_band"
+      ]
+    },
+    "sw32": {
+      "exact_one_entries": 0,
+      "has_g_point_variable": false,
+      "max": 0.46638116240501404,
+      "max_colsum": 1.0000000305299181,
+      "max_rowsum": 1.0564419701695442,
+      "min_colsum": 0.9999985096692399,
+      "min_rowsum": 0.006282196380198002,
+      "one_hot": false,
+      "positive_fractional_entries": 2066,
+      "size": [
+        995,
+        32
+      ],
+      "variable_inventory": [
+        "band_number",
+        "ch4_conc_dependence_code",
+        "ch4_molar_absorption_coeff",
+        "ch4_reference_mole_fraction",
+        "co2_conc_dependence_code",
+        "co2_molar_absorption_coeff",
+        "composite_conc_dependence_code",
+        "composite_molar_absorption_coeff",
+        "composite_mole_fraction",
+        "gpoint_fraction",
+        "h2o_conc_dependence_code",
+        "h2o_molar_absorption_coeff",
+        "h2o_mole_fraction",
+        "n2o_conc_dependence_code",
+        "n2o_molar_absorption_coeff",
+        "n2o_reference_mole_fraction",
+        "n_gases",
+        "o3_conc_dependence_code",
+        "o3_molar_absorption_coeff",
+        "pressure",
+        "rayleigh_molar_scattering_coeff",
+        "solar_irradiance",
+        "solar_spectral_irradiance",
+        "temperature",
+        "wavenumber1",
+        "wavenumber1_band",
+        "wavenumber2",
+        "wavenumber2_band"
+      ]
+    }
+  },
+  "policy_amendment": {
+    "remaining_options": [
+      {
+        "detail": "search upstream releases/ECPDS for the released find_g_points HDF5 files matching the published models; provenance-verified download if found",
+        "option": "A1_locate_original_find_g_points_outputs"
+      },
+      {
+        "detail": "run the pinned find_g_points from idealized spectra as PROBLEM-DEFINITION reconstruction (a non-optimizer stage); acceptance use requires verifying the reconstructed structure reproduces the published gpoint_fraction and band arrays -- if it does not match exactly, it CANNOT feed the acceptance floor without an explicit rule change from Greg",
+        "option": "A2_rerun_find_g_points_as_fixed_input_reconstruction"
+      },
+      {
+        "detail": "avoid create_lut regeneration entirely if raw/scaled init definitions are available from the upstream release history",
+        "option": "A3_alternative_init_source"
+      }
+    ],
+    "supersedes": "gate4_gpoint_provenance_policy.json path_a extraction METHOD (the path-A goal of structural identity stands; the argmax-from-gpoint_fraction mechanism is INVALID)"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "files": [
+      "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+      "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+    ],
+    "generated_from_head": "f88c5c9",
+    "provenance_note": "artifact generated from the working tree before its own commit",
+    "source_anchor": "create_look_up_table.cpp: input_file.read(g_point, \"g_point\")"
+  },
+  "status": "extraction_infeasibility_proven",
+  "timestamp_utc": "2026-07-19T05:30:06.728"
+}
