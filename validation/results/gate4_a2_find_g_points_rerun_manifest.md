@@ -1,0 +1,35 @@
+# Gate-4 A2 find_g_points rerun-with-proof manifest
+
+Status: **a2_manifest_ready**
+
+dry-run A2 manifest only; no find_g_points, create_lut, objective, floor, or recovery computation.
+
+| Gate | Result |
+|---|---|
+| acceptance_hinge_exact_reproduction | passed |
+| future_outputs_named | passed |
+| no_heavy_execution | passed |
+| pinned_scripts_discovered | passed |
+| required_inputs_enumerated | passed |
+| runtime_estimate_recorded | passed |
+| unproven_reruns_sensitivity_only | passed |
+
+## Required inputs (7/7)
+
+- [present] pinned find_g_points binary: `/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/find_g_points`
+- [present] pinned reorder_spectrum binary: `/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/reorder_spectrum`
+- [present] MMM LW median spectra: `/shared/home/greg/data/ckdmip/mmm/lw_spectra` (glob: median)
+- [present] MMM SW median spectra: `/shared/home/greg/data/ckdmip/mmm/sw_spectra` (glob: median)
+- [present] idealized LW spectra (create_lut PROOF stage, not find_g_points): `/shared/home/greg/data/ckdmip/idealized/lw_spectra`
+- [present] idealized SW spectra (create_lut PROOF stage, not find_g_points): `/shared/home/greg/data/ckdmip/idealized/sw_spectra`
+- [present] MMM SSI: `/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5`
+
+## Acceptance hinge
+
+rerun gpoints.h5 + raw create_lut output must EXACTLY reproduce the published gpoint_fraction and band support arrays (wavenumber1/2_band, band_number) AND the g-counts (32 LW fsck / 32 SW rgb) BEFORE any floor use
+
+If not exact: outputs are SENSITIVITY-ONLY; they cannot feed the acceptance floor unless Greg explicitly changes the optimizer-only-delta rule
+
+Runtime estimate: 1-4 h per band per tolerance on cpu-large (60 GB, 16 cpu); tolerance loop multiplies -- run the published-matching tolerances first (Slurm cpu-large, never the head node)
+
+Provenance: branch `glw/gate4-recovery`, generated_from_head `a7e74a7` (pre-own-commit).

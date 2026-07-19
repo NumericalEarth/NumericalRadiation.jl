@@ -1,0 +1,341 @@
+{
+  "acceptance_hinge": {
+    "if_not_exact": "outputs are SENSITIVITY-ONLY; they cannot feed the acceptance floor unless Greg explicitly changes the optimizer-only-delta rule",
+    "rule": "rerun gpoints.h5 + raw create_lut output must EXACTLY reproduce the published gpoint_fraction and band support arrays (wavenumber1/2_band, band_number) AND the g-counts (32 LW fsck / 32 SW rgb) BEFORE any floor use",
+    "verification_targets": "published LW32/SW32 definitions (gate4_covariance_stride_audit rows; gate4_gpoint_extraction_feasibility stats)"
+  },
+  "case": "gate4_a2_find_g_points_rerun_manifest",
+  "commands": {
+    "future_outputs": {
+      "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/lw/lw_gpoints/ecckd-<VER>_lw_gpoints_climate_fsck-tol0.0161.h5 (A2 candidate; 32-g check gates it); optional ...tol0.061.h5 16-g sanity",
+      "sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/sw/sw_gpoints/ecckd-<VER>_sw_gpoints_climate_rgb-tol0.047.h5 (A2 candidate); optional ...tol0.16.h5 16-g sanity"
+    },
+    "refusal": "no execution from this manifest; the A2 runner unit must re-check inputs and carry the acceptance hinge gates before any invocation",
+    "runtime_estimate": {
+      "basis": "reorder + find_g_points stream the MMM spectra (median present-day) per band; idealized spectra are consumed later at the create_lut proof stage; LBL-scale IO-bound",
+      "estimate": "1-4 h per band per tolerance on cpu-large (60 GB, 16 cpu); tolerance loop multiplies -- run the published-matching tolerances first",
+      "placement": "Slurm cpu-large, never the head node"
+    },
+    "step1_reorder": {
+      "lw": "test/reorder_spectrum_lw.sh (pinned) with CKDMIP_DATA_DIR=/shared/home/greg/data/ckdmip, WORK_DIR=/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/lw -- consumes MMM median present-day spectra, emits lw_order_<bandstruct>_<gas>.h5",
+      "sw": "test/reorder_spectrum_sw.sh analog for SW"
+    },
+    "step2_find_g_points": {
+      "lw": "test/find_g_points_lw.sh, BANDSTRUCT=fsck; 32-g TARGET TOLERANCE = 0.0161 (pinned do_all_lw.sh); optional 0.061 only as 16-g sanity product",
+      "sw": "test/find_g_points_sw.sh, BANDSTRUCT=rgb; 32-g TARGET TOLERANCE = 0.047 (pinned do_all_sw.sh:43, TOLERANCE=\"0.16 0.047\"); optional 0.16 only as 16-g sanity product"
+    }
+  },
+  "data_mode": "dry_run_manifest_only",
+  "disclaimer": "dry-run A2 manifest only; no find_g_points, create_lut, objective, floor, or recovery computation.",
+  "evidence": {
+    "bandstructs": [],
+    "gpoint_outputs": [
+      [
+        351,
+        "output=${WORK_LW_GPOINTS_DIR}/${ECCKD_PREFIX}_lw_gpoints_${MODEL_CODE}.h5 \\"
+      ],
+      [
+        353,
+        "|& tee ${WORK_LW_GPOINTS_DIR}/${ECCKD_PREFIX}_lw_gpoints_${MODEL_CODE}.log"
+      ],
+      [
+        353,
+        "output=${WORK_SW_GPOINTS_DIR}/${ECCKD_PREFIX}_sw_gpoints_${MODEL_CODE}.h5 \\"
+      ],
+      [
+        356,
+        "|& tee ${WORK_SW_GPOINTS_DIR}/${ECCKD_PREFIX}_sw_gpoints_${MODEL_CODE}.log"
+      ]
+    ],
+    "reorder_inputs_lw": [
+      [
+        59,
+        "input ckdmip_mmm_lw_spectra_h2o_median.h5"
+      ],
+      [
+        68,
+        "input ckdmip_mmm_lw_spectra_o3_median.h5"
+      ],
+      [
+        104,
+        "input ckdmip_mmm_lw_spectra_h2o_median.h5"
+      ],
+      [
+        116,
+        "input ckdmip_mmm_lw_spectra_o3_median.h5"
+      ],
+      [
+        178,
+        "input ckdmip_mmm_lw_spectra_h2o_median.h5"
+      ],
+      [
+        187,
+        "input ckdmip_mmm_lw_spectra_o3_median.h5"
+      ],
+      [
+        263,
+        "input ckdmip_mmm_lw_spectra_h2o_median.h5"
+      ],
+      [
+        272,
+        "input ckdmip_mmm_lw_spectra_o3_median.h5"
+      ],
+      [
+        308,
+        "input ckdmip_mmm_lw_spectra_h2o_median.h5"
+      ],
+      [
+        60,
+        "reordering_input lw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        69,
+        "reordering_input lw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        76,
+        "reordering_input lw_order_${BANDSTRUCT}_composite.h5"
+      ],
+      [
+        105,
+        "reordering_input lw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        117,
+        "reordering_input lw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        127,
+        "reordering_input lw_order_${BANDSTRUCT}_co2.h5"
+      ],
+      [
+        137,
+        "reordering_input lw_order_${BANDSTRUCT}_ch4.h5"
+      ],
+      [
+        147,
+        "reordering_input lw_order_${BANDSTRUCT}_n2o.h5"
+      ],
+      [
+        179,
+        "reordering_input lw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        188,
+        "reordering_input lw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        195,
+        "reordering_input lw_order_${BANDSTRUCT}_co2.h5"
+      ],
+      [
+        207,
+        "reordering_input lw_order_${BANDSTRUCT}_ch4.h5"
+      ],
+      [
+        219,
+        "reordering_input lw_order_${BANDSTRUCT}_n2o.h5"
+      ],
+      [
+        231,
+        "reordering_input lw_order_${BANDSTRUCT}_o2n2.h5"
+      ],
+      [
+        264,
+        "reordering_input lw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        273,
+        "reordering_input lw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        280,
+        "reordering_input lw_order_${BANDSTRUCT}_composite.h5"
+      ],
+      [
+        309,
+        "reordering_input lw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        315,
+        "reordering_input lw_order_${BANDSTRUCT}_o2.h5"
+      ]
+    ],
+    "reorder_inputs_sw": [
+      [
+        89,
+        "input ckdmip_mmm_sw_spectra_h2o_median.h5"
+      ],
+      [
+        100,
+        "input ckdmip_mmm_sw_spectra_o3_median.h5"
+      ],
+      [
+        150,
+        "input ckdmip_mmm_sw_spectra_h2o_median.h5"
+      ],
+      [
+        161,
+        "input ckdmip_mmm_sw_spectra_o3_median.h5"
+      ],
+      [
+        250,
+        "input ckdmip_mmm_sw_spectra_h2o_median.h5"
+      ],
+      [
+        261,
+        "input ckdmip_mmm_sw_spectra_o3_median.h5"
+      ],
+      [
+        90,
+        "reordering_input sw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        101,
+        "reordering_input sw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        111,
+        "reordering_input sw_order_${BANDSTRUCT}_composite.h5"
+      ],
+      [
+        144,
+        "reordering_input sw_order_${BANDSTRUCT}_cloud.h5"
+      ],
+      [
+        151,
+        "reordering_input sw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        162,
+        "reordering_input sw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        172,
+        "reordering_input sw_order_${BANDSTRUCT}_co2.h5"
+      ],
+      [
+        186,
+        "reordering_input sw_order_${BANDSTRUCT}_ch4.h5"
+      ],
+      [
+        200,
+        "reordering_input sw_order_${BANDSTRUCT}_n2o.h5"
+      ],
+      [
+        214,
+        "reordering_input sw_order_${BANDSTRUCT}_o2n2.h5"
+      ],
+      [
+        251,
+        "reordering_input sw_order_${BANDSTRUCT}_h2o.h5"
+      ],
+      [
+        263,
+        "reordering_input sw_order_${BANDSTRUCT}_o3.h5"
+      ],
+      [
+        273,
+        "reordering_input sw_order_${BANDSTRUCT}_composite.h5"
+      ],
+      [
+        280,
+        "reordering_input sw_order_${BANDSTRUCT}_rayleigh.h5"
+      ]
+    ],
+    "tolerance_lists": [
+      [
+        39,
+        "TOLERANCE=\"0.061 0.0161\""
+      ],
+      [
+        51,
+        "export TOLERANCE"
+      ],
+      [
+        35,
+        "TOLERANCE=\"0.6 0.4 0.2 0.15 0.1 0.05 0.025\""
+      ],
+      [
+        39,
+        "TOLERANCE=\"0.2\""
+      ],
+      [
+        43,
+        "TOLERANCE=\"0.16 0.047\""
+      ],
+      [
+        64,
+        "export TOLERANCE"
+      ],
+      [
+        325,
+        "for TOL in $TOLERANCE"
+      ]
+    ]
+  },
+  "failures": [],
+  "gates": {
+    "acceptance_hinge_exact_reproduction": "passed",
+    "future_outputs_named": "passed",
+    "no_heavy_execution": "passed",
+    "pinned_scripts_discovered": "passed",
+    "required_inputs_enumerated": "passed",
+    "runtime_estimate_recorded": "passed",
+    "unproven_reruns_sensitivity_only": "passed"
+  },
+  "inputs_expected": 7,
+  "inputs_present": 7,
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "a7e74a7",
+    "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "required_inputs": [
+    {
+      "glob": null,
+      "label": "pinned find_g_points binary",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/find_g_points",
+      "present": true
+    },
+    {
+      "glob": null,
+      "label": "pinned reorder_spectrum binary",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/reorder_spectrum",
+      "present": true
+    },
+    {
+      "glob": "median",
+      "label": "MMM LW median spectra",
+      "path": "/shared/home/greg/data/ckdmip/mmm/lw_spectra",
+      "present": true
+    },
+    {
+      "glob": "median",
+      "label": "MMM SW median spectra",
+      "path": "/shared/home/greg/data/ckdmip/mmm/sw_spectra",
+      "present": true
+    },
+    {
+      "glob": null,
+      "label": "idealized LW spectra (create_lut PROOF stage, not find_g_points)",
+      "path": "/shared/home/greg/data/ckdmip/idealized/lw_spectra",
+      "present": true
+    },
+    {
+      "glob": null,
+      "label": "idealized SW spectra (create_lut PROOF stage, not find_g_points)",
+      "path": "/shared/home/greg/data/ckdmip/idealized/sw_spectra",
+      "present": true
+    },
+    {
+      "glob": null,
+      "label": "MMM SSI",
+      "path": "/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5",
+      "present": true
+    }
+  ],
+  "status": "a2_manifest_ready",
+  "timestamp_utc": "2026-07-19T05:39:59.490"
+}
