@@ -28,4 +28,4 @@ Expected raw outputs: `ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc
 
 Version-skew note: pre-registered mismatch risk: published LW32 is ecckd-1.0, published SW32 is ecckd-1.4, pinned rerun toolchain is ecckd-1.2; content comparisons are name-agnostic but algorithmic drift across versions is a plausible mismatch cause; any mismatch -> sensitivity-only per the scaffold verdict rule
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `2fb10c9` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `ecf3973` (pre-own-commit).

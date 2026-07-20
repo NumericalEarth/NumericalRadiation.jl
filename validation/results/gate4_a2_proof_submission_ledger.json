@@ -1,0 +1,41 @@
+{
+  "case": "gate4_a2_proof_submission_ledger",
+  "data_mode": "submission_event_record_only",
+  "status": "proof_run_submitted_awaiting_completion",
+  "timestamp_utc": "2026-07-20T07:28:45Z",
+  "authorization": "Greg, directly: 'keep going for gate-4' (2026-07-20), following the explicit recommendation to submit the proof run; evaluation2 ruled consider-later (out of scope for the gate-4 acceptance chain, may be restored for independent generalization evaluation afterwards)",
+  "job": {
+    "job_id": 4091,
+    "job_name": "g4-a2-proof-create-lut",
+    "partition": "cpu-large",
+    "time_limit": "08:00:00",
+    "submit_time": "2026-07-20T07:28:45",
+    "state_at_ledger_write": "CONFIGURING (autoscaler; all four cpu-large nodes were idle at preflight, no exclusion needed -- 4078 completed rc=0 on 2026-07-19)",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-proof-4091.log"
+  },
+  "sbatch": {
+    "path": "validation/results/gate4_a2_proof_dryrun.sbatch",
+    "sha256": "cd1d7ab1c28c54eeb60b879828d5fb105a8a5deda1d41435e907d834331d7cf6",
+    "generated_by": "validation/gate4_a2_proof_driver_checkpoint.jl",
+    "driver_status_at_submission": "a2_proof_driver_ready_awaiting_go (rerun immediately before submission; all 11 gates passed; regeneration deterministic, submitted content identical to the committed file)"
+  },
+  "guardrails_in_effect": [
+    "head-node refusal (exit 64 without SLURM_JOB_ID)",
+    "reuses the 4082 TESTCOPY unchanged; refuses if missing (exit 68); all five patched config.h vars grep-asserted",
+    "candidate identity: sha256sum -c against the 4082 ledger hashes (LW c96e6492..., SW 13dd686a...); refuses on mismatch (exit 69)",
+    "stale-output refusal: exits 70 if either expected raw output already exists (both verified absent at driver rerun)",
+    "input deps preflight: idealized LW/SW spectra dirs, mmm-const concentrations, MMM SSI",
+    "create_lut ONLY: no optimize_lut, scale_lut, find_g_points, run_ckd, or reorder in executable lines"
+  ],
+  "expected_outputs": {
+    "lw_raw": "g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+    "sw_raw": "g4-init-generation/work/sw_raw-ckd-definition/ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+    "note": "output sha256s echoed to the job log by the sbatch"
+  },
+  "scope_statement": "PROOF-ONLY raw create_lut builds. NO objective, floor, optimization, or acceptance use. After completion: log/hash review (provenance requirement), then gate4_a2_proof_comparison_runner.jl executes the 10 elementwise-exact comparisons vs the published LW32/SW32 definitions. ALL exact -> candidates promotable subject to review; ANY mismatch -> sensitivity-only (pre-registered risk: ecckd version skew, published 1.0/1.4 vs pinned 1.2 toolchain).",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_submission": "ecf3973"
+  },
+  "disclaimer": "submission event record only; no comparison, objective, floor, or recovery computation in this unit."
+}

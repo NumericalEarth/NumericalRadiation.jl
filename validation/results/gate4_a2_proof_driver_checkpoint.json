@@ -36,10 +36,10 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "2fb10c9",
+    "generated_from_head": "ecf3973",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_proof_dryrun.sbatch",
   "status": "a2_proof_driver_ready_awaiting_go",
-  "timestamp_utc": "2026-07-19T08:32:56.877"
+  "timestamp_utc": "2026-07-20T07:28:44.412"
 }
