@@ -72,10 +72,15 @@ echo "=== R2 stage 1: build v1.4 (toolchain parity with pinned v1.2 build) ==="
 # header-only satisfiable so the bug was latent there. LIBS is placed after
 # the object by autoconf/automake, resolving adept::compiler_version().
 # Attempt 1 (job 4094) failed at exactly this configure check.
+# LIBS applies to EVERY conftest incl. the initial compiler sanity check,
+# which runs before --with-adept adds any -L path -- so the adept lib dir
+# must also be in user LDFLAGS (attempt 2, job 4095, failed there with
+# "C++ compiler cannot create executables" / cannot find -ladept).
 cd "\$V14"
 if [ ! -x src/ecckd/create_look_up_table ]; then
     [ -x ./configure ] || autoreconf -i
-    ./configure --with-adept=$ADEPT --with-netcdf=$NETCDF LIBS=-ladept
+    ./configure --with-adept=$ADEPT --with-netcdf=$NETCDF \\
+        LDFLAGS="-L$ADEPT/lib -Wl,-rpath,$ADEPT/lib" LIBS=-ladept
     make -j16
 fi
 echo "build provenance:"
@@ -217,7 +222,23 @@ function main()
                 "flags otherwise identical",
             "no_partial_state" => "configure failed before make; " *
                 "testcopy-v14/work-v14 never created; stage-0 guards " *
-                "unaffected for the retry")),
+                "unaffected for the retry"),
+        "attempt_2" => Dict(
+            "job_id" => 4095,
+            "outcome" => "FAILED at configure's initial sanity check: " *
+                "'C++ compiler cannot create executables' (cannot find " *
+                "-ladept)",
+            "root_cause" => "the attempt-1 fix LIBS=-ladept applies to " *
+                "EVERY conftest including the first compiler check, which " *
+                "runs before --with-adept contributes any -L path; " *
+                "verified on the head node (trivial main fails with " *
+                "-ladept alone, passes with -L<adept>/lib)",
+            "fix" => "add the adept lib dir to user LDFLAGS alongside " *
+                "LIBS: LDFLAGS='-L<adept>/lib -Wl,-rpath,<adept>/lib' " *
+                "LIBS=-ladept; user LDFLAGS is prepended to every " *
+                "conftest so -ladept resolves everywhere",
+            "no_partial_state" => "same as attempt 1: failed before make; " *
+                "no testcopy-v14/work-v14 state")),
         "sbatch_path" => RX_SBATCH,
         "v14_tree" => Dict("path" => V14_TREE, "commit" => V14_COMMIT,
             "post_checkout_verifications" => "configure.ac 1.4; ChangeLog " *

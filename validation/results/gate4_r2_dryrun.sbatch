@@ -38,10 +38,15 @@ echo "=== R2 stage 1: build v1.4 (toolchain parity with pinned v1.2 build) ==="
 # header-only satisfiable so the bug was latent there. LIBS is placed after
 # the object by autoconf/automake, resolving adept::compiler_version().
 # Attempt 1 (job 4094) failed at exactly this configure check.
+# LIBS applies to EVERY conftest incl. the initial compiler sanity check,
+# which runs before --with-adept adds any -L path -- so the adept lib dir
+# must also be in user LDFLAGS (attempt 2, job 4095, failed there with
+# "C++ compiler cannot create executables" / cannot find -ladept).
 cd "$V14"
 if [ ! -x src/ecckd/create_look_up_table ]; then
     [ -x ./configure ] || autoreconf -i
-    ./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack LIBS=-ladept
+    ./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack \
+        LDFLAGS="-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib" LIBS=-ladept
     make -j16
 fi
 echo "build provenance:"

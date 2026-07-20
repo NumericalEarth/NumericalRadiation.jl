@@ -6,6 +6,13 @@
       "no_partial_state": "configure failed before make; testcopy-v14/work-v14 never created; stage-0 guards unaffected for the retry",
       "outcome": "FAILED at ./configure: 'Unable to find Adept library version >= 2.1'",
       "root_cause": "upstream m4 ordering bug exposed at v1.4: adept.m4 places -ladept in LDFLAGS (before the conftest object) and Ubuntu's --as-needed drops it; the v1.4 Adept>=2.1 conftest links adept::compiler_version() (undefined reference), while v1.2's Adept>=1.1 conftest was header-only satisfiable so the same command shape passed in May. Verified on the head node: identical failure lib-before-obj, success obj-before-lib."
+    },
+    "attempt_2": {
+      "fix": "add the adept lib dir to user LDFLAGS alongside LIBS: LDFLAGS='-L<adept>/lib -Wl,-rpath,<adept>/lib' LIBS=-ladept; user LDFLAGS is prepended to every conftest so -ladept resolves everywhere",
+      "job_id": 4095,
+      "no_partial_state": "same as attempt 1: failed before make; no testcopy-v14/work-v14 state",
+      "outcome": "FAILED at configure's initial sanity check: 'C++ compiler cannot create executables' (cannot find -ladept)",
+      "root_cause": "the attempt-1 fix LIBS=-ladept applies to EVERY conftest including the first compiler check, which runs before --with-adept contributes any -L path; verified on the head node (trivial main fails with -ladept alone, passes with -L<adept>/lib)"
     }
   },
   "authorization": "Greg: 'go for R2' (2026-07-20) = r2_matching_version_go per the scaffold",
@@ -34,12 +41,12 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "2464abe",
+    "generated_from_head": "9b487fb",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_r2_dryrun.sbatch",
   "status": "r2_execution_checkpoint_ready",
-  "timestamp_utc": "2026-07-20T16:26:26.383",
+  "timestamp_utc": "2026-07-20T16:27:57.689",
   "v14_tree": {
     "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0",
     "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca",

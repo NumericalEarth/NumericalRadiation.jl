@@ -29,4 +29,4 @@ Generated (unsubmitted) batch script: `/shared/home/greg/Projects/AnalyticBandRa
 
 Expected v1.4 SW raw output: `/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc`
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `2464abe` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `9b487fb` (pre-own-commit).
