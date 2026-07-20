@@ -30,6 +30,9 @@ const SW_CANDIDATE = "$G4WORK/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-t
 const SW_CANDIDATE_SHA = "13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57"
 
 const CKDMIP_BIN_ROOT = "/shared/home/greg/build/ckdmip-1.0"
+const NETCDF_ROOT = "/shared/home/greg/local/ckdmip-stack"
+const SCALE_LUT_SHA = "a2d121b2ce5e480c56284cb10aa70dc043ee41185b3377da4af33bafb9f12cc2"
+const SW_LBL_REF_SHA = "ef9df390a2cd546a73cf75ecfcea9c9ae32ad0ea0f5a6437df4e15588d931acd"
 
 const SI_RESULTS_JSON = validation_results_path("gate4_sw_init_generation_checkpoint.json")
 const SI_RESULTS_MD = validation_results_path("gate4_sw_init_generation_checkpoint.md")
@@ -67,6 +70,42 @@ grep -q '^WORK_DIR=$G4WORK/work-v14\$' "\$TESTCOPY/config.h" || { echo "BAD conf
 sed -i 's|^CKDMIP_DIR=.*|CKDMIP_DIR=$CKDMIP_BIN_ROOT|' "\$TESTCOPY/config.h"
 grep -q '^CKDMIP_DIR=$CKDMIP_BIN_ROOT\$' "\$TESTCOPY/config.h" || { echo "BAD config: CKDMIP_DIR" >&2; exit 68; }
 test -x "$CKDMIP_BIN_ROOT/bin/ckdmip_sw" || { echo "REFUSED: ckdmip_sw executable missing" >&2; exit 68; }
+
+echo "=== SW-init stage 0b: HDF5-preinit shim (4098 SIGFPE fix; env-only) ==="
+# scale_lut.cpp:49 enables FP traps before any nc_open; HDF5 1.14's type
+# detection raises FE_INVALID under traps (4098 ledger). The shim's ENTIRE
+# code is one ELF constructor calling H5open() before main(); it cannot
+# alter arithmetic. The pinned v1.4 scale_lut binary is verified unchanged
+# and invoked via a wrapper so LD_PRELOAD applies to scale_lut ONLY.
+sha256sum -c <<'BINHASH' || { echo "REFUSED: v1.4 scale_lut binary hash changed" >&2; exit 69; }
+$SCALE_LUT_SHA  $V14_TREE/src/ecckd/scale_lut
+BINHASH
+TOOLS="\$G4WORK/tools"
+mkdir -p "\$TOOLS"
+cat > "\$TOOLS/h5open_before_traps.c" <<'SHIMSRC'
+#include <hdf5.h>
+__attribute__((constructor)) static void init_h5_before_traps(void) { H5open(); }
+SHIMSRC
+gcc -shared -fPIC -I$NETCDF_ROOT/include "\$TOOLS/h5open_before_traps.c" \\
+    -o "\$TOOLS/h5open_before_traps.so" \\
+    -L$NETCDF_ROOT/lib -Wl,-rpath,$NETCDF_ROOT/lib -lhdf5
+cat > "\$TOOLS/scale_lut_h5preinit" <<WRAP
+#!/bin/bash
+export LD_PRELOAD="\$TOOLS/h5open_before_traps.so"
+exec "$V14_TREE/src/ecckd/scale_lut" "\\\$@"
+WRAP
+chmod +x "\$TOOLS/scale_lut_h5preinit"
+echo "shim provenance:"
+sha256sum "\$TOOLS/h5open_before_traps.c" "\$TOOLS/h5open_before_traps.so" "\$TOOLS/scale_lut_h5preinit"
+sed -i "s|^SCALE_LUT=.*|SCALE_LUT=\$TOOLS/scale_lut_h5preinit|" "\$TESTCOPY/config.h"
+grep -q "^SCALE_LUT=\$TOOLS/scale_lut_h5preinit\$" "\$TESTCOPY/config.h" || { echo "BAD config: SCALE_LUT" >&2; exit 68; }
+# reusable LBL reference from 4098: verify identity if present (the script
+# regenerates it only when absent)
+if [ -e "$SW_LBL_REF" ]; then
+sha256sum -c <<'LBLHASH' || { echo "REFUSED: existing LBL reference hash mismatch vs 4098 ledger" >&2; exit 69; }
+$SW_LBL_REF_SHA  $SW_LBL_REF
+LBLHASH
+fi
 sha256sum -c <<'HASHES' || { echo "REFUSED: input hash mismatch vs Option B decision record" >&2; exit 69; }
 $SW_RAW_SHA  $SW_RAW
 $SW_CANDIDATE_SHA  $SW_CANDIDATE
@@ -142,6 +181,20 @@ function main()
     gates["ckdmip_sw_executable_preflight"] =
         occursin("ckdmip_sw executable missing", SBATCH_TEXT) &&
         isfile("$CKDMIP_BIN_ROOT/bin/ckdmip_sw") ? "passed" : "failed"
+    # 4098 fix gates (execution-environment shim; no numerical change)
+    gates["scale_lut_binary_hash_pinned"] =
+        occursin(SCALE_LUT_SHA, SBATCH_TEXT) &&
+        split(strip(read(`sha256sum $V14_TREE/src/ecckd/scale_lut`, String)))[1] ==
+        SCALE_LUT_SHA ? "passed" : "failed"
+    gates["shim_source_embedded_and_minimal"] =
+        occursin("H5open();", SBATCH_TEXT) &&
+        occursin("__attribute__((constructor))", SBATCH_TEXT) &&
+        occursin("LD_PRELOAD", SBATCH_TEXT) ? "passed" : "failed"
+    gates["preload_scoped_to_scale_lut_only"] =
+        occursin("scale_lut_h5preinit", SBATCH_TEXT) &&
+        !occursin(r"export LD_PRELOAD[^\n]*\n[^\n]*bash scale_lut_sw", SBATCH_TEXT) ? "passed" : "failed"
+    gates["lbl_reference_hash_pinned"] =
+        occursin(SW_LBL_REF_SHA, SBATCH_TEXT) ? "passed" : "failed"
 
     status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
         "sw_init_checkpoint_ready" : "sw_init_checkpoint_failed"

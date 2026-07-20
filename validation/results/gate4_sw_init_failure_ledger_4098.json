@@ -1,0 +1,44 @@
+{
+  "case": "gate4_sw_init_failure_ledger_4098",
+  "data_mode": "failure_event_record_only",
+  "status": "sw_init_job_4098_failed_sigfpe_in_hdf5_init",
+  "timestamp_utc": "2026-07-20T17:20:00Z",
+  "job": {
+    "job_id": 4098,
+    "slurm_state": "FAILED, ExitCode=1:0 (scontrol; sacct unavailable on this cluster)",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-sw-init-4098.log (5250 bytes)",
+    "stage0": "PASSED including the 4097-fix gates (CKDMIP_DIR localized, ckdmip_sw preflight)",
+    "produced": {
+      "lbl_reference": {
+        "path": "work-v14/sw_lbl_fluxes/ckdmip_mmm_sw_fluxes-raw_present_1.h5",
+        "size_bytes": 278589318,
+        "sha256": "ef9df390a2cd546a73cf75ecfcea9c9ae32ad0ea0f5a6437df4e15588d931acd",
+        "provenance": "generated in-job by ckdmip_sw from official MMM median inputs (direct-only, mu0=0.5, albedo 0.15, no Rayleigh) BEFORE the crash; deterministic and reusable"
+      },
+      "scaled_definition": "NONE -- scaled log is 176 bytes ending at the raw CKD definition read; no scaled .nc exists"
+    }
+  },
+  "root_cause": {
+    "local_reproduction": "identical command run against scratchpad output paths: SIGFPE, exit 136, core dumped, immediately after 'Reading CKD definition file'",
+    "gdb_crash_site": "H5T__init_native_float_types (libhdf5.so.310, HDF5 1.14) <- H5T_init <- H5_init_library <- nc4_hdf5_initialize <- nc_open <- DataFileEngineNetcdf (DataFileEngineNetcdf.cpp:50)",
+    "mechanism": "scale_lut.cpp:49 calls enable_floating_point_exceptions() = feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW) (floating_point_exceptions.h) BEFORE any file is opened; HDF5 1.14's native-float-type detection intentionally performs FP operations that raise FE_INVALID under enabled traps, so the first nc_open aborts. create_look_up_table does NOT enable traps, which is why R2 job 4096 ran clean on the same stack. optimize_lut also enables traps -- the same mitigation will be needed at the optimizer stage.",
+    "upstream_context": "an environment interaction (upstream ECMWF builds evidently used an HDF5 whose init does not trip traps), not an ecckd logic bug and not specific to our candidate artifacts"
+  },
+  "fix": {
+    "classification": "EXECUTION-ENVIRONMENT SHIM, not a scientific/numerical change (monitor requirement): FP traps convert silent FP conditions into aborts and never change computed values; preinitializing HDF5 before the traps are enabled changes only WHERE the library init runs, not any computation",
+    "scale_lut_binary_unchanged": "v1.4 scale_lut sha256 a2d121b2ce5e480c56284cb10aa70dc043ee41185b3377da4af33bafb9f12cc2 (untouched; the shim is injected via LD_PRELOAD in a wrapper, never by modifying or relinking the binary)",
+    "shim_source_verbatim": "#include <hdf5.h>\n__attribute__((constructor)) static void init_h5_before_traps(void) { H5open(); }",
+    "shim_scope_proof": "the shim's entire code is the two lines above: one ELF constructor calling H5open() (HDF5 library initialization) before main() -- it references no other symbols, intercepts nothing, and cannot alter arithmetic",
+    "compiler_command": "gcc -shared -fPIC -I/shared/home/greg/local/ckdmip-stack/include h5open_before_traps.c -o h5open_before_traps.so -L/shared/home/greg/local/ckdmip-stack/lib -Wl,-rpath,/shared/home/greg/local/ckdmip-stack/lib -lhdf5",
+    "shared_object_hash": "computed and echoed in-job at stage-0 (the .so is rebuilt in-job from the embedded source so the logged hash always matches the artifact actually preloaded)",
+    "mechanism": "LD_PRELOAD shim whose ELF constructor calls H5open() before main(): HDF5 initializes trap-free, then scale_lut's feenableexcept applies to all subsequent computation exactly as upstream intended. No source patch: the pinned v1.4 tree remains pristine.",
+    "verification": "shim-preloaded scale_lut ran to completion (exit 0) against scratchpad output paths, printing per-g scalings at 5 pressure levels and closing the output cleanly; no campaign artifact paths touched",
+    "deployment": "sbatch stage-0 writes the shim source under $G4WORK/tools/, compiles it against the same ckdmip-stack HDF5, sha256s both, and injects it ONLY for the scale_lut invocation by sed-patching SCALE_LUT in testcopy-v14 config.h to a generated wrapper that sets LD_PRELOAD and execs the pinned v1.4 binary"
+  },
+  "acceptance_impact": "NONE: promoted raw inits untouched; the reusable LBL reference is hash-pinned above; no scaled init exists yet; G2/G3 remain blocked pending clean scaled-init hash review",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_failure": "post-4097-fix commit"
+  },
+  "disclaimer": "failure event record only; no objective, floor, or recovery computation. Diagnostic outputs quarantined to the session scratchpad."
+}

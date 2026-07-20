@@ -14,21 +14,25 @@
     "ckdmip_sw_executable_preflight": "passed",
     "headnode_refusal_guard": "passed",
     "input_identity_pinned": "passed",
+    "lbl_reference_hash_pinned": "passed",
     "lbl_reference_spec_matches_manifest": "passed",
     "option_b_prerequisite": "passed",
+    "preload_scoped_to_scale_lut_only": "passed",
     "promoted_sw_raw_verified": "passed",
     "sbatch_written_not_submitted": "passed",
+    "scale_lut_binary_hash_pinned": "passed",
     "scale_lut_only": "passed",
     "scaled_output_absent": "passed",
+    "shim_source_embedded_and_minimal": "passed",
     "stale_output_refusal": "passed",
     "v14_scale_lut_binary_present": "passed"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "638aa4a",
+    "generated_from_head": "2905d31",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_sw_init_dryrun.sbatch",
   "status": "sw_init_checkpoint_ready",
-  "timestamp_utc": "2026-07-20T17:00:48.264"
+  "timestamp_utc": "2026-07-20T17:08:47.146"
 }
