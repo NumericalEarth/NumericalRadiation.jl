@@ -1,10 +1,10 @@
 # CKDMIP Training Data Preflight
 
-Status: **ready_for_original_ecckd_objective**
+Status: **incomplete_ckdmip_upstream_data**
 
 CKDMIP data root: `/shared/home/greg/data/ckdmip`
 
-Fixed objective manifest: `/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_training_manifest.json`
+Fixed objective manifest: `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/ecckd_published_training_manifest.json`
 
 Expected training flux files: 52
 
@@ -13,7 +13,12 @@ Expected training flux files: 52
 
 ## Blockers
 
-None.
+- Missing required CKDMIP layout directory: evaluation2/lw_spectra
+- Missing required CKDMIP layout directory: evaluation2/sw_spectra
+- Missing required CKDMIP layout directory: evaluation2/lw_fluxes
+- Missing required CKDMIP layout directory: evaluation2/sw_fluxes
+- Missing or empty CKDMIP spectra directory: evaluation2/lw_spectra
+- Missing or empty CKDMIP spectra directory: evaluation2/sw_spectra
 
 ## Derived Flux Products
 

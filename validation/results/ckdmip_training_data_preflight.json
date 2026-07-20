@@ -1,9 +1,9 @@
 {
   "case": "ckdmip_training_data_preflight",
-  "timestamp_utc": "2026-05-22T23:10:23.722",
-  "status": "ready_for_original_ecckd_objective",
+  "timestamp_utc": "2026-07-19T20:44:47.920",
+  "status": "incomplete_ckdmip_upstream_data",
   "ckdmip_data_root": "/shared/home/greg/data/ckdmip",
-  "fixed_objective_manifest": "/shared/home/greg/Projects/AnalyticBandRadiation.jl/validation/results/ecckd_published_training_manifest.json",
+  "fixed_objective_manifest": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/ecckd_published_training_manifest.json",
   "expected_training_flux_file_count": 52,
   "expected_training_flux_files": ["ckdmip_evaluation1_lw_fluxes_5gas-1120.h5", "ckdmip_evaluation1_lw_fluxes_5gas-180.h5", "ckdmip_evaluation1_lw_fluxes_5gas-2240.h5", "ckdmip_evaluation1_lw_fluxes_5gas-280.h5", "ckdmip_evaluation1_lw_fluxes_5gas-415.h5", "ckdmip_evaluation1_lw_fluxes_5gas-560.h5", "ckdmip_evaluation1_lw_fluxes_cfc11-0.h5", "ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5", "ckdmip_evaluation1_lw_fluxes_cfc12-0.h5", "ckdmip_evaluation1_lw_fluxes_cfc12-550.h5", "ckdmip_evaluation1_lw_fluxes_ch4-1200.h5", "ckdmip_evaluation1_lw_fluxes_ch4-2600.h5", "ckdmip_evaluation1_lw_fluxes_ch4-350.h5", "ckdmip_evaluation1_lw_fluxes_ch4-3500.h5", "ckdmip_evaluation1_lw_fluxes_ch4-700.h5", "ckdmip_evaluation1_lw_fluxes_co2-1120.h5", "ckdmip_evaluation1_lw_fluxes_co2-180.h5", "ckdmip_evaluation1_lw_fluxes_co2-2240.h5", "ckdmip_evaluation1_lw_fluxes_co2-280.h5", "ckdmip_evaluation1_lw_fluxes_co2-560.h5", "ckdmip_evaluation1_lw_fluxes_n2o-190.h5", "ckdmip_evaluation1_lw_fluxes_n2o-270.h5", "ckdmip_evaluation1_lw_fluxes_n2o-405.h5", "ckdmip_evaluation1_lw_fluxes_n2o-540.h5", "ckdmip_evaluation1_lw_fluxes_present.h5", "ckdmip_evaluation1_lw_fluxes_rel-1120.h5", "ckdmip_evaluation1_lw_fluxes_rel-180.h5", "ckdmip_evaluation1_lw_fluxes_rel-2240.h5", "ckdmip_evaluation1_lw_fluxes_rel-280.h5", "ckdmip_evaluation1_lw_fluxes_rel-415.h5", "ckdmip_evaluation1_lw_fluxes_rel-560.h5", "ckdmip_evaluation1_sw_fluxes_ch4-1200.h5", "ckdmip_evaluation1_sw_fluxes_ch4-2600.h5", "ckdmip_evaluation1_sw_fluxes_ch4-350.h5", "ckdmip_evaluation1_sw_fluxes_ch4-3500.h5", "ckdmip_evaluation1_sw_fluxes_ch4-700.h5", "ckdmip_evaluation1_sw_fluxes_co2-1120.h5", "ckdmip_evaluation1_sw_fluxes_co2-180.h5", "ckdmip_evaluation1_sw_fluxes_co2-2240.h5", "ckdmip_evaluation1_sw_fluxes_co2-280.h5", "ckdmip_evaluation1_sw_fluxes_co2-560.h5", "ckdmip_evaluation1_sw_fluxes_n2o-190.h5", "ckdmip_evaluation1_sw_fluxes_n2o-270.h5", "ckdmip_evaluation1_sw_fluxes_n2o-405.h5", "ckdmip_evaluation1_sw_fluxes_n2o-540.h5", "ckdmip_evaluation1_sw_fluxes_present.h5", "ckdmip_evaluation1_sw_fluxes_rel-1120.h5", "ckdmip_evaluation1_sw_fluxes_rel-180.h5", "ckdmip_evaluation1_sw_fluxes_rel-2240.h5", "ckdmip_evaluation1_sw_fluxes_rel-280.h5", "ckdmip_evaluation1_sw_fluxes_rel-415.h5", "ckdmip_evaluation1_sw_fluxes_rel-560.h5"],
   "upstream_training_flux_file_count": 34,
@@ -51,16 +51,16 @@
   "present": true
 }, {
   "path": "evaluation2/lw_spectra",
-  "present": true
+  "present": false
 }, {
   "path": "evaluation2/sw_spectra",
-  "present": true
+  "present": false
 }, {
   "path": "evaluation2/lw_fluxes",
-  "present": true
+  "present": false
 }, {
   "path": "evaluation2/sw_fluxes",
-  "present": true
+  "present": false
 }],
   "key_and_upstream_training_files": [{
   "path": "mmm/conc/ckdmip_mmm_concentrations.nc",
@@ -255,11 +255,11 @@
   "present": true
 }, {
   "path": "evaluation2/lw_spectra",
-  "present": true
+  "present": false
 }, {
   "path": "evaluation2/sw_spectra",
-  "present": true
+  "present": false
 }],
-  "blockers": [],
+  "blockers": ["Missing required CKDMIP layout directory: evaluation2/lw_spectra", "Missing required CKDMIP layout directory: evaluation2/sw_spectra", "Missing required CKDMIP layout directory: evaluation2/lw_fluxes", "Missing required CKDMIP layout directory: evaluation2/sw_fluxes", "Missing or empty CKDMIP spectra directory: evaluation2/lw_spectra", "Missing or empty CKDMIP spectra directory: evaluation2/sw_spectra"],
   "derived_flux_generation_blockers": []
 }
