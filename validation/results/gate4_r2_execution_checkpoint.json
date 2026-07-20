@@ -1,4 +1,13 @@
 {
+  "attempt_history": {
+    "attempt_1": {
+      "fix": "configure invoked with LIBS=-ladept (autoconf places LIBS after the test object); no source patch, toolchain flags otherwise identical",
+      "job_id": 4094,
+      "no_partial_state": "configure failed before make; testcopy-v14/work-v14 never created; stage-0 guards unaffected for the retry",
+      "outcome": "FAILED at ./configure: 'Unable to find Adept library version >= 2.1'",
+      "root_cause": "upstream m4 ordering bug exposed at v1.4: adept.m4 places -ladept in LDFLAGS (before the conftest object) and Ubuntu's --as-needed drops it; the v1.4 Adept>=2.1 conftest links adept::compiler_version() (undefined reference), while v1.2's Adept>=1.1 conftest was header-only satisfiable so the same command shape passed in May. Verified on the head node: identical failure lib-before-obj, success obj-before-lib."
+    }
+  },
   "authorization": "Greg: 'go for R2' (2026-07-20) = r2_matching_version_go per the scaffold",
   "case": "gate4_r2_execution_checkpoint",
   "data_mode": "dry_run_script_generation_only",
@@ -6,6 +15,7 @@
   "expected_output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
   "failures": [],
   "gates": {
+    "adept_link_workaround_documented": "passed",
     "authorization_recorded": "passed",
     "candidate_identity_pinned": "passed",
     "ckd_model_has_ssi_persistence": "passed",
@@ -24,12 +34,12 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "1a003aa",
+    "generated_from_head": "2464abe",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_r2_dryrun.sbatch",
   "status": "r2_execution_checkpoint_ready",
-  "timestamp_utc": "2026-07-20T16:17:10.431",
+  "timestamp_utc": "2026-07-20T16:26:26.383",
   "v14_tree": {
     "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0",
     "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca",

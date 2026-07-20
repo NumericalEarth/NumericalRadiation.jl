@@ -66,10 +66,16 @@ test -s "$CKDMIP_ROOT/mmm/conc/ckdmip_mmm-const_concentrations.nc" || { echo "MI
 test -s "$CKDMIP_ROOT/mmm/sw_spectra_extras/ckdmip_ssi.h5" || { echo "MISSING MMM SSI" >&2; exit 65; }
 
 echo "=== R2 stage 1: build v1.4 (toolchain parity with pinned v1.2 build) ==="
+# LIBS=-ladept works around an upstream m4 ordering bug exposed at v1.4:
+# adept.m4 puts -ladept in LDFLAGS (before the conftest object), which
+# Ubuntu's --as-needed linker drops; v1.2's weaker Adept>=1.1 conftest was
+# header-only satisfiable so the bug was latent there. LIBS is placed after
+# the object by autoconf/automake, resolving adept::compiler_version().
+# Attempt 1 (job 4094) failed at exactly this configure check.
 cd "\$V14"
 if [ ! -x src/ecckd/create_look_up_table ]; then
     [ -x ./configure ] || autoreconf -i
-    ./configure --with-adept=$ADEPT --with-netcdf=$NETCDF
+    ./configure --with-adept=$ADEPT --with-netcdf=$NETCDF LIBS=-ladept
     make -j16
 fi
 echo "build provenance:"
@@ -177,6 +183,9 @@ function main()
     gates["toolchain_parity_flags"] =
         occursin("--with-adept=$ADEPT", SBATCH_TEXT) &&
         occursin("--with-netcdf=$NETCDF", SBATCH_TEXT) ? "passed" : "failed"
+    gates["adept_link_workaround_documented"] =
+        occursin("LIBS=-ladept", SBATCH_TEXT) &&
+        occursin("as-needed", SBATCH_TEXT) ? "passed" : "failed"
 
     status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
         "r2_execution_checkpoint_ready" : "r2_execution_checkpoint_failed"
@@ -191,6 +200,24 @@ function main()
         "gates" => gates, "failures" => fails,
         "authorization" => "Greg: 'go for R2' (2026-07-20) = " *
                            "r2_matching_version_go per the scaffold",
+        "attempt_history" => Dict("attempt_1" => Dict(
+            "job_id" => 4094,
+            "outcome" => "FAILED at ./configure: 'Unable to find Adept " *
+                "library version >= 2.1'",
+            "root_cause" => "upstream m4 ordering bug exposed at v1.4: " *
+                "adept.m4 places -ladept in LDFLAGS (before the conftest " *
+                "object) and Ubuntu's --as-needed drops it; the v1.4 " *
+                "Adept>=2.1 conftest links adept::compiler_version() " *
+                "(undefined reference), while v1.2's Adept>=1.1 conftest " *
+                "was header-only satisfiable so the same command shape " *
+                "passed in May. Verified on the head node: identical " *
+                "failure lib-before-obj, success obj-before-lib.",
+            "fix" => "configure invoked with LIBS=-ladept (autoconf places " *
+                "LIBS after the test object); no source patch, toolchain " *
+                "flags otherwise identical",
+            "no_partial_state" => "configure failed before make; " *
+                "testcopy-v14/work-v14 never created; stage-0 guards " *
+                "unaffected for the retry")),
         "sbatch_path" => RX_SBATCH,
         "v14_tree" => Dict("path" => V14_TREE, "commit" => V14_COMMIT,
             "post_checkout_verifications" => "configure.ac 1.4; ChangeLog " *

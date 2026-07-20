@@ -8,6 +8,7 @@ Authorization: Greg: 'go for R2' (2026-07-20) = r2_matching_version_go per the s
 
 | Gate | Result |
 |---|---|
+| adept_link_workaround_documented | passed |
 | authorization_recorded | passed |
 | candidate_identity_pinned | passed |
 | ckd_model_has_ssi_persistence | passed |
@@ -28,4 +29,4 @@ Generated (unsubmitted) batch script: `/shared/home/greg/Projects/AnalyticBandRa
 
 Expected v1.4 SW raw output: `/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc`
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `1a003aa` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `2464abe` (pre-own-commit).

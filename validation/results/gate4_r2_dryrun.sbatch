@@ -32,10 +32,16 @@ test -s "/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.
 test -s "/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5" || { echo "MISSING MMM SSI" >&2; exit 65; }
 
 echo "=== R2 stage 1: build v1.4 (toolchain parity with pinned v1.2 build) ==="
+# LIBS=-ladept works around an upstream m4 ordering bug exposed at v1.4:
+# adept.m4 puts -ladept in LDFLAGS (before the conftest object), which
+# Ubuntu's --as-needed linker drops; v1.2's weaker Adept>=1.1 conftest was
+# header-only satisfiable so the bug was latent there. LIBS is placed after
+# the object by autoconf/automake, resolving adept::compiler_version().
+# Attempt 1 (job 4094) failed at exactly this configure check.
 cd "$V14"
 if [ ! -x src/ecckd/create_look_up_table ]; then
     [ -x ./configure ] || autoreconf -i
-    ./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack
+    ./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack LIBS=-ladept
     make -j16
 fi
 echo "build provenance:"
