@@ -1,0 +1,21 @@
+{
+  "case": "gate4_sw_init_failure_ledger_4097",
+  "data_mode": "failure_event_record_only",
+  "status": "sw_init_job_4097_failed_no_outputs",
+  "timestamp_utc": "2026-07-20T17:05:00Z",
+  "job": {
+    "job_id": 4097,
+    "outcome": "FAILED at scale_lut_sw.sh line 76: /home/parr/src/ckdmip-1.1/bin/ckdmip_sw: No such file or directory",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-sw-init-4097.log",
+    "stage0": "PASSED: both input hash checks OK (SW raw 99333fb5..., SW candidate 13dd686a...); all guards held",
+    "partial_state": "NONE: work-v14/sw_lbl_fluxes empty, no scaled-ckd-definition produced; failure was atomic before any output"
+  },
+  "root_cause": "the pristine v1.4 clone's test/config.h hardcodes the upstream author's CKDMIP_DIR=/home/parr/src/ckdmip-1.1; the R2 sed patch localized five vars (CKDMIP_DATA_DIR, WORK_DIR, BINDIR, MMM_SW_SPECTRA_DIR, CLOUD_SPECTRUM) but NOT CKDMIP_DIR. The R2 create_lut run never invokes $CKDMIP_SW so the latent bad path was invisible; scale_lut_sw.sh's self-generated LBL reference is the first testcopy-v14 stage that calls it. The v1.2-derived testcopy (A2/4091) never hit this because the May workcopy's config.h had been manually localized (CKDMIP_DIR=/shared/home/greg/build/ckdmip-1.0).",
+  "fix": "SW-init sbatch sed-patches CKDMIP_DIR=/shared/home/greg/build/ckdmip-1.0 in testcopy-v14 (idempotent; fixes CKDMIP_TOOL/LW/SW in one stroke since all derive from it), greps it back for verification, and preflights the ckdmip_sw executable; checkpoint gains gates ckdmip_dir_localized and ckdmip_sw_executable_preflight",
+  "acceptance_impact": "NONE: the promoted raw inits are untouched; no scaled init exists yet; G2/G3 remain blocked pending a clean scaled-init hash review",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_failure": "HEAD at submission recorded in gate4_sw_init_generation_checkpoint.json"
+  },
+  "disclaimer": "failure event record only; no objective, floor, or recovery computation."
+}

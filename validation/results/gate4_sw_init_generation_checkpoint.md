@@ -8,6 +8,8 @@ Authorization: Option B decision record (Greg, 2026-07-20); this is its recorded
 
 | Gate | Result |
 |---|---|
+| ckdmip_dir_localized | passed |
+| ckdmip_sw_executable_preflight | passed |
 | headnode_refusal_guard | passed |
 | input_identity_pinned | passed |
 | lbl_reference_spec_matches_manifest | passed |
@@ -23,4 +25,4 @@ Generated (unsubmitted) batch script: `/shared/home/greg/Projects/AnalyticBandRa
 
 Expected outputs: LBL reference `ckdmip_mmm_sw_fluxes-raw_present_1.h5` (MMM median col 1, present, direct-only, mu0=0.5, albedo 0.15, no Rayleigh) and SW acceptance init `ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc`.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `957fb7f` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `638aa4a` (pre-own-commit).

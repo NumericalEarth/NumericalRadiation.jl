@@ -23,6 +23,12 @@ echo "=== SW-init stage 0: environment + input identity checks ==="
 test -d "$TESTCOPY" || { echo "REFUSED: testcopy-v14 missing" >&2; exit 68; }
 test -x "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/scale_lut" || { echo "REFUSED: v1.4 scale_lut binary missing" >&2; exit 68; }
 grep -q '^WORK_DIR=/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14$' "$TESTCOPY/config.h" || { echo "BAD config: WORK_DIR" >&2; exit 68; }
+# 4097 fix: the pristine v1.4 config.h hardcodes the upstream author's
+# CKDMIP_DIR (/home/parr/...); localize it (idempotent) -- this fixes
+# CKDMIP_TOOL/LW/SW in one stroke since all derive from CKDMIP_DIR.
+sed -i 's|^CKDMIP_DIR=.*|CKDMIP_DIR=/shared/home/greg/build/ckdmip-1.0|' "$TESTCOPY/config.h"
+grep -q '^CKDMIP_DIR=/shared/home/greg/build/ckdmip-1.0$' "$TESTCOPY/config.h" || { echo "BAD config: CKDMIP_DIR" >&2; exit 68; }
+test -x "/shared/home/greg/build/ckdmip-1.0/bin/ckdmip_sw" || { echo "REFUSED: ckdmip_sw executable missing" >&2; exit 68; }
 sha256sum -c <<'HASHES' || { echo "REFUSED: input hash mismatch vs Option B decision record" >&2; exit 69; }
 99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc
 13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5

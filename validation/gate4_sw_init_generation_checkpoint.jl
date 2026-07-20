@@ -29,6 +29,8 @@ const SW_LBL_REF = "$G4WORK/work-v14/sw_lbl_fluxes/ckdmip_mmm_sw_fluxes-raw_pres
 const SW_CANDIDATE = "$G4WORK/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5"
 const SW_CANDIDATE_SHA = "13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57"
 
+const CKDMIP_BIN_ROOT = "/shared/home/greg/build/ckdmip-1.0"
+
 const SI_RESULTS_JSON = validation_results_path("gate4_sw_init_generation_checkpoint.json")
 const SI_RESULTS_MD = validation_results_path("gate4_sw_init_generation_checkpoint.md")
 const SI_SBATCH = validation_results_path("gate4_sw_init_dryrun.sbatch")
@@ -59,6 +61,12 @@ echo "=== SW-init stage 0: environment + input identity checks ==="
 test -d "\$TESTCOPY" || { echo "REFUSED: testcopy-v14 missing" >&2; exit 68; }
 test -x "$V14_TREE/src/ecckd/scale_lut" || { echo "REFUSED: v1.4 scale_lut binary missing" >&2; exit 68; }
 grep -q '^WORK_DIR=$G4WORK/work-v14\$' "\$TESTCOPY/config.h" || { echo "BAD config: WORK_DIR" >&2; exit 68; }
+# 4097 fix: the pristine v1.4 config.h hardcodes the upstream author's
+# CKDMIP_DIR (/home/parr/...); localize it (idempotent) -- this fixes
+# CKDMIP_TOOL/LW/SW in one stroke since all derive from CKDMIP_DIR.
+sed -i 's|^CKDMIP_DIR=.*|CKDMIP_DIR=$CKDMIP_BIN_ROOT|' "\$TESTCOPY/config.h"
+grep -q '^CKDMIP_DIR=$CKDMIP_BIN_ROOT\$' "\$TESTCOPY/config.h" || { echo "BAD config: CKDMIP_DIR" >&2; exit 68; }
+test -x "$CKDMIP_BIN_ROOT/bin/ckdmip_sw" || { echo "REFUSED: ckdmip_sw executable missing" >&2; exit 68; }
 sha256sum -c <<'HASHES' || { echo "REFUSED: input hash mismatch vs Option B decision record" >&2; exit 69; }
 $SW_RAW_SHA  $SW_RAW
 $SW_CANDIDATE_SHA  $SW_CANDIDATE
@@ -128,6 +136,12 @@ function main()
     gates["lbl_reference_spec_matches_manifest"] =
         occursin("direct-only, cos_solar_zenith_angle=0.5, surf_albedo=0.15",
                  read(@__FILE__, String)) ? "passed" : "failed"
+    # 4097 fix gates
+    gates["ckdmip_dir_localized"] =
+        occursin("CKDMIP_DIR=$CKDMIP_BIN_ROOT", SBATCH_TEXT) ? "passed" : "failed"
+    gates["ckdmip_sw_executable_preflight"] =
+        occursin("ckdmip_sw executable missing", SBATCH_TEXT) &&
+        isfile("$CKDMIP_BIN_ROOT/bin/ckdmip_sw") ? "passed" : "failed"
 
     status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
         "sw_init_checkpoint_ready" : "sw_init_checkpoint_failed"
