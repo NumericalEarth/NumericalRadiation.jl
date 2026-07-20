@@ -1,0 +1,52 @@
+{
+  "case": "gate4_a2_proof_finding_ledger",
+  "data_mode": "finding_record_only",
+  "status": "a2_candidates_sensitivity_only_not_promotable",
+  "timestamp_utc": "2026-07-20T08:35:00Z",
+  "verdict": "The A2 rerun candidates FAIL the exact-reproduction proof and are NOT promotable to acceptance raw inits under the optimizer-only-delta rule. They remain valid sensitivity-only artifacts. No floor, objective, acceptance, or init-generation use is permitted unless Greg explicitly changes the rule.",
+  "proof_run": {
+    "job_id": 4091,
+    "outcome": "COMPLETED rc=0 at 2026-07-20T08:20:58Z; stage-0 candidate hash checks OK for both bands; log/hash review by the Codex monitor and locally, matching",
+    "lw_raw": {
+      "path": "g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+      "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+      "size_bytes": 2413144
+    },
+    "sw_raw": {
+      "path": "g4-init-generation/work/sw_raw-ckd-definition/ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+      "sha256": "3308cb7a53d95935e4a931ac63fe7237154075cc968c04b06a5d8881e8137922",
+      "size_bytes": 2228552
+    },
+    "log_review_items": {
+      "average_optical_depth_warnings": "117 occurrences of 'Warning at line 105 of average_optical_depth.cpp: min optical depth > average optical depth: correcting' -- a numerical guard inside the pinned upstream C++; recorded as review item, not a failure"
+    }
+  },
+  "comparison_outcome": {
+    "runner": "validation/gate4_a2_proof_comparison_runner.jl (run twice, deterministic: proof_mismatch_sensitivity_only both runs)",
+    "exact_passed": [
+      "g_count (lw, sw): 32/32",
+      "wavenumber1_band, wavenumber2_band (lw, sw)",
+      "band_number (lw, sw)",
+      "wavenumber1, wavenumber2 fine grids (lw, sw)"
+    ],
+    "mismatched": [
+      {"band": "lw", "name": "gpoint_fraction", "n_mismatched": 205, "of": 10432, "max_abs_diff": 2.682209014892578e-6},
+      {"band": "sw", "name": "gpoint_fraction", "n_mismatched": 60, "of": 31840, "max_abs_diff": 1.6033649444580078e-5},
+      {"band": "sw", "name": "solar_irradiance", "n_mismatched": 2, "of": 32, "max_abs_diff": 2.0503997802734375e-5},
+      {"band": "sw", "name": "rayleigh_molar_scattering_coeff", "n_mismatched": 2, "of": 32, "max_abs_diff": 9.645062526431047e-16},
+      {"band": "sw", "name": "solar_spectral_irradiance", "issue": "VARIABLE ABSENT from the proof raw definition -- a structural comparison failure, not a value drift; present in the published ecckd-1.4 SW32 file"}
+    ],
+    "characterization": "structural g-point layout fields all exact; the four value mismatches are small-magnitude numeric differences; the missing solar_spectral_irradiance is structural. Pre-registered candidate cause: ecckd version skew (published LW32 built with ecckd-1.0, SW32 with ecckd-1.4; pinned rerun toolchain identifies as ecckd-1.2). The rule requires elementwise EXACT, so none of this is promotable regardless of magnitude."
+  },
+  "next_options_for_greg": [
+    "A: keep the exact-reproduction rule -> A2 candidates stay sensitivity-only; acceptance init source remains open (A1 released outputs or A3 upstream raw/scaled definitions were not found in recon; would need new upstream evidence)",
+    "B: explicitly amend the rule (e.g., structural-exact + bounded numeric tolerance on support arrays) -> requires a superseding decision record; the missing solar_spectral_irradiance would still need an accounted mechanism (stage or version difference) before any promotion",
+    "C: investigate version skew (build/pin ecckd 1.0 and 1.4 toolchains and rerun the proof) to test whether exactness is achievable at matching versions"
+  ],
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_finding": "ee039e9",
+    "proof_submission_ledger": "validation/results/gate4_a2_proof_submission_ledger.json"
+  },
+  "disclaimer": "finding record only; no floor, objective, acceptance, init-generation, or recovery computation."
+}

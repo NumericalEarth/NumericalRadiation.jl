@@ -1,12 +1,137 @@
 {
   "case": "gate4_a2_proof_comparison_runner",
-  "data_mode": "refusal_no_proof_outputs",
-  "disclaimer": "refuses until the proof raw definitions exist; no create_lut, objective, floor, or recovery computation.",
-  "missing": [
-    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
-    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_raw-ckd-definition/ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc"
+  "comparisons": [
+    {
+      "band": "lw",
+      "detail": "raw 32 vs published 32 (must both be 32)",
+      "exact": true,
+      "name": "g_count"
+    },
+    {
+      "band": "sw",
+      "detail": "raw 32 vs published 32 (must both be 32)",
+      "exact": true,
+      "name": "g_count"
+    },
+    {
+      "band": "lw",
+      "exact": false,
+      "max_abs_diff": 2.682209014892578e-6,
+      "n_mismatched": 205,
+      "name": "gpoint_fraction",
+      "shape": "(10432,)"
+    },
+    {
+      "band": "sw",
+      "exact": false,
+      "max_abs_diff": 1.6033649444580078e-5,
+      "n_mismatched": 60,
+      "name": "gpoint_fraction",
+      "shape": "(31840,)"
+    },
+    {
+      "band": "lw",
+      "exact": true,
+      "name": "wavenumber1_band",
+      "shape": "(1,)"
+    },
+    {
+      "band": "sw",
+      "exact": true,
+      "name": "wavenumber1_band",
+      "shape": "(5,)"
+    },
+    {
+      "band": "lw",
+      "exact": true,
+      "name": "wavenumber2_band",
+      "shape": "(1,)"
+    },
+    {
+      "band": "sw",
+      "exact": true,
+      "name": "wavenumber2_band",
+      "shape": "(5,)"
+    },
+    {
+      "band": "lw",
+      "exact": true,
+      "name": "band_number",
+      "shape": "(32,)"
+    },
+    {
+      "band": "sw",
+      "exact": true,
+      "name": "band_number",
+      "shape": "(32,)"
+    },
+    {
+      "band": "lw",
+      "exact": true,
+      "name": "wavenumber1",
+      "shape": "(326,)"
+    },
+    {
+      "band": "sw",
+      "exact": true,
+      "name": "wavenumber1",
+      "shape": "(995,)"
+    },
+    {
+      "band": "lw",
+      "exact": true,
+      "name": "wavenumber2",
+      "shape": "(326,)"
+    },
+    {
+      "band": "sw",
+      "exact": true,
+      "name": "wavenumber2",
+      "shape": "(995,)"
+    },
+    {
+      "band": "sw",
+      "exact": false,
+      "max_abs_diff": 2.0503997802734375e-5,
+      "n_mismatched": 2,
+      "name": "solar_irradiance",
+      "shape": "(32,)"
+    },
+    {
+      "band": "sw",
+      "exact": false,
+      "max_abs_diff": 9.645062526431047e-16,
+      "n_mismatched": 2,
+      "name": "rayleigh_molar_scattering_coeff",
+      "shape": "(32,)"
+    },
+    {
+      "band": "sw",
+      "detail": "variable missing from proof raw definition",
+      "exact": false,
+      "name": "solar_spectral_irradiance"
+    }
   ],
-  "provenance_requirement": "path existence alone is NOT proof provenance: comparisons are valid only after an explicitly authorized proof sbatch completion with log/hash review; raw files of unreviewed origin are unproven and promote nothing",
-  "status": "proof_comparisons_waiting_for_raw_outputs",
-  "timestamp_utc": "2026-07-19T08:33:11.739"
+  "data_mode": "read_only_exact_comparisons",
+  "disclaimer": "read-only comparisons; no create_lut, objective, floor, or recovery computation.",
+  "inputs": {
+    "lw_published": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+    "lw_raw": {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+      "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43"
+    },
+    "sw_published": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "sw_raw": {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_raw-ckd-definition/ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+      "sha256": "3308cb7a53d95935e4a931ac63fe7237154075cc968c04b06a5d8881e8137922"
+    }
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "ee039e9"
+  },
+  "provenance_requirement": "path existence alone is NOT proof provenance: these comparisons are valid evidence ONLY if the raw inputs above were created by an explicitly authorized proof sbatch whose completion, log, and output hashes have been reviewed; otherwise the raw files are UNPROVEN and this result promotes nothing",
+  "status": "proof_mismatch_sensitivity_only",
+  "timestamp_utc": "2026-07-20T08:24:17.403",
+  "verdict": "MISMATCH: candidates are SENSITIVITY-ONLY; the acceptance floor cannot use them unless Greg explicitly changes the optimizer-only-delta rule; record as finding (pre-registered risk: ecckd version skew 1.0/1.4 published vs 1.2 rerun)"
 }
