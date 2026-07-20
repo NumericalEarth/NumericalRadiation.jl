@@ -1,0 +1,57 @@
+{
+  "case": "gate4_g2b_sw_rgb_variants_checkpoint",
+  "data_mode": "dry_run_script_generation_only",
+  "disclaimer": "script generation only; nothing submitted by this unit; LBL evaluation only; no optimizer, create_lut, scale_lut, find_g_points, objective, floor, or recovery computation.",
+  "expected_outputs": [
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",
+    "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5"
+  ],
+  "failures": [],
+  "gates": {
+    "exact10_completeness_gate_before_install": "passed",
+    "g2a_prerequisite": "passed",
+    "headnode_refusal_guard": "passed",
+    "lbl_evaluation_only": "passed",
+    "pipeline_parity": "passed",
+    "quarantine_separate_from_g2a": "passed",
+    "rgb_band_grid_14300_variant": "passed",
+    "sbatch_written_not_submitted": "passed",
+    "scenario_override_ten": "passed",
+    "stale_output_refusal": "passed"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "43c53f8",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "remaining_after_g2b": [
+    "evaluation2 rel-415 both bands (TRAINING_BOTH=yes) -- Greg ruling",
+    "optimize_lut H5open-preinit shim",
+    "LW optimizer data already complete (fsck uses plain fluxes)"
+  ],
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2b_sw_rgb_dryrun.sbatch",
+  "scenario_support_verified": "run_sw_lbl_evaluation.sh: 'present' explicit branch (415/1921/332); ch4-/n2o- prefix branches set the respective VMR",
+  "scenarios": [
+    "present",
+    "ch4-350",
+    "ch4-700",
+    "ch4-1200",
+    "ch4-2600",
+    "ch4-3500",
+    "n2o-190",
+    "n2o-270",
+    "n2o-405",
+    "n2o-540"
+  ],
+  "shares_install_dir_with_g2a": "same evaluation1/sw_fluxes-rgb/ dir; disjoint filenames (G2a = rel-*, G2b = present/ch4-/n2o-); stale-output refusal covers accidental overlap",
+  "status": "g2b_checkpoint_ready",
+  "timestamp_utc": "2026-07-20T22:52:51.846"
+}
