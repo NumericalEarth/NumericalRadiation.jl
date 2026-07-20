@@ -1,11 +1,78 @@
 {
   "case": "gate4_r2_sw_comparison_runner",
-  "data_mode": "refusal_no_v14_output",
-  "disclaimer": "refuses until the v1.4 proof raw definition exists; no build, objective, floor, or promotion.",
-  "missing": [
-    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc"
+  "comparisons": [
+    {
+      "detail": "raw 32 vs published 32",
+      "exact": true,
+      "name": "g_count"
+    },
+    {
+      "exact": false,
+      "max_abs_diff": 1.6033649444580078e-5,
+      "n_mismatched": 60,
+      "name": "gpoint_fraction",
+      "shape": "(31840,)"
+    },
+    {
+      "exact": true,
+      "name": "wavenumber1_band",
+      "shape": "(5,)"
+    },
+    {
+      "exact": true,
+      "name": "wavenumber2_band",
+      "shape": "(5,)"
+    },
+    {
+      "exact": true,
+      "name": "band_number",
+      "shape": "(32,)"
+    },
+    {
+      "exact": true,
+      "name": "wavenumber1",
+      "shape": "(995,)"
+    },
+    {
+      "exact": true,
+      "name": "wavenumber2",
+      "shape": "(995,)"
+    },
+    {
+      "exact": false,
+      "max_abs_diff": 2.0503997802734375e-5,
+      "n_mismatched": 2,
+      "name": "solar_irradiance",
+      "shape": "(32,)"
+    },
+    {
+      "exact": false,
+      "max_abs_diff": 9.645062526431047e-16,
+      "n_mismatched": 2,
+      "name": "rayleigh_molar_scattering_coeff",
+      "shape": "(32,)"
+    },
+    {
+      "exact": true,
+      "name": "solar_spectral_irradiance",
+      "shape": "(995,)"
+    }
   ],
-  "provenance_requirement": "comparisons are valid only after an explicitly authorized R2 sbatch completion with log/hash review; raw files of unreviewed origin are unproven and promote nothing",
-  "status": "r2_comparisons_waiting_for_v14_raw_output",
-  "timestamp_utc": "2026-07-20T16:17:26.330"
+  "data_mode": "read_only_exact_comparisons",
+  "disclaimer": "read-only comparisons; no build, objective, floor, or promotion.",
+  "inputs": {
+    "sw_published": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "sw_raw_v14": {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+      "sha256": "99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26"
+    }
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "6937d47"
+  },
+  "provenance_requirement": "valid evidence ONLY if the raw input above came from the authorized R2 sbatch (completion + log/hash review); otherwise unproven, promotes nothing",
+  "status": "r2_ssi_emitted_drift_remains",
+  "timestamp_utc": "2026-07-20T16:45:10.928",
+  "verdict": "SSI absence RESOLVED as version skew (v1.4 emits the variable) -- strong confirmation of R1. Remaining mismatches join the unresolved-drift set (expected possibility per the pre-registered outcome): attributed to non-source factors (input data provenance, build config); candidates remain sensitivity-only; feeds Greg's A/B decision."
 }

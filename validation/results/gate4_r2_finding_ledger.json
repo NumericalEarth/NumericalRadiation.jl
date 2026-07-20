@@ -1,0 +1,50 @@
+{
+  "case": "gate4_r2_finding_ledger",
+  "data_mode": "finding_record_only",
+  "status": "r2_ssi_resolved_drift_version_independent",
+  "timestamp_utc": "2026-07-20T16:50:00Z",
+  "headline": "The v1.4 (23adaca) build EMITS solar_spectral_irradiance and it is elementwise EXACT vs the published SW32 file (995 fine-grid values bit-identical). The SSI-absence finding is RESOLVED as version skew, confirming R1 experimentally. The residual drift is VERSION-INDEPENDENT: identical mismatch counts and max diffs at v1.2 and v1.4.",
+  "r2_run": {
+    "attempts": {
+      "attempt_1": "job 4094 FAILED at configure (adept.m4 -ladept in LDFLAGS dropped by --as-needed; latent at v1.2 whose weaker conftest was header-only satisfiable)",
+      "attempt_2": "job 4095 FAILED at configure sanity check (LIBS=-ladept applied before any -L path exists)",
+      "attempt_3": "job 4096 COMPLETED rc=0 at 2026-07-20T16:43:13Z with LDFLAGS='-L<adept>/lib -Wl,-rpath,<adept>/lib' LIBS=-ladept"
+    },
+    "build_provenance": {
+      "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0 (= v1.4 configure.ac bump)",
+      "gcc": "Ubuntu 13.3.0-6ubuntu2~24.04.1",
+      "create_look_up_table_sha256": "1c79dfa3b963773d4e01437a0f79cb855c7257938d82d0b912d37630aa5412d3",
+      "toolchain": "same Adept/NetCDF stacks as the pinned v1.2 build; only the link-order workaround added (documented in the checkpoint attempt history)"
+    },
+    "input_candidate": "hash-pinned 4082 SW candidate 13dd686a... placed mechanism-1 under the v1.4-derived filename (find_g_points.cpp unchanged in v1.2..23adaca)",
+    "output": {
+      "path": "g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+      "sha256": "99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26",
+      "log_hash_match": true
+    },
+    "log_review": "50 average_optical_depth correction warnings (SW-only run; the 4091 LW+SW run had 117); recorded, not a failure"
+  },
+  "comparison_outcome": {
+    "runner": "validation/gate4_r2_sw_comparison_runner.jl, run twice, deterministic",
+    "status": "r2_ssi_emitted_drift_remains",
+    "exact": ["g_count 32", "wavenumber1_band", "wavenumber2_band", "band_number", "wavenumber1", "wavenumber2", "solar_spectral_irradiance (headline: PRESENT and elementwise EXACT, shape (995,))"],
+    "mismatched": [
+      {"name": "gpoint_fraction", "n_mismatched": 60, "of": 31840, "max_abs_diff": 1.6033649444580078e-5},
+      {"name": "solar_irradiance", "n_mismatched": 2, "of": 32, "max_abs_diff": 2.0503997802734375e-5},
+      {"name": "rayleigh_molar_scattering_coeff", "n_mismatched": 2, "of": 32, "max_abs_diff": 9.645062526431047e-16}
+    ],
+    "version_independence": "these three mismatch sets are NUMERICALLY IDENTICAL to the v1.2 proof (4091): same counts (60/2/2), same max diffs to the printed digit. The v1.2..v1.4 code delta did not move them, consistent with R1's source analysis that the delta does not touch their computation.",
+    "ssi_exactness_implication": "solar_spectral_irradiance is derived from the SSI input on the fine wavenumber grid; its bit-exactness proves the local SSI input and wavenumber grid are identical to upstream's at build time"
+  },
+  "attribution_state": {
+    "resolved": "SW structural absence: version skew (v1.4 emits; v1.2 cannot) -- CLOSED by experiment",
+    "unresolved": "the small drift in gpoint_fraction/solar_irradiance/rayleigh: version-independent across v1.2/v1.4, therefore attributable to input-data or build-config provenance of the ORIGINAL published build (e.g., spectra file vintage, build options), not to the toolchain version delta we can test",
+    "lw": "LW-1.0 mapping ambiguity unchanged (released file predates the v1.0 bump)"
+  },
+  "decision_input_for_greg": "Option B (structural-exact + storage-precision numeric tolerance) is now strongly supported: every structural field including the newly emitted SSI is bit-exact; the residual drift is tiny (<=2.1e-5), confined to three arrays, and provably not a function of the code version within our testable range. Option A (strict) would leave the campaign without an acceptance init source. Promotion remains NOT automatic pending Greg's explicit rule decision.",
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "head_at_finding": "6937d47"
+  },
+  "disclaimer": "finding record only; no floor, objective, acceptance, init-generation, or recovery computation; no promotion."
+}
