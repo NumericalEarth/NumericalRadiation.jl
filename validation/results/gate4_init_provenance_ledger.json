@@ -1,0 +1,45 @@
+{
+  "case": "gate4_init_provenance_ledger",
+  "data_mode": "provenance_record_only",
+  "status": "acceptance_inits_complete",
+  "timestamp_utc": "2026-07-20T17:15:00Z",
+  "summary": "The gate-4 acceptance init set is COMPLETE under the Option B decision record: LW raw init (create_lut_lw output) + SW scaled init (create_lut_sw + scale_lut_sw output) = the upstream pre-optimization states the recovery campaign starts from.",
+  "acceptance_inits": {
+    "lw": {
+      "role": "LW acceptance init (raw-ckd-definition; upstream LW inits are unscaled)",
+      "path": "g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+      "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+      "provenance": "proof job 4091 (pinned v1.2 build) from the hash-pinned A2 LW candidate; promoted by the Option B decision record with the permanent LW-1.0 builder-source caveat"
+    },
+    "sw": {
+      "role": "SW acceptance init (scaled-ckd-definition)",
+      "path": "g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc",
+      "sha256": "74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74",
+      "structure": "g_point=32, band=5, pressure=53, wavenumber=995, h2o_mole_fraction=12, temperature=6, composite_gas=4; solar_spectral_irradiance present; 40 variables",
+      "provenance_chain": [
+        "A2 SW gpoints candidate 13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57 (job 4082)",
+        "SW raw definition 99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26 (R2 job 4096, v1.4 23adaca build, promoted by Option B)",
+        "LBL scaling reference ckdmip_mmm_sw_fluxes-raw_present_1.h5 ef9df390a2cd546a73cf75ecfcea9c9ae32ad0ea0f5a6437df4e15588d931acd (ckdmip_sw, MMM median col 1, present, direct-only, mu0=0.5, albedo 0.15, no Rayleigh; generated in job 4098 pre-crash, hash-verified on reuse in 4099)",
+        "scale_lut (v1.4 binary UNCHANGED, sha256 a2d121b2ce5e480c56284cb10aa70dc043ee41185b3377da4af33bafb9f12cc2) -> scaled init in job 4099, rc=0 at 2026-07-20T17:09:13Z"
+      ]
+    }
+  },
+  "sw_init_job_history": {
+    "4097": "FAILED: pristine v1.4 config.h hardcoded upstream CKDMIP_DIR; no outputs (gate4_sw_init_failure_ledger_4097)",
+    "4098": "FAILED: SIGFPE in HDF5 1.14 init under scale_lut's FP traps; produced the reusable LBL reference only (gate4_sw_init_failure_ledger_4098)",
+    "4099": "SUCCESS rc=0: CKDMIP_DIR localized + H5open-preinit shim; scaled init produced; log-echoed hashes match independent local sha256sum"
+  },
+  "execution_environment_shim": {
+    "classification": "environment-only; numerically neutral (one ELF constructor calling H5open() before main so HDF5 init runs trap-free; upstream FP-trap checking stays active for all computation)",
+    "source_sha256": "0b73f0842247f2cf73994c7e32d895c0688cf68e68c943a65af835d54085e730",
+    "so_sha256": "28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f",
+    "wrapper_sha256": "ca3e4f9e23902b104226c06b6e601c546ef6493ab1f2770b0681a9397fa28cb7",
+    "scope": "LD_PRELOAD applied ONLY to the scale_lut invocation via the wrapper; note optimize_lut also enables FP traps, so the same shim will be needed for the optimizer stage",
+    "rebuilt_in_job": "the .so is compiled in-job from the embedded source, so the logged hashes always describe the artifact actually preloaded"
+  },
+  "next": "G2/G3 optimizer recovery runs from these inits (acceptance metrics: final/target <= 1.05, weight L1 <= 0.02, OD log-RMSE <= 0.02); G2/G3 executor scaffold exists (gate4_g2_g3_runner_scaffold, refuses without authorize=:real_data_preflight_green) and its preflight prerequisites are now satisfiable",
+  "provenance": {
+    "branch": "glw/gate4-recovery"
+  },
+  "disclaimer": "provenance record only; no objective, floor, or recovery computation in this unit."
+}
