@@ -1,0 +1,38 @@
+{
+  "authorization": "Greg: 'go for R2' (2026-07-20) = r2_matching_version_go per the scaffold",
+  "case": "gate4_r2_execution_checkpoint",
+  "data_mode": "dry_run_script_generation_only",
+  "disclaimer": "script generation only; nothing submitted by this unit; build+create_lut only; no objective, floor, acceptance, or promotion.",
+  "expected_output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+  "failures": [],
+  "gates": {
+    "authorization_recorded": "passed",
+    "candidate_identity_pinned": "passed",
+    "ckd_model_has_ssi_persistence": "passed",
+    "configure_ac_is_14": "passed",
+    "create_lut_only": "passed",
+    "headnode_refusal_guard": "passed",
+    "mechanism1_placement": "passed",
+    "quarantine_isolation": "passed",
+    "sbatch_written_not_submitted": "passed",
+    "scaffold_prerequisite": "passed",
+    "stale_output_refusal": "passed",
+    "sw_candidate_hash_pinned": "passed",
+    "toolchain_parity_flags": "passed",
+    "v14_raw_output_absent": "passed",
+    "v14_tree_at_pinned_commit": "passed"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "1a003aa",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_r2_dryrun.sbatch",
+  "status": "r2_execution_checkpoint_ready",
+  "timestamp_utc": "2026-07-20T16:17:10.431",
+  "v14_tree": {
+    "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0",
+    "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca",
+    "post_checkout_verifications": "configure.ac 1.4; ChangeLog v1.4 SSI entry; ckd_model.cpp 6 SSI references (v1.2: 0)"
+  }
+}

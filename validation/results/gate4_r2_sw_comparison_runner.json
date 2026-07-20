@@ -1,0 +1,11 @@
+{
+  "case": "gate4_r2_sw_comparison_runner",
+  "data_mode": "refusal_no_v14_output",
+  "disclaimer": "refuses until the v1.4 proof raw definition exists; no build, objective, floor, or promotion.",
+  "missing": [
+    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc"
+  ],
+  "provenance_requirement": "comparisons are valid only after an explicitly authorized R2 sbatch completion with log/hash review; raw files of unreviewed origin are unproven and promote nothing",
+  "status": "r2_comparisons_waiting_for_v14_raw_output",
+  "timestamp_utc": "2026-07-20T16:17:26.330"
+}
