@@ -1,0 +1,46 @@
+{
+  "case": "gate4_g2a_data_ledger",
+  "data_mode": "data_provenance_record_only",
+  "status": "sw_rgb_rel_training_fluxes_installed_and_verified",
+  "timestamp_utc": "2026-07-20T22:55:00Z",
+  "summary": "The six RGB-banded SW LBL training flux files required by the SW optimizer's relative-base pass (and its relative_to reference) are generated, installed at the exact path the optimizer's rgb rewrite expects, and triple-verified (in-job log echoes, monitor's independent check, local sha256/cmp).",
+  "job": {
+    "job_id": 4100,
+    "job_name": "g4-g2a-sw-rgb-fluxes",
+    "outcome": "COMPLETED, log marker 'G2a done rc=0' at 2026-07-20T22:47:05Z, wall ~5h18m",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-g2a-4100.log",
+    "log_markers": "all five stage banners present (preflight, testcopy, LBL evaluation, exact-6 gate + install, outputs); no REFUSED/MISSING/error lines"
+  },
+  "generation_provenance": {
+    "scripts": "isolated testcopy-rgb from the PINNED v1.2 source artifact (7b210aef.../6115f9b8); ckdmip_sw from /shared/home/greg/build/ckdmip-1.0/bin (same binary as job 4078)",
+    "band_grid": "9-band RGB variant 250/2500/4000/8000/14300/16650/20000/25000/31750/50000 activated by full-line sed (13-band narrow grid deactivated); rationale: optimize_lut_sw maps 9 LBL bands to the 5 CKD rgb bands via '0 0 0 0 1 2 3 4 4', collapsing exactly onto WN1_SW_RGB='250 14300 16650 20000 25000'; create_lut_sw uses base_wavenumber_boundary=14300; edited lines echoed in the job log",
+    "scenarios": "rel-{180,280,415,560,1120,2240} (the pinned script's default SCENARIOS)",
+    "inputs": "evaluation1 SW spectra (per-gas chunks incl. rayleigh) + evaluation1 SSI, preflighted in stage 0",
+    "pipeline_parity": "same Julia concat helper (concat_ckdmip_flux_chunks.jl) replacing ncrcat, same reuse-skip guard as job 4078",
+    "upstream_negative": "sw_fluxes-rgb products are NOT published on ECPDS (404 at three candidate layouts; recorded in the G2a checkpoint)"
+  },
+  "installed_files": [
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_rel-180.h5", "size_bytes": 1817472, "sha256": "19016e05da9586e55e6e2a7b9629ea6a06e89e4ea9f6b4e4a2f9d66ea658513b"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_rel-280.h5", "size_bytes": 1817472, "sha256": "01c5326f5f4d4c9f0b3a06dfeee2fb9a8f54b573ab2d76f08911a46081fa8879"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5", "size_bytes": 1817472, "sha256": "55cf6fffba18d950b716c2efd1b053db27cf6d48c20ca15ae1495a15f1c58cf0"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_rel-560.h5", "size_bytes": 1817472, "sha256": "19c801655f5a594e4166a4d088656dc04ad4c88bb2d00e01cfca76981fd185d9"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_rel-1120.h5", "size_bytes": 1817482, "sha256": "dddeeb6b97fdaae2c3a8fda140b38c982d2a56471afd75bcc104090304b1955f"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_rel-2240.h5", "size_bytes": 1817482, "sha256": "944c5957c33cf5d25163e4fdfd7d7777fc313a1e0ea91798e7c806808df22eb6"}
+  ],
+  "install_location": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ (the exact path optimize_lut_sw.sh's rgb rewrite derives from TRAINING_SW_FLUXES_DIR)",
+  "verification": {
+    "exact6_gate": "in-job completeness gate passed before install (partial sets refuse, exit 71)",
+    "cmp_identity": "all six workdir-vs-installed byte-identical (in-job and repeated locally post-run)",
+    "sha256_triple_agreement": "in-job log echoes == monitor's independent check == local post-run sha256sum, all six files"
+  },
+  "remaining_blockers_for_optimizer": [
+    "G2b: rgb variants of present, ch4-{350,700,1200,2600,3500}, n2o-{190,270,405,540} for the later SW passes (~10 scenarios, same pipeline)",
+    "evaluation2 rel-415 (both bands) for TRAINING_BOTH=yes -- the published '-32b' models were trained with both evaluation datasets; needs Greg's data ruling for G3 acceptance",
+    "optimize_lut FP-trap shim (same H5open-preinit mechanism as scale_lut, per the 4098 ledger)",
+    "Greg/monitor review of THIS ledger on origin"
+  ],
+  "provenance": {
+    "branch": "glw/gate4-recovery"
+  },
+  "disclaimer": "data provenance record only; no optimizer, objective, floor, or recovery computation."
+}
