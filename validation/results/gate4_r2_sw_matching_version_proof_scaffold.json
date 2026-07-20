@@ -1,0 +1,80 @@
+{
+  "authorization_token_required": "r2_matching_version_go",
+  "case": "gate4_r2_sw_matching_version_proof_scaffold",
+  "data_mode": "dry_run_plan_only_no_execution",
+  "disclaimer": "plan artifact only; no checkout, build, run, or submission; no floor, objective, acceptance, or init-generation promotion; execution requires the explicit authorization token.",
+  "failures": [],
+  "gates": {
+    "expected_outcome_pre_registered": "passed",
+    "no_exec_in_this_unit": "passed",
+    "promotion_not_automatic": "passed",
+    "r1_mapping_prerequisite": "passed",
+    "refuses_without_token": "passed",
+    "sw_candidate_present_hash_pinned": "passed",
+    "v14_tree_not_yet_created": "passed"
+  },
+  "plan": {
+    "build_prerequisites": {
+      "steps": [
+        "autoreconf -i (if configure absent)",
+        "./configure <flags above>",
+        "make -j",
+        "record: gcc/adept/netcdf versions + sha256 of the built create_look_up_table binary"
+      ],
+      "toolchain_parity": "same deps and flags as the pinned v1.2 build, from its config.log: ./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack",
+      "where": "Slurm cpu partition or cpu-large; NEVER the head node for the proof run itself; build may be head-node-acceptable if quick but default to Slurm"
+    },
+    "comparisons": [
+      "g_count == 32",
+      "gpoint_fraction elementwise EXACT vs published SW32",
+      "wavenumber1_band / wavenumber2_band EXACT",
+      "band_number EXACT",
+      "wavenumber1 / wavenumber2 fine grids EXACT",
+      "solar_irradiance EXACT",
+      "rayleigh_molar_scattering_coeff EXACT",
+      "solar_spectral_irradiance PRESENT and elementwise EXACT (the headline question)"
+    ],
+    "expected_outcome_statement": "SSI emission expected to resolve; support-array drift may remain unresolved (per R1's cautious statement -- not localized to any identified source diff)",
+    "guardrails": [
+      "this scaffold executes NOTHING (gated below)",
+      "executor requires authorize=:r2_matching_version_go",
+      "quarantined v1.4 tree + separate work-v14 subtree; pinned v1.2 workcopy, its binaries, and the 4091 proof outputs are never modified",
+      "no floor/objective/acceptance/init-generation promotion regardless of outcome; promotion remains Greg's rule decision"
+    ],
+    "objective": "SW-only matching-version proof: does a v1.4 (23adaca) build emit solar_spectral_irradiance and reproduce the published SW32 support arrays exactly?",
+    "proof_run": {
+      "expected_output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc (prefix follows the v1.4 ECCKD_PREFIX; sha256 echoed to the job log and recorded in the outcome ledger)",
+      "input_candidate": {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5",
+        "reuse_rationale": "R1/monitor verified v1.2..23adaca does NOT change find_g_points.cpp, so a v1.4 candidate regeneration would be code-identical; reusing the hash-pinned 4082 candidate isolates the create_lut version delta",
+        "sha256_must_match": "13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57"
+      },
+      "mechanism": "TESTCOPY-style isolated test dir from the v1.4 checkout; sed-patch the same five config.h vars as the 4091 proof (CKDMIP_DATA_DIR, WORK_DIR -> a NEW quarantined v1.4 work subtree, BINDIR -> the v1.4 build, MMM_SW_SPECTRA_DIR overlay, CLOUD_SPECTRUM absolute); stage-0 refuses on candidate hash mismatch or stale outputs; then APPLICATION=climate BAND_STRUCTURE=rgb TOLERANCE=0.047 bash create_lut_sw.sh ONLY"
+    },
+    "source_checkout": {
+      "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0",
+      "repo": "https://github.com/ecmwf-ifs/ecckd.git",
+      "tree": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca (QUARANTINED; the pinned v1.2 workcopy and its built binaries are never touched)",
+      "verify_after_checkout": [
+        "configure.ac AC_INIT version string reads 1.4",
+        "ChangeLog head contains 'version 1.4 (November 2022)' with the SSI-save entry",
+        "ckd_model.cpp references solar_spectral_irradiance (read/define/write persistence present)"
+      ]
+    },
+    "verdict_rules": {
+      "all_sw_fields_exact": "SW candidate promotable PENDING Greg's rule decision AND the open LW-1.0 mapping ambiguity; promotion is NOT automatic",
+      "drift_persists": "EXPECTED possibility: drift attributed to non-source factors (input data provenance, build config); remains sensitivity-only; feeds Greg's A/B decision",
+      "drift_worsens": "investigate before any further use",
+      "ssi_emitted_and_exact": "SSI-absence finding RESOLVED as version skew (strong confirmation of R1)",
+      "ssi_emitted_but_inexact": "absence resolved; SSI values join the unresolved-drift set",
+      "ssi_still_absent": "R1 mapping hypothesis WRONG for the build path used; escalate as new finding"
+    }
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "5e8f96f",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "status": "r2_scaffold_ready_awaiting_authorization",
+  "timestamp_utc": "2026-07-20T08:39:22.688"
+}
