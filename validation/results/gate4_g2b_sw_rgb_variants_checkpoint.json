@@ -1,4 +1,7 @@
 {
+  "attempt_history": {
+    "job_4103": "CANCELED before any valid output (scancel during monitor pre-submit review). It had produced a header-size partial RAW chunk (RAW_...present_1-10.h5, ~20954 B) in work-rgb-g2b; because run_sw_lbl_evaluation reuses nonempty RAW files, the corrective sbatch now wipes the G2b quarantine tree at stage 0 (partial-RAW guard) before regenerating. No consolidated or installed G2b file was ever produced by 4103."
+  },
   "case": "gate4_g2b_sw_rgb_variants_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted by this unit; LBL evaluation only; no optimizer, create_lut, scale_lut, find_g_points, objective, floor, or recovery computation.",
@@ -20,6 +23,7 @@
     "g2a_prerequisite": "passed",
     "headnode_refusal_guard": "passed",
     "lbl_evaluation_only": "passed",
+    "partial_raw_guard": "passed",
     "pipeline_parity": "passed",
     "quarantine_separate_from_g2a": "passed",
     "rgb_band_grid_14300_variant": "passed",
@@ -29,7 +33,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "43c53f8",
+    "generated_from_head": "ac37fc7",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "remaining_after_g2b": [
@@ -53,5 +57,5 @@
   ],
   "shares_install_dir_with_g2a": "same evaluation1/sw_fluxes-rgb/ dir; disjoint filenames (G2a = rel-*, G2b = present/ch4-/n2o-); stale-output refusal covers accidental overlap",
   "status": "g2b_checkpoint_ready",
-  "timestamp_utc": "2026-07-20T22:52:51.846"
+  "timestamp_utc": "2026-07-20T22:56:36.416"
 }
