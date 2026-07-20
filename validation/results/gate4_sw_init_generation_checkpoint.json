@@ -1,0 +1,32 @@
+{
+  "authorization": "Option B decision record (Greg, 2026-07-20); this is its recorded next step",
+  "case": "gate4_sw_init_generation_checkpoint",
+  "data_mode": "dry_run_script_generation_only",
+  "disclaimer": "script generation only; nothing submitted by this unit; scale_lut only; no optimize_lut, objective, floor, or recovery computation.",
+  "expected_outputs": {
+    "lbl_reference": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_mmm_sw_fluxes-raw_present_1.h5",
+    "note": "sha256s echoed to the job log; the scaled definition becomes the SW ACCEPTANCE INIT (upstream pre-optimization state)",
+    "sw_scaled_init": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc"
+  },
+  "failures": [],
+  "gates": {
+    "headnode_refusal_guard": "passed",
+    "input_identity_pinned": "passed",
+    "lbl_reference_spec_matches_manifest": "passed",
+    "option_b_prerequisite": "passed",
+    "promoted_sw_raw_verified": "passed",
+    "sbatch_written_not_submitted": "passed",
+    "scale_lut_only": "passed",
+    "scaled_output_absent": "passed",
+    "stale_output_refusal": "passed",
+    "v14_scale_lut_binary_present": "passed"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "957fb7f",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_sw_init_dryrun.sbatch",
+  "status": "sw_init_checkpoint_ready",
+  "timestamp_utc": "2026-07-20T16:53:52.627"
+}
