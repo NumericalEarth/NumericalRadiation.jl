@@ -1,0 +1,48 @@
+{
+  "case": "gate4_g2b_data_ledger",
+  "data_mode": "data_provenance_record_only",
+  "status": "sw_rgb_minor_training_fluxes_installed_and_verified",
+  "timestamp_utc": "2026-07-21T08:50:00Z",
+  "summary": "The ten RGB-banded SW LBL training flux files for the SW optimizer's later passes (present reference + relative-ch4 x5 + relative-n2o x4) are generated, installed, and triple-verified. With G2a's six rel files, the SW optimizer's full training-flux surface (16 rgb files) is now present.",
+  "job": {
+    "job_id": 4104,
+    "job_name": "g4-g2b-sw-rgb-minor",
+    "outcome": "COMPLETED, log marker 'G2b done rc=0' at 2026-07-21T08:42:43Z, wall ~9h40m",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-g2b-4104.log",
+    "partial_raw_guard_fired": "yes -- at stage 0 it detected and removed the canceled-4103 header-size partial (RAW_...present_1-10.h5, 20954 B), then regenerated from scratch (logged)",
+    "attempt_history": "job 4103 CANCELED before valid output during monitor pre-submit review (provenance/quarantine-gate fixes); 4104 is the valid fresh run"
+  },
+  "generation_provenance": {
+    "scripts": "isolated testcopy-rgb-g2b from the PINNED v1.2 source artifact; ckdmip_sw from /shared/home/greg/build/ckdmip-1.0/bin (same binary as jobs 4078/4100)",
+    "band_grid": "identical to G2a: 9-band RGB 250/2500/4000/8000/14300/16650/20000/25000/31750/50000 (14300-variant), 13-band grid deactivated; edited lines echoed in the job log",
+    "scenarios": "present, ch4-350, ch4-700, ch4-1200, ch4-2600, ch4-3500, n2o-190, n2o-270, n2o-405, n2o-540 (all supported by run_sw_lbl_evaluation.sh: present explicit branch, ch4-/n2o- prefix branches)",
+    "pipeline_parity": "Julia concat helper replacing ncrcat + reuse-skip guard, as G2a/4078"
+  },
+  "installed_files": [
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_present.h5",  "size_bytes": 1839369, "sha256": "ceb5872dd4ac39284b3071e42fd3a17068c161d7892eba873f5a99e6736ab4b5"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",  "size_bytes": 1839368, "sha256": "d15967da2873b4a4fa8e81ac764a24ed6fec046c88027951291361f10726a7a2"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",  "size_bytes": 1839368, "sha256": "9c355b0ca2597388a45b57f50bc6aab90b4b4ece5ad683870f64954e830c987a"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5", "size_bytes": 1839378, "sha256": "f31d7c5628bfb17cdcaab63ee107a4e11181b04417c1d06ad4fdd61dd6ba2493"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5", "size_bytes": 1839378, "sha256": "c22671d43a0ca055a79383353219df57b827d61547a7de7d4de3b2313329e53c"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5", "size_bytes": 1839378, "sha256": "300adb48f0feb928538d94f84b45372d8880fcf995c43919560b6af59dfb3034"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",  "size_bytes": 1839369, "sha256": "d7bac1bcf8a094978b2870a442f125b4acf439089442c620e6a3ed30def947fe"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",  "size_bytes": 1839369, "sha256": "551c532d0661025f2d0a8a1ecb66eec7bdae36dbd191df20691d2c054799cad5"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",  "size_bytes": 1839369, "sha256": "d76927da116d65d0c2e2b3426e0c449e46b419ba1f3b7a3024afdb8f59a37a5f"},
+    {"file": "ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5",  "size_bytes": 1839369, "sha256": "aac07193510b1fcc32cece1014b1ec271071363c5afb82ecff091e5ee2452f01"}
+  ],
+  "install_location": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ (16 files total now: 6 G2a rel + 10 G2b)",
+  "verification": {
+    "exact10_gate": "in-job completeness gate passed before install (partial sets refuse, exit 71)",
+    "cmp_identity": "all ten workdir-vs-installed byte-identical (in-job + repeated locally post-run)",
+    "sha256_agreement": "in-job log echoes == local post-run sha256sum, all ten files"
+  },
+  "sw_optimizer_training_data_status": "COMPLETE for evaluation1: all rgb files the SW passes reference (rel-base x6 from G2a; present/ch4x5/n2ox4 from G2b) are installed",
+  "remaining_blockers_for_optimizer": [
+    "evaluation2 rel-415 both bands (TRAINING_BOTH=yes) for faithful '-32b' G3 acceptance -- Greg's data ruling still pending; NOT published upstream (ECPDS 404), local gen needs the evaluation2 spectra download",
+    "optimize_lut H5open-preinit FP-trap shim (same mechanism as scale_lut, proven in the 4098/4099 cycle)",
+    "LW optimizer training data already complete (fsck trains on the plain evaluation1 fluxes installed by job 4078)",
+    "Greg/monitor review of this ledger on origin"
+  ],
+  "provenance": {"branch": "glw/gate4-recovery"},
+  "disclaimer": "data provenance record only; no optimizer, objective, floor, or recovery computation."
+}
