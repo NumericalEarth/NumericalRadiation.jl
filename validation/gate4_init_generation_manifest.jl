@@ -1,15 +1,35 @@
-# Gate-4 init-generation MANIFEST (spec unit; nothing is generated here).
+# Gate-4 init-generation MANIFEST (spec unit; nothing is generated here)
+# -- HISTORICAL/SUPERSEDED.
 #
-# Records the exact future commands and inputs needed to produce the
-# acceptance-run initial states with the pinned tool: LW raw-ckd-definition
-# (create_lut_lw, APP=climate, BAND_STRUCTURE fsck), SW raw-ckd-definition
-# (create_lut_sw, BAND_STRUCTURE rgb), and SW scaled-ckd-definition
-# (scale_lut_sw with a direct-only, mu0=0.5, no-Rayleigh MMM reference LBL
-# flux file). Sourced from the pinned test/{create_lut_lw,create_lut_sw,
-# scale_lut_sw}.sh and test/config.h plus the committed G2/G3 scaffold --
-# never memory. GATES GUARANTEE nothing executes create_lut/scale_lut and no
-# optimizer/objective/floor computation occurs. Missing inputs produce
-# status init_generation_manifest_ready_waiting_for_inputs, not a failure.
+# SUPERSEDED (monitor-directed marking, 2026-08-12): the init generation
+# this unit specified has since been EXECUTED and its outputs promoted --
+# job 4082 (find_g_points ONLY: the g-point candidates; the A2 ledger
+# records NO create_lut there), job 4091 (create_lut proof run producing
+# the accepted LW raw init), job 4096 (v1.4 23adaca SW raw rebuild), job
+# 4099 (scale_lut under the H5open-preinit LD_PRELOAD shim); accepted
+# under the Option-B rule (gate4_option_b_decision_record): LW raw init
+# ce057079..., SW scaled init 74d8be65..., now sha-pinned by
+# gate4_g3_scoped_input_preflight.jl.
+# Execution required deviations NOT in this pre-execution spec
+# (discovered during the runs, recorded in the execution ledgers):
+# pristine-config CKDMIP_DIR sed, the v1.4 rebuild for the SW chain, and
+# the H5open shim for scale_lut's FP traps. RETAINED ROLE: read-only
+# pre-execution specification evidence -- the verbatim command/config
+# extracts from the pinned scripts remain valid and are cited by
+# gate4_sw_init_generation_checkpoint.jl and the Option-B decision
+# record. 'ready' statuses assert spec coherence + input presence, never
+# generation readiness (generation is complete).
+#
+# Original contract: records the exact commands and inputs needed to
+# produce the acceptance-run initial states with the pinned tool: LW
+# raw-ckd-definition (create_lut_lw, APP=climate, BAND_STRUCTURE fsck),
+# SW raw-ckd-definition (create_lut_sw, BAND_STRUCTURE rgb), and SW
+# scaled-ckd-definition (scale_lut_sw with a direct-only, mu0=0.5,
+# no-Rayleigh MMM reference LBL flux file). Sourced from the pinned
+# test/{create_lut_lw,create_lut_sw,scale_lut_sw}.sh and test/config.h
+# plus the committed G2/G3 scaffold -- never memory. GATES GUARANTEE
+# nothing executes create_lut/scale_lut and no optimizer/objective/floor
+# computation occurs.
 #
 # No floor, objective-value, or recovery claim.
 
@@ -63,8 +83,10 @@ function main()
                          grepn(src["create_sw"], "conc_input"),
     )
 
-    # the three future commands (spec form; variables per pinned config.h with
-    # CKDMIP_DATA_DIR remapped to the local restored tree)
+    # the three generation commands (HISTORICAL pre-execution spec form;
+    # variables per pinned config.h with CKDMIP_DATA_DIR remapped to the
+    # local restored tree; generation has since been executed -- see the
+    # supersession banner)
     commands = Dict(
         "lw_raw" => Dict(
             "app" => "climate", "band_structure" => "fsck",
@@ -142,6 +164,9 @@ function main()
             end
         end
     end
+    # WORKROOT is nested under the second walk root, so hits appear twice
+    # without deduplication (monitor-caught artifact defect)
+    gpoint_hits = sort(unique(gpoint_hits))
     push!(req, Dict("label" => "g-point files (find_g_points output)",
                     "path" => isempty(gpoint_hits) ?
                         "NOT FOUND (must be produced by find_g_points or " *
@@ -196,9 +221,13 @@ function main()
     gates["scale_reference_direct_only_mu05"] == "passed" ||
         push!(fails, "scale-lut direct-only mu0=0.5 evidence not found")
 
+    # both success tokens explicitly historical (generation is complete);
+    # the internal exit-code prefix init_generation_manifest_ready is
+    # preserved
     status = !isempty(fails) ? "init_generation_manifest_failed" :
-             inputs_ready ? "init_generation_manifest_ready" :
-                            "init_generation_manifest_ready_waiting_for_inputs"
+             inputs_ready ?
+             "init_generation_manifest_ready_historical_superseded" :
+             "init_generation_manifest_ready_historical_superseded_waiting_for_inputs"
 
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
@@ -212,21 +241,38 @@ function main()
         "commands" => commands, "evidence" => evidence,
         "required_inputs" => req,
         "inputs_present" => n_present, "inputs_expected" => length(req),
+        "superseded_by" => "executed init generation: job 4082 " *
+            "(find_g_points only -- g-point candidates; A2 ledger records " *
+            "NO create_lut), job 4091 (create_lut proof run producing the " *
+            "accepted LW raw init), job 4096 (v1.4 SW raw rebuild), job " *
+            "4099 (scale_lut under the H5open-preinit shim); outputs " *
+            "accepted under the Option-B rule " *
+            "(gate4_option_b_decision_record) and sha-pinned by " *
+            "gate4_g3_scoped_input_preflight.jl",
+        "historical_note" => "retained as read-only pre-execution " *
+            "specification evidence; execution deviations not in this " *
+            "spec (CKDMIP_DIR sed, v1.4 rebuild, H5open shim) are " *
+            "recorded in the execution ledgers; 'ready' statuses assert " *
+            "spec coherence + input presence, never generation readiness",
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "pinned_source" => ECCKD_SRC,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
-        "disclaimer" => "init-generation specification only; nothing is " *
-                        "generated; no optimizer, objective, floor, or " *
-                        "recovery computation.",
+        "disclaimer" => "HISTORICAL/SUPERSEDED init-generation " *
+                        "specification; nothing is generated; no " *
+                        "optimizer, objective, floor, or recovery " *
+                        "computation.",
     )
     mkpath(dirname(IG_RESULTS_JSON))
     open(IG_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
     end
     open(IG_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 init-generation manifest\n")
+        println(io, "# Gate-4 init-generation manifest — " *
+                    "HISTORICAL/SUPERSEDED\n")
         println(io, "Status: **$status**\n")
+        println(io, "**Superseded by**: ", result["superseded_by"], "\n")
+        println(io, result["historical_note"], "\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gate | Result |")
         println(io, "|---|---|")
