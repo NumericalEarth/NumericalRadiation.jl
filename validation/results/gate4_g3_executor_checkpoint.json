@@ -40,7 +40,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "a5316b7",
+    "generated_from_head": "7204e05",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "quota_health_fixture_verdicts": {
@@ -55,5 +55,5 @@
     "sw": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_sw_optimizer.sbatch"
   },
   "status": "g3_executor_waiting_for_eval2",
-  "timestamp_utc": "2026-08-12T08:47:55.941"
+  "timestamp_utc": "2026-08-12T08:50:22.381"
 }

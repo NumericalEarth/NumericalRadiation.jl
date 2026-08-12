@@ -44,4 +44,4 @@ Authorization: token `g3_recovery_go` + scoped preflight ready + review.
 
 final/target <= 1.05, weight L1 <= 0.02, OD log-RMSE <= 0.02 vs published models -- evaluated by a separate post-run comparison unit, never inside the executor
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `a5316b7` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `7204e05` (pre-own-commit).

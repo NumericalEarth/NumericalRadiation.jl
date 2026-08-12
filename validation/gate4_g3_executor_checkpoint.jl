@@ -106,9 +106,12 @@ function make_sbatch(band)
                                "version.h.in")], "\n")
     # pin the MUTABLE GATE CODE itself (verified before sourcing/running):
     # a later branch edit must not silently alter runtime authorization
-    gate_pins = join(["$(sha256(joinpath(PROJECT_ROOT, "validation", f)))  $(joinpath(PROJECT_ROOT, "validation", f))"
-                      for f in ("gate4_quota_guard.sh",
-                                "gate4_g3_scoped_input_preflight.jl")], "\n")
+    gate_pins = join(["$(sha256(joinpath(PROJECT_ROOT, f)))  $(joinpath(PROJECT_ROOT, f))"
+                      for f in ("validation/gate4_quota_guard.sh",
+                                "validation/gate4_g3_scoped_input_preflight.jl",
+                                "validation/validation_results.jl",
+                                "test/Project.toml",
+                                "test/Manifest.toml")], "\n")
     """
 #!/bin/bash
 #SBATCH --job-name=g4-g3-$(band)-optimizer
@@ -266,10 +269,11 @@ function main()
              i_pf !== nothing && i_lock !== nothing &&
              first(i_gatepin) < first(i_source) < first(i_health) &&
              first(i_health) < first(i_pf) < first(i_lock)) ? "passed" : "failed"
+        gp_block = split(txt, "GATEPINS")[2]
         gates["$(nm)_gate_code_pinned"] =
-            occursin("gate4_quota_guard.sh", split(txt, "GATEPINS")[2]) &&
-            occursin("gate4_g3_scoped_input_preflight.jl", split(txt, "GATEPINS")[2]) ?
-            "passed" : "failed"
+            all(occursin(f, gp_block) for f in ("gate4_quota_guard.sh",
+                "gate4_g3_scoped_input_preflight.jl", "validation_results.jl",
+                "test/Project.toml", "test/Manifest.toml")) ? "passed" : "failed"
         gates["$(nm)_quota_health_gate"] =
             occursin("quota_health ", txt) &&
             occursin("before ANY /shared write", txt) ? "passed" : "failed"
