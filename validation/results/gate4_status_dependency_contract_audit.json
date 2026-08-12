@@ -1,0 +1,1024 @@
+{
+  "case": "gate4_status_dependency_contract_audit",
+  "census": {
+    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each ledger record matched EXACTLY once; union(served IDs) must equal the manifest",
+    "n_sites": 31,
+    "site_ledger": [
+      {
+        "anchor": "JSON.parsefile(validation_results_path(name))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution"
+        ],
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "reason": "ax_parse! helper body"
+      },
+      {
+        "anchor": "sub_exists ? JSON.parsefile(sub_path) : nothing",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_exec_checkpoint<-a2_submission_ledger:mode_selection"
+        ],
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "reason": "mode-selection parse"
+      },
+      {
+        "anchor": "pf = ax_obj(try JSON.parsefile(validation_results_path(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_exec_checkpoint<-a2_proof_finding_ledger:later_disposition"
+        ],
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "reason": "later-disposition parse"
+      },
+      {
+        "anchor": "ob = ax_obj(try JSON.parsefile(validation_results_path(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_exec_checkpoint<-option_b:later_disposition"
+        ],
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "reason": "later-disposition parse"
+      },
+      {
+        "anchor": "a1 = JSON.parsefile(validation_results_path(\"gate4_a1_upstream_recon.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_rerun_manifest<-a1_upstream_recon"
+        ],
+        "file": "gate4_a2_find_g_points_rerun_manifest.jl",
+        "reason": "a1 prerequisite parse"
+      },
+      {
+        "anchor": "fin = JSON.parsefile(PD_FINDING_LEDGER)",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_proof_driver<-a2_proof_finding_ledger:historical"
+        ],
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "reason": "historical finding-ledger parse"
+      },
+      {
+        "anchor": "sub = JSON.parsefile(PD_SUBMISSION_LEDGER)",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_proof_driver<-a2_proof_submission_ledger:historical"
+        ],
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "reason": "historical submission-ledger parse"
+      },
+      {
+        "anchor": "ob = JSON.parsefile(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_proof_driver<-option_b:historical"
+        ],
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "reason": "historical option-B parse"
+      },
+      {
+        "anchor": "scaffold = JSON.parsefile(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_proof_driver<-a2_proof_scaffold"
+        ],
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "reason": "proof-scaffold prerequisite parse"
+      },
+      {
+        "anchor": "chk = JSON.parsefile(validation_results_path(\"gate4_a2_execution_checkpoint.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:a2_proof_scaffold<-a2_exec_checkpoint"
+        ],
+        "file": "gate4_a2_reproduction_proof_scaffold.jl",
+        "reason": "execution-checkpoint prerequisite parse"
+      },
+      {
+        "anchor": "JSON.parsefile(ledger_path)",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g1_objective_ratio<-g3_run_ledger"
+        ],
+        "file": "gate4_g1_objective_ratio.jl",
+        "reason": "g1or_gate ledger parse (live edge + tmp ladder fixtures)"
+      },
+      {
+        "anchor": "m = JSON.parsefile(BDS_MANIFEST_JSON)",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g2_binding_scaffold<-gate2_od_dataset_manifest:fingerprint_join"
+        ],
+        "file": "gate4_g2_binding_decision_scaffold.jl",
+        "reason": "manifest_fingerprint helper body"
+      },
+      {
+        "anchor": "eval2_path = JSON.parsefile(BDS_MANIFEST_JSON)[\"inventory\"][end][\"path\"]",
+        "class": "fixture-support",
+        "edge_ids": [],
+        "file": "gate4_g2_binding_decision_scaffold.jl",
+        "reason": "supplies the pending-eval2 refusal fixture input"
+      },
+      {
+        "anchor": "manifest = JSON.parsefile(BDS_MANIFEST_JSON)",
+        "class": "informational-read",
+        "edge_ids": [],
+        "file": "gate4_g2_binding_decision_scaffold.jl",
+        "reason": "decision-map emission; gating lives in manifest_fingerprint"
+      },
+      {
+        "anchor": "cfg = JSON.parsefile(validation_results_path(\"gate4_stage_config_audit.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g2_g3_runner_scaffold<-stage_config_audit"
+        ],
+        "file": "gate4_g2_g3_runner_scaffold.jl",
+        "reason": "stage-config prerequisite parse"
+      },
+      {
+        "anchor": "stride = JSON.parsefile(validation_results_path(\"gate4_covariance_stride_audit.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g2_g3_runner_scaffold<-covariance_stride_audit"
+        ],
+        "file": "gate4_g2_g3_runner_scaffold.jl",
+        "reason": "covariance-stride prerequisite parse"
+      },
+      {
+        "anchor": "init = JSON.parsefile(validation_results_path(\"gate4_init_provenance_ledger.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g2a_checkpoint<-init_provenance_ledger"
+        ],
+        "file": "gate4_g2a_sw_rgb_flux_checkpoint.jl",
+        "reason": "init-ledger prerequisite parse"
+      },
+      {
+        "anchor": "g2a = JSON.parsefile(validation_results_path(\"gate4_g2a_data_ledger.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g2b_checkpoint<-g2a_data_ledger"
+        ],
+        "file": "gate4_g2b_sw_rgb_variants_checkpoint.jl",
+        "reason": "g2a-ledger prerequisite parse"
+      },
+      {
+        "anchor": "JSON.parsefile(AC_RESULTS_JSON)",
+        "class": "own-artifact",
+        "edge_ids": [],
+        "file": "gate4_g3_acceptance_comparison.jl",
+        "reason": "waiting-path parse-back self-test of own results"
+      },
+      {
+        "anchor": "ledger = JSON.parsefile(RUN_LEDGER)",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g3_acceptance<-g3_run_ledger"
+        ],
+        "file": "gate4_g3_acceptance_comparison.jl",
+        "reason": "run-ledger parse (absence-tolerant edge)"
+      },
+      {
+        "anchor": "pf = JSON.parsefile(validation_results_path(\"gate4_g3_scoped_input_preflight.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:g3_executor<-scoped_preflight"
+        ],
+        "file": "gate4_g3_executor_checkpoint.jl",
+        "reason": "scoped-preflight prerequisite parse"
+      },
+      {
+        "anchor": "scaffold = JSON.parsefile(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:init_generation_manifest<-g2_g3_runner_scaffold"
+        ],
+        "file": "gate4_init_generation_manifest.jl",
+        "reason": "runner-scaffold prerequisite parse"
+      },
+      {
+        "anchor": "JSON.parsefile(path)",
+        "class": "edge",
+        "edge_ids": [
+          "dep:rulings_register<-g2_binding_scaffold",
+          "dep:rulings_register<-g2c_fetch_checkpoint",
+          "dep:rulings_register<-g2c_failure_ledger_4440"
+        ],
+        "file": "gate4_pending_rulings_register.jl",
+        "reason": "verify_json_source helper body (register edges + fixtures)"
+      },
+      {
+        "anchor": "d = JSON.parsefile(validation_results_path(name))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:r1_probe<-r2_finding_ledger:followup",
+          "dep:r1_probe<-option_b:followup"
+        ],
+        "file": "gate4_r1_release_provenance_probe.jl",
+        "reason": "dep_case_status helper body"
+      },
+      {
+        "anchor": "JSON.parsefile(validation_results_path(name))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:r2_exec_checkpoint<-r2_proof_scaffold",
+          "dep:r2_exec_checkpoint<-r2_finding_ledger:historical"
+        ],
+        "file": "gate4_r2_execution_checkpoint.jl",
+        "reason": "parse_artifact! helper body"
+      },
+      {
+        "anchor": "r1 = JSON.parsefile(validation_results_path(\"gate4_r1_release_provenance_probe.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:r2_proof_scaffold<-r1_probe"
+        ],
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "reason": "r1 prerequisite parse"
+      },
+      {
+        "anchor": "fin = JSON.parsefile(validation_results_path(\"gate4_r2_finding_ledger.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:r2_proof_scaffold<-r2_finding_ledger:historical"
+        ],
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "reason": "finding-ledger historical parse"
+      },
+      {
+        "anchor": "ob = JSON.parsefile(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:r2_proof_scaffold<-option_b:historical"
+        ],
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "reason": "option-B historical parse"
+      },
+      {
+        "anchor": "ip = JSON.parsefile(",
+        "class": "edge",
+        "edge_ids": [
+          "dep:r2_proof_scaffold<-init_provenance_ledger:historical"
+        ],
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "reason": "init-provenance historical parse"
+      },
+      {
+        "anchor": "dr = JSON.parsefile(validation_results_path(\"gate4_option_b_decision_record.json\"))",
+        "class": "edge",
+        "edge_ids": [
+          "dep:sw_init_checkpoint<-option_b"
+        ],
+        "file": "gate4_sw_init_generation_checkpoint.jl",
+        "reason": "option-B prerequisite parse"
+      },
+      {
+        "anchor": "String(JSON.parsefile(validation_results_path(name))[\"status\"])",
+        "class": "edge",
+        "edge_ids": [
+          "dep:v1_recon<-r1_probe:followup",
+          "dep:v1_recon<-r2_finding_ledger:followup",
+          "dep:v1_recon<-option_b:followup"
+        ],
+        "file": "gate4_v1_version_skew_recon.jl",
+        "reason": "ledger_status helper body (status-only)"
+      }
+    ],
+    "sites": [
+      {
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "line": 84,
+        "text": "JSON.parsefile(validation_results_path(name))"
+      },
+      {
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "line": 196,
+        "text": "sub_exists ? JSON.parsefile(sub_path) : nothing"
+      },
+      {
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "line": 304,
+        "text": "pf = ax_obj(try JSON.parsefile(validation_results_path("
+      },
+      {
+        "file": "gate4_a2_execution_checkpoint.jl",
+        "line": 306,
+        "text": "ob = ax_obj(try JSON.parsefile(validation_results_path("
+      },
+      {
+        "file": "gate4_a2_find_g_points_rerun_manifest.jl",
+        "line": 51,
+        "text": "a1 = JSON.parsefile(validation_results_path(\"gate4_a1_upstream_recon.json\"))"
+      },
+      {
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "line": 58,
+        "text": "fin = JSON.parsefile(PD_FINDING_LEDGER)"
+      },
+      {
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "line": 59,
+        "text": "sub = JSON.parsefile(PD_SUBMISSION_LEDGER)"
+      },
+      {
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "line": 77,
+        "text": "ob = JSON.parsefile("
+      },
+      {
+        "file": "gate4_a2_proof_driver_checkpoint.jl",
+        "line": 142,
+        "text": "scaffold = JSON.parsefile("
+      },
+      {
+        "file": "gate4_a2_reproduction_proof_scaffold.jl",
+        "line": 62,
+        "text": "chk = JSON.parsefile(validation_results_path(\"gate4_a2_execution_checkpoint.json\"))"
+      },
+      {
+        "file": "gate4_g1_objective_ratio.jl",
+        "line": 134,
+        "text": "JSON.parsefile(ledger_path)"
+      },
+      {
+        "file": "gate4_g2_binding_decision_scaffold.jl",
+        "line": 161,
+        "text": "m = JSON.parsefile(BDS_MANIFEST_JSON)"
+      },
+      {
+        "file": "gate4_g2_binding_decision_scaffold.jl",
+        "line": 319,
+        "text": "eval2_path = JSON.parsefile(BDS_MANIFEST_JSON)[\"inventory\"][end][\"path\"]"
+      },
+      {
+        "file": "gate4_g2_binding_decision_scaffold.jl",
+        "line": 444,
+        "text": "manifest = JSON.parsefile(BDS_MANIFEST_JSON)"
+      },
+      {
+        "file": "gate4_g2_g3_runner_scaffold.jl",
+        "line": 63,
+        "text": "cfg = JSON.parsefile(validation_results_path(\"gate4_stage_config_audit.json\"))"
+      },
+      {
+        "file": "gate4_g2_g3_runner_scaffold.jl",
+        "line": 64,
+        "text": "stride = JSON.parsefile(validation_results_path(\"gate4_covariance_stride_audit.json\"))"
+      },
+      {
+        "file": "gate4_g2a_sw_rgb_flux_checkpoint.jl",
+        "line": 140,
+        "text": "init = JSON.parsefile(validation_results_path(\"gate4_init_provenance_ledger.json\"))"
+      },
+      {
+        "file": "gate4_g2b_sw_rgb_variants_checkpoint.jl",
+        "line": 145,
+        "text": "g2a = JSON.parsefile(validation_results_path(\"gate4_g2a_data_ledger.json\"))"
+      },
+      {
+        "file": "gate4_g3_acceptance_comparison.jl",
+        "line": 254,
+        "text": "JSON.parsefile(AC_RESULTS_JSON)"
+      },
+      {
+        "file": "gate4_g3_acceptance_comparison.jl",
+        "line": 331,
+        "text": "ledger = JSON.parsefile(RUN_LEDGER)"
+      },
+      {
+        "file": "gate4_g3_executor_checkpoint.jl",
+        "line": 215,
+        "text": "pf = JSON.parsefile(validation_results_path(\"gate4_g3_scoped_input_preflight.json\"))"
+      },
+      {
+        "file": "gate4_init_generation_manifest.jl",
+        "line": 64,
+        "text": "scaffold = JSON.parsefile("
+      },
+      {
+        "file": "gate4_pending_rulings_register.jl",
+        "line": 46,
+        "text": "JSON.parsefile(path)"
+      },
+      {
+        "file": "gate4_r1_release_provenance_probe.jl",
+        "line": 232,
+        "text": "d = JSON.parsefile(validation_results_path(name))"
+      },
+      {
+        "file": "gate4_r2_execution_checkpoint.jl",
+        "line": 157,
+        "text": "JSON.parsefile(validation_results_path(name))"
+      },
+      {
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "line": 159,
+        "text": "r1 = JSON.parsefile(validation_results_path(\"gate4_r1_release_provenance_probe.json\"))"
+      },
+      {
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "line": 170,
+        "text": "fin = JSON.parsefile(validation_results_path(\"gate4_r2_finding_ledger.json\"))"
+      },
+      {
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "line": 196,
+        "text": "ob = JSON.parsefile("
+      },
+      {
+        "file": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "line": 218,
+        "text": "ip = JSON.parsefile("
+      },
+      {
+        "file": "gate4_sw_init_generation_checkpoint.jl",
+        "line": 133,
+        "text": "dr = JSON.parsefile(validation_results_path(\"gate4_option_b_decision_record.json\"))"
+      },
+      {
+        "file": "gate4_v1_version_skew_recon.jl",
+        "line": 181,
+        "text": "String(JSON.parsefile(validation_results_path(name))[\"status\"])"
+      }
+    ],
+    "source_glob": "validation/gate4*.jl"
+  },
+  "contract_satisfaction": {
+    "consumer_selftest_state": 0,
+    "inactive_branch": 1,
+    "n_edges": 34,
+    "satisfied": 33,
+    "verdicts": [
+      {
+        "active": true,
+        "consumer": "gate4_sw_init_generation_checkpoint.jl",
+        "consumer_sha256": "562d96140b1d9b32488eaaf17d4b11bba3f30e612f162250daf1f427aea6b48b",
+        "detail": "contract satisfied",
+        "id": "dep:sw_init_checkpoint<-option_b",
+        "kind": "exact",
+        "producer_case": "gate4_option_b_decision_record",
+        "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
+        "producer_status": "option_b_adopted_candidates_promoted",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "consumer_sha256": "d3f8d8a95e0a76daacff799d1d5fff6a21236e9021df4f61dff9cf257be8d3ef",
+        "detail": "contract satisfied",
+        "id": "dep:r2_proof_scaffold<-r1_probe",
+        "kind": "exact",
+        "producer_case": "gate4_r1_release_provenance_probe",
+        "producer_sha256": "8ff2ef73c0af01c38408e7c60fdd32e4461f07373c430a8139d77f5d1ce3be19",
+        "producer_status": "r1_sw_mapping_found_lw_ambiguous",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "consumer_sha256": "d3f8d8a95e0a76daacff799d1d5fff6a21236e9021df4f61dff9cf257be8d3ef",
+        "detail": "contract satisfied",
+        "id": "dep:r2_proof_scaffold<-r2_finding_ledger:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_r2_finding_ledger",
+        "producer_sha256": "b646a5195fcac858257524020f0d64ce9b8b5f98f7a0555a73caa43dc957707e",
+        "producer_status": "r2_ssi_resolved_drift_version_independent",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "consumer_sha256": "d3f8d8a95e0a76daacff799d1d5fff6a21236e9021df4f61dff9cf257be8d3ef",
+        "detail": "contract satisfied",
+        "id": "dep:r2_proof_scaffold<-option_b:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_option_b_decision_record",
+        "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
+        "producer_status": "option_b_adopted_candidates_promoted",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r2_sw_matching_version_proof_scaffold.jl",
+        "consumer_sha256": "d3f8d8a95e0a76daacff799d1d5fff6a21236e9021df4f61dff9cf257be8d3ef",
+        "detail": "contract satisfied",
+        "id": "dep:r2_proof_scaffold<-init_provenance_ledger:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_init_provenance_ledger",
+        "producer_sha256": "b433e0f73409900f5c3fca5acad8ed05a1017570ed9ee79bb97ed3c21bb4360a",
+        "producer_status": "acceptance_inits_complete",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r2_execution_checkpoint.jl",
+        "consumer_sha256": "4f8a2fbdc5f665fd02358c2cb0d50fdaaf23047a57a0f001cb0f82bbbcaa5307",
+        "detail": "contract satisfied",
+        "id": "dep:r2_exec_checkpoint<-r2_proof_scaffold",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_r2_sw_matching_version_proof_scaffold",
+        "producer_sha256": "27aadab09a5f839e9ffd46677267ac283b7c5a2c94a5d925f1ff66083abb4c34",
+        "producer_status": "r2_scaffold_historical_executed",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r2_execution_checkpoint.jl",
+        "consumer_sha256": "4f8a2fbdc5f665fd02358c2cb0d50fdaaf23047a57a0f001cb0f82bbbcaa5307",
+        "detail": "contract satisfied",
+        "id": "dep:r2_exec_checkpoint<-r2_finding_ledger:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_r2_finding_ledger",
+        "producer_sha256": "b646a5195fcac858257524020f0d64ce9b8b5f98f7a0555a73caa43dc957707e",
+        "producer_status": "r2_ssi_resolved_drift_version_independent",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_reproduction_proof_scaffold.jl",
+        "consumer_sha256": "1f090859c0394bd8435c829e2ab0744af26f9d7b06d7a9de4de30f5f007fa64e",
+        "detail": "contract satisfied",
+        "id": "dep:a2_proof_scaffold<-a2_exec_checkpoint",
+        "kind": "set",
+        "producer_case": "gate4_a2_execution_checkpoint",
+        "producer_sha256": "eeac2f8e105249fb4575ea191793a94897e6233cd83442f37f23e2548b446d3a",
+        "producer_status": "a2_execution_checkpoint_historical_executed",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_proof_driver_checkpoint.jl",
+        "consumer_sha256": "301fac0d451b70eeaa533065a0678b3374035e80576d94c60356e8168e30c49d",
+        "detail": "contract satisfied",
+        "id": "dep:a2_proof_driver<-a2_proof_scaffold",
+        "kind": "exact",
+        "producer_case": "gate4_a2_reproduction_proof_scaffold",
+        "producer_sha256": "7d02a3947bd988fc6d90b61dca1fa9f89b544cd93e4f00537fd168ae08bf5639",
+        "producer_status": "a2_proof_scaffold_ready",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_proof_driver_checkpoint.jl",
+        "consumer_sha256": "301fac0d451b70eeaa533065a0678b3374035e80576d94c60356e8168e30c49d",
+        "detail": "contract satisfied",
+        "id": "dep:a2_proof_driver<-a2_proof_finding_ledger:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_a2_proof_finding_ledger",
+        "producer_sha256": "400749766689cc99a56721500830d094b2c3533c16afe4d177b86f8b0165c16c",
+        "producer_status": "a2_candidates_sensitivity_only_not_promotable",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_proof_driver_checkpoint.jl",
+        "consumer_sha256": "301fac0d451b70eeaa533065a0678b3374035e80576d94c60356e8168e30c49d",
+        "detail": "contract satisfied",
+        "id": "dep:a2_proof_driver<-a2_proof_submission_ledger:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_a2_proof_submission_ledger",
+        "producer_sha256": "583db5d2a7aee98acda5ebc0ddfe8f7f4299ce1476a5872e1d36f706f5ef9c4b",
+        "producer_status": "proof_run_submitted_awaiting_completion",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_proof_driver_checkpoint.jl",
+        "consumer_sha256": "301fac0d451b70eeaa533065a0678b3374035e80576d94c60356e8168e30c49d",
+        "detail": "contract satisfied",
+        "id": "dep:a2_proof_driver<-option_b:historical",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_option_b_decision_record",
+        "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
+        "producer_status": "option_b_adopted_candidates_promoted",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_execution_checkpoint.jl",
+        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "detail": "contract satisfied",
+        "id": "dep:a2_exec_checkpoint<-a2_submission_ledger:mode_selection",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_a2_submission_ledger",
+        "producer_sha256": "b5acee2153779acd988a7b226625ff118562433e843ce081cc524e37ffc5fdc1",
+        "producer_status": "a2_attempt2_completed_candidates_collected",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": false,
+        "consumer": "gate4_a2_execution_checkpoint.jl",
+        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "detail": "contract branch not exercised in the current mode; anchors verified",
+        "id": "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
+        "kind": "mode_dependent",
+        "status_only_contract": true,
+        "verdict": "inactive_branch"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_execution_checkpoint.jl",
+        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "detail": "contract satisfied",
+        "id": "dep:a2_exec_checkpoint<-a2_proof_finding_ledger:later_disposition",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_a2_proof_finding_ledger",
+        "producer_sha256": "400749766689cc99a56721500830d094b2c3533c16afe4d177b86f8b0165c16c",
+        "producer_status": "a2_candidates_sensitivity_only_not_promotable",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_execution_checkpoint.jl",
+        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "detail": "contract satisfied",
+        "id": "dep:a2_exec_checkpoint<-option_b:later_disposition",
+        "kind": "mode_dependent",
+        "producer_case": "gate4_option_b_decision_record",
+        "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
+        "producer_status": "option_b_adopted_candidates_promoted",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_a2_find_g_points_rerun_manifest.jl",
+        "consumer_sha256": "5a90eb68e4d1987939cbd3d4a313b34fb189e04f98a6669d20a70175c1fdd50f",
+        "detail": "contract satisfied",
+        "id": "dep:a2_rerun_manifest<-a1_upstream_recon",
+        "kind": "exact",
+        "producer_case": "gate4_a1_upstream_recon",
+        "producer_sha256": "0d865932b58a84222331c50ecc5846a301126b59ea393e3ee403524629a04b3d",
+        "producer_status": "a1_recon_no_exact_upstream_source_found",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_init_generation_manifest.jl",
+        "consumer_sha256": "94216fefbdba115e068ddc8ab55223d4481f41c4ac3e3f23f274c7214d49254b",
+        "detail": "contract satisfied",
+        "id": "dep:init_generation_manifest<-g2_g3_runner_scaffold",
+        "kind": "prefix",
+        "producer_case": "gate4_g2_g3_runner_scaffold",
+        "producer_sha256": "96206d6d93ebd9db4d052740ba2e3870820107fa59ff2eceba464572ccac8136",
+        "producer_status": "runner_scaffold_ready_historical_superseded",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g2_g3_runner_scaffold.jl",
+        "consumer_sha256": "e3adc40a1b214c682021353bf5f4e0279b637895345a1bd2ff4b73deee57a757",
+        "detail": "contract satisfied",
+        "id": "dep:g2_g3_runner_scaffold<-stage_config_audit",
+        "kind": "exact",
+        "producer_case": "gate4_stage_config_audit",
+        "producer_sha256": "91d232701ebbe40a5d8af12e16cf009077f961437a195fc9137ab0298f7ced9b",
+        "producer_status": "stage_config_audit_passed",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g2_g3_runner_scaffold.jl",
+        "consumer_sha256": "e3adc40a1b214c682021353bf5f4e0279b637895345a1bd2ff4b73deee57a757",
+        "detail": "contract satisfied",
+        "id": "dep:g2_g3_runner_scaffold<-covariance_stride_audit",
+        "kind": "exact",
+        "producer_case": "gate4_covariance_stride_audit",
+        "producer_sha256": "26a37633d6eaf629f1cff952476420c3135f1af4b1f5179b86f6fa1b331cba8a",
+        "producer_status": "covariance_stride_audit_passed",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g2a_sw_rgb_flux_checkpoint.jl",
+        "consumer_sha256": "8784247205760b21d21ddc046925cfcc19f8fdae78fbbb0742438382fabb6de3",
+        "detail": "contract satisfied",
+        "id": "dep:g2a_checkpoint<-init_provenance_ledger",
+        "kind": "exact",
+        "producer_case": "gate4_init_provenance_ledger",
+        "producer_sha256": "b433e0f73409900f5c3fca5acad8ed05a1017570ed9ee79bb97ed3c21bb4360a",
+        "producer_status": "acceptance_inits_complete",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g2b_sw_rgb_variants_checkpoint.jl",
+        "consumer_sha256": "6eeebd639d1c740b47464bc4cf2cc183fb638e61a5e29fd33833cc6321df5151",
+        "detail": "contract satisfied",
+        "id": "dep:g2b_checkpoint<-g2a_data_ledger",
+        "kind": "exact",
+        "producer_case": "gate4_g2a_data_ledger",
+        "producer_sha256": "671678c4a3d2564b5c77ee7ef7369ac0d6cb51212bd6eef609ee17e0cc8c9a39",
+        "producer_status": "sw_rgb_rel_training_fluxes_installed_and_verified",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g3_executor_checkpoint.jl",
+        "consumer_sha256": "7f881764fde5c26cf6f16ae289de698edbcfac3a9688144ae1c500bc443e1914",
+        "detail": "contract satisfied",
+        "id": "dep:g3_executor<-scoped_preflight",
+        "kind": "set",
+        "producer_case": "gate4_g3_scoped_input_preflight",
+        "producer_sha256": "ef7740cfc60aac1eb96e886234309380e569a6216190c163c40d1744fadfcb5b",
+        "producer_status": "g3_scoped_preflight_waiting_for_eval2",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g2_binding_decision_scaffold.jl",
+        "consumer_sha256": "04bc3ce042288e5a8a819783e0b99fea472c647111e4b40b13f81a36b2876df9",
+        "detail": "all 3 manifest-joined rows re-verified (label, sha, live size+hash); manifest status gate2_dataset_manifest_pending_eval2 recorded as info only",
+        "id": "dep:g2_binding_scaffold<-gate2_od_dataset_manifest:fingerprint_join",
+        "kind": "fingerprint_join",
+        "producer_case": "gate4_gate2_od_dataset_manifest",
+        "producer_sha256": "59abcced3beb9e671b8dc9568ebf0946ab4e70feedc7aa843b324a73631ff88b",
+        "producer_status": "gate2_dataset_manifest_pending_eval2",
+        "rows_checked": 3,
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_pending_rulings_register.jl",
+        "consumer_sha256": "527e8bb242c021480cb0715fea7d8f9803b8aee8c0e97803e5cefbb7eed29cb5",
+        "detail": "snapshot and live contract both satisfied",
+        "id": "dep:rulings_register<-g2_binding_scaffold",
+        "kind": "register_snapshot",
+        "producer_case": "gate4_g2_binding_decision_scaffold",
+        "producer_sha256": "8db2be8896247965da4f6287c7c4a8a14ca901fb0a8a206764980b9cfac87829",
+        "producer_status": "g2_binding_scaffold_ready_awaiting_rulings",
+        "register_recorded_sha256": "8db2be8896247965da4f6287c7c4a8a14ca901fb0a8a206764980b9cfac87829",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_pending_rulings_register.jl",
+        "consumer_sha256": "527e8bb242c021480cb0715fea7d8f9803b8aee8c0e97803e5cefbb7eed29cb5",
+        "detail": "snapshot and live contract both satisfied",
+        "id": "dep:rulings_register<-g2c_fetch_checkpoint",
+        "kind": "register_snapshot",
+        "producer_case": "gate4_g2c_eval2_fetch_checkpoint",
+        "producer_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
+        "producer_status": "g2c_checkpoint_blocked_by_quota",
+        "register_recorded_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_pending_rulings_register.jl",
+        "consumer_sha256": "527e8bb242c021480cb0715fea7d8f9803b8aee8c0e97803e5cefbb7eed29cb5",
+        "detail": "snapshot and live contract both satisfied",
+        "id": "dep:rulings_register<-g2c_failure_ledger_4440",
+        "kind": "register_snapshot",
+        "producer_case": "gate4_g2c_failure_ledger_4440",
+        "producer_sha256": "e7f2e458435a1ffdeab9abb2d45090cfc5959973e2a566c55b77fade1e78c571",
+        "producer_status": "g2c_job_4440_failed_disk_quota",
+        "register_recorded_sha256": "e7f2e458435a1ffdeab9abb2d45090cfc5959973e2a566c55b77fade1e78c571",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r1_release_provenance_probe.jl",
+        "consumer_sha256": "6d36e2c6e896f84486d8678def0b1c4705d91cfe5bcc3a4b27c5381de7b7917c",
+        "detail": "contract satisfied",
+        "id": "dep:r1_probe<-r2_finding_ledger:followup",
+        "kind": "exact",
+        "producer_case": "gate4_r2_finding_ledger",
+        "producer_sha256": "b646a5195fcac858257524020f0d64ce9b8b5f98f7a0555a73caa43dc957707e",
+        "producer_status": "r2_ssi_resolved_drift_version_independent",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_r1_release_provenance_probe.jl",
+        "consumer_sha256": "6d36e2c6e896f84486d8678def0b1c4705d91cfe5bcc3a4b27c5381de7b7917c",
+        "detail": "contract satisfied",
+        "id": "dep:r1_probe<-option_b:followup",
+        "kind": "exact",
+        "producer_case": "gate4_option_b_decision_record",
+        "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
+        "producer_status": "option_b_adopted_candidates_promoted",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_v1_version_skew_recon.jl",
+        "consumer_sha256": "89bb11d76a6599b8ceb3d30fbba1df27adcc7672e7c72cda23d0cc4a2831bd7f",
+        "detail": "contract satisfied",
+        "id": "dep:v1_recon<-r1_probe:followup",
+        "kind": "exact",
+        "producer_case": "gate4_r1_release_provenance_probe",
+        "producer_sha256": "8ff2ef73c0af01c38408e7c60fdd32e4461f07373c430a8139d77f5d1ce3be19",
+        "producer_status": "r1_sw_mapping_found_lw_ambiguous",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_v1_version_skew_recon.jl",
+        "consumer_sha256": "89bb11d76a6599b8ceb3d30fbba1df27adcc7672e7c72cda23d0cc4a2831bd7f",
+        "detail": "contract satisfied",
+        "id": "dep:v1_recon<-r2_finding_ledger:followup",
+        "kind": "exact",
+        "producer_case": "gate4_r2_finding_ledger",
+        "producer_sha256": "b646a5195fcac858257524020f0d64ce9b8b5f98f7a0555a73caa43dc957707e",
+        "producer_status": "r2_ssi_resolved_drift_version_independent",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_v1_version_skew_recon.jl",
+        "consumer_sha256": "89bb11d76a6599b8ceb3d30fbba1df27adcc7672e7c72cda23d0cc4a2831bd7f",
+        "detail": "contract satisfied",
+        "id": "dep:v1_recon<-option_b:followup",
+        "kind": "exact",
+        "producer_case": "gate4_option_b_decision_record",
+        "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
+        "producer_status": "option_b_adopted_candidates_promoted",
+        "status_only_contract": true,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g1_objective_ratio.jl",
+        "consumer_artifact_sha256": "d09c4e9ba1bc3635afe85cbbab0dbb6cfe97d4ee8eb80b63a2c19eaf0677300d",
+        "consumer_sha256": "d778d66c2817138db80745924d77798a70b44dd4967ffd5ff16405e0aac55b6c",
+        "detail": "outputs absent; ledger absent; allowed=[\"g1_waiting_for_optimizer_outputs\"]; consumer status=g1_waiting_for_optimizer_outputs",
+        "id": "dep:g1_objective_ratio<-g3_run_ledger",
+        "kind": "absence_tolerant",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g3_acceptance_comparison.jl",
+        "consumer_artifact_sha256": "bc06e3db05182ab1590fd29e423bfc1784a6986a84041515451c501609ac7a20",
+        "consumer_sha256": "851a8a1e9da2c7ebe1a491dbd71d476d882fed24413ef2bc6b326a2826e2abbe",
+        "detail": "outputs absent; ledger absent; allowed=[\"g3_acceptance_waiting_for_optimizer_outputs\"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs",
+        "id": "dep:g3_acceptance<-g3_run_ledger",
+        "kind": "absence_tolerant",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      }
+    ],
+    "violated": 0
+  },
+  "data_mode": "derivative_read_only_contract_audit",
+  "disclaimer": "derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts modeled faithfully (status-only contracts are hardening findings, not upgraded); no election, no state mutation, no unit execution, no submission/fetch/deletion/quota action.",
+  "failures": [],
+  "fixture_verdicts": {
+    "dangling_ledger_record_detected": true,
+    "duplicate_id_guard": true,
+    "e9_anchor_coverage_invariant": true,
+    "e9_ledger_state_matrix_validated": true,
+    "e9_selftest_classified": true,
+    "e9_truth_table_validated": true,
+    "fingerprint_row_issues_detected": true,
+    "inventory_hygiene_detected": true,
+    "malformed_artifact_detected": true,
+    "malformed_consumer_anchor_detected": true,
+    "malformed_manifest_schema_detected": true,
+    "multi_matched_ledger_record_detected": true,
+    "omitted_edge_union_detected": true,
+    "run_ledger_schema_validator": true,
+    "selftest_evidence_required": true,
+    "snapshot_staleness_detected": true,
+    "status_only_is_finding_not_failure": true,
+    "unaccounted_site_detected": true,
+    "unknown_kind_refuses": true,
+    "unknown_mode_axis_refuses": true
+  },
+  "gates": {
+    "census_reconciles_with_edge_linkage": "passed",
+    "fixtures": "passed",
+    "manifest_edge_count_34": "passed",
+    "manifest_ids_unique": "passed",
+    "manifest_schema_valid": "passed",
+    "no_contract_violations": "passed"
+  },
+  "hardening_findings": [
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:sw_init_checkpoint<-option_b"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:r2_proof_scaffold<-r1_probe"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:r2_proof_scaffold<-option_b:historical"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:r2_exec_checkpoint<-r2_proof_scaffold"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:a2_proof_scaffold<-a2_exec_checkpoint"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:a2_proof_driver<-a2_proof_scaffold"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:a2_proof_driver<-option_b:historical"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:a2_rerun_manifest<-a1_upstream_recon"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:init_generation_manifest<-g2_g3_runner_scaffold"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:g2_g3_runner_scaffold<-stage_config_audit"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:g2_g3_runner_scaffold<-covariance_stride_audit"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:g2a_checkpoint<-init_provenance_ledger"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:g2b_checkpoint<-g2a_data_ledger"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:g3_executor<-scoped_preflight"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:v1_recon<-r1_probe:followup"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:v1_recon<-r2_finding_ledger:followup"
+    },
+    {
+      "finding": "status-only contract (no case check); weakness, not a violation",
+      "id": "dep:v1_recon<-option_b:followup"
+    },
+    {
+      "finding": "consumer does not try/catch JSON.parsefile(RUN_LEDGER) and validate_run_ledger indexes the parsed value: an UNPARSEABLE OR PARSED-NON-OBJECT present ledger is an uncaught-exception gap with no faithful emitted status (G1 handles both cases as blocked_invalid); weakness, not a current violation (ledger absent)",
+      "id": "dep:g3_acceptance<-g3_run_ledger"
+    }
+  ],
+  "modes_observed": {
+    "a2": "historical",
+    "g3_run_ledger_present": false,
+    "r2": "historical"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "a71e654",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
+  "status": "dependency_contract_audit_consistent",
+  "structural_out_of_scope": {
+    "a2/r2 historical edges": "attempt strings, output/binary/sbatch hashes, job ids, outcome markers -- enforced in-unit",
+    "absence_tolerant": "full acceptance/objective logic -- this audit verifies the branch statuses and the reviewed-complete ledger schema only",
+    "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
+    "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
+  },
+  "timestamp_utc": "2026-08-12T13:39:55.756"
+}
