@@ -9,14 +9,21 @@
 #     with shape/finite/nonnegative fail-closed checks.
 #   - coefficient log-RMSE (DIAGNOSTIC, NON-BINDING, reported vs 0.02):
 #     worst *_molar_absorption_coeff log-RMSE from recovery_metrics. This
-#     is NOT the campaign's "OD log-RMSE": true OD requires evaluating
-#     optical depths for the fixed atmospheres/gas states and remains an
-#     explicit UNEVALUATED gate.
-#   - final/target objective ratio (<= 1.05): UNEVALUATED gate pending the
-#     G1 objective machinery unit.
-# Because two acceptance gates are unevaluated, the overall status after a
-# metric run is ALWAYS g3_acceptance_incomplete_pending_objective_and_od --
-# never a pass.
+#     is NOT the campaign's "OD log-RMSE": true OD remains an explicit
+#     UNEVALUATED gate HERE. The SW parity precondition is satisfied
+#     (gate4_sw_od_parity.jl 13/13) and the aggregation-independent
+#     matched-state OD evaluator is implemented
+#     (gate4_g2_matched_state_od_evaluator.jl 28/28), but the BINDING
+#     Gate-2 runner (dataset choice, aggregation, log-RMSE) remains
+#     unresolved/unimplemented pending recorded rulings.
+#   - final/target objective ratio (<= 1.05): UNEVALUATED gate HERE. The
+#     Gate-1 refusing runner is IMPLEMENTED (gate4_g1_objective_ratio.jl,
+#     self-tests green, archived published baseline bit-exact) but its
+#     live recovered result refuses pending G3 outputs + this unit's
+#     reviewed run ledger; this unit does not consume its result.
+# Because two acceptance gates are unevaluated in this unit, the overall
+# status after a metric run is ALWAYS
+# g3_acceptance_incomplete_pending_objective_and_od -- never a pass.
 #
 # PROVENANCE (concrete, not prose): metrics run ONLY when
 # validation/results/gate4_g3_run_ledger.json exists (written at post-G3
@@ -260,8 +267,15 @@ function acceptance_main()
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "selftests" => tests,
         "unevaluated_acceptance_gates" => [
-            "final/target objective ratio <= 1.05 (G1 objective machinery unit)",
-            "true OD log-RMSE <= 0.02 (optical-depth evaluation for the fixed atmospheres; coefficient log-RMSE is only a diagnostic)"],
+            "final/target objective ratio <= 1.05: runner IMPLEMENTED " *
+            "(gate4_g1_objective_ratio.jl, refusing) but its live result " *
+            "refuses pending recovered outputs + reviewed run ledger; " *
+            "not consumed by this unit",
+            "true OD log-RMSE <= 0.02: SW parity satisfied + " *
+            "aggregation-independent matched-state evaluator IMPLEMENTED " *
+            "(gate4_g2_matched_state_od_evaluator.jl); BINDING runner " *
+            "unimplemented pending dataset/aggregation rulings; " *
+            "coefficient log-RMSE is only a diagnostic"],
         "binding_metric" => "weight relative L1 <= $WEIGHT_REL_L1_ACCEPT " *
             "(gpoint_weights: LW planck-derived, SW solar-derived)",
         "malformed_cases_covered" => [
@@ -363,14 +377,18 @@ function acceptance_main()
         "disclaimer" => status == "g3_acceptance_failed_weight_l1" ?
             "binding weight rel-L1 exceeded 0.02 in at least one band: " *
             "EXPLICIT acceptance failure; monitor review required." :
-            "two acceptance gates unevaluated (objective ratio, true OD " *
-            "log-RMSE); this status is NEVER a pass; monitor review " *
+            "two acceptance gates unevaluated in this unit (objective " *
+            "ratio: implemented refusing runner, not consumed here; true " *
+            "OD log-RMSE: evaluator implemented, binding runner pending " *
+            "rulings); this status is NEVER a pass; monitor review " *
             "required."))
     write_results(result, ["# Gate-4 G3 acceptance comparison", "",
         status_render_md(status), "",
         "See JSON for per-band binding weight rel-L1 and diagnostic " *
-        "coefficient log-RMSE; objective ratio and true OD remain " *
-        "unevaluated gates."])
+        "coefficient log-RMSE; objective ratio (implemented refusing " *
+        "runner gate4_g1_objective_ratio.jl) and true OD (evaluator " *
+        "implemented; binding runner pending rulings) remain unevaluated " *
+        "gates in this unit."])
     println(status_render_console(status))
     return status == "g3_acceptance_failed_weight_l1" ? 1 : 0
 end

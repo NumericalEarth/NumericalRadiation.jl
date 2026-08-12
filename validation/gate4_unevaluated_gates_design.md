@@ -1,10 +1,28 @@
-# Gate-4 design note: the two unevaluated acceptance gates (rev 2)
+# Gate-4 design note: the two unevaluated acceptance gates (rev 3)
 
-**Status: DESIGN ONLY — neither gate is implemented.** Rev 2 supersedes
-the version in 99029f3 after monitor interface audit: the Gate-1 objective
-definition there (recovered-upstream-objective / published-upstream-
-objective, relative-base pass, "published floor") was WRONG and is
-withdrawn; the Gate-2 OD-parity assumption overstated G1's SW coverage.
+**Status (rev 3, 2026-08-12): PARTIALLY IMPLEMENTED — both gates remain
+UNEVALUATED on recovered outputs.** Implementation state:
+
+- **Gate 1: runner IMPLEMENTED** (`gate4_g1_objective_ratio.jl`) as a
+  refusing runner: its live recovered result refuses pending the G3
+  optimizer outputs and a reviewed run ledger
+  (`g1_waiting_for_optimizer_outputs`). Self-tests are green, including
+  bit-exact reproduction of the archived published-pair baseline
+  (0.18218645425029933, rel diff 0.0) — published numbers are self-test
+  context only, never recovered acceptance.
+- **Gate 2: the SW parity precondition is SATISFIED**
+  (`gate4_sw_od_parity.jl`, 13/13) **and the aggregation-independent
+  matched-state OD evaluator is IMPLEMENTED**
+  (`gate4_g2_matched_state_od_evaluator.jl`, 28/28). The BINDING Gate-2
+  runner (dataset choice, aggregation, log-RMSE computation) remains
+  UNRESOLVED and UNIMPLEMENTED pending the recorded dataset/aggregation
+  rulings.
+
+Rev 2 superseded the version in 99029f3 after monitor interface audit:
+the Gate-1 objective definition there (recovered-upstream-objective /
+published-upstream-objective, relative-base pass, "published floor") was
+WRONG and is withdrawn; the Gate-2 OD-parity assumption overstated G1's
+SW coverage.
 
 ## Gate 1: final objective / hard target ≤ 1.05
 
@@ -15,15 +33,19 @@ against a hard target of 1.0; `official_training` reports it as
 "final objective / hard target". It is NOT a ratio of upstream optimizer
 costs.
 
-**Design** (`gate4_g3_objective_ratio.jl`, refusing runner):
-- Load the recovered definitions via the package API
+**IMPLEMENTED** as `gate4_g1_objective_ratio.jl` (refusing runner):
+- Loads the recovered definitions via the package API
   (`read_ecckd_tabulated_gas_optics` on the recovered paths).
-- Evaluate the package accuracy path: `REDUCED_CASES` → `case_metrics` →
-  `hard_objective`; require `hard_objective.value / 1.0 <= 1.05`.
+- Evaluates the package accuracy path: `REDUCED_CASES` → `case_metrics` →
+  `hard_objective`; requires `hard_objective.value / 1.0 <= 1.05` on the
+  recovered pair evaluated JOINTLY.
 - Provenance gating identical to the acceptance unit (strict run-ledger +
-  hash match). Self-tests: published models through the same path
-  (recording their values as context), perturbed candidate must raise the
-  objective, malformed inputs fail-closed.
+  hash match, structural gate before evaluation, boundary-compat
+  flag-pattern equality with the published pair). Self-tests green:
+  published pair through the same path reproduces the archived baseline
+  bit-exactly (context only), perturbed candidate raises the objective,
+  malformed inputs fail-closed (six-rung refusal ladder fixtures).
+- Live status refuses honestly until G3 outputs + reviewed ledger exist.
 - NOTE (outstanding, separate validation): the full real-data UPSTREAM
   objective/floor comparison remains unimplemented and unclaimed —
   `gate4_objective_assembly_g1` is explicitly synthetic and supports
@@ -39,12 +61,10 @@ Per-gas ODs are DIAGNOSTICS only: relative-linear minor-gas contributions
 can legitimately be negative, so per-gas log comparisons are not
 well-posed as a binding metric.
 
-**Parity precondition (monitor audit)**: G1 proved per-gas OD
-reconstruction parity for **LW only**. The G1 SW section consumed
-upstream-provided total gas OD + Rayleigh and validated direct RT — SW
-candidate-side OD reconstruction is **not yet parity-proven**. A
-parity-first stage is therefore mandatory before Gate 2 can bind for SW
-(plan below).
+**Parity precondition (monitor audit): SATISFIED.** G1 proved per-gas OD
+reconstruction parity for LW (8/8); the SW gap it left was closed by
+`gate4_sw_od_parity.jl` (13/13 green, commit 47a5671) — SW binding of
+Gate 2 is now authorized on the parity axis.
 
 **Dataset**: UNRESOLVED pending review — the candidate fixed set is the
 exact union of the optimizer training scenarios (20 LW plain + 16 SW rgb
@@ -60,24 +80,27 @@ TOTAL OD only, with counts of excluded pairs reported; no silent
 clamping of negative totals (a negative total absorption OD is a
 finding, not a clamp).
 
-## Parity-first true-OD plan (proposal)
+## Parity-first true-OD plan (status)
 
-1. **SW OD parity unit** (read-only): reconstruct SW per-gas and total
-   ODs from the PUBLISHED SW32 definition via the g4 bilinear chain and
-   compare against the pinned `run_ckd` smoke reference
-   (`g1-references/sw32_run_ckd_smoke.nc`, which carries per-gas
-   `optical_depth` for exactly SIX gases — composite, h2o, o3, co2, ch4,
-   n2o — at 32 g-points × 54 layers × 50 columns) at Float32
-   storage precision — the exact analog of the LW G1 OD gates. Only a
-   green SW parity unit authorizes SW Gate-2 binding.
-2. **Matched-state OD evaluator**: given a definition + a concentration
-   scenario file, produce total absorption OD (ex-Rayleigh) on the
-   scenario's (column, layer) states via the parity-proven chain; LW
-   binding immediately, SW binding after step 1.
-3. **Gate-2 runner**: acceptance-unit-style refusing runner over the
-   agreed fixed dataset union, run-ledger gated, self-tests (self-zero,
-   perturbation-fails, structural/shape fail-closed, excluded-pair
-   accounting).
+1. **SW OD parity unit — DONE** (`gate4_sw_od_parity.jl`, 13/13 green):
+   reconstructed SW per-gas and total ODs from the PUBLISHED SW32
+   definition via the g4 bilinear chain against the pinned `run_ckd`
+   smoke reference (six gases, 32 g-points × 54 layers × 50 columns) at
+   Float32 storage precision. SW Gate-2 binding authorized.
+2. **Matched-state OD evaluator — DONE**
+   (`gate4_g2_matched_state_od_evaluator.jl`, 28/28 green,
+   aggregation-independent): definition + stacked-axis scenario file →
+   total absorption OD ex-Rayleigh on the matched states; caller-explicit
+   `active_absorption_gases` (upstream-pinned gas-scope semantics, never
+   a definition∩scenario intersection); per-file constituent_id mapping;
+   canonical-schema invariants; raw totals unclamped with negativity
+   findings.
+3. **Gate-2 runner — UNIMPLEMENTED (pending rulings)**:
+   acceptance-unit-style refusing runner over the agreed fixed dataset
+   union, run-ledger gated, self-tests (self-zero, perturbation-fails,
+   structural/shape fail-closed, excluded-pair accounting). Requires the
+   recorded BINDING dataset choice and aggregation decision before
+   implementation.
 
 ## Shared preconditions (both gates)
 
@@ -99,19 +122,25 @@ and `ecckd_published_recovery_target.jl`), not three:
 Thresholds 4–5 are candidate-minus-published comparisons on IDENTICAL
 `REDUCED_CASES`: the recovered pair's forcing errors / heating RMSE may
 not regress beyond the margins relative to the published pair evaluated
-through the same path. **Exact aggregation UNRESOLVED**: no existing
-implementation defines the regression computation (the targets files
-declare the margins; `reduced_ecckd_accuracy.jl`'s worst-TOA/surface
-forcing and heating-RMSE machinery serves the new-band-scheme metrics).
-The likely semantics — max/worst-case forcing delta and heating-RMSE
-delta across the identical case set — must be verified against canonical
-intent and RECORDED as a decision before implementation, not invented.
-Gate 1 (`hard_objective ≤ 1.05`) is NOT assumed to subsume them.
+through the same path. **Exact aggregation UNRESOLVED**: the full
+primary-source evidence audit is recorded in
+`gate4_regression_margin_semantics_evidence.md` — no source computes
+either margin quantity, the declarations predate the published-model
+evaluator, and four open axes (paired-max vs difference-of-maxima;
+TOA/surface combination; per-case vs pooled heating RMSE; signed vs
+absolute deltas) require a recorded ruling before implementation, not
+invention. Gate 1 (`hard_objective ≤ 1.05`) is NOT assumed to subsume
+them.
 
 ## Sequencing
 
 Acceptance = the FIVE-threshold conjunction over **the recovered
-LW32+SW32 pair evaluated jointly**, plus monitor review. Gate-2 SW
-additionally requires the SW parity unit green. Thresholds 4–5
-additionally require the recorded aggregation decision. Nothing here
-claims implementation or a pass.
+LW32+SW32 pair evaluated jointly**, plus monitor review. The SW parity
+requirement for Gate-2 is satisfied; the Gate-2 binding runner and
+thresholds 4–5 additionally require the recorded dataset/aggregation
+rulings. Nothing here claims a recovered pass: the implemented CAMPAIGN
+RUNNERS (Gate-1 objective-ratio, G3 acceptance comparison) refuse until
+a reviewed run ledger and recovered pair exist, while the matched-state
+OD evaluator remains a NON-BINDING aggregation-independent library that
+evaluates caller-supplied files and carries no campaign-ledger refusal
+of its own.
