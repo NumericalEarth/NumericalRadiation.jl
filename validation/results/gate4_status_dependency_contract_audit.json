@@ -1,7 +1,8 @@
 {
   "case": "gate4_status_dependency_contract_audit",
   "census": {
-    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each ledger record matched EXACTLY once; union(served IDs) must equal the manifest",
+    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each parsefile ledger record matched EXACTLY once; union(served IDs) must equal the manifest. The rulings intake deliberately uses a coupled BYTE-snapshot parse (one read supplies digest AND content, closing the hash-vs-parse TOCTOU), so it is NOT a parsefile site: its helper is carried as a declared-snapshot-extension ledger record whose anchor reconciliation binds directly against the consumer source (and which must never match a live parsefile site). n_sites therefore counts live JSON.parsefile sites only; the extension is counted separately.",
+    "n_declared_snapshot_extensions": 1,
     "n_sites": 31,
     "site_ledger": [
       {
@@ -264,6 +265,16 @@
         "reason": "init-provenance historical parse"
       },
       {
+        "anchor": "JSON.parse(String(bytes))",
+        "class": "declared-snapshot-extension",
+        "edge_ids": [
+          "dep:rulings_intake<-pending_rulings_register",
+          "dep:rulings_intake<-rulings_assignment:authority_input"
+        ],
+        "file": "gate4_rulings_intake_contract.jl",
+        "reason": "ric_snapshot helper body: a coupled BYTE snapshot (one read supplies digest AND parsed content, closing the hash-vs-parse TOCTOU), deliberately NOT JSON.parsefile -- declared here as a non-parsefile extension, source-bound directly by reconcile instead of via the parsefile census; the same helper also re-reads the unit's own previous artifact and fixture tmp files"
+      },
+      {
         "anchor": "dr = JSON.parsefile(validation_results_path(\"gate4_option_b_decision_record.json\"))",
         "class": "edge",
         "edge_ids": [
@@ -446,8 +457,8 @@
   "contract_satisfaction": {
     "consumer_selftest_state": 0,
     "inactive_branch": 1,
-    "n_edges": 34,
-    "satisfied": 33,
+    "n_edges": 36,
+    "satisfied": 35,
     "verdicts": [
       {
         "active": true,
@@ -803,6 +814,30 @@
       },
       {
         "active": true,
+        "consumer": "gate4_rulings_intake_contract.jl",
+        "consumer_sha256": "3659cf61dc0883957ad9970ed5425ad969d7ed920ebef8820df037f3d4a8b6ad",
+        "detail": "contract satisfied",
+        "id": "dep:rulings_intake<-pending_rulings_register",
+        "kind": "exact",
+        "producer_case": "gate4_pending_rulings_register",
+        "producer_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+        "producer_status": "pending_rulings_register_recorded",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_rulings_intake_contract.jl",
+        "consumer_artifact_sha256": "99376a768a4a07aac337cc7b6ecda4027f6ffdd6e60cd3fecb7b722e9d3bd0ce",
+        "consumer_sha256": "3659cf61dc0883957ad9970ed5425ad969d7ed920ebef8820df037f3d4a8b6ad",
+        "detail": "register healthy; authority input absent; allowed=[\"rulings_intake_awaiting_assignments\"]; consumer status=rulings_intake_awaiting_assignments",
+        "id": "dep:rulings_intake<-rulings_assignment:authority_input",
+        "kind": "authority_input",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
         "consumer": "gate4_r1_release_provenance_probe.jl",
         "consumer_sha256": "6d36e2c6e896f84486d8678def0b1c4705d91cfe5bcc3a4b27c5381de7b7917c",
         "detail": "contract satisfied",
@@ -895,7 +930,11 @@
   "disclaimer": "derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts modeled faithfully (status-only contracts are hardening findings, not upgraded); no election, no state mutation, no unit execution, no submission/fetch/deletion/quota action.",
   "failures": [],
   "fixture_verdicts": {
+    "authority_input_manifest_invariants": true,
+    "authority_input_missing_token_detected": true,
+    "authority_input_truth_table_validated": true,
     "dangling_ledger_record_detected": true,
+    "declared_extension_anchor_missing_detected": true,
     "duplicate_id_guard": true,
     "e9_anchor_coverage_invariant": true,
     "e9_ledger_state_matrix_validated": true,
@@ -908,10 +947,13 @@
     "malformed_manifest_schema_detected": true,
     "multi_matched_ledger_record_detected": true,
     "omitted_edge_union_detected": true,
+    "register_source_substitution_detected": true,
     "run_ledger_schema_validator": true,
     "selftest_evidence_required": true,
+    "snapshot_couples_digest_and_content": true,
     "snapshot_staleness_detected": true,
     "status_only_is_finding_not_failure": true,
+    "try_sha_nonthrowing": true,
     "unaccounted_site_detected": true,
     "unknown_kind_refuses": true,
     "unknown_mode_axis_refuses": true
@@ -919,7 +961,7 @@
   "gates": {
     "census_reconciles_with_edge_linkage": "passed",
     "fixtures": "passed",
-    "manifest_edge_count_34": "passed",
+    "manifest_edge_count_36": "passed",
     "manifest_ids_unique": "passed",
     "manifest_schema_valid": "passed",
     "no_contract_violations": "passed"
@@ -1009,16 +1051,17 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "a71e654",
+    "generated_from_head": "46d4c06",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
-  "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
+  "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
   "status": "dependency_contract_audit_consistent",
   "structural_out_of_scope": {
     "a2/r2 historical edges": "attempt strings, output/binary/sbatch hashes, job ids, outcome markers -- enforced in-unit",
     "absence_tolerant": "full acceptance/objective logic -- this audit verifies the branch statuses and the reviewed-complete ledger schema only",
+    "authority_input": "assignment schema, register pin, authority, and vocabulary enforcement -- lives in the rulings intake itself; this audit projects register health, source presence, and parse shape into the faithful allowed status set only",
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T13:39:55.756"
+  "timestamp_utc": "2026-08-12T14:36:56.472"
 }

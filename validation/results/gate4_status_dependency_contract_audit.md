@@ -2,7 +2,7 @@
 
 Status: **dependency_contract_audit_consistent**
 
-status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope
+status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope
 
 derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts modeled faithfully (status-only contracts are hardening findings, not upgraded); no election, no state mutation, no unit execution, no submission/fetch/deletion/quota action.
 
@@ -10,14 +10,14 @@ derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts m
 |---|---|
 | census_reconciles_with_edge_linkage | passed |
 | fixtures | passed |
-| manifest_edge_count_34 | passed |
+| manifest_edge_count_36 | passed |
 | manifest_ids_unique | passed |
 | manifest_schema_valid | passed |
 | no_contract_violations | passed |
 
 Census: 31 parse sites reconciled with edge linkage; modes a2=historical r2=historical g3_ledger_present=false.
 
-## Contract verdicts (33 satisfied / 1 inactive / 0 selftest-state / 0 violated)
+## Contract verdicts (35 satisfied / 1 inactive / 0 selftest-state / 0 violated)
 
 - dep:sw_init_checkpoint<-option_b [exact]: **satisfied** -- contract satisfied
 - dep:r2_proof_scaffold<-r1_probe [exact]: **satisfied** -- contract satisfied
@@ -46,6 +46,8 @@ Census: 31 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:rulings_register<-g2_binding_scaffold [register_snapshot]: **satisfied** -- snapshot and live contract both satisfied
 - dep:rulings_register<-g2c_fetch_checkpoint [register_snapshot]: **satisfied** -- snapshot and live contract both satisfied
 - dep:rulings_register<-g2c_failure_ledger_4440 [register_snapshot]: **satisfied** -- snapshot and live contract both satisfied
+- dep:rulings_intake<-pending_rulings_register [exact]: **satisfied** -- contract satisfied
+- dep:rulings_intake<-rulings_assignment:authority_input [authority_input]: **satisfied** -- register healthy; authority input absent; allowed=["rulings_intake_awaiting_assignments"]; consumer status=rulings_intake_awaiting_assignments
 - dep:r1_probe<-r2_finding_ledger:followup [exact]: **satisfied** -- contract satisfied
 - dep:r1_probe<-option_b:followup [exact]: **satisfied** -- contract satisfied
 - dep:v1_recon<-r1_probe:followup [exact]: **satisfied** -- contract satisfied
@@ -80,7 +82,8 @@ Census: 31 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 
 - **a2/r2 historical edges**: attempt strings, output/binary/sbatch hashes, job ids, outcome markers -- enforced in-unit
 - **absence_tolerant**: full acceptance/objective logic -- this audit verifies the branch statuses and the reviewed-complete ledger schema only
+- **authority_input**: assignment schema, register pin, authority, and vocabulary enforcement -- lives in the rulings intake itself; this audit projects register health, source presence, and parse shape into the faithful allowed status set only
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `a71e654` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `46d4c06` (pre-own-commit).

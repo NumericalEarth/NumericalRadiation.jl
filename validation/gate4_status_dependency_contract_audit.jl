@@ -4,10 +4,11 @@
 # SCOPE (explicit, monitor-directed): this audit verifies the STATUS/CASE
 # PROJECTION of every literal JSON.parsefile-MEDIATED cross-artifact
 # contract in validation/gate4*.jl (other parsing forms are outside the
-# censused surface), plus three declared per-kind extensions -- the
+# censused surface), plus four declared per-kind extensions -- the
 # register snapshot-hash contract, the E9 prerequisite truth table with
-# reviewed-complete ledger schema, and the fingerprint-join post-hoc row
-# contract.
+# reviewed-complete ledger schema, the fingerprint-join post-hoc row
+# contract, and the authority-input truth table (rulings intake:
+# register health x source presence x parse shape).
 # STRUCTURAL requirements beyond that projection (attempt strings, output
 # hashes, arithmetic identities, boundary flags, D-key sets) are enforced
 # in-unit by the consumers themselves and are OUT OF SCOPE here; they are
@@ -17,9 +18,14 @@
 #   - a UNIFIED parse-site ledger classifies every live JSON.parsefile
 #     site as `edge` (carrying the exact served edge_id(s)) or an
 #     excluded class; reconciliation requires every live site matched
-#     exactly once, every ledger record matched by a live site, AND
-#     union(served edge IDs) == the manifest ID set -- an omitted known
-#     edge can no longer pass;
+#     exactly once, every parsefile ledger record matched by a live
+#     site, AND union(served edge IDs) == the manifest ID set -- an
+#     omitted known edge can no longer pass. The rulings intake's
+#     coupled byte-snapshot helper is deliberately NOT JSON.parsefile
+#     (it closes the hash-vs-parse TOCTOU); it is carried as a
+#     declared-snapshot-extension record, source-bound directly by
+#     reconciliation and forbidden from matching any live parsefile
+#     site;
 #   - unknown contract kinds REFUSE (never fall through);
 #   - snapshot-staleness and E9 branch validation are PURE functions used
 #     identically in production and fixtures; the E9 present-ledger
@@ -36,6 +42,7 @@ include(joinpath(@__DIR__, "validation_results.jl"))
 
 using Dates
 import JSON
+import SHA
 
 const DCA_RESULTS_JSON =
     validation_results_path("gate4_status_dependency_contract_audit.json")
@@ -56,10 +63,40 @@ drefuse(reason) = throw(DcaRefusal(reason))
 dca_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
 dca_str(x) = x isa AbstractString ? String(x) : ""
 dca_sha(p) = split(strip(read(`sha256sum $p`, String)))[1]
+# nonthrowing current-state hash for live checks: a file vanishing
+# between an existence check and the hash (TOCTOU) is classified
+# stale/violated by the caller, never an uncaught crash
+dca_try_sha(p) = try
+    split(strip(read(`sha256sum $p`, String)))[1]
+catch
+    nothing
+end
+
+# nonthrowing BYTE snapshot for live checks where digest and parsed
+# content must correspond: one read(path) supplies both, so a mid-run
+# file replacement can never pair bytes B's content with bytes A's
+# digest (mirrors the rulings intake's ric_snapshot)
+function dca_snapshot(path)
+    bytes = try
+        read(path)
+    catch
+        return (readable = false, sha = nothing, parse_success = false,
+                object_ok = false, data = nothing)
+    end
+    sha = bytes2hex(SHA.sha256(bytes))
+    raw = try
+        JSON.parse(String(bytes))
+    catch
+        return (readable = true, sha = sha, parse_success = false,
+                object_ok = false, data = nothing)
+    end
+    return (readable = true, sha = sha, parse_success = true,
+            object_ok = raw isa AbstractDict, data = raw)
+end
 
 const DCA_KNOWN_KINDS = (:exact, :set, :prefix, :mode_dependent,
                          :register_snapshot, :fingerprint_join,
-                         :absence_tolerant)
+                         :absence_tolerant, :authority_input)
 
 # --- copied VERBATIM from gate4_g3_acceptance_comparison.jl:91-113 (that
 # unit ends in exit(main()) and must never be include()d) ------------------
@@ -96,6 +133,21 @@ dca_snapshot_stale(recorded, cur_sha, cur_case, cur_status) =
     dca_str(get(recorded, "sha256", "")) != cur_sha ||
     dca_str(get(recorded, "verified_case", "")) != cur_case ||
     dca_str(get(recorded, "verified_status", "")) != cur_status
+
+# authority-input truth table (pure; fixture-tested): the faithful
+# rulings-intake statuses given register health, source presence, and
+# parse shape. The intake's deeper semantics (assignment schema, pin,
+# authority, vocabulary) are its own fail-closed enforcement -- for a
+# present parseable object BOTH recorded and refused are faithful states.
+function dca_authority_input_allowed(reg_stale, present, parse_success,
+                                     object_ok)
+    reg_stale && return ["rulings_intake_blocked_register_stale"]
+    present || return ["rulings_intake_awaiting_assignments"]
+    (parse_success === true && object_ok === true) ||
+        return ["rulings_intake_refused"]
+    return ["rulings_intake_assignments_recorded",
+            "rulings_intake_refused"]
+end
 
 # E9 prerequisite truth table (FAITHFUL to both consumers: G1 and G3
 # check recovered OUTPUTS before RUN_LEDGER):
@@ -404,6 +456,33 @@ const DCA_EDGES = [
   accepted = ["g2c_job_4440_failed_disk_quota"],
   expected_case = "gate4_g2c_failure_ledger_4440",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:rulings_intake<-pending_rulings_register",
+  consumer = "gate4_rulings_intake_contract.jl",
+  anchors = ["const RIC_EXPECTED_CASE = \"gate4_pending_rulings_register\"",
+             "const RIC_EXPECTED_STATUS = \"pending_rulings_register_recorded\"",
+             "ric_source_set_issues", "ric_source_staleness"],
+  producer = "gate4_pending_rulings_register.json", kind = :exact,
+  accepted = ["pending_rulings_register_recorded"],
+  expected_case = "gate4_pending_rulings_register",
+  consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:rulings_intake<-rulings_assignment:authority_input",
+  consumer = "gate4_rulings_intake_contract.jl",
+  # the producer is a HUMAN-AUTHORED input in validation/ (absent =
+  # legitimate awaiting state; never written by any unit); the intake's
+  # canonical artifact must faithfully track register health + source
+  # presence + parse shape
+  anchors = ["const RIC_ASSIGNMENT_PATH = joinpath(@__DIR__, \"gate4_rulings_assignment.json\")",
+             "present = isfile(RIC_ASSIGNMENT_PATH)",
+             "ric_current_status(reg_healthy, present, parse_success,",
+             "never_written_by_this_unit"],
+  producer = "gate4_rulings_assignment.json", kind = :authority_input,
+  accepted = ["rulings_intake_awaiting_assignments",
+              "rulings_intake_assignments_recorded",
+              "rulings_intake_blocked_register_stale",
+              "rulings_intake_refused"],
+  selftest_status = "rulings_intake_selftest_failed",
+  expected_case = "gate4_rulings_intake_contract",
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:r1_probe<-r2_finding_ledger:followup",
   consumer = "gate4_r1_release_provenance_probe.jl",
   anchors = ["r2_case, r2_status = dep_case_status(\"gate4_r2_finding_ledger.json\")"],
@@ -552,6 +631,20 @@ function dca_manifest_issues(edges)
             e.status_only == !e.consumer_checks_case ||
                 push!(issues, "edge $(e.id) status_only inconsistent with " *
                               "consumer_checks_case")
+        end
+        if haskey(p, :kind) && e.kind == :authority_input
+            haskey(p, :selftest_status) || push!(issues,
+                "edge $(get(p, :id, "?")) authority_input requires " *
+                "selftest_status")
+            if haskey(p, :accepted)
+                need = ["rulings_intake_assignments_recorded",
+                        "rulings_intake_awaiting_assignments",
+                        "rulings_intake_blocked_register_stale",
+                        "rulings_intake_refused"]
+                sort(collect(e.accepted)) == sort(need) || push!(issues,
+                    "edge $(get(p, :id, "?")) authority_input declared " *
+                    "status universe != the exact four intake tokens")
+            end
         end
         if haskey(p, :kind) && e.kind == :absence_tolerant
             for k in (:e9_tokens, :catches_ledger_parse_errors,
@@ -726,6 +819,18 @@ const DCA_SITE_LEDGER = [
   anchor = "ip = JSON.parsefile(",
   class = "edge", edge_ids = ["dep:r2_proof_scaffold<-init_provenance_ledger:historical"],
   reason = "init-provenance historical parse"),
+ (file = "gate4_rulings_intake_contract.jl",
+  anchor = "JSON.parse(String(bytes))",
+  class = "declared-snapshot-extension",
+  edge_ids = ["dep:rulings_intake<-pending_rulings_register",
+              "dep:rulings_intake<-rulings_assignment:authority_input"],
+  reason = "ric_snapshot helper body: a coupled BYTE snapshot (one read " *
+           "supplies digest AND parsed content, closing the " *
+           "hash-vs-parse TOCTOU), deliberately NOT JSON.parsefile -- " *
+           "declared here as a non-parsefile extension, source-bound " *
+           "directly by reconcile instead of via the parsefile census; " *
+           "the same helper also re-reads the unit's own previous " *
+           "artifact and fixture tmp files"),
  (file = "gate4_sw_init_generation_checkpoint.jl",
   anchor = "dr = JSON.parsefile(validation_results_path(\"gate4_option_b_decision_record.json\"))",
   class = "edge", edge_ids = ["dep:sw_init_checkpoint<-option_b"],
@@ -750,7 +855,11 @@ const DCA_STRUCTURAL_OUT_OF_SCOPE = Dict(
         "size+hash contract",
     "absence_tolerant" => "full acceptance/objective logic -- this audit " *
         "verifies the branch statuses and the reviewed-complete ledger " *
-        "schema only")
+        "schema only",
+    "authority_input" => "assignment schema, register pin, authority, " *
+        "and vocabulary enforcement -- lives in the rulings intake " *
+        "itself; this audit projects register health, source presence, " *
+        "and parse shape into the faithful allowed status set only")
 
 # ============================================================================
 # ENGINE
@@ -770,9 +879,13 @@ function dca_census()
     return sites
 end
 
-# reconciliation: every live site matched exactly once; every ledger
-# record matched by exactly one live site; union of served edge_ids ==
-# the manifest ID set (both directions)
+# reconciliation: every live JSON.parsefile site matched exactly once;
+# every parsefile ledger record matched by exactly one live site; a
+# declared-snapshot-extension record (a deliberately non-parsefile
+# coupled byte-snapshot site) is instead SOURCE-BOUND directly -- its
+# anchor must exist in the consumer source and must never match a live
+# parsefile site; union of served edge_ids == the manifest ID set (both
+# directions)
 function dca_reconcile(sites, ledger, manifest_ids)
     issues = String[]
     ledger_hits = zeros(Int, length(ledger))
@@ -789,8 +902,20 @@ function dca_reconcile(sites, ledger, manifest_ids)
             ledger_hits[matches[1]] += 1
         end
     end
-    # each ledger record must be matched by EXACTLY one live site
+    # each parsefile ledger record must be matched by EXACTLY one live
+    # site; declared snapshot extensions are verified against the source
     for (li, x) in enumerate(ledger)
+        if x.class == "declared-snapshot-extension"
+            ledger_hits[li] == 0 ||
+                push!(issues, "declared-snapshot-extension record " *
+                              "unexpectedly matched a live parsefile " *
+                              "site: $(x.file)")
+            cpath = joinpath(DCA_VALIDATION_DIR, x.file)
+            (isfile(cpath) && occursin(x.anchor, read(cpath, String))) ||
+                push!(issues, "DECLARED EXTENSION ANCHOR MISSING: " *
+                              "$(x.file) anchor $(first(x.anchor, 60))")
+            continue
+        end
         ledger_hits[li] == 0 &&
             push!(issues, "DANGLING ledger record (no live site): " *
                           "$(x.file) anchor $(first(x.anchor, 60))")
@@ -799,8 +924,7 @@ function dca_reconcile(sites, ledger, manifest_ids)
                           "live sites): $(x.file) anchor " *
                           "$(first(x.anchor, 60))")
     end
-    served = sort(unique(vcat([collect(x.edge_ids) for x in ledger
-                               if x.class == "edge"]...)))
+    served = sort(unique(vcat([collect(x.edge_ids) for x in ledger]...)))
     expected = sort(manifest_ids)
     if served != expected
         missing_e = setdiff(expected, served)
@@ -828,6 +952,32 @@ function dca_accepted_tokens(e, modes)
         return e.accepted_by_mode[axis_mode]
     end
     return e.accepted
+end
+
+# live register health AS THE INTAKE CHECKS IT: identity + the EXACT
+# five normalized full source paths (a substituted same-count list is
+# stale, mirroring the intake's ric_source_set_issues) + live re-hash;
+# any drift -> the intake blocks, so the authority-input allowed set
+# narrows to blocked_register_stale
+const DCA_REG_EXPECTED_SOURCE_PATHS = sort(normpath.([
+    validation_results_path("gate4_g2_binding_decision_scaffold.json"),
+    joinpath(DCA_VALIDATION_DIR,
+             "gate4_regression_margin_semantics_evidence.md"),
+    validation_results_path("gate4_g2c_eval2_fetch_checkpoint.json"),
+    validation_results_path("gate4_g2c_failure_ledger_4440.json"),
+    joinpath(DCA_VALIDATION_DIR, "gate4_g2c_quota_recovery_runbook.md")]))
+
+function dca_register_sources_stale(srcs)
+    srcs isa AbstractVector || return true
+    sort([normpath(dca_str(get(dca_obj(s), "path", ""))) for s in srcs]) ==
+        DCA_REG_EXPECTED_SOURCE_PATHS || return true
+    for s in srcs
+        d = dca_obj(s)
+        h = dca_try_sha(dca_str(get(d, "path", "")))
+        (h !== nothing && h == dca_str(get(d, "sha256", ""))) ||
+            return true
+    end
+    return false
 end
 
 function dca_edge_verdict(e, modes)
@@ -925,6 +1075,123 @@ function dca_edge_verdict(e, modes)
                 (gap ? " -- unparseable/non-object ledger is an " *
                        "uncaught-exception gap in this consumer (no " *
                        "faithful status exists)" : "") *
+                (verdict == "violated" ?
+                 " -- INCONSISTENT with the prerequisite state" :
+                 verdict == "consumer_selftest_state" ?
+                 " -- self-test failure state (evidence-corroborated), " *
+                 "classified explicitly, not a dependency inconsistency" :
+                 "")))
+    end
+
+    if e.kind == :authority_input
+        # the producer is a human-authored input in validation/ whose
+        # ABSENCE is a legitimate (awaiting) state, so the generic
+        # results-dir producer load below does not apply. The audit
+        # projects register health + source presence + parse shape into
+        # the faithful allowed set and verifies the intake's canonical
+        # artifact against it; the intake's deeper semantics are declared
+        # structurally out of scope.
+        # SOURCE-BOUND status tokens (as E9 does): every accepted token
+        # plus the selftest status must exist in the consumer source --
+        # consumer drift cannot leave the audit green
+        for tok in vcat(collect(e.accepted), [e.selftest_status])
+            occursin(tok, ctext) || return merge(rec,
+                Dict("verdict" => "violated",
+                     "detail" => "consumer source missing bound status " *
+                                 "token: $(first(tok, 70))"))
+        end
+        # ONE register byte snapshot per evaluation: identity, source
+        # staleness, and the fact-check digest all share it (digest and
+        # parsed content from the same read)
+        reg_snap = dca_snapshot(validation_results_path(
+            "gate4_pending_rulings_register.json"))
+        regd = dca_obj(reg_snap.data)
+        reg_identity_ok = reg_snap.object_ok &&
+            dca_str(get(regd, "case", "")) ==
+                "gate4_pending_rulings_register" &&
+            dca_str(get(regd, "status", "")) ==
+                "pending_rulings_register_recorded"
+        reg_stale = !reg_identity_ok ||
+            dca_register_sources_stale(get(regd, "sources", nothing))
+        # ONE input byte snapshot per evaluation, mirroring the intake
+        apath = joinpath(DCA_VALIDATION_DIR, String(e.producer))
+        present = isfile(apath)
+        in_snap = present ? dca_snapshot(apath) : nothing
+        parse_success = present ? in_snap.parse_success : nothing
+        object_ok = present ? in_snap.object_ok : nothing
+        allowed = dca_authority_input_allowed(reg_stale, present,
+                                              parse_success, object_ok)
+        # ONE consumer-artifact byte snapshot: the verified case/status
+        # and the recorded sha are guaranteed to describe the same bytes
+        art = validation_results_path(e.expected_case * ".json")
+        art_snap = dca_snapshot(art)
+        art_snap.readable || return merge(rec,
+            Dict("verdict" => "violated",
+                 "detail" => "consumer artifact missing/unreadable: $art"))
+        art_snap.object_ok || return merge(rec,
+            Dict("verdict" => "violated",
+                 "detail" => "consumer artifact unparseable/non-object"))
+        d = dca_obj(art_snap.data)
+        ccase = dca_str(get(d, "case", ""))
+        cstat = dca_str(get(d, "status", ""))
+        rec["consumer_artifact_sha256"] = art_snap.sha
+        ccase == e.expected_case || return merge(rec,
+            Dict("verdict" => "violated",
+                 "detail" => "consumer artifact case $ccase != " *
+                             "$(e.expected_case)"))
+        # RECORDED FACTS must equal CURRENT facts, not status alone: a
+        # changed human input or register cannot leave an old artifact
+        # looking current. Every comparison uses this evaluation's byte
+        # snapshots; an unreadable file is a fact drift, never a crash.
+        art_reg = dca_obj(get(d, "register", nothing))
+        as = dca_obj(get(d, "assignment_source", nothing))
+        fact_bad = String[]
+        get(art_reg, "healthy", nothing) == !reg_stale ||
+            push!(fact_bad, "register.healthy != current register health")
+        if !reg_stale
+            dca_str(get(art_reg, "live_sha256", "")) == reg_snap.sha ||
+                push!(fact_bad, "register.live_sha256 != current " *
+                                "register snapshot digest")
+        end
+        normpath(dca_str(get(as, "path", ""))) == normpath(apath) ||
+            push!(fact_bad, "assignment_source.path mismatch")
+        get(as, "present", nothing) == present ||
+            push!(fact_bad, "assignment_source.present != current")
+        isequal(get(as, "parse_success", missing), parse_success) ||
+            push!(fact_bad, "assignment_source.parse_success != current")
+        isequal(get(as, "object_ok", missing), object_ok) ||
+            push!(fact_bad, "assignment_source.object_ok != current")
+        if present
+            isequal(get(as, "live_sha256", missing),
+                    in_snap.readable ? in_snap.sha : nothing) ||
+                push!(fact_bad, "assignment_source.live_sha256 != " *
+                                "current input snapshot digest")
+        else
+            get(as, "live_sha256", missing) === nothing ||
+                push!(fact_bad,
+                      "assignment_source.live_sha256 recorded for an " *
+                      "absent input")
+        end
+        isempty(fact_bad) || return merge(rec,
+            Dict("verdict" => "violated",
+                 "detail" => "consumer artifact facts drifted from " *
+                             "current state: " * join(fact_bad, "; ")))
+        cls = dca_e9_verdict_class(cstat, allowed, e.selftest_status)
+        if cls == :consumer_selftest_state && !dca_selftest_evidence_ok(d)
+            return merge(rec, Dict("verdict" => "violated",
+                "detail" => "consumer claims self-test-failure status " *
+                    "WITHOUT corroborating artifact evidence " *
+                    "(failures/gates/selftests/data_mode)"))
+        end
+        verdict = cls == :satisfied ? "satisfied" :
+                  cls == :consumer_selftest_state ?
+                      "consumer_selftest_state" : "violated"
+        return merge(rec, Dict("verdict" => verdict,
+            "detail" => "register " *
+                (reg_stale ? "STALE" : "healthy") * "; authority input " *
+                (present ? "present (parse_success=$(parse_success), " *
+                           "object_ok=$(object_ok))" : "absent") *
+                "; allowed=$(allowed); consumer status=$cstat" *
                 (verdict == "violated" ?
                  " -- INCONSISTENT with the prerequisite state" :
                  verdict == "consumer_selftest_state" ?
@@ -1059,10 +1326,10 @@ function dca_main()
         length(unique(ids)) == length(ids) ? "passed" : "failed"
     length(unique(ids)) == length(ids) ||
         push!(fails, "duplicate edge IDs in the declarative manifest")
-    gates["manifest_edge_count_34"] =
-        length(DCA_EDGES) == 34 ? "passed" : "failed"
-    length(DCA_EDGES) == 34 ||
-        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 34")
+    gates["manifest_edge_count_36"] =
+        length(DCA_EDGES) == 36 ? "passed" : "failed"
+    length(DCA_EDGES) == 36 ||
+        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 36")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)
@@ -1226,6 +1493,88 @@ function dca_main()
                 (output_anchors = stripped_anchors,))])) &&
         isempty([i for i in dca_manifest_issues([e9edge])
                  if occursin("output_anchors missing", i)])
+    # authority-input truth table: register staleness dominates, absence
+    # is awaiting, parse/object failures narrow to refused, and only a
+    # present parseable object admits recorded (alongside refused)
+    t["authority_input_truth_table_validated"] =
+        dca_authority_input_allowed(true, true, true, true) ==
+            ["rulings_intake_blocked_register_stale"] &&
+        dca_authority_input_allowed(false, false, nothing, nothing) ==
+            ["rulings_intake_awaiting_assignments"] &&
+        dca_authority_input_allowed(false, true, false, false) ==
+            ["rulings_intake_refused"] &&
+        dca_authority_input_allowed(false, true, true, false) ==
+            ["rulings_intake_refused"] &&
+        dca_authority_input_allowed(false, true, true, true) ==
+            ["rulings_intake_assignments_recorded",
+             "rulings_intake_refused"]
+    # authority-input manifest invariants: the declared status universe
+    # must be exactly the four intake tokens, and selftest_status is
+    # required
+    ai_edge = [e for e in DCA_EDGES
+               if e.id ==
+                  "dep:rulings_intake<-rulings_assignment:authority_input"][1]
+    t["authority_input_manifest_invariants"] =
+        any(occursin("!= the exact four intake tokens", i)
+            for i in dca_manifest_issues([merge(NamedTuple(pairs(ai_edge)),
+                (accepted = ["rulings_intake_awaiting_assignments"],))])) &&
+        isempty([i for i in dca_manifest_issues([ai_edge])
+                 if occursin("authority_input", i)])
+    # register source-set fidelity: a substituted SAME-COUNT source list
+    # (same-basename file elsewhere, or a different pinned file) is stale
+    # even if every hash matches its own file
+    subst_srcs = [Dict("path" => i == 1 ? DCA_RESULTS_JSON :
+                           DCA_REG_EXPECTED_SOURCE_PATHS[i],
+                       "sha256" => "0"^64)
+                  for i in eachindex(DCA_REG_EXPECTED_SOURCE_PATHS)]
+    t["register_source_substitution_detected"] =
+        dca_register_sources_stale(subst_srcs) &&
+        dca_register_sources_stale("not-a-vector") &&
+        dca_register_sources_stale(
+            [Dict("path" => p, "sha256" => "0"^64)
+             for p in DCA_REG_EXPECTED_SOURCE_PATHS[1:4]])
+    # TOCTOU hardening: current-state hashing never throws -- a vanished
+    # file classifies (stale/violated) instead of crashing the audit
+    t["try_sha_nonthrowing"] =
+        dca_try_sha(joinpath(tdir, "vanished.bin")) === nothing &&
+        dca_try_sha(badp) isa AbstractString
+    # coupled byte snapshot: digest and parsed content come from the
+    # SAME captured bytes; an already-taken snapshot is immune to a
+    # subsequent overwrite, and a fresh snapshot sees the new pair
+    t["snapshot_couples_digest_and_content"] = begin
+        cpf = joinpath(tdir, "coupled.json")
+        write(cpf, "{\"v\": 1}")
+        s1 = dca_snapshot(cpf)
+        h1 = dca_try_sha(cpf)
+        write(cpf, "{\"v\": 22}")
+        s2 = dca_snapshot(cpf)
+        s1.object_ok && s1.data["v"] == 1 && s1.sha == h1 &&
+            s2.data["v"] == 22 && s2.sha == dca_try_sha(cpf) &&
+            s1.sha != s2.sha &&
+            !dca_snapshot(joinpath(tdir, "gone.json")).readable
+    end
+    # a declared-snapshot-extension record is source-bound directly: a
+    # missing anchor in the consumer source must be flagged
+    t["declared_extension_anchor_missing_detected"] = begin
+        tampered = Any[x.class == "declared-snapshot-extension" ?
+                       merge(NamedTuple(pairs(x)),
+                             (anchor = "NO_SUCH_SNAPSHOT_ANCHOR",)) : x
+                       for x in DCA_SITE_LEDGER]
+        any(occursin("DECLARED EXTENSION ANCHOR MISSING", i)
+            for i in dca_reconcile(dca_census(), tampered, ids))
+    end
+    # authority-input token binding: a consumer source missing ANY
+    # accepted/selftest status token is violated before any live check
+    t["authority_input_missing_token_detected"] = begin
+        csrc = joinpath(tdir, "gate4_fake_intake.jl")
+        write(csrc, join(ai_edge.anchors, "\n") * "\n" *
+                    join(ai_edge.accepted[1:3], "\n") * "\n")
+        rel = relpath(csrc, DCA_VALIDATION_DIR)
+        v = dca_edge_verdict(merge(NamedTuple(pairs(ai_edge)),
+                                   (consumer = rel,)), modes)
+        v["verdict"] == "violated" &&
+            occursin("missing bound status token", v["detail"])
+    end
     # inventory hygiene rejected BEFORE Dict collapse
     t["inventory_hygiene_detected"] =
         any(occursin("blank label", i)
@@ -1317,7 +1666,8 @@ function dca_main()
             "artifact contracts and are not censused), plus declared " *
             "extensions (register snapshot-hash, E9 prerequisite truth " *
             "table + reviewed-complete ledger schema, fingerprint-join " *
-            "post-hoc rows with artifact identity); structural " *
+            "post-hoc rows with artifact identity, authority-input " *
+            "truth table for the rulings intake); structural " *
             "requirements beyond that projection are enforced in-unit " *
             "by consumers and listed in structural_out_of_scope",
         "structural_out_of_scope" => DCA_STRUCTURAL_OUT_OF_SCOPE,
@@ -1326,10 +1676,23 @@ function dca_main()
             "inclusion_rule" => "every literal JSON.parsefile occurrence " *
                 "in validation/gate4*.jl (this audit excluded by name; " *
                 "other parsing forms are out of the censused contract " *
-                "surface); each live site AND each ledger record matched " *
-                "EXACTLY once; union(served IDs) must equal the manifest",
+                "surface); each live site AND each parsefile ledger " *
+                "record matched EXACTLY once; union(served IDs) must " *
+                "equal the manifest. The rulings intake deliberately " *
+                "uses a coupled BYTE-snapshot parse (one read supplies " *
+                "digest AND content, closing the hash-vs-parse TOCTOU), " *
+                "so it is NOT a parsefile site: its helper is carried " *
+                "as a declared-snapshot-extension ledger record whose " *
+                "anchor reconciliation binds directly against the " *
+                "consumer source (and which must never match a live " *
+                "parsefile site). n_sites therefore counts live " *
+                "JSON.parsefile sites only; the extension is counted " *
+                "separately.",
             "source_glob" => "validation/gate4*.jl",
             "n_sites" => length(sites),
+            "n_declared_snapshot_extensions" =>
+                count(x -> x.class == "declared-snapshot-extension",
+                      DCA_SITE_LEDGER),
             "sites" => [Dict("file" => s.file, "line" => s.line,
                              "text" => first(s.text, 100)) for s in sites],
             "site_ledger" => [Dict("file" => x.file, "anchor" => x.anchor,

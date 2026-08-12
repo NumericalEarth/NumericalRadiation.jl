@@ -1,0 +1,261 @@
+{
+  "assignment_source": {
+    "live_sha256": null,
+    "never_written_by_this_unit": true,
+    "object_ok": null,
+    "parse_success": null,
+    "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_rulings_assignment.json",
+    "present": false
+  },
+  "authorship_caveat": "structural attribution, NOT authentication: validation can say structurally recorded; it cannot prove Greg authored the evidence absent a trusted signature/channel; assignment authorship is out of band and this unit never emits an authorization token",
+  "case": "gate4_rulings_intake_contract",
+  "data_mode": "derivative_fail_closed_intake",
+  "disclaimer": "derivative fail-closed rulings intake; no election, no inferred authority, no default decision; the 8 UNASSIGNED rows refuse assignment until a source-proven authority updates the register; unenumerated option sets refuse resolution; the canonical status reflects the latest successfully emitted run (atomic same-directory temp + rename -- a failed write can never truncate or silently preserve a stale-ready artifact as this run's output) and prior decisions survive only as historical non-authorizing evidence.",
+  "domain_readiness": {
+    "g2_binding_runner": {
+      "missing": [
+        "R-G2-D1",
+        "R-G2-D2",
+        "R-G2-D3",
+        "R-G2-D4"
+      ],
+      "ready": false,
+      "requires": [
+        "R-G2-D1",
+        "R-G2-D2",
+        "R-G2-D3",
+        "R-G2-D4"
+      ]
+    },
+    "quota_path": {
+      "missing": [
+        "R-QUOTA-PATH-AD"
+      ],
+      "non_authorizing_note": "recording a ruling does NOT itself authorize any action: deletion, quota change, and job submission remain UNAUTHORIZED; the quota path executes only under the runbook's own protocol",
+      "requires": [
+        "R-QUOTA-PATH-AD"
+      ],
+      "state": "awaiting_ruling"
+    },
+    "t45_evaluator": {
+      "missing": [
+        "R-T45-AX1",
+        "R-T45-AX2",
+        "R-T45-AX3",
+        "R-T45-AX4"
+      ],
+      "ready": false,
+      "requires": [
+        "R-T45-AX1",
+        "R-T45-AX2",
+        "R-T45-AX3",
+        "R-T45-AX4"
+      ]
+    }
+  },
+  "expected_assignment_schema": {
+    "authored_at_utc": "<ISO-8601>",
+    "authored_by": "<nonempty; authorship is out of band>",
+    "note": "<optional>",
+    "register_pin": {
+      "case": "gate4_pending_rulings_register",
+      "sha256": "<sha256 of the live register artifact>",
+      "status": "pending_rulings_register_recorded"
+    },
+    "rulings": [
+      {
+        "decided_at_utc": "<fully anchored ISO-8601>",
+        "decided_by": "<authority; quota requires exactly Greg>",
+        "decision": "<verbatim machine-enumerated option id>",
+        "evidence": {
+          "kind": "<source kind, e.g. conversation_record/file>",
+          "locator": "<independently reviewable locator/record>",
+          "quote": "<exact verbatim quote>",
+          "sha256": "<optional 64-hex digest of the evidence source>"
+        },
+        "notes": "<optional>",
+        "ruling_id": "<ALL 9 register IDs, each exactly once>",
+        "state": "<OPEN | RESOLVED -- explicit; OPEN rows carry ONLY ruling_id+state; RESOLVED rows require every field below>"
+      }
+    ],
+    "schema": "gate4_rulings_assignment_v1"
+  },
+  "failures": [],
+  "fixture_verdicts": {
+    "absent_source_is_awaiting": true,
+    "all_open_explicit_accepted": true,
+    "all_open_no_domain_ready": true,
+    "awaiting_prev_never_embeds": true,
+    "ax2_equivalence_note_present": true,
+    "byte_snapshot_couples_digest_and_content": true,
+    "duplicate_ruling_id_refuses": true,
+    "empty_evidence_quote_refuses": true,
+    "empty_sources_refused": true,
+    "evidence_bad_digest_refuses": true,
+    "evidence_unknown_key_refuses": true,
+    "exact_source_set_accepted": true,
+    "exit_codes_exact": true,
+    "fresh_sources_accepted": true,
+    "hash_failure_returns_nothing": true,
+    "invalid_state_token_refuses": true,
+    "json_array_parses_but_non_object": true,
+    "json_null_parses_but_non_object": true,
+    "malformed_decided_at_refuses": true,
+    "missing_file_snapshot_unreadable": true,
+    "missing_pin_refuses": true,
+    "missing_row_coverage_refuses": true,
+    "missing_source_detected": true,
+    "nine_rows_always_emitted": true,
+    "non_object_evidence_refuses": true,
+    "non_object_file_refuses": true,
+    "non_utc_offset_timestamp_refuses": true,
+    "non_vector_rulings_refuses": true,
+    "open_row_forbids_resolution_fields": true,
+    "pin_status_mismatch_refuses": true,
+    "pin_unknown_key_refuses": true,
+    "quota_bad_vocabulary_refuses": true,
+    "quota_domain_recorded_never_authorized": true,
+    "quota_row_resolved_others_open": true,
+    "quota_wrong_decider_refuses": true,
+    "recorded_state_never_embeds_itself": true,
+    "register_authority_drift_refuses": true,
+    "register_d3_key_set_drift_refuses": true,
+    "register_healthy_accepts": true,
+    "register_id_set_drift_refuses": true,
+    "register_non_open_row_refuses": true,
+    "register_quota_authority_form_refuses": true,
+    "register_quota_enum_drift_refuses": true,
+    "register_wrong_case_refuses": true,
+    "register_wrong_status_refuses": true,
+    "resolved_row_marked_non_authorizing": true,
+    "resolved_row_missing_evidence_refuses": true,
+    "same_basename_wrong_directory_refuses": true,
+    "snapshot_inconsistency_refuses": true,
+    "source_hash_drift_detected": true,
+    "stale_pin_refuses": true,
+    "stale_register_blocks_even_when_source_valid": true,
+    "trailing_garbage_timestamp_refuses": true,
+    "unassigned_authority_row_refuses": true,
+    "unenumerated_options_refuse_resolution": true,
+    "unknown_row_key_refuses": true,
+    "unknown_ruling_id_refuses": true,
+    "unknown_top_key_refuses": true,
+    "unparseable_is_parse_failure": true,
+    "valid_quota_assignment_accepted": true,
+    "valid_source_is_recorded": true,
+    "valid_then_source_corrupted_refuses": true,
+    "valid_then_source_removed_goes_awaiting": true,
+    "wrong_schema_token_refuses": true
+  },
+  "gates": {
+    "assignment_state": "passed",
+    "fixtures": "passed",
+    "register_verified_and_sources_fresh": "passed"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "46d4c06",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "refusal_reasons": [],
+  "register": {
+    "expected_case": "gate4_pending_rulings_register",
+    "expected_status": "pending_rulings_register_recorded",
+    "healthy": true,
+    "live_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+    "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_pending_rulings_register.json"
+  },
+  "resolutions": [
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-G2-D1",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-G2-D2",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "machine_enumerated",
+        "option_ids": [
+          "variant_eps_clamping",
+          "variant_pair_selection"
+        ]
+      },
+      "ruling_id": "R-G2-D3",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-G2-D4",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-T45-AX1",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "derived_equivalence_note": "derived equivalence (not an election): the conjunction (d_toa <= m && d_surface <= m) is mathematically equivalent to max(d_toa, d_surface) <= m when the same margin and the same signed/absolute transform apply; both source-described reporting forms are preserved and marked verdict-equivalent -- they cannot change pass/fail absent a different threshold/transform",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-T45-AX2",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-T45-AX3",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "UNASSIGNED",
+      "options_enumeration": {
+        "mode": "unenumerated_refuses_resolution",
+        "note": "no pinned source machine-enumerates exact option IDs; resolution refused until one does"
+      },
+      "ruling_id": "R-T45-AX4",
+      "state": "OPEN"
+    },
+    {
+      "deciding_authority": "Greg -- explicitly assigned by the runbook: 'No `rm`, no quota change, and no job submission may be run from this document without Greg's explicit authorization of the chosen path.'",
+      "options_enumeration": {
+        "mode": "machine_enumerated",
+        "option_ids": [
+          "path_a",
+          "path_d_exact_byte_scope"
+        ]
+      },
+      "ruling_id": "R-QUOTA-PATH-AD",
+      "state": "OPEN"
+    }
+  ],
+  "standing_constraint": "recording a ruling does NOT itself authorize any action: deletion, quota change, and job submission remain UNAUTHORIZED; the quota path executes only under the runbook's own protocol",
+  "status": "rulings_intake_awaiting_assignments",
+  "timestamp_utc": "2026-08-12T14:36:24.411"
+}
