@@ -1,4 +1,11 @@
 {
+  "current_disposition": {
+    "updated_at": "2026-08-12",
+    "status_at_write": "proof_run_submitted_awaiting_completion -- true at ledger write (job 4091 CONFIGURING); preserved verbatim below",
+    "current_status": "job 4091 COMPLETED rc=0 at 2026-07-20T08:20:58Z per gate4_a2_proof_finding_ledger proof_run.outcome (log/hash reviewed)",
+    "note": "ADDITIVE annotation; every field below this block is the unmodified at-write record",
+    "see": ["gate4_a2_proof_finding_ledger (outputs + strict-rule verdict + later supersession)", "gate4_option_b_decision_record"]
+  },
   "case": "gate4_a2_proof_submission_ledger",
   "data_mode": "submission_event_record_only",
   "status": "proof_run_submitted_awaiting_completion",

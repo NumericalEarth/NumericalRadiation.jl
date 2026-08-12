@@ -40,7 +40,12 @@
         "sha256": "3308cb7a53d95935e4a931ac63fe7237154075cc968c04b06a5d8881e8137922"
       }
     },
-    "execution": "authorized proof job 4091, ledger-verified outcome: COMPLETED rc=0 at 2026-07-20T08:20:58Z; stage-0 candidate hash checks OK for both bands; log/hash re; strict-rule finding status a2_candidates_sensitivity_only_not_promotable; promotion under Option B verified against gate4_option_b_decision_record (status + explicit supersession of the scaffold verdict)",
+    "execution": {
+      "job_id_verified": 4091,
+      "outcome_verified": "COMPLETED rc=0 at 2026-07-20T08:20:58Z; stage-0 candidate hash checks OK for both bands; log/hash review by the Codex monitor and locally, matching",
+      "promotion_verification": "Option-B record adoption + explicit supersession of the scaffold verdict verified against gate4_option_b_decision_record",
+      "strict_finding_status": "a2_candidates_sensitivity_only_not_promotable"
+    },
     "ledgers": {
       "finding": "gate4_a2_proof_finding_ledger.json",
       "submission": "gate4_a2_proof_submission_ledger.json"
@@ -49,10 +54,10 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "cb7c0b0",
+    "generated_from_head": "5725179",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_proof_dryrun.sbatch",
   "status": "a2_proof_driver_historical_executed",
-  "timestamp_utc": "2026-08-12T11:15:01.639"
+  "timestamp_utc": "2026-08-12T11:18:33.131"
 }

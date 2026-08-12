@@ -1,4 +1,17 @@
 {
+  "current_disposition": {
+    "updated_at": "2026-08-12",
+    "status_under_strict_rule": "a2_candidates_sensitivity_only_not_promotable -- the verdict and ALL mismatch evidence/hashes below are preserved verbatim as generation-time truth under the then-binding exact-reproduction rule",
+    "current_status": "strict finding later superseded by Greg-authorized Option B (2026-07-20, take option B; gate4_option_b_decision_record, status option_b_adopted_candidates_promoted; amended rule: structural elementwise-exact + support-array max|diff| <= 2.1e-5)",
+    "artifact_specific_disposition": {
+      "a2_gpoint_candidates": "ACCEPTED under Option B as structure sources: LW c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e, SW 13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57",
+      "lw_v12_proof_raw": "ACCEPTED under Option B and promoted to the LW acceptance init: ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+      "sw_v12_proof_raw": "REMAINS SENSITIVITY EVIDENCE ONLY, not accepted: 3308cb7a53d95935e4a931ac63fe7237154075cc968c04b06a5d8881e8137922",
+      "sw_v14_r2_raw_job_4096": "became an accepted execution artifact: 99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26",
+      "sw_scaled_init_job_4099": "accepted SW execution input (scale_lut of the job-4096 raw): 74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74"
+    },
+    "hash_crosscheck": "all artifact hashes above live-verified on disk 2026-08-12"
+  },
   "case": "gate4_a2_proof_finding_ledger",
   "data_mode": "finding_record_only",
   "status": "a2_candidates_sensitivity_only_not_promotable",

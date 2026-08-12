@@ -1,6 +1,21 @@
 # Gate-4 A2 reproduction-proof finding
 
-Status: **a2_candidates_sensitivity_only_not_promotable**
+Strict-rule status at finding: **a2_candidates_sensitivity_only_not_promotable**
+
+> **Current disposition (updated 2026-08-12, additive annotation)**: the
+> strict-rule verdict below and ALL mismatch evidence/hashes are preserved
+> verbatim as generation-time truth under the then-binding
+> exact-reproduction rule. That strict finding was later superseded by
+> Greg-authorized **Option B** (2026-07-20, "take option B";
+> `gate4_option_b_decision_record`, amended rule: structural
+> elementwise-exact + support-array max|diff| <= 2.1e-5). Artifact-specific
+> outcomes: the **A2 g-point candidates** (LW `c96e6492...`, SW
+> `13dd686a...`) and the **LW v1.2 proof raw** (`ce057079...`, promoted to
+> the LW acceptance init) were ACCEPTED under Option B; the **SW v1.2
+> proof raw** (`3308cb7a...`) REMAINS sensitivity evidence only; the
+> **v1.4 job-4096 SW raw** (`99333fb5...`) and **job-4099 scaled SW**
+> (`74d8be65...`) became the accepted SW execution artifacts. All hashes
+> live-verified 2026-08-12.
 
 The A2 rerun candidates FAIL the exact-reproduction proof and are NOT
 promotable to acceptance raw inits under the optimizer-only-delta rule.

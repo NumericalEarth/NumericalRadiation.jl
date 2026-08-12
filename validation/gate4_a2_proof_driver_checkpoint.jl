@@ -123,11 +123,13 @@ function historical_executed_mode(gates, fails, lw_sha, sw_sha)
             "sw" => Dict("path" => SW_RAW, "sha256" => exp_sw,
                 "note" => "v1.2 proof output; sensitivity evidence only -- " *
                     "the promoted SW raw is the v1.4 R2 output (job 4096)")),
-        "execution" => "authorized proof job 4091, ledger-verified " *
-            "outcome: $(first(outcome, 100)); strict-rule finding status " *
-            "$(get(fin, "status", "?")); promotion under Option B " *
-            "verified against gate4_option_b_decision_record " *
-            "(status + explicit supersession of the scaffold verdict)",
+        "execution" => Dict(
+            "job_id_verified" => 4091,
+            "outcome_verified" => outcome,     # full ledger text, untruncated
+            "strict_finding_status" => get(fin, "status", "?"),
+            "promotion_verification" => "Option-B record adoption + " *
+                "explicit supersession of the scaffold verdict verified " *
+                "against gate4_option_b_decision_record"),
         "ledgers" => Dict("finding" => basename(PD_FINDING_LEDGER),
                           "submission" => basename(PD_SUBMISSION_LEDGER)))
     return payload
@@ -334,7 +336,12 @@ function finish(gates, fails, payload, sbatch_text)
         if historical
             println(io, "\nExecuted proof batch script (preserved, " *
                         "ledger-verified): `$(PD_SBATCH)`")
-            println(io, "\nExecution: ", payload["execution"])
+            ex = payload["execution"]
+            println(io, "\nExecution (ledger-verified): job " *
+                        "$(ex["job_id_verified"]); outcome: " *
+                        "$(ex["outcome_verified"]); strict finding status: " *
+                        "$(ex["strict_finding_status"]); " *
+                        "$(ex["promotion_verification"]).")
             for b in ("lw", "sw")
                 o = payload["executed_outputs"][b]
                 println(io, "- [$b] `$(basename(o["path"]))` sha256 " *

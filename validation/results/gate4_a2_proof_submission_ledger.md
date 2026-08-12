@@ -1,6 +1,15 @@
 # Gate-4 A2 proof-run submission ledger
 
-Status: **proof_run_submitted_awaiting_completion**
+Status at ledger write: **proof_run_submitted_awaiting_completion**
+
+> **Current disposition (updated 2026-08-12, additive annotation)**: the
+> at-write status above was true at ledger write (job 4091 CONFIGURING)
+> and is preserved verbatim, as is everything below this block. Job 4091
+> subsequently **COMPLETED rc=0 at 2026-07-20T08:20:58Z** (per
+> `gate4_a2_proof_finding_ledger` proof_run.outcome, log/hash reviewed).
+> See the finding ledger for outputs and the strict-rule verdict, and
+> `gate4_option_b_decision_record` for the later Greg-authorized
+> supersession.
 
 Submission event record only; no comparison, objective, floor, or recovery
 computation has run.
