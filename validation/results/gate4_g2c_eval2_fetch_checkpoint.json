@@ -11,15 +11,20 @@
     "exact70_gate": "passed",
     "fetch_only": "passed",
     "headnode_refusal_guard": "passed",
+    "live_quota_headroom": "failed",
     "manifest_integrity": "passed",
     "quota_aware_preflight": "passed",
     "quota_guard_fixture_tests": "passed",
     "sbatch_written_not_submitted": "passed",
     "species_scope_correct": "passed"
   },
+  "live_quota_guard": {
+    "report": "quota-guard: headroom=35245007872B exact-matched=175407705620B remaining=154581529276B need=197531202236B (remaining+margin)\nQUOTA-GUARD REFUSED: headroom 35245007872B < need 197531202236B",
+    "verdict": "refused"
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "d82322f",
+    "generated_from_head": "8f2e874",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "quota_guard_fixture_verdicts": {
@@ -55,6 +60,6 @@
     ]
   },
   "source": "s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/evaluation2 (byte-verified ECPDS archive per archive_to_s3.log 2026-05-27; ECPDS live as fallback)",
-  "status": "g2c_checkpoint_ready",
-  "timestamp_utc": "2026-08-12T08:19:09.360"
+  "status": "g2c_checkpoint_blocked_by_quota",
+  "timestamp_utc": "2026-08-12T08:20:48.779"
 }

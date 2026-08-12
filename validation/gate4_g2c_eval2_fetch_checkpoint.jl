@@ -227,8 +227,24 @@ function main()
         push!(fails, "quota-guard fixture failures: " *
                      join([k for (k, v) in tests if !v], ", "))
 
-    status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
-        "g2c_checkpoint_ready" : "g2c_checkpoint_failed"
+    # LIVE guard evaluation (real lfs row, real DEST, pinned manifest):
+    # a deployed-guard refusal must never be masked by a 'ready' label.
+    live_buf = IOBuffer()
+    live_ok = success(pipeline(
+        `/bin/bash -c "source $guard; quota_guard $DEST $manifest_path 42949672960"`,
+        stdout=live_buf, stderr=live_buf))
+    live_report = strip(String(take!(live_buf)))
+    gates["live_quota_headroom"] = live_ok ? "passed" : "failed"
+
+    others_pass = all(k -> k == "live_quota_headroom" || gates[k] == "passed",
+                      keys(gates))
+    status = if others_pass && live_ok && isempty(fails)
+        "g2c_checkpoint_ready"
+    elseif others_pass && isempty(fails)
+        "g2c_checkpoint_blocked_by_quota"
+    else
+        "g2c_checkpoint_failed"
+    end
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     ghead = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
@@ -244,6 +260,9 @@ function main()
         "source" => "$S3_BASE (byte-verified ECPDS archive per " *
                     "archive_to_s3.log 2026-05-27; ECPDS live as fallback)",
         "quota_guard_fixture_verdicts" => tests,
+        "live_quota_guard" => Dict(
+            "verdict" => live_ok ? "pass" : "refused",
+            "report" => live_report),
         "scope" => Dict(
             "species" => SPECIES, "chunks" => CHUNKS,
             "expected_files" => 70,
@@ -276,6 +295,8 @@ function main()
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
         end
+        println(io, "\nLive quota guard: **" *
+                    (live_ok ? "pass" : "REFUSED") * "** -- " * live_report)
         println(io, "\nSource: ", result["source"])
         println(io, "\nScope: 7 species x 5 chunks x 2 bands = 70 files, " *
                     "~330 GB; cfc/rayleigh/ssi excluded (see JSON).")
@@ -290,7 +311,8 @@ function main()
         println("  $k: $(gates[k])")
     end
     isempty(fails) || foreach(f -> println("  FAIL: $f"), fails)
-    return status == "g2c_checkpoint_ready" ? 0 : 1
+    return status in ("g2c_checkpoint_ready",
+                      "g2c_checkpoint_blocked_by_quota") ? 0 : 1
 end
 
 exit(main())
