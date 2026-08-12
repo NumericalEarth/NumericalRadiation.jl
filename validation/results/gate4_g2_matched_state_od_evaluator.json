@@ -1,0 +1,253 @@
+{
+  "case": "gate4_g2_matched_state_od_evaluator",
+  "disclaimer": "aggregation-independent matched-state OD evaluator library + self-tests; parity vs pinned run_ckd smoke references through the stacked-axis scenario contract; no Gate-2 dataset choice, no aggregation choice, no thresholds-4/5 semantics, no optimizer/floor/recovery claims.",
+  "failures": [],
+  "gates": {
+    "gas_axis_permutation_invariance": "passed",
+    "lw_clamp_field_separate": "passed",
+    "lw_od_parity": "passed",
+    "lw_pressure_grid_consistent": "passed",
+    "negativity_findings_unclamped": "passed",
+    "refuse_active_n2": "passed",
+    "refuse_active_rayleigh": "passed",
+    "refuse_constituent_count_mismatch": "passed",
+    "refuse_duplicate_active_gas": "passed",
+    "refuse_empty_active_list": "passed",
+    "refuse_gas_not_in_definition": "passed",
+    "refuse_missing_conc_dependent_gas": "passed",
+    "refuse_negative_active_vmr": "passed",
+    "refuse_nonfinite_temperature": "passed",
+    "refuse_nonmonotone_pressure": "passed",
+    "refuse_wrong_dim_order": "passed",
+    "sw_clamp_field_separate": "passed",
+    "sw_od_parity": "passed",
+    "sw_pressure_grid_consistent": "passed"
+  },
+  "parity_stats": {
+    "lw_negativity": {
+      "cfc11": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "cfc12": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "ch4": {
+        "min": -0.09896790752419221,
+        "negative_count": 82130
+      },
+      "co2": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "composite": {
+        "min": 2.6938040418946097e-14,
+        "negative_count": 0
+      },
+      "h2o": {
+        "min": 1.7602886315812503e-13,
+        "negative_count": 0
+      },
+      "n2o": {
+        "min": -0.0012027074658303456,
+        "negative_count": 82272
+      },
+      "o3": {
+        "min": 1.6528549935183388e-12,
+        "negative_count": 0
+      },
+      "total_raw": {
+        "min": 2.6062373937738333e-9,
+        "negative_count": 0
+      }
+    },
+    "lw_od_cfc11": {
+      "max_abs": 2.884306920906965e-11,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "signed_bias_fraction": -0.0018181818181818182
+    },
+    "lw_od_cfc12": {
+      "max_abs": 1.455136873626181e-11,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "signed_bias_fraction": 0.002108262108262108
+    },
+    "lw_od_ch4": {
+      "max_abs": 3.7093903365592595e-9,
+      "max_rel_above_abs_floor": 5.808530289395586e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.002215999025934494
+    },
+    "lw_od_co2": {
+      "max_abs": 7.5982707699040475e-6,
+      "max_rel_above_abs_floor": 5.931739946656874e-8,
+      "n": 86400,
+      "signed_bias_fraction": -0.0005095541401273885
+    },
+    "lw_od_composite": {
+      "max_abs": 4.764991974326449e-7,
+      "max_rel_above_abs_floor": 5.9199810344545984e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.001574074074074074
+    },
+    "lw_od_h2o": {
+      "max_abs": 1.4010364736805059e-5,
+      "max_rel_above_abs_floor": 5.923122202435551e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.0008796296296296296
+    },
+    "lw_od_n2o": {
+      "max_abs": 5.81878469019248e-11,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "signed_bias_fraction": -0.005396732788798133
+    },
+    "lw_od_o3": {
+      "max_abs": 1.1829560353504576e-7,
+      "max_rel_above_abs_floor": 5.7952849428986206e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.0003935185185185185
+    },
+    "lw_od_total_raw": {
+      "max_abs": 1.4008329458192748e-5,
+      "max_rel_above_abs_floor": 1.4899122797653175e-7,
+      "n": 86400,
+      "signed_bias_fraction": 0.0011574074074074073
+    },
+    "negativity_fixture": {
+      "cfc11": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "cfc12": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "ch4": {
+        "min": -9.204193164602295,
+        "negative_count": 1724
+      },
+      "co2": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "composite": {
+        "min": 3.846405809455084e-14,
+        "negative_count": 0
+      },
+      "h2o": {
+        "min": 5.385594931348325e-13,
+        "negative_count": 0
+      },
+      "n2o": {
+        "min": -0.001125191852826024,
+        "negative_count": 1632
+      },
+      "o3": {
+        "min": 2.8960526296267405e-12,
+        "negative_count": 0
+      },
+      "total_raw": {
+        "min": -1.0193996872788675,
+        "negative_count": 28
+      }
+    },
+    "sw_negativity": {
+      "ch4": {
+        "min": -0.00010085519604922886,
+        "negative_count": 64275
+      },
+      "co2": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "composite": {
+        "min": 6.882160774818436e-14,
+        "negative_count": 0
+      },
+      "h2o": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "n2o": {
+        "min": -0.0006065303686777194,
+        "negative_count": 48547
+      },
+      "o3": {
+        "min": 0.0,
+        "negative_count": 0
+      },
+      "total_raw": {
+        "min": 8.351749835374495e-11,
+        "negative_count": 0
+      }
+    },
+    "sw_od_ch4": {
+      "max_abs": 3.63748617272959e-12,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "signed_bias_fraction": 0.0039673278879813305
+    },
+    "sw_od_co2": {
+      "max_abs": 2.383849997400489e-7,
+      "max_rel_above_abs_floor": 5.883617470808254e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.009333333333333334
+    },
+    "sw_od_composite": {
+      "max_abs": 1.4817620130891385e-8,
+      "max_rel_above_abs_floor": 5.668876750666911e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.007824074074074074
+    },
+    "sw_od_h2o": {
+      "max_abs": 4.7568398287012315e-7,
+      "max_rel_above_abs_floor": 5.8662862409280235e-8,
+      "n": 86400,
+      "signed_bias_fraction": -0.002835249042145594
+    },
+    "sw_od_n2o": {
+      "max_abs": 2.903624075119987e-11,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "signed_bias_fraction": -0.004717078295260263
+    },
+    "sw_od_o3": {
+      "max_abs": 1.1910219344102302e-7,
+      "max_rel_above_abs_floor": 5.733067860628769e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.003111111111111111
+    },
+    "sw_od_total_raw": {
+      "max_abs": 4.778716728992549e-7,
+      "max_rel_above_abs_floor": 5.876539197068577e-8,
+      "n": 86400,
+      "signed_bias_fraction": 0.002962962962962963
+    }
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
+    "fixture_dir": "/tmp/mso_evaluator_fixtures",
+    "generated_from_head": "7aaaba0",
+    "lw_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+    "lw_smoke": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
+    "provenance_note": "artifact generated from the working tree before its own commit",
+    "sw_definition": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "sw_smoke": "/shared/home/greg/ecckd-derived-flux-work/g1-references/sw32_run_ckd_smoke.nc"
+  },
+  "semantics": {
+    "active_gas_selection": "caller-explicit active_absorption_gases; no definition-scenario intersection; conc-dependent active gases required in constituent_id; composite permitted without axis entry; n2/o2/rayleigh refused as active; rayleigh excluded by ID",
+    "aggregation_choice": "none -- evaluator is aggregation-independent; Gate-2 dataset/aggregation and thresholds-4/5 semantics remain unresolved rulings",
+    "clamp_policy": "per-gas + total raw unclamped; max(total, 0) provided only as the separate run_ckd-output-convention field",
+    "upstream_evidence": "run_ckd.cpp:66-73,264-281,316; ckd_model.cpp:178-199,963-1058 (LUT throw :988-990, LINEAR/RELATIVE_LINEAR throw :1022-1024); optimize_lut_lw.sh GASLIST :43-260; optimize_lut_sw.sh GASLIST :73-244; published LW32 stores cfc11/cfc12 as LINEAR code 1 (codes are read from the file, never assumed)"
+  },
+  "status": "matched_state_od_evaluator_passed",
+  "thresholds": {
+    "od_abs": 1.0e-9,
+    "od_rel": 1.0e-6
+  },
+  "timestamp_utc": "2026-08-12T10:08:36.204"
+}
