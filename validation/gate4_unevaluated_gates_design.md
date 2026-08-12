@@ -1,74 +1,90 @@
-# Gate-4 design note: the two unevaluated acceptance gates
+# Gate-4 design note: the two unevaluated acceptance gates (rev 2)
 
-**Status: DESIGN ONLY — neither gate is implemented.** The acceptance
-unit (`gate4_g3_acceptance_comparison.jl`) lists both as
-`unevaluated_acceptance_gates` and caps its best post-run status at
-`incomplete_pending` until they exist. This note is the read-only design
-for the two follow-on units.
+**Status: DESIGN ONLY — neither gate is implemented.** Rev 2 supersedes
+the version in 99029f3 after monitor interface audit: the Gate-1 objective
+definition there (recovered-upstream-objective / published-upstream-
+objective, relative-base pass, "published floor") was WRONG and is
+withdrawn; the Gate-2 OD-parity assumption overstated G1's SW coverage.
 
-## Gate 1: final/target objective ratio ≤ 1.05
+## Gate 1: final objective / hard target ≤ 1.05
 
-**Claim to evaluate**: the recovered model's value of the *reconstructed
-original objective* is within 5% of the published model's value of the
-same objective (the published model sits at/near the objective floor —
-verified directionally in the P2/G1 objective-parity work).
+**Canonical definition (from the archived campaign artifacts)**: the
+PACKAGE-NATIVE normalized hard radiation objective —
+`reduced_ecckd_optimization_preflight`'s `normalized_case_objective`
+against a hard target of 1.0; `official_training` reports it as
+"final objective / hard target". It is NOT a ratio of upstream optimizer
+costs.
 
 **Design** (`gate4_g3_objective_ratio.jl`, refusing runner):
-- Reuse the G1 machinery verbatim: `gate4_forward_map.jl` (upstream-exact
-  fluxes/heating at Float32 storage precision, 16 parity gates green) and
-  the objective assembly from `gate4_objective_assembly_g1.jl` (kernels +
-  correlated prior + negative-OD penalty, options per pass from the
-  verbatim optimizer spec: prior_error 8.0 LW / 2.0 SW, corr 0.8, per-pass
-  flux weights).
-- Objective definition = the **relative-base pass** objective with the
-  faithful `TRAINING_BOTH=yes` training set (rel×6 + eval2 rel-415), per
-  band — the pass whose floor the published model defines. Later-pass
-  objectives are reported as diagnostics.
-- Inputs: published + recovered ckd-definitions (hash-gated exactly as the
-  acceptance unit: run-ledger schema + on-disk hash match); training flux
-  files (all local post-G2c/G2d); no optimizer execution.
-- Output: per-band `objective_recovered / objective_published` with the
-  ≤ 1.05 verdict; plus the raw values and per-term breakdown for review.
-- Self-tests: published-vs-published ratio == 1 exactly; a perturbed
-  candidate must raise the objective (ratio > 1); malformed inputs
-  fail-closed.
+- Load the recovered definitions via the package API
+  (`read_ecckd_tabulated_gas_optics` on the recovered paths).
+- Evaluate the package accuracy path: `REDUCED_CASES` → `case_metrics` →
+  `hard_objective`; require `hard_objective.value / 1.0 <= 1.05`.
+- Provenance gating identical to the acceptance unit (strict run-ledger +
+  hash match). Self-tests: published models through the same path
+  (recording their values as context), perturbed candidate must raise the
+  objective, malformed inputs fail-closed.
+- NOTE (outstanding, separate validation): the full real-data UPSTREAM
+  objective/floor comparison remains unimplemented and unclaimed —
+  `gate4_objective_assembly_g1` is explicitly synthetic and supports
+  term-wise parity only, not floor claims. Upstream's own cost values
+  printed in the G3 optimizer logs are future cross-check evidence, not a
+  current gate.
 
 ## Gate 2: true OD log-RMSE ≤ 0.02
 
-**Claim to evaluate**: optical depths computed from the recovered LUT
-match the published LUT's optical depths over the fixed evaluation
-atmospheres (not merely the coefficient tables — interpolation and
-concentration dependence included).
+**Binding quantity**: TOTAL absorption optical depth (Rayleigh EXCLUDED)
+computed from recovered vs published definitions on MATCHED states.
+Per-gas ODs are DIAGNOSTICS only: relative-linear minor-gas contributions
+can legitimately be negative, so per-gas log comparisons are not
+well-posed as a binding metric.
 
-**Design** (`gate4_g3_true_od_rmse.jl`, refusing runner):
-- OD evaluation via the G1-verified interpolation path
-  (`gate4_forward_map.jl` `g4_bilinear_apply` chain — proven bit-faithful
-  to upstream `run_ckd` per-gas ODs in the G1 OD parity gates, 8/8 gases).
-- Atmospheres: the evaluation1 50-profile set (concentrations from the
-  CKDMIP conc files already local); per-gas and total OD per (profile,
-  layer, g-point).
-- Metric: log-RMSE over strictly positive OD pairs with the
-  `positive_eps` guard from `ecckd_recovery_metrics.jl`; aggregate = worst
-  per-gas log-RMSE per band; verdict vs 0.02. Layer/g distributions
-  reported for review.
-- Alternative considered and rejected for the binding metric: running the
-  pinned `run_ckd` binary on both definitions and comparing its
-  `optical_depth` outputs — equivalent evidence but requires Slurm jobs;
-  the in-Julia G1 path is bit-verified and read-only. `run_ckd`
-  cross-check can be a non-binding confirmation stage.
-- Self-tests: self-comparison exactly 0; coefficient-perturbed candidate
-  must exceed 0.02; shape/structural mismatches fail-closed (reuse the
-  acceptance unit's structural gate first).
+**Parity precondition (monitor audit)**: G1 proved per-gas OD
+reconstruction parity for **LW only**. The G1 SW section consumed
+upstream-provided total gas OD + Rayleigh and validated direct RT — SW
+candidate-side OD reconstruction is **not yet parity-proven**. A
+parity-first stage is therefore mandatory before Gate 2 can bind for SW
+(plan below).
+
+**Dataset**: UNRESOLVED pending review — the candidate fixed set is the
+exact union of the optimizer training scenarios (20 LW plain + 16 SW rgb
+evaluation1 scenarios + eval2 rel-415 both bands), i.e. the states the
+optimizer actually fits; the alternative (a single present-day 50-column
+file) is explicitly NOT the campaign set. The binding choice, plus the
+aggregation (worst-case vs pooled log-RMSE across scenarios), needs a
+recorded decision before implementation.
+
+**Numerics to justify explicitly in the implementation**: positive-pair
+selection / epsilon clamping (the `positive_eps` pattern) applied to
+TOTAL OD only, with counts of excluded pairs reported; no silent
+clamping of negative totals (a negative total absorption OD is a
+finding, not a clamp).
+
+## Parity-first true-OD plan (proposal)
+
+1. **SW OD parity unit** (read-only): reconstruct SW per-gas and total
+   ODs from the PUBLISHED SW32 definition via the g4 bilinear chain and
+   compare against the pinned `run_ckd` smoke reference
+   (`g1-references/sw32_run_ckd_smoke.nc`, which carries per-gas
+   `optical_depth` for 8 gases × 54 layers × 50 columns) at Float32
+   storage precision — the exact analog of the LW G1 OD gates. Only a
+   green SW parity unit authorizes SW Gate-2 binding.
+2. **Matched-state OD evaluator**: given a definition + a concentration
+   scenario file, produce total absorption OD (ex-Rayleigh) on the
+   scenario's (column, layer) states via the parity-proven chain; LW
+   binding immediately, SW binding after step 1.
+3. **Gate-2 runner**: acceptance-unit-style refusing runner over the
+   agreed fixed dataset union, run-ledger gated, self-tests (self-zero,
+   perturbation-fails, structural/shape fail-closed, excluded-pair
+   accounting).
 
 ## Shared preconditions (both gates)
 
-Recovered outputs + reviewed `gate4_g3_run_ledger.json` (strict schema) —
-identical gating to the acceptance unit; both units refuse without them.
-No objective/OD evaluation of unreviewed artifacts.
+Recovered outputs + reviewed `gate4_g3_run_ledger.json` (strict schema,
+as enforced by the acceptance unit) — both units refuse without them.
 
 ## Sequencing
 
-Implement after G3 outputs exist (they are pure post-processing), before
-any acceptance verdict is finalized: acceptance = weight rel-L1 (done) ∧
-objective ratio (gate 1) ∧ true OD (gate 2), all three bands-passing,
-plus monitor review.
+Acceptance = weight rel-L1 (implemented) ∧ Gate 1 ∧ Gate 2, all bands,
+plus monitor review. Gate-2 SW additionally requires the SW parity unit
+green. Nothing here claims implementation or a pass.
