@@ -1,6 +1,31 @@
 # Gate-4 R1 RELEASE-PROVENANCE probe (read-only, A1-style: HEAD/listing/
 # source-history metadata only; no large downloads, no builds, no Slurm, no
-# rule change, no promotion).
+# rule change, no promotion) -- HISTORICAL: the recommended next option
+# was executed.
+#
+# EXECUTED FOLLOW-UP (monitor-directed marking, 2026-08-12; the at-probe
+# findings below are preserved verbatim and remain load-bearing citations
+# for the R2 chain): the recommended R2 experiment was executed with
+# Greg's go as jobs 4094/4095/4096 -- SSI PRESENT + elementwise EXACT
+# (the headline question answered: absence RESOLVED as version skew)
+# while the support-array drift proved unchanged/version-independent
+# ACROSS THE TESTED v1.2-v1.4 COMPARISON -- not established for all
+# versions (gate4_r2_finding_ledger). The optional LW rebuild at b42e5c0 was NOT
+# exercised; it was closed by Greg adopting Option B
+# (gate4_option_b_decision_record), which promoted the LW v1.2 proof raw
+# under the amended rule with the LW-1.0 mapping ambiguity recorded as a
+# permanent caveat. Option B closed the strict-reproduction path for
+# ACCEPTANCE-INIT SELECTION only -- it did NOT prove an LW rebuild
+# scientifically unnecessary. The status token remains TRUE and unchanged
+# (r1_sw_mapping_found_lw_ambiguous -- required by exact match in
+# gate4_r2_sw_matching_version_proof_scaffold.jl). This unit performs
+# network reads (GitHub API, raw ChangeLog, ECPDS HEAD probes); reruns
+# were deliberately NOT performed for this marking -- the committed
+# artifact carries an additive current-disposition annotation instead.
+# Future reruns keep the at-probe recommendation VERBATIM
+# (at_probe_next_option) and render the separate current_disposition only
+# after verifying the R2 finding-ledger and Option-B dependency CASE +
+# STATUS (never hardcoded).
 #
 # Question: is there an accessible ECPDS/ecRad/release-history source
 # mapping for the published ecckd-1.0 (LW32) and ecckd-1.4 (SW32) files?
@@ -191,12 +216,50 @@ function main()
             "published builds is not pinned by version labels alone",
         ],
     )
-    next_option = "R2 (needs go): build 23adaca and rerun the SW proof -- " *
-        "a targeted matching-version test that definitively answers the " *
-        "SSI-emission question; whether it also resolves the support-array " *
-        "value drift is UNCERTAIN since the drift is not localized to any " *
-        "identified source diff. LW rebuild at b42e5c0 is possible but its " *
-        "verdict would be conditional on the unproven 1.0 mapping."
+    # the AT-PROBE recommendation, preserved VERBATIM: any run of this
+    # unit is self-contained about what was recommended at probe time
+    at_probe_next_option = "R2 (needs go): build 23adaca and rerun the " *
+        "SW proof -- a targeted matching-version test that definitively " *
+        "answers the SSI-emission question; whether it also resolves the " *
+        "support-array value drift is UNCERTAIN since the drift is not " *
+        "localized to any identified source diff. LW rebuild at b42e5c0 " *
+        "is possible but its verdict would be conditional on the unproven " *
+        "1.0 mapping."
+
+    # CURRENT DISPOSITION, verified against dependency CASE + STATUS
+    # (never status alone, never hardcoded) before rendering
+    dep_case_status(name) = try
+        d = JSON.parsefile(validation_results_path(name))
+        c = get(d, "case", ""); s = get(d, "status", "")
+        (c isa AbstractString ? String(c) : "non-string",
+         s isa AbstractString ? String(s) : "non-string")
+    catch; ("unreadable", "unreadable") end
+    r2_case, r2_status = dep_case_status("gate4_r2_finding_ledger.json")
+    ob_case, ob_status = dep_case_status("gate4_option_b_decision_record.json")
+    followups_ok = r2_case == "gate4_r2_finding_ledger" &&
+                   r2_status == "r2_ssi_resolved_drift_version_independent" &&
+                   ob_case == "gate4_option_b_decision_record" &&
+                   ob_status == "option_b_adopted_candidates_promoted"
+    gates["followup_case_and_status_verified"] = followups_ok ? "passed" : "failed"
+    followups_ok ||
+        push!(fails, "follow-up verification failed: r2=($r2_case, " *
+                     "$r2_status) option_b=($ob_case, $ob_status) -- " *
+                     "executed claims withheld")
+    current_disposition = followups_ok ?
+        "EXECUTED (verified: $r2_status): the recommended R2 experiment " *
+        "ran as jobs 4094/4095/4096 -- SSI-emission question answered " *
+        "(PRESENT + elementwise EXACT; absence resolved as version skew); " *
+        "the support-array drift proved unchanged/version-independent " *
+        "across the tested v1.2-v1.4 comparison (not established for all " *
+        "versions), exactly the " *
+        "pre-registered UNCERTAIN branch. The optional LW rebuild at " *
+        "b42e5c0 was NOT exercised: Option B (verified: $ob_status) " *
+        "closed the strict-reproduction path for ACCEPTANCE-INIT " *
+        "SELECTION; it did NOT prove an LW rebuild scientifically " *
+        "unnecessary, and the LW-1.0 mapping ambiguity remains a " *
+        "permanent caveat." :
+        "FOLLOW-UP VERIFICATION FAILED (r2=($r2_case, $r2_status) " *
+        "option_b=($ob_case, $ob_status)): executed/closed claims withheld"
 
     status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
         "r1_sw_mapping_found_lw_ambiguous" : "r1_probe_failed"
@@ -213,7 +276,11 @@ function main()
         "version_bump_history" => bumps,
         "ecrad_packaging" => ecrad_pack,
         "mapping_findings" => mapping,
-        "next_option" => next_option,
+        # schema compatibility: the established key retains the verbatim
+        # at-probe recommendation; the explicit alias is additive
+        "next_option" => at_probe_next_option,
+        "at_probe_next_option" => at_probe_next_option,
+        "current_disposition" => current_disposition,
         "provenance" => Dict("branch" => branch, "generated_from_head" => ghead,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
@@ -254,7 +321,10 @@ function main()
                 mapping["support_array_drift_cautious_statement"], "\n")
         println(io, "**Remaining blockers**:")
         foreach(b -> println(io, "- ", b), mapping["remaining_blockers"])
-        println(io, "\n**Next option**: ", next_option)
+        println(io, "\n**Next option at probe (preserved verbatim)**: ",
+                at_probe_next_option)
+        println(io, "\n**Current disposition (ledger-verified, case + " *
+                "status)**: ", current_disposition)
         println(io, "\nECPDS probes: " *
             join(["$(p["http_status"]) $(p["url"])" for p in ecpds], "; "))
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *

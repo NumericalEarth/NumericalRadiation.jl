@@ -1,6 +1,25 @@
 # Gate-4 R1 release-provenance probe
 
-Status: **r1_sw_mapping_found_lw_ambiguous**
+Status at probe (still true): **r1_sw_mapping_found_lw_ambiguous**
+
+> **Current disposition (updated 2026-08-12, additive annotation)**: the
+> at-probe record below (including the original "Next option") is
+> preserved verbatim; this artifact was deliberately not regenerated
+> because the probe performs live network reads. The status remains true:
+> the SW 23adaca mapping stands (confirmed by R2 execution) and the
+> LW-1.0 mapping remains unproven (permanent caveat). The recommended R2
+> experiment was **EXECUTED** (Greg: "go for R2"; jobs 4094/4095 failed
+> configure, 4096 COMPLETED rc=0): SSI PRESENT + elementwise EXACT --
+> absence RESOLVED as version skew; the support-array drift proved
+> unchanged/version-independent **across the tested v1.2-v1.4
+> comparison** (not established for all versions), the pre-registered
+> UNCERTAIN branch (verified dependencies: `gate4_r2_finding_ledger` /
+> `r2_ssi_resolved_drift_version_independent`;
+> `gate4_option_b_decision_record` /
+> `option_b_adopted_candidates_promoted`). The optional LW rebuild at
+> b42e5c0 was NOT exercised: Option B closed the strict-reproduction path
+> for ACCEPTANCE-INIT SELECTION only -- it did NOT prove an LW rebuild
+> scientifically unnecessary.
 
 read-only metadata probes; no large downloads, builds, submissions, floor, objective, acceptance, or rule changes.
 
