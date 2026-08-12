@@ -463,13 +463,22 @@ const DCA_EDGES = [
   expected_case = "gate4_option_b_decision_record",
   consumer_checks_case = true, status_only = false,
   active_when = :a2_historical),
+ # HARDENED consumer: am_classify_a1 binds the exact case before the
+ # exact status (the A1 network producer is never rerun; only its
+ # committed artifact is parsed); five fixed refusal classes with the
+ # operative-path caveat kept ONLY on the parsed wrong-status class;
+ # fail-closed gate census before status selection; the unit executes
+ # nothing and writes only its own results (former status-only finding
+ # CLOSED)
  (id = "dep:a2_rerun_manifest<-a1_upstream_recon",
   consumer = "gate4_a2_find_g_points_rerun_manifest.jl",
-  anchors = ["a1[\"status\"] == \"a1_recon_no_exact_upstream_source_found\""],
+  anchors = ["a1_ok, a1_why = am_classify_a1(",
+             "c == \"gate4_a1_upstream_recon\"",
+             "st == \"a1_recon_no_exact_upstream_source_found\""],
   producer = "gate4_a1_upstream_recon.json", kind = :exact,
   accepted = ["a1_recon_no_exact_upstream_source_found"],
   expected_case = "gate4_a1_upstream_recon",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  # HARDENED consumer: classify_scaffold_artifact binds the exact case
  # before the FAITHFUL prefix status check; classification runs before
  # any pinned-script read/walk and short-circuits all downstream gates
@@ -890,9 +899,12 @@ const DCA_SITE_LEDGER = [
   class = "edge", edge_ids = ["dep:a2_exec_checkpoint<-option_b:later_disposition"],
   reason = "later-disposition parse"),
  (file = "gate4_a2_find_g_points_rerun_manifest.jl",
-  anchor = "a1 = JSON.parsefile(validation_results_path(\"gate4_a1_upstream_recon.json\"))",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:a2_rerun_manifest<-a1_upstream_recon"],
-  reason = "a1 prerequisite parse"),
+  reason = "am_classify_a1 guarded-loader body (five fixed refusal " *
+           "classes; exact-case + exact-status binding; artifact-only " *
+           "-- the A1 network producer is never rerun; live edge + tmp " *
+           "loader fixtures)"),
  (file = "gate4_a2_proof_driver_checkpoint.jl",
   anchor = "JSON.parsefile(path)",
   class = "edge",
@@ -1845,14 +1857,18 @@ function dca_main()
         validate_run_ledger(good)[1] &&
             !validate_run_ledger(merge(good, Dict("status" => "draft")))[1]
     end
-    # exemplar retargeted after the a2 proof-scaffold hardening: the a2
-    # rerun manifest's a1 edge remains a status-only contract (rework to
-    # a synthetic-edge fixture when the last live finding closes)
+    # exemplar retargeted after the a2 rerun-manifest hardening: the
+    # exec checkpoint's INACTIVE pre-execution edge is the last
+    # remaining status-only contract (its verdict is inactive_branch but
+    # the status-only weakness is still censused; rework this fixture to
+    # a synthetic edge when A2-3 closes it)
     t["status_only_is_finding_not_failure"] =
-        any(h -> h["id"] == "dep:a2_rerun_manifest<-a1_upstream_recon",
+        any(h -> h["id"] ==
+                 "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
             hardening) &&
-        !any(occursin("dep:a2_rerun_manifest<-a1_upstream_recon", f)
-             for f in fails)
+        !any(occursin(
+                 "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
+                 f) for f in fails)
     rm(tdir, recursive = true, force = true)
     gates["fixtures"] = all(values(t)) ? "passed" : "failed"
     all(values(t)) || push!(fails, "fixtures failed: " *

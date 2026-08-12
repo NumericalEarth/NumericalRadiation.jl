@@ -276,19 +276,33 @@
   },
   "failures": [],
   "gates": {
+    "a1_recon_prerequisite": "passed",
     "acceptance_hinge_exact_reproduction": "passed",
     "future_outputs_named": "passed",
     "no_heavy_execution": "passed",
     "pinned_scripts_discovered": "passed",
+    "pinned_source_scripts_readable": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "required_inputs_enumerated": "passed",
     "runtime_estimate_recorded": "passed",
     "unproven_reruns_sensitivity_only": "passed"
   },
   "inputs_expected": 7,
-  "inputs_present": 7,
+  "inputs_present": 5,
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "exact_green_passes": true,
+    "failed_gate_closed_without_reason": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "null_non_object_fails": true,
+    "pinned_reader_nonthrowing": true,
+    "tampered_status_fails": true,
+    "wrong_case_fails": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "a7e74a7",
+    "generated_from_head": "5114d66",
     "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
@@ -297,45 +311,65 @@
       "glob": null,
       "label": "pinned find_g_points binary",
       "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/find_g_points",
-      "present": true
+      "present": true,
+      "stage": "find_g_points"
     },
     {
       "glob": null,
       "label": "pinned reorder_spectrum binary",
       "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/reorder_spectrum",
-      "present": true
+      "present": true,
+      "stage": "find_g_points"
     },
     {
       "glob": "median",
       "label": "MMM LW median spectra",
       "path": "/shared/home/greg/data/ckdmip/mmm/lw_spectra",
-      "present": true
+      "present": true,
+      "stage": "find_g_points"
     },
     {
       "glob": "median",
       "label": "MMM SW median spectra",
       "path": "/shared/home/greg/data/ckdmip/mmm/sw_spectra",
-      "present": true
+      "present": true,
+      "stage": "find_g_points"
     },
     {
       "glob": null,
       "label": "idealized LW spectra (create_lut PROOF stage, not find_g_points)",
       "path": "/shared/home/greg/data/ckdmip/idealized/lw_spectra",
-      "present": true
+      "present": false,
+      "stage": "create_lut_proof"
     },
     {
       "glob": null,
       "label": "idealized SW spectra (create_lut PROOF stage, not find_g_points)",
       "path": "/shared/home/greg/data/ckdmip/idealized/sw_spectra",
-      "present": true
+      "present": false,
+      "stage": "create_lut_proof"
     },
     {
       "glob": null,
       "label": "MMM SSI",
       "path": "/shared/home/greg/data/ckdmip/mmm/sw_spectra_extras/ckdmip_ssi.h5",
-      "present": true
+      "present": true,
+      "stage": "find_g_points"
     }
   ],
-  "status": "a2_manifest_ready",
-  "timestamp_utc": "2026-07-19T05:39:59.490"
+  "stage_readiness": {
+    "create_lut_proof": {
+      "expected": 2,
+      "present": 0,
+      "ready": false
+    },
+    "find_g_points": {
+      "expected": 5,
+      "present": 5,
+      "ready": true
+    }
+  },
+  "stage_readiness_note": "find_g_points prerequisites are currently COMPLETE; the overall rerun-with-proof manifest waits only on the absent create_lut proof-stage idealized spectra (the registered Path-D deletion scope)",
+  "status": "a2_manifest_ready_waiting_for_inputs",
+  "timestamp_utc": "2026-08-12T17:40:34.417"
 }
