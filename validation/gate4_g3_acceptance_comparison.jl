@@ -119,6 +119,29 @@ function validate_run_ledger(ld)
     return (true, "ok")
 end
 
+# guarded ledger LOADER (fixture-run on tmp files): an unreadable or
+# unparseable present ledger and a parsed NON-OBJECT (JSON null parses
+# successfully to nothing -- a non-object, NOT a parse failure; arrays
+# and scalars likewise) are DISTINGUISHED, and both classify as invalid
+# with a stable reason instead of an uncaught exception. Only a valid
+# object reaches validate_run_ledger.
+function classify_run_ledger(path)
+    parse_failed = false
+    ledger = try
+        JSON.parsefile(path)
+    catch
+        parse_failed = true
+        nothing
+    end
+    parse_failed && return (nothing, false,
+        "run ledger unparseable (parse failure)")
+    ledger isa AbstractDict ||
+        return (nothing, false,
+            "run ledger parses to a non-object (JSON null/array/scalar)")
+    lok, lreason = validate_run_ledger(ledger)
+    return (lok ? ledger : nothing, lok, lreason)
+end
+
 # pure verdict helpers (fixture-testable)
 function band_verdict(pub, cand, kind)
     m = recovery_metrics(pub, cand)
@@ -214,6 +237,28 @@ function selftests(lw32, sw32)
             "sbatch_sha256" => "0"^64, "log_sha256" => "0"^64,
             "output_sha256" => "0"^64) for b in ("lw", "sw")))
     t["complete_ledger_accepted"] = validate_run_ledger(good)[1]
+    # guarded LOADER classification through the SAME function main uses:
+    # malformed JSON, JSON null, and an array all refuse with stable
+    # reasons (parse failure never conflated with parsed-non-object);
+    # a valid object flows through validate_run_ledger
+    mal = joinpath(tmp, "ledger_malformed.json"); write(mal, "{")
+    _, mok, mreason = classify_run_ledger(mal)
+    t["unparseable_ledger_classified_invalid"] =
+        !mok && mreason == "run ledger unparseable (parse failure)"
+    nul = joinpath(tmp, "ledger_null.json"); write(nul, "null")
+    _, nok, nreason = classify_run_ledger(nul)
+    t["null_ledger_classified_non_object"] =
+        !nok && nreason ==
+            "run ledger parses to a non-object (JSON null/array/scalar)"
+    arr = joinpath(tmp, "ledger_array.json"); write(arr, "[1]")
+    _, aok, areason = classify_run_ledger(arr)
+    t["array_ledger_classified_non_object"] =
+        !aok && occursin("non-object", areason)
+    gl = joinpath(tmp, "ledger_good.json")
+    open(gl, "w") do io; JSON.print(io, good) end
+    gld, gok, greason = classify_run_ledger(gl)
+    t["valid_object_ledger_loads"] =
+        gok && greason == "ok" && gld isa AbstractDict
     # verdict selection through the SAME helpers main uses: a controlled
     # weight-perturbed candidate must select the explicit failed status;
     # all-pass selects incomplete-pending
@@ -282,7 +327,12 @@ function acceptance_main()
             "16g synthetic shape mismatch (metrics layer throws)",
             "cross-band structural false", "structural value drift false",
             "negative weights throw", "nonfinite (NaN) weights throw",
-            "hash-only run ledger rejected"],
+            "hash-only run ledger rejected",
+            "unparseable ledger JSON classified blocked_invalid " *
+                "(guarded loader; no uncaught exception)",
+            "JSON null/array ledger classified non-object " *
+                "blocked_invalid (parse success distinguished from " *
+                "parse failure)"],
         "provenance_requirement" => "metrics run only with " *
             "gate4_g3_run_ledger.json present and hash-matching (written " *
             "at post-G3 log/hash review)")
@@ -328,8 +378,11 @@ function acceptance_main()
         println("gate4_g3_acceptance_comparison: g3_acceptance_blocked_missing_run_ledger")
         return 0
     end
-    ledger = JSON.parsefile(RUN_LEDGER)
-    lok, lreason = validate_run_ledger(ledger)
+    # guarded loader: unreadable/unparseable and parsed-non-object both
+    # classify as blocked_invalid with a stable reason (never an
+    # uncaught exception); consulted ONLY after outputs exist -- the
+    # waiting path above never touches the ledger
+    ledger, lok, lreason = classify_run_ledger(RUN_LEDGER)
     if !lok
         result = merge(base, Dict(
             "data_mode" => "refusal_invalid_run_ledger",

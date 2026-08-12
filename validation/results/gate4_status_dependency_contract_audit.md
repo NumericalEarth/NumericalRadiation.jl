@@ -56,7 +56,7 @@ Census: 31 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:g1_objective_ratio<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g1_waiting_for_optimizer_outputs"]; consumer status=g1_waiting_for_optimizer_outputs
 - dep:g3_acceptance<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g3_acceptance_waiting_for_optimizer_outputs"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs
 
-## Hardening findings (19)
+## Hardening findings (18)
 
 - dep:sw_init_checkpoint<-option_b: status-only contract (no case check); weakness, not a violation
 - dep:r2_proof_scaffold<-r1_probe: status-only contract (no case check); weakness, not a violation
@@ -76,7 +76,6 @@ Census: 31 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:v1_recon<-r1_probe:followup: status-only contract (no case check); weakness, not a violation
 - dep:v1_recon<-r2_finding_ledger:followup: status-only contract (no case check); weakness, not a violation
 - dep:v1_recon<-option_b:followup: status-only contract (no case check); weakness, not a violation
-- dep:g3_acceptance<-g3_run_ledger: consumer does not try/catch JSON.parsefile(RUN_LEDGER) and validate_run_ledger indexes the parsed value: an UNPARSEABLE OR PARSED-NON-OBJECT present ledger is an uncaught-exception gap with no faithful emitted status (G1 handles both cases as blocked_invalid); weakness, not a current violation (ledger absent)
 
 ## Structural checks out of scope
 
@@ -86,4 +85,4 @@ Census: 31 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `46d4c06` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `116a910` (pre-own-commit).

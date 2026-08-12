@@ -13,7 +13,9 @@
     "structural value drift false",
     "negative weights throw",
     "nonfinite (NaN) weights throw",
-    "hash-only run ledger rejected"
+    "hash-only run ledger rejected",
+    "unparseable ledger JSON classified blocked_invalid (guarded loader; no uncaught exception)",
+    "JSON null/array ledger classified non-object blocked_invalid (parse success distinguished from parse failure)"
   ],
   "missing": [
     "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
@@ -26,6 +28,7 @@
   },
   "selftests": {
     "all_pass_selects_incomplete_pending": true,
+    "array_ledger_classified_non_object": true,
     "complete_ledger_accepted": true,
     "cross_band_structural_false": true,
     "lw_perturb_fails_coeff_diag": true,
@@ -35,6 +38,7 @@
     "minimal_ledger_rejected": true,
     "negative_weight_throws": true,
     "nonfinite_weight_throws": true,
+    "null_ledger_classified_non_object": true,
     "render_console_interpolates_g3_acceptance_failed_weight_l1": true,
     "render_console_interpolates_g3_acceptance_incomplete_pending_objective_and_od": true,
     "render_md_interpolates_g3_acceptance_failed_weight_l1": true,
@@ -44,11 +48,13 @@
     "sw_perturb_fails_weight_l1": true,
     "sw_self_coeff_zero": true,
     "sw_self_weight_zero": true,
+    "unparseable_ledger_classified_invalid": true,
+    "valid_object_ledger_loads": true,
     "weight_failure_selects_failed_status": true,
     "zero_string_job_id_rejected": true
   },
   "status": "g3_acceptance_waiting_for_optimizer_outputs",
-  "timestamp_utc": "2026-08-12T10:39:25.982",
+  "timestamp_utc": "2026-08-12T14:47:53.449",
   "unevaluated_acceptance_gates": [
     "final/target objective ratio <= 1.05: runner IMPLEMENTED (gate4_g1_objective_ratio.jl, refusing) but its live result refuses pending recovered outputs + reviewed run ledger; not consumed by this unit",
     "true OD log-RMSE <= 0.02: SW parity satisfied + aggregation-independent matched-state evaluator IMPLEMENTED (gate4_g2_matched_state_od_evaluator.jl); BINDING runner unimplemented pending dataset/aggregation rulings; coefficient log-RMSE is only a diagnostic"

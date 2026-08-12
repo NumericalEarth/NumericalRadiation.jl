@@ -171,13 +171,13 @@
         "reason": "waiting-path parse-back self-test of own results"
       },
       {
-        "anchor": "ledger = JSON.parsefile(RUN_LEDGER)",
+        "anchor": "JSON.parsefile(path)",
         "class": "edge",
         "edge_ids": [
           "dep:g3_acceptance<-g3_run_ledger"
         ],
         "file": "gate4_g3_acceptance_comparison.jl",
-        "reason": "run-ledger parse (absence-tolerant edge)"
+        "reason": "classify_run_ledger guarded-loader body (absence-tolerant edge; live run-ledger load + tmp loader fixtures)"
       },
       {
         "anchor": "pf = JSON.parsefile(validation_results_path(\"gate4_g3_scoped_input_preflight.json\"))",
@@ -388,13 +388,13 @@
       },
       {
         "file": "gate4_g3_acceptance_comparison.jl",
-        "line": 254,
-        "text": "JSON.parsefile(AC_RESULTS_JSON)"
+        "line": 131,
+        "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_g3_acceptance_comparison.jl",
-        "line": 331,
-        "text": "ledger = JSON.parsefile(RUN_LEDGER)"
+        "line": 299,
+        "text": "JSON.parsefile(AC_RESULTS_JSON)"
       },
       {
         "file": "gate4_g3_executor_checkpoint.jl",
@@ -915,8 +915,8 @@
       {
         "active": true,
         "consumer": "gate4_g3_acceptance_comparison.jl",
-        "consumer_artifact_sha256": "bc06e3db05182ab1590fd29e423bfc1784a6986a84041515451c501609ac7a20",
-        "consumer_sha256": "851a8a1e9da2c7ebe1a491dbd71d476d882fed24413ef2bc6b326a2826e2abbe",
+        "consumer_artifact_sha256": "98750cdfdfeb8357a0f0d1dd26478c15dc4df1539fcf68c5221eb00459aa279d",
+        "consumer_sha256": "2e096801d36ba1f7ac39c264efb02def99be65af7be2c7e226d9bfaa1d7b727f",
         "detail": "outputs absent; ledger absent; allowed=[\"g3_acceptance_waiting_for_optimizer_outputs\"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs",
         "id": "dep:g3_acceptance<-g3_run_ledger",
         "kind": "absence_tolerant",
@@ -1038,10 +1038,6 @@
     {
       "finding": "status-only contract (no case check); weakness, not a violation",
       "id": "dep:v1_recon<-option_b:followup"
-    },
-    {
-      "finding": "consumer does not try/catch JSON.parsefile(RUN_LEDGER) and validate_run_ledger indexes the parsed value: an UNPARSEABLE OR PARSED-NON-OBJECT present ledger is an uncaught-exception gap with no faithful emitted status (G1 handles both cases as blocked_invalid); weakness, not a current violation (ledger absent)",
-      "id": "dep:g3_acceptance<-g3_run_ledger"
     }
   ],
   "modes_observed": {
@@ -1051,7 +1047,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "46d4c06",
+    "generated_from_head": "116a910",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1063,5 +1059,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T14:36:56.472"
+  "timestamp_utc": "2026-08-12T14:48:39.453"
 }

@@ -154,21 +154,24 @@ end
 #   outputs absent                       -> waiting (whether the ledger is
 #                                           absent OR present)
 #   outputs present + ledger absent      -> blocked_missing_run_ledger
-#   outputs present + ledger UNPARSEABLE -> ASYMMETRIC: G1 catches parse
-#     errors (blocked_invalid); G3 does NOT catch JSON.parsefile -- an
-#     execution/refusal GAP with NO faithful emitted status (empty
-#     allowed set; any artifact status in that state is a violation, and
-#     the gap itself is a standing hardening finding)
+#   outputs present + ledger UNPARSEABLE -> catches_parse_errors
+#     consumers classify blocked_invalid; a consumer WITHOUT the guard
+#     would be an execution/refusal GAP with NO faithful emitted status
+#     (empty allowed set). BOTH campaign consumers now guard (G1's
+#     try/catch; G3's classify_run_ledger loader, which closed the
+#     former standing gap) -- the gap branch stays representable and
+#     fixture-tested so any future unguarded consumer is still modeled
+#     faithfully
 #   outputs present + parseable schema-invalid -> blocked_invalid
 #   outputs present + ledger valid      -> only the consumer-specific
 #                                           downstream status set
 # tokens = (waiting, missing, invalid, downstream::Vector)
 # parse_success = JSON.parsefile completed without throwing (a ledger
 # containing JSON null PARSES successfully to nothing -- it is NOT a
-# parse failure); object_ok = the parsed value is an object. G1 maps
-# unparseable AND parsed-non-object to blocked_invalid; G3 throws on
-# unparseable AND on non-object (validate_run_ledger indexes it), so both
-# are no-faithful-status gaps there.
+# parse failure); object_ok = the parsed value is an object. G1 and G3
+# both map unparseable AND parsed-non-object to blocked_invalid (G3 via
+# its classify_run_ledger guarded loader); the no-guard style remains a
+# valid input to this pure function and is exercised by fixtures.
 function dca_e9_allowed_statuses(outputs_present, ledger_present,
                                  parse_success, object_ok, schema_ok,
                                  tokens;
@@ -561,7 +564,7 @@ const DCA_EDGES = [
              "g3_acceptance_waiting_for_optimizer_outputs",
              "g3_acceptance_blocked_missing_run_ledger",
              "g3_acceptance_blocked_invalid_run_ledger",
-             "ledger = JSON.parsefile(RUN_LEDGER)",
+             "ledger, lok, lreason = classify_run_ledger(RUN_LEDGER)",
              "validate_run_ledger(ledger)"],
   producer = :g3_run_ledger, kind = :absence_tolerant,
   accepted = String[],
@@ -572,22 +575,24 @@ const DCA_EDGES = [
                              "g3_acceptance_structural_mismatch",
                              "g3_acceptance_incomplete_pending_objective_and_od",
                              "g3_acceptance_failed_weight_l1"]),
-  # G3 does NOT try/catch JSON.parsefile(RUN_LEDGER) and
-  # validate_run_ledger indexes the parsed value: unparseable AND
-  # non-object are both uncaught-exception gaps, standing hardening
-  # finding
-  catches_ledger_parse_errors = false,
-  maps_nonobject_to_invalid = false,
+  # G3's classify_run_ledger guarded loader (added to close the former
+  # standing gap) try/catches the parse AND rejects a parsed non-object
+  # BEFORE validate_run_ledger: both shapes now classify as
+  # blocked_invalid with stable reasons, matching G1
+  catches_ledger_parse_errors = true,
+  maps_nonobject_to_invalid = true,
   selftest_status = "g3_acceptance_selftest_failed",  # emitted BEFORE
   # the output checks
   # full source binding: root constant, BOTH recovered constants (with
-  # filenames inline), the output-first check, and the exact DIRECT
-  # no-catch parse shape as evidence of the gap
+  # filenames inline), the output-first check, and the exact GUARDED
+  # loader/shape-check parse shapes as evidence the gap is closed
   output_anchors = ["const G4 = \"/shared/home/greg/ecckd-derived-flux-work/g4-init-generation\"",
                     "const LW_RECOVERED = \"\$G4/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc\"",
                     "const SW_RECOVERED = \"\$G4/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc\"",
                     "missing_out = [p for p in (LW_RECOVERED, SW_RECOVERED) if !isfile(p)]",
-                    "ledger = JSON.parsefile(RUN_LEDGER)"],
+                    "ledger = try",
+                    "parse_failed = true",
+                    "ledger isa AbstractDict ||"],
   expected_case = "gate4_g3_acceptance_comparison",
   consumer_checks_case = false, status_only = false, active_when = :always),
 ]
@@ -773,9 +778,10 @@ const DCA_SITE_LEDGER = [
   class = "own-artifact", edge_ids = String[],
   reason = "waiting-path parse-back self-test of own results"),
  (file = "gate4_g3_acceptance_comparison.jl",
-  anchor = "ledger = JSON.parsefile(RUN_LEDGER)",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:g3_acceptance<-g3_run_ledger"],
-  reason = "run-ledger parse (absence-tolerant edge)"),
+  reason = "classify_run_ledger guarded-loader body (absence-tolerant " *
+           "edge; live run-ledger load + tmp loader fixtures)"),
  (file = "gate4_g3_executor_checkpoint.jl",
   anchor = "pf = JSON.parsefile(validation_results_path(\"gate4_g3_scoped_input_preflight.json\"))",
   class = "edge", edge_ids = ["dep:g3_executor<-scoped_preflight"],
@@ -1357,16 +1363,12 @@ function dca_main()
                       "finding" => "status-only contract (no case check); " *
                           "weakness, not a violation")
                  for v in verdicts if get(v, "status_only_contract", false)]
-    # standing asymmetry finding: G3 catches neither unparseable ledger
-    # JSON nor a parsed non-object
-    push!(hardening, Dict("id" => "dep:g3_acceptance<-g3_run_ledger",
-        "finding" => "consumer does not try/catch " *
-            "JSON.parsefile(RUN_LEDGER) and validate_run_ledger indexes " *
-            "the parsed value: an UNPARSEABLE OR PARSED-NON-OBJECT " *
-            "present ledger is an uncaught-exception gap with no " *
-            "faithful emitted status (G1 handles both cases as " *
-            "blocked_invalid); weakness, not a current violation " *
-            "(ledger absent)"))
+    # the former standing G3 asymmetry finding (uncaught-exception gap on
+    # an unparseable/non-object present ledger) is CLOSED: the
+    # classify_run_ledger guarded loader catches the parse and rejects a
+    # parsed non-object before validate_run_ledger, so both consumers now
+    # map both shapes to blocked_invalid (source-bound via the edge's
+    # parse-shape anchors and flags)
     # explicitly classified self-test states are surfaced, never called
     # dependency inconsistencies
     for v in verdicts
@@ -1428,7 +1430,9 @@ function dca_main()
             "1"^64, "c", "s")
     # pure E9 TRUTH TABLE: every prerequisite branch (outputs first),
     # with parse SUCCESS / object-ness / schema distinguished, in BOTH
-    # consumer styles (G1: catches+maps; G3: neither)
+    # consumer styles (guarded catches+maps -- now BOTH campaign
+    # consumers -- and the hypothetical unguarded style, kept
+    # fixture-tested so a future guardless consumer stays representable)
     tk = (waiting = "W", missing = "M", invalid = "I",
           downstream = ["D1", "D2"])
     g1s = (catches_parse_errors = true, maps_nonobject_to_invalid = true)
@@ -1449,13 +1453,14 @@ function dca_main()
     # successfully to a non-object -- it must never be conflated with a
     # parse failure.
     t["e9_ledger_state_matrix_validated"] =
-        # malformed: G1 -> invalid; G3 -> gap (no faithful status)
+        # malformed: guarded -> invalid; unguarded -> gap (no faithful
+        # status)
         dca_e9_allowed_statuses(true, true, false, nothing, nothing,
                                 tk; g1s...) == ["I"] &&
         dca_e9_allowed_statuses(true, true, false, nothing, nothing,
                                 tk; g3s...) == String[] &&
         # null / array: parse succeeds, object_ok=false:
-        # G1 -> invalid ("not an object"); G3 -> gap
+        # guarded -> invalid ("not an object"); unguarded -> gap
         dca_e9_allowed_statuses(true, true, true, false, nothing,
                                 tk; g1s...) == ["I"] &&
         dca_e9_allowed_statuses(true, true, true, false, nothing,
