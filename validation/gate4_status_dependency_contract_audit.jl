@@ -362,14 +362,24 @@ const DCA_EDGES = [
   expected_case = "gate4_r2_finding_ledger",
   consumer_checks_case = true, status_only = false,
   active_when = :r2_historical),
+ # HARDENED consumer: ps_classify_exec_checkpoint binds the exact case
+ # before the FAITHFUL accepted set (both the pre-execution and
+ # historical-executed tokens; pure membership helper shared with
+ # fixtures); fail-closed gate census before status selection; the unit
+ # executes nothing and writes only its own results (former status-only
+ # finding CLOSED)
  (id = "dep:a2_proof_scaffold<-a2_exec_checkpoint",
   consumer = "gate4_a2_reproduction_proof_scaffold.jl",
-  anchors = ["chk[\"status\"] in (\"a2_execution_checkpoint_ready\","],
+  anchors = ["chk_ok, chk_why = ps_classify_exec_checkpoint(",
+             "c == \"gate4_a2_execution_checkpoint\"",
+             "status in (\"a2_execution_checkpoint_ready\",",
+             "\"a2_execution_checkpoint_historical_executed\")",
+             "ps_exec_status_accepted(st)"],
   producer = "gate4_a2_execution_checkpoint.json", kind = :set,
   accepted = ["a2_execution_checkpoint_ready",
               "a2_execution_checkpoint_historical_executed"],
   expected_case = "gate4_a2_execution_checkpoint",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  # HARDENED consumer: pd_parse_pinned binds exact case+status for ALL
  # FOUR pinned inputs (the finding/submission ledgers gain the exact
  # status binding matching this manifest's pinned accepted sets -- the
@@ -894,9 +904,11 @@ const DCA_SITE_LEDGER = [
            "classes; exact case+status binding; serves all four " *
            "artifact edges + tmp loader fixtures)"),
  (file = "gate4_a2_reproduction_proof_scaffold.jl",
-  anchor = "chk = JSON.parsefile(validation_results_path(\"gate4_a2_execution_checkpoint.json\"))",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:a2_proof_scaffold<-a2_exec_checkpoint"],
-  reason = "execution-checkpoint prerequisite parse"),
+  reason = "ps_classify_exec_checkpoint guarded-loader body (five fixed " *
+           "refusal classes; exact-case + faithful accepted-set " *
+           "binding; live edge + tmp loader fixtures)"),
  (file = "gate4_g1_objective_ratio.jl",
   anchor = "JSON.parsefile(ledger_path)",
   class = "edge", edge_ids = ["dep:g1_objective_ratio<-g3_run_ledger"],
@@ -1833,13 +1845,13 @@ function dca_main()
         validate_run_ledger(good)[1] &&
             !validate_run_ledger(merge(good, Dict("status" => "draft")))[1]
     end
-    # exemplar retargeted after the v1_recon hardening: the a2 proof
-    # scaffold's exec-checkpoint edge remains a status-only contract
-    # (retarget again when the a2 family is hardened)
+    # exemplar retargeted after the a2 proof-scaffold hardening: the a2
+    # rerun manifest's a1 edge remains a status-only contract (rework to
+    # a synthetic-edge fixture when the last live finding closes)
     t["status_only_is_finding_not_failure"] =
-        any(h -> h["id"] == "dep:a2_proof_scaffold<-a2_exec_checkpoint",
+        any(h -> h["id"] == "dep:a2_rerun_manifest<-a1_upstream_recon",
             hardening) &&
-        !any(occursin("dep:a2_proof_scaffold<-a2_exec_checkpoint", f)
+        !any(occursin("dep:a2_rerun_manifest<-a1_upstream_recon", f)
              for f in fails)
     rm(tdir, recursive = true, force = true)
     gates["fixtures"] = all(values(t)) ? "passed" : "failed"

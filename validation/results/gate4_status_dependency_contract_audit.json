@@ -63,13 +63,13 @@
         "reason": "pd_parse_pinned guarded-loader body (five fixed refusal classes; exact case+status binding; serves all four artifact edges + tmp loader fixtures)"
       },
       {
-        "anchor": "chk = JSON.parsefile(validation_results_path(\"gate4_a2_execution_checkpoint.json\"))",
+        "anchor": "JSON.parsefile(path)",
         "class": "edge",
         "edge_ids": [
           "dep:a2_proof_scaffold<-a2_exec_checkpoint"
         ],
         "file": "gate4_a2_reproduction_proof_scaffold.jl",
-        "reason": "execution-checkpoint prerequisite parse"
+        "reason": "ps_classify_exec_checkpoint guarded-loader body (five fixed refusal classes; exact-case + faithful accepted-set binding; live edge + tmp loader fixtures)"
       },
       {
         "anchor": "JSON.parsefile(ledger_path)",
@@ -284,8 +284,8 @@
       },
       {
         "file": "gate4_a2_reproduction_proof_scaffold.jl",
-        "line": 62,
-        "text": "chk = JSON.parsefile(validation_results_path(\"gate4_a2_execution_checkpoint.json\"))"
+        "line": 90,
+        "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_g1_objective_ratio.jl",
@@ -488,14 +488,14 @@
       {
         "active": true,
         "consumer": "gate4_a2_reproduction_proof_scaffold.jl",
-        "consumer_sha256": "1f090859c0394bd8435c829e2ab0744af26f9d7b06d7a9de4de30f5f007fa64e",
+        "consumer_sha256": "f1ebf86ce11f20845d8bdcda07cb26b9f62ec4a7638a9a3d98e3d241fbba8b5f",
         "detail": "contract satisfied",
         "id": "dep:a2_proof_scaffold<-a2_exec_checkpoint",
         "kind": "set",
         "producer_case": "gate4_a2_execution_checkpoint",
         "producer_sha256": "eeac2f8e105249fb4575ea191793a94897e6233cd83442f37f23e2548b446d3a",
         "producer_status": "a2_execution_checkpoint_historical_executed",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
@@ -506,7 +506,7 @@
         "id": "dep:a2_proof_driver<-a2_proof_scaffold",
         "kind": "exact",
         "producer_case": "gate4_a2_reproduction_proof_scaffold",
-        "producer_sha256": "7d02a3947bd988fc6d90b61dca1fa9f89b544cd93e4f00537fd168ae08bf5639",
+        "producer_sha256": "ac9a9a4eac1b60f06a895391dc9e455ffe71b62e8f7a2960f751c3c109b68810",
         "producer_status": "a2_proof_scaffold_ready",
         "status_only_contract": false,
         "verdict": "satisfied"
@@ -943,10 +943,6 @@
   "hardening_findings": [
     {
       "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:a2_proof_scaffold<-a2_exec_checkpoint"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
       "id": "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution"
     },
     {
@@ -962,7 +958,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "4620bd0",
+    "generated_from_head": "759bb2f",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -974,5 +970,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T17:19:06.273"
+  "timestamp_utc": "2026-08-12T17:25:52.341"
 }

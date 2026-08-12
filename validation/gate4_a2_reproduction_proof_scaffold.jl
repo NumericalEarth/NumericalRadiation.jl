@@ -55,17 +55,129 @@ function find_candidates()
     return hits
 end
 
+# PURE accepted-set membership shared with fixtures (the execution
+# checkpoint is itself historical-marked post-4082; both its
+# pre-execution and historical-executed tokens satisfy this
+# prerequisite -- a faithful SET contract, preserved verbatim)
+ps_exec_status_accepted(status) =
+    status in ("a2_execution_checkpoint_ready",
+               "a2_execution_checkpoint_historical_executed")
+
+# fail-closed gate closure (pure; fixture-run; same discipline as the
+# A2 proof driver): whenever ANY gate is not passed the authoritative
+# complete failed-gate census is appended, and success additionally
+# requires every gate passed
+function ps_close_failed_gates(fails, gates)
+    failed = sort([k for (k, v) in gates if v != "passed"])
+    out = copy(fails)
+    isempty(failed) ||
+        push!(out, "failed gates (fail-closed census): " *
+                   join(failed, ", "))
+    return out, isempty(failed)
+end
+
+# guarded exec-checkpoint classifier (fixture-run via the absolute-path
+# passthrough; the unit's SINGLE parsefile site): FIVE fixed, distinct
+# refusal classes -- missing; unparseable (parse failure); parses to a
+# non-object (JSON null/array/scalar); case mismatch; status not in the
+# accepted set (verbatim off-set token reported). Never an uncaught
+# exception: the unit's own JSON/MD failure report must always emit.
+function ps_classify_exec_checkpoint(name)
+    path = isabspath(name) ? name : validation_results_path(name)
+    isfile(path) ||
+        return (false, "A2 execution checkpoint missing")
+    raw = try
+        JSON.parsefile(path)
+    catch
+        return (false, "A2 execution checkpoint unparseable " *
+                       "(parse failure)")
+    end
+    raw isa AbstractDict ||
+        return (false, "A2 execution checkpoint parses to a non-object " *
+                       "(JSON null/array/scalar)")
+    c = get(raw, "case", "")
+    (c isa AbstractString && c == "gate4_a2_execution_checkpoint") ||
+        return (false, "A2 execution checkpoint case mismatch: " *
+                       (c isa AbstractString && !isempty(c) ? c :
+                        "(missing/non-string)"))
+    s = get(raw, "status", "")
+    st = s isa AbstractString ? String(s) : "(missing/non-string)"
+    ps_exec_status_accepted(st) ||
+        return (false, "A2 execution checkpoint not ready: $st")
+    return (true, "ok")
+end
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    chk = JSON.parsefile(validation_results_path("gate4_a2_execution_checkpoint.json"))
-    # the execution checkpoint is itself historical-marked post-4082; both
-    # its pre-execution and historical-executed tokens satisfy this
-    # prerequisite
-    chk["status"] in ("a2_execution_checkpoint_ready",
-                      "a2_execution_checkpoint_historical_executed") ||
-        push!(fails, "A2 execution checkpoint not ready: $(chk["status"])")
+    # classifier fixtures FIRST, through the SAME production code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] = begin
+        r = ps_classify_exec_checkpoint(joinpath(tdir, "absent.json"))
+        !r[1] && r[2] == "A2 execution checkpoint missing"
+    end
+    fpx = joinpath(tdir, "xc.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        r = ps_classify_exec_checkpoint(fpx)
+        !r[1] && occursin("unparseable (parse failure)", r[2])
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        r = ps_classify_exec_checkpoint(fpx)
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        r = ps_classify_exec_checkpoint(fpx)
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "{\"case\": \"other\", " *
+               "\"status\": \"a2_execution_checkpoint_ready\"}")
+    lt["wrong_case_fails"] = begin
+        r = ps_classify_exec_checkpoint(fpx)
+        !r[1] && occursin("case mismatch", r[2])
+    end
+    write(fpx, "{\"case\": \"gate4_a2_execution_checkpoint\", " *
+               "\"status\": \"totally_bogus\"}")
+    lt["tampered_status_fails"] = begin
+        r = ps_classify_exec_checkpoint(fpx)
+        !r[1] && occursin("not ready: totally_bogus", r[2])
+    end
+    lt["both_accepted_tokens_pass"] =
+        ps_exec_status_accepted("a2_execution_checkpoint_ready") &&
+        ps_exec_status_accepted(
+            "a2_execution_checkpoint_historical_executed") &&
+        !ps_exec_status_accepted("a2_execution_checkpoint_failed")
+    write(fpx, "{\"case\": \"gate4_a2_execution_checkpoint\", " *
+               "\"status\": \"a2_execution_checkpoint_ready\"}")
+    lt["exact_green_passes"] =
+        ps_classify_exec_checkpoint(fpx) == (true, "ok")
+    # a failed gate can never yield success; the census is always
+    # appended and cannot be hidden by another gate's reason
+    lt["failed_gate_closed_without_reason"] = begin
+        f1, ok1 = ps_close_failed_gates(String[], Dict("g" => "failed"))
+        f2, ok2 = ps_close_failed_gates(String[], Dict("g" => "passed"))
+        f3, ok3 = ps_close_failed_gates(["reason for a"],
+            Dict("a" => "failed", "b" => "failed"))
+        !ok1 && length(f1) == 1 &&
+            occursin("fail-closed census", f1[1]) &&
+            ok2 && isempty(f2) &&
+            !ok3 && length(f3) == 2 && occursin("a, b", f3[2])
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
+    # exact case + faithful accepted-set prerequisite (guarded)
+    chk_ok, chk_why = ps_classify_exec_checkpoint(
+        "gate4_a2_execution_checkpoint.json")
+    gates["exec_checkpoint_prerequisite"] = chk_ok ? "passed" : "failed"
+    chk_ok || push!(fails, chk_why)
 
     lw32 = NumericalRadiation.official_ecckd_definition_path(:longwave_32)
     sw32 = NumericalRadiation.official_ecckd_definition_path(:shortwave_32)
@@ -169,7 +281,12 @@ function main()
         "(claiming the May config already localizes paths) is absent from " *
         "the current gate4_a2_dryrun.sbatch; no action remains"
 
-    status = !isempty(fails) ? "a2_proof_scaffold_failed" :
+    # fail-closed status selection: every failed gate is closed into the
+    # authoritative census reason, and success additionally requires
+    # EVERY gate passed -- a structural gate can never fail silently
+    fails, gates_all_passed = ps_close_failed_gates(fails, gates)
+    status = !(isempty(fails) && gates_all_passed) ?
+             "a2_proof_scaffold_failed" :
              have_candidates ? "a2_proof_scaffold_ready" :
                                "a2_proof_scaffold_ready_waiting_for_candidates"
 
@@ -182,6 +299,7 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "candidates_found" => cands,
         "proof_commands" => proof_commands,
         "comparisons" => comparisons,

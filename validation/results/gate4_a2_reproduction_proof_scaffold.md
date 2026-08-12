@@ -11,8 +11,10 @@ HISTORICAL proof specification (the proof it specified was executed as job 4091 
 | Gate | Result |
 |---|---|
 | comparison_spec_complete | passed |
+| exec_checkpoint_prerequisite | passed |
 | mismatch_means_sensitivity_only | passed |
 | no_execution_in_this_unit | passed |
+| prerequisite_loader_fixture_tests | passed |
 | proof_commands_recorded | passed |
 | published_targets_resolved | passed |
 | refuses_without_candidates | passed |
@@ -36,4 +38,4 @@ Verdict (historical strict rule): all exact -> promote to acceptance raw inits; 
 
 Deferred hygiene note: RESOLVED: the previously flagged stale comment (claiming the May config already localizes paths) is absent from the current gate4_a2_dryrun.sbatch; no action remains
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `a045b24` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `759bb2f` (pre-own-commit).
