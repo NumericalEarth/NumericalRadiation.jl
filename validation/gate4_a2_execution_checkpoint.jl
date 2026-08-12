@@ -79,14 +79,64 @@ ax_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
 ax_str(x) = x isa AbstractString ? String(x) : ""
 ax_sha(p) = isfile(p) ? split(strip(read(`sha256sum $p`, String)))[1] : "missing"
 
-function ax_parse!(fails, name)
-    try
-        JSON.parsefile(validation_results_path(name))
-    catch err
-        push!(fails, "$name unreadable/unparseable: " *
-                     "$(first(sprint(showerror, err), 120))")
-        nothing
+# guarded rerun-manifest classifier (fixture-run via the absolute-path
+# passthrough; the pre-execution prerequisite's ONLY loader, replacing
+# the former single-use ax_parse!): FIVE fixed, distinct refusal
+# classes -- missing; unparseable (parse failure); parses to a
+# non-object (JSON null/array/scalar); case mismatch (exact
+# gate4_a2_find_g_points_rerun_manifest); off-status with the verbatim
+# token. Accepted: ONLY exact status a2_manifest_ready -- per the
+# monitor's BINDING ruling the current
+# a2_manifest_ready_waiting_for_inputs token is REJECTED and blocks
+# pre-execution.
+function ax_classify_rerun_manifest(name)
+    path = isabspath(name) ? name : validation_results_path(name)
+    isfile(path) ||
+        return (false, "A2 rerun manifest missing")
+    raw = try
+        JSON.parsefile(path)
+    catch
+        return (false, "A2 rerun manifest unparseable (parse failure)")
     end
+    raw isa AbstractDict ||
+        return (false, "A2 rerun manifest parses to a non-object " *
+                       "(JSON null/array/scalar)")
+    c = get(raw, "case", "")
+    (c isa AbstractString &&
+     c == "gate4_a2_find_g_points_rerun_manifest") ||
+        return (false, "A2 rerun manifest case mismatch: " *
+                       (c isa AbstractString && !isempty(c) ? c :
+                        "(missing/non-string)"))
+    s = get(raw, "status", "")
+    st = s isa AbstractString ? String(s) : "(missing/non-string)"
+    st == "a2_manifest_ready" ||
+        return (false, "A2 manifest not ready: $st")
+    return (true, "ok")
+end
+
+# the pre-execution sbatch write happens ONLY behind the classified
+# manifest prerequisite (mirrors the proven A2 proof-driver pattern);
+# blocked/waiting pre-execution, historical, and anomaly all preserve
+# the existing file
+ax_should_write(mode, manifest_ok) =
+    mode == :preexecution && manifest_ok
+function ax_write_script(writefn, mode, manifest_ok)
+    ax_should_write(mode, manifest_ok) || return false
+    writefn()
+    return true
+end
+
+# fail-closed gate closure (pure; fixture-run; standard discipline):
+# whenever ANY gate is not passed the authoritative complete
+# failed-gate census is appended, so failure reports can never omit a
+# silent failed gate
+function ax_close_failed_gates(fails, gates)
+    failed = sort([k for (k, v) in gates if v != "passed"])
+    out = copy(fails)
+    isempty(failed) ||
+        push!(out, "failed gates (fail-closed census): " *
+                   join(failed, ", "))
+    return out, isempty(failed)
 end
 
 const SBATCH_TEXT = """
@@ -183,6 +233,80 @@ function main()
     fails = String[]
     gates = Dict{String, String}()
 
+    # classifier/writer/census fixtures FIRST, through the SAME
+    # production code (counters and temp files ONLY -- AX_SBATCH is
+    # never touched by any fixture)
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] = begin
+        r = ax_classify_rerun_manifest(joinpath(tdir, "absent.json"))
+        !r[1] && r[2] == "A2 rerun manifest missing"
+    end
+    fpx = joinpath(tdir, "rm.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        r = ax_classify_rerun_manifest(fpx)
+        !r[1] && occursin("unparseable (parse failure)", r[2])
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        r = ax_classify_rerun_manifest(fpx)
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        r = ax_classify_rerun_manifest(fpx)
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "{\"case\": \"other\", " *
+               "\"status\": \"a2_manifest_ready\"}")
+    lt["wrong_case_fails"] = begin
+        r = ax_classify_rerun_manifest(fpx)
+        !r[1] && occursin("case mismatch", r[2])
+    end
+    # BINDING RULING: the current live waiting token is REJECTED and
+    # blocks pre-execution (named fixture, verbatim token)
+    write(fpx, "{\"case\": \"gate4_a2_find_g_points_rerun_manifest\", " *
+               "\"status\": \"a2_manifest_ready_waiting_for_inputs\"}")
+    lt["waiting_for_inputs_token_rejected"] = begin
+        r = ax_classify_rerun_manifest(fpx)
+        !r[1] && r[2] ==
+            "A2 manifest not ready: a2_manifest_ready_waiting_for_inputs"
+    end
+    write(fpx, "{\"case\": \"gate4_a2_find_g_points_rerun_manifest\", " *
+               "\"status\": \"totally_bogus\"}")
+    lt["tampered_status_fails"] = begin
+        r = ax_classify_rerun_manifest(fpx)
+        !r[1] && occursin("not ready: totally_bogus", r[2])
+    end
+    write(fpx, "{\"case\": \"gate4_a2_find_g_points_rerun_manifest\", " *
+               "\"status\": \"a2_manifest_ready\"}")
+    lt["exact_green_passes"] =
+        ax_classify_rerun_manifest(fpx) == (true, "ok")
+    lt["writer_only_green_preexecution"] = begin
+        n = Ref(0)
+        w = () -> (n[] += 1)
+        ax_write_script(w, :preexecution, true) == true && n[] == 1 &&
+            ax_write_script(w, :preexecution, false) == false &&
+            ax_write_script(w, :historical, true) == false &&
+            ax_write_script(w, :anomaly, true) == false && n[] == 1
+    end
+    lt["failed_gate_closed_without_reason"] = begin
+        f1, ok1 = ax_close_failed_gates(String[], Dict("g" => "failed"))
+        f2, ok2 = ax_close_failed_gates(String[], Dict("g" => "passed"))
+        f3, ok3 = ax_close_failed_gates(["reason for a"],
+            Dict("a" => "failed", "b" => "failed"))
+        !ok1 && length(f1) == 1 &&
+            occursin("fail-closed census", f1[1]) &&
+            ok2 && isempty(f2) &&
+            !ok3 && length(f3) == 2 && occursin("a, b", f3[2])
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
     # THREE-WAY MODE SELECTION from the SUBMISSION LEDGER (case + status),
     # never from live-file presence alone:
     #   :historical    -- ledger present, valid, completed
@@ -219,13 +343,16 @@ function main()
     end
 
     # manifest prerequisite is a PRE-EXECUTION gate only (stale in
-    # historical/anomaly modes)
+    # historical/anomaly modes); exact case+status through the guarded
+    # classifier -- the waiting token BLOCKS pre-execution (binding
+    # ruling; accepted is ONLY a2_manifest_ready)
+    manifest_ok = false
     if mode == :preexecution
-        m_obj = ax_obj(ax_parse!(fails,
-            "gate4_a2_find_g_points_rerun_manifest.json"))
-        ax_str(get(m_obj, "status", "")) == "a2_manifest_ready" ||
-            push!(fails, "A2 manifest not ready: " *
-                         "$(ax_str(get(m_obj, "status", "(missing)")))")
+        manifest_ok, manifest_why = ax_classify_rerun_manifest(
+            "gate4_a2_find_g_points_rerun_manifest.json")
+        gates["rerun_manifest_prerequisite"] =
+            manifest_ok ? "passed" : "failed"
+        manifest_ok || push!(fails, manifest_why)
     end
 
     executed = Dict{String, Any}()
@@ -349,19 +476,21 @@ function main()
                 "candidates as structure sources for ACCEPTANCE-INIT " *
                 "SELECTION (it did not alter the strict finding's record)" :
                 "WITHHELD: dependency verification failed")
-    elseif mode == :preexecution
-        # genuine pre-execution world (no ledger, no candidates): write
-        # the dry-run sbatch (never submitted)
-        open(AX_SBATCH, "w") do io
-            write(io, SBATCH_TEXT)
-        end
     end   # :anomaly writes nothing and claims nothing
 
-    # gates (structural; three-way mode-appropriate name so anomaly never
-    # claims "written")
+    # genuine pre-execution world writes the dry-run sbatch (never
+    # submitted) ONLY behind the classified manifest prerequisite;
+    # blocked/waiting pre-execution preserves the existing file
+    sbatch_written = ax_write_script(() -> open(AX_SBATCH, "w") do io
+        write(io, SBATCH_TEXT)
+    end, mode, manifest_ok)
+
+    # gates (structural; mode-appropriate name so anomaly and blocked
+    # pre-execution never claim "written")
     sb_gate = historical ? "sbatch_not_regenerated_or_submitted" :
               mode == :anomaly ? "sbatch_untouched_fail_closed" :
-                                 "sbatch_written_not_submitted"
+              sbatch_written ? "sbatch_written_not_submitted" :
+                               "sbatch_blocked_preserved_not_submitted"
     gates[sb_gate] = "passed"   # structural: this
     # script contains no `sbatch` invocation (self-scan with split token)
     self_src = read(@__FILE__, String)
@@ -515,7 +644,11 @@ function main()
     # success requires BOTH no fails AND every gate passed: several gates
     # can fail without appending to fails, and a false historical success
     # must be impossible
-    all_green = isempty(fails) && all(v -> v == "passed", values(gates))
+    # standard fail-closed census before status selection: failure
+    # reports can never omit a silent failed gate (all_green already
+    # requires every gate passed; the census makes the report complete)
+    fails, gates_all_passed = ax_close_failed_gates(fails, gates)
+    all_green = isempty(fails) && gates_all_passed
     status = !all_green ? "a2_execution_checkpoint_failed" :
              historical ? "a2_execution_checkpoint_historical_executed" :
                           "a2_execution_checkpoint_ready"
@@ -528,11 +661,33 @@ function main()
         "data_mode" => historical ?
             "historical_post_execution_verification_only" :
             mode == :anomaly ? "anomalous_state_no_generation" :
-            "dry_run_script_generation_only",
+            sbatch_written ? "dry_run_script_generation_only" :
+            "blocked_no_script_generated",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "sbatch_path" => AX_SBATCH,
+        "sbatch_written_this_run" => sbatch_written,
+        # the historical claim is GATE-DEPENDENT (pd_claim discipline):
+        # only a green identity gate may say ledger-verified
+        "sbatch_scripts_state" => historical ?
+            (get(gates, "preserved_sbatch_matches_submission_ledger",
+                 "") == "passed" ?
+             "EXECUTED script preserved (ledger-verified identity); " *
+             "never regenerated" :
+             "EXECUTED-script identity verification FAILED; claim " *
+             "withheld; the preserved file was NOT regenerated or " *
+             "modified by this unit") :
+            mode == :anomaly ?
+            "untouched (anomalous state; fail closed)" :
+            sbatch_written ?
+            "generated this run (unsubmitted)" :
+            isfile(AX_SBATCH) ?
+            "NOT generated this run (prerequisite blocked/waiting); " *
+            "the file at sbatch_path is PRESERVED output of an earlier " *
+            "run, not current" :
+            "NOT generated this run; NO file exists at sbatch_path",
         "env_localization" => Dict(
             "mechanism" => (historical ? "AT-CHECKPOINT description: " : "") *
                 "ALL THREE hard-coded config.h path variables " *
@@ -595,12 +750,17 @@ function main()
             "or candidates without a ledger): fail-closed; nothing " *
             "generated, regenerated, or submitted; investigate before " *
             "any action." :
+            sbatch_written ?
             "dry-run script generation only; nothing submitted; " *
             "no find_g_points/create_lut/objective/floor " *
             "execution; the generated script runs " *
             "merge_well_mixed + reorder + find_g_points only; " *
             "submission requires explicit authorization per the " *
-            "standing protocol.",
+            "standing protocol." :
+            "BLOCKED pre-execution run: the rerun-manifest prerequisite " *
+            "failed or is waiting, NO script was generated, nothing " *
+            "submitted; any file at the sbatch path is preserved output " *
+            "of an earlier run.",
     )
     mkpath(dirname(AX_RESULTS_JSON))
     open(AX_RESULTS_JSON, "w") do io
@@ -622,10 +782,19 @@ function main()
             println(io, "| $k | $(gates[k]) |")
         end
         if historical
-            println(io, "\nExecuted batch script (preserved; byte-verified " *
-                        "against the submission ledger's recorded sha): " *
-                        "`$(AX_SBATCH)` sha256 " *
-                        "`$(get(executed, "executed_sbatch_sha256", "?"))`")
+            if get(gates, "preserved_sbatch_matches_submission_ledger",
+                   "") == "passed"
+                println(io, "\nExecuted batch script (preserved; " *
+                            "byte-verified against the submission " *
+                            "ledger's recorded sha): `$(AX_SBATCH)` " *
+                            "sha256 " *
+                            "`$(get(executed, "executed_sbatch_sha256", "?"))`")
+            else
+                println(io, "\nExecuted-script identity verification " *
+                            "FAILED; claim withheld; the preserved file " *
+                            "at `$(AX_SBATCH)` was NOT regenerated or " *
+                            "modified by this unit.")
+            end
             println(io, "\nLedger-verified outcome: ",
                     get(executed, "outcome_ledger_verified", "?"))
             println(io, "\nExactly TWO g-point candidates (find_g_points " *
@@ -642,7 +811,15 @@ function main()
             println(io, "\nLater disposition (separately verified): ",
                     executed["later_disposition"])
         elseif mode == :preexecution
-            println(io, "\nGenerated (unsubmitted) batch script: `$(AX_SBATCH)`")
+            if sbatch_written
+                println(io, "\nGenerated (unsubmitted) batch script: " *
+                            "`$(AX_SBATCH)`")
+            else
+                println(io, "\nNO script generated this run " *
+                            "(prerequisite blocked/waiting); any file " *
+                            "at `$(AX_SBATCH)` is preserved output of " *
+                            "an earlier run, not current.")
+            end
             n_present = count(m -> get(m, "present", false), input_manifest)
             println(io, "\nComposite-input preflight: $n_present/" *
                         "$(length(input_manifest)) present " *

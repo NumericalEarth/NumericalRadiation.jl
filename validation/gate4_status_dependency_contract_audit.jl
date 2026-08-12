@@ -135,6 +135,25 @@ dca_snapshot_stale(recorded, cur_sha, cur_case, cur_status) =
     dca_str(get(recorded, "verified_case", "")) != cur_case ||
     dca_str(get(recorded, "verified_status", "")) != cur_status
 
+# PURE hardening-findings constructor (fixture-run with synthetic
+# verdicts): status-only contracts and explicitly classified self-test
+# states are surfaced as FINDINGS, never failures; production and the
+# fixture share this exact code
+function dca_hardening_findings(verdicts)
+    h = [Dict("id" => v["id"],
+              "finding" => "status-only contract (no case check); " *
+                  "weakness, not a violation")
+         for v in verdicts if get(v, "status_only_contract", false)]
+    for v in verdicts
+        get(v, "verdict", "") == "consumer_selftest_state" &&
+            push!(h, Dict("id" => v["id"],
+                "finding" => "consumer is in its self-test-failure " *
+                    "status; classified explicitly, not a dependency " *
+                    "inconsistency"))
+    end
+    return h
+end
+
 # authority-input truth table (pure; fixture-tested): the faithful
 # rulings-intake statuses given register health, source presence, and
 # parse shape. The intake's deeper semantics (assignment schema, pin,
@@ -438,14 +457,25 @@ const DCA_EDGES = [
   accepted = ["a2_attempt2_completed_candidates_collected"],
   expected_case = "gate4_a2_submission_ledger",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ # HARDENED consumer: ax_classify_rerun_manifest binds the exact case
+ # before the exact status; BINDING ruling -- accepted is ONLY
+ # a2_manifest_ready, so the current live waiting token
+ # (a2_manifest_ready_waiting_for_inputs) is rejected and blocks
+ # pre-execution (named fixture); the pre-execution write is
+ # allowlist-gated; historical/anomaly never write. The branch is
+ # INACTIVE live (a2 mode historical); its contract is fixture-verified
+ # offline through the same production classifier.
  (id = "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
   consumer = "gate4_a2_execution_checkpoint.jl",
-  anchors = ["== \"a2_manifest_ready\""],
+  anchors = ["manifest_ok, manifest_why = ax_classify_rerun_manifest(",
+             "c == \"gate4_a2_find_g_points_rerun_manifest\"",
+             "st == \"a2_manifest_ready\"",
+             "sbatch_written = ax_write_script("],
   producer = "gate4_a2_find_g_points_rerun_manifest.json",
   kind = :mode_dependent,
   accepted = ["a2_manifest_ready"],
   expected_case = "gate4_a2_find_g_points_rerun_manifest",
-  consumer_checks_case = false, status_only = true,
+  consumer_checks_case = true, status_only = false,
   active_when = :a2_preexecution),
  (id = "dep:a2_exec_checkpoint<-a2_proof_finding_ledger:later_disposition",
   consumer = "gate4_a2_execution_checkpoint.jl",
@@ -883,9 +913,12 @@ end
 # `edge` (with the exact served edge_ids) or an excluded class
 const DCA_SITE_LEDGER = [
  (file = "gate4_a2_execution_checkpoint.jl",
-  anchor = "JSON.parsefile(validation_results_path(name))",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution"],
-  reason = "ax_parse! helper body"),
+  reason = "ax_classify_rerun_manifest guarded-loader body (five fixed " *
+           "refusal classes; exact-case + exact-status binding; the " *
+           "waiting token is rejected per the binding ruling; live " *
+           "edge inactive in historical mode + tmp loader fixtures)"),
  (file = "gate4_a2_execution_checkpoint.jl",
   anchor = "sub_exists ? JSON.parsefile(sub_path) : nothing",
   class = "edge", edge_ids = ["dep:a2_exec_checkpoint<-a2_submission_ledger:mode_selection"],
@@ -1559,25 +1592,13 @@ function dca_main()
         "$(n_viol) contract violations: " *
         join([v["id"] for v in verdicts if v["verdict"] == "violated"], ", "))
 
-    hardening = [Dict("id" => v["id"],
-                      "finding" => "status-only contract (no case check); " *
-                          "weakness, not a violation")
-                 for v in verdicts if get(v, "status_only_contract", false)]
-    # the former standing G3 asymmetry finding (uncaught-exception gap on
-    # an unparseable/non-object present ledger) is CLOSED: the
-    # classify_run_ledger guarded loader catches the parse and rejects a
-    # parsed non-object before validate_run_ledger, so both consumers now
-    # map both shapes to blocked_invalid (source-bound via the edge's
-    # parse-shape anchors and flags)
-    # explicitly classified self-test states are surfaced, never called
-    # dependency inconsistencies
-    for v in verdicts
-        v["verdict"] == "consumer_selftest_state" && push!(hardening,
-            Dict("id" => v["id"],
-                 "finding" => "consumer is in its self-test-failure " *
-                     "status; classified explicitly, not a dependency " *
-                     "inconsistency"))
-    end
+    # hardening findings via the pure, fixture-shared constructor; with
+    # every consumer hardened, live hardening == [] is the EXPECTED
+    # generated result (informational -- deliberately NOT a gate: a
+    # future legitimate status-only or selftest finding must surface as
+    # a finding, never as an audit failure). The former standing G3
+    # asymmetry finding remains CLOSED (classify_run_ledger).
+    hardening = dca_hardening_findings(verdicts)
 
     # --- fixtures (pure validators reused; unknown kinds refuse) ----------
     t = Dict{String, Bool}()
@@ -1857,18 +1878,27 @@ function dca_main()
         validate_run_ledger(good)[1] &&
             !validate_run_ledger(merge(good, Dict("status" => "draft")))[1]
     end
-    # exemplar retargeted after the a2 rerun-manifest hardening: the
-    # exec checkpoint's INACTIVE pre-execution edge is the last
-    # remaining status-only contract (its verdict is inactive_branch but
-    # the status-only weakness is still censused; rework this fixture to
-    # a synthetic edge when A2-3 closes it)
-    t["status_only_is_finding_not_failure"] =
-        any(h -> h["id"] ==
-                 "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
-            hardening) &&
-        !any(occursin(
-                 "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
-                 f) for f in fails)
+    # SYNTHETIC exemplar (every live consumer is now hardened, so live
+    # hardening == [] is the expected generated result): a synthetic
+    # status-only verdict and a synthetic selftest-state verdict must
+    # classify as FINDINGS through the exact production constructor,
+    # and never surface as failures
+    t["status_only_is_finding_not_failure"] = begin
+        syn = dca_hardening_findings(Any[
+            Dict("id" => "synthetic-status-only-edge",
+                 "status_only_contract" => true,
+                 "verdict" => "satisfied"),
+            Dict("id" => "synthetic-selftest-edge",
+                 "status_only_contract" => false,
+                 "verdict" => "consumer_selftest_state"),
+            Dict("id" => "synthetic-clean-edge",
+                 "status_only_contract" => false,
+                 "verdict" => "satisfied")])
+        any(h -> h["id"] == "synthetic-status-only-edge", syn) &&
+            any(h -> h["id"] == "synthetic-selftest-edge", syn) &&
+            !any(h -> h["id"] == "synthetic-clean-edge", syn) &&
+            !any(occursin("synthetic-status-only-edge", f) for f in fails)
+    end
     rm(tdir, recursive = true, force = true)
     gates["fixtures"] = all(values(t)) ? "passed" : "failed"
     all(values(t)) || push!(fails, "fixtures failed: " *

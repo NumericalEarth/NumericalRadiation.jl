@@ -16,6 +16,7 @@ HISTORICAL post-execution record: the generated sbatch was executed as job 4082 
 | ledger_candidate_shas_wellformed | passed |
 | merge_reorder_find_only | passed |
 | no_mutation_of_4078_workcopy | passed |
+| prerequisite_loader_fixture_tests | passed |
 | preserved_sbatch_matches_submission_ledger | passed |
 | rayleigh_overlay_input_artifact_verified | passed |
 | rayleigh_overlay_provisioned | passed |
@@ -41,4 +42,4 @@ Later disposition (separately verified): follow-on exact-reproduction proof EXEC
 
 Follow-on proof plan (at-checkpoint text): g-counts 32/32; gpoint_fraction and band arrays elementwise EXACT vs published; any mismatch -> sensitivity-only, no floor.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `a045b24` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `06681c4` (pre-own-commit).

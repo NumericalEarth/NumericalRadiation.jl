@@ -53,6 +53,7 @@
     "ledger_candidate_shas_wellformed": "passed",
     "merge_reorder_find_only": "passed",
     "no_mutation_of_4078_workcopy": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "preserved_sbatch_matches_submission_ledger": "passed",
     "rayleigh_overlay_input_artifact_verified": "passed",
     "rayleigh_overlay_provisioned": "passed",
@@ -69,6 +70,18 @@
     "gpoints": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/**/ecckd-*_gpoints_climate_{fsck-tol0.0161,rgb-tol0.047}.h5",
     "log": "/shared/home/greg/data/ckdmip-logs/g4-a2-<jobid>.log",
     "reorder": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/**/{lw,sw}_order_*_*.h5"
+  },
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "exact_green_passes": true,
+    "failed_gate_closed_without_reason": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "null_non_object_fails": true,
+    "tampered_status_fails": true,
+    "waiting_for_inputs_token_rejected": true,
+    "writer_only_green_preexecution": true,
+    "wrong_case_fails": true
   },
   "proof_plan": {
     "gates": [
@@ -87,12 +100,14 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "a045b24",
+    "generated_from_head": "06681c4",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_dryrun.sbatch",
+  "sbatch_scripts_state": "EXECUTED script preserved (ledger-verified identity); never regenerated",
+  "sbatch_written_this_run": false,
   "status": "a2_execution_checkpoint_historical_executed",
-  "timestamp_utc": "2026-08-12T12:01:20.326",
+  "timestamp_utc": "2026-08-12T17:53:17.540",
   "verified_outputs": {
     "lw_gpoint_candidate": {
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",

@@ -6,13 +6,13 @@
     "n_sites": 24,
     "site_ledger": [
       {
-        "anchor": "JSON.parsefile(validation_results_path(name))",
+        "anchor": "JSON.parsefile(path)",
         "class": "edge",
         "edge_ids": [
           "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution"
         ],
         "file": "gate4_a2_execution_checkpoint.jl",
-        "reason": "ax_parse! helper body"
+        "reason": "ax_classify_rerun_manifest guarded-loader body (five fixed refusal classes; exact-case + exact-status binding; the waiting token is rejected per the binding ruling; live edge inactive in historical mode + tmp loader fixtures)"
       },
       {
         "anchor": "sub_exists ? JSON.parsefile(sub_path) : nothing",
@@ -254,22 +254,22 @@
     "sites": [
       {
         "file": "gate4_a2_execution_checkpoint.jl",
-        "line": 84,
-        "text": "JSON.parsefile(validation_results_path(name))"
+        "line": 97,
+        "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_a2_execution_checkpoint.jl",
-        "line": 196,
+        "line": 320,
         "text": "sub_exists ? JSON.parsefile(sub_path) : nothing"
       },
       {
         "file": "gate4_a2_execution_checkpoint.jl",
-        "line": 304,
+        "line": 431,
         "text": "pf = ax_obj(try JSON.parsefile(validation_results_path("
       },
       {
         "file": "gate4_a2_execution_checkpoint.jl",
-        "line": 306,
+        "line": 433,
         "text": "ob = ax_obj(try JSON.parsefile(validation_results_path("
       },
       {
@@ -493,7 +493,7 @@
         "id": "dep:a2_proof_scaffold<-a2_exec_checkpoint",
         "kind": "set",
         "producer_case": "gate4_a2_execution_checkpoint",
-        "producer_sha256": "eeac2f8e105249fb4575ea191793a94897e6233cd83442f37f23e2548b446d3a",
+        "producer_sha256": "9e613d8db048e85dc62763abef240640442bf6a6bd9e207ef5eada9d8e4888f3",
         "producer_status": "a2_execution_checkpoint_historical_executed",
         "status_only_contract": false,
         "verdict": "satisfied"
@@ -553,7 +553,7 @@
       {
         "active": true,
         "consumer": "gate4_a2_execution_checkpoint.jl",
-        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "consumer_sha256": "2971cdadf2095da271466ea0daf1019e0baf1db6de85175c29964c03c2c1df2a",
         "detail": "contract satisfied",
         "id": "dep:a2_exec_checkpoint<-a2_submission_ledger:mode_selection",
         "kind": "mode_dependent",
@@ -566,17 +566,17 @@
       {
         "active": false,
         "consumer": "gate4_a2_execution_checkpoint.jl",
-        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "consumer_sha256": "2971cdadf2095da271466ea0daf1019e0baf1db6de85175c29964c03c2c1df2a",
         "detail": "contract branch not exercised in the current mode; anchors verified",
         "id": "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution",
         "kind": "mode_dependent",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "inactive_branch"
       },
       {
         "active": true,
         "consumer": "gate4_a2_execution_checkpoint.jl",
-        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "consumer_sha256": "2971cdadf2095da271466ea0daf1019e0baf1db6de85175c29964c03c2c1df2a",
         "detail": "contract satisfied",
         "id": "dep:a2_exec_checkpoint<-a2_proof_finding_ledger:later_disposition",
         "kind": "mode_dependent",
@@ -589,7 +589,7 @@
       {
         "active": true,
         "consumer": "gate4_a2_execution_checkpoint.jl",
-        "consumer_sha256": "608d7c8b444fea60eba99b8707f821f111713a086b5833f5863b878246211aa7",
+        "consumer_sha256": "2971cdadf2095da271466ea0daf1019e0baf1db6de85175c29964c03c2c1df2a",
         "detail": "contract satisfied",
         "id": "dep:a2_exec_checkpoint<-option_b:later_disposition",
         "kind": "mode_dependent",
@@ -940,12 +940,7 @@
     "manifest_schema_valid": "passed",
     "no_contract_violations": "passed"
   },
-  "hardening_findings": [
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution"
-    }
-  ],
+  "hardening_findings": [],
   "modes_observed": {
     "a2": "historical",
     "g3_run_ledger_present": false,
@@ -954,7 +949,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "5114d66",
+    "generated_from_head": "06681c4",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -966,5 +961,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T17:41:09.301"
+  "timestamp_utc": "2026-08-12T17:53:52.428"
 }
