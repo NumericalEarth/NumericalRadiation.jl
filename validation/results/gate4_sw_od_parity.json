@@ -1,0 +1,207 @@
+{
+  "case": "gate4_sw_od_parity",
+  "conc_dependence_codes": {
+    "ch4": 3,
+    "co2": 1,
+    "composite": 0,
+    "h2o": 2,
+    "n2o": 3,
+    "o3": 1
+  },
+  "disclaimer": "read-only SW OD reconstruction parity (per-gas raw, total raw, clamped-vs-emitted, raw negativity); authorizes (or refuses) SW binding of the Gate-2 true-OD metric; no optimizer, objective-value, floor, or recovery claims.",
+  "failures": [],
+  "gas_stats": {
+    "ch4": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 3.63748617272959e-12,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "neg_residuals": 32010,
+      "pos_residuals": 32265,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": 0.0039673278879813305,
+      "worst_linear_index": 0,
+      "worst_ours": 0.0,
+      "worst_ref": 0.0
+    },
+    "co2": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 2.383849997400489e-7,
+      "max_rel_above_abs_floor": 5.883617470808254e-8,
+      "n": 86400,
+      "neg_residuals": 33435,
+      "pos_residuals": 34065,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": 0.009333333333333334,
+      "worst_linear_index": 17176,
+      "worst_ours": 1.0125749706935916,
+      "worst_ref": 1.0125749111175537
+    },
+    "composite": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 1.4817620130891385e-8,
+      "max_rel_above_abs_floor": 5.668876750666911e-8,
+      "n": 86400,
+      "neg_residuals": 42862,
+      "pos_residuals": 43538,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": 0.007824074074074074,
+      "worst_linear_index": 55059,
+      "worst_ours": 0.26047010733319254,
+      "worst_ref": 0.26047012209892273
+    },
+    "h2o": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 4.7568398287012315e-7,
+      "max_rel_above_abs_floor": 5.8662862409280235e-8,
+      "n": 86400,
+      "neg_residuals": 39261,
+      "pos_residuals": 39039,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": -0.002835249042145594,
+      "worst_linear_index": 1552,
+      "worst_ours": 2.0138789404665633,
+      "worst_ref": 2.01387882232666
+    },
+    "n2o": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 2.903624075119987e-11,
+      "max_rel_above_abs_floor": 0.0,
+      "n": 86400,
+      "neg_residuals": 24388,
+      "pos_residuals": 24159,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": -0.004717078295260263,
+      "worst_linear_index": 0,
+      "worst_ours": 0.0,
+      "worst_ref": 0.0
+    },
+    "o3": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 1.1910219344102302e-7,
+      "max_rel_above_abs_floor": 5.733067860628769e-8,
+      "n": 86400,
+      "neg_residuals": 40374,
+      "pos_residuals": 40626,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": 0.003111111111111111,
+      "worst_linear_index": 61310,
+      "worst_ours": 0.25237511055152373,
+      "worst_ref": 0.2523750960826874
+    }
+  },
+  "gates": {
+    "conc_dependence_codes": "passed",
+    "definition_gas_set": "passed",
+    "od_ch4": "passed",
+    "od_co2": "passed",
+    "od_composite": "passed",
+    "od_h2o": "passed",
+    "od_n2o": "passed",
+    "od_o3": "passed",
+    "od_total_clamped_vs_emitted": "passed",
+    "od_total_raw": "passed",
+    "per_gas_variable_set": "passed",
+    "pressure_hl_smoke_conc_consistent": "passed",
+    "raw_total_negativity": "passed"
+  },
+  "maxrss_bytes": 577437696,
+  "orientation_check": "passed",
+  "pressure_hl_smoke_vs_conc_max_rel": 0.0,
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "ckd_definition": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+    "clamp_policy": "per-gas + raw-total comparisons unclamped; max(.,0) applied ONLY against the upstream-emitted total; raw negativity gated separately",
+    "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
+    "generated_from_head": "a247608",
+    "provenance_note": "artifact generated from the working tree before its own commit",
+    "reference_command": "run_ckd ckd_model=<SW32 published ecckd-1.4_sw_climate_rgb-32b> input=<evaluation1 present conc> gases=composite,h2o,o3,co2,ch4,n2o tsi=1361.0",
+    "reference_nc": "/shared/home/greg/ecckd-derived-flux-work/g1-references/sw32_run_ckd_smoke.nc",
+    "reference_tool": "pinned run_ckd (ecckd source artifact 6115f9b8, May-2026 build in ecckd-derived-flux-work)",
+    "sw32_path_authority": "resolved via NumericalRadiation.official_ecckd_definition_path(:shortwave_32)"
+  },
+  "rayleigh_note": {
+    "informational_stats": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 7.3994360638707235e-9,
+      "max_rel_above_abs_floor": 5.819462964405937e-8,
+      "n": 86400,
+      "neg_residuals": 43128,
+      "pos_residuals": 43272,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": 0.0016666666666666668,
+      "worst_linear_index": 43071,
+      "worst_ours": 0.1255771143797902,
+      "worst_ref": 0.12557710707187653
+    },
+    "note": "rayleigh_od = rayleigh_molar_scattering_coeff * simple_weight, reported informationally only; excluded from the parity target set and from all totals",
+    "present": true
+  },
+  "reference_has_temperature_hl": false,
+  "relative_linear_reference_vmr": {
+    "ch4": 1.920999920912436e-6,
+    "n2o": 3.3200001325894846e-7
+  },
+  "status": "sw_od_parity_passed",
+  "thresholds": {
+    "od_abs": 1.0e-9,
+    "od_rel": 1.0e-6
+  },
+  "timestamp_utc": "2026-08-12T09:34:52.466",
+  "timings_seconds": {
+    "load_seconds": 3.01093075,
+    "od_parity_seconds": 1.011605847,
+    "total_parity_seconds": 0.645839787
+  },
+  "total_stats": {
+    "emitted_vs_clamped_ref_gas_sum_note": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 8.935729383097168e-7,
+      "max_rel_above_abs_floor": 1.1585548712127006e-7,
+      "n": 86400,
+      "neg_residuals": 42610,
+      "pos_residuals": 42567,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": -0.0005048311163811828,
+      "worst_linear_index": 6756,
+      "worst_ours": 0.06291155500908113,
+      "worst_ref": 0.06291154772043228
+    },
+    "raw_negativity": {
+      "diagnostic_min_agreement_ok": true,
+      "diagnostic_sign_mismatch_beyond_band": 0,
+      "diagnostic_worst_band_excess": 0.0,
+      "min_raw_total_ours": 8.351749835374495e-11,
+      "min_raw_total_ref_gas_sum": 8.351750042413786e-11,
+      "n_entries": 86400,
+      "negative_count_ours": 0,
+      "negative_count_ref_gas_sum": 0
+    },
+    "total_clamped_vs_emitted": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 4.7651509227364386e-7,
+      "max_rel_above_abs_floor": 5.909995467904316e-8,
+      "n": 86400,
+      "neg_residuals": 43253,
+      "pos_residuals": 43147,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": -0.0012268518518518518,
+      "worst_linear_index": 46174,
+      "worst_ours": 0.06266913188329302,
+      "worst_ref": 0.06266912817955017
+    },
+    "total_raw": {
+      "abs_tol": 1.0e-9,
+      "max_abs": 4.778716728992549e-7,
+      "max_rel_above_abs_floor": 5.876539197068577e-8,
+      "n": 86400,
+      "neg_residuals": 43072,
+      "pos_residuals": 43328,
+      "rel_tol": 1.0e-6,
+      "signed_bias_fraction": 0.002962962962962963,
+      "worst_linear_index": 14457,
+      "worst_ours": 2.022444478057343,
+      "worst_ref": 2.0224443592076007
+    }
+  }
+}

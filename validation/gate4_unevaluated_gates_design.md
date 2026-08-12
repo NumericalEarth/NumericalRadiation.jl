@@ -66,7 +66,8 @@ finding, not a clamp).
    ODs from the PUBLISHED SW32 definition via the g4 bilinear chain and
    compare against the pinned `run_ckd` smoke reference
    (`g1-references/sw32_run_ckd_smoke.nc`, which carries per-gas
-   `optical_depth` for 8 gases × 54 layers × 50 columns) at Float32
+   `optical_depth` for exactly SIX gases — composite, h2o, o3, co2, ch4,
+   n2o — at 32 g-points × 54 layers × 50 columns) at Float32
    storage precision — the exact analog of the LW G1 OD gates. Only a
    green SW parity unit authorizes SW Gate-2 binding.
 2. **Matched-state OD evaluator**: given a definition + a concentration
