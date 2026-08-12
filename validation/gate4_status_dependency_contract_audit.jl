@@ -20,10 +20,11 @@
 #     excluded class; reconciliation requires every live site matched
 #     exactly once, every parsefile ledger record matched by a live
 #     site, AND union(served edge IDs) == the manifest ID set -- an
-#     omitted known edge can no longer pass. The rulings intake's
-#     coupled byte-snapshot helper is deliberately NOT JSON.parsefile
-#     (it closes the hash-vs-parse TOCTOU); it is carried as a
-#     declared-snapshot-extension record, source-bound directly by
+#     omitted known edge can no longer pass. Consumers whose coupled
+#     byte-snapshot helpers are deliberately NOT JSON.parsefile (they
+#     close the hash-vs-parse TOCTOU; currently the rulings intake and
+#     the post-cleanup input census) are carried as
+#     declared-snapshot-extension records, source-bound directly by
 #     reconciliation and forbidden from matching any live parsefile
 #     site;
 #   - unknown contract kinds REFUSE (never fall through);
@@ -486,6 +487,37 @@ const DCA_EDGES = [
   selftest_status = "rulings_intake_selftest_failed",
   expected_case = "gate4_rulings_intake_contract",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ # post-cleanup census source edges: these bind the census to the exact
+ # case+status it verified at authoring; when the g2c/preflight statuses
+ # legitimately change (post-resume), these edges flag the census stale
+ # for deliberate revision (same pattern as the register edges)
+ (id = "dep:post_cleanup_census<-g3_scoped_preflight",
+  consumer = "gate4_post_cleanup_input_census.jl",
+  anchors = ["const PCC_PREFLIGHT_JSON =",
+             "\"gate4_g3_scoped_input_preflight\"",
+             "\"g3_scoped_preflight_waiting_for_eval2\""],
+  producer = "gate4_g3_scoped_input_preflight.json", kind = :exact,
+  accepted = ["g3_scoped_preflight_waiting_for_eval2"],
+  expected_case = "gate4_g3_scoped_input_preflight",
+  consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:post_cleanup_census<-g2c_fetch_checkpoint",
+  consumer = "gate4_post_cleanup_input_census.jl",
+  anchors = ["const PCC_G2C_JSON =",
+             "\"gate4_g2c_eval2_fetch_checkpoint\"",
+             "\"g2c_checkpoint_blocked_by_quota\""],
+  producer = "gate4_g2c_eval2_fetch_checkpoint.json", kind = :exact,
+  accepted = ["g2c_checkpoint_blocked_by_quota"],
+  expected_case = "gate4_g2c_eval2_fetch_checkpoint",
+  consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:post_cleanup_census<-pending_rulings_register",
+  consumer = "gate4_post_cleanup_input_census.jl",
+  anchors = ["const PCC_REGISTER_JSON =",
+             "\"gate4_pending_rulings_register\"",
+             "\"pending_rulings_register_recorded\""],
+  producer = "gate4_pending_rulings_register.json", kind = :exact,
+  accepted = ["pending_rulings_register_recorded"],
+  expected_case = "gate4_pending_rulings_register",
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:r1_probe<-r2_finding_ledger:followup",
   consumer = "gate4_r1_release_provenance_probe.jl",
   anchors = ["r2_case, r2_status = dep_case_status(\"gate4_r2_finding_ledger.json\")"],
@@ -797,6 +829,16 @@ const DCA_SITE_LEDGER = [
               "dep:rulings_register<-g2c_fetch_checkpoint",
               "dep:rulings_register<-g2c_failure_ledger_4440"],
   reason = "verify_json_source helper body (register edges + fixtures)"),
+ (file = "gate4_post_cleanup_input_census.jl",
+  anchor = "JSON.parse(String(bytes))",
+  class = "declared-snapshot-extension",
+  edge_ids = ["dep:post_cleanup_census<-g3_scoped_preflight",
+              "dep:post_cleanup_census<-g2c_fetch_checkpoint",
+              "dep:post_cleanup_census<-pending_rulings_register"],
+  reason = "pcc_snapshot helper body: coupled byte snapshot (one read " *
+           "supplies digest AND parsed content), deliberately NOT " *
+           "JSON.parsefile -- source-bound directly by reconcile; the " *
+           "same helper also parses fixture tmp files"),
  (file = "gate4_r1_release_provenance_probe.jl",
   anchor = "d = JSON.parsefile(validation_results_path(name))",
   class = "edge",
@@ -1332,10 +1374,10 @@ function dca_main()
         length(unique(ids)) == length(ids) ? "passed" : "failed"
     length(unique(ids)) == length(ids) ||
         push!(fails, "duplicate edge IDs in the declarative manifest")
-    gates["manifest_edge_count_36"] =
-        length(DCA_EDGES) == 36 ? "passed" : "failed"
-    length(DCA_EDGES) == 36 ||
-        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 36")
+    gates["manifest_edge_count_39"] =
+        length(DCA_EDGES) == 39 ? "passed" : "failed"
+    length(DCA_EDGES) == 39 ||
+        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 39")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)
@@ -1683,16 +1725,18 @@ function dca_main()
                 "other parsing forms are out of the censused contract " *
                 "surface); each live site AND each parsefile ledger " *
                 "record matched EXACTLY once; union(served IDs) must " *
-                "equal the manifest. The rulings intake deliberately " *
-                "uses a coupled BYTE-snapshot parse (one read supplies " *
-                "digest AND content, closing the hash-vs-parse TOCTOU), " *
-                "so it is NOT a parsefile site: its helper is carried " *
-                "as a declared-snapshot-extension ledger record whose " *
-                "anchor reconciliation binds directly against the " *
-                "consumer source (and which must never match a live " *
-                "parsefile site). n_sites therefore counts live " *
-                "JSON.parsefile sites only; the extension is counted " *
-                "separately.",
+                "equal the manifest. Consumers that deliberately use a " *
+                "coupled BYTE-snapshot parse (one read supplies digest " *
+                "AND content, closing the hash-vs-parse TOCTOU) -- " *
+                "currently the rulings intake (ric_snapshot) and the " *
+                "post-cleanup input census (pcc_snapshot) -- are NOT " *
+                "parsefile sites: each such helper is carried as a " *
+                "declared-snapshot-extension ledger record whose anchor " *
+                "reconciliation binds directly against the consumer " *
+                "source (and which must never match a live parsefile " *
+                "site). n_sites therefore counts live JSON.parsefile " *
+                "sites only; the extensions are counted separately in " *
+                "n_declared_snapshot_extensions.",
             "source_glob" => "validation/gate4*.jl",
             "n_sites" => length(sites),
             "n_declared_snapshot_extensions" =>

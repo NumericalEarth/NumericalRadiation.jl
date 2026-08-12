@@ -1,0 +1,667 @@
+{
+  "case": "gate4_post_cleanup_input_census",
+  "data_mode": "read_only_observed_at_census",
+  "determinism_note": "no quota/lfs reads (nondeterministic); sorted walks bounded to named roots; symlinks never followed; coupled byte snapshots for pinned sources; double-run compared with timestamp_utc/observed_at_utc stripped",
+  "disclaimer": "read-only observed-at census; neutral facts only -- no election, no ruling/intake change, no authorization or attribution claim, no content-integrity conclusion, no deletion/creation outside its own artifacts, no job/quota/fetch action.",
+  "failures": [],
+  "fixture_verdicts": {
+    "byte_snapshot_couples_digest_and_content": true,
+    "dir_inventory_counts_files_and_bytes": true,
+    "dir_inventory_root_distinctions": true,
+    "inventory_schema_guard": true,
+    "missing_snapshot_unreadable": true,
+    "path_observation_matrix": true,
+    "pathd_needle_guard": true,
+    "source_unparseable_refuses": true,
+    "source_verification_accepts_exact": true,
+    "source_wrong_case_refuses": true,
+    "source_wrong_status_refuses": true,
+    "stat_errno_classification_exact": true,
+    "status_and_exit_selection": true,
+    "transition_matrix_exact": true
+  },
+  "gates": {
+    "fixtures": "passed",
+    "no_observation_errors": "passed",
+    "no_recorded_present_now_absent": "passed",
+    "pinned_sources_verified": "passed"
+  },
+  "observation_semantics": "existence and size at observed_at only -- NO content read, NO hash re-verification, NO content-integrity conclusion of any kind",
+  "observed_at_utc": "2026-08-12T15:09:15.716Z",
+  "preflight_census": {
+    "counts": {
+      "observation_error": 0,
+      "recorded_absent_now_absent": 3,
+      "recorded_absent_now_present": 0,
+      "recorded_present_now_absent": 0,
+      "recorded_present_now_present": 43
+    },
+    "hash_reverification": "OUT OF SCOPE (stated bound): the preflight inventory records presence and sha256_matches verdicts, not hash values",
+    "rows": [
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW raw init",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 2413144,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW gpoints",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 58404939,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux rel-180",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 450863,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux rel-280",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 450863,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux rel-415",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 450863,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux rel-560",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 450863,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux rel-1120",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 450873,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux rel-2240",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 450873,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux present",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469175,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux ch4-350",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469174,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux ch4-700",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469174,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux ch4-1200",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469184,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux ch4-2600",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469184,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux ch4-3500",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469184,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux n2o-190",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469175,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux n2o-270",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469175,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux n2o-405",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469175,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux n2o-540",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469175,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux cfc11-0",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469173,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux cfc11-2000",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469203,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux cfc12-0",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469173,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "LW flux cfc12-550",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 469193,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "v1.2 optimize_lut",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 22141288,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/optimize_lut",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW scaled init",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 2234060,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW gpoints v1.4 symlink",
+        "link_target": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5",
+        "node_type": "symlink",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 121,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5",
+        "recorded_present": true,
+        "target_resolves_following_diagnostic": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux rel-180",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1817472,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-180.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux rel-280",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1817472,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-280.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux rel-415",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1817472,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux rel-560",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1817472,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-560.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux rel-1120",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1817482,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-1120.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux rel-2240",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1817482,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-2240.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux present",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839369,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux ch4-350",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839368,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux ch4-700",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839368,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux ch4-1200",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839378,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux ch4-2600",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839378,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux ch4-3500",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839378,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux n2o-190",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839369,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux n2o-270",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839369,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux n2o-405",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839369,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "SW rgb flux n2o-540",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 1839369,
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "v1.4 optimize_lut",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 22168448,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut",
+        "recorded_present": true
+      },
+      {
+        "class": "recorded_absent_now_absent",
+        "input": "eval2 LW rel-415 flux",
+        "node_type": "absent",
+        "now_present": false,
+        "observation_ok": true,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+        "recorded_present": false
+      },
+      {
+        "class": "recorded_absent_now_absent",
+        "input": "eval2 SW rgb rel-415 flux (work-v14)",
+        "node_type": "absent",
+        "now_present": false,
+        "observation_ok": true,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+        "recorded_present": false
+      },
+      {
+        "class": "recorded_absent_now_absent",
+        "input": "eval2 SW rgb rel-415 flux (work alt)",
+        "node_type": "absent",
+        "now_present": false,
+        "observation_ok": true,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+        "recorded_present": false
+      },
+      {
+        "class": "recorded_present_now_present",
+        "input": "H5open-preinit shim .so (4099)",
+        "node_type": "file",
+        "now_present": true,
+        "observation_ok": true,
+        "observed_size_bytes": 15328,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so",
+        "recorded_present": true
+      }
+    ]
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "6990dc3",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "readiness": {
+    "conferred": false,
+    "note": "this census confers NO readiness and authorizes NOTHING; downstream must inspect the status token and payload, never the exit code alone"
+  },
+  "registered_scope_claim_vs_observation": {
+    "evaluation1_immediate_entries": [
+      {
+        "inventory": {
+          "file_count": 34,
+          "path": "/shared/home/greg/data/ckdmip/evaluation1/conc",
+          "present": true,
+          "root_node_type": "directory",
+          "root_observation_ok": true,
+          "size_read_failures": [],
+          "symlink_count": 0,
+          "total_bytes": 8514984,
+          "traversal_errors": []
+        },
+        "name": "conc",
+        "node_type": "directory",
+        "observation_ok": true
+      },
+      {
+        "inventory": {
+          "file_count": 83,
+          "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes",
+          "present": true,
+          "root_node_type": "directory",
+          "root_observation_ok": true,
+          "size_read_failures": [],
+          "symlink_count": 0,
+          "total_bytes": 38620885,
+          "traversal_errors": []
+        },
+        "name": "lw_fluxes",
+        "node_type": "directory",
+        "observation_ok": true
+      },
+      {
+        "inventory": {
+          "file_count": 24,
+          "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes",
+          "present": true,
+          "root_node_type": "directory",
+          "root_observation_ok": true,
+          "size_read_failures": [],
+          "symlink_count": 0,
+          "total_bytes": 59736761,
+          "traversal_errors": []
+        },
+        "name": "sw_fluxes",
+        "node_type": "directory",
+        "observation_ok": true
+      },
+      {
+        "inventory": {
+          "file_count": 16,
+          "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb",
+          "present": true,
+          "root_node_type": "directory",
+          "root_observation_ok": true,
+          "size_read_failures": [],
+          "symlink_count": 0,
+          "total_bytes": 29298567,
+          "traversal_errors": []
+        },
+        "name": "sw_fluxes-rgb",
+        "node_type": "directory",
+        "observation_ok": true
+      },
+      {
+        "inventory": {
+          "file_count": 1,
+          "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_spectra",
+          "present": true,
+          "root_node_type": "directory",
+          "root_observation_ok": true,
+          "size_read_failures": [],
+          "symlink_count": 0,
+          "total_bytes": 1981779,
+          "traversal_errors": []
+        },
+        "name": "sw_spectra",
+        "node_type": "directory",
+        "observation_ok": true
+      }
+    ],
+    "evaluation1_root": {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1",
+      "present": true,
+      "root_node_type": "directory",
+      "root_observation_ok": true
+    },
+    "idealized_conc": {
+      "file_count": 1,
+      "path": "/shared/home/greg/data/ckdmip/idealized/conc",
+      "present": true,
+      "registered_scope_claim": "named in the register's RECORDED PRESERVE wording",
+      "root_node_type": "directory",
+      "root_observation_ok": true,
+      "size_read_failures": [],
+      "symlink_count": 0,
+      "total_bytes": 74296,
+      "traversal_errors": []
+    },
+    "note": "registered_scope_claim_vs_observation: the register's RECORDED wording names idealized/conc and ALL of evaluation1/ in its PRESERVE clause; the live subdir set above is the observation. Both sides are facts about recorded text and current existence -- neither is a statement of current authorization, and this unit makes no claim about who removed anything or under what approval",
+    "register_quote_recorded_wording": "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); remains UNAUTHORIZED until Greg rules",
+    "scope_dirs_observed": [
+      {
+        "file_count": 0,
+        "path": "/shared/home/greg/data/ckdmip/idealized/lw_spectra",
+        "present": false,
+        "registered_scope_claim": "listed in the register's RECORDED Path-D deletion wording (a claim recorded at register time, not a statement of current authorization)",
+        "root_node_type": "absent",
+        "root_observation_ok": true,
+        "size_read_failures": [],
+        "symlink_count": 0,
+        "total_bytes": 0,
+        "traversal_errors": []
+      },
+      {
+        "file_count": 0,
+        "path": "/shared/home/greg/data/ckdmip/idealized/sw_spectra",
+        "present": false,
+        "registered_scope_claim": "listed in the register's RECORDED Path-D deletion wording (a claim recorded at register time, not a statement of current authorization)",
+        "root_node_type": "absent",
+        "root_observation_ok": true,
+        "size_read_failures": [],
+        "symlink_count": 0,
+        "total_bytes": 0,
+        "traversal_errors": []
+      }
+    ]
+  },
+  "source_verification_semantics": "exact case/status verification authenticates ONLY the captured artifact's role and recorded baseline (e.g. the G2c checkpoint recorded g2c_checkpoint_blocked_by_quota at its own write time); it is NOT an assertion of current quota state -- this unit intentionally performs no live quota read",
+  "sources": {
+    "g2c_fetch_checkpoint": {
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_eval2_fetch_checkpoint.json",
+      "snapshot_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
+      "verified": true,
+      "verified_case": "gate4_g2c_eval2_fetch_checkpoint",
+      "verified_status": "g2c_checkpoint_blocked_by_quota"
+    },
+    "pending_rulings_register": {
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_pending_rulings_register.json",
+      "snapshot_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+      "verified": true,
+      "verified_case": "gate4_pending_rulings_register",
+      "verified_status": "pending_rulings_register_recorded"
+    },
+    "scoped_preflight": {
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_scoped_input_preflight.json",
+      "snapshot_sha256": "ef7740cfc60aac1eb96e886234309380e569a6216190c163c40d1744fadfcb5b",
+      "verified": true,
+      "verified_case": "gate4_g3_scoped_input_preflight",
+      "verified_status": "g3_scoped_preflight_waiting_for_eval2"
+    }
+  },
+  "status": "post_cleanup_census_recorded",
+  "timestamp_utc": "2026-08-12T15:09:15.716Z"
+}
