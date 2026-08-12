@@ -1,0 +1,47 @@
+{
+  "authorization": "Greg: 'go with option A' (2026-07-30) + SSO re-auth and 'keep going' (2026-08-12)",
+  "case": "gate4_g2c_eval2_fetch_checkpoint",
+  "data_mode": "dry_run_script_generation_only",
+  "disclaimer": "script generation only; nothing submitted by this unit; fetch+verify only; no LBL, optimizer, objective, floor, or recovery computation.",
+  "failures": [],
+  "followon": "G2d: rayleigh generation (make_rayleigh_evaluation.sh recipe, ckdmip_tool --rayleigh on the 5 eval2 h2o_present SW chunks) + rel-415 LBL runs (LW plain, SW rgb-banded) -> 2 flux files -> ledger -> G3",
+  "gates": {
+    "aws_auth_at_generation": "passed",
+    "disk_guard": "passed",
+    "exact70_gate": "passed",
+    "fetch_only": "passed",
+    "headnode_refusal_guard": "passed",
+    "sbatch_written_not_submitted": "passed",
+    "species_scope_correct": "passed"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "33b5012",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_eval2_fetch.sbatch",
+  "scope": {
+    "chunks": [
+      "1-10",
+      "11-20",
+      "21-30",
+      "31-40",
+      "41-50"
+    ],
+    "expected_bytes_approx": "LW 219.6 GB + SW 110.4 GB = ~330 GB",
+    "expected_files": 70,
+    "skipped": "cfc11/cfc12 (rel-415 never reads them); rayleigh (not on S3/ECPDS -- generated in the follow-on flux unit); ssi (evaluation1 local copy reused)",
+    "species": [
+      "h2o_present",
+      "o3_present",
+      "co2_present",
+      "ch4_present",
+      "n2o_present",
+      "n2_constant",
+      "o2_constant"
+    ]
+  },
+  "source": "s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/evaluation2 (byte-verified ECPDS archive per archive_to_s3.log 2026-05-27; ECPDS live as fallback)",
+  "status": "g2c_checkpoint_ready",
+  "timestamp_utc": "2026-08-12T07:46:26.929"
+}
