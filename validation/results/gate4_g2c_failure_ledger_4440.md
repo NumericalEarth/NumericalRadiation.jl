@@ -27,10 +27,13 @@ provenance strings, not MD5.
 
 ## Cleanup-candidate inventory (read-only; nothing authorized)
 
-evaluation1 spectra 383 GiB (LW 253 + SW 130; S3 byte-verified archive);
-idealized 203 GiB (LW 133 + SW 71; S3-sourced; consumed by completed init
-generation); evaluation2 partial 164 GiB (KEEP); mmm 44 GiB (KEEP); Gate-4
-work 20 GiB (KEEP).
+CORRECTED (follow-up): evaluation1 spectra 383 GiB are NOT in the current
+S3 archive (S3 holds only evaluation2 + idealized) — PRESERVE; eval1
+sw_spectra also carries the G2d-required ckdmip_ssi.h5. idealized spectra
+202.9 GiB (66 files; LW 133G + SW 71G) are the only verified-restorable
+candidate (exact name+size match vs the S3 idealized prefix, live
+2026-08-12; preserve idealized/conc). evaluation2 partial 164 GiB (KEEP);
+mmm 44 GiB (KEEP); Gate-4 work 20 GiB (KEEP).
 
 ## Recovery options
 
@@ -40,9 +43,11 @@ work 20 GiB (KEEP).
   covers all of /shared).
 - **C**: chunk-streaming redesign (~44 GB peak) — still exceeds current
   headroom; only after partial cleanup + explicit review.
-- **D (fast fallback)**: authorized deletion of S3-byte-verified eval1
-  spectra (383 GiB) and/or idealized (203 GiB) — either clears the
-  shortfall; recoverable from the verified archive; NOT executed.
+- **D (verified fallback)**: authorized deletion of idealized
+  {lw,sw}_spectra ONLY (202.9 GiB; exact-match restorable from the S3
+  idealized prefix; preserve idealized/conc and ALL evaluation1) — clears
+  the shortfall; requires the G3 executor to use a scoped actual-input
+  preflight; NOT executed. See gate4_g2c_quota_recovery_runbook.md.
 
 ## Checkpoint correction
 

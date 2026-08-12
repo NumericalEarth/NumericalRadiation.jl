@@ -33,9 +33,9 @@
   },
   "read_only_cleanup_candidate_inventory": {
     "note": "IDENTIFICATION ONLY -- nothing removed or moved; any deletion needs explicit authorization",
-    "evaluation1_lw_spectra": "253 GiB (S3 byte-verified archive exists)",
-    "evaluation1_sw_spectra": "130 GiB (S3 byte-verified archive exists)",
-    "idealized_spectra": "203 GiB (LW 133G, SW 71G; S3-sourced originally; consumed by completed init generation)",
+    "evaluation1_lw_spectra": "253 GiB -- CORRECTION (follow-up to initial ledger): NOT in the current S3 archive (S3 holds only evaluation2 + idealized); upstream source is ECPDS; MUST BE PRESERVED, not a cleanup candidate without a new verified archive",
+    "evaluation1_sw_spectra": "130 GiB -- same correction: NOT S3-archived; also contains ckdmip_ssi.h5 required by G2d; MUST BE PRESERVED",
+    "idealized_spectra": "202.9 GiB (66 files, 217,901,253,443 B; LW 133G, SW 71G) -- the ONLY verified-restorable cleanup candidate: exact name+size match against s3://aeolus-dev/.../ckdmip/idealized/ confirmed live 2026-08-12; preserve idealized/conc (local-only)",
     "evaluation2_partial": "164 GiB (the 30 preserved finals -- KEEP)",
     "mmm": "44 GiB (active gate-4 inputs -- KEEP)",
     "gate4_work": "20 GiB (accepted Gate-4 artifacts -- KEEP)"
@@ -44,9 +44,9 @@
     "A_quota_increase": "raise the uid hard limit to >=1.3 TiB (current usage + remaining 144 GiB + rayleigh/G2d/G3 headroom + margin); cleanest, preserves everything; REQUIRES Greg/admin action (lfs setquota or pcluster storage config)",
     "B_alternate_project_path": "a persistent path charged to a different quota -- none identified: the quota is uid-based on /shared, so any greg-owned path counts; no group/project quota tree found",
     "C_chunk_streaming_redesign": "download per-chunk species sets (~44 GB LW peak), run LBL, delete, iterate -- exceeds current 32.8 GiB headroom anyway; only viable after partial cleanup AND explicit review",
-    "D_authorized_cleanup": "delete S3-byte-verified evaluation1 spectra (383 GiB local) and/or idealized spectra (204 GiB) -- either alone clears the shortfall; recoverable from the verified archive; REQUIRES explicit authorization (not executed)"
+    "D_authorized_cleanup": "delete idealized/{lw_spectra,sw_spectra} ONLY (202.9 GiB; exact-match verified restorable from the S3 idealized prefix; preserve idealized/conc and ALL evaluation1) -- clears the soft limit and yields ~236 GiB hard headroom vs the 197.5 GB need; REQUIRES explicit authorization AND the G3 executor switching to a scoped actual-input preflight (the broad ckdmip_training_data_preflight layout check would go red); see gate4_g2c_quota_recovery_runbook.md"
   },
-  "recommendation": "A (quota raise to >=1.3 TiB) as primary; D as the fast fallback if a quota change is inconvenient -- eval1 spectra are the safest candidate (byte-verified on S3, consumed only by completed generation units). No retry under the current hard limit; no unchanged resubmit (checkpoint patched with quota-aware preflight).",
+  "recommendation": "A (quota raise to >=1.3 TiB) as primary; D (idealized-only cleanup per the runbook) as the verified fallback. The initial ledger text calling evaluation1 spectra 'S3-byte-verified' was WRONG and is corrected here: S3 holds only evaluation2 + idealized. No retry under the current hard limit.",
   "checkpoint_correction": "IMPLEMENTED AND TESTED: validation/gate4_quota_guard.sh (fail-closed uid-quota headroom guard: lfs aggregate-row parse with >=4-field and per-field numeric validation, KiB->bytes, hard=0/unlimited deliberate refusal, remaining = audited 329,989,234,896 B minus sizes of only matching expected finalized files, requires headroom >= remaining + 40 GiB margin) sourced by the regenerated sbatch alongside the retained df guard; checkpoint gates quota_aware_preflight + quota_guard_fixture_tests; 7 fixture verdicts all pass (live-row vs independent computation, sufficient-quota pass, missing-lfs refusal, malformed refusal, zero-hard refusal, subtraction refuses-empty/passes-with-sparse-10GiB-file verdict pair)",
   "provenance": {
     "branch": "glw/gate4-recovery"
