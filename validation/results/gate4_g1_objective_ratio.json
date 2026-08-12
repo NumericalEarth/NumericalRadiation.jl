@@ -4,14 +4,16 @@
   "disclaimer": "refusing Gate-1 runner: binds ONLY on a reviewed run ledger + sha-matched recovered pair; published-pair numbers are self-test context, not recovered acceptance; the upstream objective/floor comparison is a separate outstanding item.",
   "failures": [],
   "gates": {
+    "materialize_payloads_fixture": "passed",
     "perturbed_candidate_raises_objective": "passed",
     "published_context_matches_archived_baseline": "passed",
     "refusal_ladder_fixtures": "passed",
-    "run_ledger_schema_fixtures": "passed"
+    "run_ledger_schema_fixtures": "passed",
+    "structural_gate_fixtures": "passed"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "a27d6ec",
+    "generated_from_head": "9e20993",
     "lw32": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "sw32": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
@@ -20,6 +22,13 @@
     "NOTE": "SELF-TEST CONTEXT ONLY -- this is the PUBLISHED pair through the same path; it is NOT recovered acceptance and must never be reported as such",
     "archived_baseline": 0.18218645425029933,
     "baseline_rel_diff": 0.0,
+    "boundary_flags": {
+      "lw_spectral": true,
+      "sw_direct_albedo": false,
+      "sw_incoming_spectral": true,
+      "sw_spectral": false,
+      "sw_surface_albedo": true
+    },
     "hard_objective_case": "ecckd_clear_sky_tropical_column",
     "hard_objective_metric": "heating_rate_max_abs",
     "hard_objective_value": 0.18218645425029933,
@@ -39,5 +48,5 @@
     "ecckd_rcemip_style_column_subset"
   ],
   "status": "g1_waiting_for_optimizer_outputs",
-  "timestamp_utc": "2026-08-12T10:27:23.457"
+  "timestamp_utc": "2026-08-12T10:34:40.967"
 }

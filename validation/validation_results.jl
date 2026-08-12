@@ -33,6 +33,29 @@ end
 # NOTE: branch 3 becomes live once the `validation-data-v1` release asset in
 # Artifacts.toml is published; fresh clones then download and materialize the
 # reference data on first use.
+# Copy ONLY reference `.nc` payloads from the artifact into the working
+# tree, creating directories as needed and making the copies writable.
+# Tracked repository files at this path (README.md and any other non-.nc
+# files) are NEVER touched: an earlier top-level `cp(...; force = true)`
+# clobbered the tracked validation/reference/ecrad/README.md with the
+# artifact's stale copy (monitor-caught side effect).
+function materialize_reference_payloads(artifact_dir, reference_dir)
+    for (root, _, files) in walkdir(artifact_dir)
+        rel = relpath(root, artifact_dir)
+        for file in files
+            endswith(file, ".nc") || continue
+            dest_dir = rel == "." ? reference_dir :
+                       joinpath(reference_dir, rel)
+            mkpath(dest_dir)
+            dest = joinpath(dest_dir, file)
+            cp(joinpath(root, file), dest; force = true)
+            # Artifact-store files are read-only; the copy must be writable.
+            chmod(dest, 0o644)
+        end
+    end
+    return reference_dir
+end
+
 function validation_reference_dir()
     override = get(ENV, "NUMERICAL_RADIATION_VALIDATION_REFERENCE_DIR", nothing)
     override !== nothing && return normpath(override)
@@ -50,17 +73,6 @@ function validation_reference_dir()
         lazy_artifacts.ensure_artifact_installed("ecrad_reference_data", artifacts_toml)
     artifact_dir = lazy_artifacts.artifact_path(tree_hash)
     mkpath(reference_dir)
-    for name in readdir(artifact_dir)
-        cp(joinpath(artifact_dir, name), joinpath(reference_dir, name); force = true)
-    end
-    # Artifact-store files are read-only; the working copy must be writable.
-    for (root, dirs, files) in walkdir(reference_dir)
-        for dir in dirs
-            chmod(joinpath(root, dir), 0o755)
-        end
-        for file in files
-            chmod(joinpath(root, file), 0o644)
-        end
-    end
+    materialize_reference_payloads(artifact_dir, reference_dir)
     return reference_dir
 end

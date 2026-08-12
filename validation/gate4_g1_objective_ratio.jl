@@ -84,7 +84,38 @@ function validate_run_ledger(ld)
     end
     return (true, "ok")
 end
+
+function structural_compatible(ref_path, cand_path)
+    NCDataset(ref_path) do ref
+        NCDataset(cand_path) do cand
+            for d in ("g_point", "band", "pressure", "temperature")
+                (haskey(ref.dim, d) && haskey(cand.dim, d)) || return false
+                ref.dim[d] == cand.dim[d] || return false
+            end
+            # Option-B structural fields must be ELEMENTWISE equal, not
+            # merely present with matching dims
+            for name in ("band_number", "wavenumber1_band", "wavenumber2_band",
+                         "wavenumber1", "wavenumber2")
+                (haskey(ref, name) && haskey(cand, name)) || return false
+                a = Array(ref[name]); b = Array(cand[name])
+                size(a) == size(b) || return false
+                all(isequal.(a, b)) || return false
+            end
+            for name in keys(ref)
+                endswith(String(name), "_molar_absorption_coeff") || continue
+                haskey(cand, String(name)) || return false
+                size(ref[String(name)]) == size(cand[String(name)]) || return false
+            end
+            return true
+        end
+    end
+end
 # ---------------------------------------------------------------------------
+
+# fail-closed structural gate: unreadable/malformed candidate files are a
+# mismatch, never an uncaught exception
+g1or_structural_ok(ref_path, cand_path) =
+    try structural_compatible(ref_path, cand_path) catch; false end
 
 # pure refusal ladder (fixture-testable without real recovered outputs);
 # returns (status, detail) where status == "ready" authorizes evaluation
@@ -97,7 +128,16 @@ function g1or_gate(lw_path, sw_path, ledger_path)
         return ("g1_blocked_missing_run_ledger",
                 "recovered files exist but no reviewed run ledger pins " *
                 "their provenance")
-    ledger = JSON.parsefile(ledger_path)
+    # unparseable ledger JSON must produce a refusal artifact, not an
+    # uncaught exception (monitor gap)
+    ledger = try
+        JSON.parsefile(ledger_path)
+    catch err
+        return ("g1_blocked_invalid_run_ledger",
+                "ledger unparseable: $(sprint(showerror, err))")
+    end
+    ledger isa AbstractDict ||
+        return ("g1_blocked_invalid_run_ledger", "ledger is not an object")
     lok, lreason = validate_run_ledger(ledger)
     lok || return ("g1_blocked_invalid_run_ledger", lreason)
     for (band, path) in (("lw", lw_path), ("sw", sw_path))
@@ -197,6 +237,8 @@ function g1or_main()
     push!(ladder, g1or_gate(f_lw, f_sw, f_ledger)[1])          # absent files
     write(f_lw, "x"); write(f_sw, "y")
     push!(ladder, g1or_gate(f_lw, f_sw, f_ledger)[1])          # no ledger
+    write(f_ledger, "{ this is not json")
+    push!(ladder, g1or_gate(f_lw, f_sw, f_ledger)[1])          # unparseable
     write(f_ledger, JSON.json(bad_status))
     push!(ladder, g1or_gate(f_lw, f_sw, f_ledger)[1])          # invalid
     write(f_ledger, JSON.json(good))
@@ -209,12 +251,50 @@ function g1or_main()
     ladder_expected = ["g1_waiting_for_optimizer_outputs",
                        "g1_blocked_missing_run_ledger",
                        "g1_blocked_invalid_run_ledger",
+                       "g1_blocked_invalid_run_ledger",
                        "g1_blocked_ledger_hash_mismatch", "ready"]
     gates["refusal_ladder_fixtures"] =
         ladder == ladder_expected ? "passed" : "failed"
     ladder == ladder_expected ||
         push!(fails, "refusal ladder $ladder != $ladder_expected")
+
+    # structural gate fixtures: self-compatible published file, swapped
+    # bands (the malformed/swapped-hash-approved-file scenario), and an
+    # unreadable candidate (fail-closed, no uncaught exception)
+    structural_ok = g1or_structural_ok(lw32, lw32) &&
+                    !g1or_structural_ok(lw32, sw32) &&
+                    !g1or_structural_ok(lw32, f_lw)
+    gates["structural_gate_fixtures"] = structural_ok ? "passed" : "failed"
+    structural_ok || push!(fails, "structural gate fixtures failed " *
+        "(self=$(g1or_structural_ok(lw32, lw32)) " *
+        "swapped=$(g1or_structural_ok(lw32, sw32)) " *
+        "unreadable=$(g1or_structural_ok(lw32, f_lw)))")
     rm(fdir, recursive = true, force = true)
+
+    # materialize_reference_payloads fixture (monitor): the live run sees
+    # already-materialized .nc files and never exercises artifact branch 3,
+    # so the tracked-README protection is proven here on temp dirs: nested
+    # payload .nc copied writable, stale artifact README NEVER copied over
+    # the tracked sentinel
+    adir = mktempdir(); rdir = mktempdir()
+    mkpath(joinpath(adir, "ecrad"))
+    write(joinpath(adir, "ecrad", "payload.nc"), "NCPAYLOAD")
+    write(joinpath(adir, "ecrad", "README.md"), "STALE ARTIFACT README")
+    mkpath(joinpath(rdir, "ecrad"))
+    write(joinpath(rdir, "ecrad", "README.md"), "TRACKED SENTINEL")
+    materialize_reference_payloads(adir, rdir)
+    m_dest = joinpath(rdir, "ecrad", "payload.nc")
+    mat_ok = isfile(m_dest) && read(m_dest, String) == "NCPAYLOAD" &&
+             (stat(m_dest).mode & 0o200) != 0 &&
+             read(joinpath(rdir, "ecrad", "README.md"), String) ==
+                 "TRACKED SENTINEL" &&
+             sort(readdir(joinpath(rdir, "ecrad"))) ==
+                 ["README.md", "payload.nc"]
+    gates["materialize_payloads_fixture"] = mat_ok ? "passed" : "failed"
+    mat_ok || push!(fails, "materialize_reference_payloads fixture failed: " *
+        ".nc must copy writable while the tracked README stays byte-unchanged")
+    rm(adir, recursive = true, force = true)
+    rm(rdir, recursive = true, force = true)
 
     selftests_ok = isempty(fails)
 
@@ -225,23 +305,41 @@ function g1or_main()
         "status" => live_status, "detail" => live_detail)
     status = live_status
     if live_status == "ready"
-        recovered = g1or_evaluate_pair(G1OR_LW_RECOVERED, G1OR_SW_RECOVERED)
-        rec_flags = g1or_boundary_flags(recovered.boundary)
-        pub_flags = g1or_boundary_flags(published.boundary)
-        if rec_flags != pub_flags
-            status = "g1_blocked_boundary_compatibility_drift"
-            recovered_section["boundary_recovered"] = rec_flags
-            recovered_section["boundary_published"] = pub_flags
+        # structural gate BEFORE any package evaluation (mirrors the
+        # acceptance unit): hash-approved but malformed/swapped files must
+        # never reach case_metrics
+        structural_bad = [band for (band, pub, rec) in
+                          (("lw", lw32, G1OR_LW_RECOVERED),
+                           ("sw", sw32, G1OR_SW_RECOVERED))
+                          if !g1or_structural_ok(pub, rec)]
+        if !isempty(structural_bad)
+            status = "g1_blocked_structural_mismatch"
+            recovered_section["structural_mismatch_bands"] = structural_bad
+            recovered_section["detail"] =
+                "structural_compatible failed for $(join(structural_bad, ", ")); " *
+                "package evaluation deliberately NOT run"
         else
-            ratio = recovered.objective.value / G1OR_HARD_TARGET
-            recovered_section["hard_objective"] =
-                Dict(pairs(recovered.objective))
-            recovered_section["ratio"] = ratio
-            recovered_section["ratio_max"] = G1OR_RATIO_MAX
-            recovered_section["lw_sha256"] = g1or_filesha(G1OR_LW_RECOVERED)
-            recovered_section["sw_sha256"] = g1or_filesha(G1OR_SW_RECOVERED)
-            status = ratio <= G1OR_RATIO_MAX ? "g1_objective_ratio_passed" :
-                                               "g1_objective_ratio_failed"
+            recovered = g1or_evaluate_pair(G1OR_LW_RECOVERED, G1OR_SW_RECOVERED)
+            rec_flags = g1or_boundary_flags(recovered.boundary)
+            pub_flags = g1or_boundary_flags(published.boundary)
+            if rec_flags != pub_flags
+                status = "g1_blocked_boundary_compatibility_drift"
+                recovered_section["boundary_recovered"] = rec_flags
+                recovered_section["boundary_published"] = pub_flags
+                recovered_section["detail"] =
+                    "recovered boundary-compatibility flag pattern differs " *
+                    "from the published pair through the same references"
+            else
+                ratio = recovered.objective.value / G1OR_HARD_TARGET
+                recovered_section["hard_objective"] =
+                    Dict(pairs(recovered.objective))
+                recovered_section["ratio"] = ratio
+                recovered_section["ratio_max"] = G1OR_RATIO_MAX
+                recovered_section["lw_sha256"] = g1or_filesha(G1OR_LW_RECOVERED)
+                recovered_section["sw_sha256"] = g1or_filesha(G1OR_SW_RECOVERED)
+                status = ratio <= G1OR_RATIO_MAX ? "g1_objective_ratio_passed" :
+                                                   "g1_objective_ratio_failed"
+            end
         end
         recovered_section["status"] = status
     end
@@ -268,7 +366,8 @@ function g1or_main()
             "hard_objective_case" => published.objective.case,
             "archived_baseline" => G1OR_PUBLISHED_BASELINE,
             "baseline_rel_diff" => baseline_rel,
-            "perturbed_value" => pert_value),
+            "perturbed_value" => pert_value,
+            "boundary_flags" => g1or_boundary_flags(published.boundary)),
         "recovered" => recovered_section,
         "reduced_cases" => [case.case for case in REDUCED_CASES],
         "recovered_conventions" => Dict(
