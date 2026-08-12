@@ -60,7 +60,11 @@ function main()
     gates = Dict{String, String}()
 
     chk = JSON.parsefile(validation_results_path("gate4_a2_execution_checkpoint.json"))
-    chk["status"] == "a2_execution_checkpoint_ready" ||
+    # the execution checkpoint is itself historical-marked post-4082; both
+    # its pre-execution and historical-executed tokens satisfy this
+    # prerequisite
+    chk["status"] in ("a2_execution_checkpoint_ready",
+                      "a2_execution_checkpoint_historical_executed") ||
         push!(fails, "A2 execution checkpoint not ready: $(chk["status"])")
 
     lw32 = NumericalRadiation.official_ecckd_definition_path(:longwave_32)

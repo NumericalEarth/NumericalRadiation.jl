@@ -82,12 +82,12 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "b890429",
+    "generated_from_head": "a045b24",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "status": "a2_proof_scaffold_ready",
   "superseded_by": "gate4_option_b_decision_record (Greg-authorized amended acceptance rule); this unit's strict verdict_rule any_mismatch->sensitivity-only is explicitly listed there as superseded",
-  "timestamp_utc": "2026-08-12T11:07:37.947",
+  "timestamp_utc": "2026-08-12T12:01:25.326",
   "verdict_rule": {
     "all_exact": "candidates PROMOTED to acceptance raw inits; init-generation proceeds (scale_lut for SW next)",
     "any_mismatch": "candidates are SENSITIVITY-ONLY; record the mismatch as a finding; the acceptance floor cannot use them unless Greg explicitly changes the optimizer-only-delta rule",

@@ -1,11 +1,32 @@
-# Gate-4 A2 EXECUTION CHECKPOINT + proof scaffold (dry-run; NO submission).
+# Gate-4 A2 EXECUTION CHECKPOINT + proof scaffold (dry-run; NO submission)
+# -- HISTORICAL POST-EXECUTION MODE selected by the COMPLETED submission
+# ledger (case + status), never by live-file presence.
 #
-# Generates the exact Slurm batch script for the A2 merge_well_mixed +
-# reorder + find_g_points run (LW fsck tol 0.0161, SW rgb tol 0.047 FIRST,
-# per the pinned do_all stage lists) and records the follow-on
-# exact-reproduction proof plan. The batch script is WRITTEN but never
-# submitted by this unit; it refuses head-node execution by guard. No
-# find_g_points/create_lut/objective/floor execution.
+# EXECUTED (monitor-directed marking, 2026-08-12): the generated sbatch
+# ran as job 4082 (attempt 2; attempt 1 was job 4079 running an EARLIER
+# script revision with a different sha, recorded in the submission
+# ledger's attempt_history and the 4079 failure ledger). Job 4082 ran
+# merge_well_mixed + reorder_spectrum + find_g_points ONLY -- it produced
+# exactly TWO g-point candidates (LW fsck-tol0.0161 and SW rgb-tol0.047)
+# plus the rayleigh input-generation overlay; NO create_lut or raw-init
+# output is attributable to 4082 (those belong to the later proof-driver
+# chain, job 4091). When both candidates exist on disk, this unit runs
+# HISTORICAL VERIFICATION that is read-only with respect to execution
+# artifacts (it still writes its own JSON/MD): the executed sbatch is
+# PRESERVED (never rewritten) and byte-verified against the submission
+# ledger's recorded sbatch sha; candidates, overlay, job id, and outcome
+# are verified from the submission ledger with fail-closed normalization;
+# the follow-on proof disposition is rendered only after verifying the
+# proof finding ledger and Option-B record (case + status). The
+# pre-execution generation path is retained for the candidates-absent
+# world.
+#
+# Original contract: generates the exact Slurm batch script for the A2
+# merge_well_mixed + reorder + find_g_points run (LW fsck tol 0.0161, SW
+# rgb tol 0.047 FIRST, per the pinned do_all stage lists) and records the
+# follow-on exact-reproduction proof plan. The batch script is WRITTEN
+# but never submitted by this unit; it refuses head-node execution by
+# guard. No find_g_points/create_lut/objective/floor execution.
 #
 # REVISED after job 4079 FAILED at LW reorder: the previous script skipped
 # do_all stage 1 (merge_well_mixed_{lw,sw}.sh), so the quarantined WORK_DIR
@@ -46,6 +67,27 @@ const REORDER_FIND_GASES = ["h2o_median", "o3_median",
 const AX_RESULTS_JSON = validation_results_path("gate4_a2_execution_checkpoint.json")
 const AX_RESULTS_MD = validation_results_path("gate4_a2_execution_checkpoint.md")
 const AX_SBATCH = validation_results_path("gate4_a2_dryrun.sbatch")
+
+# the two 4082 g-point candidates (find_g_points outputs; NOTHING else is
+# attributable to 4082) and the rayleigh input-generation overlay
+const AX_LW_CAND = "$G4WORK/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5"
+const AX_SW_CAND = "$G4WORK/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5"
+const AX_OVERLAY = "$G4WORK/input/mmm/sw_spectra/ckdmip_mmm_sw_spectra_rayleigh_present.h5"
+
+# fail-closed JSON normalizers (same contract as the R2 chain)
+ax_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
+ax_str(x) = x isa AbstractString ? String(x) : ""
+ax_sha(p) = isfile(p) ? split(strip(read(`sha256sum $p`, String)))[1] : "missing"
+
+function ax_parse!(fails, name)
+    try
+        JSON.parsefile(validation_results_path(name))
+    catch err
+        push!(fails, "$name unreadable/unparseable: " *
+                     "$(first(sprint(showerror, err), 120))")
+        nothing
+    end
+end
 
 const SBATCH_TEXT = """
 #!/bin/bash
@@ -141,23 +183,191 @@ function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    a2 = JSON.parsefile(
-        validation_results_path("gate4_a2_find_g_points_rerun_manifest.json"))
-    a2["status"] == "a2_manifest_ready" ||
-        push!(fails, "A2 manifest not ready: $(a2["status"])")
-
-    # write the dry-run sbatch (artifact; never submitted here)
-    open(AX_SBATCH, "w") do io
-        write(io, SBATCH_TEXT)
+    # THREE-WAY MODE SELECTION from the SUBMISSION LEDGER (case + status),
+    # never from live-file presence alone:
+    #   :historical    -- ledger present, valid, completed
+    #   :preexecution  -- NO ledger exists AND both candidates absent
+    #   :anomaly       -- anything else (present-but-malformed/wrong-status
+    #                     ledger, or candidates on disk without a ledger):
+    #                     FAIL CLOSED; the sbatch is NEVER regenerated here
+    sub_path = validation_results_path("gate4_a2_submission_ledger.json")
+    sub_exists = isfile(sub_path)
+    sub_raw = try
+        sub_exists ? JSON.parsefile(sub_path) : nothing
+    catch; nothing end
+    sub_obj = ax_obj(sub_raw)
+    ledger_completed =
+        ax_str(get(sub_obj, "case", "")) == "gate4_a2_submission_ledger" &&
+        ax_str(get(sub_obj, "status", "")) ==
+            "a2_attempt2_completed_candidates_collected"
+    n_cand_present = count(isfile, (AX_LW_CAND, AX_SW_CAND))
+    mode = ledger_completed ? :historical :
+           (!sub_exists && n_cand_present == 0) ? :preexecution : :anomaly
+    historical = mode == :historical
+    if historical
+        # explicit gate for the ledger facts that selected this mode
+        gates["submission_ledger_completed_verified"] = "passed"
+    end
+    if mode == :anomaly
+        gates["mode_selection_fail_closed"] = "failed"
+        push!(fails, sub_exists ?
+            "submission ledger present but malformed/wrong case/status -- " *
+            "FAIL CLOSED: neither historical claims nor sbatch " *
+            "regeneration are permitted" :
+            "no submission ledger but $(n_cand_present) candidate " *
+            "file(s) on disk -- anomalous state; sbatch NOT regenerated")
     end
 
-    # gates
-    gates["sbatch_written_not_submitted"] = "passed"   # structural: this
+    # manifest prerequisite is a PRE-EXECUTION gate only (stale in
+    # historical/anomaly modes)
+    if mode == :preexecution
+        m_obj = ax_obj(ax_parse!(fails,
+            "gate4_a2_find_g_points_rerun_manifest.json"))
+        ax_str(get(m_obj, "status", "")) == "a2_manifest_ready" ||
+            push!(fails, "A2 manifest not ready: " *
+                         "$(ax_str(get(m_obj, "status", "(missing)")))")
+    end
+
+    executed = Dict{String, Any}()
+    if historical
+        completion = ax_obj(get(sub_obj, "completion", nothing))
+        job = ax_obj(get(sub_obj, "job", nothing))
+        # job 4082 identity + completion marker, ledger-verified
+        jid_ok = get(completion, "job_id", -1) == 4082 &&
+                 get(job, "job_id", -1) == 4082
+        gates["job_id_4082_verified"] = jid_ok ? "passed" : "failed"
+        jid_ok || push!(fails, "submission ledger job_id != 4082")
+        outcome = ax_str(get(completion, "outcome", ""))
+        outcome_ok = occursin("COMPLETED", outcome) && occursin("rc=0", outcome)
+        gates["completion_marker_verified"] = outcome_ok ? "passed" : "failed"
+        outcome_ok || push!(fails, "completion outcome lacks COMPLETED/rc=0")
+        # exactly TWO g-point candidates (find_g_points outputs; nothing
+        # else is attributable to 4082). Missing BOTH or hash mismatch is a
+        # historical integrity failure; exactly one present is an explicit
+        # partial-output anomaly. NEVER a regeneration fallback.
+        cands = ax_obj(get(completion, "candidates", nothing))
+        exp_lw = ax_str(get(ax_obj(get(cands, "lw", nothing)), "sha256", ""))
+        exp_sw = ax_str(get(ax_obj(get(cands, "sw", nothing)), "sha256", ""))
+        shas_wellformed = occursin(r"^[0-9a-f]{64}$", exp_lw) &&
+                          occursin(r"^[0-9a-f]{64}$", exp_sw)
+        gates["ledger_candidate_shas_wellformed"] =
+            shas_wellformed ? "passed" : "failed"
+        shas_wellformed || push!(fails,
+            "submission-ledger candidate shas missing/malformed")
+        n_present = count(isfile, (AX_LW_CAND, AX_SW_CAND))
+        if n_present == 1
+            gates["partial_candidate_outputs_anomaly"] = "failed"
+            push!(fails, "PARTIAL candidate outputs: exactly one of the " *
+                "two 4082 g-point candidates is on disk -- anomalous " *
+                "state; investigate against the submission ledger")
+        else
+            cand_ok = shas_wellformed && n_present == 2 &&
+                      ax_sha(AX_LW_CAND) == exp_lw &&
+                      ax_sha(AX_SW_CAND) == exp_sw
+            gates["two_gpoint_candidates_match_submission_ledger"] =
+                cand_ok ? "passed" : "failed"
+            cand_ok || push!(fails, "4082 candidates missing or != " *
+                "submission-ledger shas (historical integrity failure, " *
+                "never a regeneration fallback)")
+        end
+        # rayleigh overlay verified SEPARATELY as an input-generation
+        # artifact -- it is NOT a third g-point candidate
+        exp_ray = ax_str(get(completion, "rayleigh_overlay_sha256", ""))
+        ray_ok = occursin(r"^[0-9a-f]{64}$", exp_ray) &&
+                 ax_sha(AX_OVERLAY) == exp_ray
+        gates["rayleigh_overlay_input_artifact_verified"] =
+            ray_ok ? "passed" : "failed"
+        ray_ok || push!(fails, "rayleigh input-generation overlay missing " *
+                               "or != submission-ledger sha")
+        # executed sbatch PRESERVED: no write in this branch (structural)
+        # and live bytes == the submission ledger's recorded sbatch sha
+        gates["sbatch_preserved_not_regenerated"] = "passed"
+        exp_sb = ax_str(get(ax_obj(get(sub_obj, "sbatch", nothing)),
+                            "sha256", ""))
+        sb_ok = occursin(r"^[0-9a-f]{64}$", exp_sb) &&
+                ax_sha(AX_SBATCH) == exp_sb
+        gates["preserved_sbatch_matches_submission_ledger"] =
+            sb_ok ? "passed" : "failed"
+        sb_ok || push!(fails, "preserved sbatch missing or != " *
+                              "submission-ledger sha")
+        att1 = ax_obj(get(ax_obj(get(sub_obj, "attempt_history", nothing)),
+                          "attempt_1", nothing))
+        att1_sha = ax_str(get(att1, "sbatch_sha256", ""))
+        att1_ok = get(att1, "job_id", -1) == 4079 &&
+                  occursin(r"^[0-9a-f]{64}$", att1_sha) && att1_sha != exp_sb
+        gates["attempt1_distinct_script_verified"] =
+            att1_ok ? "passed" : "failed"
+        att1_ok || push!(fails, "attempt-1 (4079) record missing or its " *
+            "sbatch sha is not distinct from the executed attempt-2 script")
+        # LATER DISPOSITION (separately verified, case + status): the
+        # follow-on proof plan below stays as at-checkpoint text
+        pf = ax_obj(try JSON.parsefile(validation_results_path(
+            "gate4_a2_proof_finding_ledger.json")) catch; nothing end)
+        ob = ax_obj(try JSON.parsefile(validation_results_path(
+            "gate4_option_b_decision_record.json")) catch; nothing end)
+        # because later_disposition names job 4091, its identity and
+        # completion are verified from the proof finding ledger, not
+        # assumed from case/status alone
+        pf_run = ax_obj(get(pf, "proof_run", nothing))
+        pf_outcome = ax_str(get(pf_run, "outcome", ""))
+        disp_ok = ax_str(get(pf, "case", "")) == "gate4_a2_proof_finding_ledger" &&
+            ax_str(get(pf, "status", "")) ==
+                "a2_candidates_sensitivity_only_not_promotable" &&
+            get(pf_run, "job_id", -1) == 4091 &&
+            occursin("COMPLETED", pf_outcome) &&
+            occursin("rc=0", pf_outcome) &&
+            ax_str(get(ob, "case", "")) == "gate4_option_b_decision_record" &&
+            ax_str(get(ob, "status", "")) ==
+                "option_b_adopted_candidates_promoted"
+        gates["later_disposition_verified"] = disp_ok ? "passed" : "failed"
+        disp_ok || push!(fails, "later-disposition dependencies failed " *
+            "case+status verification -- disposition claims withheld")
+        executed = Dict(
+            "job" => 4082,
+            "outcome_ledger_verified" => outcome,
+            "candidates" => Dict(
+                "lw" => Dict("path" => AX_LW_CAND, "sha256" => exp_lw),
+                "sw" => Dict("path" => AX_SW_CAND, "sha256" => exp_sw),
+                "note" => "exactly TWO g-point candidates (find_g_points " *
+                    "only); NO create_lut/raw-init output is attributable " *
+                    "to 4082 -- those belong to the proof-driver chain " *
+                    "(job 4091)"),
+            "rayleigh_overlay" => Dict("path" => AX_OVERLAY,
+                "sha256" => exp_ray,
+                "note" => "input-generation artifact, NOT a candidate"),
+            "executed_sbatch_sha256" => exp_sb,
+            "attempt_1" => Dict("job" => 4079,
+                "sbatch_sha256" => att1_sha,
+                "note" => "earlier script revision (distinct sha); see " *
+                    "gate4_a2_failure_ledger_4079"),
+            "later_disposition" => disp_ok ?
+                "follow-on exact-reproduction proof EXECUTED via the " *
+                "proof-driver chain (job 4091): strict verdict " *
+                "a2_candidates_sensitivity_only_not_promotable; " *
+                "subsequently Greg-authorized Option B " *
+                "(option_b_adopted_candidates_promoted) accepted the two " *
+                "candidates as structure sources for ACCEPTANCE-INIT " *
+                "SELECTION (it did not alter the strict finding's record)" :
+                "WITHHELD: dependency verification failed")
+    elseif mode == :preexecution
+        # genuine pre-execution world (no ledger, no candidates): write
+        # the dry-run sbatch (never submitted)
+        open(AX_SBATCH, "w") do io
+            write(io, SBATCH_TEXT)
+        end
+    end   # :anomaly writes nothing and claims nothing
+
+    # gates (structural; three-way mode-appropriate name so anomaly never
+    # claims "written")
+    sb_gate = historical ? "sbatch_not_regenerated_or_submitted" :
+              mode == :anomaly ? "sbatch_untouched_fail_closed" :
+                                 "sbatch_written_not_submitted"
+    gates[sb_gate] = "passed"   # structural: this
     # script contains no `sbatch` invocation (self-scan with split token)
     self_src = read(@__FILE__, String)
     sb_tok = "sb" * "atch "
     n_direct = length(collect(eachmatch(Regex("run\\(`" * sb_tok), self_src)))
-    n_direct == 0 || (gates["sbatch_written_not_submitted"] = "failed";
+    n_direct == 0 || (gates[sb_gate] = "failed";
                       push!(fails, "sbatch invocation found in checkpoint unit"))
     gates["headnode_refusal_guard"] =
         occursin("REFUSED: head-node execution", SBATCH_TEXT) ? "passed" : "failed"
@@ -194,8 +404,12 @@ function main()
         push!(fails, "SW rayleigh overlay provisioning missing or mutates data tree")
     # checkpoint-side composite-input preflight (files on disk NOW);
     # rayleigh counts as satisfied if present in overlay OR generatable via
-    # the pinned recipe (grid file + pinned tool both present)
+    # the pinned recipe (grid file + pinned tool both present).
+    # PRE-EXECUTION ONLY: historical/anomaly modes skip this stale
+    # availability gate (the run consumed its inputs in July; present-day
+    # availability proves nothing)
     input_manifest = Any[]
+    if mode == :preexecution
     inputs_ok = true
     for band in ("lw", "sw"), gas in vcat(MERGE_GASES, REORDER_FIND_GASES)
         p = joinpath(CKDMIP_ROOT, "mmm", "$(band)_spectra",
@@ -241,21 +455,31 @@ function main()
         "recipe" => RAYLEIGH_RECIPE))
     gates["composite_inputs_preflight"] = inputs_ok ? "passed" : "failed"
     inputs_ok || push!(fails, "composite-stage inputs missing (see input_manifest)")
+    end
     gates["target_tolerances_narrowed"] =
         occursin("TOLERANCE=0.0161", SBATCH_TEXT) &&
         occursin("TOLERANCE=0.047", SBATCH_TEXT) ? "passed" : "failed"
     gates["workdir_quarantined"] =
         occursin("g4-init-generation/work", SBATCH_TEXT) ? "passed" : "failed"
-    running_4078 = try
-        !isempty(strip(read(`squeue -j 4078 -h -o "%T"`, String)))
-    catch; false end
-    contention = Dict(
-        "job_4078_running" => running_4078,
-        "policy" => "A2 may run CONCURRENTLY with 4078 on a different " *
-                    "cpu-large node (partition has 4 nodes); do not submit " *
-                    "if the partition is saturated; never share the node " *
-                    "running 4078",
-    )
+    # live scheduler queries are PRE-EXECUTION ONLY -- the 4078-era
+    # contention policy is a historical record in the other modes
+    contention = if mode != :preexecution
+        Dict("policy" => "HISTORICAL: the at-checkpoint policy (run " *
+             "concurrently with 4078 on a different cpu-large node) " *
+             "applied to the July submission window; no live squeue " *
+             "queries are made outside pre-execution mode")
+    else
+        running_4078 = try
+            !isempty(strip(read(`squeue -j 4078 -h -o "%T"`, String)))
+        catch; false end
+        Dict(
+            "job_4078_running" => running_4078,
+            "policy" => "A2 may run CONCURRENTLY with 4078 on a different " *
+                        "cpu-large node (partition has 4 nodes); do not submit " *
+                        "if the partition is saturated; never share the node " *
+                        "running 4078",
+        )
+    end
     gates["contention_policy_recorded"] = "passed"
     gates["config_copy_patched_not_env_only"] =
         occursin("sed -i", SBATCH_TEXT) &&
@@ -288,24 +512,38 @@ function main()
         "refusal" => "proof runner refuses when candidate files are absent",
     )
 
-    status = isempty(fails) ? "a2_execution_checkpoint_ready" :
-                              "a2_execution_checkpoint_failed"
+    # success requires BOTH no fails AND every gate passed: several gates
+    # can fail without appending to fails, and a false historical success
+    # must be impossible
+    all_green = isempty(fails) && all(v -> v == "passed", values(gates))
+    status = !all_green ? "a2_execution_checkpoint_failed" :
+             historical ? "a2_execution_checkpoint_historical_executed" :
+                          "a2_execution_checkpoint_ready"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
     result = Dict(
         "case" => "gate4_a2_execution_checkpoint",
-        "data_mode" => "dry_run_script_generation_only",
+        "executed" => executed,
+        "data_mode" => historical ?
+            "historical_post_execution_verification_only" :
+            mode == :anomaly ? "anomalous_state_no_generation" :
+            "dry_run_script_generation_only",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
         "sbatch_path" => AX_SBATCH,
         "env_localization" => Dict(
-            "mechanism" => "ALL THREE hard-coded config.h path variables " *
-                "are sed-patched ABSOLUTE inside the isolated TESTCOPY; " *
+            "mechanism" => (historical ? "AT-CHECKPOINT description: " : "") *
+                "ALL THREE hard-coded config.h path variables " *
+                (historical ? "were" : "are") *
+                " sed-patched ABSOLUTE inside the isolated TESTCOPY; " *
                 "env-only localization is insufficient and gated; the " *
-                "active 4078 working copy is read only as a copy source, " *
-                "never mutated",
+                (historical ?
+                 "then-active 4078 working copy was read only as a copy " *
+                 "source, never mutated" :
+                 "active 4078 working copy is read only as a copy source, " *
+                 "never mutated"),
             "CKDMIP_DATA_DIR" => "$CKDMIP_ROOT (sed-patched in TESTCOPY)",
             "WORK_DIR" => "$G4WORK/work (sed-patched in TESTCOPY; " *
                           "quarantined from 4078's workdir)",
@@ -321,29 +559,61 @@ function main()
             "BAND_STRUCTURE/TOLERANCE" => "fsck/0.0161 (LW), rgb/0.047 (SW) " *
                                           "first; 16-g sanity later"),
         "input_manifest" => input_manifest,
-        "expected_outputs" => Dict(
+        # historical: verified_outputs carries ONLY genuinely hash-verified
+        # artifacts; the un-hashed glob specs stay labeled as at-checkpoint
+        # spec, never as verified evidence
+        (historical ? "outputs_spec_at_checkpoint" : "expected_outputs") =>
+        Dict(
             "gpoints" => "$G4WORK/work/**/ecckd-*_gpoints_climate_" *
                          "{fsck-tol0.0161,rgb-tol0.047}.h5",
             "reorder" => "$G4WORK/work/**/{lw,sw}_order_*_*.h5",
             "log" => "/shared/home/greg/data/ckdmip-logs/g4-a2-<jobid>.log"),
+        "verified_outputs" => historical ? Dict(
+            "lw_gpoint_candidate" => Dict("path" => AX_LW_CAND,
+                "sha256" => get(get(ax_obj(get(executed, "candidates",
+                    nothing)), "lw", Dict{String, Any}()), "sha256", "?")),
+            "sw_gpoint_candidate" => Dict("path" => AX_SW_CAND,
+                "sha256" => get(get(ax_obj(get(executed, "candidates",
+                    nothing)), "sw", Dict{String, Any}()), "sha256", "?")),
+            "rayleigh_overlay_input_artifact" => Dict("path" => AX_OVERLAY,
+                "sha256" => get(ax_obj(get(executed, "rayleigh_overlay",
+                    nothing)), "sha256", "?"))) : Dict{String, Any}(),
         "contention" => contention,
         "proof_plan" => proof_plan,
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
-        "disclaimer" => "dry-run script generation only; nothing submitted; " *
-                        "no find_g_points/create_lut/objective/floor " *
-                        "execution; the generated script runs " *
-                        "merge_well_mixed + reorder + find_g_points only; " *
-                        "submission requires explicit authorization per the " *
-                        "standing protocol.",
+        "disclaimer" => historical ?
+            "HISTORICAL post-execution record: the generated sbatch was " *
+            "executed as job 4082 (submission-ledger-verified; attempt 1 " *
+            "was 4079 on an earlier script revision); the executed script " *
+            "is preserved, never regenerated; read-only with respect to " *
+            "execution artifacts (this unit writes only its own JSON/MD); " *
+            "nothing executed or submitted." :
+            mode == :anomaly ?
+            "ANOMALOUS state (malformed/wrong-status submission ledger, " *
+            "or candidates without a ledger): fail-closed; nothing " *
+            "generated, regenerated, or submitted; investigate before " *
+            "any action." :
+            "dry-run script generation only; nothing submitted; " *
+            "no find_g_points/create_lut/objective/floor " *
+            "execution; the generated script runs " *
+            "merge_well_mixed + reorder + find_g_points only; " *
+            "submission requires explicit authorization per the " *
+            "standing protocol.",
     )
     mkpath(dirname(AX_RESULTS_JSON))
     open(AX_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
     end
     open(AX_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 A2 execution checkpoint (dry-run)\n")
+        println(io, historical ?
+            "# Gate-4 A2 execution checkpoint — HISTORICAL (executed as " *
+            "job 4082; attempt 1 = job 4079 on an earlier script)\n" :
+            mode == :anomaly ?
+            "# Gate-4 A2 execution checkpoint — ANOMALOUS STATE " *
+            "(fail-closed)\n" :
+            "# Gate-4 A2 execution checkpoint (dry-run)\n")
         println(io, "Status: **$status**\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gate | Result |")
@@ -351,17 +621,42 @@ function main()
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
         end
-        println(io, "\nGenerated (unsubmitted) batch script: `$(AX_SBATCH)`")
-        n_present = count(m -> get(m, "present", false), input_manifest)
-        println(io, "\nComposite-input preflight: $n_present/" *
-                    "$(length(input_manifest)) present " *
-                    "(SW rayleigh provisioned in the quarantined overlay " *
-                    "via the pinned recipe when absent).")
-        println(io, "\nContention: 4078 running = $(contention["job_4078_running"]); " *
-                    contention["policy"])
-        println(io, "\nFollow-on proof plan: g-counts 32/32; gpoint_fraction " *
-                    "and band arrays elementwise EXACT vs published; any " *
-                    "mismatch -> sensitivity-only, no floor.")
+        if historical
+            println(io, "\nExecuted batch script (preserved; byte-verified " *
+                        "against the submission ledger's recorded sha): " *
+                        "`$(AX_SBATCH)` sha256 " *
+                        "`$(get(executed, "executed_sbatch_sha256", "?"))`")
+            println(io, "\nLedger-verified outcome: ",
+                    get(executed, "outcome_ledger_verified", "?"))
+            println(io, "\nExactly TWO g-point candidates (find_g_points " *
+                        "only; no create_lut output is attributable to " *
+                        "4082):")
+            for b in ("lw", "sw")
+                c = executed["candidates"][b]
+                println(io, "- [$b] `$(basename(c["path"]))` sha256 " *
+                            "`$(c["sha256"])`")
+            end
+            ro = executed["rayleigh_overlay"]
+            println(io, "\nRayleigh overlay (input-generation artifact, " *
+                        "NOT a candidate): sha256 `$(ro["sha256"])`")
+            println(io, "\nLater disposition (separately verified): ",
+                    executed["later_disposition"])
+        elseif mode == :preexecution
+            println(io, "\nGenerated (unsubmitted) batch script: `$(AX_SBATCH)`")
+            n_present = count(m -> get(m, "present", false), input_manifest)
+            println(io, "\nComposite-input preflight: $n_present/" *
+                        "$(length(input_manifest)) present " *
+                        "(SW rayleigh provisioned in the quarantined overlay " *
+                        "via the pinned recipe when absent).")
+        end
+        haskey(contention, "job_4078_running") &&
+            println(io, "\nContention: 4078 running = " *
+                        "$(contention["job_4078_running"]); " *
+                        contention["policy"])
+        println(io, "\nFollow-on proof plan (at-checkpoint text): g-counts " *
+                    "32/32; gpoint_fraction and band arrays elementwise " *
+                    "EXACT vs published; any mismatch -> sensitivity-only, " *
+                    "no floor.")
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$head` (pre-own-commit).")
         isempty(fails) || (println(io, "\n## Failures\n");
@@ -372,7 +667,8 @@ function main()
         println("  $k: $(gates[k])")
     end
     isempty(fails) || foreach(f -> println("  FAIL: $f"), fails)
-    return status == "a2_execution_checkpoint_ready" ? 0 : 1
+    return status in ("a2_execution_checkpoint_ready",
+                      "a2_execution_checkpoint_historical_executed") ? 0 : 1
 end
 
 exit(main())

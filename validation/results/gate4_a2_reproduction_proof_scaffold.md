@@ -36,4 +36,4 @@ Verdict (historical strict rule): all exact -> promote to acceptance raw inits; 
 
 Deferred hygiene note: RESOLVED: the previously flagged stale comment (claiming the May config already localizes paths) is absent from the current gate4_a2_dryrun.sbatch; no action remains
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `b890429` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `a045b24` (pre-own-commit).
