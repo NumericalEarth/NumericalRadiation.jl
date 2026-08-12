@@ -13,7 +13,7 @@ with diagnostic clouds.
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/NumericalEarth/AnalyticBandRadiation.jl")
+Pkg.add(url = "https://github.com/NumericalEarth/NumericalRadiation.jl")
 ```
 
 ## Quickstart

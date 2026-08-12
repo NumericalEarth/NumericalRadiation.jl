@@ -1,8 +1,8 @@
 # NumericalRadiation.jl
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://NumericalEarth.github.io/AnalyticBandRadiation.jl/dev/)
-[![CI](https://github.com/NumericalEarth/AnalyticBandRadiation.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NumericalEarth/AnalyticBandRadiation.jl/actions/workflows/CI.yml)
-[![Documenter](https://github.com/NumericalEarth/AnalyticBandRadiation.jl/actions/workflows/Documenter.yml/badge.svg)](https://github.com/NumericalEarth/AnalyticBandRadiation.jl/actions/workflows/Documenter.yml)
+[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/)
+[![CI](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/CI.yml)
+[![Documenter](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml/badge.svg)](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml)
 
 Analytic-band atmospheric radiation for intermediate-complexity models.
 
@@ -30,7 +30,7 @@ Package extensions wire each host automatically when both packages are loaded.
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/NumericalEarth/AnalyticBandRadiation.jl")
+Pkg.add(url="https://github.com/NumericalEarth/NumericalRadiation.jl")
 ```
 
 ## Standalone usage (single column)
@@ -137,7 +137,7 @@ julia --project=. -e 'using Pkg; Pkg.test()'
 The development and validation harness — the ecRad/ecCKD accuracy gates, the
 frozen evidence and diagnostics they produced, and the gate-4 CKDMIP training
 pipeline (published ecCKD model recovery) — lives on the
-[`validation-platform`](https://github.com/NumericalEarth/AnalyticBandRadiation.jl/tree/validation-platform)
+[`validation-platform`](https://github.com/NumericalEarth/NumericalRadiation.jl/tree/validation-platform)
 branch. This branch carries only the package. The ecRad reference NetCDF data
 used by that platform is distributed as the `validation-data-v1` release
 (the lazy `ecrad_reference_data` artifact pinned in `Artifacts.toml`).

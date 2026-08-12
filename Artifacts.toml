@@ -22,5 +22,5 @@ git-tree-sha1 = "6070697d4ab162dc2180c2187d855e711fb3ad38"
 lazy = true
 
     [[ecrad_reference_data.download]]
-    url = "https://github.com/NumericalEarth/AnalyticBandRadiation.jl/releases/download/validation-data-v1/ecrad_reference_data.tar.gz"
+    url = "https://github.com/NumericalEarth/NumericalRadiation.jl/releases/download/validation-data-v1/ecrad_reference_data.tar.gz"
     sha256 = "91e6ff211a8936c7bc9befac32f27baafeed05b1370f516466ed90848d9bfe4f"

@@ -30,7 +30,7 @@ makedocs(
     authors = "NumericalEarth organization and contributors",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://NumericalEarth.github.io/AnalyticBandRadiation.jl",
+        canonical = "https://NumericalEarth.github.io/NumericalRadiation.jl",
         assets = String[],
     ),
     pages = [
@@ -75,7 +75,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/NumericalEarth/AnalyticBandRadiation.jl.git",
+    repo = "github.com/NumericalEarth/NumericalRadiation.jl.git",
     devbranch = "main",
     push_preview = true,
 )
