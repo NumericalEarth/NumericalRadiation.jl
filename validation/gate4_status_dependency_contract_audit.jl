@@ -315,9 +315,16 @@ const DCA_EDGES = [
   expected_case = "gate4_init_provenance_ledger",
   consumer_checks_case = true, status_only = false,
   active_when = :r2_historical),
+ # HARDENED consumer: rx_classify_scaffold binds the exact case before
+ # the FAITHFUL mode-dependent status sets; parse/missing/non-object
+ # are three fixed distinct refusal classes; the pre-execution sbatch
+ # write is allowlist-gated (former status-only finding CLOSED)
  (id = "dep:r2_exec_checkpoint<-r2_proof_scaffold",
   consumer = "gate4_r2_execution_checkpoint.jl",
-  anchors = ["scaffold_status in (\"r2_scaffold_ready_awaiting_authorization\","],
+  anchors = ["scaffold_ok, scaffold_why = rx_classify_scaffold(scaffold_obj,",
+             "c == \"gate4_r2_sw_matching_version_proof_scaffold\"",
+             "s in (\"r2_scaffold_ready_awaiting_authorization\",",
+             "sbatch_written = rx_write_script("],
   producer = "gate4_r2_sw_matching_version_proof_scaffold.json",
   kind = :mode_dependent,
   # FAITHFUL mode-specific sets: the pre-execution branch REJECTS the
@@ -328,7 +335,7 @@ const DCA_EDGES = [
       :preexecution => ["r2_scaffold_ready_awaiting_authorization"]),
   mode_axis = :r2,
   expected_case = "gate4_r2_sw_matching_version_proof_scaffold",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:r2_exec_checkpoint<-r2_finding_ledger:historical",
   consumer = "gate4_r2_execution_checkpoint.jl",
   anchors = ["fin_ok = as_str(get(fin_obj, \"case\", \"\")) ==",
@@ -920,11 +927,13 @@ const DCA_SITE_LEDGER = [
               "dep:r1_probe<-option_b:followup"],
   reason = "dep_case_status helper body"),
  (file = "gate4_r2_execution_checkpoint.jl",
-  anchor = "JSON.parsefile(validation_results_path(name))",
+  anchor = "JSON.parsefile(path)",
   class = "edge",
   edge_ids = ["dep:r2_exec_checkpoint<-r2_proof_scaffold",
               "dep:r2_exec_checkpoint<-r2_finding_ledger:historical"],
-  reason = "parse_artifact! helper body"),
+  reason = "parse_artifact! guarded-loader body (three fixed refusal " *
+           "classes: missing / unparseable / non-object; serves both " *
+           "edges + tmp loader fixtures)"),
  (file = "gate4_r2_sw_matching_version_proof_scaffold.jl",
   anchor = "r1 = JSON.parsefile(validation_results_path(\"gate4_r1_release_provenance_probe.json\"))",
   class = "edge", edge_ids = ["dep:r2_proof_scaffold<-r1_probe"],

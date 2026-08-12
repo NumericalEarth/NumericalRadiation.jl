@@ -40,6 +40,7 @@
     "finding_ledger_structure_valid": "passed",
     "headnode_refusal_guard": "passed",
     "mechanism1_placement": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "preserved_sbatch_consistent_with_current_generator_text": "passed",
     "preserved_sbatch_matches_executed_blob": "passed",
     "quarantine_isolation": "passed",
@@ -53,14 +54,27 @@
     "v14_raw_output_matches_finding_ledger": "passed",
     "v14_tree_at_pinned_commit": "passed"
   },
+  "prerequisite_loader_fixture_verdicts": {
+    "malformed_distinguished": true,
+    "missing_fails": true,
+    "null_and_array_distinguished": true,
+    "scaffold_mode_dependent_sets": true,
+    "scaffold_valid_and_tampered_status": true,
+    "scaffold_wrong_case_fails": true,
+    "try_sha_and_read_nonthrowing": true,
+    "valid_object_no_reason": true,
+    "writer_only_preexecution_green": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "3f75f52",
+    "generated_from_head": "2f9fa6d",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_r2_dryrun.sbatch",
+  "sbatch_scripts_state": "NOT generated this run (historical mode preserves the executed script bytes); the file at sbatch path is PRESERVED output of an earlier run",
+  "sbatch_written_this_run": false,
   "status": "r2_execution_checkpoint_historical_executed",
-  "timestamp_utc": "2026-08-12T11:39:21.765",
+  "timestamp_utc": "2026-08-12T16:31:58.688",
   "v14_tree": {
     "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0",
     "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca",

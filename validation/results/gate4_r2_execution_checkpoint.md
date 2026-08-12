@@ -18,6 +18,7 @@ Authorization: Greg: 'go for R2' (2026-07-20) = r2_matching_version_go per the s
 | finding_ledger_structure_valid | passed |
 | headnode_refusal_guard | passed |
 | mechanism1_placement | passed |
+| prerequisite_loader_fixture_tests | passed |
 | preserved_sbatch_consistent_with_current_generator_text | passed |
 | preserved_sbatch_matches_executed_blob | passed |
 | quarantine_isolation | passed |
@@ -40,4 +41,4 @@ Ledger-verified attempts:
 
 Verified v1.4 SW raw output: `/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc` sha256 `99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26`
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `3f75f52` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `2f9fa6d` (pre-own-commit).

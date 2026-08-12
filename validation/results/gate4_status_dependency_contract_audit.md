@@ -60,11 +60,10 @@ Census: 30 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:g1_objective_ratio<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g1_waiting_for_optimizer_outputs"]; consumer status=g1_waiting_for_optimizer_outputs
 - dep:g3_acceptance<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g3_acceptance_waiting_for_optimizer_outputs"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs
 
-## Hardening findings (11)
+## Hardening findings (10)
 
 - dep:r2_proof_scaffold<-r1_probe: status-only contract (no case check); weakness, not a violation
 - dep:r2_proof_scaffold<-option_b:historical: status-only contract (no case check); weakness, not a violation
-- dep:r2_exec_checkpoint<-r2_proof_scaffold: status-only contract (no case check); weakness, not a violation
 - dep:a2_proof_scaffold<-a2_exec_checkpoint: status-only contract (no case check); weakness, not a violation
 - dep:a2_proof_driver<-a2_proof_scaffold: status-only contract (no case check); weakness, not a violation
 - dep:a2_proof_driver<-option_b:historical: status-only contract (no case check); weakness, not a violation
@@ -82,4 +81,4 @@ Census: 30 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `c1d64c1` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `2f9fa6d` (pre-own-commit).

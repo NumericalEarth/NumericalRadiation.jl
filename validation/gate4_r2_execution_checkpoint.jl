@@ -153,13 +153,65 @@ as_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
 as_str(x) = x isa AbstractString ? String(x) : ""
 
 function parse_artifact!(fails, name)
-    try
-        JSON.parsefile(validation_results_path(name))
-    catch err
-        push!(fails, "$name unreadable/unparseable: " *
-                     "$(first(sprint(showerror, err), 120))")
-        nothing
+    # absolute paths pass through so tmp fixtures exercise the SAME
+    # helper. THREE stable, distinct refusal classes with FIXED reasons
+    # (no OS/parser exception text embedded): missing; unparseable
+    # (parse failure); parsed-non-object (JSON null/array/scalar).
+    path = isabspath(name) ? name : validation_results_path(name)
+    isfile(path) || (push!(fails, "$name missing"); return nothing)
+    raw = try
+        JSON.parsefile(path)
+    catch
+        push!(fails, "$name unparseable (parse failure)")
+        return nothing
     end
+    raw isa AbstractDict ||
+        push!(fails, "$name parses to a non-object " *
+                     "(JSON null/array/scalar)")
+    return raw
+end
+
+# nonthrowing hash for the OUTPUT boundary: a vanished/unreadable file
+# classifies as a failed gate with a reason, never a crash
+rx_try_sha(p) = try
+    split(strip(read(`sha256sum $p`, String)))[1]
+catch
+    nothing
+end
+
+# nonthrowing text read for residual file checks inside the pinned tree
+rx_try_read(p) = try
+    read(p, String)
+catch
+    nothing
+end
+
+# scaffold prerequisite classification (pure; fixture-run): the EXACT
+# case is bound alongside the FAITHFUL mode-dependent status sets (the
+# pre-execution branch still rejects the historical token)
+function rx_classify_scaffold(scaffold_obj, historical)
+    c = as_str(get(scaffold_obj, "case", ""))
+    c == "gate4_r2_sw_matching_version_proof_scaffold" ||
+        return (false, "scaffold case mismatch: " *
+                       (isempty(c) ? "(missing/non-string)" : c))
+    s = as_str(get(scaffold_obj, "status", ""))
+    ok = historical ?
+        s in ("r2_scaffold_ready_awaiting_authorization",
+              "r2_scaffold_historical_executed") :
+        s == "r2_scaffold_ready_awaiting_authorization"
+    ok || return (false, "scaffold status: " *
+                         (isempty(s) ? "(missing/non-string)" : s))
+    return (true, "ok")
+end
+
+# the pre-execution sbatch write happens ONLY behind the classified
+# prerequisite (historical mode structurally contains no write; a
+# blocked pre-execution run never clobbers the committed script)
+rx_should_write(historical, scaffold_ok) = !historical && scaffold_ok
+function rx_write_script(writefn, historical, scaffold_ok)
+    rx_should_write(historical, scaffold_ok) || return false
+    writefn()
+    return true
 end
 
 function main()
@@ -170,40 +222,130 @@ function main()
     # historical verification (read-only w.r.t. execution artifacts)
     historical = isfile(SW_RAW_V14)
 
-    # controlled external-JSON dependency: malformed scaffold artifact is a
-    # failed gate, not an exception
+    # loader/classifier/writer fixtures FIRST, through the SAME code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] = begin
+        fx = String[]
+        parse_artifact!(fx, joinpath(tdir, "absent.json")) === nothing &&
+            length(fx) == 1 && endswith(fx[1], "missing")
+    end
+    lt["malformed_distinguished"] = begin
+        fx = String[]
+        fp = joinpath(tdir, "m.json"); write(fp, "{")
+        parse_artifact!(fx, fp) === nothing &&
+            length(fx) == 1 &&
+            endswith(fx[1], "unparseable (parse failure)")
+    end
+    lt["null_and_array_distinguished"] = begin
+        fx = String[]
+        fp = joinpath(tdir, "n.json"); write(fp, "null")
+        r1 = parse_artifact!(fx, fp)
+        fp2 = joinpath(tdir, "a.json"); write(fp2, "[1]")
+        r2 = parse_artifact!(fx, fp2)
+        r1 === nothing && r2 isa AbstractVector &&
+            count(occursin("parses to a non-object", f) for f in fx) == 2 &&
+            !any(occursin("unreadable", f) for f in fx)
+    end
+    lt["valid_object_no_reason"] = begin
+        fx = String[]
+        fp = joinpath(tdir, "g.json"); write(fp, "{\"case\": \"x\"}")
+        parse_artifact!(fx, fp) isa AbstractDict && isempty(fx)
+    end
+    lt["scaffold_wrong_case_fails"] =
+        !rx_classify_scaffold(Dict("case" => "other",
+            "status" => "r2_scaffold_ready_awaiting_authorization"),
+            true)[1]
+    lt["scaffold_mode_dependent_sets"] = begin
+        hist_tok = Dict(
+            "case" => "gate4_r2_sw_matching_version_proof_scaffold",
+            "status" => "r2_scaffold_historical_executed")
+        ready_tok = Dict(
+            "case" => "gate4_r2_sw_matching_version_proof_scaffold",
+            "status" => "r2_scaffold_ready_awaiting_authorization")
+        rx_classify_scaffold(hist_tok, true)[1] &&
+            !rx_classify_scaffold(hist_tok, false)[1] &&
+            rx_classify_scaffold(ready_tok, true)[1] &&
+            rx_classify_scaffold(ready_tok, false)[1] &&
+            !rx_classify_scaffold(Dict{String, Any}(), true)[1]
+    end
+    lt["scaffold_valid_and_tampered_status"] = begin
+        tam = Dict("case" => "gate4_r2_sw_matching_version_proof_scaffold",
+                   "status" => "totally_bogus")
+        ok_h = rx_classify_scaffold(Dict(
+            "case" => "gate4_r2_sw_matching_version_proof_scaffold",
+            "status" => "r2_scaffold_historical_executed"), true)
+        ok_h == (true, "ok") &&
+            !rx_classify_scaffold(tam, true)[1] &&
+            !rx_classify_scaffold(tam, false)[1]
+    end
+    lt["writer_only_preexecution_green"] = begin
+        n = Ref(0)
+        w = () -> (n[] += 1)
+        rx_write_script(w, false, true) == true && n[] == 1 &&
+            rx_write_script(w, false, false) == false &&
+            rx_write_script(w, true, true) == false &&
+            rx_write_script(w, true, false) == false && n[] == 1
+    end
+    lt["try_sha_and_read_nonthrowing"] =
+        rx_try_sha(joinpath(tdir, "gone.bin")) === nothing &&
+        rx_try_read(joinpath(tdir, "gone.txt")) === nothing &&
+        rx_try_sha(joinpath(tdir, "g.json")) isa AbstractString
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
+    # controlled external-JSON dependency: malformed scaffold artifact is
+    # a failed gate, not an exception; EXACT case bound alongside the
+    # faithful mode-dependent status sets
     scaffold_obj = as_obj(parse_artifact!(fails,
         "gate4_r2_sw_matching_version_proof_scaffold.json"))
-    scaffold_status = as_str(get(scaffold_obj, "status", ""))
-    scaffold_ok = historical ?
-        scaffold_status in ("r2_scaffold_ready_awaiting_authorization",
-                            "r2_scaffold_historical_executed") :
-        scaffold_status == "r2_scaffold_ready_awaiting_authorization"
+    scaffold_ok, scaffold_why = rx_classify_scaffold(scaffold_obj,
+                                                     historical)
     gates["scaffold_prerequisite"] = scaffold_ok ? "passed" : "failed"
-    scaffold_ok || push!(fails, "scaffold status: " *
-        (isempty(scaffold_status) ? "(missing/non-string)" : scaffold_status))
+    scaffold_ok || push!(fails, scaffold_why)
     gates["authorization_recorded"] = "passed"  # Greg: "go for R2" 2026-07-20
 
     # post-checkout verifications (tree exists now; scaffold's
-    # v14_tree_not_yet_created gate is superseded by authorization)
-    tree_ok = isdir(V14_TREE) &&
-        strip(read(`git -C $V14_TREE rev-parse HEAD`, String)) == V14_COMMIT
+    # v14_tree_not_yet_created gate is superseded by authorization);
+    # every residual read is NONTHROWING -- a missing/broken tree or
+    # file is a failed gate with a reason, never a crash
+    tree_head = isdir(V14_TREE) ? (try
+        strip(read(`git -C $V14_TREE rev-parse HEAD`, String))
+    catch
+        nothing
+    end) : nothing
+    tree_ok = tree_head == V14_COMMIT
     gates["v14_tree_at_pinned_commit"] = tree_ok ? "passed" : "failed"
-    tree_ok || push!(fails, "v1.4 tree missing or wrong commit")
+    tree_ok || push!(fails, "v1.4 tree missing, unreadable, or wrong " *
+                            "commit")
     if tree_ok
+        cfg_txt = rx_try_read(joinpath(V14_TREE, "configure.ac"))
         gates["configure_ac_is_14"] =
-            occursin("AC_INIT([ecCKD], [1.4]",
-                     read(joinpath(V14_TREE, "configure.ac"), String)) ?
+            (cfg_txt !== nothing &&
+             occursin("AC_INIT([ecCKD], [1.4]", cfg_txt)) ?
             "passed" : "failed"
+        gates["configure_ac_is_14"] == "passed" ||
+            push!(fails, cfg_txt === nothing ?
+                "configure.ac missing/unreadable in the pinned tree" :
+                "configure.ac does not carry AC_INIT([ecCKD], [1.4]")
+        ckd_txt = rx_try_read(joinpath(V14_TREE, "src/ecckd/ckd_model.cpp"))
         gates["ckd_model_has_ssi_persistence"] =
-            count(l -> occursin("solar_spectral_irradiance", l),
-                  readlines(joinpath(V14_TREE, "src/ecckd/ckd_model.cpp"))) > 0 ?
+            (ckd_txt !== nothing &&
+             occursin("solar_spectral_irradiance", ckd_txt)) ?
             "passed" : "failed"
+        gates["ckd_model_has_ssi_persistence"] == "passed" ||
+            push!(fails, ckd_txt === nothing ?
+                "ckd_model.cpp missing/unreadable in the pinned tree" :
+                "ckd_model.cpp lacks solar_spectral_irradiance persistence")
     end
 
-    cand_ok = isfile(SW_CANDIDATE) &&
-        split(strip(read(`sha256sum $SW_CANDIDATE`, String)))[1] == SW_CANDIDATE_SHA
+    cand_ok = rx_try_sha(SW_CANDIDATE) == SW_CANDIDATE_SHA
     gates["sw_candidate_hash_pinned"] = cand_ok ? "passed" : "failed"
+    cand_ok || push!(fails, "SW candidate missing, unreadable, or " *
+                            "hash-mismatched")
 
     executed = Dict{String, Any}()
     if historical
@@ -234,7 +376,7 @@ function main()
             "; attempts " *
             (isempty(attempts_obj) ? "missing/non-object" : "ok"))
         out_ok = exp_out_wellformed &&
-            split(strip(read(`sha256sum $SW_RAW_V14`, String)))[1] == exp_out
+            rx_try_sha(SW_RAW_V14) == exp_out
         gates["v14_raw_output_matches_finding_ledger"] =
             out_ok ? "passed" : "failed"
         out_ok || push!(fails, "v1.4 raw output != finding-ledger sha " *
@@ -263,8 +405,8 @@ function main()
                 `git -C $(dirname(@__DIR__)) show $(RX_LEDGER_HEAD_COMMIT):$(RX_SBATCH_REPO_PATH)`,
                 `sha256sum`), String)))[1]
         catch; "blob-unreadable" end
-        live_sha = isfile(RX_SBATCH) ?
-            split(strip(read(`sha256sum $RX_SBATCH`, String)))[1] : "missing"
+        live_hash = rx_try_sha(RX_SBATCH)
+        live_sha = live_hash === nothing ? "missing/unreadable" : live_hash
         exec_ok = blob_sha == RX_EXECUTED_SBATCH_SHA &&
                   live_sha == RX_EXECUTED_SBATCH_SHA
         gates["preserved_sbatch_matches_executed_blob"] =
@@ -272,10 +414,17 @@ function main()
         exec_ok || push!(fails, "sbatch identity vs executed blob failed: " *
             "blob=$blob_sha live=$live_sha expected=$RX_EXECUTED_SBATCH_SHA")
         # generator-integrity CONSISTENCY property (not execution identity:
-        # both this source and the file are mutable in a working tree)
+        # both this source and the file are mutable in a working tree);
+        # nonthrowing read -- a vanished file is a failed gate with a
+        # reason, never a crash
+        preserved_txt = rx_try_read(RX_SBATCH)
         gates["preserved_sbatch_consistent_with_current_generator_text"] =
-            (isfile(RX_SBATCH) && read(RX_SBATCH, String) == SBATCH_TEXT) ?
-            "passed" : "failed"
+            preserved_txt == SBATCH_TEXT ? "passed" : "failed"
+        preserved_txt == SBATCH_TEXT ||
+            push!(fails, preserved_txt === nothing ?
+                "preserved sbatch missing/unreadable" :
+                "preserved sbatch not byte-identical to the current " *
+                "generator text")
         executed = Dict(
             "attempt_1_ledger_verified" => a1,
             "attempt_2_ledger_verified" => a2,
@@ -293,14 +442,19 @@ function main()
     else
         gates["v14_raw_output_absent"] = !isfile(SW_RAW_V14) ?
             "passed" : "failed"
-        open(RX_SBATCH, "w") do io
-            write(io, SBATCH_TEXT)
-        end
     end
+    # the pre-execution write is allowlist-gated on the classified
+    # scaffold prerequisite (historical never writes; a blocked
+    # pre-execution run never clobbers the committed script)
+    sbatch_written = rx_write_script(() -> open(RX_SBATCH, "w") do io
+        write(io, SBATCH_TEXT)
+    end, historical, scaffold_ok)
     # (1) mode-appropriate gate name; the structural no-submission check
-    # applies in both modes
+    # applies in all modes, and a blocked pre-execution run never claims
+    # "written" -- it names the blocked-preserved state
     sb_gate = historical ? "sbatch_not_regenerated_or_submitted" :
-                           "sbatch_written_not_submitted"
+              sbatch_written ? "sbatch_written_not_submitted" :
+              "sbatch_blocked_preserved_not_submitted"
     gates[sb_gate] = "passed"
     self_src = read(@__FILE__, String)
     sb_tok = "sb" * "atch "
@@ -358,6 +512,17 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
+        "sbatch_written_this_run" => sbatch_written,
+        "sbatch_scripts_state" => sbatch_written ?
+            "generated this run (unsubmitted)" :
+            isfile(RX_SBATCH) ?
+            "NOT generated this run " *
+            "($(historical ? "historical mode preserves the executed " *
+                             "script bytes" :
+                             "prerequisite blocked")); the file at " *
+            "sbatch path is PRESERVED output of an earlier run" :
+            "NOT generated this run; NO file exists at the sbatch path",
         "authorization" => "Greg: 'go for R2' (2026-07-20) = " *
                            "r2_matching_version_go per the scaffold",
         "attempt_history" => Dict("attempt_1" => Dict(
@@ -443,8 +608,14 @@ function main()
             end
             println(io, "\nVerified v1.4 SW raw output: `$(SW_RAW_V14)` " *
                         "sha256 `$(executed["v14_raw_output_sha256"])`")
-        else
+        elseif sbatch_written
             println(io, "\nGenerated (unsubmitted) batch script: `$(RX_SBATCH)`")
+            println(io, "\nExpected v1.4 SW raw output: `$(SW_RAW_V14)`")
+        else
+            println(io, "\nNO script generated this run (prerequisite " *
+                        "blocked); any file at `$(RX_SBATCH)` is " *
+                        "preserved output of an earlier run, not " *
+                        "current.")
             println(io, "\nExpected v1.4 SW raw output: `$(SW_RAW_V14)`")
         end
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
