@@ -72,3 +72,33 @@ quota_guard() {
     [ "$headroom" -ge "$need" ] || { echo "QUOTA-GUARD REFUSED: headroom ${headroom}B < need ${need}B" >&2; return 67; }
     return 0
 }
+
+# quota_health <reserve_bytes> -- output-write health gate for compute
+# jobs (G3 executors): FAIL-CLOSED unless the uid quota is in a fully
+# healthy state: used <= soft (no grace clock running, grace field "-"),
+# soft>0, hard>0, and hard-limit headroom >= reserve_bytes. Same parsing
+# discipline as quota_guard.
+quota_health() {
+    local reserve="$1"
+    command -v lfs >/dev/null 2>&1 || { echo "QUOTA-HEALTH REFUSED: lfs not available" >&2; return 67; }
+    local row
+    row=$(lfs quota -q -u "$(id -u)" /shared 2>/dev/null | awk '$1=="/shared"{print; exit}')
+    [ -n "$row" ] || { echo "QUOTA-HEALTH REFUSED: no /shared aggregate row" >&2; return 67; }
+    local nf; nf=$(echo "$row" | awk '{print NF}')
+    [ "$nf" -ge 5 ] || { echo "QUOTA-HEALTH REFUSED: row has $nf fields (<5): '$row'" >&2; return 67; }
+    local used soft hard grace
+    used=$(echo "$row" | awk '{gsub(/\*/,"",$2); print $2}')
+    soft=$(echo "$row" | awk '{gsub(/\*/,"",$3); print $3}')
+    hard=$(echo "$row" | awk '{gsub(/\*/,"",$4); print $4}')
+    grace=$(echo "$row" | awk '{print $5}')
+    for v in "$used" "$soft" "$hard"; do
+        case "$v" in ''|*[!0-9]*) echo "QUOTA-HEALTH REFUSED: malformed numeric field '$v'" >&2; return 67;; esac
+    done
+    { [ "$soft" -gt 0 ] && [ "$hard" -gt 0 ]; } || { echo "QUOTA-HEALTH REFUSED: soft/hard 0-or-unlimited (soft=$soft hard=$hard); fail-closed" >&2; return 67; }
+    [ "$used" -le "$soft" ] || { echo "QUOTA-HEALTH REFUSED: used ${used}KiB over soft ${soft}KiB (grace $grace)" >&2; return 67; }
+    [ "$grace" = "-" ] || { echo "QUOTA-HEALTH REFUSED: grace clock active: $grace" >&2; return 67; }
+    local headroom=$(( (hard - used) * 1024 ))
+    [ "$headroom" -ge "$reserve" ] || { echo "QUOTA-HEALTH REFUSED: hard headroom ${headroom}B < reserve ${reserve}B" >&2; return 67; }
+    echo "quota-health: used=${used}KiB soft=${soft}KiB hard=${hard}KiB grace=- headroom=${headroom}B reserve=${reserve}B"
+    return 0
+}

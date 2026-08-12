@@ -50,6 +50,9 @@ const SW_INIT_SHA = "74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c276
 const V12_BIN_SHA = "6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692"
 const V14_BIN_SHA = "101e41ed77c83c81c138494a2b950bbffd12caad27b0c64028666550d7c30d65"
 
+const PROJECT_ROOT = "/shared/home/greg/Projects/AnalyticBandRadiation-platform"
+sha256(p) = split(strip(read(`sha256sum $p`, String)))[1]
+
 const GX_RESULTS_JSON = validation_results_path("gate4_g3_executor_checkpoint.json")
 const GX_RESULTS_MD = validation_results_path("gate4_g3_executor_checkpoint.md")
 const GX_SBATCH_LW = validation_results_path("gate4_g3_lw_optimizer.sbatch")
@@ -97,6 +100,15 @@ function make_sbatch(band)
     stale_block = join(["test ! -e \"$f\" || { echo \"REFUSED: stale optimizer output exists: $f\" >&2; exit 70; }"
                         for f in stale], "\n")
     final_ckd = stale[end]
+    # pin the test sources actually copied at runtime (generation-time shas)
+    src_pins = join(["$(sha256(joinpath(srcdir, "test", f)))  $(joinpath(srcdir, "test", f))"
+                     for f in (script, "config.h", "check_configuration.h",
+                               "version.h.in")], "\n")
+    # pin the MUTABLE GATE CODE itself (verified before sourcing/running):
+    # a later branch edit must not silently alter runtime authorization
+    gate_pins = join(["$(sha256(joinpath(PROJECT_ROOT, "validation", f)))  $(joinpath(PROJECT_ROOT, "validation", f))"
+                      for f in ("gate4_quota_guard.sh",
+                                "gate4_g3_scoped_input_preflight.jl")], "\n")
     """
 #!/bin/bash
 #SBATCH --job-name=g4-g3-$(band)-optimizer
@@ -119,11 +131,31 @@ fi
 G4WORK=$G4WORK
 TESTCOPY="\$G4WORK/testcopy-g3-$(band)"
 
-echo "=== G3-$(band) stage 0: input identity checks ==="
-sha256sum -c <<'HASHES' || { echo "REFUSED: pinned input hash mismatch" >&2; exit 69; }
+echo "=== G3-$(band) stage 0a: gate-code identity (verify BEFORE sourcing) ==="
+sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code changed since generation; regenerate the checkpoint" >&2; exit 75; }
+$gate_pins
+GATEPINS
+
+echo "=== G3-$(band) stage 0b: quota health (read-only; before ANY /shared write) ==="
+source $PROJECT_ROOT/validation/gate4_quota_guard.sh
+quota_health \$((5*1024*1024*1024)) || { echo "REFUSED: quota not healthy (soft-limit state or <5GiB reserve)" >&2; exit 67; }
+
+echo "=== G3-$(band) stage 0c: fresh scoped preflight must be READY (no-write mode) ==="
+PF_LINE=\$(cd $PROJECT_ROOT && G3_PREFLIGHT_CHECK_ONLY=1 julia --project=test validation/gate4_g3_scoped_input_preflight.jl 2>/dev/null | grep '^gate4_g3_scoped_input_preflight:')
+echo "\$PF_LINE"
+[ "\$PF_LINE" = "gate4_g3_scoped_input_preflight: g3_scoped_preflight_ready" ] || { echo "REFUSED: scoped preflight not READY at execution time" >&2; exit 74; }
+
+echo "=== G3-$(band) stage 0d: single-flight lock (first /shared write) ==="
+mkdir -p "\$G4WORK/locks"
+exec 9>"\$G4WORK/locks/g3-$(band).lock"
+flock -n 9 || { echo "REFUSED: another G3-$(band) job holds the lock" >&2; exit 73; }
+
+echo "=== G3-$(band) stage 0e: input + source identity checks ==="
+sha256sum -c <<'HASHES' || { echo "REFUSED: pinned input/source hash mismatch" >&2; exit 69; }
 $initsha  $initfile
 $binsha  $bindir/optimize_lut
 $SHIM_SO_SHA  $SHIM_SO
+$src_pins
 HASHES
 test -x "$bindir/optimize_lut" || { echo "REFUSED: optimize_lut not executable" >&2; exit 68; }
 test -s "$eval2" || { echo "REFUSED: eval2 TRAINING_BOTH file missing (G2d incomplete)" >&2; exit 65; }
@@ -223,14 +255,71 @@ function main()
     gates["sw_mode_list"] =
         occursin("optimize_lut_sw.sh relative-base relative-ch4 relative-n2o",
                  sw_text) && !occursin("relative-cfc", sw_text) ? "passed" : "failed"
+    for (nm, txt) in (("lw", lw_text), ("sw", sw_text))
+        gates["$(nm)_flock_single_flight"] =
+            occursin("flock -n 9", txt) && occursin("g3-$(nm).lock", txt) ? "passed" : "failed"
+        i_gatepin = findfirst("GATEPINS", txt); i_health = findfirst("quota_health ", txt)
+        i_source = findfirst("source $PROJECT_ROOT", txt); i_lock = findfirst("flock -n 9", txt)
+        i_pf = findfirst("G3_PREFLIGHT_CHECK_ONLY=1", txt)
+        gates["$(nm)_readonly_gates_before_lock"] =
+            (i_gatepin !== nothing && i_source !== nothing && i_health !== nothing &&
+             i_pf !== nothing && i_lock !== nothing &&
+             first(i_gatepin) < first(i_source) < first(i_health) &&
+             first(i_health) < first(i_pf) < first(i_lock)) ? "passed" : "failed"
+        gates["$(nm)_gate_code_pinned"] =
+            occursin("gate4_quota_guard.sh", split(txt, "GATEPINS")[2]) &&
+            occursin("gate4_g3_scoped_input_preflight.jl", split(txt, "GATEPINS")[2]) ?
+            "passed" : "failed"
+        gates["$(nm)_quota_health_gate"] =
+            occursin("quota_health ", txt) &&
+            occursin("before ANY /shared write", txt) ? "passed" : "failed"
+        gates["$(nm)_runtime_ready_preflight"] =
+            occursin("G3_PREFLIGHT_CHECK_ONLY=1", txt) &&
+            occursin("g3_scoped_preflight_ready", txt) ? "passed" : "failed"
+        gates["$(nm)_source_pins"] =
+            occursin("config.h", split(txt, "HASHES")[2]) &&
+            occursin("version.h.in", split(txt, "HASHES")[2]) ? "passed" : "failed"
+    end
+    # quota_health fixture tests (stubbed lfs; same sourced logic)
+    guard = joinpath(PROJECT_ROOT, "validation/gate4_quota_guard.sh")
+    run_health(pathdir) = success(pipeline(
+        `/usr/bin/env PATH=$pathdir /bin/bash -c "source $guard; quota_health 5368709120"`,
+        stdout=devnull, stderr=devnull))
+    fx = mktempdir()
+    bin_min = joinpath(fx, "bin_min"); mkpath(bin_min)
+    for t in ("awk", "stat", "id", "grep", "sed", "sort", "wc")
+        tp = Sys.which(t); tp === nothing || symlink(tp, joinpath(bin_min, t))
+    end
+    mkfix(name, rowscript) = begin
+        d = joinpath(fx, name); mkpath(d)
+        for t in readdir(bin_min); symlink(joinpath(bin_min, t), joinpath(d, t)); end
+        lf = joinpath(d, "lfs"); write(lf, "#!/bin/bash\necho \"" * rowscript * "\"\n")
+        chmod(lf, 0o755); d
+    end
+    htests = Dict{String, Bool}()
+    htests["healthy_passes"] =
+        run_health(mkfix("h1", "/shared 100 900000000 1000000000 - 1 0 0 -")) == true
+    htests["over_soft_grace_refuses"] =
+        run_health(mkfix("h2", "/shared 950000000* 900000000 1000000000 6d23h 1 0 0 -")) == false
+    htests["malformed_refuses"] =
+        run_health(mkfix("h3", "/shared abc def ghi - 1 0 0 -")) == false
+    htests["zero_limits_refuse"] =
+        run_health(mkfix("h4", "/shared 100 0 0 - 1 0 0 -")) == false
+    htests["reserve_shortfall_refuses"] =
+        run_health(mkfix("h5", "/shared 999999000 900000000 1000000000 - 1 0 0 -")) == false
+    gates["quota_health_fixture_tests"] = all(values(htests)) ? "passed" : "failed"
+    all(values(htests)) ||
+        push!(fails, "quota_health fixture failures: " *
+                     join([k for (k, v) in htests if !v], ", "))
     gates["token_gated_submit"] = try
         submit_g3(); "failed"
     catch err
         occursin("refused", sprint(showerror, err)) ? "passed" : "failed"
     end
-    gates["sw_script_version_identity"] =
-        read(`diff -q $V14_TREE/test/optimize_lut_sw.sh $ECCKD_SRC/test/optimize_lut_sw.sh`,
-             String) == "" ? "passed" : "failed"
+    gates["sw_script_version_identity"] = try
+        success(pipeline(`diff -q $V14_TREE/test/optimize_lut_sw.sh $ECCKD_SRC/test/optimize_lut_sw.sh`,
+                         stdout=devnull, stderr=devnull)) ? "passed" : "failed"
+    catch; "failed" end
 
     others = [k for k in keys(gates) if k != "scoped_preflight_prerequisite"]
     others_pass = all(k -> gates[k] == "passed", others)
@@ -251,6 +340,7 @@ function main()
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
         "sbatch_paths" => Dict("lw" => GX_SBATCH_LW, "sw" => GX_SBATCH_SW),
+        "quota_health_fixture_verdicts" => htests,
         "authorization_token_required" => "g3_recovery_go (plus scoped " *
             "preflight ready; submission is a reviewed human step)",
         "acceptance_metrics_note" => "final/target <= 1.05, weight L1 <= " *

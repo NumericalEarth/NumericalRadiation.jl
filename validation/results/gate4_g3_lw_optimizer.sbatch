@@ -19,11 +19,35 @@ fi
 G4WORK=/shared/home/greg/ecckd-derived-flux-work/g4-init-generation
 TESTCOPY="$G4WORK/testcopy-g3-lw"
 
-echo "=== G3-lw stage 0: input identity checks ==="
-sha256sum -c <<'HASHES' || { echo "REFUSED: pinned input hash mismatch" >&2; exit 69; }
+echo "=== G3-lw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
+sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code changed since generation; regenerate the checkpoint" >&2; exit 75; }
+cd5627f643717fa91d75e6f93296d54d161e57394069aa7dce306aa2e8ce0641  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
+c65809a45e8dbd56adea7d443c520b4be30ce294ace02b9f9b91ac79d5c744ea  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g3_scoped_input_preflight.jl
+GATEPINS
+
+echo "=== G3-lw stage 0b: quota health (read-only; before ANY /shared write) ==="
+source /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
+quota_health $((5*1024*1024*1024)) || { echo "REFUSED: quota not healthy (soft-limit state or <5GiB reserve)" >&2; exit 67; }
+
+echo "=== G3-lw stage 0c: fresh scoped preflight must be READY (no-write mode) ==="
+PF_LINE=$(cd /shared/home/greg/Projects/AnalyticBandRadiation-platform && G3_PREFLIGHT_CHECK_ONLY=1 julia --project=test validation/gate4_g3_scoped_input_preflight.jl 2>/dev/null | grep '^gate4_g3_scoped_input_preflight:')
+echo "$PF_LINE"
+[ "$PF_LINE" = "gate4_g3_scoped_input_preflight: g3_scoped_preflight_ready" ] || { echo "REFUSED: scoped preflight not READY at execution time" >&2; exit 74; }
+
+echo "=== G3-lw stage 0d: single-flight lock (first /shared write) ==="
+mkdir -p "$G4WORK/locks"
+exec 9>"$G4WORK/locks/g3-lw.lock"
+flock -n 9 || { echo "REFUSED: another G3-lw job holds the lock" >&2; exit 73; }
+
+echo "=== G3-lw stage 0e: input + source identity checks ==="
+sha256sum -c <<'HASHES' || { echo "REFUSED: pinned input/source hash mismatch" >&2; exit 69; }
 ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc
 6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692  /shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/optimize_lut
 28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so
+f0d77b16b97612687818e85615a103adaa948627846c9819e40e7754ab0743ba  /shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/optimize_lut_lw.sh
+44dcddf099d69becab1c5e6674d013d6c676685e0b8a4ae51e85a1dda33cfc69  /shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/config.h
+34323fd3ecbcd64980b328eec463eedc692497ed3cdd685f2505ca4d1fdc5e2c  /shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/check_configuration.h
+a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810  /shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/version.h.in
 HASHES
 test -x "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/optimize_lut" || { echo "REFUSED: optimize_lut not executable" >&2; exit 68; }
 test -s "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5" || { echo "REFUSED: eval2 TRAINING_BOTH file missing (G2d incomplete)" >&2; exit 65; }

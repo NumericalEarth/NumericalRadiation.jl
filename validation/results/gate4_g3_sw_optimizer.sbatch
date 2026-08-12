@@ -19,11 +19,35 @@ fi
 G4WORK=/shared/home/greg/ecckd-derived-flux-work/g4-init-generation
 TESTCOPY="$G4WORK/testcopy-g3-sw"
 
-echo "=== G3-sw stage 0: input identity checks ==="
-sha256sum -c <<'HASHES' || { echo "REFUSED: pinned input hash mismatch" >&2; exit 69; }
+echo "=== G3-sw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
+sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code changed since generation; regenerate the checkpoint" >&2; exit 75; }
+cd5627f643717fa91d75e6f93296d54d161e57394069aa7dce306aa2e8ce0641  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
+c65809a45e8dbd56adea7d443c520b4be30ce294ace02b9f9b91ac79d5c744ea  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g3_scoped_input_preflight.jl
+GATEPINS
+
+echo "=== G3-sw stage 0b: quota health (read-only; before ANY /shared write) ==="
+source /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
+quota_health $((5*1024*1024*1024)) || { echo "REFUSED: quota not healthy (soft-limit state or <5GiB reserve)" >&2; exit 67; }
+
+echo "=== G3-sw stage 0c: fresh scoped preflight must be READY (no-write mode) ==="
+PF_LINE=$(cd /shared/home/greg/Projects/AnalyticBandRadiation-platform && G3_PREFLIGHT_CHECK_ONLY=1 julia --project=test validation/gate4_g3_scoped_input_preflight.jl 2>/dev/null | grep '^gate4_g3_scoped_input_preflight:')
+echo "$PF_LINE"
+[ "$PF_LINE" = "gate4_g3_scoped_input_preflight: g3_scoped_preflight_ready" ] || { echo "REFUSED: scoped preflight not READY at execution time" >&2; exit 74; }
+
+echo "=== G3-sw stage 0d: single-flight lock (first /shared write) ==="
+mkdir -p "$G4WORK/locks"
+exec 9>"$G4WORK/locks/g3-sw.lock"
+flock -n 9 || { echo "REFUSED: another G3-sw job holds the lock" >&2; exit 73; }
+
+echo "=== G3-sw stage 0e: input + source identity checks ==="
+sha256sum -c <<'HASHES' || { echo "REFUSED: pinned input/source hash mismatch" >&2; exit 69; }
 74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc
 101e41ed77c83c81c138494a2b950bbffd12caad27b0c64028666550d7c30d65  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut
 28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so
+618b210ed0b3fedf279596342426084047624cb866e437e4e6546b01bb98371f  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/optimize_lut_sw.sh
+d00a19fd16a7abb79b29748d00c5023c5ccee2a1c2a085c8ead30d2fd4e93b20  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/config.h
+34323fd3ecbcd64980b328eec463eedc692497ed3cdd685f2505ca4d1fdc5e2c  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/check_configuration.h
+a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/version.h.in
 HASHES
 test -x "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut" || { echo "REFUSED: optimize_lut not executable" >&2; exit 68; }
 test -s "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5" || { echo "REFUSED: eval2 TRAINING_BOTH file missing (G2d incomplete)" >&2; exit 65; }

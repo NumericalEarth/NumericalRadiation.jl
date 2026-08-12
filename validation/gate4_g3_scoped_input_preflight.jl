@@ -219,6 +219,8 @@ function main()
         "disclaimer" => "input manifest only; no optimizer, LBL, objective, " *
                         "floor, or recovery computation; nothing submitted.",
     )
+    check_only = get(ENV, "G3_PREFLIGHT_CHECK_ONLY", "0") == "1"
+    if !check_only
     mkpath(dirname(GP_RESULTS_JSON))
     open(GP_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
@@ -242,6 +244,7 @@ function main()
         isempty(fails) || (println(io, "\n## Failures\n");
                            foreach(f -> println(io, "- ", f), fails))
     end
+    end  # !check_only (no-write mode for execution-time require-ready)
     println("gate4_g3_scoped_input_preflight: $status")
     for k in sort(collect(keys(gates)))
         println("  $k: $(gates[k])")
