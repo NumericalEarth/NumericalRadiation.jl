@@ -1,0 +1,43 @@
+{
+  "binding_definition": "package-native hard_objective (worst threshold-normalized (case, metric) row over REDUCED_CASES) on the recovered LW32+SW32 pair evaluated jointly; ratio = value / 1.0 <= 1.05",
+  "case": "gate4_g1_objective_ratio",
+  "disclaimer": "refusing Gate-1 runner: binds ONLY on a reviewed run ledger + sha-matched recovered pair; published-pair numbers are self-test context, not recovered acceptance; the upstream objective/floor comparison is a separate outstanding item.",
+  "failures": [],
+  "gates": {
+    "perturbed_candidate_raises_objective": "passed",
+    "published_context_matches_archived_baseline": "passed",
+    "refusal_ladder_fixtures": "passed",
+    "run_ledger_schema_fixtures": "passed"
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "a27d6ec",
+    "lw32": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+    "provenance_note": "artifact generated from the working tree before its own commit",
+    "sw32": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+  },
+  "published_context": {
+    "NOTE": "SELF-TEST CONTEXT ONLY -- this is the PUBLISHED pair through the same path; it is NOT recovered acceptance and must never be reported as such",
+    "archived_baseline": 0.18218645425029933,
+    "baseline_rel_diff": 0.0,
+    "hard_objective_case": "ecckd_clear_sky_tropical_column",
+    "hard_objective_metric": "heating_rate_max_abs",
+    "hard_objective_value": 0.18218645425029933,
+    "perturbed_value": 27.90958396366932
+  },
+  "recovered": {
+    "detail": "recovered pair absent (expected at the G3 executor output conventions); refusing to evaluate",
+    "status": "g1_waiting_for_optimizer_outputs"
+  },
+  "recovered_conventions": {
+    "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+    "run_ledger": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_run_ledger.json",
+    "sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc"
+  },
+  "reduced_cases": [
+    "ecckd_clear_sky_tropical_column",
+    "ecckd_rcemip_style_column_subset"
+  ],
+  "status": "g1_waiting_for_optimizer_outputs",
+  "timestamp_utc": "2026-08-12T10:27:23.457"
+}
