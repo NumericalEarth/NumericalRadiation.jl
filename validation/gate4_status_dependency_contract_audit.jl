@@ -229,6 +229,9 @@ const DCA_SW_RECOVERED = "$DCA_G4WORK/work-v14/sw_ckd-definition/" *
 # DECLARATIVE DATA
 # ============================================================================
 
+const DCA_SW_SCALED = "$DCA_G4WORK/work-v14/sw_raw-ckd-definition/" *
+    "ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc"
+
 function dca_modes()
     a2_sub = try
         JSON.parsefile(validation_results_path("gate4_a2_submission_ledger.json"))
@@ -237,6 +240,13 @@ function dca_modes()
               "a2_attempt2_completed_candidates_collected"
     return (a2 = a2_hist ? :historical : :preexecution,
             r2 = isfile(DCA_R2_V14_RAW) ? :historical : :preexecution,
+            # PRESENCE semantics, not verification semantics: the audit
+            # only observes that a scaled output EXISTS -- whether it is
+            # historical (path+sha verified) or anomaly is the
+            # CONSUMER's classification; the ledger edge is active for
+            # the whole output-present branch either way
+            sw_init = isfile(DCA_SW_SCALED) ? :output_present :
+                                              :preexecution,
             g3_ledger_present =
                 isfile(validation_results_path("gate4_g3_run_ledger.json")))
 end
@@ -245,12 +255,36 @@ end
 # accepted_by_mode + mode_axis), expected_case, consumer_checks_case
 # (ACTUAL contract), status_only (hardening flag), active_when
 const DCA_EDGES = [
+ # HARDENED consumer: classify_pinned_artifact binds exact case+status
+ # for BOTH pinned inputs; the sbatch write is allowlist-gated to
+ # pre-execution mode; the init-provenance ledger is consulted ONLY in
+ # historical mode (post-execution evidence, its own edge below)
  (id = "dep:sw_init_checkpoint<-option_b", consumer = "gate4_sw_init_generation_checkpoint.jl",
-  anchors = ["dr[\"status\"] == \"option_b_adopted_candidates_promoted\""],
+  anchors = ["ob_ok, ob_why, _ = classify_pinned_artifact(",
+             "\"gate4_option_b_decision_record\",",
+             "\"option_b_adopted_candidates_promoted\")",
+             "sbatch_written = si_write_script("],
   producer = "gate4_option_b_decision_record.json", kind = :exact,
   accepted = ["option_b_adopted_candidates_promoted"],
   expected_case = "gate4_option_b_decision_record",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:sw_init_checkpoint<-init_provenance_ledger:output_present",
+  consumer = "gate4_sw_init_generation_checkpoint.jl",
+  # OUTPUT-PRESENT evidence edge: loaded whenever a scaled output
+  # exists; whether that output is historical (path+sha verified) or
+  # anomaly is the CONSUMER's classification -- the audit gates only on
+  # presence, never calling unverified evidence historical. The
+  # ledger-recorded sha must verify the live output through a
+  # path-bound (root-resolved, normalized-equality) record.
+  anchors = ["il_ok, il_why, il = classify_pinned_artifact(",
+             "\"gate4_init_provenance_ledger\",",
+             "\"acceptance_inits_complete\")",
+             "si_ledger_sw_matches(rec, SW_SCALED)"],
+  producer = "gate4_init_provenance_ledger.json", kind = :exact,
+  accepted = ["acceptance_inits_complete"],
+  expected_case = "gate4_init_provenance_ledger",
+  consumer_checks_case = true, status_only = false,
+  active_when = :sw_init_output_present),
  (id = "dep:r2_proof_scaffold<-r1_probe", consumer = "gate4_r2_sw_matching_version_proof_scaffold.jl",
   anchors = ["r1[\"status\"] == \"r1_sw_mapping_found_lw_ambiguous\""],
   producer = "gate4_r1_release_provenance_probe.json", kind = :exact,
@@ -666,7 +700,8 @@ const DCA_EDGES = [
 
 # declarative-manifest schema/invariant validation (pure; fixture-tested)
 const DCA_ALLOWED_ACTIVE_WHEN = (:always, :a2_historical,
-                                 :a2_preexecution, :r2_historical)
+                                 :a2_preexecution, :r2_historical,
+                                 :sw_init_output_present)
 function dca_manifest_issues(edges)
     issues = String[]
     for e in edges
@@ -919,9 +954,14 @@ const DCA_SITE_LEDGER = [
            "the same helper also re-reads the unit's own previous " *
            "artifact and fixture tmp files"),
  (file = "gate4_sw_init_generation_checkpoint.jl",
-  anchor = "dr = JSON.parsefile(validation_results_path(\"gate4_option_b_decision_record.json\"))",
-  class = "edge", edge_ids = ["dep:sw_init_checkpoint<-option_b"],
-  reason = "option-B prerequisite parse"),
+  anchor = "JSON.parsefile(path)",
+  class = "edge",
+  edge_ids = ["dep:sw_init_checkpoint<-option_b",
+              "dep:sw_init_checkpoint<-init_provenance_ledger:output_present"],
+  reason = "classify_pinned_artifact guarded-loader body (exact-case + " *
+           "exact-status binding; serves the always-on Option-B edge " *
+           "and the output-present ledger-evidence edge + tmp loader " *
+           "fixtures)"),
  (file = "gate4_v1_version_skew_recon.jl",
   anchor = "String(JSON.parsefile(validation_results_path(name))[\"status\"])",
   class = "edge",
@@ -1028,6 +1068,8 @@ function dca_active(e, modes)
     e.active_when == :a2_historical && return modes.a2 == :historical
     e.active_when == :a2_preexecution && return modes.a2 == :preexecution
     e.active_when == :r2_historical && return modes.r2 == :historical
+    e.active_when == :sw_init_output_present &&
+        return modes.sw_init == :output_present
     drefuse("unknown active_when $(e.active_when) for $(e.id)")
 end
 
@@ -1413,10 +1455,10 @@ function dca_main()
         length(unique(ids)) == length(ids) ? "passed" : "failed"
     length(unique(ids)) == length(ids) ||
         push!(fails, "duplicate edge IDs in the declarative manifest")
-    gates["manifest_edge_count_39"] =
-        length(DCA_EDGES) == 39 ? "passed" : "failed"
-    length(DCA_EDGES) == 39 ||
-        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 39")
+    gates["manifest_edge_count_40"] =
+        length(DCA_EDGES) == 40 ? "passed" : "failed"
+    length(DCA_EDGES) == 40 ||
+        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 40")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)
@@ -1678,6 +1720,17 @@ function dca_main()
     t["multi_matched_ledger_record_detected"] =
         any(occursin("MULTI-MATCHED", i)
             for i in dca_reconcile(dupsites, DCA_SITE_LEDGER, ids))
+    # the sw_init mode axis must gate its output-present edge: active
+    # for :output_present (presence semantics -- the consumer, not the
+    # audit, decides historical vs anomaly), inactive for :preexecution
+    t["sw_init_mode_axis_active_when"] = begin
+        e_h = (id = "fixture", active_when = :sw_init_output_present)
+        m_h = (a2 = :historical, r2 = :historical,
+               sw_init = :output_present, g3_ledger_present = false)
+        m_p = (a2 = :historical, r2 = :historical,
+               sw_init = :preexecution, g3_ledger_present = false)
+        dca_active(e_h, m_h) && !dca_active(e_h, m_p)
+    end
     # unknown mode_axis must refuse (never silently mapped)
     t["unknown_mode_axis_refuses"] = try
         e6 = [e for e in DCA_EDGES
@@ -1727,9 +1780,11 @@ function dca_main()
         validate_run_ledger(good)[1] &&
             !validate_run_ledger(merge(good, Dict("status" => "draft")))[1]
     end
+    # exemplar retargeted after the sw_init edge hardening: v1_recon's
+    # r1-probe followup remains a status-only contract
     t["status_only_is_finding_not_failure"] =
-        any(h -> h["id"] == "dep:sw_init_checkpoint<-option_b", hardening) &&
-        !any(occursin("dep:sw_init_checkpoint<-option_b", f) for f in fails)
+        any(h -> h["id"] == "dep:v1_recon<-r1_probe:followup", hardening) &&
+        !any(occursin("dep:v1_recon<-r1_probe:followup", f) for f in fails)
     rm(tdir, recursive = true, force = true)
     gates["fixtures"] = all(values(t)) ? "passed" : "failed"
     all(values(t)) || push!(fails, "fixtures failed: " *
@@ -1788,6 +1843,7 @@ function dca_main()
                 "reason" => x.reason) for x in DCA_SITE_LEDGER]),
         "modes_observed" => Dict("a2" => String(modes.a2),
             "r2" => String(modes.r2),
+            "sw_init" => String(modes.sw_init),
             "g3_run_ledger_present" => modes.g3_ledger_present),
         "contract_satisfaction" => Dict(
             "n_edges" => length(DCA_EDGES),
@@ -1823,7 +1879,7 @@ function dca_main()
         end
         println(io, "\nCensus: $(length(sites)) parse sites reconciled " *
                     "with edge linkage; modes a2=$(modes.a2) " *
-                    "r2=$(modes.r2) " *
+                    "r2=$(modes.r2) sw_init=$(modes.sw_init) " *
                     "g3_ledger_present=$(modes.g3_ledger_present).")
         println(io, "\n## Contract verdicts ($(n_sat) satisfied / " *
                     "$(n_inact) inactive / $(n_self) selftest-state / " *
