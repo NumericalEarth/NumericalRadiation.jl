@@ -1,13 +1,24 @@
-# Gate-4 G2/G3 runner SCAFFOLD (dry-run manifest; pre-data unit).
+# Gate-4 G2/G3 runner SCAFFOLD (dry-run manifest) -- HISTORICAL/SUPERSEDED.
 #
-# Builds the exact ordered LW/SW pass manifest for the eventual G2 gradient
-# check and G3 floor run, sourced from committed audit artifacts (stage-config
-# audit, covariance-stride audit) and the pinned create/optimize scripts --
-# never memory. This scaffold REFUSES to compute any objective or floor value:
-# it enumerates configuration, init files, OUTCODE chains, relative_to files,
-# trainable sets, band mappings, and expected derived-data paths with
-# present/missing status. When data is absent the status is
-# runner_scaffold_ready_waiting_for_data (not a failure).
+# SUPERSEDED (monitor-directed marking, 2026-08-12): the execution path
+# this scaffold anticipated landed as a DIFFERENT gated chain -- the
+# scoped input preflight (gate4_g3_scoped_input_preflight.jl) + G3
+# executor checkpoint (gate4_g3_executor_checkpoint.jl, token-gated
+# sbatch generation with human submission) + the G2a-G2d training-flux
+# chain. The execute_g2_g3 entrypoint below is RETIRED: intentionally
+# unimplemented and superseded; its broad ckdmip_training_data_preflight
+# gating was superseded by the SCOPED preflight (the broad preflight
+# would go red under a Path-D cleanup by design). The unit is RETAINED as read-only
+# manifest evidence: its pass-chain/audit gates (OUTCODE continuity, no
+# 4angle, init provenance, rel-415 relative_to, support-array exclusion)
+# remain valid historical checks of the pinned upstream scripts.
+#
+# Original contract: builds the exact ordered LW/SW pass manifest sourced
+# from committed audit artifacts (stage-config audit, covariance-stride
+# audit) and the pinned create/optimize scripts -- never memory. REFUSES
+# to compute any objective or floor value; enumerates configuration, init
+# files, OUTCODE chains, relative_to files, trainable sets, band
+# mappings, and expected derived-data paths with present/missing status.
 #
 # No floor, objective-value, or recovery claim.
 
@@ -27,15 +38,22 @@ const RS_RESULTS_MD = validation_results_path("gate4_g2_g3_runner_scaffold.md")
 
 const CO2_LEVELS = ["180", "280", "415", "560", "1120", "2240"]
 
-# The future execute entrypoint. The scaffold NEVER calls this; a real run
-# must pass authorize = :real_data_preflight_green explicitly.
+# HISTORICAL entrypoint, intentionally unimplemented and now SUPERSEDED:
+# the real execution path landed as the scoped-preflight + executor-
+# checkpoint chain (token g3_recovery_go; submission is a reviewed human
+# sbatch step). This function refuses on EVERY path, including the old
+# authorization token.
 function execute_g2_g3(manifest; authorize::Symbol = :refused)
     authorize === :real_data_preflight_green ||
-        error("execute_g2_g3 refused: this is a dry-run scaffold. Run the " *
-              "CKDMIP preflight to green, then invoke with " *
-              "authorize = :real_data_preflight_green.")
-    error("not implemented in the scaffold: the G2/G3 executor lands as its " *
-          "own gated unit once data is present.")
+        error("execute_g2_g3 refused: this is a dry-run scaffold and is " *
+              "SUPERSEDED by the gate4_g3_scoped_input_preflight + " *
+              "gate4_g3_executor_checkpoint chain.")
+    error("execute_g2_g3 SUPERSEDED: even with the historical " *
+          "authorization token, no execution happens here. The G3 " *
+          "executor landed as gate4_g3_executor_checkpoint.jl " *
+          "(token-gated sbatch generation, human submission); this " *
+          "scaffold entrypoint is retired, intentionally unimplemented, " *
+          "and superseded.")
 end
 
 function main()
@@ -190,10 +208,16 @@ function main()
         length(derived) == 18 ? "passed" : "failed"
     length(derived) == 18 || push!(fails, "expected 18 derived products")
 
+    # "ready" here is HISTORICAL manifest coherence + 4078-era derived-data
+    # presence, NOT execution readiness (execution authority moved to the
+    # scoped-preflight + executor-checkpoint chain). The prefix
+    # "runner_scaffold_ready" is preserved for the init-generation-manifest
+    # consumer (gate4_init_generation_manifest.jl).
     data_ready = n_present == length(derived)
     status = !isempty(fails) ? "runner_scaffold_failed" :
-             data_ready ? "runner_scaffold_ready" :
-                          "runner_scaffold_ready_waiting_for_data"
+             data_ready ?
+             "runner_scaffold_ready_historical_superseded" :
+             "runner_scaffold_ready_historical_superseded_waiting_for_data"
 
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
@@ -207,15 +231,21 @@ function main()
         "manifest" => manifest,
         "derived_present" => n_present,
         "derived_expected" => length(derived),
-        "future_execute_command" =>
-            "RH_CKDMIP_DATA_PATH=... julia --project=test " *
-            "validation/gate4_g2_g3_runner_scaffold.jl -- once the executor " *
-            "unit lands: execute_g2_g3(manifest; authorize = " *
-            ":real_data_preflight_green) after ckdmip_training_data_preflight " *
-            "reports ready_for_original_ecckd_objective",
-        "dry_run_refusal" => "execute_g2_g3 errors unless " *
-            "authorize = :real_data_preflight_green; the scaffold never " *
-            "computes objective or floor values",
+        "superseded_by" => "gate4_g3_scoped_input_preflight.jl + " *
+            "gate4_g3_executor_checkpoint.jl (token g3_recovery_go, " *
+            "human sbatch submission) + the G2a-G2d training-flux chain; " *
+            "the previously advertised execute_g2_g3 future command is " *
+            "WITHDRAWN -- that entrypoint is retired (intentionally " *
+            "unimplemented, refuses on every path) and the broad " *
+            "ckdmip_training_data_preflight gating was replaced by " *
+            "the scoped preflight",
+        "historical_note" => "retained as read-only manifest evidence; " *
+            "pass-chain/audit gates remain valid checks of the pinned " *
+            "upstream scripts; 'ready' statuses assert manifest coherence " *
+            "+ 4078-era derived-data presence, never execution readiness",
+        "dry_run_refusal" => "execute_g2_g3 errors on EVERY path " *
+            "(superseded); the scaffold never computes objective or " *
+            "floor values",
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "sources" => ["gate4_stage_config_audit.json",
                           "gate4_covariance_stride_audit.json",
@@ -223,17 +253,21 @@ function main()
                           "optimize_lut_sw.sh at $ECCKD_SRC"],
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
-        "disclaimer" => "dry-run manifest only; no floor, objective-value, " *
-                        "or recovery claim; refuses execution without " *
-                        "explicit real-data authorization.",
+        "disclaimer" => "HISTORICAL/SUPERSEDED dry-run manifest; no floor, " *
+                        "objective-value, or recovery claim; execution " *
+                        "refused on every path -- authority moved to the " *
+                        "scoped-preflight + executor-checkpoint chain.",
     )
     mkpath(dirname(RS_RESULTS_JSON))
     open(RS_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
     end
     open(RS_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 G2/G3 runner scaffold (dry-run manifest)\n")
+        println(io, "# Gate-4 G2/G3 runner scaffold (dry-run manifest) — " *
+                    "HISTORICAL/SUPERSEDED\n")
         println(io, "Status: **$status**\n")
+        println(io, "**Superseded by**: ", result["superseded_by"], "\n")
+        println(io, result["historical_note"], "\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gate | Result |")
         println(io, "|---|---|")
@@ -250,7 +284,6 @@ function main()
             end
         end
         println(io, "\nDerived products present: $n_present / $(length(derived))")
-        println(io, "\nFuture execution: ", result["future_execute_command"])
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$head` (pre-own-commit).")
         isempty(fails) || (println(io, "\n## Failures\n");

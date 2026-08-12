@@ -2,11 +2,10 @@
   "case": "gate4_g2_g3_runner_scaffold",
   "data_mode": "dry_run_manifest_only",
   "derived_expected": 18,
-  "derived_present": 0,
-  "disclaimer": "dry-run manifest only; no floor, objective-value, or recovery claim; refuses execution without explicit real-data authorization.",
-  "dry_run_refusal": "execute_g2_g3 errors unless authorize = :real_data_preflight_green; the scaffold never computes objective or floor values",
+  "derived_present": 18,
+  "disclaimer": "HISTORICAL/SUPERSEDED dry-run manifest; no floor, objective-value, or recovery claim; execution refused on every path -- authority moved to the scoped-preflight + executor-checkpoint chain.",
+  "dry_run_refusal": "execute_g2_g3 errors on EVERY path (superseded); the scaffold never computes objective or floor values",
   "failures": [],
-  "future_execute_command": "RH_CKDMIP_DATA_PATH=... julia --project=test validation/gate4_g2_g3_runner_scaffold.jl -- once the executor unit lands: execute_g2_g3(manifest; authorize = :real_data_preflight_green) after ckdmip_training_data_preflight reports ready_for_original_ecckd_objective",
   "gates": {
     "derived_products_enumerated": "passed",
     "lw_base_init_raw_ckd": "passed",
@@ -16,6 +15,7 @@
     "support_excluded_from_trainable": "passed",
     "sw_base_init_scaled_ckd": "passed"
   },
+  "historical_note": "retained as read-only manifest evidence; pass-chain/audit gates remain valid checks of the pinned upstream scripts; 'ready' statuses assert manifest coherence + 4078-era derived-data presence, never execution readiness",
   "manifest": {
     "common_options": {
       "lw": [
@@ -136,75 +136,75 @@
     "derived_products": [
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-180.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-280.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-415.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-560.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-1120.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_5gas-2240.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-180.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-280.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-415.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-560.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-1120.h5",
-        "present": false
+        "present": true
       },
       {
         "path": "evaluation1/sw_fluxes/ckdmip_evaluation1_sw_fluxes_rel-2240.h5",
-        "present": false
+        "present": true
       }
     ],
     "init_templates": {
@@ -425,7 +425,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "87a93db",
+    "generated_from_head": "38c5788",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "sources": [
       "gate4_stage_config_audit.json",
@@ -433,6 +433,7 @@
       "pinned create_lut_{lw,sw}.sh / scale_lut_sw.sh / optimize_lut_sw.sh at /shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd"
     ]
   },
-  "status": "runner_scaffold_ready_waiting_for_data",
-  "timestamp_utc": "2026-07-19T05:17:07.587"
+  "status": "runner_scaffold_ready_historical_superseded",
+  "superseded_by": "gate4_g3_scoped_input_preflight.jl + gate4_g3_executor_checkpoint.jl (token g3_recovery_go, human sbatch submission) + the G2a-G2d training-flux chain; the previously advertised execute_g2_g3 future command is WITHDRAWN -- that entrypoint is retired (intentionally unimplemented, refuses on every path) and the broad ckdmip_training_data_preflight gating was replaced by the scoped preflight",
+  "timestamp_utc": "2026-08-12T10:52:11.668"
 }

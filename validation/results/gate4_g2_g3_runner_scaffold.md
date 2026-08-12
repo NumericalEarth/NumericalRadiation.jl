@@ -1,8 +1,12 @@
-# Gate-4 G2/G3 runner scaffold (dry-run manifest)
+# Gate-4 G2/G3 runner scaffold (dry-run manifest) — HISTORICAL/SUPERSEDED
 
-Status: **runner_scaffold_ready_waiting_for_data**
+Status: **runner_scaffold_ready_historical_superseded**
 
-dry-run manifest only; no floor, objective-value, or recovery claim; refuses execution without explicit real-data authorization.
+**Superseded by**: gate4_g3_scoped_input_preflight.jl + gate4_g3_executor_checkpoint.jl (token g3_recovery_go, human sbatch submission) + the G2a-G2d training-flux chain; the previously advertised execute_g2_g3 future command is WITHDRAWN -- that entrypoint is retired (intentionally unimplemented, refuses on every path) and the broad ckdmip_training_data_preflight gating was replaced by the scoped preflight
+
+retained as read-only manifest evidence; pass-chain/audit gates remain valid checks of the pinned upstream scripts; 'ready' statuses assert manifest coherence + 4078-era derived-data presence, never execution readiness
+
+HISTORICAL/SUPERSEDED dry-run manifest; no floor, objective-value, or recovery claim; execution refused on every path -- authority moved to the scoped-preflight + executor-checkpoint chain.
 
 | Gate | Result |
 |---|---|
@@ -27,8 +31,6 @@ dry-run manifest only; no floor, objective-value, or recovery claim; refuses exe
 - relative-ch4: raw2-ckd-definition -> raw3-ckd-definition; gases = ch4; relative_to = ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5
 - relative-n2o: raw3-ckd-definition -> ckd-definition; gases = n2o; relative_to = ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5
 
-Derived products present: 0 / 18
+Derived products present: 18 / 18
 
-Future execution: RH_CKDMIP_DATA_PATH=... julia --project=test validation/gate4_g2_g3_runner_scaffold.jl -- once the executor unit lands: execute_g2_g3(manifest; authorize = :real_data_preflight_green) after ckdmip_training_data_preflight reports ready_for_original_ecckd_objective
-
-Provenance: branch `glw/gate4-recovery`, generated_from_head `87a93db` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `38c5788` (pre-own-commit).
