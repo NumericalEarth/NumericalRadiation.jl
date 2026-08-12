@@ -1,6 +1,28 @@
 # Gate-4 A2 submission ledger
 
-Status: **a2_attempt2_completed_candidates_collected**
+Status at ledger write: **a2_attempt2_completed_candidates_collected**
+
+> **Current disposition (updated 2026-08-12, additive annotation)**: the
+> submission/completion event record below (scope, next steps) is
+> preserved verbatim as event-time truth. Since then, all three "next
+> steps" resolved -- each grounded in a verified dependency artifact: the
+> reproduction proof **EXECUTED as job 4091** (COMPLETED rc=0 per
+> `gate4_a2_proof_finding_ledger`) with strict verdict
+> `a2_candidates_sensitivity_only_not_promotable`; Greg-authorized
+> **Option B** (`gate4_option_b_decision_record`,
+> `option_b_adopted_candidates_promoted`) subsequently accepted the
+> exactly **two** 4082 g-point candidates (LW + SW; the rayleigh overlay
+> is an input-generation artifact, not a candidate) as structure sources
+> for ACCEPTANCE-INIT SELECTION under the amended rule, the strict
+> finding record standing unmodified; and the job-4078 watch closed --
+> 4078 completed rc=0 per the at-write record in
+> `gate4_a2_proof_submission_ledger` (that ledger's own status,
+> `proof_run_submitted_awaiting_completion`, is at-write: awaiting proof
+> completion), with the 18 derived training flux products **present** per
+> the post-4078 `ckdmip_training_data_preflight`
+> (2026-07-19T20:44:47.920; 18/18 present, no derived-flux-generation
+> blockers; that artifact records no hashes, so presence only -- no
+> byte-identity claim is made).
 
 Submission/completion event record only; no floor, proof, objective, or
 recovery computation has run.

@@ -69,5 +69,40 @@
       "outcome": "FAILED at LW reorder (missing stage-1 merge composites in the fresh quarantined WORK_DIR); full diagnosis in gate4_a2_failure_ledger_4079.json; produced no candidates, nothing promoted"
     },
     "attempt_2": "current top-level record"
+  },
+  "current_disposition": {
+    "next_steps_disposition": {
+      "job_4078_watch": "CLOSED: 4078 completed rc=0 per the proof-submission ledger at-write record; 18 derived training flux products PRESENT per the post-4078 ckdmip_training_data_preflight (presence only -- that artifact records no hashes, so no byte-identity claim is made here)",
+      "reproduction_proof": "since EXECUTED as job 4091 (COMPLETED rc=0 per the proof finding ledger): strict verdict a2_candidates_sensitivity_only_not_promotable under the then-binding exact-reproduction rule",
+      "sensitivity_only_pending_proof": "OVERTAKEN: Greg-authorized Option B subsequently accepted the exactly TWO 4082 g-point candidates (LW + SW; the rayleigh overlay is an input-generation artifact, not a candidate) as structure sources for ACCEPTANCE-INIT SELECTION under the amended rule; the strict finding record itself stands unmodified"
+    },
+    "note": "ADDITIVE annotation; the submission/completion event record below (including scope_statement and next_steps) is preserved verbatim as event-time truth.",
+    "updated_at": "2026-08-12",
+    "verified_dependencies": {
+      "ckdmip_training_data_preflight": {
+        "all_18_derived_products_present": true,
+        "artifact_overall_status": "incomplete_ckdmip_upstream_data",
+        "case": "ckdmip_training_data_preflight",
+        "derived_flux_generation_blockers": "none",
+        "derived_training_flux_file_count": 18,
+        "evidence_scope": "PRESENCE only -- this artifact records no hashes, so no byte-identity claim is made; its overall status reflects unrelated upstream-data gaps",
+        "timestamp_utc": "2026-07-19T20:44:47.920"
+      },
+      "gate4_a2_proof_finding_ledger": {
+        "case": "gate4_a2_proof_finding_ledger",
+        "proof_run_job_id": 4091,
+        "proof_run_outcome": "COMPLETED rc=0 at 2026-07-20T08:20:58Z; stage-0 candidate hash checks OK for both bands; log/hash review by the Codex monitor and locally, matching",
+        "status": "a2_candidates_sensitivity_only_not_promotable"
+      },
+      "gate4_a2_proof_submission_ledger": {
+        "case": "gate4_a2_proof_submission_ledger",
+        "job_4078_completion_statement": "CONFIGURING (autoscaler; all four cpu-large nodes were idle at preflight, no exclusion needed -- 4078 completed rc=0 on 2026-07-19)",
+        "status_at_write": "proof_run_submitted_awaiting_completion (at-write: awaiting proof completion)"
+      },
+      "gate4_option_b_decision_record": {
+        "case": "gate4_option_b_decision_record",
+        "status": "option_b_adopted_candidates_promoted"
+      }
+    }
   }
 }
