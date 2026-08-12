@@ -1,4 +1,14 @@
 {
+  "current_disposition": {
+    "updated_at": "2026-08-12",
+    "note": "ADDITIVE annotation; the at-recon record below (including the original next_options texts) is preserved verbatim. This artifact was deliberately NOT regenerated: the recon performs live network reads (git ls-remote + GitHub API) and re-querying would replace at-recon upstream state with current state.",
+    "status_at_recon_still_true": "v1_version_skew_supported_mapping_unproven -- the LW-1.0 published-file-to-tag mapping remains unproven (permanent caveat per gate4_r1_release_provenance_probe)",
+    "followups_executed": {
+      "R1": "EXECUTED: gate4_r1_release_provenance_probe -> r1_sw_mapping_found_lw_ambiguous (23adaca strong SW mapping; LW-1.0 ambiguous)",
+      "R2": "EXECUTED (Greg: go for R2; built 23adaca per R1 refinement, not master b1482b2 as sketched here): jobs 4094/4095 configure failures, 4096 rc=0 -> SSI PRESENT + elementwise EXACT (absence RESOLVED as version skew); residual drift VERSION-INDEPENDENT (gate4_r2_finding_ledger: r2_ssi_resolved_drift_version_independent)",
+      "R3": "CLOSED: Greg adopted Option B (gate4_option_b_decision_record); the proof-finding A/B choice is no longer open"
+    }
+  },
   "case": "gate4_v1_version_skew_recon",
   "cited_commits": [
     {

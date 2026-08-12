@@ -1,20 +1,28 @@
-# Gate-4 R2 SW matching-version proof scaffold
+# Gate-4 R2 SW matching-version proof scaffold — HISTORICAL (executed as jobs 4094/4095/4096)
 
-Status: **r2_scaffold_ready_awaiting_authorization**
+Status: **r2_scaffold_historical_executed**
 
-plan artifact only; no checkout, build, run, or submission; no floor, objective, acceptance, or init-generation promotion; execution requires the explicit authorization token.
+HISTORICAL post-execution record: the plan below was executed (Greg-authorized) as jobs 4094/4095/4096 and verified against the R2 finding ledger; the pre-registered plan/expectation is preserved verbatim; nothing executed by this unit.
+
+**Executed**: Greg, 2026-07-20: 'go for R2'; job 4094 FAILED at configure (adept.m4 -ladept in LDFLAGS dropped by --as-needed; latent at v1.2 whose weaker conftest was header-only satisfiable); job 4095 FAILED at configure sanity check (LIBS=-ladept applied before any -L path exists); job 4096 COMPLETED rc=0 at 2026-07-20T16:43:13Z with LDFLAGS='-L<adept>/lib -Wl,-rpath,<adept>/lib' LIBS=-ladept. finding ledger status r2_ssi_resolved_drift_version_independent: SSI PRESENT + elementwise EXACT (absence resolved as version skew); residual drift version-independent. v1.4 raw promoted under Option B as the accepted pre-scale SW artifact; scaled SW acceptance init verified against gate4_init_provenance_ledger (acceptance_inits_complete) and the live file: 74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74.
 
 | Gate | Result |
 |---|---|
+| attempt_history_verified | passed |
 | expected_outcome_pre_registered | passed |
 | no_exec_in_this_unit | passed |
+| option_b_promotion_of_v14_raw_verified | passed |
 | promotion_not_automatic | passed |
 | r1_mapping_prerequisite | passed |
+| r2_finding_ledger_verified | passed |
 | refuses_without_token | passed |
+| scaled_sw_init_4099_verified | passed |
 | sw_candidate_present_hash_pinned | passed |
-| v14_tree_not_yet_created | passed |
+| v14_binary_matches_finding_ledger | passed |
+| v14_output_matches_finding_ledger | passed |
+| v14_tree_matches_executed_commit | passed |
 
-Authorization token required: `r2_matching_version_go`
+Authorization token at plan time (consumed): `r2_matching_version_go`
 
 ## Plan
 
@@ -37,4 +45,4 @@ Authorization token required: `r2_matching_version_go`
 
 Guardrails: this scaffold executes NOTHING (gated below); executor requires authorize=:r2_matching_version_go; quarantined v1.4 tree + separate work-v14 subtree; pinned v1.2 workcopy, its binaries, and the 4091 proof outputs are never modified; no floor/objective/acceptance/init-generation promotion regardless of outcome; promotion remains Greg's rule decision.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `5e8f96f` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `8d82fcb` (pre-own-commit).

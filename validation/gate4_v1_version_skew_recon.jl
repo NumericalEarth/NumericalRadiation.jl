@@ -1,5 +1,23 @@
 # Gate-4 V1 VERSION-SKEW reconnaissance (read-only; no builds, no
-# submissions, no rule change).
+# submissions, no rule change) -- HISTORICAL: follow-up options executed.
+#
+# EXECUTED FOLLOW-UPS (monitor-directed marking, 2026-08-12; the recon
+# evidence and hypothesis assessment below are preserved verbatim):
+# R1 was executed (gate4_r1_release_provenance_probe:
+# r1_sw_mapping_found_lw_ambiguous -- 23adaca is the strong SW source
+# mapping; the LW-1.0 mapping remains unproven, a permanent caveat).
+# R2 was executed with Greg's go ("go for R2") building 23adaca per R1's
+# refinement -- NOT master b1482b2 as first sketched here -- as jobs
+# 4094/4095 (configure failures) and 4096 (rc=0): SSI PRESENT +
+# elementwise EXACT (absence RESOLVED as version skew); residual drift
+# VERSION-INDEPENDENT (gate4_r2_finding_ledger). R3 was closed by Greg
+# adopting Option B (gate4_option_b_decision_record). This recon's core
+# status token remains TRUE and unchanged: the version-skew hypothesis is
+# supported and the published-file-to-tag mapping remains unproven for
+# LW-1.0. NOTE: this unit performs network reads (git ls-remote + GitHub
+# API); reruns re-query live upstream state and were deliberately NOT
+# performed for this marking -- the committed artifact carries an
+# additive current-disposition annotation instead.
 #
 # Tests the pre-registered hypothesis that the proof mismatches
 # (gate4_a2_proof_finding_ledger) are caused by ecCKD toolchain version skew:
@@ -156,16 +174,35 @@ function main()
             "exposed; matching-version rebuild requires release provenance " *
             "first",
     )
-    next_options = [
-        "R1 (release provenance): probe ECPDS/ecRad packaging history or " *
-        "contact upstream for the exact source states behind the " *
-        "ecckd-1.0/1.4 released files",
-        "R2 (bounded experiment, needs go): build master b1482b2 and rerun " *
-        "the SW proof only -- tests whether post-23adaca source emits " *
-        "solar_spectral_irradiance and shrinks the SW value drift; " *
-        "NOT a proof of 1.4 identity",
-        "R3 (Greg rule decision): options A/B from the proof finding " *
-        "ledger remain open and are informed by this recon",
+    # HISTORICAL: follow-up dispositions are VERIFIED against the result
+    # artifacts before rendering, never hardcoded (the original option
+    # texts are preserved in the committed at-recon artifact)
+    ledger_status(name) = try
+        String(JSON.parsefile(validation_results_path(name))["status"])
+    catch; "unreadable" end
+    r1_status = ledger_status("gate4_r1_release_provenance_probe.json")
+    r2_status = ledger_status("gate4_r2_finding_ledger.json")
+    ob_status = ledger_status("gate4_option_b_decision_record.json")
+    followups_ok = r1_status == "r1_sw_mapping_found_lw_ambiguous" &&
+                   r2_status == "r2_ssi_resolved_drift_version_independent" &&
+                   ob_status == "option_b_adopted_candidates_promoted"
+    gates["followup_statuses_verified"] = followups_ok ? "passed" : "failed"
+    followups_ok ||
+        push!(fails, "follow-up artifact statuses failed verification: " *
+                     "r1=$r1_status r2=$r2_status option_b=$ob_status -- " *
+                     "executed/closed claims withheld")
+    next_options = followups_ok ? [
+        "R1 EXECUTED (verified: $r1_status): 23adaca strong SW mapping; " *
+        "LW-1.0 mapping permanently ambiguous",
+        "R2 EXECUTED (verified: $r2_status; Greg: 'go for R2'; built " *
+        "23adaca per R1 refinement, not master b1482b2 as first " *
+        "sketched): SSI PRESENT + elementwise EXACT (absence RESOLVED " *
+        "as version skew); residual drift VERSION-INDEPENDENT",
+        "R3 CLOSED (verified: $ob_status): Greg adopted Option B; the " *
+        "A/B choice from the proof finding ledger is no longer open",
+    ] : [
+        "FOLLOW-UP VERIFICATION FAILED (r1=$r1_status r2=$r2_status " *
+        "option_b=$ob_status): executed/closed claims withheld",
     ]
 
     status = isempty(fails) ? "v1_version_skew_supported_mapping_unproven" :
@@ -219,7 +256,7 @@ function main()
                   "limit")
             println(io, "- **$k**: $(hypothesis[k])")
         end
-        println(io, "\n## Next options\n")
+        println(io, "\n## Follow-up options (all executed/closed)\n")
         foreach(o -> println(io, "- ", o), next_options)
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$ghead` (pre-own-commit).")

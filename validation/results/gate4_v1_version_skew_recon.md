@@ -1,6 +1,18 @@
 # Gate-4 V1 version-skew reconnaissance
 
-Status: **v1_version_skew_supported_mapping_unproven**
+Status at recon (still true): **v1_version_skew_supported_mapping_unproven**
+
+> **Current disposition (updated 2026-08-12, additive annotation)**: the
+> at-recon record below (including the original "Next options") is
+> preserved verbatim; this artifact was deliberately not regenerated
+> because the recon performs live network reads. The status remains true
+> (LW-1.0 mapping unproven, permanent per the R1 probe). Follow-ups since:
+> **R1 executed** (`r1_sw_mapping_found_lw_ambiguous`); **R2 executed**
+> (Greg: "go for R2"; built 23adaca per R1's refinement, not master as
+> sketched here; jobs 4094/4095 failed configure, 4096 rc=0 -> SSI PRESENT
+> + elementwise EXACT, absence RESOLVED as version skew; residual drift
+> VERSION-INDEPENDENT per `gate4_r2_finding_ledger`); **R3 closed** (Greg
+> adopted Option B, `gate4_option_b_decision_record`).
 
 read-only reconnaissance; no builds, submissions, floor, objective, acceptance, or rule changes.
 

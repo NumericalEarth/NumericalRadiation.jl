@@ -1,17 +1,31 @@
 {
-  "authorization_token_required": "r2_matching_version_go",
+  "authorization_token_required": "r2_matching_version_go (historical: authorization was given and consumed)",
   "case": "gate4_r2_sw_matching_version_proof_scaffold",
-  "data_mode": "dry_run_plan_only_no_execution",
-  "disclaimer": "plan artifact only; no checkout, build, run, or submission; no floor, objective, acceptance, or init-generation promotion; execution requires the explicit authorization token.",
+  "data_mode": "historical_post_execution_verification_only",
+  "disclaimer": "HISTORICAL post-execution record: the plan below was executed (Greg-authorized) as jobs 4094/4095/4096 and verified against the R2 finding ledger; the pre-registered plan/expectation is preserved verbatim; nothing executed by this unit.",
+  "executed": {
+    "authorization": "Greg, 2026-07-20: 'go for R2'",
+    "jobs": "job 4094 FAILED at configure (adept.m4 -ladept in LDFLAGS dropped by --as-needed; latent at v1.2 whose weaker conftest was header-only satisfiable); job 4095 FAILED at configure sanity check (LIBS=-ladept applied before any -L path exists); job 4096 COMPLETED rc=0 at 2026-07-20T16:43:13Z with LDFLAGS='-L<adept>/lib -Wl,-rpath,<adept>/lib' LIBS=-ladept",
+    "later_disposition": "v1.4 raw promoted under Option B as the accepted pre-scale SW artifact; scaled SW acceptance init verified against gate4_init_provenance_ledger (acceptance_inits_complete) and the live file: 74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74",
+    "outcome_verified": "finding ledger status r2_ssi_resolved_drift_version_independent: SSI PRESENT + elementwise EXACT (absence resolved as version skew); residual drift version-independent",
+    "v14_binary_sha256": "1c79dfa3b963773d4e01437a0f79cb855c7257938d82d0b912d37630aa5412d3",
+    "v14_raw_output_sha256": "99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26"
+  },
   "failures": [],
   "gates": {
+    "attempt_history_verified": "passed",
     "expected_outcome_pre_registered": "passed",
     "no_exec_in_this_unit": "passed",
+    "option_b_promotion_of_v14_raw_verified": "passed",
     "promotion_not_automatic": "passed",
     "r1_mapping_prerequisite": "passed",
+    "r2_finding_ledger_verified": "passed",
     "refuses_without_token": "passed",
+    "scaled_sw_init_4099_verified": "passed",
     "sw_candidate_present_hash_pinned": "passed",
-    "v14_tree_not_yet_created": "passed"
+    "v14_binary_matches_finding_ledger": "passed",
+    "v14_output_matches_finding_ledger": "passed",
+    "v14_tree_matches_executed_commit": "passed"
   },
   "plan": {
     "build_prerequisites": {
@@ -72,9 +86,9 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "5e8f96f",
+    "generated_from_head": "8d82fcb",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
-  "status": "r2_scaffold_ready_awaiting_authorization",
-  "timestamp_utc": "2026-07-20T08:39:22.688"
+  "status": "r2_scaffold_historical_executed",
+  "timestamp_utc": "2026-08-12T11:28:50.901"
 }
