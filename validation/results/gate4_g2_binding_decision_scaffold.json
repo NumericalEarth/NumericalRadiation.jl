@@ -1,0 +1,151 @@
+{
+  "case": "gate4_g2_binding_decision_scaffold",
+  "data_mode": "neutral_calculations_and_decision_map_only",
+  "decision_map": {
+    "D1_dataset_binding": {
+      "alternative": "single present-day 50-column file (explicitly NOT the campaign set per design note rev 3)",
+      "candidate_set": {
+        "counts": {
+          "eval2_present": 0,
+          "lw_present": 20,
+          "of_eval2": 2,
+          "of_lw": 20,
+          "of_sw": 16,
+          "sw_present": 16
+        },
+        "manifest_status": "gate2_dataset_manifest_pending_eval2",
+        "note": "entries remain tied to the manifest inventory labels/sha256 fingerprints, joined live per scenario by manifest_fingerprint with size+hash re-verification; eval2 rel-415 pair PENDING G2c/G2d and refused as a metric row until present",
+        "source_manifest": "gate4_gate2_od_dataset_manifest.json"
+      },
+      "state": "UNRESOLVED (requires recorded ruling)"
+    },
+    "D2_aggregation": {
+      "candidates": "worst-case (max per-scenario log-RMSE) vs pooled (sqrt(sum SSE / sum selected count)) -- BOTH computed by aggregation_candidates(); the unweighted mean of scenario RMSEs is NOT a candidate and is kept outside as a demonstrator",
+      "state": "UNRESOLVED (requires recorded ruling)"
+    },
+    "D3_nonpositive_pair_policy": {
+      "invariant": "NEGATIVE totals in either definition are a finding/refusal under BOTH variants, never excluded or clamped; with no zeros the variants are numerically identical; they can diverge only when zeros are present",
+      "state": "UNRESOLVED (requires recorded ruling) -- the design-note wording 'positive-pair selection / epsilon clamping' is not a unique algorithm",
+      "variant_eps_clamping": "all nonnegative pairs included; log(x+eps) with eps = positive_eps over ALL values (unmodified positive_eps of ecckd_recovery_metrics.jl, reused by include)",
+      "variant_pair_selection": "both totals > 0 selected; exact-zero pairs excluded and counted; log(x+eps) with eps = positive_eps over the SELECTED values"
+    },
+    "D4_active_gas_lists": {
+      "constraint": "identical reference/candidate lists are ENFORCED for campaign-comparable metrics (single-list API); the binding runner needs recorded per-scenario lists (rel scenarios omit cfc11/cfc12 from their axes, so LW lists are scenario-dependent)",
+      "self_test_lists": "labeled TEST inputs only",
+      "state": "UNRESOLVED (requires recorded ruling)"
+    },
+    "cross_reference": "thresholds 4-5 aggregation semantics are a SEPARATE ruling: gate4_regression_margin_semantics_evidence.md (four open axes)"
+  },
+  "demo_aggregation": {
+    "candidates": {
+      "pooled_sse_over_count": 0.0009995003306626298,
+      "sum_selected": 172800,
+      "sum_sse": 0.17262735741988522,
+      "worst_case": 0.0009995003313265987
+    },
+    "non_candidate_demonstrator": {
+      "note": "NOT an aggregation candidate; shown only to demonstrate it differs from pooled on unequal counts",
+      "unweighted_mean_rmse": 0.0009995003306626296
+    },
+    "note": "synthetic x1.001 candidate totals on two manifest scenarios; labeled demo, no acceptance meaning, no election"
+  },
+  "demo_metric_rows_manifest_joined": [
+    {
+      "eps_clamping": {
+        "epsilon": 2.220446049250313e-16,
+        "log_rmse": 0.0009995003313265987,
+        "n_selected": 86400,
+        "sse": 0.08631367882461914
+      },
+      "manifest_label": "sw_rgb_rel-415",
+      "manifest_sha256": "55cf6fffba18d950b716c2efd1b053db27cf6d48c20ca15ae1495a15f1c58cf0",
+      "manifest_status": "gate2_dataset_manifest_pending_eval2",
+      "n_pairs_total": 86400,
+      "pair_selection": {
+        "epsilon": 2.220446049250313e-16,
+        "log_rmse": 0.0009995003313265987,
+        "n_excluded_zero_pairs": 0,
+        "n_selected": 86400,
+        "sse": 0.08631367882461914
+      },
+      "scenario_path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
+      "zero_totals": {
+        "both": 0,
+        "candidate": 0,
+        "candidate_only": 0,
+        "reference": 0,
+        "reference_only": 0
+      }
+    },
+    {
+      "eps_clamping": {
+        "epsilon": 2.220446049250313e-16,
+        "log_rmse": 0.0009995003299986607,
+        "n_selected": 86400,
+        "sse": 0.08631367859526609
+      },
+      "manifest_label": "sw_rgb_present",
+      "manifest_sha256": "ceb5872dd4ac39284b3071e42fd3a17068c161d7892eba873f5a99e6736ab4b5",
+      "manifest_status": "gate2_dataset_manifest_pending_eval2",
+      "n_pairs_total": 86400,
+      "pair_selection": {
+        "epsilon": 2.220446049250313e-16,
+        "log_rmse": 0.0009995003299986607,
+        "n_excluded_zero_pairs": 0,
+        "n_selected": 86400,
+        "sse": 0.08631367859526609
+      },
+      "scenario_path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
+      "zero_totals": {
+        "both": 0,
+        "candidate": 0,
+        "candidate_only": 0,
+        "reference": 0,
+        "reference_only": 0
+      }
+    }
+  ],
+  "disclaimer": "decision map + neutral deterministic calculations only; NO dataset, aggregation, nonpositive-pair-policy, or gas-list election; NO threshold verdict; the binding Gate-2 runner remains unimplemented pending the D1-D4 rulings.",
+  "failures": [],
+  "gates": {
+    "all_zero_per_policy_outcomes": "passed",
+    "diagnostic_ch4_only_negative_total_refuses": "passed",
+    "manifest_join_live_verified": "passed",
+    "one_sided_zero_divergence": "passed",
+    "policies_numerically_identical_without_zeros": "passed",
+    "pooled_is_sse_over_count_not_mean_of_rmse": "passed",
+    "real_two_scenario_aggregation": "passed",
+    "refuse_axes_mismatch": "passed",
+    "refuse_empty_arrays": "passed",
+    "refuse_inf": "passed",
+    "refuse_negative_total_finding": "passed",
+    "refuse_nonfinite": "passed",
+    "refuse_pending_eval2_as_metric_row": "passed",
+    "refuse_scenario_outside_manifest": "passed",
+    "refuse_unknown_policy": "passed",
+    "refuse_unknown_policy_aggregation": "passed",
+    "self_zero_both_policies_lw_sw": "passed",
+    "synthetic_perturbation_detected": "passed"
+  },
+  "negative_total_diagnostic": {
+    "active_absorption_gases": [
+      "ch4"
+    ],
+    "label": "DIAGNOSTIC ONLY -- NOT campaign or acceptance evidence: real-data demonstration that a ch4-only LW total (relative-linear per-gas OD) is negative when the scenario mole fraction sits below the stored reference",
+    "refusal_reason_with_counts": "negative total OD is a FINDING, never excluded or clamped: reference 86258, candidate 86258 negative entries",
+    "scenario": {
+      "manifest_label": "lw_ch4-350",
+      "manifest_sha256": "67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4",
+      "manifest_status": "gate2_dataset_manifest_pending_eval2"
+    }
+  },
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "ecf641b",
+    "lw32": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+    "provenance_note": "artifact generated from the working tree before its own commit",
+    "sw32": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+  },
+  "status": "g2_binding_scaffold_ready_awaiting_rulings",
+  "timestamp_utc": "2026-08-12T12:45:46.759"
+}
