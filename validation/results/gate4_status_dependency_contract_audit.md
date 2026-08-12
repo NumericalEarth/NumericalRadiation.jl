@@ -59,7 +59,7 @@ Census: 30 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:g1_objective_ratio<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g1_waiting_for_optimizer_outputs"]; consumer status=g1_waiting_for_optimizer_outputs
 - dep:g3_acceptance<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g3_acceptance_waiting_for_optimizer_outputs"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs
 
-## Hardening findings (15)
+## Hardening findings (14)
 
 - dep:sw_init_checkpoint<-option_b: status-only contract (no case check); weakness, not a violation
 - dep:r2_proof_scaffold<-r1_probe: status-only contract (no case check); weakness, not a violation
@@ -70,7 +70,6 @@ Census: 30 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:a2_proof_driver<-option_b:historical: status-only contract (no case check); weakness, not a violation
 - dep:a2_exec_checkpoint<-a2_rerun_manifest:preexecution: status-only contract (no case check); weakness, not a violation
 - dep:a2_rerun_manifest<-a1_upstream_recon: status-only contract (no case check); weakness, not a violation
-- dep:init_generation_manifest<-g2_g3_runner_scaffold: status-only contract (no case check); weakness, not a violation
 - dep:g2a_checkpoint<-init_provenance_ledger: status-only contract (no case check); weakness, not a violation
 - dep:g2b_checkpoint<-g2a_data_ledger: status-only contract (no case check); weakness, not a violation
 - dep:v1_recon<-r1_probe:followup: status-only contract (no case check); weakness, not a violation
@@ -85,4 +84,4 @@ Census: 30 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `2f84829` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `6a5d5c6` (pre-own-commit).

@@ -51,9 +51,182 @@ const IG_RESULTS_MD = validation_results_path("gate4_init_generation_manifest.md
 grepn(text, pat) = [(i, strip(l)) for (i, l) in enumerate(split(text, '\n'))
                     if occursin(pat, l) && !occursin(r"^\s*#", l)]
 
+# guarded scaffold-artifact loader (fixture-run on tmp files): a
+# missing, unparseable (parse failure), parsed-non-object (JSON null/
+# array DISTINGUISHED from parse failure), WRONG-CASE, or
+# non-matching-status artifact classifies fail-closed with a stable
+# reason -- never an uncaught exception, never status-only trust. The
+# exact case is bound first; the status binding stays FAITHFUL to the
+# existing prefix contract (startswith runner_scaffold_ready).
+function classify_scaffold_artifact(path)
+    isfile(path) ||
+        return (false, "scaffold artifact missing: $path", nothing)
+    parse_failed = false
+    d = try
+        JSON.parsefile(path)
+    catch
+        parse_failed = true
+        nothing
+    end
+    parse_failed && return (false,
+        "scaffold artifact unparseable (parse failure)", nothing)
+    d isa AbstractDict || return (false,
+        "scaffold artifact parses to a non-object " *
+        "(JSON null/array/scalar)", nothing)
+    c = get(d, "case", "")
+    (c isa AbstractString && c == "gate4_g2_g3_runner_scaffold") ||
+        return (false,
+                "scaffold artifact case mismatch: $(repr(c))", nothing)
+    s = get(d, "status", "")
+    (s isa AbstractString && startswith(s, "runner_scaffold_ready")) ||
+        return (false, "runner scaffold not green: $(repr(s))", nothing)
+    return (true, "ok", d)
+end
+
+# safe navigation to the ONLY scaffold values this unit consumes (the
+# first-pass incode per band): any shape deficiency -- missing manifest,
+# non-vector band, empty band, non-object first entry, missing or
+# non-string incode -- returns nothing, and the derived gates then fail
+# with a stable reason instead of throwing on a deep index.
+function ig_first_incode(scaffold, band)
+    m = get(scaffold, "manifest", nothing)
+    m isa AbstractDict || return nothing
+    b = get(m, band, nothing)
+    (b isa AbstractVector && !isempty(b)) || return nothing
+    e = b[1]
+    e isa AbstractDict || return nothing
+    v = get(e, "incode", nothing)
+    return v isa AbstractString ? v : nothing
+end
+
+# every gate computed downstream of the prerequisite: explicitly
+# blocked_prerequisite when classification refuses, never evaluated
+const IG_DOWNSTREAM_GATES = ["no_generation_executed",
+    "required_inputs_enumerated", "sw_acceptance_init_is_scaled",
+    "lw_acceptance_init_is_raw", "no_optimizer_or_floor_computation",
+    "scale_reference_direct_only_mu05"]
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
+
+    # loader + navigator fixtures FIRST, through the SAME guarded code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] =
+        !classify_scaffold_artifact(joinpath(tdir, "absent.json"))[1]
+    fpx = joinpath(tdir, "sc.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        okx, why = classify_scaffold_artifact(fpx)
+        !okx && occursin("unparseable", why)
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        okx, why = classify_scaffold_artifact(fpx)
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        okx, why = classify_scaffold_artifact(fpx)
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "{\"case\": \"other\", " *
+               "\"status\": \"runner_scaffold_ready\"}")
+    lt["wrong_case_fails"] = begin
+        okx, why = classify_scaffold_artifact(fpx)
+        !okx && occursin("case mismatch", why)
+    end
+    write(fpx, "{\"case\": \"gate4_g2_g3_runner_scaffold\", " *
+               "\"status\": \"runner_scaffold_failed\"}")
+    lt["non_prefix_status_fails"] = begin
+        okx, why = classify_scaffold_artifact(fpx)
+        !okx && occursin("not green", why)
+    end
+    write(fpx, "{\"case\": \"gate4_g2_g3_runner_scaffold\", " *
+               "\"status\": \"runner_scaffold_ready_historical_superseded\"}")
+    lt["prefix_green_captures"] = begin
+        okx, why, dd = classify_scaffold_artifact(fpx)
+        okx && why == "ok" && dd isa AbstractDict
+    end
+    good = Dict("manifest" =>
+        Dict("lw" => [Dict("incode" => "raw-ckd-definition")]))
+    lt["navigator_good_shape"] =
+        ig_first_incode(good, "lw") == "raw-ckd-definition"
+    lt["navigator_missing_manifest"] =
+        ig_first_incode(Dict{String, Any}(), "lw") === nothing
+    lt["navigator_nonvector_band"] =
+        ig_first_incode(Dict("manifest" => Dict("lw" => "x")),
+                        "lw") === nothing
+    lt["navigator_empty_band"] =
+        ig_first_incode(Dict("manifest" => Dict("lw" => Any[])),
+                        "lw") === nothing
+    lt["navigator_nonobject_entry"] =
+        ig_first_incode(Dict("manifest" => Dict("lw" => [1])),
+                        "lw") === nothing
+    lt["navigator_nonstring_incode"] =
+        ig_first_incode(Dict("manifest" =>
+            Dict("lw" => [Dict("incode" => 5)])), "lw") === nothing
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
+    # prerequisite classification BEFORE any pinned-script read,
+    # evidence/command construction, filesystem walk, or navigation: a
+    # classifier failure must reach canonical failed emission without
+    # depending on unrelated ECCKD_SRC availability
+    scaffold_ok, scaffold_why, scaffold = classify_scaffold_artifact(
+        validation_results_path("gate4_g2_g3_runner_scaffold.json"))
+    gates["runner_scaffold_prerequisite"] =
+        scaffold_ok ? "passed" : "failed"
+    if !scaffold_ok
+        push!(fails, scaffold_why)
+        for g in IG_DOWNSTREAM_GATES
+            gates[g] = "blocked_prerequisite"
+        end
+        status = "init_generation_manifest_failed"
+        branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
+        head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
+        result = Dict(
+            "case" => "gate4_init_generation_manifest",
+            "data_mode" => "spec_manifest_only_nothing_generated",
+            "status" => status,
+            "timestamp_utc" => string(Dates.now(Dates.UTC)),
+            "gates" => gates, "failures" => fails,
+            "prerequisite_loader_fixture_verdicts" => lt,
+            "downstream_note" => "downstream spec evidence, commands, " *
+                "input enumeration, and manifest navigation NOT " *
+                "evaluated (blocked_prerequisite)",
+            "provenance" => Dict("branch" => branch,
+                "generated_from_head" => head,
+                "provenance_note" => "artifact generated from the " *
+                    "working tree before its own commit"),
+            "disclaimer" => "HISTORICAL/SUPERSEDED init-generation " *
+                "specification; nothing is generated; no optimizer, " *
+                "objective, floor, or recovery computation.")
+        mkpath(dirname(IG_RESULTS_JSON))
+        open(IG_RESULTS_JSON, "w") do io
+            JSON.print(io, result, 2)
+        end
+        open(IG_RESULTS_MD, "w") do io
+            println(io, "# Gate-4 init-generation manifest — " *
+                        "HISTORICAL/SUPERSEDED\n")
+            println(io, "Status: **$status**\n")
+            println(io, result["downstream_note"], "\n")
+            println(io, "| Gate | Result |")
+            println(io, "|---|---|")
+            for k in sort(collect(keys(gates)))
+                println(io, "| $k | $(gates[k]) |")
+            end
+            println(io, "\n## Failures\n")
+            foreach(f -> println(io, "- ", f), fails)
+        end
+        println("gate4_init_generation_manifest: $status")
+        foreach(f -> println("  FAIL: $f"), fails)
+        return 1
+    end
 
     src = Dict(
         "create_lw" => read(joinpath(ECCKD_SRC, "test/create_lut_lw.sh"), String),
@@ -61,10 +234,6 @@ function main()
         "scale_sw" => read(joinpath(ECCKD_SRC, "test/scale_lut_sw.sh"), String),
         "config" => read(joinpath(ECCKD_SRC, "test/config.h"), String),
     )
-    scaffold = JSON.parsefile(
-        validation_results_path("gate4_g2_g3_runner_scaffold.json"))
-    startswith(scaffold["status"], "runner_scaffold_ready") ||
-        push!(fails, "runner scaffold not green: $(scaffold["status"])")
 
     # verbatim command/config evidence with line anchors
     evidence = Dict{String, Any}(
@@ -193,16 +362,20 @@ function main()
     end
     gates["required_inputs_enumerated"] = length(req) >= 9 ? "passed" : "failed"
     length(req) >= 9 || push!(fails, "input enumeration incomplete")
-    sw_accept = scaffold["manifest"]["sw"][1]["incode"]
+    # safe navigation: shape deficiencies fail the gate with a stable
+    # reason (nothing = deficient), never a deep-index throw
+    sw_accept = ig_first_incode(scaffold, "sw")
     gates["sw_acceptance_init_is_scaled"] =
         sw_accept == "scaled-ckd-definition" ? "passed" : "failed"
     sw_accept == "scaled-ckd-definition" ||
-        push!(fails, "SW acceptance init: $sw_accept")
-    lw_accept = scaffold["manifest"]["lw"][1]["incode"]
+        push!(fails, "SW acceptance init: $(repr(sw_accept)) (nothing " *
+                     "= scaffold manifest shape deficient)")
+    lw_accept = ig_first_incode(scaffold, "lw")
     gates["lw_acceptance_init_is_raw"] =
         lw_accept == "raw-ckd-definition" ? "passed" : "failed"
     lw_accept == "raw-ckd-definition" ||
-        push!(fails, "LW acceptance init: $lw_accept")
+        push!(fails, "LW acceptance init: $(repr(lw_accept)) (nothing " *
+                     "= scaffold manifest shape deficient)")
     gates["no_optimizer_or_floor_computation"] = "passed"  # by construction:
     # this unit imports no loss kernels, no forward map, no Enzyme. The token
     # is split below so the check cannot match its own source line.
@@ -238,6 +411,7 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "commands" => commands, "evidence" => evidence,
         "required_inputs" => req,
         "inputs_present" => n_present, "inputs_expected" => length(req),

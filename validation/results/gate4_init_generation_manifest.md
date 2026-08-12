@@ -1,6 +1,6 @@
 # Gate-4 init-generation manifest — HISTORICAL/SUPERSEDED
 
-Status: **init_generation_manifest_ready_historical_superseded**
+Status: **init_generation_manifest_ready_historical_superseded_waiting_for_inputs**
 
 **Superseded by**: executed init generation: job 4082 (find_g_points only -- g-point candidates; A2 ledger records NO create_lut), job 4091 (create_lut proof run producing the accepted LW raw init), job 4096 (v1.4 SW raw rebuild), job 4099 (scale_lut under the H5open-preinit shim); outputs accepted under the Option-B rule (gate4_option_b_decision_record) and sha-pinned by gate4_g3_scoped_input_preflight.jl
 
@@ -13,14 +13,16 @@ HISTORICAL/SUPERSEDED init-generation specification; nothing is generated; no op
 | lw_acceptance_init_is_raw | passed |
 | no_generation_executed | passed |
 | no_optimizer_or_floor_computation | passed |
+| prerequisite_loader_fixture_tests | passed |
 | required_inputs_enumerated | passed |
+| runner_scaffold_prerequisite | passed |
 | scale_reference_direct_only_mu05 | passed |
 | sw_acceptance_init_is_scaled | passed |
 
-## Required inputs (9/9 present)
+## Required inputs (7/9 present)
 
-- [present] idealized LW spectra: `/shared/home/greg/data/ckdmip/idealized/lw_spectra`
-- [present] idealized SW spectra: `/shared/home/greg/data/ckdmip/idealized/sw_spectra`
+- [MISSING] idealized LW spectra: `/shared/home/greg/data/ckdmip/idealized/lw_spectra`
+- [MISSING] idealized SW spectra: `/shared/home/greg/data/ckdmip/idealized/sw_spectra`
 - [present] idealized conc: `/shared/home/greg/data/ckdmip/idealized/conc/ckdmip_idealized_concentrations.nc`
 - [present] MMM conc: `/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm_concentrations.nc`
 - [present] MMM const conc (composite): `/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc`
@@ -31,4 +33,4 @@ HISTORICAL/SUPERSEDED init-generation specification; nothing is generated; no op
 
 SW acceptance init resolves to the scaled-ckd-definition output; LW to the raw-ckd-definition output (gated).
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `305a54c` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `6a5d5c6` (pre-own-commit).

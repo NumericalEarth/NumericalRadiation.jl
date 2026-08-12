@@ -382,13 +382,21 @@ const DCA_EDGES = [
   accepted = ["a1_recon_no_exact_upstream_source_found"],
   expected_case = "gate4_a1_upstream_recon",
   consumer_checks_case = false, status_only = true, active_when = :always),
+ # HARDENED consumer: classify_scaffold_artifact binds the exact case
+ # before the FAITHFUL prefix status check; classification runs before
+ # any pinned-script read/walk and short-circuits all downstream gates
+ # to blocked_prerequisite; consumed manifest fields go through a safe
+ # navigator (former status-only finding CLOSED)
  (id = "dep:init_generation_manifest<-g2_g3_runner_scaffold",
   consumer = "gate4_init_generation_manifest.jl",
-  anchors = ["startswith(scaffold[\"status\"], \"runner_scaffold_ready\")"],
+  anchors = ["scaffold_ok, scaffold_why, scaffold = classify_scaffold_artifact(",
+             "c == \"gate4_g2_g3_runner_scaffold\"",
+             "startswith(s, \"runner_scaffold_ready\")",
+             "ig_first_incode(scaffold, "],
   producer = "gate4_g2_g3_runner_scaffold.json", kind = :prefix,
   accepted = "runner_scaffold_ready",
   expected_case = "gate4_g2_g3_runner_scaffold",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  # HARDENED consumer: classify_green_audit binds the exact case before
  # the status comparison and classifies missing/unparseable/non-object
  # fail-closed; downstream building sits behind an exception-catching
@@ -835,9 +843,10 @@ const DCA_SITE_LEDGER = [
   reason = "classify_scoped_preflight guarded-loader body (exact-case " *
            "prerequisite binding; live edge + tmp loader fixtures)"),
  (file = "gate4_init_generation_manifest.jl",
-  anchor = "scaffold = JSON.parsefile(",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:init_generation_manifest<-g2_g3_runner_scaffold"],
-  reason = "runner-scaffold prerequisite parse"),
+  reason = "classify_scaffold_artifact guarded-loader body (exact-case " *
+           "+ faithful prefix binding; live edge + tmp loader fixtures)"),
  (file = "gate4_pending_rulings_register.jl",
   anchor = "JSON.parsefile(path)",
   class = "edge",

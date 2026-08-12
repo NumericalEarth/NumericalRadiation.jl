@@ -119,16 +119,33 @@
     "lw_acceptance_init_is_raw": "passed",
     "no_generation_executed": "passed",
     "no_optimizer_or_floor_computation": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "required_inputs_enumerated": "passed",
+    "runner_scaffold_prerequisite": "passed",
     "scale_reference_direct_only_mu05": "passed",
     "sw_acceptance_init_is_scaled": "passed"
   },
   "historical_note": "retained as read-only pre-execution specification evidence; execution deviations not in this spec (CKDMIP_DIR sed, v1.4 rebuild, H5open shim) are recorded in the execution ledgers; 'ready' statuses assert spec coherence + input presence, never generation readiness",
   "inputs_expected": 9,
-  "inputs_present": 9,
+  "inputs_present": 7,
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "navigator_empty_band": true,
+    "navigator_good_shape": true,
+    "navigator_missing_manifest": true,
+    "navigator_nonobject_entry": true,
+    "navigator_nonstring_incode": true,
+    "navigator_nonvector_band": true,
+    "non_prefix_status_fails": true,
+    "null_non_object_fails": true,
+    "prefix_green_captures": true,
+    "wrong_case_fails": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "305a54c",
+    "generated_from_head": "6a5d5c6",
     "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
@@ -136,12 +153,12 @@
     {
       "label": "idealized LW spectra",
       "path": "/shared/home/greg/data/ckdmip/idealized/lw_spectra",
-      "present": true
+      "present": false
     },
     {
       "label": "idealized SW spectra",
       "path": "/shared/home/greg/data/ckdmip/idealized/sw_spectra",
-      "present": true
+      "present": false
     },
     {
       "label": "idealized conc",
@@ -179,7 +196,7 @@
       "present": true
     }
   ],
-  "status": "init_generation_manifest_ready_historical_superseded",
+  "status": "init_generation_manifest_ready_historical_superseded_waiting_for_inputs",
   "superseded_by": "executed init generation: job 4082 (find_g_points only -- g-point candidates; A2 ledger records NO create_lut), job 4091 (create_lut proof run producing the accepted LW raw init), job 4096 (v1.4 SW raw rebuild), job 4099 (scale_lut under the H5open-preinit shim); outputs accepted under the Option-B rule (gate4_option_b_decision_record) and sha-pinned by gate4_g3_scoped_input_preflight.jl",
-  "timestamp_utc": "2026-08-12T10:56:06.794"
+  "timestamp_utc": "2026-08-12T15:45:21.662"
 }
