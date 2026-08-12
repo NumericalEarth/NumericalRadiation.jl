@@ -12,259 +12,333 @@
   "disclaimer": "inventory only; no aggregation choice, no metric evaluation, no candidate acceptance; eval2 entries pending G2c/G2d honestly.",
   "gates": {
     "eval2_pair_present": "pending",
+    "expected_sets_match_pinned_scripts": "passed",
     "lw_20_present": "passed",
+    "schema_all_present_ok": "passed",
     "sw_16_present": "passed"
   },
   "inventory": [
     {
       "label": "lw_rel-180",
+      "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "dde735608e57af934a2c1e99932c0ccce530883ab48910c7e17b621de7fa0bee",
       "size_bytes": 450863
     },
     {
       "label": "lw_rel-280",
+      "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85",
       "size_bytes": 450863
     },
     {
       "label": "lw_rel-415",
+      "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "01836becbc96e7da2b3b33d586d148948df136457216625b7e60225e093e1792",
       "size_bytes": 450863
     },
     {
       "label": "lw_rel-560",
+      "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2",
       "size_bytes": 450863
     },
     {
       "label": "lw_rel-1120",
+      "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c",
       "size_bytes": 450873
     },
     {
       "label": "lw_rel-2240",
+      "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8",
       "size_bytes": 450873
     },
     {
       "label": "lw_present",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4",
       "size_bytes": 469175
     },
     {
       "label": "lw_ch4-350",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4",
       "size_bytes": 469174
     },
     {
       "label": "lw_ch4-700",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759",
       "size_bytes": 469174
     },
     {
       "label": "lw_ch4-1200",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842",
       "size_bytes": 469184
     },
     {
       "label": "lw_ch4-2600",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4",
       "size_bytes": 469184
     },
     {
       "label": "lw_ch4-3500",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb",
       "size_bytes": 469184
     },
     {
       "label": "lw_n2o-190",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560",
       "size_bytes": 469175
     },
     {
       "label": "lw_n2o-270",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0",
       "size_bytes": 469175
     },
     {
       "label": "lw_n2o-405",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8",
       "size_bytes": 469175
     },
     {
       "label": "lw_n2o-540",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2",
       "size_bytes": 469175
     },
     {
       "label": "lw_cfc11-0",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2",
       "size_bytes": 469173
     },
     {
       "label": "lw_cfc11-2000",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4",
       "size_bytes": 469203
     },
     {
       "label": "lw_cfc12-0",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c",
       "size_bytes": 469173
     },
     {
       "label": "lw_cfc12-550",
+      "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b",
       "size_bytes": 469193
     },
     {
       "label": "sw_rgb_rel-180",
+      "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-180.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "19016e05da9586e55e6e2a7b9629ea6a06e89e4ea9f6b4e4a2f9d66ea658513b",
       "size_bytes": 1817472
     },
     {
       "label": "sw_rgb_rel-280",
+      "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-280.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "01c5326f5f4d4c9f0b3a06dfeee2fb9a8f54b573ab2d76f08911a46081fa8879",
       "size_bytes": 1817472
     },
     {
       "label": "sw_rgb_rel-415",
+      "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "55cf6fffba18d950b716c2efd1b053db27cf6d48c20ca15ae1495a15f1c58cf0",
       "size_bytes": 1817472
     },
     {
       "label": "sw_rgb_rel-560",
+      "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-560.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "19c801655f5a594e4166a4d088656dc04ad4c88bb2d00e01cfca76981fd185d9",
       "size_bytes": 1817472
     },
     {
       "label": "sw_rgb_rel-1120",
+      "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-1120.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "dddeeb6b97fdaae2c3a8fda140b38c982d2a56471afd75bcc104090304b1955f",
       "size_bytes": 1817482
     },
     {
       "label": "sw_rgb_rel-2240",
+      "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-2240.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "944c5957c33cf5d25163e4fdfd7d7777fc313a1e0ea91798e7c806808df22eb6",
       "size_bytes": 1817482
     },
     {
       "label": "sw_rgb_present",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "ceb5872dd4ac39284b3071e42fd3a17068c161d7892eba873f5a99e6736ab4b5",
       "size_bytes": 1839369
     },
     {
       "label": "sw_rgb_ch4-350",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "d15967da2873b4a4fa8e81ac764a24ed6fec046c88027951291361f10726a7a2",
       "size_bytes": 1839368
     },
     {
       "label": "sw_rgb_ch4-700",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "9c355b0ca2597388a45b57f50bc6aab90b4b4ece5ad683870f64954e830c987a",
       "size_bytes": 1839368
     },
     {
       "label": "sw_rgb_ch4-1200",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "f31d7c5628bfb17cdcaab63ee107a4e11181b04417c1d06ad4fdd61dd6ba2493",
       "size_bytes": 1839378
     },
     {
       "label": "sw_rgb_ch4-2600",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "c22671d43a0ca055a79383353219df57b827d61547a7de7d4de3b2313329e53c",
       "size_bytes": 1839378
     },
     {
       "label": "sw_rgb_ch4-3500",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "300adb48f0feb928538d94f84b45372d8880fcf995c43919560b6af59dfb3034",
       "size_bytes": 1839378
     },
     {
       "label": "sw_rgb_n2o-190",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "d7bac1bcf8a094978b2870a442f125b4acf439089442c620e6a3ed30def947fe",
       "size_bytes": 1839369
     },
     {
       "label": "sw_rgb_n2o-270",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "551c532d0661025f2d0a8a1ecb66eec7bdae36dbd191df20691d2c054799cad5",
       "size_bytes": 1839369
     },
     {
       "label": "sw_rgb_n2o-405",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "d76927da116d65d0c2e2b3426e0c449e46b419ba1f3b7a3024afdb8f59a37a5f",
       "size_bytes": 1839369
     },
     {
       "label": "sw_rgb_n2o-540",
+      "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5",
       "present": true,
+      "schema_ok": true,
       "sha256": "aac07193510b1fcc32cece1014b1ec271071363c5afb82ecff091e5ee2452f01",
       "size_bytes": 1839369
     },
@@ -285,10 +359,10 @@
   ],
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "47a5671"
+    "generated_from_head": "2753548"
   },
   "status": "gate2_dataset_manifest_pending_eval2",
-  "timestamp_utc": "2026-08-12T09:36:37.619",
+  "timestamp_utc": "2026-08-12T09:40:15.688",
   "unresolved_decisions": [
     "BINDING dataset choice (this optimizer-training union is the candidate per design note rev 2; not yet ruled)",
     "aggregation: worst-case vs pooled log-RMSE across scenarios"
