@@ -23,7 +23,8 @@
 #     stays evaluation1 so TRAINING_SW_SSI keeps resolving to the local
 #     evaluation1 ckdmip_ssi.h5.
 #   OUTDIR=$WORK_*_LBL_FLUX_DIR; WORK_DIR=work-eval2 in the testcopy config
-#     -> outputs land directly in the contract location (no install step).
+#     -> LBL outputs land in the QUARANTINE tree; stage 6 then installs the
+#     exact-2/hash-gated files into the executor trees per the contract.
 #   SW rel-415 additionally reads ckdmip_evaluation2_sw_spectra_rayleigh_
 #     present_<chunk>.h5 -- NOT published upstream for eval2 at all (S3 and
 #     ECPDS both lack it); generated in-job by the upstream author's own

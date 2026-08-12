@@ -21,10 +21,10 @@ Path contract (two-phase): generate in work-eval2, install to `/shared/home/greg
 
 Rayleigh: eval2 SW rayleigh is not published anywhere (S3 archive and ECPDS both lack it); generated in-job by the upstream author's make_rayleigh_evaluation.sh recipe into the fetched eval2 tree, mirroring evaluation1's official layout; sha256s echoed in the job log
 
-eval2 spectra present at generation: 0/70
+eval2 spectra present at generation: 10/70
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `029b911` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `4f24b70` (pre-own-commit).
 
 ## Failures
 
-- eval2 spectra incomplete: 0/70 (G2c pending?)
+- eval2 spectra incomplete: 10/70 (G2c pending?)

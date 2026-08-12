@@ -2,9 +2,9 @@
   "case": "gate4_g2d_eval2_rel415_flux_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted by this unit; rayleigh + LBL evaluation only; no optimizer, objective, floor, or recovery computation.",
-  "eval2_spectra_present": "0/70",
+  "eval2_spectra_present": "10/70",
   "failures": [
-    "eval2 spectra incomplete: 0/70 (G2c pending?)"
+    "eval2 spectra incomplete: 10/70 (G2c pending?)"
   ],
   "gates": {
     "g2c_spectra_prerequisite": "failed",
@@ -28,11 +28,11 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "029b911",
+    "generated_from_head": "4f24b70",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "rayleigh_note": "eval2 SW rayleigh is not published anywhere (S3 archive and ECPDS both lack it); generated in-job by the upstream author's make_rayleigh_evaluation.sh recipe into the fetched eval2 tree, mirroring evaluation1's official layout; sha256s echoed in the job log",
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2d_eval2_rel415_flux.sbatch",
   "status": "g2d_checkpoint_waiting_for_g2c",
-  "timestamp_utc": "2026-08-12T07:52:56.802"
+  "timestamp_utc": "2026-08-12T07:56:17.669"
 }
