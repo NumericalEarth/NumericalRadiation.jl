@@ -61,7 +61,7 @@ avail_kb=\$(df --output=avail /shared | tail -1)
 # uid-quota headroom guard (job 4440 lesson: df cannot see Lustre uid
 # quotas). Audited selected-source total: 329,989,234,896 B; margin 40 GiB.
 source $PROJECT_ROOT/validation/gate4_quota_guard.sh
-quota_guard "\$DEST" 329989234896 \$((40*1024*1024*1024)) || { echo "REFUSED: quota headroom insufficient" >&2; exit 67; }
+quota_guard "\$DEST" "$PROJECT_ROOT/validation/gate4_eval2_selected_manifest.tsv" \$((40*1024*1024*1024)) || { echo "REFUSED: quota headroom insufficient" >&2; exit 67; }
 mkdir -p "\$DEST/lw_spectra" "\$DEST/sw_spectra"
 
 echo "=== G2c stage 1: sync LW spectra (7 species x 5 chunks, ~220 GB) ==="
@@ -138,16 +138,27 @@ function main()
     gates["disk_guard"] = occursin("400GB free", SBATCH_TEXT) ? "passed" : "failed"
     gates["quota_aware_preflight"] =
         occursin("gate4_quota_guard.sh", SBATCH_TEXT) &&
-        occursin("quota_guard \"\$DEST\" 329989234896", SBATCH_TEXT) ? "passed" : "failed"
+        occursin("gate4_eval2_selected_manifest.tsv", SBATCH_TEXT) ? "passed" : "failed"
+    # audited manifest integrity (checkpoint-side mirror of the guard's check)
+    manifest_path = joinpath(PROJECT_ROOT, "validation/gate4_eval2_selected_manifest.tsv")
+    mrows = [split(l, '\t') for l in eachline(manifest_path)
+             if !startswith(l, '#') && !isempty(strip(l))]
+    mnames = [r[1] for r in mrows]
+    msizes = Dict(r[1] => parse(Int, r[2]) for r in mrows)
+    gates["manifest_integrity"] =
+        (length(mrows) == 70 && length(unique(mnames)) == 70 &&
+         sum(values(msizes)) == 329989234896) ? "passed" : "failed"
+    gates["manifest_integrity"] == "passed" ||
+        push!(fails, "manifest count/uniqueness/sum drift")
 
     # --- quota-guard fixture tests (same sourced logic the sbatch runs) ---
     guard = joinpath(PROJECT_ROOT, "validation/gate4_quota_guard.sh")
-    run_guard(pathdir, destdir) = success(pipeline(
-        `/usr/bin/env PATH=$pathdir /bin/bash -c "source $guard; quota_guard $destdir 329989234896 42949672960"`,
+    run_guard(pathdir, destdir; mani=manifest_path) = success(pipeline(
+        `/usr/bin/env PATH=$pathdir /bin/bash -c "source $guard; quota_guard $destdir $mani 42949672960"`,
         stdout=devnull, stderr=devnull))
     fx = mktempdir()
     bin_min = joinpath(fx, "bin_min"); mkpath(bin_min)   # awk/stat/id, NO lfs
-    for t in ("awk", "stat", "id", "grep", "sed")
+    for t in ("awk", "stat", "id", "grep", "sed", "sort", "wc")
         tp = Sys.which(t); tp === nothing || symlink(tp, joinpath(bin_min, t))
     end
     mkfix(name, rowscript) = begin
@@ -187,18 +198,29 @@ function main()
     # (e) hard limit 0/unlimited -> deliberate refusal
     d = mkfix("zerohard", "echo \"/shared 12345 0 0 -\"")
     tests["zero_hard_limit_refuses"] = run_guard(d, emptydest) == false
-    # (f) finalized-file subtraction changes the VERDICT: stub headroom is
-    # strictly between need(empty dest) and need(dest with a 10 GiB sparse
-    # expected file): 370,000,000,000 B = (361328225-100) KiB * 1024;
-    # need(empty) = total+margin = 372,938,907,856 B -> REFUSE;
-    # need(with file) = 372,938,907,856 - 10,737,418,240 -> PASS.
+    # (f) finalized-file subtraction changes the VERDICT, exact-size only:
+    # sparse file of EXACTLY the manifest size for lw h2o_present_1-10;
+    # stub headroom 370,000,000,000 B = (361328225-100) KiB * 1024 sits
+    # strictly between need(empty) = total+margin = 372,938,907,856 B
+    # (-> REFUSE) and need(with exact file) = 372,938,907,856 -
+    # manifest_size (-> PASS).
+    fsz = msizes["ckdmip_evaluation2_lw_spectra_h2o_present_1-10.h5"]
+    @assert 372938907856 - fsz < 370000000000 < 372938907856
     d2 = joinpath(fx, "dest2"); mkpath(joinpath(d2, "lw_spectra")); mkpath(joinpath(d2, "sw_spectra"))
     open(joinpath(d2, "lw_spectra/ckdmip_evaluation2_lw_spectra_h2o_present_1-10.h5"), "w") do io
-        seek(io, 10 * 1024^3 - 1); write(io, UInt8(0))
+        seek(io, fsz - 1); write(io, UInt8(0))
     end
     d = mkfix("between", "echo \"/shared 100 0 361328225 - 1 0 0 -\"")
     tests["subtraction_refuses_on_empty_dest"] = run_guard(d, emptydest) == false
-    tests["subtraction_passes_with_finalized_file"] = run_guard(d, d2) == true
+    tests["subtraction_passes_with_exact_size_file"] = run_guard(d, d2) == true
+    # (g) present-but-WRONG-size file must REFUSE even under huge quota
+    # (10 GiB bogus at an expected name; sync would replace it)
+    d3 = joinpath(fx, "dest3"); mkpath(joinpath(d3, "lw_spectra")); mkpath(joinpath(d3, "sw_spectra"))
+    open(joinpath(d3, "lw_spectra/ckdmip_evaluation2_lw_spectra_h2o_present_1-10.h5"), "w") do io
+        seek(io, 10 * 1024^3 - 1); write(io, UInt8(0))
+    end
+    d = mkfix("hugequota", "echo \"/shared 100 0 2000000000 - 1 0 0 -\"")
+    tests["wrong_size_file_refuses"] = run_guard(d, d3) == false
     gates["quota_guard_fixture_tests"] =
         all(values(tests)) ? "passed" : "failed"
     all(values(tests)) ||

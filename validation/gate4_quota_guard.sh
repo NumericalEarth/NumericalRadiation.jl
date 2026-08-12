@@ -2,18 +2,22 @@
 # /shared (Lustre). Sourced by G2c-family sbatch scripts AND by the
 # checkpoint's fixture tests, so the tested logic is the deployed logic.
 #
-# quota_guard <dest_root> <selected_source_total_bytes> <margin_bytes>
-#   dest_root: directory containing {lw,sw}_spectra with any already-
-#              finalized expected files (only the audited 70-name set is
-#              counted toward "already have").
-#   FAIL-CLOSED: missing lfs, missing/malformed aggregate row, or a hard
-#   limit reading 0 ("unlimited" in lfs semantics) all REFUSE -- on this
-#   cluster the uid quota is known to exist, so an unlimited reading most
-#   likely means the wrong row was parsed. Returns 0 only when
-#   headroom >= (source_total - finalized_bytes) + margin.
+# quota_guard <dest_root> <manifest_tsv> <margin_bytes>
+#   manifest_tsv: the audited selected-source manifest (basename, exact
+#     size; optional ETag/LastModified provenance columns; '#' comments).
+#     MUST contain exactly 70 unique basenames summing 329,989,234,896 B.
+#   A local file counts toward "already have" ONLY if its stat size
+#   EXACTLY matches its manifest size. A present-but-wrong-size file
+#   REFUSES outright: aws s3 sync will re-download it, so any accounting
+#   crediting it would understate the transfer, and the mismatch itself
+#   demands investigation before spending quota.
+#   FAIL-CLOSED: missing lfs/manifest, malformed rows, manifest count/sum
+#   drift, or a hard limit reading 0 ("unlimited") all REFUSE. Returns 0
+#   only when headroom >= (manifest_total - exact_matched_bytes) + margin.
 quota_guard() {
-    local dest="$1" total="$2" margin="$3"
+    local dest="$1" manifest="$2" margin="$3"
     command -v lfs >/dev/null 2>&1 || { echo "QUOTA-GUARD REFUSED: lfs not available" >&2; return 67; }
+    [ -r "$manifest" ] || { echo "QUOTA-GUARD REFUSED: manifest not readable: $manifest" >&2; return 67; }
     local row
     row=$(lfs quota -q -u "$(id -u)" /shared 2>/dev/null | awk '$1=="/shared"{print; exit}')
     [ -n "$row" ] || { echo "QUOTA-GUARD REFUSED: no /shared aggregate row from lfs quota" >&2; return 67; }
@@ -35,21 +39,36 @@ quota_guard() {
     fi
     local headroom=$(( (hard_kib - used_kib) * 1024 ))
     [ "$headroom" -ge 0 ] || headroom=0
-    local have=0 band sp chunk f sz
-    for band in lw sw; do
-        for sp in h2o_present o3_present co2_present ch4_present n2o_present n2_constant o2_constant; do
-            for chunk in 1-10 11-20 21-30 31-40 41-50; do
-                f="$dest/${band}_spectra/ckdmip_evaluation2_${band}_spectra_${sp}_${chunk}.h5"
-                if [ -s "$f" ]; then
-                    sz=$(stat -c %s "$f") || { echo "QUOTA-GUARD REFUSED: stat failed on $f" >&2; return 67; }
-                    have=$(( have + sz ))
-                fi
-            done
-        done
-    done
-    local remaining=$(( total - have )); [ "$remaining" -lt 0 ] && remaining=0
+    # manifest validation: exactly 70 unique names, audited byte sum
+    local mcount ucount msum
+    mcount=$(awk -F'\t' '!/^#/ && NF>=2 {n++} END{print n+0}' "$manifest")
+    ucount=$(awk -F'\t' '!/^#/ && NF>=2 {print $1}' "$manifest" | sort -u | wc -l)
+    msum=$(awk -F'\t' '!/^#/ && NF>=2 {if ($2 !~ /^[0-9]+$/) {print "BAD"; exit} s+=$2} END{printf "%.0f", s}' "$manifest")
+    [ "$mcount" = 70 ] && [ "$ucount" = 70 ] || { echo "QUOTA-GUARD REFUSED: manifest count/uniqueness $mcount/$ucount != 70/70" >&2; return 67; }
+    [ "$msum" = 329989234896 ] || { echo "QUOTA-GUARD REFUSED: manifest sum $msum != audited 329989234896" >&2; return 67; }
+    # exact-size matching against local finals; wrong size => refuse
+    local have=0 name size sub f sz
+    while IFS=$'\t' read -r name size _rest; do
+        case "$name" in ''|'#'*) continue;; esac
+        case "$name" in
+            *_lw_spectra_*) sub=lw_spectra;;
+            *_sw_spectra_*) sub=sw_spectra;;
+            *) echo "QUOTA-GUARD REFUSED: manifest name without band dir: $name" >&2; return 67;;
+        esac
+        f="$dest/$sub/$name"
+        if [ -e "$f" ]; then
+            sz=$(stat -c %s "$f") || { echo "QUOTA-GUARD REFUSED: stat failed on $f" >&2; return 67; }
+            if [ "$sz" = "$size" ]; then
+                have=$(( have + sz ))
+            else
+                echo "QUOTA-GUARD REFUSED: size mismatch $f local=$sz manifest=$size (sync would replace it; investigate before spending quota)" >&2
+                return 67
+            fi
+        fi
+    done < "$manifest"
+    local remaining=$(( 329989234896 - have )); [ "$remaining" -lt 0 ] && remaining=0
     local need=$(( remaining + margin ))
-    echo "quota-guard: headroom=${headroom}B finalized=${have}B remaining=${remaining}B need=${need}B (remaining+margin)"
+    echo "quota-guard: headroom=${headroom}B exact-matched=${have}B remaining=${remaining}B need=${need}B (remaining+margin)"
     [ "$headroom" -ge "$need" ] || { echo "QUOTA-GUARD REFUSED: headroom ${headroom}B < need ${need}B" >&2; return 67; }
     return 0
 }
