@@ -6,6 +6,7 @@ script generation only; nothing submitted by this unit; rayleigh + LBL evaluatio
 
 | Gate | Result |
 |---|---|
+| atomic_rayleigh_publication | passed |
 | g2c_spectra_prerequisite | failed |
 | headnode_refusal_guard | passed |
 | lbl_and_rayleigh_only | passed |
@@ -21,10 +22,10 @@ Path contract (two-phase): generate in work-eval2, install to `/shared/home/greg
 
 Rayleigh: eval2 SW rayleigh is not published anywhere (S3 archive and ECPDS both lack it); generated in-job by the upstream author's make_rayleigh_evaluation.sh recipe into the fetched eval2 tree, mirroring evaluation1's official layout; sha256s echoed in the job log
 
-eval2 spectra present at generation: 10/70
+eval2 spectra present at generation: 25/70
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `4f24b70` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `9f80ed1` (pre-own-commit).
 
 ## Failures
 
-- eval2 spectra incomplete: 10/70 (G2c pending?)
+- eval2 spectra incomplete: 25/70 (G2c pending?)

@@ -2,11 +2,12 @@
   "case": "gate4_g2d_eval2_rel415_flux_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted by this unit; rayleigh + LBL evaluation only; no optimizer, objective, floor, or recovery computation.",
-  "eval2_spectra_present": "10/70",
+  "eval2_spectra_present": "25/70",
   "failures": [
-    "eval2 spectra incomplete: 10/70 (G2c pending?)"
+    "eval2 spectra incomplete: 25/70 (G2c pending?)"
   ],
   "gates": {
+    "atomic_rayleigh_publication": "passed",
     "g2c_spectra_prerequisite": "failed",
     "headnode_refusal_guard": "passed",
     "lbl_and_rayleigh_only": "passed",
@@ -24,15 +25,15 @@
     "install_lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
     "install_sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
     "install_sw_v14": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
-    "rationale": "monitor-specified two-phase: generate in quarantined work-eval2, exact-2/hash gate, install only verified outputs into the EXISTING executor trees so G3 keeps WORK_DIR=work (LW) with inits/gpoints untouched; optimizer resolves via append_path TRAINING_*_FLUXES_DIR:WORK_*_LBL_FLUX_DIR (EVALUATION_*_FLUXES_DIR never appended); SW dual-installed into work-v14/sw_lbl_fluxes too because the SW executor may run WORK_DIR=work-v14 (accepted scaled init + ecckd-1.4 prefix live there) -- final SW wiring decided at the G3 spec review"
+    "rationale": "monitor-specified two-phase: generate in quarantined work-eval2, exact-2 output-presence gate, install the presence-gated outputs into the EXISTING executor trees (post-install cmp = identity gate; sha256 echoes = provenance records, no expected digest) so G3 keeps WORK_DIR=work (LW) with inits/gpoints untouched; optimizer resolves via append_path TRAINING_*_FLUXES_DIR:WORK_*_LBL_FLUX_DIR (EVALUATION_*_FLUXES_DIR never appended); SW dual-installed into work-v14/sw_lbl_fluxes too because the SW executor may run WORK_DIR=work-v14 (accepted scaled init + ecckd-1.4 prefix live there) -- final SW wiring decided at the G3 spec review"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "4f24b70",
+    "generated_from_head": "9f80ed1",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "rayleigh_note": "eval2 SW rayleigh is not published anywhere (S3 archive and ECPDS both lack it); generated in-job by the upstream author's make_rayleigh_evaluation.sh recipe into the fetched eval2 tree, mirroring evaluation1's official layout; sha256s echoed in the job log",
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2d_eval2_rel415_flux.sbatch",
   "status": "g2d_checkpoint_waiting_for_g2c",
-  "timestamp_utc": "2026-08-12T07:56:17.669"
+  "timestamp_utc": "2026-08-12T07:59:52.246"
 }

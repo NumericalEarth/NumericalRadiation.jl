@@ -3,7 +3,7 @@
 # training flux files from the G2c-fetched evaluation2 spectra.
 #
 # PATH CONTRACT (monitor-specified, two-phase): GENERATE in the quarantined
-# work-eval2 tree, exact-2/hash gate there, then INSTALL only the verified
+# work-eval2 tree, exact-2 output-presence gate there, then INSTALL the
 # outputs into the EXISTING executor trees (inits/gpoints untouched):
 #   $G4WORK/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5
 #   $G4WORK/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5
@@ -24,7 +24,8 @@
 #     evaluation1 ckdmip_ssi.h5.
 #   OUTDIR=$WORK_*_LBL_FLUX_DIR; WORK_DIR=work-eval2 in the testcopy config
 #     -> LBL outputs land in the QUARANTINE tree; stage 6 then installs the
-#     exact-2/hash-gated files into the executor trees per the contract.
+#     presence-gated files into the executor trees; the post-install cmp
+#     is the identity gate; sha256 echoes are provenance records only.
 #   SW rel-415 additionally reads ckdmip_evaluation2_sw_spectra_rayleigh_
 #     present_<chunk>.h5 -- NOT published upstream for eval2 at all (S3 and
 #     ECPDS both lack it); generated in-job by the upstream author's own
@@ -109,10 +110,21 @@ if [ -e "\$WORKEVAL2" ]; then
 fi
 
 echo "=== G2d stage 1: eval2 SW rayleigh (upstream recipe; 5 chunks) ==="
+# stale partials from any earlier killed job: report + remove (finals with
+# the exact final name are NEVER touched; they only exist via the atomic mv)
+find "\$E2/sw_spectra" -maxdepth 1 -name 'ckdmip_evaluation2_sw_spectra_rayleigh_present_*.h5.partial.*' -printf 'removing stale partial: %p (%s B)\\n' -delete 2>/dev/null || true
 for chunk in $(join(CHUNKS, " ")); do
     R="\$E2/sw_spectra/ckdmip_evaluation2_sw_spectra_rayleigh_present_\$chunk.h5"
     if [ ! -s "\$R" ]; then
-        $CKDMIP_BIN_ROOT/bin/ckdmip_tool --grid "\$E2/sw_spectra/ckdmip_evaluation2_sw_spectra_h2o_present_\$chunk.h5" --rayleigh -o "\$R"
+        # atomic publication: generate to a job-scoped temp; only a
+        # successfully completed file is mv'd to the final name, so a
+        # mid-write kill can never leave a truncated FINAL that a retry
+        # would wrongly reuse
+        TMP="\$R.partial.\$SLURM_JOB_ID"
+        rm -f "\$TMP"
+        $CKDMIP_BIN_ROOT/bin/ckdmip_tool --grid "\$E2/sw_spectra/ckdmip_evaluation2_sw_spectra_h2o_present_\$chunk.h5" --rayleigh -o "\$TMP"
+        test -s "\$TMP" || { echo "MISSING rayleigh temp after generation: \$chunk" >&2; exit 66; }
+        mv "\$TMP" "\$R"
     fi
     test -s "\$R" || { echo "MISSING rayleigh after generation: \$chunk" >&2; exit 66; }
 done
@@ -171,7 +183,7 @@ bash run_lw_lbl_evaluation.sh
 echo "=== G2d stage 4: SW rel-415 RGB LBL evaluation ==="
 bash run_sw_lbl_evaluation.sh
 
-echo "=== G2d stage 5: exact-2 completeness gate (quarantine) ==="
+echo "=== G2d stage 5: exact-2 output-presence gate (quarantine) ==="
 test -s "$LW_OUT" || { echo "MISSING LW output" >&2; exit 71; }
 test -s "$SW_OUT" || { echo "MISSING SW output" >&2; exit 71; }
 
@@ -241,6 +253,14 @@ function main()
     gates["stale_output_refusal_and_partial_raw_guard"] =
         occursin("stale LW output", SBATCH_TEXT) &&
         occursin("partial-RAW guard", SBATCH_TEXT) ? "passed" : "failed"
+    gates["atomic_rayleigh_publication"] =
+        occursin(".partial.\$SLURM_JOB_ID", SBATCH_TEXT) &&
+        occursin("mv \"\$TMP\" \"\$R\"", SBATCH_TEXT) &&
+        occursin("rm -f \"\$TMP\"", SBATCH_TEXT) &&
+        occursin("test -s \"\$TMP\"", SBATCH_TEXT) &&
+        occursin("removing stale partial", SBATCH_TEXT) ? "passed" : "failed"
+    gates["atomic_rayleigh_publication"] == "passed" ||
+        push!(fails, "atomic rayleigh publication pattern missing")
     gates["pipeline_parity"] =
         occursin("concat_ckdmip_flux_chunks.jl", SBATCH_TEXT) &&
         occursin("REUSING", SBATCH_TEXT) ? "passed" : "failed"
@@ -271,8 +291,10 @@ function main()
             "install_lw" => LW_INSTALL, "install_sw" => SW_INSTALL,
             "install_sw_v14" => SW_INSTALL_V14,
             "rationale" => "monitor-specified two-phase: generate in " *
-                "quarantined work-eval2, exact-2/hash gate, install only " *
-                "verified outputs into the EXISTING executor trees so G3 " *
+                "quarantined work-eval2, exact-2 output-presence gate, install " *
+                "the presence-gated outputs into the EXISTING executor trees " *
+                "(post-install cmp = identity gate; sha256 echoes = " *
+                "provenance records, no expected digest) so G3 " *
                 "keeps WORK_DIR=work (LW) with inits/gpoints untouched; " *
                 "optimizer resolves via append_path TRAINING_*_FLUXES_DIR:" *
                 "WORK_*_LBL_FLUX_DIR (EVALUATION_*_FLUXES_DIR never " *
