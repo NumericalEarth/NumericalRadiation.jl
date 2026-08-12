@@ -22,6 +22,10 @@ command -v aws >/dev/null || { echo "MISSING aws CLI on compute node" >&2; exit 
 aws sts get-caller-identity >/dev/null || { echo "REFUSED: AWS auth unavailable (SSO expired?)" >&2; exit 66; }
 avail_kb=$(df --output=avail /shared | tail -1)
 [ "$avail_kb" -gt 419430400 ] || { echo "REFUSED: <400GB free on /shared" >&2; exit 67; }
+# uid-quota headroom guard (job 4440 lesson: df cannot see Lustre uid
+# quotas). Audited selected-source total: 329,989,234,896 B; margin 40 GiB.
+source /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
+quota_guard "$DEST" 329989234896 $((40*1024*1024*1024)) || { echo "REFUSED: quota headroom insufficient" >&2; exit 67; }
 mkdir -p "$DEST/lw_spectra" "$DEST/sw_spectra"
 
 echo "=== G2c stage 1: sync LW spectra (7 species x 5 chunks, ~220 GB) ==="

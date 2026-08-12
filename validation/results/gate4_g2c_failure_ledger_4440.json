@@ -1,0 +1,55 @@
+{
+  "case": "gate4_g2c_failure_ledger_4440",
+  "data_mode": "failure_event_record_only",
+  "status": "g2c_job_4440_failed_disk_quota",
+  "timestamp_utc": "2026-08-12T08:20:00Z",
+  "job": {
+    "job_id": 4440,
+    "slurm_state": "FAILED NonZeroExitCode, ExitCode=1:0, runtime 00:10:42 (07:51:25-08:02:07 UTC; scontrol, monitor-verified)",
+    "log": "/shared/home/greg/data/ckdmip-logs/g4-g2c-4440.log",
+    "stage0": "PASSED including compute-node AWS auth (sts get-caller-identity) and the df-based >=400GB free check",
+    "failure_point": "stage 1 LW sync: five o3_present chunk downloads failed with [Errno 122] Disk quota exceeded; set -e aborted; stage 2 (SW) never began"
+  },
+  "root_cause": "PER-USER Lustre quota, invisible to df: lfs quota -u greg /shared = used 1,014,155,103 KiB (~967 GiB, over the 943,718,400 KiB soft limit, grace running 6d23h), hard limit 1,048,576,000 KiB (1000 GiB). At the actual EDQUOT event, usage necessarily reached the hard allocation boundary transiently; the figures here were measured post-failure, after the AWS CLI removed its partial temp files. The checkpoint preflight checked filesystem free space (1.9 TB) but not user quota -- df is irrelevant under a uid quota.",
+  "exact_accounting_monitor_verified": {
+    "source_set_bytes": {
+      "lw_35_files": 219614131381,
+      "sw_35_files": 110375103515,
+      "total_70": 329989234896
+    },
+    "local_finalized": {
+      "files": 30,
+      "bytes": 175407705620,
+      "note": "30 LW finals, 0 SW, 0 temps; all preserved, nothing deleted"
+    },
+    "remaining_bytes": 154581529276,
+    "note": "headroom and shortfall measured POST-FAILURE after AWS removed partial temps (usage transiently reached the hard boundary at EDQUOT); spectra alone exceed post-failure headroom by ~111 GiB before ~4.5 GB rayleigh and G2d work outputs; S3 ETags are multipart (suffix -N) = opaque provenance strings, NOT MD5",
+    "hard_headroom_bytes_post_failure": 35246998528,
+    "shortfall_bytes_post_failure": 119334530748
+  },
+  "evidence_tiers": {
+    "source_provenance": "2026-05-27 archive_to_s3.log byte verification of S3 vs ECPDS originals (predates this job)",
+    "job_4440_transfer": "30 finalized LW files (atomic aws-cli temp->rename publication; no temps on disk); sync-convergence NOT yet run (job died before stage 3); the exact-70 name-set check is deferred to the recovery completion"
+  },
+  "read_only_cleanup_candidate_inventory": {
+    "note": "IDENTIFICATION ONLY -- nothing removed or moved; any deletion needs explicit authorization",
+    "evaluation1_lw_spectra": "253 GiB (S3 byte-verified archive exists)",
+    "evaluation1_sw_spectra": "130 GiB (S3 byte-verified archive exists)",
+    "idealized_spectra": "203 GiB (LW 133G, SW 71G; S3-sourced originally; consumed by completed init generation)",
+    "evaluation2_partial": "164 GiB (the 30 preserved finals -- KEEP)",
+    "mmm": "44 GiB (active gate-4 inputs -- KEEP)",
+    "gate4_work": "20 GiB (accepted Gate-4 artifacts -- KEEP)"
+  },
+  "recovery_options": {
+    "A_quota_increase": "raise the uid hard limit to >=1.3 TiB (current usage + remaining 144 GiB + rayleigh/G2d/G3 headroom + margin); cleanest, preserves everything; REQUIRES Greg/admin action (lfs setquota or pcluster storage config)",
+    "B_alternate_project_path": "a persistent path charged to a different quota -- none identified: the quota is uid-based on /shared, so any greg-owned path counts; no group/project quota tree found",
+    "C_chunk_streaming_redesign": "download per-chunk species sets (~44 GB LW peak), run LBL, delete, iterate -- exceeds current 32.8 GiB headroom anyway; only viable after partial cleanup AND explicit review",
+    "D_authorized_cleanup": "delete S3-byte-verified evaluation1 spectra (383 GiB local) and/or idealized spectra (204 GiB) -- either alone clears the shortfall; recoverable from the verified archive; REQUIRES explicit authorization (not executed)"
+  },
+  "recommendation": "A (quota raise to >=1.3 TiB) as primary; D as the fast fallback if a quota change is inconvenient -- eval1 spectra are the safest candidate (byte-verified on S3, consumed only by completed generation units). No retry under the current hard limit; no unchanged resubmit (checkpoint patched with quota-aware preflight).",
+  "checkpoint_correction": "IMPLEMENTED AND TESTED: validation/gate4_quota_guard.sh (fail-closed uid-quota headroom guard: lfs aggregate-row parse with >=4-field and per-field numeric validation, KiB->bytes, hard=0/unlimited deliberate refusal, remaining = audited 329,989,234,896 B minus sizes of only matching expected finalized files, requires headroom >= remaining + 40 GiB margin) sourced by the regenerated sbatch alongside the retained df guard; checkpoint gates quota_aware_preflight + quota_guard_fixture_tests; 7 fixture verdicts all pass (live-row vs independent computation, sufficient-quota pass, missing-lfs refusal, malformed refusal, zero-hard refusal, subtraction refuses-empty/passes-with-sparse-10GiB-file verdict pair)",
+  "provenance": {
+    "branch": "glw/gate4-recovery"
+  },
+  "disclaimer": "failure event record only; nothing deleted; G2d and optimizer remain blocked."
+}

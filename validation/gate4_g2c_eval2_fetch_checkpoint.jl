@@ -21,6 +21,7 @@ import JSON
 
 const S3_BASE = "s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/evaluation2"
 const DEST = "/shared/home/greg/data/ckdmip/evaluation2"
+const PROJECT_ROOT = "/shared/home/greg/Projects/AnalyticBandRadiation-platform"
 const SPECIES = ["h2o_present", "o3_present", "co2_present", "ch4_present",
                  "n2o_present", "n2_constant", "o2_constant"]
 const CHUNKS = ["1-10", "11-20", "21-30", "31-40", "41-50"]
@@ -57,6 +58,10 @@ command -v aws >/dev/null || { echo "MISSING aws CLI on compute node" >&2; exit 
 aws sts get-caller-identity >/dev/null || { echo "REFUSED: AWS auth unavailable (SSO expired?)" >&2; exit 66; }
 avail_kb=\$(df --output=avail /shared | tail -1)
 [ "\$avail_kb" -gt 419430400 ] || { echo "REFUSED: <400GB free on /shared" >&2; exit 67; }
+# uid-quota headroom guard (job 4440 lesson: df cannot see Lustre uid
+# quotas). Audited selected-source total: 329,989,234,896 B; margin 40 GiB.
+source $PROJECT_ROOT/validation/gate4_quota_guard.sh
+quota_guard "\$DEST" 329989234896 \$((40*1024*1024*1024)) || { echo "REFUSED: quota headroom insufficient" >&2; exit 67; }
 mkdir -p "\$DEST/lw_spectra" "\$DEST/sw_spectra"
 
 echo "=== G2c stage 1: sync LW spectra (7 species x 5 chunks, ~220 GB) ==="
@@ -131,6 +136,74 @@ function main()
         occursin("completeness gate failed", SBATCH_TEXT) &&
         occursin("resync transferred data", SBATCH_TEXT) ? "passed" : "failed"
     gates["disk_guard"] = occursin("400GB free", SBATCH_TEXT) ? "passed" : "failed"
+    gates["quota_aware_preflight"] =
+        occursin("gate4_quota_guard.sh", SBATCH_TEXT) &&
+        occursin("quota_guard \"\$DEST\" 329989234896", SBATCH_TEXT) ? "passed" : "failed"
+
+    # --- quota-guard fixture tests (same sourced logic the sbatch runs) ---
+    guard = joinpath(PROJECT_ROOT, "validation/gate4_quota_guard.sh")
+    run_guard(pathdir, destdir) = success(pipeline(
+        `/usr/bin/env PATH=$pathdir /bin/bash -c "source $guard; quota_guard $destdir 329989234896 42949672960"`,
+        stdout=devnull, stderr=devnull))
+    fx = mktempdir()
+    bin_min = joinpath(fx, "bin_min"); mkpath(bin_min)   # awk/stat/id, NO lfs
+    for t in ("awk", "stat", "id", "grep", "sed")
+        tp = Sys.which(t); tp === nothing || symlink(tp, joinpath(bin_min, t))
+    end
+    mkfix(name, rowscript) = begin
+        d = joinpath(fx, name); mkpath(d)
+        for t in readdir(bin_min); symlink(joinpath(bin_min, t), joinpath(d, t)); end
+        lf = joinpath(d, "lfs")
+        write(lf, "#!/bin/bash\n" * rowscript * "\n"); chmod(lf, 0o755)
+        d
+    end
+    emptydest = joinpath(fx, "dest"); mkpath(joinpath(emptydest, "lw_spectra")); mkpath(joinpath(emptydest, "sw_spectra"))
+    # (a) live-fixture: today's actual lfs row baked into a stub; expected
+    #     verdict computed independently in Julia from the same row
+    live_row = try
+        uid = strip(read(`id -u`, String))
+        strip(split(read(`lfs quota -q -u $uid /shared`, String), "\n")[1])
+    catch; "" end
+    tests = Dict{String, Bool}()
+    if !isempty(live_row)
+        d = mkfix("live", "echo \"$live_row\"")
+        used_kib = parse(Int, replace(split(live_row)[2], "*" => ""))
+        hard_kib = parse(Int, split(live_row)[4])
+        headroom = max(hard_kib - used_kib, 0) * 1024
+        expect_pass = hard_kib > 0 && headroom >= 329989234896 + 42949672960
+        tests["live_fixture_matches_independent_computation"] =
+            run_guard(d, emptydest) == expect_pass
+    else
+        tests["live_fixture_matches_independent_computation"] = false
+    end
+    # (b) sufficient quota -> pass
+    d = mkfix("sufficient", "echo \"/shared 100 0 2000000000 - 1 0 0 -\"")
+    tests["sufficient_quota_passes"] = run_guard(d, emptydest) == true
+    # (c) missing lfs -> refusal
+    tests["missing_lfs_refuses"] = run_guard(bin_min, emptydest) == false
+    # (d) malformed output -> refusal
+    d = mkfix("malformed", "echo \"/shared abc* def ghi -\"")
+    tests["malformed_refuses"] = run_guard(d, emptydest) == false
+    # (e) hard limit 0/unlimited -> deliberate refusal
+    d = mkfix("zerohard", "echo \"/shared 12345 0 0 -\"")
+    tests["zero_hard_limit_refuses"] = run_guard(d, emptydest) == false
+    # (f) finalized-file subtraction changes the VERDICT: stub headroom is
+    # strictly between need(empty dest) and need(dest with a 10 GiB sparse
+    # expected file): 370,000,000,000 B = (361328225-100) KiB * 1024;
+    # need(empty) = total+margin = 372,938,907,856 B -> REFUSE;
+    # need(with file) = 372,938,907,856 - 10,737,418,240 -> PASS.
+    d2 = joinpath(fx, "dest2"); mkpath(joinpath(d2, "lw_spectra")); mkpath(joinpath(d2, "sw_spectra"))
+    open(joinpath(d2, "lw_spectra/ckdmip_evaluation2_lw_spectra_h2o_present_1-10.h5"), "w") do io
+        seek(io, 10 * 1024^3 - 1); write(io, UInt8(0))
+    end
+    d = mkfix("between", "echo \"/shared 100 0 361328225 - 1 0 0 -\"")
+    tests["subtraction_refuses_on_empty_dest"] = run_guard(d, emptydest) == false
+    tests["subtraction_passes_with_finalized_file"] = run_guard(d, d2) == true
+    gates["quota_guard_fixture_tests"] =
+        all(values(tests)) ? "passed" : "failed"
+    all(values(tests)) ||
+        push!(fails, "quota-guard fixture failures: " *
+                     join([k for (k, v) in tests if !v], ", "))
 
     status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
         "g2c_checkpoint_ready" : "g2c_checkpoint_failed"
@@ -148,6 +221,7 @@ function main()
         "sbatch_path" => GC_SBATCH,
         "source" => "$S3_BASE (byte-verified ECPDS archive per " *
                     "archive_to_s3.log 2026-05-27; ECPDS live as fallback)",
+        "quota_guard_fixture_verdicts" => tests,
         "scope" => Dict(
             "species" => SPECIES, "chunks" => CHUNKS,
             "expected_files" => 70,

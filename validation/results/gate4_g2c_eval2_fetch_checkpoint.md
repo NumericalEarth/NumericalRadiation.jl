@@ -13,6 +13,8 @@ Authorization: Greg: 'go with option A' (2026-07-30) + SSO re-auth and 'keep goi
 | exact70_gate | passed |
 | fetch_only | passed |
 | headnode_refusal_guard | passed |
+| quota_aware_preflight | passed |
+| quota_guard_fixture_tests | passed |
 | sbatch_written_not_submitted | passed |
 | species_scope_correct | passed |
 
@@ -22,4 +24,4 @@ Scope: 7 species x 5 chunks x 2 bands = 70 files, ~330 GB; cfc/rayleigh/ssi excl
 
 Follow-on: G2d: rayleigh generation (make_rayleigh_evaluation.sh recipe, ckdmip_tool --rayleigh on the 5 eval2 h2o_present SW chunks) + rel-415 LBL runs (LW plain, SW rgb-banded) -> 2 flux files -> ledger -> G3
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `33b5012` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `a2a5096` (pre-own-commit).

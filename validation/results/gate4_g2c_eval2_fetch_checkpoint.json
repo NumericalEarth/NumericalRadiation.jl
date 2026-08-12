@@ -11,13 +11,24 @@
     "exact70_gate": "passed",
     "fetch_only": "passed",
     "headnode_refusal_guard": "passed",
+    "quota_aware_preflight": "passed",
+    "quota_guard_fixture_tests": "passed",
     "sbatch_written_not_submitted": "passed",
     "species_scope_correct": "passed"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "33b5012",
+    "generated_from_head": "a2a5096",
     "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "quota_guard_fixture_verdicts": {
+    "live_fixture_matches_independent_computation": true,
+    "malformed_refuses": true,
+    "missing_lfs_refuses": true,
+    "subtraction_passes_with_finalized_file": true,
+    "subtraction_refuses_on_empty_dest": true,
+    "sufficient_quota_passes": true,
+    "zero_hard_limit_refuses": true
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_eval2_fetch.sbatch",
   "scope": {
@@ -43,5 +54,5 @@
   },
   "source": "s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/evaluation2 (byte-verified ECPDS archive per archive_to_s3.log 2026-05-27; ECPDS live as fallback)",
   "status": "g2c_checkpoint_ready",
-  "timestamp_utc": "2026-08-12T07:46:26.929"
+  "timestamp_utc": "2026-08-12T08:16:07.518"
 }
