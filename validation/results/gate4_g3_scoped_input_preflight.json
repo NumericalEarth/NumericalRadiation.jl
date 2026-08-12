@@ -1,0 +1,262 @@
+{
+  "case": "gate4_g3_scoped_input_preflight",
+  "data_mode": "dry_run_input_manifest_only",
+  "disclaimer": "input manifest only; no optimizer, LBL, objective, floor, or recovery computation; nothing submitted.",
+  "executor_notes": [
+    "wrap optimize_lut with the H5open-preinit LD_PRELOAD shim (4098 mechanism)",
+    "config overrides: CKDMIP_DATA_DIR, WORK_DIR (LW work / SW work-v14), ECCKD_VERSION (1.2 LW / 1.4 SW), OPTIMIZE_LUT binary path, TRAINING_BOTH=yes",
+    "quota_guard-style headroom check before any output-writing stage"
+  ],
+  "failures": [],
+  "gates": {
+    "eval2_training_both_pair": "waiting",
+    "fp_shim_required_noted": "passed",
+    "lw_gpoints": "passed",
+    "lw_init": "passed",
+    "lw_optimize_binary": "passed",
+    "lw_training_fluxes_20": "passed",
+    "no_idealized_dependency": "passed",
+    "sw_gpoints_symlink": "passed",
+    "sw_init": "passed",
+    "sw_optimize_binary": "passed",
+    "sw_training_fluxes_16": "passed"
+  },
+  "inventory": [
+    {
+      "input": "LW raw init",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+      "present": true,
+      "sha256_matches": true
+    },
+    {
+      "input": "LW gpoints",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux rel-180",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux rel-280",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux rel-415",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux rel-560",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux rel-1120",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux rel-2240",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux present",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux ch4-350",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux ch4-700",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux ch4-1200",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux ch4-2600",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux ch4-3500",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux n2o-190",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux n2o-270",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux n2o-405",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux n2o-540",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux cfc11-0",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux cfc11-2000",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux cfc12-0",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
+      "present": true
+    },
+    {
+      "input": "LW flux cfc12-550",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
+      "present": true
+    },
+    {
+      "input": "v1.2 optimize_lut",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/optimize_lut",
+      "present": true
+    },
+    {
+      "input": "SW scaled init",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc",
+      "present": true,
+      "sha256_matches": true
+    },
+    {
+      "input": "SW gpoints v1.4 symlink",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5",
+      "present": true,
+      "resolves_to": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5"
+    },
+    {
+      "input": "SW rgb flux rel-180",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-180.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux rel-280",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-280.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux rel-415",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux rel-560",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-560.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux rel-1120",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-1120.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux rel-2240",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-2240.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux present",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux ch4-350",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux ch4-700",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux ch4-1200",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux ch4-2600",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux ch4-3500",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux n2o-190",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux n2o-270",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux n2o-405",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",
+      "present": true
+    },
+    {
+      "input": "SW rgb flux n2o-540",
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5",
+      "present": true
+    },
+    {
+      "input": "v1.4 optimize_lut",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut",
+      "present": true
+    },
+    {
+      "input": "eval2 LW rel-415 flux",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+      "present": false
+    },
+    {
+      "input": "eval2 SW rgb rel-415 flux (work-v14)",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+      "present": false
+    },
+    {
+      "input": "eval2 SW rgb rel-415 flux (work alt)",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+      "present": false
+    }
+  ],
+  "provenance": {
+    "branch": "glw/gate4-recovery",
+    "generated_from_head": "57fbd2c",
+    "provenance_note": "artifact generated from the working tree before its own commit"
+  },
+  "scope_rationale": "gates ONLY on inputs the pinned optimizer invocation actually reads (input=, gpointfile=, append_path training/work flux dirs) plus binaries and the FP-shim requirement; deliberately independent of idealized/ and the broad ckdmip_training_data_preflight layout, per the quota-recovery runbook's binding Path-D requirement",
+  "status": "g3_scoped_preflight_waiting_for_eval2",
+  "timestamp_utc": "2026-08-12T08:29:31.519"
+}
