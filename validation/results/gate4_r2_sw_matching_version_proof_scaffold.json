@@ -15,8 +15,10 @@
   "gates": {
     "attempt_history_verified": "passed",
     "expected_outcome_pre_registered": "passed",
+    "finding_ledger_structure_valid": "passed",
     "no_exec_in_this_unit": "passed",
     "option_b_promotion_of_v14_raw_verified": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "promotion_not_automatic": "passed",
     "r1_mapping_prerequisite": "passed",
     "r2_finding_ledger_verified": "passed",
@@ -84,11 +86,26 @@
       "ssi_still_absent": "R1 mapping hypothesis WRONG for the build path used; escalate as new finding"
     }
   },
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "attempts_shape_navigation": true,
+    "exact_green_captures": true,
+    "init_sw_sha_navigation": true,
+    "ledger_shape_navigation": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "null_non_object_fails": true,
+    "ob_promotion_reason_branches": true,
+    "promotion_scan_normalized": true,
+    "tampered_status_fails": true,
+    "try_sha_nonthrowing": true,
+    "wrong_case_fails": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "8d82fcb",
+    "generated_from_head": "1134bc1",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "status": "r2_scaffold_historical_executed",
-  "timestamp_utc": "2026-08-12T11:28:50.901"
+  "timestamp_utc": "2026-08-12T16:47:04.757"
 }

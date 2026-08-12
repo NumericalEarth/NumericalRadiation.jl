@@ -61,9 +61,218 @@ function execute_r2(; authorize::Symbol = :refused)
           "execution happens here on any path")
 end
 
+# fail-closed JSON normalizers (never a thrown MethodError on shape)
+rp_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
+rp_str(x) = x isa AbstractString ? String(x) : ""
+
+# nonthrowing hash for the OUTPUT boundary: a vanished/unreadable file
+# classifies as a failed gate with a reason, never a crash
+rp_try_sha(p) = try
+    # early missing-file return: deliberate missing-file fixtures never
+    # leak sha256sum stderr; the try still covers TOCTOU races
+    isfile(p) || return nothing
+    split(strip(read(`sha256sum $p`, String)))[1]
+catch
+    nothing
+end
+
+# shared guarded pinned-artifact loader (fixture-run on tmp files via
+# the absolute-path passthrough; the unit's SINGLE parsefile site,
+# serving all four artifact edges): FIVE stable, distinct refusal
+# classes with FIXED reasons -- missing; unparseable (parse failure);
+# parses to a non-object (JSON null/array/scalar); case mismatch; not
+# green (wrong status). Exact case is bound before the status check.
+function rp_parse_pinned(name, expected_case, expected_status)
+    path = isabspath(name) ? name : validation_results_path(name)
+    isfile(path) ||
+        return (false, "$expected_case missing", nothing)
+    raw = try
+        JSON.parsefile(path)
+    catch
+        return (false, "$expected_case unparseable (parse failure)",
+                nothing)
+    end
+    raw isa AbstractDict ||
+        return (false, "$expected_case parses to a non-object " *
+                       "(JSON null/array/scalar)", nothing)
+    c = rp_str(get(raw, "case", ""))
+    c == expected_case ||
+        return (false, "$expected_case case mismatch: " *
+                       (isempty(c) ? "(missing/non-string)" : c), raw)
+    s = rp_str(get(raw, "status", ""))
+    s == expected_status ||
+        return (false, "$expected_case not green: " *
+                       (isempty(s) ? "(missing/non-string)" : s), raw)
+    return (true, "ok", raw)
+end
+
+# PURE safe navigators used identically by production and fixtures (a
+# fixture can never pass while production drifts):
+# finding-ledger build/output shas -- shape deficiencies yield ""
+rp_finding_shas(fin) = (
+    rp_str(get(rp_obj(get(rp_obj(get(rp_obj(fin), "r2_run", nothing)),
+        "build_provenance", nothing)),
+        "create_look_up_table_sha256", nothing)),
+    rp_str(get(rp_obj(get(rp_obj(get(rp_obj(fin), "r2_run", nothing)),
+        "output", nothing)), "sha256", nothing)))
+
+# finding-ledger attempt strings -- shape deficiencies yield ""
+function rp_finding_attempts(fin)
+    att = rp_obj(get(rp_obj(get(rp_obj(fin), "r2_run", nothing)),
+                     "attempts", nothing))
+    return (rp_str(get(att, "attempt_1", "")),
+            rp_str(get(att, "attempt_2", "")),
+            rp_str(get(att, "attempt_3", "")))
+end
+
+# promoted-artifacts access + normalized sha membership: a non-vector
+# list never matches; non-dict entries normalize (never throw or
+# falsely match)
+rp_promoted_list(ob) = get(rp_obj(ob), "promoted_artifacts", nothing)
+function rp_has_promoted_sha(ob, sha)
+    arts = rp_promoted_list(ob)
+    return arts isa AbstractVector &&
+           any(rp_str(get(rp_obj(p), "sha256", "")) == sha for p in arts)
+end
+
+# precise Option-B promotion diagnostics (pure; fixture-run): a parse/
+# case/status failure already carries ob_why and adds NOTHING here (no
+# contradictory membership claim); a malformed finding sha means the
+# promotion CANNOT BE VERIFIED; only then are non-vector and
+# exact-sha-absence distinguished
+function rp_ob_promotion_reason(ob_ok0, ledger_shape_ok, arts, member)
+    ob_ok0 || return nothing
+    ledger_shape_ok ||
+        return "Option-B promotion cannot be verified: finding-ledger " *
+               "output sha missing/malformed"
+    arts isa AbstractVector ||
+        return "Option-B promoted_artifacts missing/non-vector"
+    member && return nothing
+    return "Option-B record does not list the v1.4 raw output among " *
+           "promoted artifacts"
+end
+
+# init-ledger SW acceptance sha (pure; fixture-run; same-helper
+# standard as the finding-ledger fields)
+rp_init_sw_sha(ip) = rp_str(get(rp_obj(get(rp_obj(get(rp_obj(ip),
+    "acceptance_inits", nothing)), "sw", nothing)), "sha256", ""))
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
+
+    # loader/navigator fixtures FIRST, through the SAME guarded code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] = begin
+        r = rp_parse_pinned(joinpath(tdir, "absent.json"), "c", "s")
+        !r[1] && r[2] == "c missing"
+    end
+    fpx = joinpath(tdir, "pa.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        r = rp_parse_pinned(fpx, "c", "s")
+        !r[1] && r[2] == "c unparseable (parse failure)"
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        r = rp_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        r = rp_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "{\"case\": \"other\", \"status\": \"s\"}")
+    lt["wrong_case_fails"] = begin
+        r = rp_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("case mismatch", r[2])
+    end
+    write(fpx, "{\"case\": \"c\", \"status\": \"totally_bogus\"}")
+    lt["tampered_status_fails"] = begin
+        r = rp_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("not green", r[2])
+    end
+    write(fpx, "{\"case\": \"c\", \"status\": \"s\"}")
+    lt["exact_green_captures"] = begin
+        r = rp_parse_pinned(fpx, "c", "s")
+        r[1] && r[2] == "ok" && r[3] isa AbstractDict
+    end
+    # finding-ledger deep-field navigation through the SAME production
+    # helpers: every shape deficiency yields empty strings (controlled
+    # failed gates), never a throw
+    lt["ledger_shape_navigation"] = begin
+        good = Dict("r2_run" => Dict(
+            "build_provenance" =>
+                Dict("create_look_up_table_sha256" => "a" ^ 64),
+            "output" => Dict("sha256" => "b" ^ 64)))
+        rp_finding_shas(good) == ("a" ^ 64, "b" ^ 64) &&
+            rp_finding_shas(Dict{String, Any}()) == ("", "") &&
+            rp_finding_shas(Dict("r2_run" => "x")) == ("", "") &&
+            rp_finding_shas(Dict("r2_run" => Dict("output" =>
+                Dict("sha256" => 5)))) == ("", "") &&
+            rp_finding_shas(nothing) == ("", "")
+    end
+    lt["attempts_shape_navigation"] = begin
+        good = Dict("r2_run" => Dict("attempts" => Dict(
+            "attempt_1" => "j1", "attempt_2" => "j2",
+            "attempt_3" => "j3")))
+        rp_finding_attempts(good) == ("j1", "j2", "j3") &&
+            rp_finding_attempts(Dict{String, Any}()) == ("", "", "") &&
+            rp_finding_attempts(Dict("r2_run" =>
+                Dict("attempts" => "x"))) == ("", "", "") &&
+            rp_finding_attempts(Dict("r2_run" => Dict("attempts" =>
+                Dict("attempt_1" => 7)))) == ("", "", "")
+    end
+    # promoted-artifacts scan through the SAME production helper:
+    # non-vector refuses; non-dict entries normalize (never throw or
+    # falsely match); exact sha matches
+    lt["promotion_scan_normalized"] = begin
+        mko(arts) = Dict("promoted_artifacts" => arts)
+        rp_has_promoted_sha(mko([Dict("sha256" => "c" ^ 64)]), "c" ^ 64) &&
+            !rp_has_promoted_sha(mko("not-a-vector"), "c" ^ 64) &&
+            !rp_has_promoted_sha(Dict{String, Any}(), "c" ^ 64) &&
+            !rp_has_promoted_sha(mko([1, "x",
+                Dict("sha256" => "d" ^ 64)]), "c" ^ 64) &&
+            rp_has_promoted_sha(mko([1, Dict("sha256" => "c" ^ 64)]),
+                                "c" ^ 64)
+    end
+    # Option-B diagnostic branches through the SAME pure helper: a
+    # classification failure adds nothing; malformed sha says cannot be
+    # verified; non-vector and exact-absence stay distinct
+    lt["ob_promotion_reason_branches"] = begin
+        rp_ob_promotion_reason(false, false, "x", false) === nothing &&
+            occursin("cannot be verified",
+                     rp_ob_promotion_reason(true, false, "x", false)) &&
+            occursin("missing/non-vector",
+                     rp_ob_promotion_reason(true, true, "x", false)) &&
+            occursin("does not list",
+                     rp_ob_promotion_reason(true, true, Any[], false)) &&
+            rp_ob_promotion_reason(true, true, Any[], true) === nothing
+    end
+    # init-ledger SW sha through the SAME pure helper: missing/wrong
+    # nested containers and a non-string sha all yield ""
+    lt["init_sw_sha_navigation"] = begin
+        good = Dict("acceptance_inits" =>
+                    Dict("sw" => Dict("sha256" => "e" ^ 64)))
+        rp_init_sw_sha(good) == "e" ^ 64 &&
+            rp_init_sw_sha(Dict{String, Any}()) == "" &&
+            rp_init_sw_sha(Dict("acceptance_inits" => "x")) == "" &&
+            rp_init_sw_sha(Dict("acceptance_inits" =>
+                Dict("sw" => "y"))) == "" &&
+            rp_init_sw_sha(Dict("acceptance_inits" =>
+                Dict("sw" => Dict("sha256" => 5)))) == "" &&
+            rp_init_sw_sha(nothing) == ""
+    end
+    lt["try_sha_nonthrowing"] =
+        rp_try_sha(joinpath(tdir, "gone.bin")) === nothing &&
+        rp_try_sha(fpx) isa AbstractString
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
 
     plan = Dict(
         "objective" => "SW-only matching-version proof: does a v1.4 " *
@@ -153,12 +362,16 @@ function main()
     # --- gates ------------------------------------------------------------
     cand_ok = isfile(SW_CANDIDATE)
     sha_ok = cand_ok &&
-        split(strip(read(`sha256sum $SW_CANDIDATE`, String)))[1] == SW_CANDIDATE_SHA
+        rp_try_sha(SW_CANDIDATE) == SW_CANDIDATE_SHA
     gates["sw_candidate_present_hash_pinned"] = sha_ok ? "passed" : "failed"
-    sha_ok || push!(fails, "SW candidate missing or hash-mismatched")
-    r1 = JSON.parsefile(validation_results_path("gate4_r1_release_provenance_probe.json"))
-    gates["r1_mapping_prerequisite"] =
-        r1["status"] == "r1_sw_mapping_found_lw_ambiguous" ? "passed" : "failed"
+    sha_ok || push!(fails, "SW candidate missing, unreadable, or " *
+                           "hash-mismatched")
+    r1_ok, r1_why, _ = rp_parse_pinned(
+        validation_results_path("gate4_r1_release_provenance_probe.json"),
+        "gate4_r1_release_provenance_probe",
+        "r1_sw_mapping_found_lw_ambiguous")
+    gates["r1_mapping_prerequisite"] = r1_ok ? "passed" : "failed"
+    r1_ok || push!(fails, r1_why)
 
     # POST-EXECUTION: the quarantined v1.4 tree exists -> read-only
     # historical verification against the R2 finding ledger (never a
@@ -167,12 +380,13 @@ function main()
     historical = ispath(V14_TREE)
     executed = Dict{String, Any}()
     if historical
-        fin = JSON.parsefile(validation_results_path("gate4_r2_finding_ledger.json"))
-        fin_ok = get(fin, "case", "") == "gate4_r2_finding_ledger" &&
-                 fin["status"] == "r2_ssi_resolved_drift_version_independent"
+        fin_ok, fin_why, fin = rp_parse_pinned(
+            validation_results_path("gate4_r2_finding_ledger.json"),
+            "gate4_r2_finding_ledger",
+            "r2_ssi_resolved_drift_version_independent")
         gates["r2_finding_ledger_verified"] = fin_ok ? "passed" : "failed"
-        fin_ok || push!(fails, "R2 finding ledger missing/wrong: " *
-                               "$(get(fin, "status", "?"))")
+        fin_ok || push!(fails, fin_why)
+        fin_obj = rp_obj(fin)
         tree_commit = try
             strip(read(`git -C $V14_TREE rev-parse HEAD`, String))
         catch; "unreadable" end
@@ -180,32 +394,46 @@ function main()
             tree_commit == V14_COMMIT ? "passed" : "failed"
         tree_commit == V14_COMMIT ||
             push!(fails, "v1.4 tree HEAD $tree_commit != $V14_COMMIT")
-        exp_bin = fin["r2_run"]["build_provenance"]["create_look_up_table_sha256"]
+        # ledger deep fields via the SAME pure navigators the fixtures
+        # exercise: shape deficiencies are failed gates with reasons,
+        # never a deep-index throw
+        exp_bin, exp_out = rp_finding_shas(fin)
+        ledger_shape_ok = occursin(r"^[0-9a-f]{64}$", exp_bin) &&
+                          occursin(r"^[0-9a-f]{64}$", exp_out)
+        gates["finding_ledger_structure_valid"] =
+            ledger_shape_ok ? "passed" : "failed"
+        ledger_shape_ok || push!(fails, "finding ledger r2_run build/" *
+            "output sha fields missing or malformed (safe navigation)")
         bin_path = "$V14_TREE/src/ecckd/create_look_up_table"
-        bin_ok = isfile(bin_path) &&
-            split(strip(read(`sha256sum $bin_path`, String)))[1] == exp_bin
+        bin_ok = ledger_shape_ok && rp_try_sha(bin_path) == exp_bin
         gates["v14_binary_matches_finding_ledger"] = bin_ok ? "passed" : "failed"
-        bin_ok || push!(fails, "v1.4 built binary missing or != ledger sha")
-        exp_out = fin["r2_run"]["output"]["sha256"]
+        bin_ok || push!(fails, "v1.4 built binary missing, unreadable, " *
+                               "or != ledger sha")
         out_path = "$G4WORK/work-v14/sw_raw-ckd-definition/" *
                    "ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc"
-        out_ok = isfile(out_path) &&
-            split(strip(read(`sha256sum $out_path`, String)))[1] == exp_out
+        out_ok = ledger_shape_ok && rp_try_sha(out_path) == exp_out
         gates["v14_output_matches_finding_ledger"] = out_ok ? "passed" : "failed"
-        out_ok || push!(fails, "v1.4 raw output missing or != ledger sha")
-        ob = JSON.parsefile(
-            validation_results_path("gate4_option_b_decision_record.json"))
-        ob_ok = get(ob, "status", "") == "option_b_adopted_candidates_promoted" &&
-                any(get(p, "sha256", "") == exp_out
-                    for p in get(ob, "promoted_artifacts", Any[]))
+        out_ok || push!(fails, "v1.4 raw output missing, unreadable, " *
+                               "or != ledger sha")
+        ob_ok0, ob_why, ob = rp_parse_pinned(
+            validation_results_path("gate4_option_b_decision_record.json"),
+            "gate4_option_b_decision_record",
+            "option_b_adopted_candidates_promoted")
+        ob_ok0 || push!(fails, ob_why)
+        # promotion scan and PRECISE diagnostics through the SAME pure
+        # helpers the fixtures exercise: non-dict entries normalize and
+        # can neither throw nor falsely match; a classification failure
+        # never appends a contradictory membership claim
+        arts = rp_promoted_list(ob)
+        member = rp_has_promoted_sha(ob, exp_out)
+        ob_ok = ob_ok0 && ledger_shape_ok && member
         gates["option_b_promotion_of_v14_raw_verified"] = ob_ok ? "passed" : "failed"
-        ob_ok || push!(fails, "Option-B record does not list the v1.4 raw " *
-                              "output among promoted artifacts")
-        # attempt history VERIFIED from the finding ledger, never hardcoded
-        att = get(fin["r2_run"], "attempts", Dict{String, Any}())
-        a1 = String(get(att, "attempt_1", ""))
-        a2 = String(get(att, "attempt_2", ""))
-        a3 = String(get(att, "attempt_3", ""))
+        ob_reason = rp_ob_promotion_reason(ob_ok0, ledger_shape_ok,
+                                           arts, member)
+        ob_reason === nothing || push!(fails, ob_reason)
+        # attempt history VERIFIED from the finding ledger through the
+        # SAME pure navigator, never hardcoded
+        a1, a2, a3 = rp_finding_attempts(fin)
         attempts_ok = occursin("4094", a1) && occursin("FAILED", a1) &&
                       occursin("4095", a2) && occursin("FAILED", a2) &&
                       occursin("4096", a3) && occursin("COMPLETED", a3) &&
@@ -215,18 +443,18 @@ function main()
             "carry 4094 FAILED / 4095 FAILED / 4096 COMPLETED rc=0")
         # later job-4099 scaled-SW claim VERIFIED against the init
         # provenance ledger + live file hash, never hardcoded
-        ip = JSON.parsefile(
-            validation_results_path("gate4_init_provenance_ledger.json"))
-        exp_scaled = String(get(get(get(ip, "acceptance_inits",
-            Dict{String, Any}()), "sw", Dict{String, Any}()), "sha256", ""))
+        ip_ok, ip_why, ip = rp_parse_pinned(
+            validation_results_path("gate4_init_provenance_ledger.json"),
+            "gate4_init_provenance_ledger",
+            "acceptance_inits_complete")
+        ip_ok || push!(fails, ip_why)
+        exp_scaled = rp_init_sw_sha(ip)
         sw_init_path = "$G4WORK/work-v14/sw_raw-ckd-definition/" *
             "ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc"
-        scaled_ok = get(ip, "case", "") == "gate4_init_provenance_ledger" &&
-            get(ip, "status", "") == "acceptance_inits_complete" &&
+        scaled_ok = ip_ok &&
             occursin(r"^[0-9a-f]{64}$", exp_scaled) &&
             startswith(exp_scaled, "74d8be65") &&
-            isfile(sw_init_path) &&
-            split(strip(read(`sha256sum $sw_init_path`, String)))[1] == exp_scaled
+            rp_try_sha(sw_init_path) == exp_scaled
         gates["scaled_sw_init_4099_verified"] = scaled_ok ? "passed" : "failed"
         scaled_ok || push!(fails, "job-4099 scaled SW init claim failed " *
             "verification (init ledger status/sha or live file hash)")
@@ -235,16 +463,16 @@ function main()
             # rendered summary DERIVED from the verified ledger fields
             "jobs" => "$a1; $a2; $a3",
             "outcome_verified" => "finding ledger status " *
-                "$(fin["status"]): SSI PRESENT + elementwise EXACT " *
-                "(absence resolved as version skew); residual drift " *
-                "version-independent",
+                "$(rp_str(get(fin_obj, "status", "?"))): SSI PRESENT + " *
+                "elementwise EXACT (absence resolved as version skew); " *
+                "residual drift version-independent",
             "v14_binary_sha256" => exp_bin,
             "v14_raw_output_sha256" => exp_out,
             "later_disposition" => "v1.4 raw promoted under Option B as " *
                 "the accepted pre-scale SW artifact; scaled SW acceptance " *
                 "init verified against gate4_init_provenance_ledger " *
-                "($(get(ip, "status", "?"))) and the live file: " *
-                "$exp_scaled")
+                "($(rp_str(get(rp_obj(ip), "status", "?")))) and the " *
+                "live file: $exp_scaled")
     else
         gates["v14_tree_not_yet_created"] = !ispath(V14_TREE) ? "passed" : "failed"
     end
@@ -285,6 +513,7 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "authorization_token_required" => "r2_matching_version_go " *
             "(historical: authorization was given and consumed)",
         "plan" => plan,

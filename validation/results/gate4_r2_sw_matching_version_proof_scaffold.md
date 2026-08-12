@@ -10,8 +10,10 @@ HISTORICAL post-execution record: the plan below was executed (Greg-authorized) 
 |---|---|
 | attempt_history_verified | passed |
 | expected_outcome_pre_registered | passed |
+| finding_ledger_structure_valid | passed |
 | no_exec_in_this_unit | passed |
 | option_b_promotion_of_v14_raw_verified | passed |
+| prerequisite_loader_fixture_tests | passed |
 | promotion_not_automatic | passed |
 | r1_mapping_prerequisite | passed |
 | r2_finding_ledger_verified | passed |
@@ -45,4 +47,4 @@ Authorization token at plan time (consumed): `r2_matching_version_go`
 
 Guardrails: this scaffold executes NOTHING (gated below); executor requires authorize=:r2_matching_version_go; quarantined v1.4 tree + separate work-v14 subtree; pinned v1.2 workcopy, its binaries, and the 4091 proof outputs are never modified; no floor/objective/acceptance/init-generation promotion regardless of outcome; promotion remains Greg's rule decision.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `8d82fcb` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `1134bc1` (pre-own-commit).
