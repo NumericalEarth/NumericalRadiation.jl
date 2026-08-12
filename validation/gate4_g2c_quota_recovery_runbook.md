@@ -22,10 +22,13 @@ authorization of the chosen path. Written after job 4440
 
 1. **Admin action (Greg / cluster admin):** raise the uid limits, e.g.
    ```
-   sudo lfs setquota -u greg --block-softlimit 1288490189k --block-hardlimit 1395864371k /shared
+   sudo lfs setquota -u greg -b 1288490189 -B 1395864371 /shared
    ```
-   (soft 1.2 TiB stops the running grace clock; hard 1.3 TiB gives the
-   fetch need + rayleigh/G2d/G3 outputs + margin.)
+   (ADMIN-ONLY, ILLUSTRATIVE: short options `-b`/`-B` per the installed
+   `lfs setquota --help`; values are KiB block limits — soft 1.2 TiB stops
+   the running grace clock, hard 1.3 TiB covers the fetch need +
+   rayleigh/G2d/G3 outputs + margin. The admin must confirm site policy
+   and unit conventions before running.)
 2. **Revalidate (read-only):**
    ```
    lfs quota -h -u greg /shared
@@ -53,17 +56,20 @@ source is ECPDS, but with no verified same-cloud copy it must be
 preserved, not deleted).
 
 Restore source (verified live, exact): `s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/idealized/`
-— all 66 relative names and sizes match local byte-for-size, 0
-mismatches (independent checks by assistant and monitor, 2026-08-12).
+— exact 66-name + Size metadata match (live S3 listing vs local stat),
+0 mismatches (independent checks by assistant and monitor, 2026-08-12).
+This is a name+size identity, NOT a checksum verification: S3 multipart
+ETags are not content hashes.
 
 Dependency proof (recorded):
 - G2d's generated sbatch: zero `idealized` references.
 - Pinned `optimize_lut_{lw,sw}.sh` and `run_{lw,sw}_lbl_evaluation.sh`:
   zero `IDEALIZED` references — the optimizer consumes the accepted WORK
   init/gpoints and TRAINING/WORK flux dirs only.
-- idealized spectra fed only the COMPLETED find_g_points/create_lut/
-  scale_lut stages (candidates, raw inits, and scaled init all exist,
-  hash-pinned).
+- idealized spectra fed only the COMPLETED create_lut init/proof stages
+  (jobs 4091/4096 via the create_lut append_path; outputs exist,
+  hash-pinned). A2 find_g_points consumed MMM+reordered spectra, and the
+  pinned scale_lut has no IDEALIZED reference.
 - CAVEAT for the G3 executor: the historical broad
   `ckdmip_training_data_preflight` requires idealized directories to
   exist and would report red after this cleanup. The G3 executor MUST
@@ -73,8 +79,10 @@ Dependency proof (recorded):
 
 Dry-run verification BEFORE any deletion (read-only):
 ```
-ls /shared/home/greg/data/ckdmip/idealized/lw_spectra | wc -l   # 33 entries
-ls /shared/home/greg/data/ckdmip/idealized/sw_spectra | wc -l   # 33 entries
+find /shared/home/greg/data/ckdmip/idealized/lw_spectra -maxdepth 1 -type f | wc -l  # 33 (32 .h5 + hidden .ecpds_mkdir.txt)
+find /shared/home/greg/data/ckdmip/idealized/sw_spectra -maxdepth 1 -type f | wc -l  # 33 (32 .h5 + hidden .ecpds_mkdir.txt)
+ls /shared/home/greg/data/ckdmip/idealized/lw_spectra/*.h5 | wc -l  # 32
+ls /shared/home/greg/data/ckdmip/idealized/sw_spectra/*.h5 | wc -l  # 32
 du -sb /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra}
 aws s3 ls s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/idealized/lw_spectra/ --summarize | tail -2
 aws s3 ls s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/idealized/sw_spectra/ --summarize | tail -2
