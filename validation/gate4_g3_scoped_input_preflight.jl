@@ -35,6 +35,7 @@ const LW_GPTS = "$G4WORK/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.
 const LW_GPTS_SHA = "c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e"
 const SW_GPTS_V14 = "$G4WORK/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5"
 const SW_GPTS_SHA = "13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57"
+const SW_GPTS_TARGET = "$G4WORK/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5"
 const V12_BIN_SHA = "6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692"
 const V14_BIN_SHA = "101e41ed77c83c81c138494a2b950bbffd12caad27b0c64028666550d7c30d65"
 const SHIM_SO = "$G4WORK/tools/h5open_before_traps.so"
@@ -65,17 +66,20 @@ function main()
     gates = Dict{String, String}()
     inv = Any[]
 
-    check(label, path; sha=nothing, waiting=false) = begin
+    check(label, path; sha=nothing, waiting=false, exec=false) = begin
         present = isfile(path) && filesize(path) > 0
         sha_ok = present && sha !== nothing ? (sha256(path) == sha) : nothing
+        exec_ok = exec ? (present && Sys.isexecutable(path)) : nothing
         push!(inv, Dict("input" => label, "path" => path,
             "present" => present,
-            (sha === nothing ? () : ("sha256_matches" => sha_ok,))...))
+            (sha === nothing ? () : ("sha256_matches" => sha_ok,))...,
+            (exec ? ("executable" => exec_ok,) : ())...))
         if waiting
             present   # informational; drives waiting status not failure
         else
-            ok = present && (sha === nothing || sha_ok === true)
-            ok || push!(fails, "missing/mismatched: $label")
+            ok = present && (sha === nothing || sha_ok === true) &&
+                 (!exec || exec_ok === true)
+            ok || push!(fails, "missing/mismatched/not-executable: $label")
             ok
         end
     end
@@ -88,24 +92,30 @@ function main()
         for s in LW_TRAIN]
     lw_train_ok = all(lw_train_bools)
     gates["lw_training_fluxes_20"] = lw_train_ok ? "passed" : "failed"
-    gates["lw_optimize_binary"] = check("v1.2 optimize_lut", V12_BIN; sha=V12_BIN_SHA) ? "passed" : "failed"
+    gates["lw_optimize_binary"] = check("v1.2 optimize_lut", V12_BIN; sha=V12_BIN_SHA, exec=true) ? "passed" : "failed"
 
     # --- SW actual inputs ---
     gates["sw_init"] = check("SW scaled init", SW_INIT; sha=SW_INIT_SHA) ? "passed" : "failed"
-    sw_gpts_ok = islink(SW_GPTS_V14) && isfile(realpath(SW_GPTS_V14)) &&
-                 sha256(realpath(SW_GPTS_V14)) == SW_GPTS_SHA
+    sw_resolved = try
+        islink(SW_GPTS_V14) ? realpath(SW_GPTS_V14) : nothing
+    catch; nothing end   # realpath throws on a dangling link: fail-closed
+    sw_gpts_ok = sw_resolved !== nothing && isfile(sw_resolved) &&
+                 sw_resolved == SW_GPTS_TARGET &&
+                 sha256(sw_resolved) == SW_GPTS_SHA
     push!(inv, Dict("input" => "SW gpoints v1.4 symlink", "path" => SW_GPTS_V14,
         "present" => sw_gpts_ok,
-        "resolves_to" => islink(SW_GPTS_V14) ? realpath(SW_GPTS_V14) : "BROKEN",
+        "resolves_to" => sw_resolved === nothing ? "BROKEN/DANGLING" : sw_resolved,
+        "resolved_path_equals_accepted_candidate" =>
+            sw_resolved == SW_GPTS_TARGET,
         "resolved_target_sha256_matches" => sw_gpts_ok))
     gates["sw_gpoints_symlink"] = sw_gpts_ok ? "passed" : "failed"
-    sw_gpts_ok || push!(fails, "SW gpoints symlink missing/broken/hash-mismatch")
+    sw_gpts_ok || push!(fails, "SW gpoints symlink missing/dangling/wrong-target/hash-mismatch")
     sw_train_bools = [check("SW rgb flux $s",
         joinpath(CKDMIP_ROOT, "evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_$s.h5"))
         for s in SW_TRAIN]
     sw_train_ok = all(sw_train_bools)
     gates["sw_training_fluxes_16"] = sw_train_ok ? "passed" : "failed"
-    gates["sw_optimize_binary"] = check("v1.4 optimize_lut", V14_BIN; sha=V14_BIN_SHA) ? "passed" : "failed"
+    gates["sw_optimize_binary"] = check("v1.4 optimize_lut", V14_BIN; sha=V14_BIN_SHA, exec=true) ? "passed" : "failed"
 
     # --- eval2 TRAINING_BOTH pair (post-G2c/G2d; waiting, not failing) ---
     lw_e2 = check("eval2 LW rel-415 flux", LW_EVAL2; waiting=true)

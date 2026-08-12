@@ -23,4 +23,4 @@ Inventory: 43/46 inputs present (missing items are the eval2 rel-415 pair pendin
 
 Scope: gates ONLY on inputs the pinned optimizer invocation actually reads (input=, gpointfile=, append_path training/work flux dirs) plus binaries and the FP-shim requirement; deliberately independent of idealized/ and the broad ckdmip_training_data_preflight layout, per the quota-recovery runbook's binding Path-D requirement
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `c994426` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `507794f` (pre-own-commit).
