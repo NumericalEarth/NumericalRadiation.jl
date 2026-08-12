@@ -49,6 +49,8 @@ decision record; promotes the named artifacts to acceptance inits under the amen
   - builder: A2 job 4082 (find_g_points unchanged v1.2..23adaca)
   - caveat: none: candidate-derived structure verified bit-exact
 
-Next: init generation: scale_lut_sw applied to the promoted SW raw (per gate4_init_generation_manifest: LBL direct-only mu0=0.5 albedo 0.15 reference); G2/G3 optimizer recovery runs from the promoted inits (acceptance metrics unchanged: final/target <= 1.05, weight L1 <= 0.02, OD log-RMSE <= 0.02)
+Completed since this decision: scale_lut_sw applied to the promoted SW raw as job 4099 (under the H5open-preinit shim; per gate4_init_generation_manifest: LBL direct-only mu0=0.5 albedo 0.15 reference) -> promoted SW scaled init sha256 74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74; the exact execution inputs -- accepted LW raw init + promoted SW scaled init + g-point files -- sha-pinned by gate4_g3_scoped_input_preflight.jl (the pre-scale SW raw is recorded here but is not an execution input and is not preflight-pinned); G3 executor checkpoint chain landed (token g3_recovery_go, human sbatch submission)
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `fd74174` (pre-own-commit).
+Next: G3 optimizer recovery runs from the promoted inits, blocked on the evaluation2 rel-415 fetch (G2c/G2d) pending the quota resolution; acceptance = the FIVE canonical thresholds (not three): final/target objective ratio <= 1.05 (Gate-1 runner implemented, refusing pending recovered outputs + reviewed run ledger); weight rel-L1 <= 0.02 (acceptance unit); true OD log-RMSE <= 0.02 (binding runner pending dataset/aggregation rulings); forcing regression margin <= 0.03 W/m2 and heating-RMSE regression margin <= 0.005 K/day (aggregation semantics pending ruling; see gate4_regression_margin_semantics_evidence.md)
+
+Provenance: branch `glw/gate4-recovery`, generated_from_head `935c583` (pre-own-commit).
