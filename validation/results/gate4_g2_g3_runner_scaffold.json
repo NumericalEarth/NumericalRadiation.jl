@@ -7,11 +7,14 @@
   "dry_run_refusal": "execute_g2_g3 errors on EVERY path (superseded); the scaffold never computes objective or floor values",
   "failures": [],
   "gates": {
+    "covariance_stride_prerequisite": "passed",
     "derived_products_enumerated": "passed",
     "lw_base_init_raw_ckd": "passed",
     "minor_pass_relative_to_rel415": "passed",
     "no_external_sw_4angle_products": "passed",
     "outcode_chain_continuous": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
+    "stage_config_prerequisite": "passed",
     "support_excluded_from_trainable": "passed",
     "sw_base_init_scaled_ckd": "passed"
   },
@@ -423,9 +426,22 @@
       ]
     ]
   },
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "blocked_never_invokes_builder": true,
+    "exact_green_passes_and_captures": true,
+    "green_invokes_builder_once": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "null_non_object_fails": true,
+    "throwing_builder_caught_as_build_failed": true,
+    "unexpected_state_never_invokes_builder": true,
+    "wrong_case_fails": true,
+    "wrong_status_fails": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "38c5788",
+    "generated_from_head": "2f84829",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "sources": [
       "gate4_stage_config_audit.json",
@@ -435,5 +451,5 @@
   },
   "status": "runner_scaffold_ready_historical_superseded",
   "superseded_by": "gate4_g3_scoped_input_preflight.jl + gate4_g3_executor_checkpoint.jl (token g3_recovery_go, human sbatch submission) + the G2a-G2d training-flux chain; the previously advertised execute_g2_g3 future command is WITHDRAWN -- that entrypoint is retired (intentionally unimplemented, refuses on every path) and the broad ckdmip_training_data_preflight gating was replaced by the scoped preflight",
-  "timestamp_utc": "2026-08-12T10:52:11.668"
+  "timestamp_utc": "2026-08-12T15:34:08.314"
 }

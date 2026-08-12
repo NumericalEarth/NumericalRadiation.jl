@@ -3,7 +3,7 @@
   "census": {
     "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each parsefile ledger record matched EXACTLY once; union(served IDs) must equal the manifest. Consumers that deliberately use a coupled BYTE-snapshot parse (one read supplies digest AND content, closing the hash-vs-parse TOCTOU) -- currently the rulings intake (ric_snapshot) and the post-cleanup input census (pcc_snapshot) -- are NOT parsefile sites: each such helper is carried as a declared-snapshot-extension ledger record whose anchor reconciliation binds directly against the consumer source (and which must never match a live parsefile site). n_sites therefore counts live JSON.parsefile sites only; the extensions are counted separately in n_declared_snapshot_extensions.",
     "n_declared_snapshot_extensions": 2,
-    "n_sites": 31,
+    "n_sites": 30,
     "site_ledger": [
       {
         "anchor": "JSON.parsefile(validation_results_path(name))",
@@ -128,22 +128,14 @@
         "reason": "decision-map emission; gating lives in manifest_fingerprint"
       },
       {
-        "anchor": "cfg = JSON.parsefile(validation_results_path(\"gate4_stage_config_audit.json\"))",
+        "anchor": "JSON.parsefile(path)",
         "class": "edge",
         "edge_ids": [
-          "dep:g2_g3_runner_scaffold<-stage_config_audit"
-        ],
-        "file": "gate4_g2_g3_runner_scaffold.jl",
-        "reason": "stage-config prerequisite parse"
-      },
-      {
-        "anchor": "stride = JSON.parsefile(validation_results_path(\"gate4_covariance_stride_audit.json\"))",
-        "class": "edge",
-        "edge_ids": [
+          "dep:g2_g3_runner_scaffold<-stage_config_audit",
           "dep:g2_g3_runner_scaffold<-covariance_stride_audit"
         ],
         "file": "gate4_g2_g3_runner_scaffold.jl",
-        "reason": "covariance-stride prerequisite parse"
+        "reason": "classify_green_audit guarded-loader body (exact-case prerequisite binding; serves both prerequisite edges + tmp loader fixtures)"
       },
       {
         "anchor": "init = JSON.parsefile(validation_results_path(\"gate4_init_provenance_ledger.json\"))",
@@ -379,13 +371,8 @@
       },
       {
         "file": "gate4_g2_g3_runner_scaffold.jl",
-        "line": 63,
-        "text": "cfg = JSON.parsefile(validation_results_path(\"gate4_stage_config_audit.json\"))"
-      },
-      {
-        "file": "gate4_g2_g3_runner_scaffold.jl",
-        "line": 64,
-        "text": "stride = JSON.parsefile(validation_results_path(\"gate4_covariance_stride_audit.json\"))"
+        "line": 71,
+        "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_g2a_sw_rgb_flux_checkpoint.jl",
@@ -697,7 +684,7 @@
         "id": "dep:init_generation_manifest<-g2_g3_runner_scaffold",
         "kind": "prefix",
         "producer_case": "gate4_g2_g3_runner_scaffold",
-        "producer_sha256": "96206d6d93ebd9db4d052740ba2e3870820107fa59ff2eceba464572ccac8136",
+        "producer_sha256": "0a3d14c7f9db6adab925ea4ff35ccdcf529fda3d7f864164bae7a83deadbadc6",
         "producer_status": "runner_scaffold_ready_historical_superseded",
         "status_only_contract": true,
         "verdict": "satisfied"
@@ -705,27 +692,27 @@
       {
         "active": true,
         "consumer": "gate4_g2_g3_runner_scaffold.jl",
-        "consumer_sha256": "e3adc40a1b214c682021353bf5f4e0279b637895345a1bd2ff4b73deee57a757",
+        "consumer_sha256": "f97e8b8a445ec045cbea0f928b1e30d495a3b45390024411d9425604e2140558",
         "detail": "contract satisfied",
         "id": "dep:g2_g3_runner_scaffold<-stage_config_audit",
         "kind": "exact",
         "producer_case": "gate4_stage_config_audit",
         "producer_sha256": "91d232701ebbe40a5d8af12e16cf009077f961437a195fc9137ab0298f7ced9b",
         "producer_status": "stage_config_audit_passed",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
         "active": true,
         "consumer": "gate4_g2_g3_runner_scaffold.jl",
-        "consumer_sha256": "e3adc40a1b214c682021353bf5f4e0279b637895345a1bd2ff4b73deee57a757",
+        "consumer_sha256": "f97e8b8a445ec045cbea0f928b1e30d495a3b45390024411d9425604e2140558",
         "detail": "contract satisfied",
         "id": "dep:g2_g3_runner_scaffold<-covariance_stride_audit",
         "kind": "exact",
         "producer_case": "gate4_covariance_stride_audit",
         "producer_sha256": "26a37633d6eaf629f1cff952476420c3135f1af4b1f5179b86f6fa1b331cba8a",
         "producer_status": "covariance_stride_audit_passed",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
@@ -1059,14 +1046,6 @@
     },
     {
       "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:g2_g3_runner_scaffold<-stage_config_audit"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:g2_g3_runner_scaffold<-covariance_stride_audit"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
       "id": "dep:g2a_checkpoint<-init_provenance_ledger"
     },
     {
@@ -1093,7 +1072,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "5d2b194",
+    "generated_from_head": "2f84829",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1105,5 +1084,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T15:21:08.094"
+  "timestamp_utc": "2026-08-12T15:34:38.803"
 }

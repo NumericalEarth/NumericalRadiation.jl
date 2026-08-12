@@ -10,11 +10,14 @@ HISTORICAL/SUPERSEDED dry-run manifest; no floor, objective-value, or recovery c
 
 | Gate | Result |
 |---|---|
+| covariance_stride_prerequisite | passed |
 | derived_products_enumerated | passed |
 | lw_base_init_raw_ckd | passed |
 | minor_pass_relative_to_rel415 | passed |
 | no_external_sw_4angle_products | passed |
 | outcode_chain_continuous | passed |
+| prerequisite_loader_fixture_tests | passed |
+| stage_config_prerequisite | passed |
 | support_excluded_from_trainable | passed |
 | sw_base_init_scaled_ckd | passed |
 
@@ -33,4 +36,4 @@ HISTORICAL/SUPERSEDED dry-run manifest; no floor, objective-value, or recovery c
 
 Derived products present: 18 / 18
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `38c5788` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `2f84829` (pre-own-commit).

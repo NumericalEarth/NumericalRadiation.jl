@@ -56,17 +56,176 @@ function execute_g2_g3(manifest; authorize::Symbol = :refused)
           "and superseded.")
 end
 
+# guarded GREEN-audit prerequisite loader (fixture-run on tmp files):
+# returns (ok, reason, captured object). A missing, unparseable (parse
+# failure), parsed-non-object (JSON null/array DISTINGUISHED from parse
+# failure), WRONG-CASE, or wrong-status artifact classifies fail-closed
+# with a stable reason and data=nothing -- never an uncaught exception,
+# never status-only trust: the exact case is bound before the status
+# comparison, and only an exact-green object is captured for downstream.
+function classify_green_audit(path, expected_case, expected_status)
+    isfile(path) ||
+        return (false, "prerequisite artifact missing: $path", nothing)
+    parse_failed = false
+    d = try
+        JSON.parsefile(path)
+    catch
+        parse_failed = true
+        nothing
+    end
+    parse_failed && return (false,
+        "prerequisite artifact unparseable (parse failure): $path",
+        nothing)
+    d isa AbstractDict || return (false,
+        "prerequisite artifact parses to a non-object " *
+        "(JSON null/array/scalar): $path", nothing)
+    c = get(d, "case", "")
+    (c isa AbstractString && c == expected_case) || return (false,
+        "prerequisite case mismatch: $(repr(c)) != $expected_case",
+        nothing)
+    s = get(d, "status", "")
+    s == expected_status || return (false,
+        "$expected_case not green: $(repr(s))", nothing)
+    return (true, "ok", d)
+end
+
+# downstream manifest building runs only behind this FAIL-CLOSED
+# ALLOWLIST BOUNDARY on the classified prerequisite state, and the
+# boundary also CATCHES builder exceptions: exact case+status is not
+# structural schema validation, so an exact-green object missing cfg
+# order/pass maps or stride.stats (or a failing pinned-script read)
+# would still throw inside the builder -- that is caught and returned
+# as a structured build_failed with a stable bounded reason, never an
+# escaping exception. The builder stays UNINVOKED for classifier-
+# invalid/unknown states; it may be invoked and caught for
+# schema/build failures. (Fixture-proven via injected counting and
+# throwing builders.)
+rs_should_build(prereq_state) = prereq_state == "green"
+function rs_build(buildfn, prereq_state)
+    rs_should_build(prereq_state) ||
+        return (outcome = :blocked, value = nothing, reason = "")
+    value = try
+        buildfn()
+    catch err
+        return (outcome = :build_failed, value = nothing,
+                reason = "downstream builder failed (prerequisite " *
+                         "schema/shape or external read): " *
+                         first(sprint(showerror, err), 160))
+    end
+    return (outcome = :built, value = value, reason = "")
+end
+
+# every gate computed by the downstream builder: explicitly
+# blocked_prerequisite when building is refused, never evaluated on
+# missing/fabricated prerequisite data
+const RS_DOWNSTREAM_GATES = ["outcode_chain_continuous",
+    "no_external_sw_4angle_products", "sw_base_init_scaled_ckd",
+    "lw_base_init_raw_ckd", "minor_pass_relative_to_rel415",
+    "support_excluded_from_trainable", "derived_products_enumerated"]
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    cfg = JSON.parsefile(validation_results_path("gate4_stage_config_audit.json"))
-    stride = JSON.parsefile(validation_results_path("gate4_covariance_stride_audit.json"))
-    cfg["status"] == "stage_config_audit_passed" ||
-        push!(fails, "stage-config audit not green: $(cfg["status"])")
-    stride["status"] == "covariance_stride_audit_passed" ||
-        push!(fails, "covariance-stride audit not green: $(stride["status"])")
+    # loader fixtures FIRST, through the SAME guarded classifier
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] =
+        !classify_green_audit(joinpath(tdir, "absent.json"), "c", "s")[1]
+    fpx = joinpath(tdir, "aud.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        okx, why = classify_green_audit(fpx, "c", "s")
+        !okx && occursin("unparseable", why)
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        okx, why = classify_green_audit(fpx, "c", "s")
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        okx, why = classify_green_audit(fpx, "c", "s")
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "{\"case\": \"other\", \"status\": \"s\"}")
+    lt["wrong_case_fails"] = begin
+        okx, why = classify_green_audit(fpx, "c", "s")
+        !okx && occursin("case mismatch", why)
+    end
+    write(fpx, "{\"case\": \"c\", \"status\": \"tampered\"}")
+    lt["wrong_status_fails"] = begin
+        okx, why = classify_green_audit(fpx, "c", "s")
+        !okx && occursin("not green", why)
+    end
+    write(fpx, "{\"case\": \"c\", \"status\": \"s\"}")
+    lt["exact_green_passes_and_captures"] = begin
+        r = classify_green_audit(fpx, "c", "s")
+        r[1] && r[2] == "ok" && r[3] isa AbstractDict &&
+            r[3]["status"] == "s"
+    end
+    # allowlist boundary, proven with injected counting/throwing
+    # builders: blocked AND unexpected internal states NEVER invoke it;
+    # green does; a throwing builder is CAUGHT into build_failed and no
+    # exception escapes
+    lt["blocked_never_invokes_builder"] = begin
+        n = Ref(0)
+        r = rs_build(() -> (n[] += 1; :built), "blocked")
+        r.outcome == :blocked && n[] == 0
+    end
+    lt["unexpected_state_never_invokes_builder"] = begin
+        n = Ref(0)
+        r = rs_build(() -> (n[] += 1; :built), "bogus_state")
+        r.outcome == :blocked && n[] == 0
+    end
+    lt["green_invokes_builder_once"] = begin
+        n = Ref(0)
+        r = rs_build(() -> (n[] += 1; :built), "green")
+        r.outcome == :built && r.value == :built && n[] == 1
+    end
+    lt["throwing_builder_caught_as_build_failed"] = begin
+        r = try
+            rs_build(() -> error("deep schema boom"), "green")
+        catch
+            nothing
+        end
+        r !== nothing && r.outcome == :build_failed &&
+            occursin("deep schema boom", r.reason) &&
+            occursin("builder failed", r.reason)
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
 
+    # exact case+status prerequisite binding through the guarded loader;
+    # BOTH inputs classified, captured objects kept for the builder
+    prereq = Dict{String, Any}()
+    prereq_ok = true
+    for (label, path, ecase, estatus) in (
+        ("stage_config",
+         validation_results_path("gate4_stage_config_audit.json"),
+         "gate4_stage_config_audit", "stage_config_audit_passed"),
+        ("covariance_stride",
+         validation_results_path("gate4_covariance_stride_audit.json"),
+         "gate4_covariance_stride_audit",
+         "covariance_stride_audit_passed"))
+        okp, why, data = classify_green_audit(path, ecase, estatus)
+        gates["$(label)_prerequisite"] = okp ? "passed" : "failed"
+        okp || (prereq_ok = false; push!(fails, why))
+        prereq[label] = data
+    end
+    prereq_state = prereq_ok ? "green" : "blocked"
+
+    # ALL downstream manifest/enumeration work runs ONLY behind the
+    # allowlist boundary: it indexes cfg/stride deeply and would throw
+    # on malformed prerequisite shapes, so a blocked prerequisite is
+    # never built and a builder exception is caught into build_failed --
+    # both reach canonical failed emission
+    built = rs_build(() -> begin
+    cfg = prereq["stage_config"]
+    stride = prereq["covariance_stride"]
     # init CKD filename templates verbatim from the pinned create scripts
     create_lw = read(joinpath(ECCKD_SRC, "test/create_lut_lw.sh"), String)
     create_sw = read(joinpath(ECCKD_SRC, "test/create_lut_sw.sh"), String)
@@ -207,13 +366,33 @@ function main()
     gates["derived_products_enumerated"] =
         length(derived) == 18 ? "passed" : "failed"
     length(derived) == 18 || push!(fails, "expected 18 derived products")
+    (manifest, n_present, length(derived))
+    end, prereq_state)
+
+    if built.outcome != :built
+        # short-circuit: minimal canonical failed emission; downstream
+        # gates explicitly blocked_prerequisite (builder never invoked)
+        # or build_failed (builder threw and was caught)
+        gtok = built.outcome == :blocked ? "blocked_prerequisite" :
+                                           "build_failed"
+        for g in RS_DOWNSTREAM_GATES
+            gates[g] = gtok
+        end
+        built.outcome == :build_failed && push!(fails, built.reason)
+        manifest = Dict{String, Any}("downstream" =>
+            "not_evaluated ($gtok)")
+        n_present = 0
+        n_expected = 0
+    else
+        manifest, n_present, n_expected = built.value
+    end
 
     # "ready" here is HISTORICAL manifest coherence + 4078-era derived-data
     # presence, NOT execution readiness (execution authority moved to the
     # scoped-preflight + executor-checkpoint chain). The prefix
     # "runner_scaffold_ready" is preserved for the init-generation-manifest
     # consumer (gate4_init_generation_manifest.jl).
-    data_ready = n_present == length(derived)
+    data_ready = built.outcome == :built && n_present == n_expected
     status = !isempty(fails) ? "runner_scaffold_failed" :
              data_ready ?
              "runner_scaffold_ready_historical_superseded" :
@@ -228,9 +407,10 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "manifest" => manifest,
         "derived_present" => n_present,
-        "derived_expected" => length(derived),
+        "derived_expected" => n_expected,
         "superseded_by" => "gate4_g3_scoped_input_preflight.jl + " *
             "gate4_g3_executor_checkpoint.jl (token g3_recovery_go, " *
             "human sbatch submission) + the G2a-G2d training-flux chain; " *
@@ -274,23 +454,30 @@ function main()
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
         end
-        for band in ("lw", "sw")
-            println(io, "\n## $(uppercase(band)) pass chain\n")
-            for e in manifest[band]
-                println(io, "- $(e["pass"]): $(e["incode"]) -> " *
-                            "$(e["outcode"]); gases = " *
-                            "$(join(e["trainable_gases"], ", ")); " *
-                            "relative_to = $(e["relative_to_after_rgb_rewrite"])")
+        if built.outcome != :built
+            why_txt = built.outcome == :blocked ? "blocked prerequisite" :
+                                                  "build failed"
+            println(io, "\nDownstream manifest NOT evaluated " *
+                        "($why_txt); pass chains omitted.")
+        else
+            for band in ("lw", "sw")
+                println(io, "\n## $(uppercase(band)) pass chain\n")
+                for e in manifest[band]
+                    println(io, "- $(e["pass"]): $(e["incode"]) -> " *
+                                "$(e["outcode"]); gases = " *
+                                "$(join(e["trainable_gases"], ", ")); " *
+                                "relative_to = $(e["relative_to_after_rgb_rewrite"])")
+                end
             end
         end
-        println(io, "\nDerived products present: $n_present / $(length(derived))")
+        println(io, "\nDerived products present: $n_present / $n_expected")
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$head` (pre-own-commit).")
         isempty(fails) || (println(io, "\n## Failures\n");
                            foreach(f -> println(io, "- ", f), fails))
     end
     println("gate4_g2_g3_runner_scaffold: $status ($n_present/" *
-            "$(length(derived)) derived present)")
+            "$n_expected derived present)")
     for k in sort(collect(keys(gates)))
         println("  $k: $(gates[k])")
     end
