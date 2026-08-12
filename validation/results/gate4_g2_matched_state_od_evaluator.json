@@ -10,6 +10,7 @@
     "negativity_findings_unclamped": "passed",
     "refuse_active_n2": "passed",
     "refuse_active_rayleigh": "passed",
+    "refuse_conc_code_map_violation": "passed",
     "refuse_constituent_count_mismatch": "passed",
     "refuse_definition_gas_set_mismatch": "passed",
     "refuse_definition_gcount_drift": "passed",
@@ -19,10 +20,12 @@
     "refuse_missing_conc_dependent_gas": "passed",
     "refuse_missing_reference_surface_mf": "passed",
     "refuse_negative_active_vmr": "passed",
+    "refuse_negative_coefficients": "passed",
     "refuse_negative_reference_surface_mf": "passed",
     "refuse_nonfinite_temperature": "passed",
     "refuse_nonmonotone_pressure": "passed",
     "refuse_parity_stats_shape_mismatch": "passed",
+    "refuse_uneven_logp_axis": "passed",
     "refuse_unknown_scenario_axis_id": "passed",
     "refuse_wrong_dim_order": "passed",
     "sw_clamp_field_separate": "passed",
@@ -237,7 +240,7 @@
     "branch": "glw/gate4-recovery",
     "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
     "fixture_dir": "/tmp/mso_evaluator_fixtures",
-    "generated_from_head": "0255fe7",
+    "generated_from_head": "83ebeff",
     "lw_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "lw_smoke": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
     "provenance_note": "artifact generated from the working tree before its own commit",
@@ -255,5 +258,5 @@
     "od_abs": 1.0e-9,
     "od_rel": 1.0e-6
   },
-  "timestamp_utc": "2026-08-12T10:14:47.453"
+  "timestamp_utc": "2026-08-12T10:22:49.959"
 }

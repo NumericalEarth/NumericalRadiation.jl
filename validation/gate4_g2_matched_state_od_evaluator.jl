@@ -95,6 +95,33 @@ const MSO_EXPECTED_DEFINITION_GASES = Dict(
     "lw" => ["cfc11", "cfc12", "ch4", "co2", "composite", "h2o", "n2o", "o3"],
     "sw" => ["ch4", "co2", "composite", "h2o", "n2o", "o3"])
 
+# Exact published conc-code map (canonical: the target schema is already
+# hardcoded above; codes verified on both published definitions --
+# LW cfc11/cfc12 are LINEAR code 1, not relative-linear)
+const MSO_EXPECTED_CONC_CODES = Dict(
+    "lw" => Dict("composite" => 0, "h2o" => 2, "o3" => 1, "co2" => 1,
+                 "ch4" => 3, "n2o" => 3, "cfc11" => 1, "cfc12" => 1),
+    "sw" => Dict("composite" => 0, "h2o" => 2, "o3" => 1, "co2" => 1,
+                 "ch4" => 3, "n2o" => 3))
+
+# The interpolation stencils assume EVEN spacing (upstream uses the first
+# increment as the grid constant: ckd_model.cpp:925,937 and the code-2
+# log-conc axis). Near-uniformity is enforced with a Float32-aware
+# relative tolerance; monitor-measured published maxima: log-p 5.55e-7,
+# T 7.63e-7, log-c 7.23e-8 -- 1e-5 is conservative. Malformed recovered
+# axes must refuse, never silently produce wrong OD.
+const MSO_EVEN_RTOL = 1e-5
+
+function mso_require_even(vals, label)
+    diffs = diff(collect(Float64, vals))
+    dref = diffs[1]
+    abs(dref) > 0.0 || refuse("$label has zero spacing")
+    dev = maximum(abs.(diffs .- dref)) / abs(dref)
+    dev <= MSO_EVEN_RTOL ||
+        refuse("$label not evenly spaced: max relative deviation $dev > " *
+               "$(MSO_EVEN_RTOL)")
+end
+
 struct MsoRefusal <: Exception
     reason::String
 end
@@ -131,6 +158,7 @@ function mso_read_definition(path)
             refuse("definition pressure LUT axis must be finite, positive, " *
                    "strictly increasing")
         length(p_nodes) >= 2 || refuse("pressure LUT axis too short")
+        mso_require_even(log.(p_nodes), "log-pressure LUT axis")
         d["pressure"] = p_nodes
         tv = ds["temperature"]
         Tm = Float64.(Array(tv))
@@ -143,11 +171,22 @@ function mso_read_definition(path)
                    "node count $(length(p_nodes))")
         size(Tm, 2) >= 2 || refuse("temperature LUT axis too short")
         all(isfinite, Tm) || refuse("temperature LUT has non-finite entries")
+        let d_t = Tm[1, 2] - Tm[1, 1]
+            # published temperature axis is increasing; a descending uniform
+            # axis must refuse under this hardcoded target schema
+            d_t > 0.0 || refuse("temperature LUT spacing must be positive " *
+                                "(increasing axis), got d_t=$d_t")
+            maximum(abs.(diff(Tm, dims = 2) .- d_t)) / abs(d_t) <=
+                MSO_EVEN_RTOL ||
+                refuse("temperature LUT increments not near-uniform " *
+                       "(stencil assumes even d_t from the first increment)")
+        end
         d["temperature"] = Tm
 
         np = length(p_nodes)
         nt = size(Tm, 2)
         ng = -1
+        expected_codes = MSO_EXPECTED_CONC_CODES[band]
         for gas in gases
             v = ds["$(gas)_molar_absorption_coeff"]
             dims = mso_dimnames(v)
@@ -155,8 +194,10 @@ function mso_read_definition(path)
              dims[2] == "pressure" && dims[3] == "temperature") ||
                 refuse("definition coefficient dims for $gas: $dims")
             A = Float64.(Array(v))
-            all(isfinite, A) ||
-                refuse("non-finite coefficients for $gas")
+            all(x -> isfinite(x) && x >= 0.0, A) ||
+                refuse("non-finite or negative coefficients for $gas " *
+                       "(negative per-gas OD arises only from " *
+                       "relative-linear weights, never from tables)")
             (size(A, 2) == np && size(A, 3) == nt) ||
                 refuse("coefficient p/t shape for $gas $(size(A)) " *
                        "inconsistent with LUT nodes ($np, $nt)")
@@ -172,8 +213,11 @@ function mso_read_definition(path)
             ckey = "$(gas)_conc_dependence_code"
             haskey(ds, ckey) || refuse("definition missing $ckey")
             code = Int(only(Array(ds[ckey])))
-            code in (0, 1, 2, 3) ||
-                refuse("unsupported conc_dependence_code $code for $gas")
+            # exact published conc-code map (canonical for this hardcoded
+            # target schema)
+            code == expected_codes[gas] ||
+                refuse("conc_dependence_code $code for $gas != published " *
+                       "$band map value $(expected_codes[gas])")
             d[ckey] = code
             if code == 3
                 rkey = "$(gas)_reference_mole_fraction"
@@ -181,8 +225,9 @@ function mso_read_definition(path)
                     refuse("$gas is RELATIVE_LINEAR but definition has no $rkey")
                 # stored Float32; run_ckd promotes the STORED value (G1 lesson)
                 ref_vmr = Float64(only(Array(ds[rkey])))
-                isfinite(ref_vmr) ||
-                    refuse("non-finite reference mole fraction for $gas")
+                (isfinite(ref_vmr) && ref_vmr >= 0.0) ||
+                    refuse("non-finite or negative reference mole fraction " *
+                           "for $gas")
                 d["$(gas)_reference_vmr"] = ref_vmr
             elseif code == 2
                 akey = "$(gas)_mole_fraction"
@@ -193,6 +238,7 @@ function mso_read_definition(path)
                  issorted(va, lt = <=) && length(va) >= 2) ||
                     refuse("LUT concentration axis for $gas must be finite, " *
                            "positive, strictly increasing")
+                mso_require_even(log.(va), "log-concentration axis for $gas")
                 (length(dims) == 4 && dims[4] == akey) ||
                     refuse("LUT coefficient for $gas must have fourth dim " *
                            "$akey, got $dims")
@@ -200,6 +246,11 @@ function mso_read_definition(path)
                     refuse("LUT coefficient fourth-axis length " *
                            "$(size(A, 4)) != $akey length $(length(va))")
                 d["$(gas)_vmr_axis"] = va
+            else
+                # non-LUT coefficients are exactly 3-D
+                length(dims) == 3 ||
+                    refuse("non-LUT coefficient for $gas must be exactly " *
+                           "3-D, got $dims")
             end
         end
         d["ng"] = ng
@@ -476,11 +527,12 @@ end
 
 # --- parity statistics (copied from gate4_sw_od_parity.jl) ------------------
 function mso_parity_stats(ours::AbstractArray, ref::AbstractArray)
-    # identical shapes required (monitor hardening 5): equal-length
-    # reshapes must refuse, not compare linearly
-    size(ours) == size(ref) ||
+    # identical axes required (monitor hardening 5): equal-length or even
+    # equal-size views with different index ranges must refuse, not
+    # compare linearly
+    axes(ours) == axes(ref) ||
         refuse("parity stats require identical shapes: " *
-               "$(size(ours)) vs $(size(ref))")
+               "axes $(axes(ours)) vs $(axes(ref))")
     max_abs = 0.0; max_rel = 0.0
     pos = 0; neg = 0
     for i in eachindex(ref)
@@ -555,17 +607,23 @@ function mso_write_stacked(path, p_hl, t_hl, gas_ids, vmr_by_gas;
 end
 
 # tiny synthetic CKD definition (refusal fixtures only; a few hundred
-# bytes -- no published definition is ever copied)
+# bytes -- no published definition is ever copied). Emits the CORRECT
+# published conc-code map by default (composite 0, h2o 2 with LUT axis,
+# ch4/n2o 3 with reference scalar, others 1); fixtures perturb via kwargs.
 function mso_write_tiny_definition(path; gases, planck = true,
-                                   bad_gpoint_gases = String[])
+                                   bad_gpoint_gases = String[],
+                                   pressure_nodes = [100.0, 1000.0, 10000.0],
+                                   coeff_value = 1.0,
+                                   code_override = Dict{String, Int}())
     rm(path, force = true)
     NCDataset(path, "c") do ds
         defDim(ds, "g_point", 2)
         defDim(ds, "g_point_drift", 3)
         defDim(ds, "pressure", 3)
         defDim(ds, "temperature", 2)
+        defDim(ds, "h2o_mole_fraction", 2)
         vp = defVar(ds, "pressure", Float64, ("pressure",))
-        vp[:] = [100.0, 1000.0, 10000.0]
+        vp[:] = pressure_nodes
         vt = defVar(ds, "temperature", Float64, ("pressure", "temperature"))
         vt[:, :] = [200.0 250.0; 210.0 260.0; 220.0 270.0]
         if planck
@@ -575,14 +633,34 @@ function mso_write_tiny_definition(path; gases, planck = true,
             vs = defVar(ds, "solar_irradiance", Float64, ("g_point",))
             vs[:] = [1.0, 2.0]
         end
+        default_code(gas) = gas == "composite" ? 0 :
+                            gas == "h2o" ? 2 :
+                            gas in ("ch4", "n2o") ? 3 : 1
         for gas in gases
+            code = get(code_override, gas, default_code(gas))
             drift = gas in bad_gpoint_gases
             gdim = drift ? "g_point_drift" : "g_point"
-            vc = defVar(ds, "$(gas)_molar_absorption_coeff", Float64,
-                        (gdim, "pressure", "temperature"))
-            vc[:, :, :] = ones(drift ? 3 : 2, 3, 2)
+            ngg = drift ? 3 : 2
+            if code == 2
+                vc = defVar(ds, "$(gas)_molar_absorption_coeff", Float64,
+                            (gdim, "pressure", "temperature",
+                             "h2o_mole_fraction"))
+                vc[:, :, :, :] = fill(coeff_value, ngg, 3, 2, 2)
+                va = defVar(ds, "$(gas)_mole_fraction", Float64,
+                            ("h2o_mole_fraction",))
+                va[:] = [1.0e-4, 1.0e-3]
+            else
+                vc = defVar(ds, "$(gas)_molar_absorption_coeff", Float64,
+                            (gdim, "pressure", "temperature"))
+                vc[:, :, :] = fill(coeff_value, ngg, 3, 2)
+            end
+            if code == 3
+                vr = defVar(ds, "$(gas)_reference_mole_fraction",
+                            Float64, ())
+                vr[] = 1.0e-6
+            end
             vcode = defVar(ds, "$(gas)_conc_dependence_code", Int32, ())
-            vcode[] = gas == "composite" ? 0 : 1
+            vcode[] = code
         end
     end
     return path
@@ -862,6 +940,33 @@ function main()
     mso_expect_refusal!(gates, fails, "refuse_parity_stats_shape_mismatch",
         "identical shapes",
         () -> mso_parity_stats(zeros(2, 3), zeros(3, 2)))
+
+    tiny_c = mso_write_tiny_definition(
+        joinpath(MSO_SCRATCH, "tiny_def_wrong_code.nc");
+        gases = MSO_EXPECTED_DEFINITION_GASES["lw"], planck = true,
+        code_override = Dict("ch4" => 1))
+    mso_expect_refusal!(gates, fails, "refuse_conc_code_map_violation",
+        "!= published",
+        () -> matched_state_od(tiny_c, sw_scen;
+                               active_absorption_gases = ["composite"]))
+
+    tiny_d = mso_write_tiny_definition(
+        joinpath(MSO_SCRATCH, "tiny_def_uneven_p.nc");
+        gases = MSO_EXPECTED_DEFINITION_GASES["lw"], planck = true,
+        pressure_nodes = [100.0, 1000.0, 5000.0])
+    mso_expect_refusal!(gates, fails, "refuse_uneven_logp_axis",
+        "log-pressure LUT axis not evenly spaced",
+        () -> matched_state_od(tiny_d, sw_scen;
+                               active_absorption_gases = ["composite"]))
+
+    tiny_e = mso_write_tiny_definition(
+        joinpath(MSO_SCRATCH, "tiny_def_negative_coeff.nc");
+        gases = MSO_EXPECTED_DEFINITION_GASES["lw"], planck = true,
+        coeff_value = -1.0)
+    mso_expect_refusal!(gates, fails, "refuse_negative_coefficients",
+        "negative coefficients",
+        () -> matched_state_od(tiny_e, sw_scen;
+                               active_absorption_gases = ["composite"]))
 
     # --- verdict + artifacts ------------------------------------------------
     status = (isempty(fails) && all(v == "passed" for v in values(gates))) ?

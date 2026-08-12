@@ -13,6 +13,7 @@ aggregation-independent matched-state OD evaluator library + self-tests; parity 
 | negativity_findings_unclamped | passed |
 | refuse_active_n2 | passed |
 | refuse_active_rayleigh | passed |
+| refuse_conc_code_map_violation | passed |
 | refuse_constituent_count_mismatch | passed |
 | refuse_definition_gas_set_mismatch | passed |
 | refuse_definition_gcount_drift | passed |
@@ -22,10 +23,12 @@ aggregation-independent matched-state OD evaluator library + self-tests; parity 
 | refuse_missing_conc_dependent_gas | passed |
 | refuse_missing_reference_surface_mf | passed |
 | refuse_negative_active_vmr | passed |
+| refuse_negative_coefficients | passed |
 | refuse_negative_reference_surface_mf | passed |
 | refuse_nonfinite_temperature | passed |
 | refuse_nonmonotone_pressure | passed |
 | refuse_parity_stats_shape_mismatch | passed |
+| refuse_uneven_logp_axis | passed |
 | refuse_unknown_scenario_axis_id | passed |
 | refuse_wrong_dim_order | passed |
 | sw_clamp_field_separate | passed |
@@ -53,4 +56,4 @@ Parity (Float32-storage tolerances: abs floor 1.0e-9, rel 1.0e-6):
 | sw_od_o3 | 1.1910219344102302e-7 | 5.733067860628769e-8 | 0.003111111111111111 |
 | sw_od_total_raw | 4.778716728992549e-7 | 5.876539197068577e-8 | 0.002962962962962963 |
 
-Provenance: branch `glw/gate4-recovery`, head `0255fe7` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, head `83ebeff` (pre-own-commit).
