@@ -12,11 +12,14 @@ script generation only; nothing submitted by this unit; LBL evaluation only; no 
 | lbl_evaluation_only | passed |
 | partial_raw_guard | passed |
 | pipeline_parity | passed |
+| prerequisite_loader_fixture_tests | passed |
 | quarantine_separate_from_g2a | passed |
 | rgb_band_grid_14300_variant | passed |
 | sbatch_written_not_submitted | passed |
 | scenario_override_ten | passed |
 | stale_output_refusal | passed |
+
+Generated (unsubmitted): `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2b_sw_rgb_dryrun.sbatch`
 
 **Attempt history**: job 4103 CANCELED before any valid output during monitor pre-submit review; it left a header-size partial RAW chunk, so the corrective sbatch wipes the G2b quarantine tree at stage 0 (partial-RAW guard) before regenerating.
 
@@ -27,4 +30,4 @@ Scenario support: run_sw_lbl_evaluation.sh: 'present' explicit branch (415/1921/
 
 Quarantine: work-rgb-g2b / testcopy-rgb-g2b (disjoint from G2a's work-rgb); shared install dir evaluation1/sw_fluxes-rgb with disjoint filenames.
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `ac37fc7` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `a4a0dfc` (pre-own-commit).

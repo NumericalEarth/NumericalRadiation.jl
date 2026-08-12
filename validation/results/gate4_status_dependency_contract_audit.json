@@ -147,13 +147,13 @@
         "reason": "classify_init_ledger guarded-loader body (exact-case + exact-status binding; live edge + tmp loader fixtures)"
       },
       {
-        "anchor": "g2a = JSON.parsefile(validation_results_path(\"gate4_g2a_data_ledger.json\"))",
+        "anchor": "JSON.parsefile(path)",
         "class": "edge",
         "edge_ids": [
           "dep:g2b_checkpoint<-g2a_data_ledger"
         ],
         "file": "gate4_g2b_sw_rgb_variants_checkpoint.jl",
-        "reason": "g2a-ledger prerequisite parse"
+        "reason": "classify_g2a_ledger guarded-loader body (exact-case + exact-status binding; live edge + tmp loader fixtures)"
       },
       {
         "anchor": "JSON.parsefile(AC_RESULTS_JSON)",
@@ -381,8 +381,8 @@
       },
       {
         "file": "gate4_g2b_sw_rgb_variants_checkpoint.jl",
-        "line": 145,
-        "text": "g2a = JSON.parsefile(validation_results_path(\"gate4_g2a_data_ledger.json\"))"
+        "line": 152,
+        "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_g3_acceptance_comparison.jl",
@@ -731,14 +731,14 @@
       {
         "active": true,
         "consumer": "gate4_g2b_sw_rgb_variants_checkpoint.jl",
-        "consumer_sha256": "6eeebd639d1c740b47464bc4cf2cc183fb638e61a5e29fd33833cc6321df5151",
+        "consumer_sha256": "50be8358bd72996868554725858bf86770761ccefe92e9a13bebf11e5533bca4",
         "detail": "contract satisfied",
         "id": "dep:g2b_checkpoint<-g2a_data_ledger",
         "kind": "exact",
         "producer_case": "gate4_g2a_data_ledger",
         "producer_sha256": "671678c4a3d2564b5c77ee7ef7369ac0d6cb51212bd6eef609ee17e0cc8c9a39",
         "producer_status": "sw_rgb_rel_training_fluxes_installed_and_verified",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
@@ -1042,10 +1042,6 @@
     },
     {
       "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:g2b_checkpoint<-g2a_data_ledger"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
       "id": "dep:v1_recon<-r1_probe:followup"
     },
     {
@@ -1064,7 +1060,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "9c8a122",
+    "generated_from_head": "a4a0dfc",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1076,5 +1072,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T15:53:35.559"
+  "timestamp_utc": "2026-08-12T15:58:37.586"
 }

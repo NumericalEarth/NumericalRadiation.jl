@@ -432,13 +432,19 @@ const DCA_EDGES = [
   accepted = ["acceptance_inits_complete"],
   expected_case = "gate4_init_provenance_ledger",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ # HARDENED consumer: classify_g2a_ledger binds the exact case before
+ # the faithful exact-status comparison, and the sbatch write is gated
+ # on the classified prerequisite (former status-only finding CLOSED)
  (id = "dep:g2b_checkpoint<-g2a_data_ledger",
   consumer = "gate4_g2b_sw_rgb_variants_checkpoint.jl",
-  anchors = ["g2a[\"status\"] == \"sw_rgb_rel_training_fluxes_installed_and_verified\""],
+  anchors = ["g2a_ok, g2a_why, _ = classify_g2a_ledger(",
+             "c == \"gate4_g2a_data_ledger\"",
+             "s == \"sw_rgb_rel_training_fluxes_installed_and_verified\"",
+             "sbatch_written = gb_write_script("],
   producer = "gate4_g2a_data_ledger.json", kind = :exact,
   accepted = ["sw_rgb_rel_training_fluxes_installed_and_verified"],
   expected_case = "gate4_g2a_data_ledger",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:g3_executor<-scoped_preflight",
   consumer = "gate4_g3_executor_checkpoint.jl",
   # HARDENED consumer: classify_scoped_preflight binds the exact case
@@ -832,9 +838,10 @@ const DCA_SITE_LEDGER = [
   reason = "classify_init_ledger guarded-loader body (exact-case + " *
            "exact-status binding; live edge + tmp loader fixtures)"),
  (file = "gate4_g2b_sw_rgb_variants_checkpoint.jl",
-  anchor = "g2a = JSON.parsefile(validation_results_path(\"gate4_g2a_data_ledger.json\"))",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:g2b_checkpoint<-g2a_data_ledger"],
-  reason = "g2a-ledger prerequisite parse"),
+  reason = "classify_g2a_ledger guarded-loader body (exact-case + " *
+           "exact-status binding; live edge + tmp loader fixtures)"),
  (file = "gate4_g3_acceptance_comparison.jl",
   anchor = "JSON.parsefile(AC_RESULTS_JSON)",
   class = "own-artifact", edge_ids = String[],

@@ -138,18 +138,113 @@ done
 echo "=== G2b done rc=\$? \$(date -u +%FT%TZ) ==="
 """
 
+# guarded G2a-ledger prerequisite loader (fixture-run on tmp files): a
+# missing, unparseable (parse failure), parsed-non-object (JSON null/
+# array DISTINGUISHED from parse failure), WRONG-CASE, or wrong-status
+# artifact classifies fail-closed with a stable reason -- never an
+# uncaught exception, never status-only trust: the exact case is bound
+# before the FAITHFUL exact-status comparison.
+function classify_g2a_ledger(path)
+    isfile(path) ||
+        return (false, "g2a data ledger missing: $path", nothing)
+    parse_failed = false
+    d = try
+        JSON.parsefile(path)
+    catch
+        parse_failed = true
+        nothing
+    end
+    parse_failed && return (false,
+        "g2a data ledger unparseable (parse failure)", nothing)
+    d isa AbstractDict || return (false,
+        "g2a data ledger parses to a non-object " *
+        "(JSON null/array/scalar)", nothing)
+    c = get(d, "case", "")
+    (c isa AbstractString && c == "gate4_g2a_data_ledger") ||
+        return (false, "g2a data ledger case mismatch: $(repr(c))",
+                nothing)
+    s = get(d, "status", "")
+    s == "sw_rgb_rel_training_fluxes_installed_and_verified" ||
+        return (false, "g2a data ledger not green: $(repr(s))", nothing)
+    return (true, "ok", d)
+end
+
+# the sbatch WRITE happens only behind the classified prerequisite (the
+# committed script is never clobbered by a blocked run); SBATCH_TEXT is
+# a load-time constant, so generation itself cannot throw and the text
+# gates stay evaluated on both paths -- only the write is gated
+function gb_write_script(writefn, prereq_ok)
+    prereq_ok || return false
+    writefn()
+    return true
+end
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    g2a = JSON.parsefile(validation_results_path("gate4_g2a_data_ledger.json"))
-    gates["g2a_prerequisite"] =
-        g2a["status"] == "sw_rgb_rel_training_fluxes_installed_and_verified" ?
-        "passed" : "failed"
-
-    open(GB_SBATCH, "w") do io
-        write(io, SBATCH_TEXT)
+    # loader + write-boundary fixtures FIRST, through the SAME code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] =
+        !classify_g2a_ledger(joinpath(tdir, "absent.json"))[1]
+    fpx = joinpath(tdir, "gl.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        okx, why = classify_g2a_ledger(fpx)
+        !okx && occursin("unparseable", why)
     end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        okx, why = classify_g2a_ledger(fpx)
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        okx, why = classify_g2a_ledger(fpx)
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "{\"case\": \"other\", \"status\": " *
+               "\"sw_rgb_rel_training_fluxes_installed_and_verified\"}")
+    lt["wrong_case_fails"] = begin
+        okx, why = classify_g2a_ledger(fpx)
+        !okx && occursin("case mismatch", why)
+    end
+    write(fpx, "{\"case\": \"gate4_g2a_data_ledger\", " *
+               "\"status\": \"tampered\"}")
+    lt["wrong_status_fails"] = begin
+        okx, why = classify_g2a_ledger(fpx)
+        !okx && occursin("not green", why)
+    end
+    write(fpx, "{\"case\": \"gate4_g2a_data_ledger\", \"status\": " *
+               "\"sw_rgb_rel_training_fluxes_installed_and_verified\"}")
+    lt["exact_green_captures"] = begin
+        okx, why, dd = classify_g2a_ledger(fpx)
+        okx && why == "ok" && dd isa AbstractDict
+    end
+    lt["blocked_never_invokes_writer"] = begin
+        n = Ref(0)
+        gb_write_script(() -> (n[] += 1), false) == false && n[] == 0
+    end
+    lt["ok_invokes_writer_once"] = begin
+        n = Ref(0)
+        gb_write_script(() -> (n[] += 1), true) == true && n[] == 1
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
+    # exact case+status prerequisite binding BEFORE the script write
+    g2a_ok, g2a_why, _ = classify_g2a_ledger(
+        validation_results_path("gate4_g2a_data_ledger.json"))
+    gates["g2a_prerequisite"] = g2a_ok ? "passed" : "failed"
+    g2a_ok || push!(fails, g2a_why)
+
+    sbatch_written = gb_write_script(() -> open(GB_SBATCH, "w") do io
+        write(io, SBATCH_TEXT)
+    end, g2a_ok)
     gates["sbatch_written_not_submitted"] = "passed"
     self_src = read(@__FILE__, String)
     sb_tok = "sb" * "atch "
@@ -208,7 +303,14 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "sbatch_path" => GB_SBATCH,
+        "sbatch_written_this_run" => sbatch_written,
+        "sbatch_scripts_state" => sbatch_written ?
+            "generated this run (unsubmitted)" :
+            "NOT generated this run (prerequisite blocked); any file " *
+            "at sbatch_path is PRESERVED HISTORICAL output of an " *
+            "earlier run, not current",
         "attempt_history" => Dict(
             "job_4103" => "CANCELED before any valid output (scancel during " *
                 "monitor pre-submit review). It had produced a header-size " *
@@ -251,6 +353,14 @@ function main()
         println(io, "|---|---|")
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
+        end
+        if sbatch_written
+            println(io, "\nGenerated (unsubmitted): `$(GB_SBATCH)`")
+        else
+            println(io, "\nNO script generated this run (prerequisite " *
+                        "blocked); any file at `$(GB_SBATCH)` is " *
+                        "preserved historical output of an earlier " *
+                        "run, not current.")
         end
         println(io, "\n**Attempt history**: job 4103 CANCELED before any " *
                     "valid output during monitor pre-submit review; it left " *
