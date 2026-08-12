@@ -24,11 +24,18 @@ semantics by inference.
   `docs/src/design.md:174-175`;
   `validation/results/ecckd_training_recovery_targets.md:19-20`;
   `validation/results/ecckd_published_recovery_target.md:12-13`.
-- Repo-wide search (this repo and the package repo, source + docs) finds NO
-  other occurrence of either identifier and no "regression" aggregation
-  definition. The origin commit `e944699` ("Add original-objective recovery
-  framework + published-model accuracy gate") introduces both files; its
-  message records no margin semantics.
+- Repo-wide identifier census (unfiltered, this repo and the package repo,
+  source + docs): every occurrence of either identifier is one of —
+  **declaration** (`ecckd_training_recovery_targets.jl:35-36`,
+  `ecckd_published_recovery_target.jl:95-96`), **render** of the declared
+  value into a report (`ecckd_training_recovery_targets.jl:138-139` and the
+  archived results tables), or **restatement** (`docs/src/design.md:174-175`,
+  `validation/gate4_unevaluated_gates_design.md:96-97` rev 2, and this
+  memo). **NO source file COMPUTES either quantity** — there is no
+  "regression" aggregation definition anywhere. The origin commit `e944699`
+  ("Add original-objective recovery framework + published-model accuracy
+  gate") introduces both declaring files; its message records no margin
+  semantics.
 - Archived campaign records (all verified on ref `audit-trail-pre-cleanup`;
   the pass numbers were supplied by the monitor and independently
   confirmed here):
@@ -92,9 +99,17 @@ machinery that evaluates published models is:
   row across all (case, metric) pairs. This pins the Gate-1 quantity
   ("final objective / hard target"); heating RMSE enters it only
   threshold-normalized.
-- **No model-level heating-RMSE aggregate exists anywhere** — heating RMSE
-  is recorded per case only. Any model-level heating-RMSE aggregation for
-  threshold 5 is a NEW choice, not a precedented one.
+- **No model-level heating-RMSE aggregate exists in the canonical
+  published-accuracy path** (`published_model_result`,
+  `ecckd_published_model_accuracy.jl:318-343`) — there, heating RMSE is
+  recorded per case only. A pooled aggregate DOES exist in other machinery:
+  `reduced_ecckd_32g_rrtmgp_comparison.jl:140` computes
+  `sqrt(mean(m.heating_rate_rmse^2 for m in metrics))` across its metric
+  rows. That precedent belongs to the RRTMGP-comparison path and was never
+  tied to thresholds 4-5; its existence shows pooling conventions VARY
+  across the machinery, so a model-level heating-RMSE aggregation for
+  threshold 5 remains a NEW choice for the canonical path, with two
+  divergent in-repo precedents (per-case-only vs RMS-pooled).
 
 ### 3. Published 32×32 baseline numbers (archived)
 
@@ -138,8 +153,11 @@ share columns with the tropical set), but this is unverified.
    must independently satisfy the margin (conjunction), or the max of the
    two deltas. No combined scalar exists in any primary source.
 3. **Heating RMSE aggregation**: per-case deltas each within margin, versus
-   worst-case delta, versus pooled-across-cases RMSE (pooling would also be
-   new: no cross-case pooled RMSE exists in the machinery).
+   worst-case delta, versus pooled-across-cases RMSE. No cross-case pooled
+   RMSE exists in the canonical published-accuracy path; the
+   `sqrt(mean(rmse^2))` pooling at
+   `reduced_ecckd_32g_rrtmgp_comparison.jl:140` is an in-repo precedent
+   from a different path, never tied to thresholds 4-5.
 4. (Interacts with the above) Whether signed deltas or absolute deltas are
    intended — "may not regress beyond" (design note rev 2) reads as signed
    candidate-minus-published upper bound, i.e. improvement is unbounded;
