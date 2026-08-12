@@ -85,6 +85,14 @@ const MSO_OD_ABS_TOL = 1e-9
 # n2/o2 are folded into the composite background; rayleigh is scattering.
 const MSO_INACTIVE_IDS = ("n2", "o2", "rayleigh")
 
+# Campaign-known gas IDs that legitimately appear on scenario axes WITHOUT
+# being this definition's gases: real SW present/ch4/n2o files carry
+# cfc11/cfc12 (N=10 axis census) although SW definitions have no CFC
+# tables. Such axis entries are RECORDED as unconsumed, never consumed,
+# and refused if requested as active for a definition lacking them; truly
+# unknown IDs still refuse.
+const MSO_KNOWN_UNCONSUMED_GASES = ("cfc11", "cfc12")
+
 # Full definition gas-set contract (monitor hardening 2): the band is
 # classified from unambiguous support variables (planck_function -> LW,
 # solar_irradiance -> SW; exactly one must be present) and the definition
@@ -287,18 +295,39 @@ function mso_read_scenario(path)
                    "$(mso_dimnames(ds["mole_fraction_fl"]))" *
                    " != [level, gas, column]")
 
-        p = Float64.(Array(ds["pressure_hl"]))
-        t = Float64.(Array(ds["temperature_hl"]))
-        mf = Float64.(Array(ds["mole_fraction_fl"]))
+        # real CKDMIP flux files carry netCDF fill values: fully-missing
+        # INACTIVE gas slices (e.g. rayleigh) and _FillValue entries in
+        # reference_surface_mole_fraction. Policy (monitor-reviewed):
+        # validate what is CONSUMED, record what is skipped -- p/T must be
+        # missing-free; mole-fraction missing entries are counted per gas
+        # and promoted to NaN so any consumed (active) slice containing
+        # them refuses in matched_state_od.
+        p_raw = Array(ds["pressure_hl"])
+        t_raw = Array(ds["temperature_hl"])
+        any(ismissing, p_raw) &&
+            refuse("pressure_hl contains missing/fill values")
+        any(ismissing, t_raw) &&
+            refuse("temperature_hl contains missing/fill values")
+        p = Float64.(p_raw)
+        t = Float64.(t_raw)
+        mf_raw = Array(ds["mole_fraction_fl"])
+        # dimensional-consistency gates FIRST: per-gas indexing below must
+        # be unreachable for malformed shapes (MsoRefusal, never
+        # BoundsError)
         nhl, ncol = size(p)
         size(t) == (nhl, ncol) ||
             refuse("temperature_hl $(size(t)) != pressure_hl $(size(p))")
-        (size(mf, 1) == nhl - 1 && size(mf, 3) == ncol) ||
-            refuse("mole_fraction_fl $(size(mf)) inconsistent with " *
+        (size(mf_raw, 1) == nhl - 1 && size(mf_raw, 3) == ncol) ||
+            refuse("mole_fraction_fl $(size(mf_raw)) inconsistent with " *
                    "pressure_hl $(size(p))")
-        size(mf, 2) == length(gas_ids) ||
-            refuse("mole_fraction_fl gas dim $(size(mf, 2)) != " *
+        size(mf_raw, 2) == length(gas_ids) ||
+            refuse("mole_fraction_fl gas dim $(size(mf_raw, 2)) != " *
                    "constituent_id count $(length(gas_ids))")
+        missing_by_gas = Dict(gas_ids[i] =>
+            count(ismissing, view(mf_raw, :, i, :))
+            for i in eachindex(gas_ids))
+        mf = Float64.(coalesce.(mf_raw, NaN))
+        s["missing_by_gas"] = missing_by_gas
         all(isfinite, p) || refuse("pressure_hl has non-finite entries")
         all(>(0.0), p) || refuse("pressure_hl has non-positive entries")
         for c in 1:ncol, l in 1:(nhl - 1)
@@ -308,10 +337,14 @@ function mso_read_scenario(path)
         end
         all(x -> isfinite(x) && x > 0.0, t) ||
             refuse("temperature_hl has non-finite/non-positive entries")
-        all(isfinite, mf) || refuse("mole_fraction_fl has non-finite entries")
+        # whole-array mole-fraction finiteness is NOT gated here: missing
+        # entries were promoted to NaN with per-gas counts recorded, and
+        # validation applies to CONSUMED (active) slices in matched_state_od
 
         # REQUIRED per the hardened manifest schema contract (monitor
-        # hardening 1): exact [gas] dims, exact length, finite nonnegative
+        # hardening 1): exact [gas] dims, exact length; value gate applies
+        # to NON-MISSING entries (real files legitimately use _FillValue
+        # where no reference exists), with missing entries counted
         haskey(ds, "reference_surface_mole_fraction") ||
             refuse("scenario missing reference_surface_mole_fraction")
         rs = ds["reference_surface_mole_fraction"]
@@ -319,11 +352,14 @@ function mso_read_scenario(path)
             refuse("reference_surface_mole_fraction dims != [gas]")
         length(rs) == length(gas_ids) ||
             refuse("reference_surface_mole_fraction length != gas count")
-        rsv = Float64.(Array(rs))
-        all(x -> isfinite(x) && x >= 0.0, rsv) ||
+        rs_raw = Array(rs)
+        all(x -> isfinite(x) && x >= 0.0, skipmissing(rs_raw)) ||
             refuse("reference_surface_mole_fraction has non-finite or " *
-                   "negative stored values")
-        s["reference_surface_mole_fraction"] = rsv
+                   "negative stored (non-missing) values")
+        s["reference_surface_mole_fraction_missing_gases"] =
+            [gas_ids[i] for i in eachindex(rs_raw) if ismissing(rs_raw[i])]
+        s["reference_surface_mole_fraction"] =
+            Float64.(coalesce.(rs_raw, NaN))
         s["pressure_hl"] = p
         s["temperature_hl"] = t
         s["mole_fraction_fl"] = mf
@@ -447,14 +483,21 @@ function matched_state_od(definition_path, scenario_path;
     end
 
     gas_ids = scen["gas_ids"]
-    # unknown-axis refusal (monitor hardening 3): every scenario axis ID
-    # must be a definition gas or an allowed inactive ID -- membership
-    # validation only, never a selection rule
+    # unknown-axis refusal (monitor hardening 3, amended for real files):
+    # every scenario axis ID must be a definition gas, an allowed inactive
+    # ID, or a campaign-known unconsumed gas -- membership validation only,
+    # never a selection rule. Known-unconsumed entries are recorded below.
     for g in gas_ids
-        (g in defn["gas_set"] || g in MSO_INACTIVE_IDS) ||
-            refuse("unknown scenario gas ID $g: not a definition gas and " *
-                   "not an allowed inactive ID $(MSO_INACTIVE_IDS)")
+        (g in defn["gas_set"] || g in MSO_INACTIVE_IDS ||
+         g in MSO_KNOWN_UNCONSUMED_GASES) ||
+            refuse("unknown scenario gas ID $g: not a definition gas, " *
+                   "not an allowed inactive ID $(MSO_INACTIVE_IDS), and " *
+                   "not a campaign-known unconsumed gas " *
+                   "$(MSO_KNOWN_UNCONSUMED_GASES)")
     end
+    unconsumed_axis_gases = [g for g in gas_ids
+                             if !(g in defn["gas_set"]) &&
+                                !(g in MSO_INACTIVE_IDS)]
     axis_index = Dict(g => i for (i, g) in enumerate(gas_ids))
     mapping = Dict{String, Any}()
     for gas in active
@@ -477,7 +520,19 @@ function matched_state_od(definition_path, scenario_path;
     mf = scen["mole_fraction_fl"]              # (level, gas, column), Float64
     for gas in active
         mapping[gas] == "concentration_free" && continue
+        # active non-composite slices are validated in strict order with
+        # distinct reasons: missing/fill first, then non-finite, then
+        # negative. Inactive slices (e.g. rayleigh) may be entirely
+        # missing -- recorded, never consumed.
+        n_miss = get(scen["missing_by_gas"], gas, 0)
+        n_miss == 0 ||
+            refuse("active gas $gas has $n_miss missing/fill mole-" *
+                   "fraction entries in scenario (consumed slices must " *
+                   "be complete)")
         slice = view(mf, :, mapping[gas], :)
+        all(isfinite, slice) ||
+            refuse("active gas $gas has non-finite mole fractions in " *
+                   "scenario")
         all(>=(0.0), slice) ||
             refuse("active gas $gas has negative mole fractions in scenario")
     end
@@ -521,6 +576,14 @@ function matched_state_od(definition_path, scenario_path;
         definition_gas_set = defn["gas_set"],       # recorded separately;
         scenario_gas_ids = gas_ids,                 # NEVER compared directly
         scenario = scen["scenario"],
+        # missingness exposed: per-gas mole-fraction fill counts and the
+        # rsmf gases whose reference values are _FillValue (schema/
+        # provenance only; rsmf is never used in OD)
+        scenario_missing = Dict(
+            "mole_fraction_by_gas" => scen["missing_by_gas"],
+            "reference_surface_missing_gases" =>
+                scen["reference_surface_mole_fraction_missing_gases"]),
+        unconsumed_axis_gases = unconsumed_axis_gases,
         n_gpoints = ng, n_layers = nlay, n_columns = ncol,
     )
 end
@@ -570,7 +633,8 @@ function mso_write_stacked(path, p_hl, t_hl, gas_ids, vmr_by_gas;
                            scenario = "synthetic-eval1-present",
                            mf_dim_order = ("level", "gas", "column"),
                            constituent_id = join(gas_ids, " "),
-                           write_rsmf = true, rsmf = nothing)
+                           write_rsmf = true, rsmf = nothing,
+                           missing_gas = nothing)
     nhl, ncol = size(p_hl)
     nlay = nhl - 1
     ngas = length(gas_ids)
@@ -590,11 +654,21 @@ function mso_write_stacked(path, p_hl, t_hl, gas_ids, vmr_by_gas;
         vp[:, :] = p_hl
         vt = defVar(ds, "temperature_hl", Float64, ("half_level", "column"))
         vt[:, :] = t_hl
-        vm = defVar(ds, "mole_fraction_fl", Float64, mf_dim_order)
+        vm = missing_gas === nothing ?
+             defVar(ds, "mole_fraction_fl", Float64, mf_dim_order) :
+             defVar(ds, "mole_fraction_fl", Float64, mf_dim_order;
+                    fillvalue = -9.96921e36)
         if mf_dim_order == ("level", "gas", "column")
             vm[:, :, :] = mf
         else
             vm[:, :, :] = permutedims(mf, (2, 1, 3))   # (gas, level, column)
+        end
+        if missing_gas !== nothing
+            mf_dim_order == ("level", "gas", "column") ||
+                error("missing_gas fixture supports the default dim order")
+            gi = findfirst(==(missing_gas), gas_ids)
+            gi === nothing && error("missing_gas $missing_gas not on axis")
+            vm[:, gi, :] = fill(missing, nlay, ncol)
         end
         if write_rsmf
             vr = defVar(ds, "reference_surface_mole_fraction", Float64,
@@ -785,6 +859,56 @@ function main()
         gates["$(name)_clamp_field_separate"] = clamp_ok ? "passed" : "failed"
         clamp_ok || push!(fails, "$name clamped field != max(raw, 0)")
     end
+
+    # --- REAL manifest files: inactive/rsmf missingness recorded, never a
+    # refusal; exact counts asserted (monitor amendment fixtures) ----------
+    real_sw = "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/" *
+              "ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5"
+    real_lw = "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/" *
+              "ckdmip_evaluation1_lw_fluxes_rel-415.h5"
+    r_real_sw = matched_state_od(sw32, real_sw;
+                                 active_absorption_gases = sw_active)
+    r_real_lw = matched_state_od(lw32, real_lw;
+        active_absorption_gases = ["composite", "h2o", "o3", "co2",
+                                   "ch4", "n2o"])
+    mbg_sw = r_real_sw.scenario_missing["mole_fraction_by_gas"]
+    mbg_lw = r_real_lw.scenario_missing["mole_fraction_by_gas"]
+    real_ok = get(mbg_sw, "rayleigh", -1) == 54 * 50 &&
+        all(get(mbg_sw, g, -1) == 0
+            for g in ("h2o", "o3", "co2", "ch4", "n2o")) &&
+        sort(r_real_sw.scenario_missing["reference_surface_missing_gases"]) ==
+            ["h2o", "o3", "rayleigh"] &&
+        all(v == 0 for v in values(mbg_lw)) &&
+        sort(r_real_lw.scenario_missing["reference_surface_missing_gases"]) ==
+            ["h2o", "o3"]
+    gates["real_files_inactive_missing_recorded"] =
+        real_ok ? "passed" : "failed"
+    real_ok || push!(fails, "real-file missingness accounting unexpected: " *
+        "sw=$(mbg_sw) sw_rsmf=" *
+        "$(r_real_sw.scenario_missing["reference_surface_missing_gases"]) " *
+        "lw_rsmf=" *
+        "$(r_real_lw.scenario_missing["reference_surface_missing_gases"])")
+
+    # SW PRESENT real file: cfc11/cfc12 sit on the axis without being SW
+    # definition gases -- must ACCEPT and record them as unconsumed
+    real_sw_present = "/shared/home/greg/data/ckdmip/evaluation1/" *
+        "sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5"
+    r_sw_present = matched_state_od(sw32, real_sw_present;
+                                    active_absorption_gases = sw_active)
+    unc_ok = sort(r_sw_present.unconsumed_axis_gases) == ["cfc11", "cfc12"]
+    gates["sw_present_unconsumed_cfcs_recorded"] = unc_ok ? "passed" : "failed"
+    unc_ok || push!(fails, "SW present unconsumed axis gases " *
+        "$(r_sw_present.unconsumed_axis_gases) != [cfc11, cfc12]")
+
+    # active-missing must refuse with the missing/fill reason (synthetic
+    # fixture: ch4 slice written as fill values)
+    scen_miss = mso_write_stacked(joinpath(MSO_SCRATCH, "sw_missing_ch4.nc"),
+        conc["pressure_hl"], conc["temperature_hl"], sw_axis, vmrs;
+        missing_gas = "ch4")
+    mso_expect_refusal!(gates, fails, "refuse_active_gas_missing_entries",
+        "missing/fill mole-fraction entries",
+        () -> matched_state_od(sw32, scen_miss;
+                               active_absorption_gases = sw_active))
 
     # --- permutation invariance: same data, different axis order ----------
     sw_axis_perm = ["ch4", "co2", "o2", "rayleigh", "h2o", "n2", "o3", "n2o"]
@@ -989,6 +1113,23 @@ function main()
                 "intersection; conc-dependent active gases required in " *
                 "constituent_id; composite permitted without axis entry; " *
                 "n2/o2/rayleigh refused as active; rayleigh excluded by ID",
+            "missingness_policy" => "validate what is consumed, record " *
+                "what is skipped: pressure/temperature must be " *
+                "missing-free; every active non-composite mole-fraction " *
+                "slice separately refuses missing/fill, then non-finite, " *
+                "then negative values (distinct reasons); INACTIVE slice " *
+                "missingness (e.g. the fully-missing rayleigh slice in " *
+                "real SW files) is counted per gas and recorded in " *
+                "scenario_missing, never consumed; " *
+                "reference_surface_mole_fraction is schema/provenance " *
+                "only -- missing entries are allowed and recorded by gas " *
+                "ID, non-missing entries must be finite and nonnegative",
+            "unconsumed_axis_gases_policy" => "campaign-known gases " *
+                "(cfc11/cfc12) may sit on scenario axes without being " *
+                "this definition's gases (real SW present/ch4/n2o files): " *
+                "they are RECORDED in unconsumed_axis_gases and never " *
+                "selected; requesting them as active for a definition " *
+                "lacking them refuses; truly unknown axis IDs refuse",
             "clamp_policy" => "per-gas + total raw unclamped; " *
                 "max(total, 0) provided only as the separate " *
                 "run_ckd-output-convention field",

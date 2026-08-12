@@ -11,6 +11,8 @@ aggregation-independent matched-state OD evaluator library + self-tests; parity 
 | lw_od_parity | passed |
 | lw_pressure_grid_consistent | passed |
 | negativity_findings_unclamped | passed |
+| real_files_inactive_missing_recorded | passed |
+| refuse_active_gas_missing_entries | passed |
 | refuse_active_n2 | passed |
 | refuse_active_rayleigh | passed |
 | refuse_conc_code_map_violation | passed |
@@ -33,6 +35,7 @@ aggregation-independent matched-state OD evaluator library + self-tests; parity 
 | refuse_wrong_dim_order | passed |
 | sw_clamp_field_separate | passed |
 | sw_od_parity | passed |
+| sw_present_unconsumed_cfcs_recorded | passed |
 | sw_pressure_grid_consistent | passed |
 
 Parity (Float32-storage tolerances: abs floor 1.0e-9, rel 1.0e-6):
@@ -56,4 +59,4 @@ Parity (Float32-storage tolerances: abs floor 1.0e-9, rel 1.0e-6):
 | sw_od_o3 | 1.1910219344102302e-7 | 5.733067860628769e-8 | 0.003111111111111111 |
 | sw_od_total_raw | 4.778716728992549e-7 | 5.876539197068577e-8 | 0.002962962962962963 |
 
-Provenance: branch `glw/gate4-recovery`, head `83ebeff` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, head `441f1e5` (pre-own-commit).

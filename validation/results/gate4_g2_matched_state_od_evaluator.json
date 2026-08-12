@@ -8,6 +8,8 @@
     "lw_od_parity": "passed",
     "lw_pressure_grid_consistent": "passed",
     "negativity_findings_unclamped": "passed",
+    "real_files_inactive_missing_recorded": "passed",
+    "refuse_active_gas_missing_entries": "passed",
     "refuse_active_n2": "passed",
     "refuse_active_rayleigh": "passed",
     "refuse_conc_code_map_violation": "passed",
@@ -30,6 +32,7 @@
     "refuse_wrong_dim_order": "passed",
     "sw_clamp_field_separate": "passed",
     "sw_od_parity": "passed",
+    "sw_present_unconsumed_cfcs_recorded": "passed",
     "sw_pressure_grid_consistent": "passed"
   },
   "parity_stats": {
@@ -240,7 +243,7 @@
     "branch": "glw/gate4-recovery",
     "concentrations": "ckdmip_evaluation1_concentrations_present.nc",
     "fixture_dir": "/tmp/mso_evaluator_fixtures",
-    "generated_from_head": "83ebeff",
+    "generated_from_head": "441f1e5",
     "lw_definition": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "lw_smoke": "/shared/home/greg/ecckd-derived-flux-work/g1-references/lw32_run_ckd_smoke.nc",
     "provenance_note": "artifact generated from the working tree before its own commit",
@@ -251,6 +254,8 @@
     "active_gas_selection": "caller-explicit active_absorption_gases; no definition-scenario intersection; conc-dependent active gases required in constituent_id; composite permitted without axis entry; n2/o2/rayleigh refused as active; rayleigh excluded by ID",
     "aggregation_choice": "none -- evaluator is aggregation-independent; Gate-2 dataset/aggregation and thresholds-4/5 semantics remain unresolved rulings",
     "clamp_policy": "per-gas + total raw unclamped; max(total, 0) provided only as the separate run_ckd-output-convention field",
+    "missingness_policy": "validate what is consumed, record what is skipped: pressure/temperature must be missing-free; every active non-composite mole-fraction slice separately refuses missing/fill, then non-finite, then negative values (distinct reasons); INACTIVE slice missingness (e.g. the fully-missing rayleigh slice in real SW files) is counted per gas and recorded in scenario_missing, never consumed; reference_surface_mole_fraction is schema/provenance only -- missing entries are allowed and recorded by gas ID, non-missing entries must be finite and nonnegative",
+    "unconsumed_axis_gases_policy": "campaign-known gases (cfc11/cfc12) may sit on scenario axes without being this definition's gases (real SW present/ch4/n2o files): they are RECORDED in unconsumed_axis_gases and never selected; requesting them as active for a definition lacking them refuses; truly unknown axis IDs refuse",
     "upstream_evidence": "run_ckd.cpp:66-73,264-281,316; ckd_model.cpp:178-199,963-1058 (LUT throw :988-990, LINEAR/RELATIVE_LINEAR throw :1022-1024); optimize_lut_lw.sh GASLIST :43-260; optimize_lut_sw.sh GASLIST :73-244; published LW32 stores cfc11/cfc12 as LINEAR code 1 (codes are read from the file, never assumed)"
   },
   "status": "matched_state_od_evaluator_passed",
@@ -258,5 +263,5 @@
     "od_abs": 1.0e-9,
     "od_rel": 1.0e-6
   },
-  "timestamp_utc": "2026-08-12T10:22:49.959"
+  "timestamp_utc": "2026-08-12T12:40:03.654"
 }
