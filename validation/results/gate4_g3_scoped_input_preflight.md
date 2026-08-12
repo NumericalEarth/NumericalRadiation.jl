@@ -7,7 +7,8 @@ input manifest only; no optimizer, LBL, objective, floor, or recovery computatio
 | Gate | Result |
 |---|---|
 | eval2_training_both_pair | waiting |
-| fp_shim_required_noted | passed |
+| expected_sets_match_pinned_scripts | passed |
+| fp_shim_so_hash | passed |
 | lw_gpoints | passed |
 | lw_init | passed |
 | lw_optimize_binary | passed |
@@ -18,8 +19,8 @@ input manifest only; no optimizer, LBL, objective, floor, or recovery computatio
 | sw_optimize_binary | passed |
 | sw_training_fluxes_16 | passed |
 
-Inventory: 42/45 inputs present (missing items are the eval2 rel-415 pair pending G2c/G2d).
+Inventory: 43/46 inputs present (missing items are the eval2 rel-415 pair pending G2c/G2d).
 
 Scope: gates ONLY on inputs the pinned optimizer invocation actually reads (input=, gpointfile=, append_path training/work flux dirs) plus binaries and the FP-shim requirement; deliberately independent of idealized/ and the broad ckdmip_training_data_preflight layout, per the quota-recovery runbook's binding Path-D requirement
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `57fbd2c` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `c994426` (pre-own-commit).

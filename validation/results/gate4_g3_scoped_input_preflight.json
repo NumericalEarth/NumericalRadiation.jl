@@ -10,7 +10,8 @@
   "failures": [],
   "gates": {
     "eval2_training_both_pair": "waiting",
-    "fp_shim_required_noted": "passed",
+    "expected_sets_match_pinned_scripts": "passed",
+    "fp_shim_so_hash": "passed",
     "lw_gpoints": "passed",
     "lw_init": "passed",
     "lw_optimize_binary": "passed",
@@ -31,7 +32,8 @@
     {
       "input": "LW gpoints",
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
-      "present": true
+      "present": true,
+      "sha256_matches": true
     },
     {
       "input": "LW flux rel-180",
@@ -136,7 +138,8 @@
     {
       "input": "v1.2 optimize_lut",
       "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/optimize_lut",
-      "present": true
+      "present": true,
+      "sha256_matches": true
     },
     {
       "input": "SW scaled init",
@@ -148,6 +151,7 @@
       "input": "SW gpoints v1.4 symlink",
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5",
       "present": true,
+      "resolved_target_sha256_matches": true,
       "resolves_to": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_gpoints/ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5"
     },
     {
@@ -233,7 +237,8 @@
     {
       "input": "v1.4 optimize_lut",
       "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut",
-      "present": true
+      "present": true,
+      "sha256_matches": true
     },
     {
       "input": "eval2 LW rel-415 flux",
@@ -249,14 +254,20 @@
       "input": "eval2 SW rgb rel-415 flux (work alt)",
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
       "present": false
+    },
+    {
+      "input": "H5open-preinit shim .so (4099)",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so",
+      "present": true,
+      "sha256_matches": true
     }
   ],
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "57fbd2c",
+    "generated_from_head": "c994426",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope_rationale": "gates ONLY on inputs the pinned optimizer invocation actually reads (input=, gpointfile=, append_path training/work flux dirs) plus binaries and the FP-shim requirement; deliberately independent of idealized/ and the broad ckdmip_training_data_preflight layout, per the quota-recovery runbook's binding Path-D requirement",
   "status": "g3_scoped_preflight_waiting_for_eval2",
-  "timestamp_utc": "2026-08-12T08:29:31.519"
+  "timestamp_utc": "2026-08-12T08:33:24.267"
 }
