@@ -102,10 +102,14 @@ finding, not a clamp).
    recorded BINDING dataset choice and aggregation decision before
    implementation.
 
-## Shared preconditions (both gates)
+## Shared preconditions (binding campaign runners)
 
 Recovered outputs + reviewed `gate4_g3_run_ledger.json` (strict schema,
-as enforced by the acceptance unit) — both units refuse without them.
+as enforced by the acceptance unit) — the BINDING CAMPAIGN RUNNERS
+(Gate-1 objective-ratio runner, G3 acceptance unit, and the future
+Gate-2 binding runner) refuse without them. The matched-state OD
+evaluator is exempt by design: it is a non-binding library evaluating
+caller-supplied files with no ledger requirement of its own.
 
 ## The FIVE canonical acceptance thresholds (complete conjunction)
 

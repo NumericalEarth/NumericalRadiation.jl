@@ -23,7 +23,7 @@ echo "=== G3-lw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
 sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code changed since generation; regenerate the checkpoint" >&2; exit 75; }
 cd5627f643717fa91d75e6f93296d54d161e57394069aa7dce306aa2e8ce0641  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
 c65809a45e8dbd56adea7d443c520b4be30ce294ace02b9f9b91ac79d5c744ea  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g3_scoped_input_preflight.jl
-de9472e0c3efaf40ef033bbfa207328d890dfa95136c21e85db720f5d1247e3d  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
+60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
 9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0  /shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Project.toml
 cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186  /shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Manifest.toml
 GATEPINS

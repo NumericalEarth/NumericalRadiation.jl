@@ -30,7 +30,9 @@ semantics by inference.
   `ecckd_published_recovery_target.jl:95-96`), **render** of the declared
   value into a report (`ecckd_training_recovery_targets.jl:138-139` and the
   archived results tables), or **restatement** (`docs/src/design.md:174-175`,
-  `validation/gate4_unevaluated_gates_design.md:96-97` rev 2, and this
+  `validation/gate4_unevaluated_gates_design.md` (rev 3, the
+  five-threshold section "The FIVE canonical acceptance thresholds",
+  items 4-5), and this
   memo). **NO source file COMPUTES either quantity** — there is no
   "regression" aggregation definition anywhere. The origin commit `e944699`
   ("Add original-objective recovery framework + published-model accuracy
@@ -83,7 +85,8 @@ machinery that evaluates published models is:
   ecRad reference on one state** (candidate minus reference), NOT a
   scenario-pair (CKDMIP-style) forcing; it couples the LW and SW models
   jointly, consistent with "the recovered LW32+SW32 pair evaluated jointly"
-  (design note rev 2).
+  (design note, Sequencing section — wording unchanged since rev 2,
+  current rev 3).
 - `validation/reduced_ecckd_accuracy.jl:511-553` — `case_metrics` per case:
   `variables.heating_rate.rmse` (pooled within-case), `toa_forcing_max_abs`
   = max over columns of |Δ net TOA| (line 529), `surface_forcing_max_abs`
@@ -159,7 +162,8 @@ share columns with the tropical set), but this is unverified.
    `reduced_ecckd_32g_rrtmgp_comparison.jl:140` is an in-repo precedent
    from a different path, never tied to thresholds 4-5.
 4. (Interacts with the above) Whether signed deltas or absolute deltas are
-   intended — "may not regress beyond" (design note rev 2) reads as signed
+   intended — "may not regress beyond" (design note five-threshold
+   section, unchanged in rev 3) reads as signed
    candidate-minus-published upper bound, i.e. improvement is unbounded;
    this is the design note's recorded phrasing, not an implementation.
 

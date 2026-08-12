@@ -42,6 +42,6 @@ Generated (unsubmitted): `/shared/home/greg/Projects/AnalyticBandRadiation-platf
 
 Authorization: token `g3_recovery_go` + scoped preflight ready + review.
 
-final/target <= 1.05, weight L1 <= 0.02, OD log-RMSE <= 0.02 vs published models -- evaluated by a separate post-run comparison unit, never inside the executor
+FIVE canonical thresholds, evaluated by separate post-run runners, never inside the executor: (1) final/target objective ratio <= 1.05 (Gate-1 runner implemented, refusing until reviewed ledger + outputs); (2) weight rel-L1 <= 0.02 (binding, acceptance unit); (3) true OD log-RMSE <= 0.02 (Gate-2 binding runner pending dataset/aggregation rulings; matched-state evaluator implemented); (4) forcing regression margin <= 0.03 W/m2 and (5) heating-RMSE regression margin <= 0.005 K/day (aggregation semantics pending ruling)
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `7204e05` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `5e9d2d0` (pre-own-commit).

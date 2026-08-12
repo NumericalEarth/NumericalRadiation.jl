@@ -26,9 +26,16 @@
 #       4099 H5open-preinit .so, exec the band's pinned binary) and seds
 #       OPTIMIZE_LUT= in the testcopy config to that wrapper.
 #
-# ACCEPTANCE METRICS (evaluated by a SEPARATE post-run comparison unit,
-# never inside the executor): final/target <= 1.05, weight L1 <= 0.02,
-# OD log-RMSE <= 0.02 vs the published models.
+# ACCEPTANCE METRICS (evaluated by SEPARATE post-run runners, never
+# inside the executor) -- the FIVE canonical thresholds: (1) final/target
+# objective ratio <= 1.05 (Gate-1 runner gate4_g1_objective_ratio.jl:
+# implemented, refusing until reviewed ledger + outputs); (2) weight
+# rel-L1 <= 0.02 (binding, gate4_g3_acceptance_comparison.jl); (3) true
+# OD log-RMSE <= 0.02 (Gate-2 binding runner pending dataset/aggregation
+# rulings; matched-state evaluator implemented); (4) forcing regression
+# margin <= 0.03 W/m2 and (5) heating-RMSE regression margin <= 0.005
+# K/day (aggregation semantics pending ruling; see
+# gate4_regression_margin_semantics_evidence.md).
 
 include(joinpath(@__DIR__, "validation_results.jl"))
 
@@ -347,9 +354,16 @@ function main()
         "quota_health_fixture_verdicts" => htests,
         "authorization_token_required" => "g3_recovery_go (plus scoped " *
             "preflight ready; submission is a reviewed human step)",
-        "acceptance_metrics_note" => "final/target <= 1.05, weight L1 <= " *
-            "0.02, OD log-RMSE <= 0.02 vs published models -- evaluated by " *
-            "a separate post-run comparison unit, never inside the executor",
+        "acceptance_metrics_note" => "FIVE canonical thresholds, evaluated " *
+            "by separate post-run runners, never inside the executor: " *
+            "(1) final/target objective ratio <= 1.05 (Gate-1 runner " *
+            "implemented, refusing until reviewed ledger + outputs); " *
+            "(2) weight rel-L1 <= 0.02 (binding, acceptance unit); " *
+            "(3) true OD log-RMSE <= 0.02 (Gate-2 binding runner pending " *
+            "dataset/aggregation rulings; matched-state evaluator " *
+            "implemented); (4) forcing regression margin <= 0.03 W/m2 and " *
+            "(5) heating-RMSE regression margin <= 0.005 K/day " *
+            "(aggregation semantics pending ruling)",
         "provenance" => Dict("branch" => branch, "generated_from_head" => ghead,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
