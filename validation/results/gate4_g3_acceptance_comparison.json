@@ -1,0 +1,56 @@
+{
+  "binding_metric": "weight relative L1 <= 0.02 (gpoint_weights: LW planck-derived, SW solar-derived)",
+  "case": "gate4_g3_acceptance_comparison",
+  "data_mode": "refusal_no_g3_outputs",
+  "disclaimer": "refuses until both recovered ckd-definitions exist; no objective, floor, or recovery computation.",
+  "expected_outputs": {
+    "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+    "sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc"
+  },
+  "malformed_cases_covered": [
+    "16g synthetic shape mismatch (metrics layer throws)",
+    "cross-band structural false",
+    "structural value drift false",
+    "negative weights throw",
+    "nonfinite (NaN) weights throw",
+    "hash-only run ledger rejected"
+  ],
+  "missing": [
+    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc"
+  ],
+  "provenance_requirement": "metrics run only with gate4_g3_run_ledger.json present and hash-matching (written at post-G3 log/hash review)",
+  "published_targets": {
+    "lw": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+    "sw": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+  },
+  "selftests": {
+    "all_pass_selects_incomplete_pending": true,
+    "complete_ledger_accepted": true,
+    "cross_band_structural_false": true,
+    "lw_perturb_fails_coeff_diag": true,
+    "lw_perturb_fails_weight_l1": true,
+    "lw_self_coeff_zero": true,
+    "lw_self_weight_zero": true,
+    "minimal_ledger_rejected": true,
+    "negative_weight_throws": true,
+    "nonfinite_weight_throws": true,
+    "render_console_interpolates_g3_acceptance_failed_weight_l1": true,
+    "render_console_interpolates_g3_acceptance_incomplete_pending_objective_and_od": true,
+    "render_md_interpolates_g3_acceptance_failed_weight_l1": true,
+    "render_md_interpolates_g3_acceptance_incomplete_pending_objective_and_od": true,
+    "shape_mismatch_metrics_throw": true,
+    "structural_value_drift_false": true,
+    "sw_perturb_fails_weight_l1": true,
+    "sw_self_coeff_zero": true,
+    "sw_self_weight_zero": true,
+    "weight_failure_selects_failed_status": true,
+    "zero_string_job_id_rejected": true
+  },
+  "status": "g3_acceptance_waiting_for_optimizer_outputs",
+  "timestamp_utc": "2026-08-12T09:07:14.983",
+  "unevaluated_acceptance_gates": [
+    "final/target objective ratio <= 1.05 (G1 objective machinery unit)",
+    "true OD log-RMSE <= 0.02 (optical-depth evaluation for the fixed atmospheres; coefficient log-RMSE is only a diagnostic)"
+  ]
+}
