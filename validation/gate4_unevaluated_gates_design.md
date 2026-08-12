@@ -83,8 +83,34 @@ finding, not a clamp).
 Recovered outputs + reviewed `gate4_g3_run_ledger.json` (strict schema,
 as enforced by the acceptance unit) — both units refuse without them.
 
+## The FIVE canonical acceptance thresholds (complete conjunction)
+
+Canonical recovery acceptance has FIVE thresholds (declared in
+`ecckd_training_recovery_targets.jl` `published_model_recovery_metrics`
+and `ecckd_published_recovery_target.jl`), not three:
+
+1. `final_objective_target_ratio_max` ≤ 1.05 (Gate 1 above)
+2. `weight_l1_relative_error_max` ≤ 0.02 (implemented, acceptance unit)
+3. `optical_depth_log_rmse_max` ≤ 0.02 (Gate 2 above)
+4. `forcing_error_regression_margin_w_m2` ≤ 0.03
+5. `heating_rmse_regression_margin_k_day` ≤ 0.005
+
+Thresholds 4–5 are candidate-minus-published comparisons on IDENTICAL
+`REDUCED_CASES`: the recovered pair's forcing errors / heating RMSE may
+not regress beyond the margins relative to the published pair evaluated
+through the same path. **Exact aggregation UNRESOLVED**: no existing
+implementation defines the regression computation (the targets files
+declare the margins; `reduced_ecckd_accuracy.jl`'s worst-TOA/surface
+forcing and heating-RMSE machinery serves the new-band-scheme metrics).
+The likely semantics — max/worst-case forcing delta and heating-RMSE
+delta across the identical case set — must be verified against canonical
+intent and RECORDED as a decision before implementation, not invented.
+Gate 1 (`hard_objective ≤ 1.05`) is NOT assumed to subsume them.
+
 ## Sequencing
 
-Acceptance = weight rel-L1 (implemented) ∧ Gate 1 ∧ Gate 2, all bands,
-plus monitor review. Gate-2 SW additionally requires the SW parity unit
-green. Nothing here claims implementation or a pass.
+Acceptance = the FIVE-threshold conjunction over **the recovered
+LW32+SW32 pair evaluated jointly**, plus monitor review. Gate-2 SW
+additionally requires the SW parity unit green. Thresholds 4–5
+additionally require the recorded aggregation decision. Nothing here
+claims implementation or a pass.
