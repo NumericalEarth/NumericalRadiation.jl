@@ -208,23 +208,151 @@ echo "=== G3-$(band) done rc=\$? \$(date -u +%FT%TZ) ==="
 """
 end
 
+# guarded prerequisite loader (fixture-run on tmp files): a missing,
+# unparseable, parsed-non-object (JSON null/array distinguished from
+# parse failure), WRONG-CASE, or unknown-status preflight artifact all
+# classify as an invalid prerequisite with a stable reason -- never an
+# uncaught exception, and never status-only trust: the exact case is
+# bound BEFORE the status ladder.
+function classify_scoped_preflight(path)
+    isfile(path) ||
+        return ("invalid", "scoped preflight artifact missing: $path")
+    parse_failed = false
+    pf = try
+        JSON.parsefile(path)
+    catch
+        parse_failed = true
+        nothing
+    end
+    parse_failed &&
+        return ("invalid", "scoped preflight artifact unparseable " *
+                           "(parse failure)")
+    pf isa AbstractDict ||
+        return ("invalid", "scoped preflight artifact parses to a " *
+                           "non-object (JSON null/array/scalar)")
+    c = get(pf, "case", "")
+    (c isa AbstractString && c == "gate4_g3_scoped_input_preflight") ||
+        return ("invalid",
+                "scoped preflight artifact case mismatch: $(repr(c))")
+    s = get(pf, "status", "")
+    s == "g3_scoped_preflight_ready" && return ("ready", "ok")
+    s == "g3_scoped_preflight_waiting_for_eval2" &&
+        return ("waiting", "ok")
+    return ("invalid", "scoped preflight in failed/unknown state: " *
+                       "$(repr(s))")
+end
+
+# script generation is INVOKED only behind the prerequisite decision:
+# the generator reads/hashes mutable external inputs and may throw, so
+# an invalid prerequisite must reach canonical failed emission without
+# ever calling it (fixture-proven via an injected counting generator).
+# FAIL-CLOSED ALLOWLIST: only the two known-good states generate; any
+# unexpected internal state refuses generation too.
+gx_should_generate(pf_state) = pf_state in ("waiting", "ready")
+function gx_generate_scripts(genfn, pf_state)
+    gx_should_generate(pf_state) || return nothing
+    return Dict("lw" => genfn("lw"), "sw" => genfn("sw"))
+end
+
+# every gate computed FROM generated script text: explicitly
+# blocked_prerequisite when generation is refused, never evaluated on
+# fabricated/empty text
+const GX_TEXT_GATES = vcat(
+    [g for nm in ("lw", "sw")
+       for g in ["$(nm)_headnode_refusal", "$(nm)_optimize_only",
+                 "$(nm)_training_both_sed", "$(nm)_shim_wrapper",
+                 "$(nm)_stale_output_refusal", "$(nm)_input_hash_gate",
+                 "$(nm)_flock_single_flight",
+                 "$(nm)_readonly_gates_before_lock",
+                 "$(nm)_gate_code_pinned", "$(nm)_quota_health_gate",
+                 "$(nm)_runtime_ready_preflight", "$(nm)_source_pins"]],
+    ["lw_mode_list", "sw_mode_list"])
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    pf = JSON.parsefile(validation_results_path("gate4_g3_scoped_input_preflight.json"))
-    pf_ready = pf["status"] == "g3_scoped_preflight_ready"
+    # loader fixtures FIRST, through the SAME guarded classifier
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_invalid"] =
+        classify_scoped_preflight(joinpath(tdir, "absent.json"))[1] ==
+        "invalid"
+    fp = joinpath(tdir, "mal.json"); write(fp, "{")
+    lt["malformed_invalid"] = begin
+        st, why = classify_scoped_preflight(fp)
+        st == "invalid" && occursin("unparseable", why)
+    end
+    write(fp, "null")
+    lt["null_invalid_non_object"] = begin
+        st, why = classify_scoped_preflight(fp)
+        st == "invalid" && occursin("non-object", why)
+    end
+    write(fp, "[1]")
+    lt["array_invalid_non_object"] = begin
+        st, why = classify_scoped_preflight(fp)
+        st == "invalid" && occursin("non-object", why)
+    end
+    write(fp, "{\"case\": \"other\", \"status\": \"g3_scoped_preflight_ready\"}")
+    lt["wrong_case_invalid"] = begin
+        st, why = classify_scoped_preflight(fp)
+        st == "invalid" && occursin("case mismatch", why)
+    end
+    write(fp, "{\"case\": \"gate4_g3_scoped_input_preflight\", " *
+              "\"status\": \"g3_scoped_preflight_ready\"}")
+    lt["exact_case_ready"] = classify_scoped_preflight(fp)[1] == "ready"
+    write(fp, "{\"case\": \"gate4_g3_scoped_input_preflight\", " *
+              "\"status\": \"g3_scoped_preflight_waiting_for_eval2\"}")
+    lt["exact_case_waiting"] =
+        classify_scoped_preflight(fp)[1] == "waiting"
+    write(fp, "{\"case\": \"gate4_g3_scoped_input_preflight\", " *
+              "\"status\": \"tampered\"}")
+    lt["unknown_status_invalid"] = begin
+        st, why = classify_scoped_preflight(fp)
+        st == "invalid" && occursin("failed/unknown state", why)
+    end
+    # call-site decision, proven with an injected counting generator:
+    # invalid NEVER invokes generation; waiting/ready generate both bands
+    lt["invalid_never_invokes_generator"] = begin
+        n = Ref(0)
+        r = gx_generate_scripts(b -> (n[] += 1; "T"), "invalid")
+        r === nothing && n[] == 0
+    end
+    # allowlist fail-closed: an UNEXPECTED internal state must refuse
+    # generation exactly like invalid
+    lt["unexpected_state_never_invokes_generator"] = begin
+        n = Ref(0)
+        r = gx_generate_scripts(b -> (n[] += 1; "T"), "bogus_state")
+        r === nothing && n[] == 0
+    end
+    lt["waiting_and_ready_generate_both_bands"] = begin
+        n = Ref(0)
+        r1 = gx_generate_scripts(b -> (n[] += 1; "T"), "waiting")
+        r2 = gx_generate_scripts(b -> (n[] += 1; "T"), "ready")
+        r1 !== nothing && r2 !== nothing && n[] == 4 &&
+            sort(collect(keys(r1))) == ["lw", "sw"]
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["preflight_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "preflight loader fixture failures: " *
+        join(sort([k for (k, v) in lt if !v]), ", "))
+
+    pf_state, pf_reason = classify_scoped_preflight(
+        validation_results_path("gate4_g3_scoped_input_preflight.json"))
+    pf_ready = pf_state == "ready"
     gates["scoped_preflight_prerequisite"] =
         pf_ready ? "passed" :
-        (pf["status"] == "g3_scoped_preflight_waiting_for_eval2" ? "waiting" : "failed")
-    pf["status"] in ("g3_scoped_preflight_ready",
-                     "g3_scoped_preflight_waiting_for_eval2") ||
-        push!(fails, "scoped preflight in failed state: $(pf["status"])")
+        (pf_state == "waiting" ? "waiting" : "failed")
+    pf_state == "invalid" && push!(fails, pf_reason)
 
-    lw_text = make_sbatch("lw")
-    sw_text = make_sbatch("sw")
-    open(GX_SBATCH_LW, "w") do io; write(io, lw_text); end
-    open(GX_SBATCH_SW, "w") do io; write(io, sw_text); end
+    # exact case+status prerequisite binding BEFORE script generation:
+    # an invalid prerequisite NEVER invokes make_sbatch (which reads and
+    # hashes mutable external inputs and may throw), never rewrites the
+    # committed scripts, and reaches canonical failed emission with the
+    # text gates explicitly blocked_prerequisite
+    texts = gx_generate_scripts(make_sbatch, pf_state)
+    sbatch_written = texts !== nothing
 
     gates["sbatch_written_not_submitted"] = "passed"
     self_src = read(@__FILE__, String)
@@ -232,64 +360,74 @@ function main()
     isempty(collect(eachmatch(Regex("run\\(`" * sb_tok), self_src))) ||
         (gates["sbatch_written_not_submitted"] = "failed";
          push!(fails, "sbatch invocation found in checkpoint unit"))
-    for (nm, txt) in (("lw", lw_text), ("sw", sw_text))
-        exec_lines = join([l for l in split(txt, '\n')
-                           if !occursin(r"^\s*#", l)], '\n')
-        gates["$(nm)_headnode_refusal"] =
-            occursin("REFUSED: head-node execution", txt) ? "passed" : "failed"
-        gates["$(nm)_optimize_only"] =
-            occursin("optimize_lut", exec_lines) &&
-            !occursin("create_lut", exec_lines) &&
-            !occursin("create_look_up_table", exec_lines) &&
-            !occursin("scale_lut_", exec_lines) &&
-            !occursin("find_g_points", exec_lines) &&
-            !occursin("run_ckd", exec_lines) &&
-            !occursin("lbl_evaluation", exec_lines) ? "passed" : "failed"
-        gates["$(nm)_optimize_only"] == "passed" ||
-            push!(fails, "$nm: forbidden stage in executable lines")
-        gates["$(nm)_training_both_sed"] =
-            occursin("TRAINING_BOTH=no\$|TRAINING_BOTH=yes", txt) ? "passed" : "failed"
-        gates["$(nm)_shim_wrapper"] =
-            occursin("LD_PRELOAD", txt) && occursin(SHIM_SO_SHA, txt) &&
-            occursin("OPTIMIZE_LUT=$G4WORK/tools/optimize_lut_h5preinit", txt) ?
-            "passed" : "failed"
-        gates["$(nm)_stale_output_refusal"] =
-            occursin("stale optimizer output exists", txt) ? "passed" : "failed"
-        gates["$(nm)_input_hash_gate"] =
-            occursin("sha256sum -c", txt) &&
-            occursin("eval2 TRAINING_BOTH file missing", txt) ? "passed" : "failed"
-    end
-    gates["lw_mode_list"] =
-        occursin("optimize_lut_lw.sh relative-base relative-ch4 relative-n2o relative-cfc",
-                 lw_text) ? "passed" : "failed"
-    gates["sw_mode_list"] =
-        occursin("optimize_lut_sw.sh relative-base relative-ch4 relative-n2o",
-                 sw_text) && !occursin("relative-cfc", sw_text) ? "passed" : "failed"
-    for (nm, txt) in (("lw", lw_text), ("sw", sw_text))
-        gates["$(nm)_flock_single_flight"] =
-            occursin("flock -n 9", txt) && occursin("g3-$(nm).lock", txt) ? "passed" : "failed"
-        i_gatepin = findfirst("GATEPINS", txt); i_health = findfirst("quota_health ", txt)
-        i_source = findfirst("source $PROJECT_ROOT", txt); i_lock = findfirst("flock -n 9", txt)
-        i_pf = findfirst("G3_PREFLIGHT_CHECK_ONLY=1", txt)
-        gates["$(nm)_readonly_gates_before_lock"] =
-            (i_gatepin !== nothing && i_source !== nothing && i_health !== nothing &&
-             i_pf !== nothing && i_lock !== nothing &&
-             first(i_gatepin) < first(i_source) < first(i_health) &&
-             first(i_health) < first(i_pf) < first(i_lock)) ? "passed" : "failed"
-        gp_block = split(txt, "GATEPINS")[2]
-        gates["$(nm)_gate_code_pinned"] =
-            all(occursin(f, gp_block) for f in ("gate4_quota_guard.sh",
-                "gate4_g3_scoped_input_preflight.jl", "validation_results.jl",
-                "test/Project.toml", "test/Manifest.toml")) ? "passed" : "failed"
-        gates["$(nm)_quota_health_gate"] =
-            occursin("quota_health ", txt) &&
-            occursin("before ANY /shared write", txt) ? "passed" : "failed"
-        gates["$(nm)_runtime_ready_preflight"] =
-            occursin("G3_PREFLIGHT_CHECK_ONLY=1", txt) &&
-            occursin("g3_scoped_preflight_ready", txt) ? "passed" : "failed"
-        gates["$(nm)_source_pins"] =
-            occursin("config.h", split(txt, "HASHES")[2]) &&
-            occursin("version.h.in", split(txt, "HASHES")[2]) ? "passed" : "failed"
+    if sbatch_written
+        lw_text = texts["lw"]
+        sw_text = texts["sw"]
+        open(GX_SBATCH_LW, "w") do io; write(io, lw_text); end
+        open(GX_SBATCH_SW, "w") do io; write(io, sw_text); end
+        for (nm, txt) in (("lw", lw_text), ("sw", sw_text))
+            exec_lines = join([l for l in split(txt, '\n')
+                               if !occursin(r"^\s*#", l)], '\n')
+            gates["$(nm)_headnode_refusal"] =
+                occursin("REFUSED: head-node execution", txt) ? "passed" : "failed"
+            gates["$(nm)_optimize_only"] =
+                occursin("optimize_lut", exec_lines) &&
+                !occursin("create_lut", exec_lines) &&
+                !occursin("create_look_up_table", exec_lines) &&
+                !occursin("scale_lut_", exec_lines) &&
+                !occursin("find_g_points", exec_lines) &&
+                !occursin("run_ckd", exec_lines) &&
+                !occursin("lbl_evaluation", exec_lines) ? "passed" : "failed"
+            gates["$(nm)_optimize_only"] == "passed" ||
+                push!(fails, "$nm: forbidden stage in executable lines")
+            gates["$(nm)_training_both_sed"] =
+                occursin("TRAINING_BOTH=no\$|TRAINING_BOTH=yes", txt) ? "passed" : "failed"
+            gates["$(nm)_shim_wrapper"] =
+                occursin("LD_PRELOAD", txt) && occursin(SHIM_SO_SHA, txt) &&
+                occursin("OPTIMIZE_LUT=$G4WORK/tools/optimize_lut_h5preinit", txt) ?
+                "passed" : "failed"
+            gates["$(nm)_stale_output_refusal"] =
+                occursin("stale optimizer output exists", txt) ? "passed" : "failed"
+            gates["$(nm)_input_hash_gate"] =
+                occursin("sha256sum -c", txt) &&
+                occursin("eval2 TRAINING_BOTH file missing", txt) ? "passed" : "failed"
+        end
+        gates["lw_mode_list"] =
+            occursin("optimize_lut_lw.sh relative-base relative-ch4 relative-n2o relative-cfc",
+                     lw_text) ? "passed" : "failed"
+        gates["sw_mode_list"] =
+            occursin("optimize_lut_sw.sh relative-base relative-ch4 relative-n2o",
+                     sw_text) && !occursin("relative-cfc", sw_text) ? "passed" : "failed"
+        for (nm, txt) in (("lw", lw_text), ("sw", sw_text))
+            gates["$(nm)_flock_single_flight"] =
+                occursin("flock -n 9", txt) && occursin("g3-$(nm).lock", txt) ? "passed" : "failed"
+            i_gatepin = findfirst("GATEPINS", txt); i_health = findfirst("quota_health ", txt)
+            i_source = findfirst("source $PROJECT_ROOT", txt); i_lock = findfirst("flock -n 9", txt)
+            i_pf = findfirst("G3_PREFLIGHT_CHECK_ONLY=1", txt)
+            gates["$(nm)_readonly_gates_before_lock"] =
+                (i_gatepin !== nothing && i_source !== nothing && i_health !== nothing &&
+                 i_pf !== nothing && i_lock !== nothing &&
+                 first(i_gatepin) < first(i_source) < first(i_health) &&
+                 first(i_health) < first(i_pf) < first(i_lock)) ? "passed" : "failed"
+            gp_block = split(txt, "GATEPINS")[2]
+            gates["$(nm)_gate_code_pinned"] =
+                all(occursin(f, gp_block) for f in ("gate4_quota_guard.sh",
+                    "gate4_g3_scoped_input_preflight.jl", "validation_results.jl",
+                    "test/Project.toml", "test/Manifest.toml")) ? "passed" : "failed"
+            gates["$(nm)_quota_health_gate"] =
+                occursin("quota_health ", txt) &&
+                occursin("before ANY /shared write", txt) ? "passed" : "failed"
+            gates["$(nm)_runtime_ready_preflight"] =
+                occursin("G3_PREFLIGHT_CHECK_ONLY=1", txt) &&
+                occursin("g3_scoped_preflight_ready", txt) ? "passed" : "failed"
+            gates["$(nm)_source_pins"] =
+                occursin("config.h", split(txt, "HASHES")[2]) &&
+                occursin("version.h.in", split(txt, "HASHES")[2]) ? "passed" : "failed"
+        end
+    else
+        for g in GX_TEXT_GATES
+            gates[g] = "blocked_prerequisite"
+        end
     end
     # quota_health fixture tests (stubbed lfs; same sourced logic)
     guard = joinpath(PROJECT_ROOT, "validation/gate4_quota_guard.sh")
@@ -351,6 +489,13 @@ function main()
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
         "sbatch_paths" => Dict("lw" => GX_SBATCH_LW, "sw" => GX_SBATCH_SW),
+        "sbatch_written_this_run" => sbatch_written,
+        "sbatch_scripts_state" => sbatch_written ?
+            "generated this run (unsubmitted)" :
+            "NOT generated this run (prerequisite blocked); any files " *
+            "at sbatch_paths are PRESERVED HISTORICAL output of an " *
+            "earlier run, not current",
+        "preflight_loader_fixture_verdicts" => lt,
         "quota_health_fixture_verdicts" => htests,
         "authorization_token_required" => "g3_recovery_go (plus scoped " *
             "preflight ready; submission is a reviewed human step)",
@@ -384,7 +529,15 @@ function main()
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
         end
-        println(io, "\nGenerated (unsubmitted): `$(GX_SBATCH_LW)`, `$(GX_SBATCH_SW)`")
+        if sbatch_written
+            println(io, "\nGenerated (unsubmitted): `$(GX_SBATCH_LW)`, " *
+                        "`$(GX_SBATCH_SW)`")
+        else
+            println(io, "\nNO scripts generated this run (prerequisite " *
+                        "blocked); any files at `$(GX_SBATCH_LW)`, " *
+                        "`$(GX_SBATCH_SW)` are preserved historical " *
+                        "output of an earlier run, not current.")
+        end
         println(io, "\nAuthorization: token `g3_recovery_go` + scoped " *
                     "preflight ready + review.")
         println(io, "\n", result["acceptance_metrics_note"])

@@ -19,6 +19,7 @@
     "lw_source_pins": "passed",
     "lw_stale_output_refusal": "passed",
     "lw_training_both_sed": "passed",
+    "preflight_loader_fixture_tests": "passed",
     "quota_health_fixture_tests": "passed",
     "sbatch_written_not_submitted": "passed",
     "scoped_preflight_prerequisite": "waiting",
@@ -38,9 +39,22 @@
     "sw_training_both_sed": "passed",
     "token_gated_submit": "passed"
   },
+  "preflight_loader_fixture_verdicts": {
+    "array_invalid_non_object": true,
+    "exact_case_ready": true,
+    "exact_case_waiting": true,
+    "invalid_never_invokes_generator": true,
+    "malformed_invalid": true,
+    "missing_invalid": true,
+    "null_invalid_non_object": true,
+    "unexpected_state_never_invokes_generator": true,
+    "unknown_status_invalid": true,
+    "waiting_and_ready_generate_both_bands": true,
+    "wrong_case_invalid": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "5e9d2d0",
+    "generated_from_head": "5d2b194",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "quota_health_fixture_verdicts": {
@@ -54,6 +68,8 @@
     "lw": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_lw_optimizer.sbatch",
     "sw": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_sw_optimizer.sbatch"
   },
+  "sbatch_scripts_state": "generated this run (unsubmitted)",
+  "sbatch_written_this_run": true,
   "status": "g3_executor_waiting_for_eval2",
-  "timestamp_utc": "2026-08-12T10:45:34.775"
+  "timestamp_utc": "2026-08-12T15:20:16.206"
 }

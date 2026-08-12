@@ -419,7 +419,14 @@ const DCA_EDGES = [
   consumer_checks_case = false, status_only = true, active_when = :always),
  (id = "dep:g3_executor<-scoped_preflight",
   consumer = "gate4_g3_executor_checkpoint.jl",
-  anchors = ["pf[\"status\"] == \"g3_scoped_preflight_ready\""],
+  # HARDENED consumer: classify_scoped_preflight binds the exact case
+  # before the status ladder and classifies missing/unparseable/
+  # non-object/unknown-status fail-closed; generation is allowlist-gated
+  # behind the classified state (former status-only finding CLOSED)
+  anchors = ["pf_state, pf_reason = classify_scoped_preflight(",
+             "c == \"gate4_g3_scoped_input_preflight\"",
+             "s == \"g3_scoped_preflight_ready\"",
+             "gx_should_generate(pf_state) = pf_state in (\"waiting\", \"ready\")"],
   producer = "gate4_g3_scoped_input_preflight.json", kind = :set,
   # FAITHFUL: the executor tolerates waiting-for-eval2 (its own status
   # becomes g3_executor_waiting_for_eval2, accepted exit-0); only the
@@ -427,7 +434,7 @@ const DCA_EDGES = [
   accepted = ["g3_scoped_preflight_ready",
               "g3_scoped_preflight_waiting_for_eval2"],
   expected_case = "gate4_g3_scoped_input_preflight",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:g2_binding_scaffold<-gate2_od_dataset_manifest:fingerprint_join",
   consumer = "gate4_g2_binding_decision_scaffold.jl",
   anchors = ["function manifest_fingerprint(scenario_path)"],
@@ -815,9 +822,10 @@ const DCA_SITE_LEDGER = [
   reason = "classify_run_ledger guarded-loader body (absence-tolerant " *
            "edge; live run-ledger load + tmp loader fixtures)"),
  (file = "gate4_g3_executor_checkpoint.jl",
-  anchor = "pf = JSON.parsefile(validation_results_path(\"gate4_g3_scoped_input_preflight.json\"))",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:g3_executor<-scoped_preflight"],
-  reason = "scoped-preflight prerequisite parse"),
+  reason = "classify_scoped_preflight guarded-loader body (exact-case " *
+           "prerequisite binding; live edge + tmp loader fixtures)"),
  (file = "gate4_init_generation_manifest.jl",
   anchor = "scaffold = JSON.parsefile(",
   class = "edge", edge_ids = ["dep:init_generation_manifest<-g2_g3_runner_scaffold"],
