@@ -1,4 +1,24 @@
-# Gate-4 R2 EXECUTION CHECKPOINT (dry-run generation; NO submission).
+# Gate-4 R2 EXECUTION CHECKPOINT (dry-run generation; NO submission) --
+# HISTORICAL POST-EXECUTION MODE when the v1.4 SW raw output exists.
+#
+# EXECUTED (monitor-directed marking, 2026-08-12): the generated sbatch
+# ran as jobs 4094/4095 (configure failures, root causes recorded below
+# at write time) and 4096 (COMPLETED rc=0); outcomes are pinned by
+# gate4_r2_finding_ledger (r2_ssi_resolved_drift_version_independent).
+# When the v1.4 raw output exists, this unit runs HISTORICAL VERIFICATION
+# that is read-only WITH RESPECT TO EXECUTION ARTIFACTS (it still writes
+# its own JSON/MD results): the executed sbatch is PRESERVED -- never
+# rewritten, and byte-verified against the git blob at the finding-ledger
+# head commit 6937d473c4cb22daea38f38cd5bbaaed7dd98416 (pinned sha
+# 30d0a2ce...; committed 16:27:59Z, before job 4096 completed 16:43:13Z)
+# -- the REPOSITORY-PINNED FINAL SUBMITTED-SCRIPT RECORD, the strongest
+# available anchor since no scheduler ledger records the sbatch hash;
+# consistency with the current SBATCH_TEXT is checked separately as a
+# generator-integrity property, not as execution identity. Output and attempt history are verified
+# against the finding ledger with fail-closed structure handling. The
+# at-write attempt_1/attempt_2 root-cause records below are preserved
+# verbatim as execution evidence. The pre-execution generation path is
+# retained for the output-absent world.
 #
 # AUTHORIZED: Greg issued the R2 go ("go for R2", 2026-07-20), satisfying
 # the r2_matching_version_go token required by the R2 scaffold.
@@ -30,6 +50,17 @@ const NETCDF = "/shared/home/greg/local/ckdmip-stack"
 const RX_RESULTS_JSON = validation_results_path("gate4_r2_execution_checkpoint.json")
 const RX_RESULTS_MD = validation_results_path("gate4_r2_execution_checkpoint.md")
 const RX_SBATCH = validation_results_path("gate4_r2_dryrun.sbatch")
+
+# the REPOSITORY-PINNED FINAL SUBMITTED-SCRIPT RECORD: the script blob at
+# the finding-ledger head commit (committed 2026-07-20T16:27:59Z, BEFORE
+# job 4096 completed at 16:43:13Z). No scheduler/submission ledger
+# independently records the R2 sbatch hash, so this is the strongest
+# available identity anchor: the repository's final record of the
+# submitted script, not a scheduler-verified hash.
+const RX_LEDGER_HEAD_COMMIT = "6937d473c4cb22daea38f38cd5bbaaed7dd98416"
+const RX_EXECUTED_SBATCH_SHA =
+    "30d0a2ce4735f9d52d36b3e23789824cbc058ab3167dff17e6e921ba7624839c"
+const RX_SBATCH_REPO_PATH = "validation/results/gate4_r2_dryrun.sbatch"
 
 const SBATCH_TEXT = """
 #!/bin/bash
@@ -115,15 +146,42 @@ sha256sum "$SW_RAW_V14"
 echo "=== R2 done rc=\$? \$(date -u +%FT%TZ) ==="
 """
 
+# fail-closed JSON normalizers: every level of an external artifact is
+# coerced to a known shape before use; wrong types yield empty values and
+# controlled failed gates, never a thrown MethodError
+as_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
+as_str(x) = x isa AbstractString ? String(x) : ""
+
+function parse_artifact!(fails, name)
+    try
+        JSON.parsefile(validation_results_path(name))
+    catch err
+        push!(fails, "$name unreadable/unparseable: " *
+                     "$(first(sprint(showerror, err), 120))")
+        nothing
+    end
+end
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    scaffold = JSON.parsefile(
-        validation_results_path("gate4_r2_sw_matching_version_proof_scaffold.json"))
-    gates["scaffold_prerequisite"] =
-        scaffold["status"] == "r2_scaffold_ready_awaiting_authorization" ?
-        "passed" : "failed"
+    # POST-EXECUTION detection: the v1.4 raw output on disk selects
+    # historical verification (read-only w.r.t. execution artifacts)
+    historical = isfile(SW_RAW_V14)
+
+    # controlled external-JSON dependency: malformed scaffold artifact is a
+    # failed gate, not an exception
+    scaffold_obj = as_obj(parse_artifact!(fails,
+        "gate4_r2_sw_matching_version_proof_scaffold.json"))
+    scaffold_status = as_str(get(scaffold_obj, "status", ""))
+    scaffold_ok = historical ?
+        scaffold_status in ("r2_scaffold_ready_awaiting_authorization",
+                            "r2_scaffold_historical_executed") :
+        scaffold_status == "r2_scaffold_ready_awaiting_authorization"
+    gates["scaffold_prerequisite"] = scaffold_ok ? "passed" : "failed"
+    scaffold_ok || push!(fails, "scaffold status: " *
+        (isempty(scaffold_status) ? "(missing/non-string)" : scaffold_status))
     gates["authorization_recorded"] = "passed"  # Greg: "go for R2" 2026-07-20
 
     # post-checkout verifications (tree exists now; scaffold's
@@ -146,16 +204,108 @@ function main()
     cand_ok = isfile(SW_CANDIDATE) &&
         split(strip(read(`sha256sum $SW_CANDIDATE`, String)))[1] == SW_CANDIDATE_SHA
     gates["sw_candidate_hash_pinned"] = cand_ok ? "passed" : "failed"
-    gates["v14_raw_output_absent"] = !isfile(SW_RAW_V14) ? "passed" : "failed"
 
-    open(RX_SBATCH, "w") do io
-        write(io, SBATCH_TEXT)
+    executed = Dict{String, Any}()
+    if historical
+        # (3) fail-closed structure handling: EVERY level is normalized
+        # (top-level array, non-dict r2_run/output/attempts, non-string
+        # sha/attempt values) into controlled failed gates, never a throw
+        fin_obj = as_obj(parse_artifact!(fails,
+            "gate4_r2_finding_ledger.json"))
+        fin_ok = as_str(get(fin_obj, "case", "")) ==
+                     "gate4_r2_finding_ledger" &&
+                 as_str(get(fin_obj, "status", "")) ==
+                     "r2_ssi_resolved_drift_version_independent"
+        gates["r2_finding_ledger_verified"] = fin_ok ? "passed" : "failed"
+        fin_ok || push!(fails, "R2 finding ledger missing/wrong " *
+                               "case/status (or non-object JSON)")
+        r2run_obj = as_obj(get(fin_obj, "r2_run", nothing))
+        output_obj = as_obj(get(r2run_obj, "output", nothing))
+        exp_out = as_str(get(output_obj, "sha256", nothing))
+        attempts_obj = as_obj(get(r2run_obj, "attempts", nothing))
+        exp_out_wellformed = occursin(r"^[0-9a-f]{64}$", exp_out)
+        structure_ok = fin_ok && exp_out_wellformed &&
+                       !isempty(attempts_obj)
+        gates["finding_ledger_structure_valid"] =
+            structure_ok ? "passed" : "failed"
+        structure_ok || push!(fails,
+            "finding ledger structure invalid: output.sha256 " *
+            (exp_out_wellformed ? "ok" : "missing/malformed/non-string") *
+            "; attempts " *
+            (isempty(attempts_obj) ? "missing/non-object" : "ok"))
+        out_ok = exp_out_wellformed &&
+            split(strip(read(`sha256sum $SW_RAW_V14`, String)))[1] == exp_out
+        gates["v14_raw_output_matches_finding_ledger"] =
+            out_ok ? "passed" : "failed"
+        out_ok || push!(fails, "v1.4 raw output != finding-ledger sha " *
+            "(a real integrity problem, not a stale-output refusal)")
+        a1 = as_str(get(attempts_obj, "attempt_1", nothing))
+        a2 = as_str(get(attempts_obj, "attempt_2", nothing))
+        a3 = as_str(get(attempts_obj, "attempt_3", nothing))
+        attempts_ok = occursin("4094", a1) && occursin("FAILED", a1) &&
+                      occursin("4095", a2) && occursin("FAILED", a2) &&
+                      occursin("4096", a3) && occursin("COMPLETED", a3) &&
+                      occursin("rc=0", a3)
+        gates["attempt_history_ledger_verified"] =
+            attempts_ok ? "passed" : "failed"
+        attempts_ok || push!(fails, "finding-ledger attempt strings do not " *
+            "carry 4094 FAILED / 4095 FAILED / 4096 COMPLETED rc=0")
+        # (2) submitted-script identity: the live sbatch bytes must equal
+        # the pinned sha of the git blob at the finding-ledger head commit
+        # -- the repository-pinned final submitted-script record (committed
+        # before job 4096 completed; no scheduler ledger records the hash,
+        # so this is the strongest available anchor); both the blob and
+        # the live file are hashed here, nothing is assumed
+        gates["sbatch_preserved_not_regenerated"] = "passed"  # structural:
+        # this branch contains no write to RX_SBATCH
+        blob_sha = try
+            split(strip(read(pipeline(
+                `git -C $(dirname(@__DIR__)) show $(RX_LEDGER_HEAD_COMMIT):$(RX_SBATCH_REPO_PATH)`,
+                `sha256sum`), String)))[1]
+        catch; "blob-unreadable" end
+        live_sha = isfile(RX_SBATCH) ?
+            split(strip(read(`sha256sum $RX_SBATCH`, String)))[1] : "missing"
+        exec_ok = blob_sha == RX_EXECUTED_SBATCH_SHA &&
+                  live_sha == RX_EXECUTED_SBATCH_SHA
+        gates["preserved_sbatch_matches_executed_blob"] =
+            exec_ok ? "passed" : "failed"
+        exec_ok || push!(fails, "sbatch identity vs executed blob failed: " *
+            "blob=$blob_sha live=$live_sha expected=$RX_EXECUTED_SBATCH_SHA")
+        # generator-integrity CONSISTENCY property (not execution identity:
+        # both this source and the file are mutable in a working tree)
+        gates["preserved_sbatch_consistent_with_current_generator_text"] =
+            (isfile(RX_SBATCH) && read(RX_SBATCH, String) == SBATCH_TEXT) ?
+            "passed" : "failed"
+        executed = Dict(
+            "attempt_1_ledger_verified" => a1,
+            "attempt_2_ledger_verified" => a2,
+            "attempt_3_ledger_verified" => a3,
+            "outcome_verified" => "finding ledger status " *
+                "$(as_str(get(fin_obj, "status", "")))",
+            "executed_sbatch_sha256" => RX_EXECUTED_SBATCH_SHA,
+            "executed_sbatch_provenance" => "repository-pinned final " *
+                "submitted-script record: git blob at " *
+                "$(RX_LEDGER_HEAD_COMMIT):$(RX_SBATCH_REPO_PATH) " *
+                "(committed 2026-07-20T16:27:59Z, before job 4096 " *
+                "completed 16:43:13Z), hash-verified this run; no " *
+                "scheduler ledger independently records the sbatch hash",
+            "v14_raw_output_sha256" => exp_out)
+    else
+        gates["v14_raw_output_absent"] = !isfile(SW_RAW_V14) ?
+            "passed" : "failed"
+        open(RX_SBATCH, "w") do io
+            write(io, SBATCH_TEXT)
+        end
     end
-    gates["sbatch_written_not_submitted"] = "passed"
+    # (1) mode-appropriate gate name; the structural no-submission check
+    # applies in both modes
+    sb_gate = historical ? "sbatch_not_regenerated_or_submitted" :
+                           "sbatch_written_not_submitted"
+    gates[sb_gate] = "passed"
     self_src = read(@__FILE__, String)
     sb_tok = "sb" * "atch "
     isempty(collect(eachmatch(Regex("run\\(`" * sb_tok), self_src))) ||
-        (gates["sbatch_written_not_submitted"] = "failed";
+        (gates[sb_gate] = "failed";
          push!(fails, "sbatch invocation found in checkpoint unit"))
     gates["headnode_refusal_guard"] =
         occursin("REFUSED: head-node execution", SBATCH_TEXT) ? "passed" : "failed"
@@ -192,14 +342,19 @@ function main()
         occursin("LIBS=-ladept", SBATCH_TEXT) &&
         occursin("as-needed", SBATCH_TEXT) ? "passed" : "failed"
 
-    status = isempty(fails) && all(v -> v == "passed", values(gates)) ?
-        "r2_execution_checkpoint_ready" : "r2_execution_checkpoint_failed"
+    status = !(isempty(fails) && all(v -> v == "passed", values(gates))) ?
+        "r2_execution_checkpoint_failed" :
+        historical ? "r2_execution_checkpoint_historical_executed" :
+                     "r2_execution_checkpoint_ready"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     ghead = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
 
     result = Dict(
         "case" => "gate4_r2_execution_checkpoint",
-        "data_mode" => "dry_run_script_generation_only",
+        "executed" => executed,
+        "data_mode" => historical ?
+            "historical_post_execution_verification_only" :
+            "dry_run_script_generation_only",
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
@@ -243,20 +398,28 @@ function main()
         "v14_tree" => Dict("path" => V14_TREE, "commit" => V14_COMMIT,
             "post_checkout_verifications" => "configure.ac 1.4; ChangeLog " *
                 "v1.4 SSI entry; ckd_model.cpp 6 SSI references (v1.2: 0)"),
-        "expected_output" => SW_RAW_V14,
+        (historical ? "verified_output" : "expected_output") => SW_RAW_V14,
         "provenance" => Dict("branch" => branch, "generated_from_head" => ghead,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
-        "disclaimer" => "script generation only; nothing submitted by this " *
-                        "unit; build+create_lut only; no objective, floor, " *
-                        "acceptance, or promotion.",
+        "disclaimer" => historical ?
+            "HISTORICAL post-execution record: the generated sbatch was " *
+            "executed as jobs 4094/4095/4096 (ledger-verified); the " *
+            "executed script is preserved byte-identically, never " *
+            "regenerated; nothing executed or submitted by this unit." :
+            "script generation only; nothing submitted by this " *
+            "unit; build+create_lut only; no objective, floor, " *
+            "acceptance, or promotion.",
     )
     mkpath(dirname(RX_RESULTS_JSON))
     open(RX_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
     end
     open(RX_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 R2 execution checkpoint\n")
+        println(io, historical ?
+            "# Gate-4 R2 execution checkpoint — HISTORICAL (executed as " *
+            "jobs 4094/4095/4096)\n" :
+            "# Gate-4 R2 execution checkpoint\n")
         println(io, "Status: **$status**\n")
         println(io, result["disclaimer"], "\n")
         println(io, "Authorization: ", result["authorization"], "\n")
@@ -265,8 +428,25 @@ function main()
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
         end
-        println(io, "\nGenerated (unsubmitted) batch script: `$(RX_SBATCH)`")
-        println(io, "\nExpected v1.4 SW raw output: `$(SW_RAW_V14)`")
+        if historical
+            println(io, "\nExecuted batch script (preserved; byte-verified " *
+                        "against the repository-pinned final " *
+                        "submitted-script record, the git blob at " *
+                        "`$(RX_LEDGER_HEAD_COMMIT)` committed " *
+                        "2026-07-20T16:27:59Z before job 4096 completed " *
+                        "16:43:13Z): `$(RX_SBATCH)` sha256 " *
+                        "`$(RX_EXECUTED_SBATCH_SHA)`")
+            println(io, "\nLedger-verified attempts:")
+            for k in ("attempt_1_ledger_verified", "attempt_2_ledger_verified",
+                      "attempt_3_ledger_verified")
+                println(io, "- ", executed[k])
+            end
+            println(io, "\nVerified v1.4 SW raw output: `$(SW_RAW_V14)` " *
+                        "sha256 `$(executed["v14_raw_output_sha256"])`")
+        else
+            println(io, "\nGenerated (unsubmitted) batch script: `$(RX_SBATCH)`")
+            println(io, "\nExpected v1.4 SW raw output: `$(SW_RAW_V14)`")
+        end
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$ghead` (pre-own-commit).")
         isempty(fails) || (println(io, "\n## Failures\n");
@@ -277,7 +457,8 @@ function main()
         println("  $k: $(gates[k])")
     end
     isempty(fails) || foreach(f -> println("  FAIL: $f"), fails)
-    return status == "r2_execution_checkpoint_ready" ? 0 : 1
+    return status in ("r2_execution_checkpoint_ready",
+                      "r2_execution_checkpoint_historical_executed") ? 0 : 1
 end
 
 exit(main())

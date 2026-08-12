@@ -17,39 +17,54 @@
   },
   "authorization": "Greg: 'go for R2' (2026-07-20) = r2_matching_version_go per the scaffold",
   "case": "gate4_r2_execution_checkpoint",
-  "data_mode": "dry_run_script_generation_only",
-  "disclaimer": "script generation only; nothing submitted by this unit; build+create_lut only; no objective, floor, acceptance, or promotion.",
-  "expected_output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc",
+  "data_mode": "historical_post_execution_verification_only",
+  "disclaimer": "HISTORICAL post-execution record: the generated sbatch was executed as jobs 4094/4095/4096 (ledger-verified); the executed script is preserved byte-identically, never regenerated; nothing executed or submitted by this unit.",
+  "executed": {
+    "attempt_1_ledger_verified": "job 4094 FAILED at configure (adept.m4 -ladept in LDFLAGS dropped by --as-needed; latent at v1.2 whose weaker conftest was header-only satisfiable)",
+    "attempt_2_ledger_verified": "job 4095 FAILED at configure sanity check (LIBS=-ladept applied before any -L path exists)",
+    "attempt_3_ledger_verified": "job 4096 COMPLETED rc=0 at 2026-07-20T16:43:13Z with LDFLAGS='-L<adept>/lib -Wl,-rpath,<adept>/lib' LIBS=-ladept",
+    "executed_sbatch_provenance": "repository-pinned final submitted-script record: git blob at 6937d473c4cb22daea38f38cd5bbaaed7dd98416:validation/results/gate4_r2_dryrun.sbatch (committed 2026-07-20T16:27:59Z, before job 4096 completed 16:43:13Z), hash-verified this run; no scheduler ledger independently records the sbatch hash",
+    "executed_sbatch_sha256": "30d0a2ce4735f9d52d36b3e23789824cbc058ab3167dff17e6e921ba7624839c",
+    "outcome_verified": "finding ledger status r2_ssi_resolved_drift_version_independent",
+    "v14_raw_output_sha256": "99333fb5f3c1a3e7ee343a8abd5bbe599f61419c89b8f9b13320a85105532c26"
+  },
   "failures": [],
   "gates": {
     "adept_link_workaround_documented": "passed",
+    "attempt_history_ledger_verified": "passed",
     "authorization_recorded": "passed",
     "candidate_identity_pinned": "passed",
     "ckd_model_has_ssi_persistence": "passed",
     "configure_ac_is_14": "passed",
     "create_lut_only": "passed",
+    "finding_ledger_structure_valid": "passed",
     "headnode_refusal_guard": "passed",
     "mechanism1_placement": "passed",
+    "preserved_sbatch_consistent_with_current_generator_text": "passed",
+    "preserved_sbatch_matches_executed_blob": "passed",
     "quarantine_isolation": "passed",
-    "sbatch_written_not_submitted": "passed",
+    "r2_finding_ledger_verified": "passed",
+    "sbatch_not_regenerated_or_submitted": "passed",
+    "sbatch_preserved_not_regenerated": "passed",
     "scaffold_prerequisite": "passed",
     "stale_output_refusal": "passed",
     "sw_candidate_hash_pinned": "passed",
     "toolchain_parity_flags": "passed",
-    "v14_raw_output_absent": "passed",
+    "v14_raw_output_matches_finding_ledger": "passed",
     "v14_tree_at_pinned_commit": "passed"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "9b487fb",
+    "generated_from_head": "3f75f52",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_r2_dryrun.sbatch",
-  "status": "r2_execution_checkpoint_ready",
-  "timestamp_utc": "2026-07-20T16:27:57.689",
+  "status": "r2_execution_checkpoint_historical_executed",
+  "timestamp_utc": "2026-08-12T11:39:21.765",
   "v14_tree": {
     "commit": "23adaca3344f4b53f109f3bd9533a5ed62998ec0",
     "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca",
     "post_checkout_verifications": "configure.ac 1.4; ChangeLog v1.4 SSI entry; ckd_model.cpp 6 SSI references (v1.2: 0)"
-  }
+  },
+  "verified_output": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_raw-ckd-definition_climate_rgb-tol0.047.nc"
 }
