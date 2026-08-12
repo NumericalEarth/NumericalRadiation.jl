@@ -47,4 +47,6 @@ Counts: LW 20/20, SW-rgb 16/16, eval2 0/2
 | eval2_lw_rel-415 | false | 0 | PENDING |
 | eval2_sw_rgb_rel-415 | false | 0 | PENDING |
 
+Failures: none
+
 Unresolved: BINDING dataset choice (this optimizer-training union is the candidate per design note rev 2; not yet ruled); aggregation: worst-case vs pooled log-RMSE across scenarios

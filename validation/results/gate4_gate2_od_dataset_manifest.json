@@ -10,6 +10,12 @@
   },
   "data_mode": "read_only_inventory",
   "disclaimer": "inventory only; no aggregation choice, no metric evaluation, no candidate acceptance; eval2 entries pending G2c/G2d honestly.",
+  "eval2_gas_n_contract": {
+    "attribution": "expected band contract verified on evaluation1 rel-415 only (eval2 absent); enforced against eval2 files when they arrive",
+    "lw": 7,
+    "sw": 8
+  },
+  "failures": [],
   "gates": {
     "eval2_pair_present": "pending",
     "expected_sets_match_pinned_scripts": "passed",
@@ -19,6 +25,15 @@
   },
   "inventory": [
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2"
+      ],
       "label": "lw_rel-180",
       "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
@@ -28,6 +43,15 @@
       "size_bytes": 450863
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2"
+      ],
       "label": "lw_rel-280",
       "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
@@ -37,6 +61,15 @@
       "size_bytes": 450863
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2"
+      ],
       "label": "lw_rel-415",
       "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
@@ -46,6 +79,15 @@
       "size_bytes": 450863
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2"
+      ],
       "label": "lw_rel-560",
       "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
@@ -55,6 +97,15 @@
       "size_bytes": 450863
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2"
+      ],
       "label": "lw_rel-1120",
       "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
@@ -64,6 +115,15 @@
       "size_bytes": 450873
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2"
+      ],
       "label": "lw_rel-2240",
       "mole_fraction_gas_n": 7,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
@@ -73,6 +133,17 @@
       "size_bytes": 450873
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_present",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5",
@@ -82,6 +153,17 @@
       "size_bytes": 469175
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_ch4-350",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
@@ -91,6 +173,17 @@
       "size_bytes": 469174
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_ch4-700",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
@@ -100,6 +193,17 @@
       "size_bytes": 469174
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_ch4-1200",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
@@ -109,6 +213,17 @@
       "size_bytes": 469184
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_ch4-2600",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
@@ -118,6 +233,17 @@
       "size_bytes": 469184
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_ch4-3500",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
@@ -127,6 +253,17 @@
       "size_bytes": 469184
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_n2o-190",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
@@ -136,6 +273,17 @@
       "size_bytes": 469175
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_n2o-270",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
@@ -145,6 +293,17 @@
       "size_bytes": 469175
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_n2o-405",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
@@ -154,6 +313,17 @@
       "size_bytes": 469175
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_n2o-540",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
@@ -163,6 +333,17 @@
       "size_bytes": 469175
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_cfc11-0",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
@@ -172,6 +353,17 @@
       "size_bytes": 469173
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_cfc11-2000",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
@@ -181,6 +373,17 @@
       "size_bytes": 469203
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_cfc12-0",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
@@ -190,6 +393,17 @@
       "size_bytes": 469173
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12"
+      ],
       "label": "lw_cfc12-550",
       "mole_fraction_gas_n": 9,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
@@ -199,6 +413,16 @@
       "size_bytes": 469193
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2",
+        "rayleigh"
+      ],
       "label": "sw_rgb_rel-180",
       "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-180.h5",
@@ -208,6 +432,16 @@
       "size_bytes": 1817472
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2",
+        "rayleigh"
+      ],
       "label": "sw_rgb_rel-280",
       "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-280.h5",
@@ -217,6 +451,16 @@
       "size_bytes": 1817472
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2",
+        "rayleigh"
+      ],
       "label": "sw_rgb_rel-415",
       "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
@@ -226,6 +470,16 @@
       "size_bytes": 1817472
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2",
+        "rayleigh"
+      ],
       "label": "sw_rgb_rel-560",
       "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-560.h5",
@@ -235,6 +489,16 @@
       "size_bytes": 1817472
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2",
+        "rayleigh"
+      ],
       "label": "sw_rgb_rel-1120",
       "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-1120.h5",
@@ -244,6 +508,16 @@
       "size_bytes": 1817482
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "ch4",
+        "n2o",
+        "co2",
+        "rayleigh"
+      ],
       "label": "sw_rgb_rel-2240",
       "mole_fraction_gas_n": 8,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-2240.h5",
@@ -253,6 +527,18 @@
       "size_bytes": 1817482
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_present",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
@@ -262,6 +548,18 @@
       "size_bytes": 1839369
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_ch4-350",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",
@@ -271,6 +569,18 @@
       "size_bytes": 1839368
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_ch4-700",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",
@@ -280,6 +590,18 @@
       "size_bytes": 1839368
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_ch4-1200",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5",
@@ -289,6 +611,18 @@
       "size_bytes": 1839378
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_ch4-2600",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5",
@@ -298,6 +632,18 @@
       "size_bytes": 1839378
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_ch4-3500",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5",
@@ -307,6 +653,18 @@
       "size_bytes": 1839378
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_n2o-190",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",
@@ -316,6 +674,18 @@
       "size_bytes": 1839369
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_n2o-270",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",
@@ -325,6 +695,18 @@
       "size_bytes": 1839369
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_n2o-405",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",
@@ -334,6 +716,18 @@
       "size_bytes": 1839369
     },
     {
+      "gas_ids": [
+        "h2o",
+        "o3",
+        "n2",
+        "o2",
+        "co2",
+        "ch4",
+        "n2o",
+        "cfc11",
+        "cfc12",
+        "rayleigh"
+      ],
       "label": "sw_rgb_n2o-540",
       "mole_fraction_gas_n": 10,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5",
@@ -359,10 +753,10 @@
   ],
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "2753548"
+    "generated_from_head": "089c9f4"
   },
   "status": "gate2_dataset_manifest_pending_eval2",
-  "timestamp_utc": "2026-08-12T09:40:15.688",
+  "timestamp_utc": "2026-08-12T09:46:15.693",
   "unresolved_decisions": [
     "BINDING dataset choice (this optimizer-training union is the candidate per design note rev 2; not yet ruled)",
     "aggregation: worst-case vs pooled log-RMSE across scenarios"

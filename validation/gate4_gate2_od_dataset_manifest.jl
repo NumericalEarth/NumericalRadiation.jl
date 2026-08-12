@@ -41,38 +41,69 @@ const DM_RESULTS_MD = validation_results_path("gate4_gate2_od_dataset_manifest.m
 filesha(p) = split(strip(read(`sha256sum $p`, String)))[1]
 
 # fail-closed per-file schema + scenario-attribute checks (monitor):
-# pressure_hl (55,50), temperature_hl (55,50), mole_fraction_fl (54,N,50)
-# with N recorded (varies by scenario: e.g. LW rel-415 N=7, LW ch4-350 N=9),
-# reference_surface_mole_fraction present, scenario attr == exact token.
+# exact dim NAMES/ORDER (a true-OD evaluator must map the gas axis, so
+# presence/shape alone is insufficient): pressure_hl (half_level,column)
+# (55,50), temperature_hl (half_level,column) (55,50), mole_fraction_fl
+# (level,gas,column) (54,N,50) with N recorded (varies by scenario: rel/
+# present omit cfc11+cfc12, ch4/n2o include them, SW appends rayleigh),
+# reference_surface_mole_fraction (gas) with length == N, GLOBAL
+# constituent_id attr split to exactly N ordered gas IDs (recorded),
+# scenario attr == exact token.
+dimnames_of(v) = collect(String.(NCDatasets.dimnames(v)))
+
 function schema_check(path, scenario_token; expect_gas_n = nothing)
     issues = String[]
     gas_n = -1
+    gas_ids = String[]
     try
         NCDataset(path) do ds
             att = get(ds.attrib, "scenario", nothing)
             att == scenario_token ||
                 push!(issues, "scenario attr '$att' != '$scenario_token'")
-            size(ds["pressure_hl"]) == (55, 50) ||
-                push!(issues, "pressure_hl $(size(ds["pressure_hl"])) != (55,50)")
-            size(ds["temperature_hl"]) == (55, 50) ||
-                push!(issues, "temperature_hl $(size(ds["temperature_hl"])) != (55,50)")
+            for v in ("pressure_hl", "temperature_hl")
+                if haskey(ds, v)
+                    size(ds[v]) == (55, 50) ||
+                        push!(issues, "$v $(size(ds[v])) != (55,50)")
+                    dimnames_of(ds[v]) == ["half_level", "column"] ||
+                        push!(issues, "$v dims $(dimnames_of(ds[v])) != [half_level,column]")
+                else
+                    push!(issues, "$v missing")
+                end
+            end
             if haskey(ds, "mole_fraction_fl")
                 mf = size(ds["mole_fraction_fl"])
                 (length(mf) == 3 && mf[1] == 54 && mf[3] == 50) ||
                     push!(issues, "mole_fraction_fl $mf != (54,N,50)")
+                dimnames_of(ds["mole_fraction_fl"]) == ["level", "gas", "column"] ||
+                    push!(issues, "mole_fraction_fl dims $(dimnames_of(ds["mole_fraction_fl"])) != [level,gas,column]")
                 gas_n = length(mf) == 3 ? mf[2] : -1
                 expect_gas_n !== nothing && gas_n != expect_gas_n &&
                     push!(issues, "mole_fraction_fl N=$gas_n != expected $expect_gas_n")
             else
                 push!(issues, "mole_fraction_fl missing")
             end
-            haskey(ds, "reference_surface_mole_fraction") ||
+            if haskey(ds, "reference_surface_mole_fraction")
+                rs = ds["reference_surface_mole_fraction"]
+                dimnames_of(rs) == ["gas"] ||
+                    push!(issues, "reference_surface_mole_fraction dims $(dimnames_of(rs)) != [gas]")
+                length(rs) == gas_n ||
+                    push!(issues, "reference_surface_mole_fraction length $(length(rs)) != gas_n $gas_n")
+            else
                 push!(issues, "reference_surface_mole_fraction missing")
+            end
+            cid = get(ds.attrib, "constituent_id", nothing)
+            if cid isa AbstractString && !isempty(strip(cid))
+                gas_ids = String.(split(strip(cid)))
+                length(gas_ids) == gas_n ||
+                    push!(issues, "constituent_id count $(length(gas_ids)) != gas_n $gas_n")
+            else
+                push!(issues, "constituent_id global attr missing/empty")
+            end
         end
     catch err
         push!(issues, "open/read failed: $(sprint(showerror, err))")
     end
-    return issues, gas_n
+    return issues, gas_n, gas_ids
 end
 
 function entry(label, path; scenario = nothing, expect_gas_n = nothing)
@@ -82,9 +113,11 @@ function entry(label, path; scenario = nothing, expect_gas_n = nothing)
         "size_bytes" => present ? filesize(path) : 0,
         "sha256" => present ? filesha(path) : "PENDING")
     if present && scenario !== nothing
-        issues, gas_n = schema_check(path, scenario; expect_gas_n = expect_gas_n)
+        issues, gas_n, gas_ids = schema_check(path, scenario;
+                                              expect_gas_n = expect_gas_n)
         d["schema_ok"] = isempty(issues)
         d["mole_fraction_gas_n"] = gas_n
+        d["gas_ids"] = gas_ids
         isempty(issues) || (d["schema_issues"] = issues)
     end
     d
@@ -119,7 +152,10 @@ function main()
             joinpath(CKDMIP_ROOT, "evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_$s.h5");
             scenario = s))
     end
-    # eval2 rel-415 pair: monitor-verified schema pins N=7 (LW) / N=8 (SW)
+    # eval2 rel-415 pair: EXPECTED band contract N=7 (LW) / N=8 (SW).
+    # Attribution (monitor correction): these shapes were verified on
+    # EVALUATION1 rel-415 only — eval2 is absent, so this is the contract
+    # to validate when the files arrive, NOT an observed-eval2 fact.
     push!(inv, entry(EVAL2[1][1], EVAL2[1][2]; scenario = "rel-415",
                      expect_gas_n = 7))
     push!(inv, entry(EVAL2[2][1], EVAL2[2][2]; scenario = "rel-415",
@@ -145,6 +181,25 @@ function main()
     gates["expected_sets_match_pinned_scripts"] =
         (lw_pinned == lw_expected && sw_pinned == sw_expected) ?
         "passed" : "failed"
+
+    # top-level failures array (monitor): schema issues with failing labels
+    # + pinned-set symmetric diffs, so a red run is diagnosable from the
+    # payload alone
+    failures = Any[]
+    for e in inv
+        get(e, "schema_ok", true) == false && push!(failures,
+            Dict("kind" => "schema", "label" => e["label"],
+                 "issues" => e["schema_issues"]))
+    end
+    for (band, pinned, expected) in (("lw", lw_pinned, lw_expected),
+                                     ("sw_rgb", sw_pinned, sw_expected))
+        extra = sort(collect(setdiff(pinned, expected)))
+        missing_ = sort(collect(setdiff(expected, pinned)))
+        (isempty(extra) && isempty(missing_)) || push!(failures,
+            Dict("kind" => "pinned_set_drift", "label" => band,
+                 "in_pinned_not_expected" => extra,
+                 "in_expected_not_pinned" => missing_))
+    end
     status = if gates["lw_20_present"] == "passed" &&
                 gates["sw_16_present"] == "passed" &&
                 gates["schema_all_present_ok"] == "passed" &&
@@ -166,6 +221,12 @@ function main()
         "counts" => Dict("lw_present" => n_lw, "of_lw" => 20,
                          "sw_present" => n_sw, "of_sw" => 16,
                          "eval2_present" => n_e2, "of_eval2" => 2),
+        "failures" => failures,
+        "eval2_gas_n_contract" => Dict(
+            "lw" => 7, "sw" => 8,
+            "attribution" => "expected band contract verified on " *
+                "evaluation1 rel-415 only (eval2 absent); enforced " *
+                "against eval2 files when they arrive"),
         "inventory" => inv,
         "unresolved_decisions" => [
             "BINDING dataset choice (this optimizer-training union is the " *
@@ -191,12 +252,22 @@ function main()
             sh = e["sha256"] == "PENDING" ? "PENDING" : e["sha256"][1:16]
             println(io, "| $(e["label"]) | $(e["present"]) | $(e["size_bytes"]) | $sh |")
         end
+        if isempty(failures)
+            println(io, "\nFailures: none")
+        else
+            println(io, "\nFailures:")
+            for f in failures
+                println(io, "- [$(f["kind"])] $(f["label"]): ",
+                        JSON.json(filter(p -> p.first ∉ ("kind", "label"), f)))
+            end
+        end
         println(io, "\nUnresolved: ", join(result["unresolved_decisions"], "; "))
     end
     println("gate4_gate2_od_dataset_manifest: $status")
     for (k, v) in sort(collect(gates))
         println("  $k: $v")
     end
+    println("  failures: $(length(failures))")
     return status == "gate2_dataset_manifest_failed" ? 1 : 0
 end
 
