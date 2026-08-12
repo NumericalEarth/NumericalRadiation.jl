@@ -74,7 +74,111 @@ const CITED_COMMITS = [
              "in proof job 4091"),
 ]
 
+# shared guarded follow-up loader (fixture-run via the absolute-path
+# passthrough; the unit's SINGLE parsefile site, serving all three
+# follow-up artifact edges): FIVE fixed, distinct refusal tokens --
+# missing / unparseable / non-object / case-mismatch /
+# non-string-status -- with the EXACT case bound before the status
+# read. On success the VERIFIED status string is returned; refusal
+# tokens can never equal an accepted status, so the fail-closed
+# withholding of executed/closed claims is preserved verbatim.
+function v1_followup_status(name, expected_case)
+    path = isabspath(name) ? name : validation_results_path(name)
+    isfile(path) || return "missing"
+    raw = try
+        JSON.parsefile(path)
+    catch
+        return "unparseable"
+    end
+    raw isa AbstractDict || return "non-object"
+    c = get(raw, "case", "")
+    (c isa AbstractString && c == expected_case) ||
+        return "case-mismatch"
+    s = get(raw, "status", "")
+    return s isa AbstractString ? String(s) : "non-string-status"
+end
+
+# pure acceptance conjunction used by BOTH normal production and the
+# offline selftest (so tampered-token fixtures exercise the EXACT
+# acceptance logic, not only the loader return)
+v1_followups_ok(r1_status, r2_status, ob_status) =
+    r1_status == "r1_sw_mapping_found_lw_ambiguous" &&
+    r2_status == "r2_ssi_resolved_drift_version_independent" &&
+    ob_status == "option_b_adopted_candidates_promoted"
+
+# OFFLINE, NO-WRITE contract selftest: exercises the exact shared
+# loader above on tmp fixtures plus a READ-ONLY classification of the
+# three live artifacts, then exits BEFORE any local/upstream
+# reconnaissance (git ls-remote / GitHub curl) and WITHOUT writing the
+# committed V1 JSON/MD. This is the only path this campaign runs: the
+# normal path re-queries live upstream state and stays deliberately
+# unexecuted (no-fetch boundary).
+function contract_selftest()
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_token"] =
+        v1_followup_status(joinpath(tdir, "absent.json"), "c") == "missing"
+    fpx = joinpath(tdir, "fu.json")
+    write(fpx, "{")
+    lt["unparseable_token"] = v1_followup_status(fpx, "c") == "unparseable"
+    write(fpx, "null")
+    lt["null_non_object_token"] =
+        v1_followup_status(fpx, "c") == "non-object"
+    write(fpx, "[1]")
+    lt["array_non_object_token"] =
+        v1_followup_status(fpx, "c") == "non-object"
+    write(fpx, "{\"case\": \"other\", \"status\": \"s\"}")
+    lt["case_mismatch_token"] =
+        v1_followup_status(fpx, "c") == "case-mismatch"
+    write(fpx, "{\"case\": \"c\", \"status\": \"totally_bogus\"}")
+    lt["tampered_status_returned_verbatim_never_accepted"] =
+        v1_followup_status(fpx, "c") == "totally_bogus"
+    write(fpx, "{\"case\": \"c\", \"status\": 5}")
+    lt["non_string_status_token"] =
+        v1_followup_status(fpx, "c") == "non-string-status"
+    write(fpx, "{\"case\": \"c\", \"status\": \"s\"}")
+    lt["exact_green_status_returned"] = v1_followup_status(fpx, "c") == "s"
+    rm(tdir, recursive = true, force = true)
+    # read-only LIVE classification through the SAME call sites main uses
+    live = Dict(
+        "r1" => v1_followup_status(
+            "gate4_r1_release_provenance_probe.json",
+            "gate4_r1_release_provenance_probe"),
+        "r2" => v1_followup_status("gate4_r2_finding_ledger.json",
+                                   "gate4_r2_finding_ledger"),
+        "option_b" => v1_followup_status(
+            "gate4_option_b_decision_record.json",
+            "gate4_option_b_decision_record"))
+    # the EXACT production acceptance conjunction, fixture-run on green,
+    # tampered, and refusal-token inputs
+    lt["acceptance_conjunction_exact"] =
+        v1_followups_ok("r1_sw_mapping_found_lw_ambiguous",
+                        "r2_ssi_resolved_drift_version_independent",
+                        "option_b_adopted_candidates_promoted") &&
+        !v1_followups_ok("totally_bogus",
+                         "r2_ssi_resolved_drift_version_independent",
+                         "option_b_adopted_candidates_promoted") &&
+        !v1_followups_ok("missing", "unparseable", "case-mismatch")
+    live_ok = v1_followups_ok(live["r1"], live["r2"], live["option_b"])
+    ok = all(values(lt)) && live_ok
+    println("gate4_v1_version_skew_recon CONTRACT SELFTEST " *
+            "(offline, no-write): " * (ok ? "PASSED" : "FAILED"))
+    for k in sort(collect(keys(lt)))
+        println("  fixture $k: $(lt[k])")
+    end
+    for k in sort(collect(keys(live)))
+        println("  live $k: $(live[k])")
+    end
+    println("  live_statuses_verified: $live_ok")
+    println("  no reconnaissance executed; no artifact written")
+    return ok ? 0 : 1
+end
+
 function main()
+    # the offline selftest exits BEFORE any network/reconnaissance and
+    # writes nothing
+    get(ENV, "V1_CONTRACT_SELFTEST_ONLY", "") == "1" &&
+        return contract_selftest()
     fails = String[]
     gates = Dict{String, String}()
 
@@ -177,15 +281,15 @@ function main()
     # HISTORICAL: follow-up dispositions are VERIFIED against the result
     # artifacts before rendering, never hardcoded (the original option
     # texts are preserved in the committed at-recon artifact)
-    ledger_status(name) = try
-        String(JSON.parsefile(validation_results_path(name))["status"])
-    catch; "unreadable" end
-    r1_status = ledger_status("gate4_r1_release_provenance_probe.json")
-    r2_status = ledger_status("gate4_r2_finding_ledger.json")
-    ob_status = ledger_status("gate4_option_b_decision_record.json")
-    followups_ok = r1_status == "r1_sw_mapping_found_lw_ambiguous" &&
-                   r2_status == "r2_ssi_resolved_drift_version_independent" &&
-                   ob_status == "option_b_adopted_candidates_promoted"
+    r1_status = v1_followup_status(
+        "gate4_r1_release_provenance_probe.json",
+        "gate4_r1_release_provenance_probe")
+    r2_status = v1_followup_status("gate4_r2_finding_ledger.json",
+                                   "gate4_r2_finding_ledger")
+    ob_status = v1_followup_status(
+        "gate4_option_b_decision_record.json",
+        "gate4_option_b_decision_record")
+    followups_ok = v1_followups_ok(r1_status, r2_status, ob_status)
     gates["followup_statuses_verified"] = followups_ok ? "passed" : "failed"
     followups_ok ||
         push!(fails, "follow-up artifact statuses failed verification: " *

@@ -264,7 +264,7 @@
         "reason": "classify_pinned_artifact guarded-loader body (exact-case + exact-status binding; serves the always-on Option-B edge and the output-present ledger-evidence edge + tmp loader fixtures)"
       },
       {
-        "anchor": "String(JSON.parsefile(validation_results_path(name))[\"status\"])",
+        "anchor": "JSON.parsefile(path)",
         "class": "edge",
         "edge_ids": [
           "dep:v1_recon<-r1_probe:followup",
@@ -272,7 +272,7 @@
           "dep:v1_recon<-option_b:followup"
         ],
         "file": "gate4_v1_version_skew_recon.jl",
-        "reason": "ledger_status helper body (status-only)"
+        "reason": "v1_followup_status guarded-loader body (five fixed refusal tokens; exact-case binding; offline contract-selftest verified -- the unit's normal network path is never run under the no-fetch boundary)"
       }
     ],
     "sites": [
@@ -408,8 +408,8 @@
       },
       {
         "file": "gate4_v1_version_skew_recon.jl",
-        "line": 181,
-        "text": "String(JSON.parsefile(validation_results_path(name))[\"status\"])"
+        "line": 89,
+        "text": "JSON.parsefile(path)"
       }
     ],
     "source_glob": "validation/gate4*.jl"
@@ -877,40 +877,40 @@
       {
         "active": true,
         "consumer": "gate4_v1_version_skew_recon.jl",
-        "consumer_sha256": "89bb11d76a6599b8ceb3d30fbba1df27adcc7672e7c72cda23d0cc4a2831bd7f",
+        "consumer_sha256": "e00d1b497bfc044787f841ffdf98bf5b125f49a3e6f47737676abd6692efa8fa",
         "detail": "contract satisfied",
         "id": "dep:v1_recon<-r1_probe:followup",
         "kind": "exact",
         "producer_case": "gate4_r1_release_provenance_probe",
         "producer_sha256": "8ff2ef73c0af01c38408e7c60fdd32e4461f07373c430a8139d77f5d1ce3be19",
         "producer_status": "r1_sw_mapping_found_lw_ambiguous",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
         "active": true,
         "consumer": "gate4_v1_version_skew_recon.jl",
-        "consumer_sha256": "89bb11d76a6599b8ceb3d30fbba1df27adcc7672e7c72cda23d0cc4a2831bd7f",
+        "consumer_sha256": "e00d1b497bfc044787f841ffdf98bf5b125f49a3e6f47737676abd6692efa8fa",
         "detail": "contract satisfied",
         "id": "dep:v1_recon<-r2_finding_ledger:followup",
         "kind": "exact",
         "producer_case": "gate4_r2_finding_ledger",
         "producer_sha256": "b646a5195fcac858257524020f0d64ce9b8b5f98f7a0555a73caa43dc957707e",
         "producer_status": "r2_ssi_resolved_drift_version_independent",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
         "active": true,
         "consumer": "gate4_v1_version_skew_recon.jl",
-        "consumer_sha256": "89bb11d76a6599b8ceb3d30fbba1df27adcc7672e7c72cda23d0cc4a2831bd7f",
+        "consumer_sha256": "e00d1b497bfc044787f841ffdf98bf5b125f49a3e6f47737676abd6692efa8fa",
         "detail": "contract satisfied",
         "id": "dep:v1_recon<-option_b:followup",
         "kind": "exact",
         "producer_case": "gate4_option_b_decision_record",
         "producer_sha256": "6ba8e7297dbfad3b8d76abf51778be322be26d01fbe3b364e741fde0f5559229",
         "producer_status": "option_b_adopted_candidates_promoted",
-        "status_only_contract": true,
+        "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
@@ -999,18 +999,6 @@
     {
       "finding": "status-only contract (no case check); weakness, not a violation",
       "id": "dep:a2_rerun_manifest<-a1_upstream_recon"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:v1_recon<-r1_probe:followup"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:v1_recon<-r2_finding_ledger:followup"
-    },
-    {
-      "finding": "status-only contract (no case check); weakness, not a violation",
-      "id": "dep:v1_recon<-option_b:followup"
     }
   ],
   "modes_observed": {
@@ -1021,7 +1009,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "1134bc1",
+    "generated_from_head": "30b9c62",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1033,5 +1021,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T16:47:30.116"
+  "timestamp_utc": "2026-08-12T16:59:15.505"
 }

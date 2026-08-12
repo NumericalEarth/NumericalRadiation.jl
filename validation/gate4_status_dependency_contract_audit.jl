@@ -625,27 +625,43 @@ const DCA_EDGES = [
   accepted = ["option_b_adopted_candidates_promoted"],
   expected_case = "gate4_option_b_decision_record",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ # HARDENED consumer (offline contract-selftest verified; the unit's
+ # normal path performs network reconnaissance and stays deliberately
+ # unexecuted under the no-fetch boundary): v1_followup_status binds
+ # the exact case before the status read with five fixed refusal
+ # tokens; refusal tokens can never equal an accepted status, so the
+ # fail-closed withholding of executed/closed claims is unchanged
+ # (former status-only findings CLOSED)
  (id = "dep:v1_recon<-r1_probe:followup",
   consumer = "gate4_v1_version_skew_recon.jl",
-  anchors = ["r1_status = ledger_status(\"gate4_r1_release_provenance_probe.json\")"],
+  anchors = ["r1_status = v1_followup_status(",
+             "\"gate4_r1_release_provenance_probe\")",
+             "r1_status == \"r1_sw_mapping_found_lw_ambiguous\"",
+             "followups_ok = v1_followups_ok(r1_status, r2_status, ob_status)"],
   producer = "gate4_r1_release_provenance_probe.json", kind = :exact,
   accepted = ["r1_sw_mapping_found_lw_ambiguous"],
   expected_case = "gate4_r1_release_provenance_probe",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:v1_recon<-r2_finding_ledger:followup",
   consumer = "gate4_v1_version_skew_recon.jl",
-  anchors = ["r2_status = ledger_status(\"gate4_r2_finding_ledger.json\")"],
+  anchors = ["r2_status = v1_followup_status(\"gate4_r2_finding_ledger.json\",",
+             "\"gate4_r2_finding_ledger\")",
+             "r2_status == \"r2_ssi_resolved_drift_version_independent\"",
+             "followups_ok = v1_followups_ok(r1_status, r2_status, ob_status)"],
   producer = "gate4_r2_finding_ledger.json", kind = :exact,
   accepted = ["r2_ssi_resolved_drift_version_independent"],
   expected_case = "gate4_r2_finding_ledger",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:v1_recon<-option_b:followup",
   consumer = "gate4_v1_version_skew_recon.jl",
-  anchors = ["ob_status = ledger_status(\"gate4_option_b_decision_record.json\")"],
+  anchors = ["ob_status = v1_followup_status(",
+             "\"gate4_option_b_decision_record\")",
+             "ob_status == \"option_b_adopted_candidates_promoted\"",
+             "followups_ok = v1_followups_ok(r1_status, r2_status, ob_status)"],
   producer = "gate4_option_b_decision_record.json", kind = :exact,
   accepted = ["option_b_adopted_candidates_promoted"],
   expected_case = "gate4_option_b_decision_record",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:g1_objective_ratio<-g3_run_ledger",
   consumer = "gate4_g1_objective_ratio.jl",
   # anchors cover the consumer's ACTUAL prerequisite chain: the ledger
@@ -983,12 +999,15 @@ const DCA_SITE_LEDGER = [
            "and the output-present ledger-evidence edge + tmp loader " *
            "fixtures)"),
  (file = "gate4_v1_version_skew_recon.jl",
-  anchor = "String(JSON.parsefile(validation_results_path(name))[\"status\"])",
+  anchor = "JSON.parsefile(path)",
   class = "edge",
   edge_ids = ["dep:v1_recon<-r1_probe:followup",
               "dep:v1_recon<-r2_finding_ledger:followup",
               "dep:v1_recon<-option_b:followup"],
-  reason = "ledger_status helper body (status-only)"),
+  reason = "v1_followup_status guarded-loader body (five fixed refusal " *
+           "tokens; exact-case binding; offline contract-selftest " *
+           "verified -- the unit's normal network path is never run " *
+           "under the no-fetch boundary)"),
 ]
 
 const DCA_STRUCTURAL_OUT_OF_SCOPE = Dict(
@@ -1800,11 +1819,14 @@ function dca_main()
         validate_run_ledger(good)[1] &&
             !validate_run_ledger(merge(good, Dict("status" => "draft")))[1]
     end
-    # exemplar retargeted after the sw_init edge hardening: v1_recon's
-    # r1-probe followup remains a status-only contract
+    # exemplar retargeted after the v1_recon hardening: the a2 proof
+    # scaffold's exec-checkpoint edge remains a status-only contract
+    # (retarget again when the a2 family is hardened)
     t["status_only_is_finding_not_failure"] =
-        any(h -> h["id"] == "dep:v1_recon<-r1_probe:followup", hardening) &&
-        !any(occursin("dep:v1_recon<-r1_probe:followup", f) for f in fails)
+        any(h -> h["id"] == "dep:a2_proof_scaffold<-a2_exec_checkpoint",
+            hardening) &&
+        !any(occursin("dep:a2_proof_scaffold<-a2_exec_checkpoint", f)
+             for f in fails)
     rm(tdir, recursive = true, force = true)
     gates["fixtures"] = all(values(t)) ? "passed" : "failed"
     all(values(t)) || push!(fails, "fixtures failed: " *
