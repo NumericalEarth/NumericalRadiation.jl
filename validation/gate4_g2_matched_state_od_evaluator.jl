@@ -85,6 +85,16 @@ const MSO_OD_ABS_TOL = 1e-9
 # n2/o2 are folded into the composite background; rayleigh is scattering.
 const MSO_INACTIVE_IDS = ("n2", "o2", "rayleigh")
 
+# Full definition gas-set contract (monitor hardening 2): the band is
+# classified from unambiguous support variables (planck_function -> LW,
+# solar_irradiance -> SW; exactly one must be present) and the definition
+# must carry EXACTLY the published absorption-gas set for that band. This
+# is a definition-side gate, independent of (and never compared to)
+# scenario axis IDs.
+const MSO_EXPECTED_DEFINITION_GASES = Dict(
+    "lw" => ["cfc11", "cfc12", "ch4", "co2", "composite", "h2o", "n2o", "o3"],
+    "sw" => ["ch4", "co2", "composite", "h2o", "n2o", "o3"])
+
 struct MsoRefusal <: Exception
     reason::String
 end
@@ -98,25 +108,66 @@ function mso_read_definition(path)
     d = Dict{String, Any}()
     isfile(path) || refuse("definition file missing: $path")
     NCDataset(path) do ds
+        # band classification from unambiguous support variables, then the
+        # ENFORCED full definition gas-set gate (monitor hardening 2)
+        has_planck = haskey(ds, "planck_function")
+        has_solar = haskey(ds, "solar_irradiance")
+        (has_planck && !has_solar) || (has_solar && !has_planck) ||
+            refuse("definition band classification ambiguous: " *
+                   "planck_function=$has_planck solar_irradiance=$has_solar")
+        band = has_planck ? "lw" : "sw"
+        d["band"] = band
         gases = sort([replace(String(k), "_molar_absorption_coeff" => "")
                       for k in keys(ds)
                       if endswith(String(k), "_molar_absorption_coeff")])
-        isempty(gases) && refuse("definition has no *_molar_absorption_coeff")
+        gases == MSO_EXPECTED_DEFINITION_GASES[band] ||
+            refuse("definition gas set $gases != expected $band set " *
+                   "$(MSO_EXPECTED_DEFINITION_GASES[band])")
         d["gas_set"] = gases
-        d["pressure"] = Float64.(Array(ds["pressure"]))
+
+        p_nodes = Float64.(Array(ds["pressure"]))
+        (all(isfinite, p_nodes) && all(>(0.0), p_nodes) &&
+         issorted(p_nodes, lt = <=)) ||
+            refuse("definition pressure LUT axis must be finite, positive, " *
+                   "strictly increasing")
+        length(p_nodes) >= 2 || refuse("pressure LUT axis too short")
+        d["pressure"] = p_nodes
         tv = ds["temperature"]
-        d["temperature"] = Float64.(Array(tv))
+        Tm = Float64.(Array(tv))
         d["temperature_dims"] = mso_dimnames(tv)
         d["temperature_dims"] == ["pressure", "temperature"] ||
             refuse("definition temperature dims $(d["temperature_dims"]) " *
                    "!= [pressure, temperature]")
+        size(Tm, 1) == length(p_nodes) ||
+            refuse("temperature LUT first dim $(size(Tm, 1)) != pressure " *
+                   "node count $(length(p_nodes))")
+        size(Tm, 2) >= 2 || refuse("temperature LUT axis too short")
+        all(isfinite, Tm) || refuse("temperature LUT has non-finite entries")
+        d["temperature"] = Tm
+
+        np = length(p_nodes)
+        nt = size(Tm, 2)
+        ng = -1
         for gas in gases
             v = ds["$(gas)_molar_absorption_coeff"]
             dims = mso_dimnames(v)
             (length(dims) in (3, 4) && dims[1] == "g_point" &&
              dims[2] == "pressure" && dims[3] == "temperature") ||
                 refuse("definition coefficient dims for $gas: $dims")
-            d[gas] = Float64.(Array(v))
+            A = Float64.(Array(v))
+            all(isfinite, A) ||
+                refuse("non-finite coefficients for $gas")
+            (size(A, 2) == np && size(A, 3) == nt) ||
+                refuse("coefficient p/t shape for $gas $(size(A)) " *
+                       "inconsistent with LUT nodes ($np, $nt)")
+            # common g-point count across ALL gases (monitor hardening 4):
+            # cross-gas drift must refuse here, never BoundsError later
+            if ng < 0
+                ng = size(A, 1)
+            elseif size(A, 1) != ng
+                refuse("g-point count drift for $gas: $(size(A, 1)) != $ng")
+            end
+            d[gas] = A
             d["$(gas)_dims"] = dims
             ckey = "$(gas)_conc_dependence_code"
             haskey(ds, ckey) || refuse("definition missing $ckey")
@@ -129,14 +180,29 @@ function mso_read_definition(path)
                 haskey(ds, rkey) ||
                     refuse("$gas is RELATIVE_LINEAR but definition has no $rkey")
                 # stored Float32; run_ckd promotes the STORED value (G1 lesson)
-                d["$(gas)_reference_vmr"] = Float64(only(Array(ds[rkey])))
+                ref_vmr = Float64(only(Array(ds[rkey])))
+                isfinite(ref_vmr) ||
+                    refuse("non-finite reference mole fraction for $gas")
+                d["$(gas)_reference_vmr"] = ref_vmr
             elseif code == 2
                 akey = "$(gas)_mole_fraction"
                 haskey(ds, akey) ||
                     refuse("$gas is LUT but definition has no $akey axis")
-                d["$(gas)_vmr_axis"] = Float64.(Array(ds[akey]))
+                va = Float64.(Array(ds[akey]))
+                (all(isfinite, va) && all(>(0.0), va) &&
+                 issorted(va, lt = <=) && length(va) >= 2) ||
+                    refuse("LUT concentration axis for $gas must be finite, " *
+                           "positive, strictly increasing")
+                (length(dims) == 4 && dims[4] == akey) ||
+                    refuse("LUT coefficient for $gas must have fourth dim " *
+                           "$akey, got $dims")
+                size(A, 4) == length(va) ||
+                    refuse("LUT coefficient fourth-axis length " *
+                           "$(size(A, 4)) != $akey length $(length(va))")
+                d["$(gas)_vmr_axis"] = va
             end
         end
+        d["ng"] = ng
     end
     return d
 end
@@ -193,13 +259,20 @@ function mso_read_scenario(path)
             refuse("temperature_hl has non-finite/non-positive entries")
         all(isfinite, mf) || refuse("mole_fraction_fl has non-finite entries")
 
-        if haskey(ds, "reference_surface_mole_fraction")
-            rs = ds["reference_surface_mole_fraction"]
-            mso_dimnames(rs) == ["gas"] ||
-                refuse("reference_surface_mole_fraction dims != [gas]")
-            length(rs) == length(gas_ids) ||
-                refuse("reference_surface_mole_fraction length != gas count")
-        end
+        # REQUIRED per the hardened manifest schema contract (monitor
+        # hardening 1): exact [gas] dims, exact length, finite nonnegative
+        haskey(ds, "reference_surface_mole_fraction") ||
+            refuse("scenario missing reference_surface_mole_fraction")
+        rs = ds["reference_surface_mole_fraction"]
+        mso_dimnames(rs) == ["gas"] ||
+            refuse("reference_surface_mole_fraction dims != [gas]")
+        length(rs) == length(gas_ids) ||
+            refuse("reference_surface_mole_fraction length != gas count")
+        rsv = Float64.(Array(rs))
+        all(x -> isfinite(x) && x >= 0.0, rsv) ||
+            refuse("reference_surface_mole_fraction has non-finite or " *
+                   "negative stored values")
+        s["reference_surface_mole_fraction"] = rsv
         s["pressure_hl"] = p
         s["temperature_hl"] = t
         s["mole_fraction_fl"] = mf
@@ -323,6 +396,14 @@ function matched_state_od(definition_path, scenario_path;
     end
 
     gas_ids = scen["gas_ids"]
+    # unknown-axis refusal (monitor hardening 3): every scenario axis ID
+    # must be a definition gas or an allowed inactive ID -- membership
+    # validation only, never a selection rule
+    for g in gas_ids
+        (g in defn["gas_set"] || g in MSO_INACTIVE_IDS) ||
+            refuse("unknown scenario gas ID $g: not a definition gas and " *
+                   "not an allowed inactive ID $(MSO_INACTIVE_IDS)")
+    end
     axis_index = Dict(g => i for (i, g) in enumerate(gas_ids))
     mapping = Dict{String, Any}()
     for gas in active
@@ -354,7 +435,7 @@ function matched_state_od(definition_path, scenario_path;
     t = scen["temperature_hl"]
     ncol = size(p, 2)
     nlay = size(p, 1) - 1
-    ng = size(defn[first(active)], 1)
+    ng = defn["ng"]        # common g-count enforced in mso_read_definition
 
     per_gas = Dict{String, Array{Float64, 3}}()
     for gas in active
@@ -395,6 +476,11 @@ end
 
 # --- parity statistics (copied from gate4_sw_od_parity.jl) ------------------
 function mso_parity_stats(ours::AbstractArray, ref::AbstractArray)
+    # identical shapes required (monitor hardening 5): equal-length
+    # reshapes must refuse, not compare linearly
+    size(ours) == size(ref) ||
+        refuse("parity stats require identical shapes: " *
+               "$(size(ours)) vs $(size(ref))")
     max_abs = 0.0; max_rel = 0.0
     pos = 0; neg = 0
     for i in eachindex(ref)
@@ -431,7 +517,8 @@ const MSO_SCRATCH = get(ENV, "MSO_SCRATCH_DIR",
 function mso_write_stacked(path, p_hl, t_hl, gas_ids, vmr_by_gas;
                            scenario = "synthetic-eval1-present",
                            mf_dim_order = ("level", "gas", "column"),
-                           constituent_id = join(gas_ids, " "))
+                           constituent_id = join(gas_ids, " "),
+                           write_rsmf = true, rsmf = nothing)
     nhl, ncol = size(p_hl)
     nlay = nhl - 1
     ngas = length(gas_ids)
@@ -457,8 +544,46 @@ function mso_write_stacked(path, p_hl, t_hl, gas_ids, vmr_by_gas;
         else
             vm[:, :, :] = permutedims(mf, (2, 1, 3))   # (gas, level, column)
         end
-        vr = defVar(ds, "reference_surface_mole_fraction", Float64, ("gas",))
-        vr[:] = [vmr_by_gas[g][end, 1] for g in gas_ids]
+        if write_rsmf
+            vr = defVar(ds, "reference_surface_mole_fraction", Float64,
+                        ("gas",))
+            vr[:] = rsmf === nothing ?
+                    [vmr_by_gas[g][end, 1] for g in gas_ids] : rsmf
+        end
+    end
+    return path
+end
+
+# tiny synthetic CKD definition (refusal fixtures only; a few hundred
+# bytes -- no published definition is ever copied)
+function mso_write_tiny_definition(path; gases, planck = true,
+                                   bad_gpoint_gases = String[])
+    rm(path, force = true)
+    NCDataset(path, "c") do ds
+        defDim(ds, "g_point", 2)
+        defDim(ds, "g_point_drift", 3)
+        defDim(ds, "pressure", 3)
+        defDim(ds, "temperature", 2)
+        vp = defVar(ds, "pressure", Float64, ("pressure",))
+        vp[:] = [100.0, 1000.0, 10000.0]
+        vt = defVar(ds, "temperature", Float64, ("pressure", "temperature"))
+        vt[:, :] = [200.0 250.0; 210.0 260.0; 220.0 270.0]
+        if planck
+            vpl = defVar(ds, "planck_function", Float64, ("temperature",))
+            vpl[:] = [1.0, 2.0]
+        else
+            vs = defVar(ds, "solar_irradiance", Float64, ("g_point",))
+            vs[:] = [1.0, 2.0]
+        end
+        for gas in gases
+            drift = gas in bad_gpoint_gases
+            gdim = drift ? "g_point_drift" : "g_point"
+            vc = defVar(ds, "$(gas)_molar_absorption_coeff", Float64,
+                        (gdim, "pressure", "temperature"))
+            vc[:, :, :] = ones(drift ? 3 : 2, 3, 2)
+            vcode = defVar(ds, "$(gas)_conc_dependence_code", Int32, ())
+            vcode[] = gas == "composite" ? 0 : 1
+        end
     end
     return path
 end
@@ -689,6 +814,54 @@ function main()
         "constituent_id count",
         () -> matched_state_od(sw32, bad5;
                                active_absorption_gases = sw_active))
+
+    vmr1 = Dict{String, Any}(g => vmrs[g][:, 1:1] for g in keys(vmrs))
+    bad6 = mso_write_stacked(joinpath(MSO_SCRATCH, "bad_no_rsmf.nc"),
+        conc["pressure_hl"][:, 1:1], conc["temperature_hl"][:, 1:1],
+        sw_axis, vmr1; write_rsmf = false)
+    mso_expect_refusal!(gates, fails, "refuse_missing_reference_surface_mf",
+        "missing reference_surface_mole_fraction",
+        () -> matched_state_od(sw32, bad6;
+                               active_absorption_gases = sw_active))
+
+    bad_rsmf = fill(1e-6, length(sw_axis)); bad_rsmf[2] = -1e-9
+    bad7 = mso_write_stacked(joinpath(MSO_SCRATCH, "bad_neg_rsmf.nc"),
+        conc["pressure_hl"][:, 1:1], conc["temperature_hl"][:, 1:1],
+        sw_axis, vmr1; rsmf = bad_rsmf)
+    mso_expect_refusal!(gates, fails, "refuse_negative_reference_surface_mf",
+        "reference_surface_mole_fraction has non-finite or negative",
+        () -> matched_state_od(sw32, bad7;
+                               active_absorption_gases = sw_active))
+
+    vmr_unk = Dict{String, Any}(vmr1); vmr_unk["xyz"] = fill(1e-9, nlay, 1)
+    bad8 = mso_write_stacked(joinpath(MSO_SCRATCH, "bad_unknown_axis.nc"),
+        conc["pressure_hl"][:, 1:1], conc["temperature_hl"][:, 1:1],
+        vcat(sw_axis, ["xyz"]), vmr_unk)
+    mso_expect_refusal!(gates, fails, "refuse_unknown_scenario_axis_id",
+        "unknown scenario gas ID xyz",
+        () -> matched_state_od(sw32, bad8;
+                               active_absorption_gases = sw_active))
+
+    tiny_a = mso_write_tiny_definition(
+        joinpath(MSO_SCRATCH, "tiny_def_wrong_set.nc");
+        gases = ["composite", "h2o"], planck = true)
+    mso_expect_refusal!(gates, fails, "refuse_definition_gas_set_mismatch",
+        "definition gas set",
+        () -> matched_state_od(tiny_a, sw_scen;
+                               active_absorption_gases = ["composite"]))
+
+    tiny_b = mso_write_tiny_definition(
+        joinpath(MSO_SCRATCH, "tiny_def_gcount_drift.nc");
+        gases = MSO_EXPECTED_DEFINITION_GASES["lw"], planck = true,
+        bad_gpoint_gases = ["ch4"])
+    mso_expect_refusal!(gates, fails, "refuse_definition_gcount_drift",
+        "for ch4",
+        () -> matched_state_od(tiny_b, sw_scen;
+                               active_absorption_gases = ["composite"]))
+
+    mso_expect_refusal!(gates, fails, "refuse_parity_stats_shape_mismatch",
+        "identical shapes",
+        () -> mso_parity_stats(zeros(2, 3), zeros(3, 2)))
 
     # --- verdict + artifacts ------------------------------------------------
     status = (isempty(fails) && all(v == "passed" for v in values(gates))) ?
