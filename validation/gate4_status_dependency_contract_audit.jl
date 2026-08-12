@@ -419,13 +419,19 @@ const DCA_EDGES = [
   accepted = ["covariance_stride_audit_passed"],
   expected_case = "gate4_covariance_stride_audit",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ # HARDENED consumer: classify_init_ledger binds the exact case before
+ # the faithful exact-status comparison, and the sbatch write is gated
+ # on the classified prerequisite (former status-only finding CLOSED)
  (id = "dep:g2a_checkpoint<-init_provenance_ledger",
   consumer = "gate4_g2a_sw_rgb_flux_checkpoint.jl",
-  anchors = ["init[\"status\"] == \"acceptance_inits_complete\""],
+  anchors = ["init_ok, init_why, _ = classify_init_ledger(",
+             "c == \"gate4_init_provenance_ledger\"",
+             "s == \"acceptance_inits_complete\"",
+             "sbatch_written = ga_write_script("],
   producer = "gate4_init_provenance_ledger.json", kind = :exact,
   accepted = ["acceptance_inits_complete"],
   expected_case = "gate4_init_provenance_ledger",
-  consumer_checks_case = false, status_only = true, active_when = :always),
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:g2b_checkpoint<-g2a_data_ledger",
   consumer = "gate4_g2b_sw_rgb_variants_checkpoint.jl",
   anchors = ["g2a[\"status\"] == \"sw_rgb_rel_training_fluxes_installed_and_verified\""],
@@ -821,9 +827,10 @@ const DCA_SITE_LEDGER = [
            "prerequisite binding; serves both prerequisite edges + tmp " *
            "loader fixtures)"),
  (file = "gate4_g2a_sw_rgb_flux_checkpoint.jl",
-  anchor = "init = JSON.parsefile(validation_results_path(\"gate4_init_provenance_ledger.json\"))",
+  anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:g2a_checkpoint<-init_provenance_ledger"],
-  reason = "init-ledger prerequisite parse"),
+  reason = "classify_init_ledger guarded-loader body (exact-case + " *
+           "exact-status binding; live edge + tmp loader fixtures)"),
  (file = "gate4_g2b_sw_rgb_variants_checkpoint.jl",
   anchor = "g2a = JSON.parsefile(validation_results_path(\"gate4_g2a_data_ledger.json\"))",
   class = "edge", edge_ids = ["dep:g2b_checkpoint<-g2a_data_ledger"],

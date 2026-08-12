@@ -133,22 +133,120 @@ sha256sum "$CKDMIP_ROOT/evaluation1/sw_fluxes-rgb/"ckdmip_evaluation1_sw_fluxes-
 echo "=== G2a done rc=\$? \$(date -u +%FT%TZ) ==="
 """
 
+# guarded init-ledger prerequisite loader (fixture-run on tmp files): a
+# missing, unparseable (parse failure), parsed-non-object (JSON null/
+# array DISTINGUISHED from parse failure), WRONG-CASE, or wrong-status
+# artifact classifies fail-closed with a stable reason -- never an
+# uncaught exception, never status-only trust: the exact case is bound
+# before the FAITHFUL exact-status comparison.
+function classify_init_ledger(path)
+    isfile(path) ||
+        return (false, "init provenance ledger missing: $path", nothing)
+    parse_failed = false
+    d = try
+        JSON.parsefile(path)
+    catch
+        parse_failed = true
+        nothing
+    end
+    parse_failed && return (false,
+        "init provenance ledger unparseable (parse failure)", nothing)
+    d isa AbstractDict || return (false,
+        "init provenance ledger parses to a non-object " *
+        "(JSON null/array/scalar)", nothing)
+    c = get(d, "case", "")
+    (c isa AbstractString && c == "gate4_init_provenance_ledger") ||
+        return (false,
+                "init provenance ledger case mismatch: $(repr(c))",
+                nothing)
+    s = get(d, "status", "")
+    s == "acceptance_inits_complete" ||
+        return (false, "init provenance ledger not green: $(repr(s))",
+                nothing)
+    return (true, "ok", d)
+end
+
+# the sbatch WRITE happens only behind the classified prerequisite (the
+# committed script is never clobbered by a blocked run); SBATCH_TEXT is
+# a load-time constant, so generation itself cannot throw and the text
+# gates stay evaluated on both paths -- only the write is gated
+function ga_write_script(writefn, prereq_ok)
+    prereq_ok || return false
+    writefn()
+    return true
+end
+
 function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    init = JSON.parsefile(validation_results_path("gate4_init_provenance_ledger.json"))
-    gates["init_ledger_prerequisite"] =
-        init["status"] == "acceptance_inits_complete" ? "passed" : "failed"
+    # loader + write-boundary fixtures FIRST, through the SAME code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] =
+        !classify_init_ledger(joinpath(tdir, "absent.json"))[1]
+    fpx = joinpath(tdir, "il.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        okx, why = classify_init_ledger(fpx)
+        !okx && occursin("unparseable", why)
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        okx, why = classify_init_ledger(fpx)
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        okx, why = classify_init_ledger(fpx)
+        !okx && occursin("non-object", why)
+    end
+    write(fpx, "{\"case\": \"other\", " *
+               "\"status\": \"acceptance_inits_complete\"}")
+    lt["wrong_case_fails"] = begin
+        okx, why = classify_init_ledger(fpx)
+        !okx && occursin("case mismatch", why)
+    end
+    write(fpx, "{\"case\": \"gate4_init_provenance_ledger\", " *
+               "\"status\": \"tampered\"}")
+    lt["wrong_status_fails"] = begin
+        okx, why = classify_init_ledger(fpx)
+        !okx && occursin("not green", why)
+    end
+    write(fpx, "{\"case\": \"gate4_init_provenance_ledger\", " *
+               "\"status\": \"acceptance_inits_complete\"}")
+    lt["exact_green_captures"] = begin
+        okx, why, dd = classify_init_ledger(fpx)
+        okx && why == "ok" && dd isa AbstractDict
+    end
+    lt["blocked_never_invokes_writer"] = begin
+        n = Ref(0)
+        ga_write_script(() -> (n[] += 1), false) == false && n[] == 0
+    end
+    lt["ok_invokes_writer_once"] = begin
+        n = Ref(0)
+        ga_write_script(() -> (n[] += 1), true) == true && n[] == 1
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
+    # exact case+status prerequisite binding BEFORE the script write
+    init_ok, init_why, _ = classify_init_ledger(
+        validation_results_path("gate4_init_provenance_ledger.json"))
+    gates["init_ledger_prerequisite"] = init_ok ? "passed" : "failed"
+    init_ok || push!(fails, init_why)
 
     # upstream 404 evidence for the rgb files must be on record (this unit's
     # justification for local generation)
     gates["rgb_not_published_upstream_recorded"] = "passed"  # probed this
     # session: 404 at all three candidate ECPDS layouts; recorded in MD below
 
-    open(GA_SBATCH, "w") do io
+    sbatch_written = ga_write_script(() -> open(GA_SBATCH, "w") do io
         write(io, SBATCH_TEXT)
-    end
+    end, init_ok)
     gates["sbatch_written_not_submitted"] = "passed"
     self_src = read(@__FILE__, String)
     sb_tok = "sb" * "atch "
@@ -212,7 +310,14 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "sbatch_path" => GA_SBATCH,
+        "sbatch_written_this_run" => sbatch_written,
+        "sbatch_scripts_state" => sbatch_written ?
+            "generated this run (unsubmitted)" :
+            "NOT generated this run (prerequisite blocked); any file " *
+            "at sbatch_path is PRESERVED HISTORICAL output of an " *
+            "earlier run, not current",
         "band_grid_rationale" => "9-band 14300/16650/20000/25000/31750 " *
             "variant activated; optimize_lut_sw maps 9 LBL bands to 5 CKD " *
             "rgb bands via '0 0 0 0 1 2 3 4 4' which collapses exactly " *
@@ -246,6 +351,14 @@ function main()
         println(io, "|---|---|")
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
+        end
+        if sbatch_written
+            println(io, "\nGenerated (unsubmitted): `$(GA_SBATCH)`")
+        else
+            println(io, "\nNO script generated this run (prerequisite " *
+                        "blocked); any file at `$(GA_SBATCH)` is " *
+                        "preserved historical output of an earlier " *
+                        "run, not current.")
         end
         println(io, "\nBand grid: ", result["band_grid_rationale"], "\n")
         println(io, "Upstream negatives: ",

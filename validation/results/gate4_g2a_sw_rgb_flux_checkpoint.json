@@ -18,18 +18,32 @@
     "init_ledger_prerequisite": "passed",
     "lbl_evaluation_only": "passed",
     "pipeline_parity_with_4078": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "rgb_band_grid_14300_variant": "passed",
     "rgb_not_published_upstream_recorded": "passed",
     "sbatch_written_not_submitted": "passed",
     "stale_output_refusal": "passed",
     "testcopy_from_pinned_artifact": "passed"
   },
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "blocked_never_invokes_writer": true,
+    "exact_green_captures": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "null_non_object_fails": true,
+    "ok_invokes_writer_once": true,
+    "wrong_case_fails": true,
+    "wrong_status_fails": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "9df8421",
+    "generated_from_head": "9c8a122",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2a_sw_rgb_dryrun.sbatch",
+  "sbatch_scripts_state": "generated this run (unsubmitted)",
+  "sbatch_written_this_run": true,
   "scope": {
     "follow_on_evaluation2": "the published models are '-32b' = TRAINING_BOTH=yes (copy_to_ckdmip_lw.sh:76-81): faithful G3 additionally needs ckdmip_evaluation2_{lw,sw}_fluxes_rel-415 (ECPDS 404 for both; local generation requires the evaluation2 spectra download) -- Greg's deferred evaluation2 decision is now concrete and load-bearing for G3 acceptance",
     "follow_on_g2b": "later SW passes need rgb variants of present, ch4-{350,700,1200,2600,3500}, n2o-{190,270,405,540} (~10 more scenarios, same pipeline)",
@@ -37,7 +51,7 @@
     "this_unit": "the SIX rgb rel files (relative-base pass + relative_to reference) -- minimum to unblock G2 objective parity on the accepted inits"
   },
   "status": "g2a_checkpoint_ready",
-  "timestamp_utc": "2026-07-20T17:25:29.370",
+  "timestamp_utc": "2026-08-12T15:53:06.326",
   "upstream_negative_probes": [
     "404 ecpds/home/ckdmip/sw_fluxes-rgb/evaluation1/...",
     "404 ecpds/home/ckdmip/sw_fluxes/evaluation1/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
