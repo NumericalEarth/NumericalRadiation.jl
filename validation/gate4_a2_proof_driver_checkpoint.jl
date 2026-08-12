@@ -1,16 +1,31 @@
-# Gate-4 A2 PROOF-DRIVER checkpoint (dry-run; NO submission, NO execution).
+# Gate-4 A2 PROOF-DRIVER checkpoint (dry-run; NO submission, NO execution)
+# -- HISTORICAL POST-EXECUTION MODE when the 4091 outputs exist.
 #
-# Generates the exact Slurm batch script for the reproduction-proof raw
-# create_lut builds that consume the 4082 candidates, per mechanism 1 of the
-# proof scaffold. Key simplification proven by the readiness audit: the
-# candidates ALREADY sit in WORK_{LW,SW}_GPOINTS_DIR under the exact
-# filenames create_lut_{lw,sw}.sh derives (INPUT is a bare filename resolved
-# via the generated config's append_path), so "placement" reduces to a
-# sha256 identity check pinned at generation time.
+# EXECUTED (monitor-directed marking, 2026-08-12): the sbatch this unit
+# generated was submitted as authorized proof job 4091 (rc=0); its raw
+# outputs exist and are pinned by the reviewed finding ledger
+# (gate4_a2_proof_finding_ledger.json: lw_raw ce057079..., sw_raw
+# 3308cb7a...), and the LW raw was later PROMOTED to the acceptance init
+# under Option B. Therefore, when BOTH raw outputs exist, this unit runs
+# in READ-ONLY HISTORICAL MODE: it does NOT regenerate the sbatch (the
+# committed script is preserved as the executed artifact and verified
+# against the submission ledger's sbatch sha), verifies the on-disk
+# outputs against the finding ledger, re-checks the preserved script's
+# structural guards, and reports a2_proof_driver_historical_executed.
+# The pre-execution generation path (with its stale-output refusal gates)
+# is retained VERBATIM for the outputs-absent world; partial outputs are
+# an explicit failure. Nothing is submitted in any mode.
 #
-# The generated script runs create_look_up_table ONLY (via the pristine
-# create_lut_{lw,sw}.sh drivers in the EXISTING 4082 TESTCOPY -- reused, not
-# recreated, so the proof runs in the identical patched environment). NO
+# Original contract (pre-execution): generates the exact Slurm batch
+# script for the reproduction-proof raw create_lut builds that consume
+# the 4082 candidates, per mechanism 1 of the proof scaffold. Key
+# simplification proven by the readiness audit: the candidates ALREADY
+# sit in WORK_{LW,SW}_GPOINTS_DIR under the exact filenames
+# create_lut_{lw,sw}.sh derives (INPUT is a bare filename resolved via
+# the generated config's append_path), so "placement" reduces to a
+# sha256 identity check pinned at generation time. The generated script
+# runs create_look_up_table ONLY (via the pristine create_lut_{lw,sw}.sh
+# drivers in the EXISTING 4082 TESTCOPY -- reused, not recreated). NO
 # optimize_lut, scale_lut, find_g_points, run_ckd, objective, floor, or
 # acceptance use. Submission requires explicit review/go.
 
@@ -32,8 +47,91 @@ const SW_RAW = "$G4WORK/work/sw_raw-ckd-definition/ecckd-1.2_sw_raw-ckd-definiti
 const PD_RESULTS_JSON = validation_results_path("gate4_a2_proof_driver_checkpoint.json")
 const PD_RESULTS_MD = validation_results_path("gate4_a2_proof_driver_checkpoint.md")
 const PD_SBATCH = validation_results_path("gate4_a2_proof_dryrun.sbatch")
+const PD_FINDING_LEDGER = validation_results_path("gate4_a2_proof_finding_ledger.json")
+const PD_SUBMISSION_LEDGER = validation_results_path("gate4_a2_proof_submission_ledger.json")
 
 sha256(p) = split(strip(read(`sha256sum $p`, String)))[1]
+
+# read-only historical mode: outputs exist; verify against the reviewed
+# ledgers, preserve (never regenerate) the executed sbatch
+function historical_executed_mode(gates, fails, lw_sha, sw_sha)
+    fin = JSON.parsefile(PD_FINDING_LEDGER)
+    sub = JSON.parsefile(PD_SUBMISSION_LEDGER)
+
+    # fail-closed evidence gates: execution facts are VERIFIED from the
+    # ledgers, never hardcoded (monitor requirement)
+    case_ok = get(fin, "case", "") == "gate4_a2_proof_finding_ledger" &&
+              get(sub, "case", "") == "gate4_a2_proof_submission_ledger"
+    gates["ledger_case_ids_verified"] = case_ok ? "passed" : "failed"
+    case_ok || push!(fails, "ledger case IDs wrong: fin=" *
+        "$(get(fin, "case", "?")) sub=$(get(sub, "case", "?"))")
+    jid_ok = get(get(sub, "job", Dict{String, Any}()), "job_id", -1) == 4091 &&
+             get(fin["proof_run"], "job_id", -1) == 4091
+    gates["job_id_4091_verified"] = jid_ok ? "passed" : "failed"
+    jid_ok || push!(fails, "job_id != 4091 in a ledger")
+    outcome = String(get(fin["proof_run"], "outcome", ""))
+    outcome_ok = occursin("COMPLETED", outcome) && occursin("rc=0", outcome)
+    gates["finding_outcome_completed_rc0"] = outcome_ok ? "passed" : "failed"
+    outcome_ok || push!(fails, "finding-ledger outcome lacks COMPLETED " *
+                               "rc=0: $(first(outcome, 80))")
+    ob = JSON.parsefile(
+        validation_results_path("gate4_option_b_decision_record.json"))
+    ob_ok = get(ob, "status", "") == "option_b_adopted_candidates_promoted" &&
+            any(occursin("gate4_a2_reproduction_proof_scaffold", String(s))
+                for s in get(ob, "supersedes", Any[]))
+    gates["option_b_adoption_verified"] = ob_ok ? "passed" : "failed"
+    ob_ok || push!(fails, "Option-B record not adopted or does not " *
+        "supersede the strict scaffold verdict; promotion cannot be claimed")
+
+    exp_lw = fin["proof_run"]["lw_raw"]["sha256"]
+    exp_sw = fin["proof_run"]["sw_raw"]["sha256"]
+    lw_ok = sha256(LW_RAW) == exp_lw
+    sw_ok = sha256(SW_RAW) == exp_sw
+    gates["outputs_match_4091_finding_ledger"] =
+        lw_ok && sw_ok ? "passed" : "failed"
+    (lw_ok && sw_ok) ||
+        push!(fails, "on-disk proof outputs do not match the reviewed 4091 " *
+                     "finding ledger (lw_ok=$lw_ok sw_ok=$sw_ok) -- this IS " *
+                     "a real integrity problem, not a stale-output refusal")
+    # the committed sbatch is the executed artifact; verify identity vs the
+    # submission ledger and re-check its structural guards without rewriting
+    sbatch_text = isfile(PD_SBATCH) ? read(PD_SBATCH, String) : ""
+    sb_expected = get(get(sub, "sbatch", Dict{String, Any}()), "sha256", "")
+    sb_ok = isfile(PD_SBATCH) && sha256(PD_SBATCH) == sb_expected
+    gates["preserved_sbatch_matches_submission_ledger"] =
+        sb_ok ? "passed" : "failed"
+    sb_ok || push!(fails, "preserved sbatch missing or != submission-ledger " *
+                          "sha $sb_expected")
+    gates["sbatch_preserved_not_regenerated"] = "passed"  # structural: this
+    # branch contains no write to PD_SBATCH
+    gates["headnode_refusal_guard"] =
+        occursin("REFUSED: head-node execution", sbatch_text) ? "passed" : "failed"
+    gates["candidate_identity_pinned"] =
+        occursin(lw_sha, sbatch_text) && occursin(sw_sha, sbatch_text) &&
+        occursin("sha256sum -c", sbatch_text) ? "passed" : "failed"
+    gates["sbatch_refuses_stale_raw_outputs"] =
+        occursin("stale LW raw output", sbatch_text) &&
+        occursin("stale SW raw output", sbatch_text) ? "passed" : "failed"
+    payload = Dict(
+        "mode" => "historical_executed",
+        "candidates" => Dict(
+            "lw" => Dict("path" => LW_CAND, "sha256" => lw_sha),
+            "sw" => Dict("path" => SW_CAND, "sha256" => sw_sha)),
+        "executed_outputs" => Dict(
+            "lw" => Dict("path" => LW_RAW, "sha256" => exp_lw,
+                "note" => "PROMOTED to the LW acceptance init under Option B"),
+            "sw" => Dict("path" => SW_RAW, "sha256" => exp_sw,
+                "note" => "v1.2 proof output; sensitivity evidence only -- " *
+                    "the promoted SW raw is the v1.4 R2 output (job 4096)")),
+        "execution" => "authorized proof job 4091, ledger-verified " *
+            "outcome: $(first(outcome, 100)); strict-rule finding status " *
+            "$(get(fin, "status", "?")); promotion under Option B " *
+            "verified against gate4_option_b_decision_record " *
+            "(status + explicit supersession of the scaffold verdict)",
+        "ledgers" => Dict("finding" => basename(PD_FINDING_LEDGER),
+                          "submission" => basename(PD_SUBMISSION_LEDGER)))
+    return payload
+end
 
 function main()
     fails = String[]
@@ -52,6 +150,17 @@ function main()
     lw_sha = sha256(LW_CAND)
     sw_sha = sha256(SW_CAND)
     gates["candidates_hashed"] = "passed"
+
+    # POST-EXECUTION: both 4091 outputs on disk -> read-only historical mode
+    if isfile(LW_RAW) && isfile(SW_RAW)
+        payload = historical_executed_mode(gates, fails, lw_sha, sw_sha)
+        return finish(gates, fails, payload, "")
+    elseif isfile(LW_RAW) || isfile(SW_RAW)
+        push!(fails, "PARTIAL proof outputs on disk (exactly one of LW/SW " *
+                     "raw exists) -- anomalous state; investigate against " *
+                     "the 4091 finding ledger before any action")
+        return finish(gates, fails, Dict("mode" => "partial_outputs"), "")
+    end
 
     sbatch_text = """
 #!/bin/bash
@@ -169,13 +278,20 @@ echo "=== proof create_lut done rc=\$? \$(date -u +%FT%TZ) ==="
 end
 
 function finish(gates, fails, payload, sbatch_text)
-    status = isempty(fails) ? "a2_proof_driver_ready_awaiting_go" :
-                              "a2_proof_driver_failed"
+    mode = get(payload, "mode", "")
+    historical = mode == "historical_executed"
+    partial = mode == "partial_outputs"
+    status = !isempty(fails) ? "a2_proof_driver_failed" :
+             historical ? "a2_proof_driver_historical_executed" :
+                          "a2_proof_driver_ready_awaiting_go"
+    data_mode = historical ? "historical_post_execution_verification_only" :
+                partial ? "anomalous_partial_outputs_no_generation" :
+                          "dry_run_script_generation_only"
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
     result = Dict(
         "case" => "gate4_a2_proof_driver_checkpoint",
-        "data_mode" => "dry_run_script_generation_only",
+        "data_mode" => data_mode,
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
@@ -184,17 +300,30 @@ function finish(gates, fails, payload, sbatch_text)
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
-        "disclaimer" => "dry-run script generation only; nothing submitted; " *
-                        "no create_lut, comparison, objective, floor, or " *
-                        "acceptance execution; submission requires explicit " *
-                        "review/go per the standing protocol.",
+        "disclaimer" => historical ?
+            "HISTORICAL post-execution record: the generated sbatch was " *
+            "executed as authorized proof job 4091 (ledger-verified, not " *
+            "assumed); outputs verified against the reviewed finding " *
+            "ledger; the executed script is preserved, never regenerated; " *
+            "nothing submitted or executed by this unit." :
+            partial ?
+            "ANOMALOUS partial-output state: exactly one 4091 raw output " *
+            "is on disk; nothing generated, regenerated, or submitted; " *
+            "investigate against the finding ledger before any action." :
+            "dry-run script generation only; nothing submitted; " *
+            "no create_lut, comparison, objective, floor, or " *
+            "acceptance execution; submission requires explicit " *
+            "review/go per the standing protocol.",
     )
     mkpath(dirname(PD_RESULTS_JSON))
     open(PD_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
     end
     open(PD_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 A2 proof-driver checkpoint (dry-run)\n")
+        println(io, historical ?
+            "# Gate-4 A2 proof-driver checkpoint — HISTORICAL (executed " *
+            "as job 4091)\n" :
+            "# Gate-4 A2 proof-driver checkpoint (dry-run)\n")
         println(io, "Status: **$status**\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gate | Result |")
@@ -202,17 +331,32 @@ function finish(gates, fails, payload, sbatch_text)
         for k in sort(collect(keys(gates)))
             println(io, "| $k | $(gates[k]) |")
         end
-        println(io, "\nGenerated (unsubmitted) proof batch script: `$(PD_SBATCH)`")
+        if historical
+            println(io, "\nExecuted proof batch script (preserved, " *
+                        "ledger-verified): `$(PD_SBATCH)`")
+            println(io, "\nExecution: ", payload["execution"])
+            for b in ("lw", "sw")
+                o = payload["executed_outputs"][b]
+                println(io, "- [$b] `$(basename(o["path"]))` sha256 " *
+                            "`$(o["sha256"])` -- $(o["note"])")
+            end
+        else
+            println(io, "\nGenerated (unsubmitted) proof batch script: " *
+                        "`$(PD_SBATCH)`")
+        end
         if haskey(payload, "candidates")
             println(io, "\nPinned candidate identities:")
             for b in ("lw", "sw")
                 c = payload["candidates"][b]
                 println(io, "- [$b] `$(basename(c["path"]))` sha256 `$(c["sha256"])`")
             end
-            println(io, "\nExpected raw outputs: " *
-                        "`$(basename(payload["expected_raw_outputs"]["lw"]))`, " *
-                        "`$(basename(payload["expected_raw_outputs"]["sw"]))`")
-            println(io, "\nVersion-skew note: ", payload["version_skew_note"])
+            haskey(payload, "expected_raw_outputs") &&
+                println(io, "\nExpected raw outputs: " *
+                    "`$(basename(payload["expected_raw_outputs"]["lw"]))`, " *
+                    "`$(basename(payload["expected_raw_outputs"]["sw"]))`")
+            haskey(payload, "version_skew_note") &&
+                println(io, "\nVersion-skew note: ",
+                        payload["version_skew_note"])
         end
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$head` (pre-own-commit).")
@@ -224,7 +368,8 @@ function finish(gates, fails, payload, sbatch_text)
         println("  $k: $(gates[k])")
     end
     isempty(fails) || foreach(f -> println("  FAIL: $f"), fails)
-    return status == "a2_proof_driver_ready_awaiting_go" ? 0 : 1
+    return status in ("a2_proof_driver_ready_awaiting_go",
+                      "a2_proof_driver_historical_executed") ? 0 : 1
 end
 
 exit(main())

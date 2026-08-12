@@ -1,31 +1,32 @@
-# Gate-4 A2 proof-driver checkpoint (dry-run)
+# Gate-4 A2 proof-driver checkpoint — HISTORICAL (executed as job 4091)
 
-Status: **a2_proof_driver_ready_awaiting_go**
+Status: **a2_proof_driver_historical_executed**
 
-dry-run script generation only; nothing submitted; no create_lut, comparison, objective, floor, or acceptance execution; submission requires explicit review/go per the standing protocol.
+HISTORICAL post-execution record: the generated sbatch was executed as authorized proof job 4091 (ledger-verified, not assumed); outputs verified against the reviewed finding ledger; the executed script is preserved, never regenerated; nothing submitted or executed by this unit.
 
 | Gate | Result |
 |---|---|
 | candidate_identity_pinned | passed |
 | candidates_hashed | passed |
-| create_lut_only | passed |
+| finding_outcome_completed_rc0 | passed |
 | headnode_refusal_guard | passed |
-| no_execution_in_this_unit | passed |
-| raw_outputs_absent_preproof | passed |
-| raw_outputs_declared | passed |
+| job_id_4091_verified | passed |
+| ledger_case_ids_verified | passed |
+| option_b_adoption_verified | passed |
+| outputs_match_4091_finding_ledger | passed |
+| preserved_sbatch_matches_submission_ledger | passed |
+| sbatch_preserved_not_regenerated | passed |
 | sbatch_refuses_stale_raw_outputs | passed |
-| sbatch_written_not_submitted | passed |
 | scaffold_ready_required | passed |
-| testcopy_reused_not_recreated | passed |
 
-Generated (unsubmitted) proof batch script: `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_proof_dryrun.sbatch`
+Executed proof batch script (preserved, ledger-verified): `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_proof_dryrun.sbatch`
+
+Execution: authorized proof job 4091, ledger-verified outcome: COMPLETED rc=0 at 2026-07-20T08:20:58Z; stage-0 candidate hash checks OK for both bands; log/hash re; strict-rule finding status a2_candidates_sensitivity_only_not_promotable; promotion under Option B verified against gate4_option_b_decision_record (status + explicit supersession of the scaffold verdict)
+- [lw] `ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc` sha256 `ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43` -- PROMOTED to the LW acceptance init under Option B
+- [sw] `ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc` sha256 `3308cb7a53d95935e4a931ac63fe7237154075cc968c04b06a5d8881e8137922` -- v1.2 proof output; sensitivity evidence only -- the promoted SW raw is the v1.4 R2 output (job 4096)
 
 Pinned candidate identities:
 - [lw] `ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5` sha256 `c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e`
 - [sw] `ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5` sha256 `13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57`
 
-Expected raw outputs: `ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc`, `ecckd-1.2_sw_raw-ckd-definition_climate_rgb-tol0.047.nc`
-
-Version-skew note: pre-registered mismatch risk: published LW32 is ecckd-1.0, published SW32 is ecckd-1.4, pinned rerun toolchain is ecckd-1.2; content comparisons are name-agnostic but algorithmic drift across versions is a plausible mismatch cause; any mismatch -> sensitivity-only per the scaffold verdict rule
-
-Provenance: branch `glw/gate4-recovery`, generated_from_head `ecf3973` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `cb7c0b0` (pre-own-commit).
