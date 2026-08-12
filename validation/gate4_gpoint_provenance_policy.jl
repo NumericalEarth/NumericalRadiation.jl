@@ -1,7 +1,27 @@
-# Gate-4 g-point PROVENANCE POLICY artifact (decision record; nothing run).
+# Gate-4 g-point PROVENANCE POLICY artifact (decision record; nothing run)
+# -- HISTORICAL; ACCEPTANCE MECHANISM SUPERSEDED BY OPTION B.
 #
-# The acceptance-run init generation requires gpoints.h5 inputs that do not
-# exist on this system. Two candidate provenances:
+# SUPERSESSION (monitor-directed marking, 2026-08-12): the override this
+# unit anticipated in its authority_note HAPPENED -- Greg (2026-07-20,
+# "take option B") adopted the AMENDED acceptance rule recorded in
+# gate4_option_b_decision_record (structural fields elementwise EXACT +
+# support arrays within storage precision, max|diff| <= 2.1e-5),
+# superseding this unit's strict exact-reproduction A2 mechanism. OUTCOME:
+# the A2 find_g_points rerun (job 4082) produced the candidates; the
+# create_lut proof (job 4091) showed structure bit-exact with
+# storage-precision support drift; the candidates were ACCEPTED under the
+# amended rule (LW gpoints c96e6492..., SW 13dd686a...) and are sha-pinned
+# by gate4_g3_scoped_input_preflight.jl. The structural-identity POLICY
+# INTENT (g-points are part of the fixed problem definition) and the
+# Path-B sensitivity rule remain in force; only the strict exact-match
+# acceptance mechanism was superseded. The previously recorded
+# future-output/extractor wording is WITHDRAWN below (extraction was
+# proven invalid and no extractor unit was ever needed). The status token
+# gpoint_policy_recorded is retained unchanged.
+#
+# Original context (historical): at decision time the acceptance-run init
+# generation required gpoints.h5 inputs that did not exist on this
+# system. Two candidate provenances:
 #
 #   PATH A (G2/G3 acceptance POLICY: structural identity with the published
 #   targets). MECHANISM AMENDED per gate4_gpoint_extraction_feasibility:
@@ -49,17 +69,23 @@ function main()
         push!(fails, "published targets unresolved: $lw32 / $sw32")
 
     path_a = Dict(
-        "role" => "ACCEPTANCE (G2/G3 floor and recovery runs)",
-        "method" => "SUPERSEDED MECHANISM -- see " *
-            "gate4_gpoint_extraction_feasibility.json: direct " *
-            "argmax-from-gpoint_fraction extraction is PROVEN INVALID " *
+        "role" => "HISTORICAL strict acceptance mechanism (G2/G3 floor and " *
+            "recovery runs) -- superseded by the Option-B amended rule",
+        "method" => "HISTORICAL STRICT MECHANISM (twice superseded: first " *
+            "amended per gate4_gpoint_extraction_feasibility.json -- direct " *
+            "argmax-from-gpoint_fraction extraction PROVEN INVALID " *
             "(fractional projection arrays; no g_point variable in the " *
-            "published files). The structural-identity POLICY stands; " *
-            "acceptable mechanisms are now: (A1) released find_g_points " *
-            "HDF5 outputs with verified provenance; (A2) exact find_g_points " *
-            "rerun WITH PROOF it reproduces the published " *
-            "gpoint_fraction/band arrays; (A3) existing upstream raw/scaled " *
-            "init definitions from the release history",
+            "published files) -- then superseded by Option B). Under the " *
+            "historical strict mechanism the acceptable sources were: (A1) " *
+            "released find_g_points HDF5 outputs with verified provenance; " *
+            "(A2) exact find_g_points rerun WITH PROOF it reproduces the " *
+            "published gpoint_fraction/band arrays; (A3) existing upstream " *
+            "raw/scaled init definitions from the release history. " *
+            "STILL-CURRENT RULE (precise): g-point STRUCTURE remains part " *
+            "of the fixed problem definition and unproven reruns remain " *
+            "barred from acceptance; storage-precision support-array drift " *
+            "(max|diff| <= 2.1e-5) is allowed ONLY under the Option-B " *
+            "amended rule",
         "verification_support_arrays" => Dict(
             "role" => "COMPARISON/VERIFICATION targets for A1/A2 candidates " *
                       "-- NOT extraction sources (see feasibility proof)",
@@ -68,13 +94,14 @@ function main()
             "fields" => ["gpoint_fraction (fractional projection)",
                          "wavenumber1_band / wavenumber2_band",
                          "band arrays and g-point counts"]),
-        "future_outputs" => Dict(
-            "lw" => "$(WORKROOT)/gpoints/extracted_lw_climate_fsck-32b_gpoints.h5",
-            "sw" => "$(WORKROOT)/gpoints/extracted_sw_climate_rgb-32b_gpoints.h5"),
-        "schema_anchor" => "the gpoints.h5 schema consumed by " *
-            "create_look_up_table (input=...) must be read from " *
-            "create_look_up_table.cpp when the extractor unit lands; " *
-            "extraction is NOT implemented in this policy unit",
+        "outputs_historical_note" => "the previously recorded " *
+            "future-output paths ($(WORKROOT)/gpoints/extracted_*.h5) and " *
+            "extractor schema anchor are WITHDRAWN: extraction was proven " *
+            "invalid and no extractor unit was ever built; the actual " *
+            "accepted g-point files came from the A2 rerun (job 4082) at " *
+            "$(WORKROOT)/work/lw_gpoints/ and " *
+            "$(WORKROOT)/work-v14 (symlinked), accepted under Option B " *
+            "(LW c96e6492..., SW 13dd686a...)",
         "rationale" => "g-point structure is part of the fixed problem " *
             "definition under the optimizer-only-delta rule; ANY acceptance " *
             "mechanism must guarantee structural identity with the recovery " *
@@ -112,7 +139,10 @@ function main()
     gates["independent_blocker_mmm_const_identified"] =
         !isfile(mmm_const) ? "passed" : "passed"   # recorded either way
     blockers = Any[Dict(
-        "blocker" => "ckdmip_mmm-const_concentrations.nc",
+        "historical_requirement" => "ckdmip_mmm-const_concentrations.nc " *
+            "(recorded as an independent blocker at decision time; " *
+            "RESOLVED -- restored to disk and consumed by the executed " *
+            "create_lut runs)",
         "path" => mmm_const, "present" => isfile(mmm_const),
         "independence" => "independent of the g-point provenance decision; " *
                           "required by create_lut composite gas regardless")]
@@ -127,13 +157,26 @@ function main()
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
-        "recommendation" => "PATH A for G2/G3 acceptance; PATH B recorded " *
-            "as non-acceptance sensitivity/reproduction path",
+        "recommendation" => "HISTORICAL: PATH A (strict mechanism) for " *
+            "G2/G3 acceptance; PATH B recorded as non-acceptance " *
+            "sensitivity/reproduction path. The strict Path-A mechanism " *
+            "was superseded by Option B; the fixed-structure principle " *
+            "and the Path-B bar on unproven reruns remain current",
         "path_a" => path_a, "path_b" => path_b,
         "independent_blockers" => blockers,
-        "authority_note" => "this recommendation binds the campaign's " *
-            "default; Greg may override, in which case this artifact must " *
-            "be superseded by a new decision record",
+        "authority_note" => "this recommendation bound the campaign's " *
+            "default; the anticipated override happened: Greg (2026-07-20) " *
+            "adopted Option B",
+        "superseded_by" => "gate4_option_b_decision_record (Greg-authorized " *
+            "amended acceptance rule: structural elementwise-exact + " *
+            "support arrays within storage precision <= 2.1e-5); the " *
+            "structural-identity policy intent and Path-B sensitivity rule " *
+            "remain in force",
+        "outcome" => "A2 rerun (job 4082) candidates + create_lut proof " *
+            "(job 4091) accepted under the amended rule: LW gpoints " *
+            "c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e, " *
+            "SW 13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57; " *
+            "sha-pinned by gate4_g3_scoped_input_preflight.jl",
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "pinned_source" => ECCKD_SRC,
             "provenance_note" => "artifact generated from the working tree " *
@@ -147,8 +190,11 @@ function main()
         JSON.print(io, result, 2)
     end
     open(GP_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 g-point provenance policy\n")
+        println(io, "# Gate-4 g-point provenance policy — HISTORICAL " *
+                    "(acceptance mechanism superseded by Option B)\n")
         println(io, "Status: **$status**\n")
+        println(io, "**Superseded by**: ", result["superseded_by"], "\n")
+        println(io, "**Outcome**: ", result["outcome"], "\n")
         println(io, result["disclaimer"], "\n")
         println(io, "**Recommendation: PATH A (structural identity), " *
                     "MECHANISM AMENDED** -- direct extraction from published " *
@@ -174,10 +220,12 @@ function main()
         println(io, "\nVerification support arrays (comparison targets " *
                     "for A1/A2 candidates, NOT extraction sources): " *
                     "$(basename(lw32)), $(basename(sw32)) " *
-                    "(gpoint_fraction + band arrays); future gpoints.h5 " *
-                    "outputs under $(WORKROOT)/gpoints/.")
-        println(io, "\nIndependent blocker: ckdmip_mmm-const_concentrations" *
-                    ".nc (present: $(isfile(mmm_const))).")
+                    "(gpoint_fraction + band arrays). " *
+                    path_a["outputs_historical_note"])
+        println(io, "\nHistorical requirement (was an independent blocker " *
+                    "at decision time, RESOLVED): " *
+                    "ckdmip_mmm-const_concentrations.nc " *
+                    "(present: $(isfile(mmm_const))).")
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$head` (pre-own-commit).")
         isempty(fails) || (println(io, "\n## Failures\n");

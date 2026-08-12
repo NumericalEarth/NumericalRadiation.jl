@@ -1,5 +1,5 @@
 {
-  "authority_note": "this recommendation binds the campaign's default; Greg may override, in which case this artifact must be superseded by a new decision record",
+  "authority_note": "this recommendation bound the campaign's default; the anticipated override happened: Greg (2026-07-20) adopted Option B",
   "case": "gate4_gpoint_provenance_policy",
   "data_mode": "policy_decision_record_only",
   "disclaimer": "policy decision record only; no extraction, generation, optimization, objective, floor, or recovery computation.",
@@ -13,21 +13,18 @@
   },
   "independent_blockers": [
     {
-      "blocker": "ckdmip_mmm-const_concentrations.nc",
+      "historical_requirement": "ckdmip_mmm-const_concentrations.nc (recorded as an independent blocker at decision time; RESOLVED -- restored to disk and consumed by the executed create_lut runs)",
       "independence": "independent of the g-point provenance decision; required by create_lut composite gas regardless",
       "path": "/shared/home/greg/data/ckdmip/mmm/conc/ckdmip_mmm-const_concentrations.nc",
       "present": true
     }
   ],
+  "outcome": "A2 rerun (job 4082) candidates + create_lut proof (job 4091) accepted under the amended rule: LW gpoints c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e, SW 13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57; sha-pinned by gate4_g3_scoped_input_preflight.jl",
   "path_a": {
-    "future_outputs": {
-      "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/gpoints/extracted_lw_climate_fsck-32b_gpoints.h5",
-      "sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/gpoints/extracted_sw_climate_rgb-32b_gpoints.h5"
-    },
-    "method": "SUPERSEDED MECHANISM -- see gate4_gpoint_extraction_feasibility.json: direct argmax-from-gpoint_fraction extraction is PROVEN INVALID (fractional projection arrays; no g_point variable in the published files). The structural-identity POLICY stands; acceptable mechanisms are now: (A1) released find_g_points HDF5 outputs with verified provenance; (A2) exact find_g_points rerun WITH PROOF it reproduces the published gpoint_fraction/band arrays; (A3) existing upstream raw/scaled init definitions from the release history",
+    "method": "HISTORICAL STRICT MECHANISM (twice superseded: first amended per gate4_gpoint_extraction_feasibility.json -- direct argmax-from-gpoint_fraction extraction PROVEN INVALID (fractional projection arrays; no g_point variable in the published files) -- then superseded by Option B). Under the historical strict mechanism the acceptable sources were: (A1) released find_g_points HDF5 outputs with verified provenance; (A2) exact find_g_points rerun WITH PROOF it reproduces the published gpoint_fraction/band arrays; (A3) existing upstream raw/scaled init definitions from the release history. STILL-CURRENT RULE (precise): g-point STRUCTURE remains part of the fixed problem definition and unproven reruns remain barred from acceptance; storage-precision support-array drift (max|diff| <= 2.1e-5) is allowed ONLY under the Option-B amended rule",
+    "outputs_historical_note": "the previously recorded future-output paths (/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/gpoints/extracted_*.h5) and extractor schema anchor are WITHDRAWN: extraction was proven invalid and no extractor unit was ever built; the actual accepted g-point files came from the A2 rerun (job 4082) at /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ and /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14 (symlinked), accepted under Option B (LW c96e6492..., SW 13dd686a...)",
     "rationale": "g-point structure is part of the fixed problem definition under the optimizer-only-delta rule; ANY acceptance mechanism must guarantee structural identity with the recovery target (verified against published support arrays)",
-    "role": "ACCEPTANCE (G2/G3 floor and recovery runs)",
-    "schema_anchor": "the gpoints.h5 schema consumed by create_look_up_table (input=...) must be read from create_look_up_table.cpp when the extractor unit lands; extraction is NOT implemented in this policy unit",
+    "role": "HISTORICAL strict acceptance mechanism (G2/G3 floor and recovery runs) -- superseded by the Option-B amended rule",
     "verification_support_arrays": {
       "fields": [
         "gpoint_fraction (fractional projection)",
@@ -47,11 +44,12 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "1433e9c",
+    "generated_from_head": "b890429",
     "pinned_source": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
-  "recommendation": "PATH A for G2/G3 acceptance; PATH B recorded as non-acceptance sensitivity/reproduction path",
+  "recommendation": "HISTORICAL: PATH A (strict mechanism) for G2/G3 acceptance; PATH B recorded as non-acceptance sensitivity/reproduction path. The strict Path-A mechanism was superseded by Option B; the fixed-structure principle and the Path-B bar on unproven reruns remain current",
   "status": "gpoint_policy_recorded",
-  "timestamp_utc": "2026-07-19T05:32:32.984"
+  "superseded_by": "gate4_option_b_decision_record (Greg-authorized amended acceptance rule: structural elementwise-exact + support arrays within storage precision <= 2.1e-5); the structural-identity policy intent and Path-B sensitivity rule remain in force",
+  "timestamp_utc": "2026-08-12T11:07:29.215"
 }

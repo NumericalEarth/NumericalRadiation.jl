@@ -61,8 +61,8 @@
     }
   ],
   "data_mode": "dry_run_proof_specification_only",
-  "deferred_hygiene": "gate4_a2_dryrun.sbatch retains a stale comment claiming the May config already localizes paths (superseded by the sed-patch block that follows it); remove at the next checkpoint amend -- not blocking, the executable sed block is authoritative",
-  "disclaimer": "proof specification only; refuses until A2 gpoints candidates exist; no create_lut, objective, floor, or recovery computation.",
+  "deferred_hygiene": "RESOLVED: the previously flagged stale comment (claiming the May config already localizes paths) is absent from the current gate4_a2_dryrun.sbatch; no action remains",
+  "disclaimer": "HISTORICAL proof specification (the proof it specified was executed as job 4091 and its strict verdict rule superseded by Option B); no create_lut, objective, floor, or recovery computation.",
   "failures": [],
   "gates": {
     "comparison_spec_complete": "passed",
@@ -72,6 +72,7 @@
     "published_targets_resolved": "passed",
     "refuses_without_candidates": "passed"
   },
+  "outcome": "proof executed as job 4091 on the job-4082 A2 candidates: verdict proof_mismatch_sensitivity_only under the strict rule (structure all exact, support drift at storage precision); R2 job 4096 resolved the SSI absence as version skew; candidates promoted under Option B",
   "proof_commands": {
     "input_mechanism_1_preferred": "place/symlink the rerun candidate into the TESTCOPY-configured WORK_LW_GPOINTS_DIR / WORK_SW_GPOINTS_DIR under the EXACT filename the script derives (ECCKD_PREFIX + _lw_gpoints_climate_fsck-tol0.0161.h5 / _sw_gpoints_climate_rgb-tol0.047.h5), then run the pristine script",
     "input_mechanism_2": "call the pinned create_look_up_table binary directly with the generated config and explicit input=<A2 candidate> output=<proof raw definition> (bypasses the driver's filename derivation; config must replicate the script-emitted config block verbatim)",
@@ -81,14 +82,16 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "2f45d6f",
+    "generated_from_head": "b890429",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "status": "a2_proof_scaffold_ready",
-  "timestamp_utc": "2026-07-19T08:17:55.224",
+  "superseded_by": "gate4_option_b_decision_record (Greg-authorized amended acceptance rule); this unit's strict verdict_rule any_mismatch->sensitivity-only is explicitly listed there as superseded",
+  "timestamp_utc": "2026-08-12T11:07:37.947",
   "verdict_rule": {
     "all_exact": "candidates PROMOTED to acceptance raw inits; init-generation proceeds (scale_lut for SW next)",
-    "any_mismatch": "candidates are SENSITIVITY-ONLY; record the mismatch as a finding; the acceptance floor cannot use them unless Greg explicitly changes the optimizer-only-delta rule"
+    "any_mismatch": "candidates are SENSITIVITY-ONLY; record the mismatch as a finding; the acceptance floor cannot use them unless Greg explicitly changes the optimizer-only-delta rule",
+    "superseded_note": "this strict rule was applied by proof job 4091 (verdict proof_mismatch_sensitivity_only) and then SUPERSEDED by the Greg-authorized Option-B amended rule (gate4_option_b_decision_record), under which the candidates were promoted; retained here as the historical spec"
   },
   "verification_targets": {
     "lw32": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",

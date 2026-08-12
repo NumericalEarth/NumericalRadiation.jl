@@ -1,12 +1,26 @@
-# Gate-4 A2 REPRODUCTION-PROOF scaffold (dry-run; refuses until candidates
-# exist; no create_lut execution; no floor).
+# Gate-4 A2 REPRODUCTION-PROOF scaffold (dry-run; no create_lut execution;
+# no floor) -- HISTORICAL; VERDICT RULE SUPERSEDED BY OPTION B.
 #
-# Defines, ahead of the A2 run: (1) the exact future proof-only raw
-# create_lut commands that consume the rerun gpoints candidates, and (2) the
-# exact comparisons against the published LW32/SW32 support arrays that
-# decide acceptance. The hinge (binding, from the amended policy): rerun
-# gpoints + raw create_lut must EXACTLY reproduce the published support
-# arrays before any floor use; anything less is sensitivity-only.
+# SUPERSESSION (monitor-directed marking, 2026-08-12): the proof this
+# unit specified ahead of time has been EXECUTED -- proof job 4091
+# (create_lut on the A2 candidates from job 4082) returned
+# proof_mismatch_sensitivity_only under THIS unit's strict verdict rule
+# (structure all exact; support-array drift at storage precision), and
+# the R2 matching-version run (job 4096) resolved the SSI absence as
+# version skew. Greg then (2026-07-20, "take option B") adopted the
+# AMENDED acceptance rule in gate4_option_b_decision_record, which
+# explicitly supersedes this unit's verdict_rule
+# (any_mismatch -> sensitivity-only): the candidates were PROMOTED under
+# structural-exact + storage-precision tolerance. The comparisons and the
+# original verdict rule below are RETAINED VERBATIM as the historical
+# strict spec; the pre-execution command spec is historical, not a plan.
+# The status token a2_proof_scaffold_ready is retained UNCHANGED because
+# gate4_a2_proof_driver_checkpoint.jl requires it by exact match.
+#
+# Original contract (historical): defines, ahead of the A2 run, (1) the
+# exact proof-only raw create_lut commands that consume the rerun gpoints
+# candidates, and (2) the exact comparisons against the published
+# LW32/SW32 support arrays that decide acceptance under the strict rule.
 #
 # No generation, optimization, objective, floor, or recovery computation.
 
@@ -114,6 +128,8 @@ function main()
         Dict("name" => "solar_spectral_irradiance", "band" => "sw",
              "rule" => "elementwise EXACT vs published SW32"),
     ]
+    # HISTORICAL strict verdict rule, retained verbatim; superseded by the
+    # Option-B amended rule (see supersession banner)
     verdict_rule = Dict(
         "all_exact" => "candidates PROMOTED to acceptance raw inits; " *
                        "init-generation proceeds (scale_lut for SW next)",
@@ -121,6 +137,11 @@ function main()
                           "mismatch as a finding; the acceptance floor " *
                           "cannot use them unless Greg explicitly changes " *
                           "the optimizer-only-delta rule",
+        "superseded_note" => "this strict rule was applied by proof job " *
+            "4091 (verdict proof_mismatch_sensitivity_only) and then " *
+            "SUPERSEDED by the Greg-authorized Option-B amended rule " *
+            "(gate4_option_b_decision_record), under which the candidates " *
+            "were promoted; retained here as the historical spec",
     )
 
     gates["refuses_without_candidates"] = have_candidates ? "passed" :
@@ -140,10 +161,9 @@ function main()
         (gates["no_execution_in_this_unit"] = "failed";
          push!(fails, "create_lut invocation found in proof scaffold"))
 
-    deferred_hygiene = "gate4_a2_dryrun.sbatch retains a stale comment " *
-        "claiming the May config already localizes paths (superseded by the " *
-        "sed-patch block that follows it); remove at the next checkpoint " *
-        "amend -- not blocking, the executable sed block is authoritative"
+    deferred_hygiene = "RESOLVED: the previously flagged stale comment " *
+        "(claiming the May config already localizes paths) is absent from " *
+        "the current gate4_a2_dryrun.sbatch; no action remains"
 
     status = !isempty(fails) ? "a2_proof_scaffold_failed" :
              have_candidates ? "a2_proof_scaffold_ready" :
@@ -164,21 +184,35 @@ function main()
         "verdict_rule" => verdict_rule,
         "verification_targets" => Dict("lw32" => basename(lw32),
                                        "sw32" => basename(sw32)),
+        "superseded_by" => "gate4_option_b_decision_record (Greg-authorized " *
+            "amended acceptance rule); this unit's strict verdict_rule " *
+            "any_mismatch->sensitivity-only is explicitly listed there as " *
+            "superseded",
+        "outcome" => "proof executed as job 4091 on the job-4082 A2 " *
+            "candidates: verdict proof_mismatch_sensitivity_only under the " *
+            "strict rule (structure all exact, support drift at storage " *
+            "precision); R2 job 4096 resolved the SSI absence as version " *
+            "skew; candidates promoted under Option B",
         "deferred_hygiene" => deferred_hygiene,
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
-        "disclaimer" => "proof specification only; refuses until A2 gpoints " *
-                        "candidates exist; no create_lut, objective, floor, " *
-                        "or recovery computation.",
+        "disclaimer" => "HISTORICAL proof specification (the proof it " *
+                        "specified was executed as job 4091 and its strict " *
+                        "verdict rule superseded by Option B); no " *
+                        "create_lut, objective, floor, or recovery " *
+                        "computation.",
     )
     mkpath(dirname(RP_RESULTS_JSON))
     open(RP_RESULTS_JSON, "w") do io
         JSON.print(io, result, 2)
     end
     open(RP_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 A2 reproduction-proof scaffold\n")
+        println(io, "# Gate-4 A2 reproduction-proof scaffold — HISTORICAL " *
+                    "(verdict rule superseded by Option B)\n")
         println(io, "Status: **$status**\n")
+        println(io, "**Superseded by**: ", result["superseded_by"], "\n")
+        println(io, "**Outcome**: ", result["outcome"], "\n")
         println(io, result["disclaimer"], "\n")
         println(io, "| Gate | Result |")
         println(io, "|---|---|")
@@ -191,9 +225,10 @@ function main()
         for c in comparisons
             println(io, "- [$(c["band"])] $(c["name"]): $(c["rule"])")
         end
-        println(io, "\nVerdict: all exact -> promote to acceptance raw " *
-                    "inits; any mismatch -> sensitivity-only, no floor use " *
-                    "without an explicit rule change.")
+        println(io, "\nVerdict (historical strict rule): all exact -> " *
+                    "promote to acceptance raw inits; any mismatch -> " *
+                    "sensitivity-only, no floor use without an explicit " *
+                    "rule change. ", verdict_rule["superseded_note"], ".")
         println(io, "\nDeferred hygiene note: ", deferred_hygiene)
         println(io, "\nProvenance: branch `$branch`, generated_from_head " *
                     "`$head` (pre-own-commit).")

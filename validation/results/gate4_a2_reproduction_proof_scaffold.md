@@ -1,8 +1,12 @@
-# Gate-4 A2 reproduction-proof scaffold
+# Gate-4 A2 reproduction-proof scaffold — HISTORICAL (verdict rule superseded by Option B)
 
 Status: **a2_proof_scaffold_ready**
 
-proof specification only; refuses until A2 gpoints candidates exist; no create_lut, objective, floor, or recovery computation.
+**Superseded by**: gate4_option_b_decision_record (Greg-authorized amended acceptance rule); this unit's strict verdict_rule any_mismatch->sensitivity-only is explicitly listed there as superseded
+
+**Outcome**: proof executed as job 4091 on the job-4082 A2 candidates: verdict proof_mismatch_sensitivity_only under the strict rule (structure all exact, support drift at storage precision); R2 job 4096 resolved the SSI absence as version skew; candidates promoted under Option B
+
+HISTORICAL proof specification (the proof it specified was executed as job 4091 and its strict verdict rule superseded by Option B); no create_lut, objective, floor, or recovery computation.
 
 | Gate | Result |
 |---|---|
@@ -28,8 +32,8 @@ Candidates found: LW 1, SW 1
 - [both] wavenumber2: elementwise EXACT (fine per-bin upper bounds)
 - [sw] solar_spectral_irradiance: elementwise EXACT vs published SW32
 
-Verdict: all exact -> promote to acceptance raw inits; any mismatch -> sensitivity-only, no floor use without an explicit rule change.
+Verdict (historical strict rule): all exact -> promote to acceptance raw inits; any mismatch -> sensitivity-only, no floor use without an explicit rule change. this strict rule was applied by proof job 4091 (verdict proof_mismatch_sensitivity_only) and then SUPERSEDED by the Greg-authorized Option-B amended rule (gate4_option_b_decision_record), under which the candidates were promoted; retained here as the historical spec.
 
-Deferred hygiene note: gate4_a2_dryrun.sbatch retains a stale comment claiming the May config already localizes paths (superseded by the sed-patch block that follows it); remove at the next checkpoint amend -- not blocking, the executable sed block is authoritative
+Deferred hygiene note: RESOLVED: the previously flagged stale comment (claiming the May config already localizes paths) is absent from the current gate4_a2_dryrun.sbatch; no action remains
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `2f45d6f` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `b890429` (pre-own-commit).
