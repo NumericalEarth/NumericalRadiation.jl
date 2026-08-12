@@ -50,58 +50,188 @@ const PD_SBATCH = validation_results_path("gate4_a2_proof_dryrun.sbatch")
 const PD_FINDING_LEDGER = validation_results_path("gate4_a2_proof_finding_ledger.json")
 const PD_SUBMISSION_LEDGER = validation_results_path("gate4_a2_proof_submission_ledger.json")
 
-sha256(p) = split(strip(read(`sha256sum $p`, String)))[1]
+# nonthrowing hash for the OUTPUT boundary: missing/unreadable files
+# classify as failed gates with reasons, never a crash (early
+# missing-file return avoids sha256sum stderr in deliberate fixtures)
+pd_try_sha(p) = try
+    isfile(p) || return nothing
+    split(strip(read(`sha256sum $p`, String)))[1]
+catch
+    nothing
+end
+
+pd_obj(x) = x isa AbstractDict ? x : Dict{String, Any}()
+pd_str(x) = x isa AbstractString ? String(x) : ""
+pd_hex64(x) = x isa AbstractString && occursin(r"^[0-9a-f]{64}$", x)
+
+# shared guarded pinned-artifact loader (fixture-run via the
+# absolute-path passthrough; the unit's SINGLE parsefile site, serving
+# all four artifact edges): FIVE fixed, distinct refusal classes with
+# FIXED reasons -- missing; unparseable (parse failure); parses to a
+# non-object (JSON null/array/scalar); case mismatch; not green. The
+# EXACT case is bound before the EXACT status for every producer,
+# including the finding and submission ledgers.
+function pd_parse_pinned(name, expected_case, expected_status)
+    path = isabspath(name) ? name : validation_results_path(name)
+    isfile(path) ||
+        return (false, "$expected_case missing", nothing)
+    raw = try
+        JSON.parsefile(path)
+    catch
+        return (false, "$expected_case unparseable (parse failure)",
+                nothing)
+    end
+    raw isa AbstractDict ||
+        return (false, "$expected_case parses to a non-object " *
+                       "(JSON null/array/scalar)", nothing)
+    c = pd_str(get(raw, "case", ""))
+    c == expected_case ||
+        return (false, "$expected_case case mismatch: " *
+                       (isempty(c) ? "(missing/non-string)" : c), raw)
+    s = pd_str(get(raw, "status", ""))
+    s == expected_status ||
+        return (false, "$expected_case not green: " *
+                       (isempty(s) ? "(missing/non-string)" : s), raw)
+    return (true, "ok", raw)
+end
+
+# PURE safe navigators used identically by production and fixtures:
+# finding-ledger proof_run fields (shape deficiencies yield ""/-1)
+pd_fin_job_id(fin) = get(pd_obj(get(pd_obj(fin), "proof_run", nothing)),
+                         "job_id", -1)
+pd_fin_outcome(fin) = pd_str(get(pd_obj(get(pd_obj(fin), "proof_run",
+                                             nothing)), "outcome", ""))
+pd_fin_raw_sha(fin, band) = pd_str(get(pd_obj(get(pd_obj(get(pd_obj(fin),
+    "proof_run", nothing)), band, nothing)), "sha256", ""))
+# submission-ledger fields
+pd_sub_job_id(sub) = get(pd_obj(get(pd_obj(sub), "job", nothing)),
+                         "job_id", -1)
+pd_sub_sbatch_sha(sub) = pd_str(get(pd_obj(get(pd_obj(sub), "sbatch",
+                                               nothing)), "sha256", ""))
+# Option-B supersedes scan: non-vector never matches; non-string
+# entries normalize (never throw or falsely match)
+function pd_ob_supersedes_scaffold(ob)
+    sup = get(pd_obj(ob), "supersedes", nothing)
+    return sup isa AbstractVector &&
+           any(occursin("gate4_a2_reproduction_proof_scaffold",
+                        pd_str(s)) for s in sup)
+end
+
+# payload-facing status extraction: safe on nothing/non-object/non-
+# string (the failure report must always be emittable)
+function pd_status_or_q(x)
+    s = pd_str(get(pd_obj(x), "status", ""))
+    return isempty(s) ? "?" : s
+end
+
+# truthful pre-execution data_mode: a blocked run generated nothing
+pd_preexec_data_mode(sbatch_written) = sbatch_written ?
+    "dry_run_script_generation_only" : "blocked_no_script_generated"
+
+# pure claim formatter shared with fixtures: a fact is ASSERTED only
+# when its gate is green; otherwise the claim is WITHHELD -- a
+# malformed-ledger report can never assert the facts it failed to verify
+pd_claim(ok, verified_text, withheld_text) =
+    ok ? verified_text : withheld_text
+
+# fail-closed gate closure (pure; fixture-run): whenever ANY gate is
+# not passed, the AUTHORITATIVE complete failed-gate census is appended
+# (duplication with specific reasons is acceptable -- one gate's reason
+# can never hide another gate's silent failure), and success ALWAYS
+# additionally requires every gate passed
+function pd_close_failed_gates(fails, gates)
+    failed = sort([k for (k, v) in gates if v != "passed"])
+    out = copy(fails)
+    isempty(failed) ||
+        push!(out, "failed gates (fail-closed census): " *
+                   join(failed, ", "))
+    return out, isempty(failed)
+end
+
+# the pre-execution sbatch write happens ONLY behind the classified
+# scaffold prerequisite (historical/partial paths are structurally
+# write-free; a blocked pre-execution run never clobbers PD_SBATCH)
+pd_should_write(preexecution, scaffold_ok) = preexecution && scaffold_ok
+function pd_write_script(writefn, preexecution, scaffold_ok)
+    pd_should_write(preexecution, scaffold_ok) || return false
+    writefn()
+    return true
+end
 
 # read-only historical mode: outputs exist; verify against the reviewed
 # ledgers, preserve (never regenerate) the executed sbatch
 function historical_executed_mode(gates, fails, lw_sha, sw_sha)
-    fin = JSON.parsefile(PD_FINDING_LEDGER)
-    sub = JSON.parsefile(PD_SUBMISSION_LEDGER)
-
     # fail-closed evidence gates: execution facts are VERIFIED from the
-    # ledgers, never hardcoded (monitor requirement)
-    case_ok = get(fin, "case", "") == "gate4_a2_proof_finding_ledger" &&
-              get(sub, "case", "") == "gate4_a2_proof_submission_ledger"
-    gates["ledger_case_ids_verified"] = case_ok ? "passed" : "failed"
-    case_ok || push!(fails, "ledger case IDs wrong: fin=" *
-        "$(get(fin, "case", "?")) sub=$(get(sub, "case", "?"))")
-    jid_ok = get(get(sub, "job", Dict{String, Any}()), "job_id", -1) == 4091 &&
-             get(fin["proof_run"], "job_id", -1) == 4091
+    # ledgers, never hardcoded (monitor requirement); EXACT case+status
+    # are bound for both ledgers through the shared guarded loader
+    fin_ok, fin_why, fin = pd_parse_pinned(PD_FINDING_LEDGER,
+        "gate4_a2_proof_finding_ledger",
+        "a2_candidates_sensitivity_only_not_promotable")
+    sub_ok, sub_why, sub = pd_parse_pinned(PD_SUBMISSION_LEDGER,
+        "gate4_a2_proof_submission_ledger",
+        "proof_run_submitted_awaiting_completion")
+    gates["ledger_case_ids_verified"] =
+        (fin_ok && sub_ok) ? "passed" : "failed"
+    fin_ok || push!(fails, fin_why)
+    sub_ok || push!(fails, sub_why)
+    jid_ok = pd_sub_job_id(sub) == 4091 && pd_fin_job_id(fin) == 4091
     gates["job_id_4091_verified"] = jid_ok ? "passed" : "failed"
-    jid_ok || push!(fails, "job_id != 4091 in a ledger")
-    outcome = String(get(fin["proof_run"], "outcome", ""))
+    jid_ok || push!(fails, "job_id != 4091 in a ledger (or ledger " *
+                           "shape deficient)")
+    outcome = pd_fin_outcome(fin)
     outcome_ok = occursin("COMPLETED", outcome) && occursin("rc=0", outcome)
     gates["finding_outcome_completed_rc0"] = outcome_ok ? "passed" : "failed"
     outcome_ok || push!(fails, "finding-ledger outcome lacks COMPLETED " *
                                "rc=0: $(first(outcome, 80))")
-    ob = JSON.parsefile(
-        validation_results_path("gate4_option_b_decision_record.json"))
-    ob_ok = get(ob, "status", "") == "option_b_adopted_candidates_promoted" &&
-            any(occursin("gate4_a2_reproduction_proof_scaffold", String(s))
-                for s in get(ob, "supersedes", Any[]))
+    ob_ok0, ob_why, ob = pd_parse_pinned(
+        "gate4_option_b_decision_record.json",
+        "gate4_option_b_decision_record",
+        "option_b_adopted_candidates_promoted")
+    ob_ok0 || push!(fails, ob_why)
+    ob_ok = ob_ok0 && pd_ob_supersedes_scaffold(ob)
     gates["option_b_adoption_verified"] = ob_ok ? "passed" : "failed"
-    ob_ok || push!(fails, "Option-B record not adopted or does not " *
-        "supersede the strict scaffold verdict; promotion cannot be claimed")
+    (ob_ok || !ob_ok0) ||
+        push!(fails, "Option-B record does not supersede the strict " *
+                     "scaffold verdict; promotion cannot be claimed")
 
-    exp_lw = fin["proof_run"]["lw_raw"]["sha256"]
-    exp_sw = fin["proof_run"]["sw_raw"]["sha256"]
-    lw_ok = sha256(LW_RAW) == exp_lw
-    sw_ok = sha256(SW_RAW) == exp_sw
+    # ledger shas 64-HEX VALIDATED before any file hashing/comparison
+    exp_lw = pd_fin_raw_sha(fin, "lw_raw")
+    exp_sw = pd_fin_raw_sha(fin, "sw_raw")
+    shas_wellformed = pd_hex64(exp_lw) && pd_hex64(exp_sw)
+    gates["finding_ledger_shas_wellformed"] =
+        shas_wellformed ? "passed" : "failed"
+    shas_wellformed || push!(fails, "finding-ledger lw/sw raw shas " *
+                                    "missing or not 64-hex")
+    lw_ok = shas_wellformed && pd_try_sha(LW_RAW) == exp_lw
+    sw_ok = shas_wellformed && pd_try_sha(SW_RAW) == exp_sw
     gates["outputs_match_4091_finding_ledger"] =
         lw_ok && sw_ok ? "passed" : "failed"
-    (lw_ok && sw_ok) ||
+    (lw_ok && sw_ok) || !shas_wellformed ||
         push!(fails, "on-disk proof outputs do not match the reviewed 4091 " *
                      "finding ledger (lw_ok=$lw_ok sw_ok=$sw_ok) -- this IS " *
                      "a real integrity problem, not a stale-output refusal")
     # the committed sbatch is the executed artifact; verify identity vs the
-    # submission ledger and re-check its structural guards without rewriting
-    sbatch_text = isfile(PD_SBATCH) ? read(PD_SBATCH, String) : ""
-    sb_expected = get(get(sub, "sbatch", Dict{String, Any}()), "sha256", "")
-    sb_ok = isfile(PD_SBATCH) && sha256(PD_SBATCH) == sb_expected
+    # submission ledger (sha 64-HEX validated first) and re-check its
+    # structural guards without rewriting; nonthrowing reads
+    sbatch_text = try
+        isfile(PD_SBATCH) ? read(PD_SBATCH, String) : ""
+    catch
+        ""
+    end
+    sb_expected = pd_sub_sbatch_sha(sub)
+    sb_wellformed = pd_hex64(sb_expected)
+    gates["submission_ledger_sbatch_sha_wellformed"] =
+        sb_wellformed ? "passed" : "failed"
+    sb_wellformed || push!(fails, "submission-ledger sbatch sha " *
+                                  "missing or not 64-hex")
+    sb_ok = sb_wellformed && pd_try_sha(PD_SBATCH) == sb_expected
     gates["preserved_sbatch_matches_submission_ledger"] =
         sb_ok ? "passed" : "failed"
-    sb_ok || push!(fails, "preserved sbatch missing or != submission-ledger " *
-                          "sha $sb_expected")
+    # the identity reason is emitted ONLY when the expected sha is
+    # well-formed; the malformed-sha reason above stands alone
+    (sb_ok || !sb_wellformed) ||
+        push!(fails, "preserved sbatch missing or != submission-ledger " *
+                     "sha $sb_expected")
     gates["sbatch_preserved_not_regenerated"] = "passed"  # structural: this
     # branch contains no write to PD_SBATCH
     gates["headnode_refusal_guard"] =
@@ -112,6 +242,9 @@ function historical_executed_mode(gates, fails, lw_sha, sw_sha)
     gates["sbatch_refuses_stale_raw_outputs"] =
         occursin("stale LW raw output", sbatch_text) &&
         occursin("stale SW raw output", sbatch_text) ? "passed" : "failed"
+    # CLAIM DISCIPLINE: every asserted fact goes through pd_claim keyed
+    # on its own verification gate -- a failed verification WITHHOLDS
+    # the claim while still stating that nothing was regenerated
     payload = Dict(
         "mode" => "historical_executed",
         "candidates" => Dict(
@@ -119,17 +252,27 @@ function historical_executed_mode(gates, fails, lw_sha, sw_sha)
             "sw" => Dict("path" => SW_CAND, "sha256" => sw_sha)),
         "executed_outputs" => Dict(
             "lw" => Dict("path" => LW_RAW, "sha256" => exp_lw,
-                "note" => "PROMOTED to the LW acceptance init under Option B"),
+                "note" => pd_claim(ob_ok && lw_ok,
+                    "PROMOTED to the LW acceptance init under Option B",
+                    "promotion claim WITHHELD (verification failed); " *
+                    "file not modified by this unit")),
             "sw" => Dict("path" => SW_RAW, "sha256" => exp_sw,
-                "note" => "v1.2 proof output; sensitivity evidence only -- " *
-                    "the promoted SW raw is the v1.4 R2 output (job 4096)")),
+                "note" => pd_claim(sw_ok,
+                    "v1.2 proof output; sensitivity evidence only -- " *
+                    "the promoted SW raw is the v1.4 R2 output (job 4096)",
+                    "output identity UNVERIFIED; claim withheld; file " *
+                    "not modified by this unit"))),
         "execution" => Dict(
-            "job_id_verified" => 4091,
-            "outcome_verified" => outcome,     # full ledger text, untruncated
-            "strict_finding_status" => get(fin, "status", "?"),
-            "promotion_verification" => "Option-B record adoption + " *
-                "explicit supersession of the scaffold verdict verified " *
-                "against gate4_option_b_decision_record"),
+            "job_id_verified" => pd_claim(jid_ok, 4091,
+                "UNVERIFIED (claim withheld)"),
+            "outcome_verified" => pd_claim(outcome_ok, outcome,
+                "UNVERIFIED (claim withheld)"),
+            "strict_finding_status" => pd_status_or_q(fin),
+            "promotion_verification" => pd_claim(ob_ok,
+                "Option-B record adoption + explicit supersession of " *
+                "the scaffold verdict verified against " *
+                "gate4_option_b_decision_record",
+                "promotion verification FAILED; claim withheld")),
         "ledgers" => Dict("finding" => basename(PD_FINDING_LEDGER),
                           "submission" => basename(PD_SUBMISSION_LEDGER)))
     return payload
@@ -139,29 +282,154 @@ function main()
     fails = String[]
     gates = Dict{String, String}()
 
-    scaffold = JSON.parsefile(
-        validation_results_path("gate4_a2_reproduction_proof_scaffold.json"))
-    gates["scaffold_ready_required"] =
-        scaffold["status"] == "a2_proof_scaffold_ready" ? "passed" : "failed"
-    scaffold["status"] == "a2_proof_scaffold_ready" ||
-        push!(fails, "proof scaffold not ready: $(scaffold["status"])")
+    # loader/navigator/writer fixtures FIRST, through the SAME code
+    tdir = mktempdir()
+    lt = Dict{String, Bool}()
+    lt["missing_fails"] = begin
+        r = pd_parse_pinned(joinpath(tdir, "absent.json"), "c", "s")
+        !r[1] && r[2] == "c missing"
+    end
+    fpx = joinpath(tdir, "pa.json")
+    write(fpx, "{")
+    lt["malformed_fails"] = begin
+        r = pd_parse_pinned(fpx, "c", "s")
+        !r[1] && r[2] == "c unparseable (parse failure)"
+    end
+    write(fpx, "null")
+    lt["null_non_object_fails"] = begin
+        r = pd_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "[1]")
+    lt["array_non_object_fails"] = begin
+        r = pd_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("non-object", r[2])
+    end
+    write(fpx, "{\"case\": \"other\", \"status\": \"s\"}")
+    lt["wrong_case_fails"] = begin
+        r = pd_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("case mismatch", r[2])
+    end
+    write(fpx, "{\"case\": \"c\", \"status\": \"totally_bogus\"}")
+    lt["tampered_status_fails"] = begin
+        r = pd_parse_pinned(fpx, "c", "s")
+        !r[1] && occursin("not green", r[2])
+    end
+    write(fpx, "{\"case\": \"c\", \"status\": \"s\"}")
+    lt["exact_green_captures"] = begin
+        r = pd_parse_pinned(fpx, "c", "s")
+        r[1] && r[2] == "ok" && r[3] isa AbstractDict
+    end
+    lt["fin_navigators_shape_safe"] = begin
+        good = Dict("proof_run" => Dict("job_id" => 4091,
+            "outcome" => "COMPLETED rc=0",
+            "lw_raw" => Dict("sha256" => "a" ^ 64),
+            "sw_raw" => Dict("sha256" => "b" ^ 64)))
+        pd_fin_job_id(good) == 4091 &&
+            pd_fin_outcome(good) == "COMPLETED rc=0" &&
+            pd_fin_raw_sha(good, "lw_raw") == "a" ^ 64 &&
+            pd_fin_raw_sha(good, "sw_raw") == "b" ^ 64 &&
+            pd_fin_job_id(Dict{String, Any}()) == -1 &&
+            pd_fin_outcome(Dict("proof_run" => "x")) == "" &&
+            pd_fin_raw_sha(Dict("proof_run" =>
+                Dict("lw_raw" => Dict("sha256" => 5))), "lw_raw") == "" &&
+            pd_fin_raw_sha(nothing, "lw_raw") == ""
+    end
+    lt["sub_navigators_shape_safe"] = begin
+        good = Dict("job" => Dict("job_id" => 4091),
+                    "sbatch" => Dict("sha256" => "c" ^ 64))
+        pd_sub_job_id(good) == 4091 &&
+            pd_sub_sbatch_sha(good) == "c" ^ 64 &&
+            pd_sub_job_id(Dict{String, Any}()) == -1 &&
+            pd_sub_sbatch_sha(Dict("sbatch" => "x")) == "" &&
+            !pd_hex64(pd_sub_sbatch_sha(Dict("sbatch" =>
+                Dict("sha256" => "zz"))))
+    end
+    lt["supersedes_scan_normalized"] = begin
+        hit = Dict("supersedes" =>
+            ["gate4_a2_reproduction_proof_scaffold strict verdict"])
+        pd_ob_supersedes_scaffold(hit) &&
+            !pd_ob_supersedes_scaffold(Dict("supersedes" => "x")) &&
+            !pd_ob_supersedes_scaffold(Dict{String, Any}()) &&
+            pd_ob_supersedes_scaffold(Dict("supersedes" =>
+                [5, "gate4_a2_reproduction_proof_scaffold"])) &&
+            !pd_ob_supersedes_scaffold(Dict("supersedes" => [5, "other"]))
+    end
+    lt["writer_only_preexecution_green"] = begin
+        n = Ref(0)
+        w = () -> (n[] += 1)
+        pd_write_script(w, true, true) == true && n[] == 1 &&
+            pd_write_script(w, true, false) == false &&
+            pd_write_script(w, false, true) == false &&
+            pd_write_script(w, false, false) == false && n[] == 1
+    end
+    lt["try_sha_nonthrowing"] =
+        pd_try_sha(joinpath(tdir, "gone.bin")) === nothing &&
+        pd_try_sha(fpx) isa AbstractString
+    # payload-facing status extraction must be emittable on ANY loader
+    # result, including nothing/non-object/non-string
+    lt["payload_status_safe_on_refusals"] =
+        pd_status_or_q(nothing) == "?" &&
+        pd_status_or_q(Dict{String, Any}()) == "?" &&
+        pd_status_or_q(Dict("status" => 5)) == "?" &&
+        pd_status_or_q("not-an-object") == "?" &&
+        pd_status_or_q(Dict("status" => "x")) == "x"
+    # blocked pre-execution runs report a truthful data_mode
+    lt["blocked_data_mode_truthful"] =
+        pd_preexec_data_mode(true) == "dry_run_script_generation_only" &&
+        pd_preexec_data_mode(false) == "blocked_no_script_generated"
+    # claim discipline: withheld on failure, verbatim on green
+    lt["claims_withheld_on_failure"] =
+        pd_claim(true, "verified", "withheld") == "verified" &&
+        pd_claim(false, "verified", "withheld") == "withheld"
+    # a failed gate can never yield success, and the complete failed-gate
+    # census is ALWAYS appended -- one gate's reason cannot hide another
+    # gate's silent failure
+    lt["failed_gate_closed_without_reason"] = begin
+        f1, ok1 = pd_close_failed_gates(String[], Dict("g" => "failed"))
+        f2, ok2 = pd_close_failed_gates(String[], Dict("g" => "passed"))
+        f3, ok3 = pd_close_failed_gates(["reason for a"],
+            Dict("a" => "failed", "b" => "failed"))
+        !ok1 && length(f1) == 1 && occursin("fail-closed census", f1[1]) &&
+            ok2 && isempty(f2) &&
+            !ok3 && length(f3) == 2 && f3[1] == "reason for a" &&
+            occursin("a, b", f3[2])
+    end
+    rm(tdir, recursive = true, force = true)
+    gates["prerequisite_loader_fixture_tests"] =
+        all(values(lt)) ? "passed" : "failed"
+    all(values(lt)) || push!(fails, "prerequisite loader fixture " *
+        "failures: " * join(sort([k for (k, v) in lt if !v]), ", "))
+
+    # exact case+status scaffold prerequisite through the shared loader
+    scaffold_ok, scaffold_why, _ = pd_parse_pinned(
+        "gate4_a2_reproduction_proof_scaffold.json",
+        "gate4_a2_reproduction_proof_scaffold",
+        "a2_proof_scaffold_ready")
+    gates["scaffold_ready_required"] = scaffold_ok ? "passed" : "failed"
+    scaffold_ok || push!(fails, scaffold_why)
 
     isfile(LW_CAND) && isfile(SW_CAND) ||
         (push!(fails, "candidate files missing"); return finish(gates, fails,
-            Dict(), ""))
-    lw_sha = sha256(LW_CAND)
-    sw_sha = sha256(SW_CAND)
+            Dict(), ""; lt = lt))
+    lw_sha = pd_try_sha(LW_CAND)
+    sw_sha = pd_try_sha(SW_CAND)
+    if lw_sha === nothing || sw_sha === nothing
+        push!(fails, "candidate files unreadable at hash time")
+        return finish(gates, fails, Dict(), ""; lt = lt)
+    end
     gates["candidates_hashed"] = "passed"
 
     # POST-EXECUTION: both 4091 outputs on disk -> read-only historical mode
     if isfile(LW_RAW) && isfile(SW_RAW)
         payload = historical_executed_mode(gates, fails, lw_sha, sw_sha)
-        return finish(gates, fails, payload, "")
+        return finish(gates, fails, payload, ""; lt = lt)
     elseif isfile(LW_RAW) || isfile(SW_RAW)
         push!(fails, "PARTIAL proof outputs on disk (exactly one of LW/SW " *
                      "raw exists) -- anomalous state; investigate against " *
                      "the 4091 finding ledger before any action")
-        return finish(gates, fails, Dict("mode" => "partial_outputs"), "")
+        return finish(gates, fails, Dict("mode" => "partial_outputs"), "";
+                      lt = lt)
     end
 
     sbatch_text = """
@@ -213,15 +481,19 @@ echo "=== proof raw outputs ==="
 sha256sum "$LW_RAW" "$SW_RAW"
 echo "=== proof create_lut done rc=\$? \$(date -u +%FT%TZ) ==="
 """
-    open(PD_SBATCH, "w") do io
+    # the WRITE is allowlist-gated on the classified scaffold
+    # prerequisite: a blocked pre-execution run never clobbers PD_SBATCH
+    sbatch_written = pd_write_script(() -> open(PD_SBATCH, "w") do io
         write(io, sbatch_text)
-    end
+    end, true, scaffold_ok)
 
-    gates["sbatch_written_not_submitted"] = "passed"
+    sb_gate = sbatch_written ? "sbatch_written_not_submitted" :
+              "sbatch_blocked_preserved_not_submitted"
+    gates[sb_gate] = "passed"
     self_src = read(@__FILE__, String)
     sb_tok = "sb" * "atch "
     isempty(collect(eachmatch(Regex("run\\(`" * sb_tok), self_src))) ||
-        (gates["sbatch_written_not_submitted"] = "failed";
+        (gates[sb_gate] = "failed";
          push!(fails, "sbatch invocation found in proof-driver unit"))
     gates["headnode_refusal_guard"] =
         occursin("REFUSED: head-node execution", sbatch_text) ? "passed" : "failed"
@@ -276,19 +548,28 @@ echo "=== proof create_lut done rc=\$? \$(date -u +%FT%TZ) ==="
             "but algorithmic drift across versions is a plausible mismatch " *
             "cause; any mismatch -> sensitivity-only per the scaffold " *
             "verdict rule")
-    return finish(gates, fails, payload, sbatch_text)
+    return finish(gates, fails, payload, sbatch_text;
+                  lt = lt, sbatch_written = sbatch_written)
 end
 
-function finish(gates, fails, payload, sbatch_text)
+function finish(gates, fails, payload, sbatch_text;
+                lt = Dict{String, Bool}(), sbatch_written = false)
     mode = get(payload, "mode", "")
     historical = mode == "historical_executed"
     partial = mode == "partial_outputs"
-    status = !isempty(fails) ? "a2_proof_driver_failed" :
+    # fail-closed status selection: every failed gate is closed into a
+    # controlled reason, and success requires EVERY gate passed
+    fails, gates_all_passed = pd_close_failed_gates(fails, gates)
+    status = !(isempty(fails) && gates_all_passed) ?
+             "a2_proof_driver_failed" :
              historical ? "a2_proof_driver_historical_executed" :
                           "a2_proof_driver_ready_awaiting_go"
+    sb_identity_ok =
+        get(gates, "preserved_sbatch_matches_submission_ledger", "") ==
+        "passed"
     data_mode = historical ? "historical_post_execution_verification_only" :
                 partial ? "anomalous_partial_outputs_no_generation" :
-                          "dry_run_script_generation_only"
+                          pd_preexec_data_mode(sbatch_written)
     branch = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --abbrev-ref HEAD`, String)) catch; "unknown" end
     head = try strip(read(`git -C $(dirname(@__DIR__)) rev-parse --short HEAD`, String)) catch; "unknown" end
     result = Dict(
@@ -297,25 +578,52 @@ function finish(gates, fails, payload, sbatch_text)
         "status" => status,
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "gates" => gates, "failures" => fails,
+        "prerequisite_loader_fixture_verdicts" => lt,
         "sbatch_path" => PD_SBATCH,
+        "sbatch_written_this_run" => sbatch_written,
+        "sbatch_scripts_state" => historical ?
+            pd_claim(sb_identity_ok,
+                "EXECUTED script preserved (ledger-verified identity); " *
+                "never regenerated",
+                "EXECUTED-script identity verification FAILED; claim " *
+                "withheld; the preserved file was NOT regenerated or " *
+                "modified by this unit") :
+            sbatch_written ?
+            "generated this run (unsubmitted)" :
+            isfile(PD_SBATCH) ?
+            "NOT generated this run (prerequisite blocked or anomalous " *
+            "state); the file at sbatch_path is PRESERVED output of an " *
+            "earlier run, not current" :
+            "NOT generated this run; NO file exists at sbatch_path",
         "payload" => payload,
         "provenance" => Dict("branch" => branch, "generated_from_head" => head,
             "provenance_note" => "artifact generated from the working tree " *
                 "before its own commit"),
         "disclaimer" => historical ?
-            "HISTORICAL post-execution record: the generated sbatch was " *
-            "executed as authorized proof job 4091 (ledger-verified, not " *
-            "assumed); outputs verified against the reviewed finding " *
-            "ledger; the executed script is preserved, never regenerated; " *
-            "nothing submitted or executed by this unit." :
+            pd_claim(status == "a2_proof_driver_historical_executed",
+                "HISTORICAL post-execution record: the generated sbatch " *
+                "was executed as authorized proof job 4091 " *
+                "(ledger-verified, not assumed); outputs verified " *
+                "against the reviewed finding ledger; the executed " *
+                "script is preserved, never regenerated; nothing " *
+                "submitted or executed by this unit.",
+                "HISTORICAL post-execution record with FAILED " *
+                "verification: executed/promoted claims WITHHELD " *
+                "pending review; the preserved script and outputs were " *
+                "NOT regenerated or modified by this unit; nothing " *
+                "submitted or executed.") :
             partial ?
             "ANOMALOUS partial-output state: exactly one 4091 raw output " *
             "is on disk; nothing generated, regenerated, or submitted; " *
             "investigate against the finding ledger before any action." :
+            sbatch_written ?
             "dry-run script generation only; nothing submitted; " *
             "no create_lut, comparison, objective, floor, or " *
             "acceptance execution; submission requires explicit " *
-            "review/go per the standing protocol.",
+            "review/go per the standing protocol." :
+            "BLOCKED pre-execution run: a prerequisite failed, NO " *
+            "script was generated, nothing submitted; any file at the " *
+            "sbatch path is preserved output of an earlier run.",
     )
     mkpath(dirname(PD_RESULTS_JSON))
     open(PD_RESULTS_JSON, "w") do io
@@ -347,9 +655,14 @@ function finish(gates, fails, payload, sbatch_text)
                 println(io, "- [$b] `$(basename(o["path"]))` sha256 " *
                             "`$(o["sha256"])` -- $(o["note"])")
             end
-        else
+        elseif sbatch_written
             println(io, "\nGenerated (unsubmitted) proof batch script: " *
                         "`$(PD_SBATCH)`")
+        else
+            println(io, "\nNO script generated this run (prerequisite " *
+                        "blocked or anomalous state); any file at " *
+                        "`$(PD_SBATCH)` is preserved output of an " *
+                        "earlier run, not current.")
         end
         if haskey(payload, "candidates")
             println(io, "\nPinned candidate identities:")

@@ -8,16 +8,19 @@ HISTORICAL post-execution record: the generated sbatch was executed as authorize
 |---|---|
 | candidate_identity_pinned | passed |
 | candidates_hashed | passed |
+| finding_ledger_shas_wellformed | passed |
 | finding_outcome_completed_rc0 | passed |
 | headnode_refusal_guard | passed |
 | job_id_4091_verified | passed |
 | ledger_case_ids_verified | passed |
 | option_b_adoption_verified | passed |
 | outputs_match_4091_finding_ledger | passed |
+| prerequisite_loader_fixture_tests | passed |
 | preserved_sbatch_matches_submission_ledger | passed |
 | sbatch_preserved_not_regenerated | passed |
 | sbatch_refuses_stale_raw_outputs | passed |
 | scaffold_ready_required | passed |
+| submission_ledger_sbatch_sha_wellformed | passed |
 
 Executed proof batch script (preserved, ledger-verified): `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_proof_dryrun.sbatch`
 
@@ -29,4 +32,4 @@ Pinned candidate identities:
 - [lw] `ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5` sha256 `c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e`
 - [sw] `ecckd-1.2_sw_gpoints_climate_rgb-tol0.047.h5` sha256 `13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57`
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `5725179` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `4620bd0` (pre-own-commit).

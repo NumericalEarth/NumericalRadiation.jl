@@ -6,16 +6,19 @@
   "gates": {
     "candidate_identity_pinned": "passed",
     "candidates_hashed": "passed",
+    "finding_ledger_shas_wellformed": "passed",
     "finding_outcome_completed_rc0": "passed",
     "headnode_refusal_guard": "passed",
     "job_id_4091_verified": "passed",
     "ledger_case_ids_verified": "passed",
     "option_b_adoption_verified": "passed",
     "outputs_match_4091_finding_ledger": "passed",
+    "prerequisite_loader_fixture_tests": "passed",
     "preserved_sbatch_matches_submission_ledger": "passed",
     "sbatch_preserved_not_regenerated": "passed",
     "sbatch_refuses_stale_raw_outputs": "passed",
-    "scaffold_ready_required": "passed"
+    "scaffold_ready_required": "passed",
+    "submission_ledger_sbatch_sha_wellformed": "passed"
   },
   "payload": {
     "candidates": {
@@ -52,12 +55,32 @@
     },
     "mode": "historical_executed"
   },
+  "prerequisite_loader_fixture_verdicts": {
+    "array_non_object_fails": true,
+    "blocked_data_mode_truthful": true,
+    "claims_withheld_on_failure": true,
+    "exact_green_captures": true,
+    "failed_gate_closed_without_reason": true,
+    "fin_navigators_shape_safe": true,
+    "malformed_fails": true,
+    "missing_fails": true,
+    "null_non_object_fails": true,
+    "payload_status_safe_on_refusals": true,
+    "sub_navigators_shape_safe": true,
+    "supersedes_scan_normalized": true,
+    "tampered_status_fails": true,
+    "try_sha_nonthrowing": true,
+    "writer_only_preexecution_green": true,
+    "wrong_case_fails": true
+  },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "5725179",
+    "generated_from_head": "4620bd0",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_a2_proof_dryrun.sbatch",
+  "sbatch_scripts_state": "EXECUTED script preserved (ledger-verified identity); never regenerated",
+  "sbatch_written_this_run": false,
   "status": "a2_proof_driver_historical_executed",
-  "timestamp_utc": "2026-08-12T11:18:33.131"
+  "timestamp_utc": "2026-08-12T17:18:48.037"
 }
