@@ -1,41 +1,60 @@
 {
-  "authorization": "Greg: 'go with option A' (2026-07-30) + SSO re-auth and 'keep going' (2026-08-12)",
+  "authorization": "Greg: 'go with option A' (2026-07-30) + SSO re-auth and 'keep going' (2026-08-12) + G2c resume: Greg via campaign coordinator 'of course, keep going; the fetch/job gate is lifted', relay reviewed and accepted as durable authorization by the Codex monitor (2026-08-13); submission itself additionally gated on Codex diff review",
   "case": "gate4_g2c_eval2_fetch_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted by this unit; fetch+verify only; no LBL, optimizer, objective, floor, or recovery computation.",
   "failures": [],
   "followon": "G2d: rayleigh generation (make_rayleigh_evaluation.sh recipe, ckdmip_tool --rayleigh on the 5 eval2 h2o_present SW chunks) + rel-415 LBL runs (LW plain, SW rgb-banded) -> 2 flux files -> ledger -> G3",
   "gates": {
-    "aws_auth_at_generation": "passed",
-    "disk_guard": "passed",
+    "df_gate_removed": "passed",
+    "ecpds_fallback": "passed",
     "exact70_gate": "passed",
     "fetch_only": "passed",
     "headnode_refusal_guard": "passed",
-    "live_quota_headroom": "failed",
+    "live_quota_headroom": "passed",
     "manifest_integrity": "passed",
+    "per_object_pipeline": "passed",
+    "probe_size_matches_manifest": "passed",
     "quota_aware_preflight": "passed",
     "quota_guard_fixture_tests": "passed",
     "sbatch_written_not_submitted": "passed",
+    "single_run_lock": "passed",
+    "soft_primary_reserve": "passed",
+    "source_available_at_generation": "passed",
     "species_scope_correct": "passed"
   },
   "live_quota_guard": {
-    "report": "quota-guard: headroom=35245007872B exact-matched=175407705620B remaining=154581529276B need=197531202236B (remaining+margin)\nQUOTA-GUARD REFUSED: headroom 35245007872B < need 197531202236B",
-    "verdict": "refused"
+    "report": "quota-guard: soft-headroom=575334382592B hard-headroom=682708564992B exact-matched=175407705620B remaining=154581529276B need=208268620476B (remaining+margin; soft is primary ceiling)",
+    "verdict": "pass"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "8f2e874",
+    "generated_from_head": "db5ed3a",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "quota_guard_fixture_verdicts": {
+    "active_grace_refuses": true,
+    "hard_secondary_ceiling_refuses": true,
     "live_fixture_matches_independent_computation": true,
     "malformed_refuses": true,
     "missing_lfs_refuses": true,
+    "recheck_passes_with_headroom": true,
+    "recheck_refuses_active_grace": true,
+    "recheck_refuses_malformed_next": true,
+    "recheck_refuses_when_reserve_would_be_breached": true,
+    "recheck_zero_next_passes_at_exact_reserve": true,
+    "reserve_refuses_when_only_remaining_fits": true,
+    "soft_boundary_passes": true,
+    "soft_boundary_refuses": true,
+    "source_selection_falls_back_to_ecpds": true,
+    "source_selection_refuses_when_both_down": true,
+    "source_selection_survives_ecpds_down_with_s3_up": true,
     "subtraction_passes_with_exact_size_file": true,
     "subtraction_refuses_on_empty_dest": true,
     "sufficient_quota_passes": true,
     "wrong_size_file_refuses": true,
-    "zero_hard_limit_refuses": true
+    "zero_hard_limit_refuses": true,
+    "zero_soft_limit_refuses": true
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_eval2_fetch.sbatch",
   "scope": {
@@ -59,7 +78,16 @@
       "o2_constant"
     ]
   },
-  "source": "s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/evaluation2 (byte-verified ECPDS archive per archive_to_s3.log 2026-05-27; ECPDS live as fallback)",
-  "status": "g2c_checkpoint_blocked_by_quota",
-  "timestamp_utc": "2026-08-12T08:20:48.779"
+  "source": "s3://aeolus-dev/users/greg@aeolus.earth/ckdmip/evaluation2 (byte-verified ECPDS archive per archive_to_s3.log 2026-05-27; ECPDS live as fallback, HEAD-audited 70/70 exact vs pinned manifest by the Codex monitor 2026-08-13)",
+  "source_probes": {
+    "ecpds_accept_ranges_bytes": true,
+    "ecpds_exact": true,
+    "ecpds_probe_content_length": 8841345967,
+    "ecpds_probe_expected_bytes": 8841345967,
+    "ecpds_probe_object": "ckdmip_evaluation2_lw_spectra_o3_present_1-10.h5",
+    "s3_auth": false,
+    "selection_rule": "prefer authenticated S3; else exact ECPDS fallback; refuse only when both unavailable (mirrored in the sbatch stage-0 preflight)"
+  },
+  "status": "g2c_checkpoint_ready",
+  "timestamp_utc": "2026-08-13T09:30:45.782"
 }
