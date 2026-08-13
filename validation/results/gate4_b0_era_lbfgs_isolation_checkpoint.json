@@ -1,0 +1,162 @@
+{
+  "case": "gate4_b0_era_lbfgs_isolation_checkpoint",
+  "data_mode": "generator_checkpoint",
+  "design_note": "B0 mechanism isolation: same ce057079 init (min/max arrays retained; controlled max_iterations=1 schema-open probe REFUSES rather than strips), same seven pinned training fluxes, exact 4515 relative-base config; ONLY the optimizer mechanism changes to the pinned v1.0/b42e5c0 solve_lbfgs backend built in-job. PRIVATE output under g4-diag; zero canonical writes; submission HELD for monitor review.",
+  "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch.",
+  "era": {
+    "archive_sha256": "801542f43e6d9c0f444d6966fbe30d28fc3df7aabf147551c4485f352fbafa22",
+    "autotools": {
+      "autoconf": "2.71",
+      "automake": "1.16.5",
+      "libtoolize": "2.4.7"
+    },
+    "blobs": [
+      {
+        "path": "src/ecckd/optimize_lut.cpp",
+        "sha256": "c0ec54b57c25be734f7dcde1d1afadd812df73e188d8f152b465390b0bb519a9"
+      },
+      {
+        "path": "src/ecckd/solve_lbfgs.cpp",
+        "sha256": "c10dec6bd4bdb6b3589ca0e2fa82c48886384ed8213d67c873c7040a70807f4a"
+      },
+      {
+        "path": "src/lbfgs/lbfgs.c",
+        "sha256": "2f0e2a1a8b1bb278e17691ce65d0421d518d5d05c7efc41052bd8f91633e6e3f"
+      },
+      {
+        "path": "test/optimize_lut_lw.sh",
+        "sha256": "06e7fb62a17cef5106ade44c12a54618006fe8a966402c8cf31200a2e7e6e906"
+      },
+      {
+        "path": "configure.ac",
+        "sha256": "30d590aa8240f2760f0ee68bdd34ac0b8041ba299124d00667f9cb0d4697f260"
+      }
+    ],
+    "commit": "b42e5c0b188f1e7b747990bc2b35e6c53c2c7258",
+    "configure_argv": "./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'",
+    "repo": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca",
+    "tree": "0d2a0454f758de7bec04790c1ece54551e465b94"
+  },
+  "failures": [],
+  "fixture_verdicts": {
+    "bash_syntax_broken_refuses": true,
+    "bash_syntax_good_accepted": true,
+    "ledger_case_mismatch_refuses": true,
+    "ledger_green_accepted": true,
+    "ledger_missing_refuses": true,
+    "ledger_non_object_refuses": true,
+    "ledger_sha_drift_refuses": true,
+    "ledger_status_mismatch_refuses": true,
+    "ledger_unparseable_refuses": true,
+    "ledger_unreadable_refuses": true,
+    "text_extra_pass_refuses": true,
+    "text_foreign_lock_redirect_refuses": true,
+    "text_good_accepted": true,
+    "text_missing_flock_refuses": true,
+    "text_missing_probe_gpoints_refuses": true,
+    "text_missing_probe_refuses": true,
+    "text_publish_machinery_refuses": true,
+    "text_shared_redirect_refuses": true,
+    "text_wrong_commit_refuses": true
+  },
+  "gates": {
+    "evidence_era_source_pins": "passed",
+    "evidence_input_pins": "passed",
+    "evidence_reviewed_run_ledger": "passed",
+    "evidence_runtime_and_build_stack": "passed",
+    "evidence_sbatch_bash_syntax": "passed",
+    "evidence_sbatch_text_gates": "passed",
+    "fixtures": "passed"
+  },
+  "inputs": [
+    {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+      "sha256": "dde735608e57af934a2c1e99932c0ccce530883ab48910c7e17b621de7fa0bee",
+      "size": 450863,
+      "staged_rel": "data/evaluation1/lw_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+      "sha256": "b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85",
+      "size": 450863,
+      "staged_rel": "data/evaluation1/lw_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "sha256": "01836becbc96e7da2b3b33d586d148948df136457216625b7e60225e093e1792",
+      "size": 450863,
+      "staged_rel": "data/evaluation1/lw_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
+      "sha256": "c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2",
+      "size": 450863,
+      "staged_rel": "data/evaluation1/lw_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+      "sha256": "cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c",
+      "size": 450873,
+      "staged_rel": "data/evaluation1/lw_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+      "sha256": "75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8",
+      "size": 450873,
+      "staged_rel": "data/evaluation1/lw_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+      "sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc",
+      "size": 451045,
+      "staged_rel": "work/lw_lbl_fluxes"
+    },
+    {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+      "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+      "size": 2413144,
+      "staged_rel": "work/lw_raw-ckd-definition"
+    },
+    {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
+      "sha256": "c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e",
+      "size": 58404939,
+      "staged_rel": "work/lw_gpoints"
+    }
+  ],
+  "non_authorizing_note": "this checkpoint generates and verifies the B0 sbatch; it never submits; submission requires explicit monitor GO.",
+  "prerequisite": {
+    "required_case": "gate4_g3_run_ledger",
+    "required_status": "reviewed-complete",
+    "reviewed_sha256": "6fd7791834fe1ceb184afd4623c0f95ab311685bb849cfad0837b3c6ffd4aa4e",
+    "run_ledger": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_run_ledger.json"
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_lw_era_lbfgs.sbatch",
+  "sbatch_sha256": "1339163ed81e6596a7e8555037387ac555a72b99ed4a0d41665e7ae59c73d9c0",
+  "status": "b0_checkpoint_ready",
+  "v12_testcopy": {
+    "pins": [
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/optimize_lut_lw.sh",
+        "sha256": "f0d77b16b97612687818e85615a103adaa948627846c9819e40e7754ab0743ba",
+        "size": 11792
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/config.h",
+        "sha256": "44dcddf099d69becab1c5e6674d013d6c676685e0b8a4ae51e85a1dda33cfc69",
+        "size": 6357
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/check_configuration.h",
+        "sha256": "34323fd3ecbcd64980b328eec463eedc692497ed3cdd685f2505ca4d1fdc5e2c",
+        "size": 1369
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/version.h.in",
+        "sha256": "a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810",
+        "size": 92
+      }
+    ],
+    "root": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd"
+  }
+}
