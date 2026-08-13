@@ -671,6 +671,15 @@ const DCA_EDGES = [
   accepted = ["g2c_checkpoint_ready"],
   expected_case = "gate4_g2c_eval2_fetch_checkpoint",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:g2d_checkpoint<-g2c_completion_ledger",
+  consumer = "gate4_g2d_eval2_rel415_flux_checkpoint.jl",
+  anchors = ["classify_g2c_ledger(GD_LEDGER_JSON)",
+             "\"g2c_fetch_completed_verified\"",
+             "\"gate4_g2c_fetch_completion_ledger\""],
+  producer = "gate4_g2c_fetch_completion_ledger.json", kind = :exact,
+  accepted = ["g2c_fetch_completed_verified"],
+  expected_case = "gate4_g2c_fetch_completion_ledger",
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:post_cleanup_census<-pending_rulings_register",
   consumer = "gate4_post_cleanup_input_census.jl",
   anchors = ["const PCC_REGISTER_JSON =",
@@ -988,6 +997,15 @@ const DCA_SITE_LEDGER = [
   class = "edge", edge_ids = ["dep:g2b_checkpoint<-g2a_data_ledger"],
   reason = "classify_g2a_ledger guarded-loader body (exact-case + " *
            "exact-status binding; live edge + tmp loader fixtures)"),
+ (file = "gate4_g2d_eval2_rel415_flux_checkpoint.jl",
+  anchor = "JSON.parse(String(copy(bytes)))",
+  class = "declared-snapshot-extension",
+  edge_ids = ["dep:g2d_checkpoint<-g2c_completion_ledger"],
+  reason = "gd_snapshot helper body: coupled byte snapshot (one read " *
+           "supplies digest AND parsed content; the Unit L ledger pin " *
+           "is a sha-over-the-same-bytes check), deliberately NOT " *
+           "JSON.parsefile -- source-bound directly by reconcile; the " *
+           "same helper also parses fixture tmp files"),
  (file = "gate4_g3_acceptance_comparison.jl",
   anchor = "JSON.parsefile(AC_RESULTS_JSON)",
   class = "own-artifact", edge_ids = String[],
@@ -1565,10 +1583,10 @@ function dca_main()
         length(unique(ids)) == length(ids) ? "passed" : "failed"
     length(unique(ids)) == length(ids) ||
         push!(fails, "duplicate edge IDs in the declarative manifest")
-    gates["manifest_edge_count_40"] =
-        length(DCA_EDGES) == 40 ? "passed" : "failed"
-    length(DCA_EDGES) == 40 ||
-        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 40")
+    gates["manifest_edge_count_41"] =
+        length(DCA_EDGES) == 41 ? "passed" : "failed"
+    length(DCA_EDGES) == 41 ||
+        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 41")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)

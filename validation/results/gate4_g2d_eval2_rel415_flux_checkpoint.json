@@ -2,38 +2,154 @@
   "case": "gate4_g2d_eval2_rel415_flux_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted by this unit; rayleigh + LBL evaluation only; no optimizer, objective, floor, or recovery computation.",
-  "eval2_spectra_present": "25/70",
-  "failures": [
-    "eval2 spectra incomplete: 25/70 (G2c pending?)"
-  ],
-  "gates": {
-    "atomic_rayleigh_publication": "passed",
-    "g2c_spectra_prerequisite": "failed",
-    "headnode_refusal_guard": "passed",
-    "lbl_and_rayleigh_only": "passed",
-    "lw_indir_retarget": "passed",
-    "path_contract_honored": "passed",
-    "pipeline_parity": "passed",
-    "rgb_band_grid_14300_variant": "passed",
-    "sbatch_written_not_submitted": "passed",
-    "ssi_stays_evaluation1": "passed",
-    "stale_output_refusal_and_partial_raw_guard": "passed"
+  "estimates": {
+    "flux_output_evidence_bytes": {
+      "eval1_lw_rel415": 450863,
+      "eval1_sw_rgb_rel415": 1817472
+    },
+    "lbl_stage_alloc_bytes": 1073741824,
+    "quota_baseline_note": "used ~508.2 GiB observed 2026-08-13 (live lfs read; NOT a code constant); soft-primary guard with 50 GiB reserve gates every allocation live",
+    "rayleigh_alloc_derivation": "conservative 15 GiB PER chunk: per-chunk source dims 10 x 54 x 3,126,494 at up to 8 bytes + overhead, compression uncredited (monitor-specified worst case); five chunks imply a 75 GiB worst-case total, gated per-chunk by live rechecks",
+    "rayleigh_alloc_per_chunk_bytes": 16106127360,
+    "wall_derivation": "job 4078: 12 LW + 6 SW scenarios in 17h44 (~59 min/scenario); G2a 6 SW in 5h18; G2b 10 SW in 9h46. Two G2d scenarios project ~2 h plus rayleigh; the 08:00:00 wall is >3x margin"
   },
+  "failures": [],
+  "fixture_verdicts": {
+    "install_absent_target_installs": true,
+    "install_identical_target_skips": true,
+    "install_invalid_target_refuses": true,
+    "install_mismatched_target_refuses": true,
+    "ledger_case_mismatch_refuses": true,
+    "ledger_green_accepted": true,
+    "ledger_hash_drift_refuses": true,
+    "ledger_missing_refuses": true,
+    "ledger_non_object_refuses": true,
+    "ledger_nongreen_g2c_fetch_ledger_failed_refuses": true,
+    "ledger_nongreen_g2c_fetch_ledger_indeterminate_refused_refuses": true,
+    "ledger_nongreen_g2c_fetch_ledger_resumable_timeout_refuses": true,
+    "ledger_nongreen_g2c_fetch_ledger_waiting_for_job_refuses": true,
+    "ledger_unparseable_refuses": true,
+    "raw_lw_accepts_conforming_chunk": true,
+    "raw_lw_rejects_50col_final": true,
+    "raw_lw_rejects_bad_shape": true,
+    "raw_lw_rejects_missing_dataset": true,
+    "raw_lw_rejects_sw_chunk": true,
+    "raw_modes_stricter_than_open": true,
+    "raw_sw_accepts_conforming_chunk": true,
+    "rayleigh_accepts_conforming": true,
+    "rayleigh_rejects_bad_od_shape": true,
+    "rayleigh_rejects_bad_source_shape": true,
+    "rayleigh_rejects_missing_axis": true,
+    "rayleigh_rejects_missing_dataset": true,
+    "rayleigh_rejects_nonunity_ssa": true,
+    "rayleigh_rejects_wavenumber_mismatch": true,
+    "rayleigh_source_contract_on_real_chunk": true,
+    "saferm_allowlisted_tree_removed": true,
+    "saferm_non_allowlisted_refuses": true,
+    "saferm_symlink_refuses": true,
+    "schema_lw_accepts_eval1_precedent": true,
+    "schema_lw_rejects_sw_file": true,
+    "schema_open_accepts_ssi": true,
+    "schema_open_rejects_non_h5": true,
+    "schema_ssi_accepts_pinned_ssi": true,
+    "schema_ssi_rejects_generic_h5": true,
+    "schema_sw_accepts_eval1_precedent": true,
+    "schema_sw_rejects_lw_file": true
+  },
+  "gates": {
+    "atomic_publication": "passed",
+    "binary_pins_live": "passed",
+    "df_gate_removed": "passed",
+    "exact_g3_targets": "passed",
+    "fixtures": "passed",
+    "g2c_completion_ledger_green": "passed",
+    "headnode_refusal_guard": "passed",
+    "in_job_70_row_verification": "passed",
+    "in_job_pins": "passed",
+    "lbl_and_rayleigh_only": "passed",
+    "ledger_loader_single_call_site": "passed",
+    "manifest_integrity": "passed",
+    "manifest_sha_pinned_live": "passed",
+    "negative_conc_dependency": "passed",
+    "no_broad_deletion": "passed",
+    "postsed_pins_computed": "passed",
+    "pristine_script_pins_live": "passed",
+    "repo_dependency_pins_live": "passed",
+    "retry_safe_reuse": "passed",
+    "sbatch_written_not_submitted": "passed",
+    "schema_validation_no_size_floor": "passed",
+    "single_run_lock": "passed",
+    "soft_quota_rechecks": "passed",
+    "ssi_pins_live": "passed"
+  },
+  "negative_conc_dependency": "pinned rel-415 scripts use spectra-embedded reference concentrations and literal VMR scaling (--conc 415e-6/--const); NO evaluation2 conc files are read; asserted in-job (U3 resolved)",
   "path_contract": {
     "generate_lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-eval2/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
     "generate_sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-eval2/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
     "install_lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
     "install_sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
     "install_sw_v14": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
-    "rationale": "monitor-specified two-phase: generate in quarantined work-eval2, exact-2 output-presence gate, install the presence-gated outputs into the EXISTING executor trees (post-install cmp = identity gate; sha256 echoes = provenance records, no expected digest) so G3 keeps WORK_DIR=work (LW) with inits/gpoints untouched; optimizer resolves via append_path TRAINING_*_FLUXES_DIR:WORK_*_LBL_FLUX_DIR (EVALUATION_*_FLUXES_DIR never appended); SW dual-installed into work-v14/sw_lbl_fluxes too because the SW executor may run WORK_DIR=work-v14 (accepted scaled init + ecckd-1.4 prefix live there) -- final SW wiring decided at the G3 spec review"
+    "rationale": "two-phase: generate in quarantined work-eval2, full schema gate, atomic install into the EXISTING executor trees; G3 keeps WORK_DIR=work (LW) / work-v14 (SW primary, work alt); final SW wiring decided at the G3 spec review"
+  },
+  "pins": {
+    "binaries": {
+      "ckdmip_lw": "ae7a2a9a2cd2f522627f4fd6e7a087b2539016eb45d1a4d6793602960d2bcd8a",
+      "ckdmip_sw": "ab8176c5a41bf40d49ef814ff01c21092c4948f4f0b910077da20104511536db",
+      "ckdmip_tool": "2334730bd2da322b603b5748c4076bba442928a2a9b05a3f2f53c8ad159c44cd"
+    },
+    "bindir_note": "BINDIR points at the established v1.2 path but is NON-COMPUTATIONAL for this unit: neither LBL script executes it",
+    "manifest": {
+      "bytes": 329989234896,
+      "count": 70,
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_eval2_selected_manifest.tsv",
+      "sha256": "d72ecb4149c07a07f73972fc540d812f56d7e492d2f75208228e8541c925fca2"
+    },
+    "postsed": {
+      "config": "37db6562d262f949287b9083f7ac31f6da152d1cc39a0a18f161bcaf71c43892",
+      "lw": "e4eba6e691592ca3027402189ac24c0c8b09ebcb8a179ebddf9964cc39a30387",
+      "sw": "76a5a4f40c0ca83a95dfac8bf0d70e163853e3b0a09d85fceed63eeae3bf69a1"
+    },
+    "pristine_lw": "cbe9c3f3af4ca6872dc038bc7b1c5959baf1890f8f3b075acb02b21c2961f4dd",
+    "pristine_sw": "f53d18583c3e48ad16f6685945118b97f8229491e43e158424049b3fbc7f7e51",
+    "repo_dependencies": {
+      "concat_helper": {
+        "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/concat_ckdmip_flux_chunks.jl",
+        "sha256": "b8cdf031a35c08236c068e01f8c55c43aba7cfbaa254ff0ebd2d473966f86fa8"
+      },
+      "note": "live executable repo dependencies pinned in-job before source/use; --project=test is the concat environment, so its Project AND resolved Manifest are both pinned (full dependency-closure provenance)",
+      "quota_guard": {
+        "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh",
+        "sha256": "786506c29c07f3c7d4584d98a07f9a10b91b773b43763465f52966fb61f83e7d"
+      },
+      "test_manifest": {
+        "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Manifest.toml",
+        "sha256": "cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186"
+      },
+      "test_project": {
+        "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Project.toml",
+        "sha256": "9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0"
+      }
+    },
+    "ssi": {
+      "bytes": 1981779,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_spectra/ckdmip_ssi.h5",
+      "sha256": "440e1c4f481ad67bb67c352c36095da885475dd50cc9592ad4be68d179722a03"
+    }
+  },
+  "prerequisite": {
+    "classifier_verdict": "green",
+    "expected_case": "gate4_g2c_fetch_completion_ledger",
+    "expected_sha256": "f979292c6db259eee552a76eca42cf91bba05b442e47dcf235359179e338dbf2",
+    "expected_status": "g2c_fetch_completed_verified",
+    "ledger": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_fetch_completion_ledger.json"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "9f80ed1",
+    "generated_from_head": "62c1a28",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
-  "rayleigh_note": "eval2 SW rayleigh is not published anywhere (S3 archive and ECPDS both lack it); generated in-job by the upstream author's make_rayleigh_evaluation.sh recipe into the fetched eval2 tree, mirroring evaluation1's official layout; sha256s echoed in the job log",
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2d_eval2_rel415_flux.sbatch",
-  "status": "g2d_checkpoint_waiting_for_g2c",
-  "timestamp_utc": "2026-08-12T07:59:52.246"
+  "sbatch_sha256": "06c1a97d49e289cb29a462bb1f1fb750d650c170f6aab8d5ab333568f7e2329d",
+  "status": "g2d_checkpoint_ready",
+  "timestamp_utc": "2026-08-13T12:37:10.303Z"
 }
