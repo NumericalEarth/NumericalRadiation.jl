@@ -1,8 +1,8 @@
 {
   "case": "gate4_status_dependency_contract_audit",
   "census": {
-    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each parsefile ledger record matched EXACTLY once; union(served IDs) must equal the manifest. Consumers that deliberately use a coupled BYTE-snapshot parse (one read supplies digest AND content, closing the hash-vs-parse TOCTOU) -- each declared as its own extension record (currently ric_snapshot, pcc_snapshot, gd_snapshot, and fl_snapshot) -- are NOT parsefile sites: each such helper is carried as a declared-snapshot-extension ledger record whose anchor reconciliation binds directly against the consumer source (and which must never match a live parsefile site). n_sites therefore counts live JSON.parsefile sites only; the extensions are counted separately in n_declared_snapshot_extensions.",
-    "n_declared_snapshot_extensions": 4,
+    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each parsefile ledger record matched EXACTLY once; union(served IDs) must equal the manifest. Consumers that deliberately use a coupled BYTE-snapshot parse (one read supplies digest AND content, closing the hash-vs-parse TOCTOU) -- each declared as its own extension record (currently ric_snapshot, pcc_snapshot, gd_snapshot, fl_snapshot, and pf_snapshot) -- are NOT parsefile sites: each such helper is carried as a declared-snapshot-extension ledger record whose anchor reconciliation binds directly against the consumer source (and which must never match a live parsefile site). n_sites therefore counts live JSON.parsefile sites only; the extensions are counted separately in n_declared_snapshot_extensions.",
+    "n_declared_snapshot_extensions": 5,
     "n_sites": 24,
     "site_ledger": [
       {
@@ -173,6 +173,15 @@
         ],
         "file": "gate4_g3_executor_checkpoint.jl",
         "reason": "classify_scoped_preflight guarded-loader body (exact-case prerequisite binding; live edge + tmp loader fixtures)"
+      },
+      {
+        "anchor": "JSON.parse(String(copy(bytes)))",
+        "class": "declared-snapshot-extension",
+        "edge_ids": [
+          "dep:g3_scoped_preflight<-g2d_completion_ledger"
+        ],
+        "file": "gate4_g3_scoped_input_preflight.jl",
+        "reason": "pf_snapshot helper body: coupled byte snapshot (one read supplies digest AND parsed content; the G2d completion ledger pin is a sha-over-the-same-bytes check), deliberately NOT JSON.parsefile -- source-bound directly by reconcile; the same helper also parses fixture tmp files"
       },
       {
         "anchor": "JSON.parsefile(path)",
@@ -396,8 +405,8 @@
   "contract_satisfaction": {
     "consumer_selftest_state": 0,
     "inactive_branch": 1,
-    "n_edges": 42,
-    "satisfied": 41,
+    "n_edges": 43,
+    "satisfied": 42,
     "verdicts": [
       {
         "active": true,
@@ -703,8 +712,8 @@
         "id": "dep:g3_executor<-scoped_preflight",
         "kind": "set",
         "producer_case": "gate4_g3_scoped_input_preflight",
-        "producer_sha256": "ef7740cfc60aac1eb96e886234309380e569a6216190c163c40d1744fadfcb5b",
-        "producer_status": "g3_scoped_preflight_waiting_for_eval2",
+        "producer_sha256": "f5b7e1714b107a7307842389ea3bdfbbd1bb0111f9509cafcdee464327955f0b",
+        "producer_status": "g3_scoped_preflight_ready",
         "status_only_contract": false,
         "verdict": "satisfied"
       },
@@ -791,20 +800,33 @@
       {
         "active": true,
         "consumer": "gate4_post_cleanup_input_census.jl",
-        "consumer_sha256": "b686f7651d4bf3dff70abddb16b2aa9f11793116d62fafa480393cd3771f7810",
+        "consumer_sha256": "9d19ece27e7de4d79fc17e2428faea0321b3d518c620f71bf696454c20ee04c6",
         "detail": "contract satisfied",
         "id": "dep:post_cleanup_census<-g3_scoped_preflight",
         "kind": "exact",
         "producer_case": "gate4_g3_scoped_input_preflight",
-        "producer_sha256": "ef7740cfc60aac1eb96e886234309380e569a6216190c163c40d1744fadfcb5b",
-        "producer_status": "g3_scoped_preflight_waiting_for_eval2",
+        "producer_sha256": "f5b7e1714b107a7307842389ea3bdfbbd1bb0111f9509cafcdee464327955f0b",
+        "producer_status": "g3_scoped_preflight_ready",
+        "status_only_contract": false,
+        "verdict": "satisfied"
+      },
+      {
+        "active": true,
+        "consumer": "gate4_g3_scoped_input_preflight.jl",
+        "consumer_sha256": "d06d1608152303cbf6bf73794447bbf59cf8deb40a5baf26a0231984cf93fc71",
+        "detail": "contract satisfied",
+        "id": "dep:g3_scoped_preflight<-g2d_completion_ledger",
+        "kind": "exact",
+        "producer_case": "gate4_g2d_flux_completion_ledger",
+        "producer_sha256": "46ee8d2a2d6a3f662c3f937d8fec644e83b94fd2a4f21254c703b112e9dd9dab",
+        "producer_status": "g2d_flux_completed_verified",
         "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
         "active": true,
         "consumer": "gate4_post_cleanup_input_census.jl",
-        "consumer_sha256": "b686f7651d4bf3dff70abddb16b2aa9f11793116d62fafa480393cd3771f7810",
+        "consumer_sha256": "9d19ece27e7de4d79fc17e2428faea0321b3d518c620f71bf696454c20ee04c6",
         "detail": "contract satisfied",
         "id": "dep:post_cleanup_census<-g2c_fetch_checkpoint",
         "kind": "exact",
@@ -843,7 +865,7 @@
       {
         "active": true,
         "consumer": "gate4_post_cleanup_input_census.jl",
-        "consumer_sha256": "b686f7651d4bf3dff70abddb16b2aa9f11793116d62fafa480393cd3771f7810",
+        "consumer_sha256": "9d19ece27e7de4d79fc17e2428faea0321b3d518c620f71bf696454c20ee04c6",
         "detail": "contract satisfied",
         "id": "dep:post_cleanup_census<-pending_rulings_register",
         "kind": "exact",
@@ -979,10 +1001,11 @@
   "gates": {
     "census_reconciles_with_edge_linkage": "passed",
     "fixtures": "passed",
-    "manifest_edge_count_42": "passed",
+    "manifest_edge_count_43": "passed",
     "manifest_ids_unique": "passed",
     "manifest_schema_valid": "passed",
-    "no_contract_violations": "passed"
+    "no_contract_violations": "passed",
+    "snapshot_extension_count_5": "passed"
   },
   "hardening_findings": [],
   "modes_observed": {
@@ -993,7 +1016,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "dec274d",
+    "generated_from_head": "7735a03",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1005,5 +1028,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-13T15:31:41.346"
+  "timestamp_utc": "2026-08-13T15:52:54.283"
 }

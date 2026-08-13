@@ -13,9 +13,12 @@
 #   - the register's RECORDED Path-D wording is represented strictly as
 #     registered_scope_claim_vs_observation -- a claim recorded at
 #     register time, NEVER a statement of current authorization;
-#   - EXISTENCE and SIZE only: no hash re-verification (the preflight
-#     rows record presence and sha256_matches verdicts, not hash
-#     values) and therefore NO content-integrity conclusion of any kind.
+#   - LIVE SCIENTIFIC INPUT rows are EXISTENCE and SIZE only (their
+#     content is never read or hashed here; the preflight's recorded
+#     observed hashes/verdicts are consumed as-is). Pinned SOURCE JSON
+#     artifacts ARE byte-read and sha256-hashed (coupled snapshots),
+#     and the scoped preflight artifact is verified against an exact
+#     pinned sha.
 # Traversal is bounded to the exact named roots, symlinks are never
 # followed (walkdir follow_symlinks=false; symlinked entries counted,
 # not traversed), and permission/read failures are RECORDED per
@@ -37,6 +40,10 @@ const PCC_RESULTS_JSON =
 const PCC_RESULTS_MD =
     validation_results_path("gate4_post_cleanup_input_census.md")
 
+# exact committed preflight artifact this census consumes (fail-closed
+# readiness contract: case + status + byte sha, all inspectable below)
+const PCC_PREFLIGHT_SHA =
+    "f5b7e1714b107a7307842389ea3bdfbbd1bb0111f9509cafcdee464327955f0b"
 const PCC_PREFLIGHT_JSON =
     validation_results_path("gate4_g3_scoped_input_preflight.json")
 const PCC_G2C_JSON =
@@ -146,7 +153,8 @@ function pcc_path_observation(path; statfn = lstat)
 end
 
 # fail-closed pinned-source verification over an already-taken snapshot
-function pcc_source_issues(snap, expected_case, expected_status)
+function pcc_source_issues(snap, expected_case, expected_status,
+                           expected_sha = nothing)
     issues = String[]
     snap.readable || (push!(issues, "source unreadable"); return issues)
     snap.parse_success || (push!(issues, "source unparseable");
@@ -157,6 +165,10 @@ function pcc_source_issues(snap, expected_case, expected_status)
         push!(issues, "source case != $expected_case")
     pcc_str(get(snap.data, "status", "")) == expected_status ||
         push!(issues, "source status != $expected_status")
+    # optional byte-sha pin: refuse drift when a source is pinned to an
+    # exact committed artifact (same coupled snapshot supplies the sha)
+    (expected_sha === nothing || snap.sha == expected_sha) ||
+        push!(issues, "source sha drift (!= pinned $(expected_sha))")
     return issues
 end
 
@@ -353,6 +365,11 @@ function pcc_fixtures()
                data = Dict("case" => "c1", "status" => "s1"))
     t["source_verification_accepts_exact"] =
         isempty(pcc_source_issues(ok_snap, "c1", "s1"))
+    t["source_sha_pin_match_accepted"] =
+        isempty(pcc_source_issues(ok_snap, "c1", "s1", ok_snap.sha))
+    t["source_sha_drift_refused"] =
+        any(occursin("sha drift", i)
+            for i in pcc_source_issues(ok_snap, "c1", "s1", "0" ^ 64))
     t["source_wrong_case_refuses"] =
         any(occursin("case !=", i)
             for i in pcc_source_issues(ok_snap, "other", "s1"))
@@ -499,24 +516,25 @@ function pcc_main()
     src = Dict{String, Any}()
     sources_ok = true
     snaps = Dict{String, Any}()
-    for (label, path, ecase, estatus) in (
+    for (label, path, ecase, estatus, esha) in (
         ("scoped_preflight", PCC_PREFLIGHT_JSON,
          "gate4_g3_scoped_input_preflight",
-         "g3_scoped_preflight_waiting_for_eval2"),
+         "g3_scoped_preflight_ready", PCC_PREFLIGHT_SHA),
         ("g2c_fetch_checkpoint", PCC_G2C_JSON,
          "gate4_g2c_eval2_fetch_checkpoint",
-         "g2c_checkpoint_ready"),
+         "g2c_checkpoint_ready", nothing),
         ("pending_rulings_register", PCC_REGISTER_JSON,
          "gate4_pending_rulings_register",
-         "pending_rulings_register_recorded"))
+         "pending_rulings_register_recorded", nothing))
         snap = pcc_snapshot(path)
-        issues = pcc_source_issues(snap, ecase, estatus)
+        issues = pcc_source_issues(snap, ecase, estatus, esha)
         isempty(issues) || (sources_ok = false;
                             append!(fails, ["$label: " * i
                                             for i in issues]))
         snaps[label] = snap
         src[label] = Dict("path" => path,
             "snapshot_sha256" => snap.sha,
+            "expected_sha256" => esha,   # nothing for unpinned sources
             "verified_case" => ecase, "verified_status" => estatus,
             "verified" => isempty(issues))
     end
@@ -685,9 +703,14 @@ function pcc_main()
         "status" => status,
         "timestamp_utc" => nowstamp,
         "observed_at_utc" => nowstamp,
-        "observation_semantics" => "existence and size at observed_at " *
-            "only -- NO content read, NO hash re-verification, NO " *
-            "content-integrity conclusion of any kind",
+        "observation_semantics" => "for LIVE SCIENTIFIC INPUT census " *
+            "rows: existence and size at observed_at only -- their " *
+            "content is never read or hashed by this unit and no " *
+            "content-integrity conclusion is drawn about them. Pinned " *
+            "SOURCE JSON artifacts are different: their bytes ARE read " *
+            "and sha256-hashed (coupled snapshots), and the scoped " *
+            "preflight artifact is additionally verified against an " *
+            "exact pinned sha",
         "readiness" => Dict(
             "conferred" => false,
             "note" => "this census confers NO readiness and authorizes " *
@@ -696,19 +719,27 @@ function pcc_main()
         "gates" => gates, "failures" => fails,
         "fixture_verdicts" => t,
         "sources" => src,
-        "source_verification_semantics" => "exact case/status " *
-            "verification authenticates ONLY the captured artifact's " *
-            "role and recorded baseline (e.g. the G2c checkpoint " *
-            "recorded g2c_checkpoint_ready at its own write time); it " *
-            "is NOT an assertion of current source availability or " *
-            "quota state -- this unit intentionally performs no live " *
-            "probe or quota read",
+        "source_verification_semantics" => "ALL pinned source " *
+            "artifacts get exact case/status verification; the " *
+            "scoped_preflight source ADDITIONALLY gets exact " *
+            "coupled-byte sha256 verification against " *
+            "PCC_PREFLIGHT_SHA. This authenticates the captured " *
+            "artifacts' role and recorded baseline (e.g. the G2c " *
+            "checkpoint recorded g2c_checkpoint_ready at its own write " *
+            "time); it is NOT an assertion of current source " *
+            "availability or quota state -- this unit intentionally " *
+            "performs no live probe or quota read",
         "preflight_census" => Dict(
             "rows" => census_rows,
             "counts" => counts,
-            "hash_reverification" => "OUT OF SCOPE (stated bound): the " *
-                "preflight inventory records presence and " *
-                "sha256_matches verdicts, not hash values"),
+            "hash_reverification" => "scientific files are NOT rehashed " *
+                "by this census (stated bound): the preflight " *
+                "inventory's recorded observed hashes and " *
+                "sha256_matches verdicts are consumed as-is. Source " *
+                "JSON artifacts are byte-read and sha256-HASHED via " *
+                "coupled snapshots; scoped_preflight is ADDITIONALLY " *
+                "checked against its exact pin (G2c/register snapshots " *
+                "are hashed but carry no digest pin)"),
         "registered_scope_claim_vs_observation" => Dict(
             "register_quote_recorded_wording" => pathd_scope.scope,
             "scope_dirs_observed" => pathd_dirs,
@@ -728,8 +759,10 @@ function pcc_main()
         "disclaimer" => "read-only observed-at census; neutral facts " *
             "only -- no election, no ruling/intake change, no " *
             "authorization or attribution claim, no content-integrity " *
-            "conclusion, no deletion/creation outside its own " *
-            "artifacts, no job/quota/fetch action.")
+            "conclusion about live scientific inputs (pinned source " *
+            "JSON artifacts are byte-hashed as disclosed above), no " *
+            "deletion/creation outside its own artifacts, no " *
+            "job/quota/fetch action.")
 
     mkpath(dirname(PCC_RESULTS_JSON))
     jbuf = IOBuffer(); JSON.print(jbuf, result, 2)

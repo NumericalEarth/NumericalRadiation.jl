@@ -656,11 +656,22 @@ const DCA_EDGES = [
  (id = "dep:post_cleanup_census<-g3_scoped_preflight",
   consumer = "gate4_post_cleanup_input_census.jl",
   anchors = ["const PCC_PREFLIGHT_JSON =",
+             "const PCC_PREFLIGHT_SHA =",
              "\"gate4_g3_scoped_input_preflight\"",
-             "\"g3_scoped_preflight_waiting_for_eval2\""],
+             "\"g3_scoped_preflight_ready\", PCC_PREFLIGHT_SHA"],
   producer = "gate4_g3_scoped_input_preflight.json", kind = :exact,
-  accepted = ["g3_scoped_preflight_waiting_for_eval2"],
+  accepted = ["g3_scoped_preflight_ready"],
   expected_case = "gate4_g3_scoped_input_preflight",
+  consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:g3_scoped_preflight<-g2d_completion_ledger",
+  consumer = "gate4_g3_scoped_input_preflight.jl",
+  anchors = ["pf_classify_g2d_ledger(PF_LEDGER_JSON)",
+             "const PF_LEDGER_SHA =",
+             "\"g2d_flux_completed_verified\"",
+             "\"gate4_g2d_flux_completion_ledger\""],
+  producer = "gate4_g2d_flux_completion_ledger.json", kind = :exact,
+  accepted = ["g2d_flux_completed_verified"],
+  expected_case = "gate4_g2d_flux_completion_ledger",
   consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:post_cleanup_census<-g2c_fetch_checkpoint",
   consumer = "gate4_post_cleanup_input_census.jl",
@@ -1038,6 +1049,15 @@ const DCA_SITE_LEDGER = [
   class = "edge", edge_ids = ["dep:g3_executor<-scoped_preflight"],
   reason = "classify_scoped_preflight guarded-loader body (exact-case " *
            "prerequisite binding; live edge + tmp loader fixtures)"),
+ (file = "gate4_g3_scoped_input_preflight.jl",
+  anchor = "JSON.parse(String(copy(bytes)))",
+  class = "declared-snapshot-extension",
+  edge_ids = ["dep:g3_scoped_preflight<-g2d_completion_ledger"],
+  reason = "pf_snapshot helper body: coupled byte snapshot (one read " *
+           "supplies digest AND parsed content; the G2d completion " *
+           "ledger pin is a sha-over-the-same-bytes check), " *
+           "deliberately NOT JSON.parsefile -- source-bound directly " *
+           "by reconcile; the same helper also parses fixture tmp files"),
  (file = "gate4_init_generation_manifest.jl",
   anchor = "JSON.parsefile(path)",
   class = "edge", edge_ids = ["dep:init_generation_manifest<-g2_g3_runner_scaffold"],
@@ -1601,10 +1621,17 @@ function dca_main()
         length(unique(ids)) == length(ids) ? "passed" : "failed"
     length(unique(ids)) == length(ids) ||
         push!(fails, "duplicate edge IDs in the declarative manifest")
-    gates["manifest_edge_count_42"] =
-        length(DCA_EDGES) == 42 ? "passed" : "failed"
-    length(DCA_EDGES) == 42 ||
-        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 42")
+    gates["manifest_edge_count_43"] =
+        length(DCA_EDGES) == 43 ? "passed" : "failed"
+    length(DCA_EDGES) == 43 ||
+        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 43")
+    n_snapext = count(x -> x.class == "declared-snapshot-extension",
+                      DCA_SITE_LEDGER)
+    gates["snapshot_extension_count_5"] =
+        n_snapext == 5 ? "passed" : "failed"
+    n_snapext == 5 ||
+        push!(fails, "site ledger has $n_snapext declared-snapshot-" *
+                     "extension records, expected 5")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)
@@ -1973,8 +2000,8 @@ function dca_main()
                 "coupled BYTE-snapshot parse (one read supplies digest " *
                 "AND content, closing the hash-vs-parse TOCTOU) -- " *
                 "each declared as its own extension record (currently " *
-                "ric_snapshot, pcc_snapshot, gd_snapshot, and " *
-                "fl_snapshot) -- are NOT " *
+                "ric_snapshot, pcc_snapshot, gd_snapshot, fl_snapshot, " *
+                "and pf_snapshot) -- are NOT " *
                 "parsefile sites: each such helper is carried as a " *
                 "declared-snapshot-extension ledger record whose anchor " *
                 "reconciliation binds directly against the consumer " *

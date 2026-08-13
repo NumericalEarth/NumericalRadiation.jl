@@ -8,15 +8,38 @@
     "quota_guard-style headroom check before any output-writing stage"
   ],
   "failures": [],
+  "fixture_verdicts": {
+    "eval2_copy_drift_refuses": true,
+    "eval2_good_accepted": true,
+    "eval2_hash_drift_refuses": true,
+    "eval2_missing_refuses": true,
+    "eval2_schema_drift_refuses": true,
+    "eval2_size_drift_refuses": true,
+    "ledger_case_mismatch_refuses": true,
+    "ledger_green_accepted": true,
+    "ledger_missing_refuses": true,
+    "ledger_non_object_refuses": true,
+    "ledger_unparseable_refuses": true,
+    "ledger_wrong_sha_refuses": true,
+    "ledger_wrong_status_refuses": true,
+    "status_failed_selection": true,
+    "status_ready_selection": true
+  },
   "gates": {
-    "eval2_training_both_pair": "waiting",
+    "eval2_training_both_pair": "passed",
     "expected_sets_match_pinned_scripts": "passed",
+    "fixtures": "passed",
     "fp_shim_so_hash": "passed",
+    "g2d_commit_ancestry": "passed",
+    "g2d_completion_ledger_green": "passed",
+    "g2d_ledger_source_pin": "passed",
+    "g2d_sbatch_pin_and_validator": "passed",
     "lw_gpoints": "passed",
     "lw_init": "passed",
     "lw_optimize_binary": "passed",
     "lw_training_fluxes_20": "passed",
     "no_idealized_dependency": "passed",
+    "sw_copies_byte_identical": "passed",
     "sw_gpoints_symlink": "passed",
     "sw_init": "passed",
     "sw_optimize_binary": "passed",
@@ -244,19 +267,34 @@
       "sha256_matches": true
     },
     {
-      "input": "eval2 LW rel-415 flux",
+      "input": "eval2 LW rel-415 flux (work)",
+      "observed_bytes": 451045,
+      "observed_sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc",
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
-      "present": false
+      "present": true,
+      "schema_valid": true,
+      "sha256_matches": true,
+      "size_matches": true
     },
     {
       "input": "eval2 SW rgb rel-415 flux (work-v14)",
+      "observed_bytes": 1817493,
+      "observed_sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291",
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
-      "present": false
+      "present": true,
+      "schema_valid": true,
+      "sha256_matches": true,
+      "size_matches": true
     },
     {
       "input": "eval2 SW rgb rel-415 flux (work alt)",
+      "observed_bytes": 1817493,
+      "observed_sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291",
       "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
-      "present": false
+      "present": true,
+      "schema_valid": true,
+      "sha256_matches": true,
+      "size_matches": true
     },
     {
       "input": "H5open-preinit shim .so (4099)",
@@ -267,10 +305,43 @@
   ],
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "507794f",
+    "generated_from_head": "7735a03",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
+  "readiness_pins": {
+    "eval2_targets": {
+      "lw_bytes": 451045,
+      "lw_sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc",
+      "observed_lw_sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc",
+      "observed_sw_alt_sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291",
+      "observed_sw_v14_sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291",
+      "sw_bytes": 1817493,
+      "sw_sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291"
+    },
+    "g2d_commit_ancestor": {
+      "expected": "7735a034ffbdcacc5c5892fab76a08d9cc083897",
+      "observed": true
+    },
+    "g2d_completion_ledger": {
+      "classifier_verdict": "green",
+      "expected_case": "gate4_g2d_flux_completion_ledger",
+      "expected_sha256": "46ee8d2a2d6a3f662c3f937d8fec644e83b94fd2a4f21254c703b112e9dd9dab",
+      "expected_status": "g2d_flux_completed_verified",
+      "observed_case": "gate4_g2d_flux_completion_ledger",
+      "observed_sha256": "46ee8d2a2d6a3f662c3f937d8fec644e83b94fd2a4f21254c703b112e9dd9dab",
+      "observed_status": "g2d_flux_completed_verified",
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2d_flux_completion_ledger.json"
+    },
+    "g2d_ledger_source": {
+      "expected_sha256": "1729c820235293852860720af8921608f3d91c34e5c6a637ad222f1de4ac096a",
+      "observed_sha256": "1729c820235293852860720af8921608f3d91c34e5c6a637ad222f1de4ac096a"
+    },
+    "g2d_sbatch": {
+      "expected_sha256": "06c1a97d49e289cb29a462bb1f1fb750d650c170f6aab8d5ab333568f7e2329d",
+      "observed_sha256": "06c1a97d49e289cb29a462bb1f1fb750d650c170f6aab8d5ab333568f7e2329d"
+    }
+  },
   "scope_rationale": "gates ONLY on inputs the pinned optimizer invocation actually reads (input=, gpointfile=, append_path training/work flux dirs) plus binaries and the FP-shim requirement; deliberately independent of idealized/ and the broad ckdmip_training_data_preflight layout, per the quota-recovery runbook's binding Path-D requirement",
-  "status": "g3_scoped_preflight_waiting_for_eval2",
-  "timestamp_utc": "2026-08-12T08:34:56.422"
+  "status": "g3_scoped_preflight_ready",
+  "timestamp_utc": "2026-08-13T15:49:49.802"
 }

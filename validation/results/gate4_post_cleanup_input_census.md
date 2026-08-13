@@ -2,7 +2,7 @@
 
 Status: **post_cleanup_census_recorded**
 
-read-only observed-at census; neutral facts only -- no election, no ruling/intake change, no authorization or attribution claim, no content-integrity conclusion, no deletion/creation outside its own artifacts, no job/quota/fetch action.
+read-only observed-at census; neutral facts only -- no election, no ruling/intake change, no authorization or attribution claim, no content-integrity conclusion about live scientific inputs (pinned source JSON artifacts are byte-hashed as disclosed above), no deletion/creation outside its own artifacts, no job/quota/fetch action.
 
 | Gate | Verdict |
 |---|---|
@@ -13,11 +13,8 @@ read-only observed-at census; neutral facts only -- no election, no ruling/intak
 
 ## Preflight inventory re-stat (46 rows)
 
-Counts: {"observation_error": 0, "recorded_absent_now_absent": 3, "recorded_absent_now_present": 0, "recorded_present_now_absent": 0, "recorded_present_now_present": 43}
+Counts: {"observation_error": 0, "recorded_absent_now_absent": 0, "recorded_absent_now_present": 0, "recorded_present_now_absent": 0, "recorded_present_now_present": 46}
 
-- [recorded_absent_now_absent] eval2 LW rel-415 flux: `/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5`
-- [recorded_absent_now_absent] eval2 SW rgb rel-415 flux (work-v14): `/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5`
-- [recorded_absent_now_absent] eval2 SW rgb rel-415 flux (work alt): `/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5`
 
 (recorded_present_now_present rows omitted above for brevity; all rows are in the JSON.)
 
@@ -37,4 +34,4 @@ Register RECORDED wording (a claim recorded at register time, not a statement of
 
 registered_scope_claim_vs_observation: the register's RECORDED wording names idealized/conc and ALL of evaluation1/ in its PRESERVE clause; the live subdir set above is the observation. Both sides are facts about recorded text and current existence -- neither is a statement of current authorization, and this unit makes no claim about who removed anything or under what approval
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `9216204` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `7735a03` (pre-own-commit).
