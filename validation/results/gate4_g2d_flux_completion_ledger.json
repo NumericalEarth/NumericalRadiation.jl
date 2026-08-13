@@ -1,0 +1,165 @@
+{
+  "attempt_registry": [
+    {
+      "expected_submit_line": "sbatch --parsable validation/results/gate4_g2d_eval2_rel415_flux.sbatch",
+      "job_id": 4503,
+      "original_receipt_sha256_disclosed": "59d7907353f0a3470b03038ede9f28048d7b7a8f2dcdb161a2219368f240e346",
+      "submitted_by": "Codex monitor via Codex exec after IMMUTABLE commit review of dec274d8; exactly ONE authorized sbatch was executed (session 40's local submit was blocked by its permission classifier BEFORE execution)",
+      "submitted_utc": "2026-08-13T12:40:50Z",
+      "terminal_log": "/shared/home/greg/data/ckdmip-logs/g4-g2d-4503.log",
+      "terminal_log_sha256": "bdad1889bfc38b9d042700e67f52eb60e051a889cb62f1642bd329ebb8ecf0c0",
+      "terminal_monitor_output": "/shared/home/greg/data/ckdmip-logs/g4-g2d-4503-terminal-monitor-output.txt",
+      "terminal_monitor_output_sha256": "aaeed4d49efdbe5987bfb4803b542969de9986801951e458e8e183f4abf12e31",
+      "termination_record": "/shared/home/greg/data/ckdmip-logs/g4-g2d-4503-scontrol-final.txt",
+      "termination_record_sha256": "7328195aa860961ab04df7b77b4a6aa7c29ff87fb0ad8047beeeb9de22d3560f"
+    }
+  ],
+  "case": "gate4_g2d_flux_completion_ledger",
+  "data_mode": "read_only_evidence_ledger",
+  "disclaimer": "read-only evidence ledger; writes nothing except its own JSON/MD results.",
+  "failures": [],
+  "fixture_verdicts": {
+    "ckpt_case_mismatch_refuses": true,
+    "ckpt_green_accepted": true,
+    "ckpt_hash_drift_refuses": true,
+    "ckpt_missing_refuses": true,
+    "ckpt_non_object_refuses": true,
+    "ckpt_not_ready_refuses": true,
+    "ckpt_unparseable_refuses": true,
+    "copy_identity_drift_refuses": true,
+    "cross_check_agreement_passes": true,
+    "cross_check_disagreement_refuses": true,
+    "file_good_accepted": true,
+    "file_missing_refuses": true,
+    "file_wrong_sha_refuses": true,
+    "file_wrong_size_refuses": true,
+    "log_failure_marker_refuses": true,
+    "log_good_accepted": true,
+    "log_marker_generic_error_refuses": true,
+    "log_marker_generic_failed_refuses": true,
+    "log_marker_generic_fatal_refuses": true,
+    "log_marker_pin_mismatch_refuses": true,
+    "log_marker_quota_exceeded_refuses": true,
+    "log_marker_traceback_refuses": true,
+    "log_missing_echo_refuses": true,
+    "log_missing_stage_refuses": true,
+    "log_out_of_order_refuses": true,
+    "log_wrong_done_timestamp_refuses": true,
+    "monitor_output_capline_missing_refuses": true,
+    "monitor_output_digest_drift_refuses": true,
+    "monitor_output_field_drift_refuses": true,
+    "monitor_output_good": true,
+    "monitor_output_missing_refuses": true,
+    "monitor_output_tail_echo_missing_refuses": true,
+    "overall_all_green": true,
+    "overall_any_issue_refuses": true,
+    "ray_census_exact_accepted": true,
+    "ray_census_extra_refuses": true,
+    "ray_census_missing_refuses": true,
+    "ray_census_unlistable_refuses": true,
+    "ray_census_wrong_name_refuses": true,
+    "rayleigh_wrong_source_refuses": true,
+    "receipt_good_binds": true,
+    "receipt_group_digest_drift_refuses": true,
+    "receipt_group_good": true,
+    "receipt_group_missing_refuses": true,
+    "receipt_jobid_refuses": true,
+    "receipt_nonzero_exit_refuses": true,
+    "receipt_restarts_refuses": true,
+    "receipt_runtime_refuses": true,
+    "receipt_stdout_refuses": true,
+    "receipt_submitline_injection_refuses": true,
+    "receipt_submittime_refuses": true,
+    "receipt_workdir_refuses": true,
+    "receipt_wrong_state_refuses": true,
+    "residue_clean_accepted": true,
+    "residue_g2dtmp_refuses": true,
+    "residue_install_tmp_refuses": true,
+    "residue_raw_refuses": true,
+    "residue_ray_tmp_refuses": true,
+    "residue_unexpected_entry_refuses": true,
+    "residue_unlistable_refuses": true,
+    "schema_cross_mode_refuses": true
+  },
+  "gates": {
+    "evidence_checkpoint_json_pin": "passed",
+    "evidence_checkpoint_source_pin": "passed",
+    "evidence_commit_ancestry": "passed",
+    "evidence_flux_outputs_and_installs": "passed",
+    "evidence_rayleigh_finals": "passed",
+    "evidence_receipt_cross_check": "passed",
+    "evidence_residue": "passed",
+    "evidence_sbatch_pin": "passed",
+    "evidence_terminal_log": "passed",
+    "evidence_terminal_monitor_output": "passed",
+    "evidence_termination_receipt": "passed",
+    "fixtures": "passed",
+    "validator_extracted_from_pinned_sbatch": "passed"
+  },
+  "non_authorizing_note": "this ledger records and classifies evidence; it does not itself submit, fetch, delete, change quota, or execute G3 -- downstream consumers must bind this artifact (exact case/status/sha) rather than assume progression from its existence",
+  "outputs": {
+    "lw": {
+      "bytes": 451045,
+      "copies": [
+        "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-eval2/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+        "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5"
+      ],
+      "sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc"
+    },
+    "sw": {
+      "bytes": 1817493,
+      "copies": [
+        "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-eval2/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+        "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+        "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5"
+      ],
+      "sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291"
+    }
+  },
+  "quota_observed_at": {
+    "note": "informational observation ONLY; never an input to the completion classification",
+    "observed_at_utc": "2026-08-13T15:31:08.490Z",
+    "row_verbatim": "/shared 543142478  943718400 1048576000       -  596808       0       0       -"
+  },
+  "rayleigh": [
+    {
+      "bytes": 902119952,
+      "chunk": "1-10",
+      "path": "/shared/home/greg/data/ckdmip/evaluation2/sw_spectra/ckdmip_evaluation2_sw_spectra_rayleigh_present_1-10.h5",
+      "sha256": "164ead75fdd2d08c86b7cb6729875bdb7802718a6bc0d0200ce9290a7c2ba15e"
+    },
+    {
+      "bytes": 902145705,
+      "chunk": "11-20",
+      "path": "/shared/home/greg/data/ckdmip/evaluation2/sw_spectra/ckdmip_evaluation2_sw_spectra_rayleigh_present_11-20.h5",
+      "sha256": "d8c29fbfc562d9d8cabbe34eb8cfdaada2e3aecafcb17364e0336b07c1dc0c85"
+    },
+    {
+      "bytes": 902140646,
+      "chunk": "21-30",
+      "path": "/shared/home/greg/data/ckdmip/evaluation2/sw_spectra/ckdmip_evaluation2_sw_spectra_rayleigh_present_21-30.h5",
+      "sha256": "5babdf39143d5ec564abbcb77cbce5ceffaf08685d033e7982c8cc80e63f97ce"
+    },
+    {
+      "bytes": 902107831,
+      "chunk": "31-40",
+      "path": "/shared/home/greg/data/ckdmip/evaluation2/sw_spectra/ckdmip_evaluation2_sw_spectra_rayleigh_present_31-40.h5",
+      "sha256": "266fafd0b2516d8093e495f26bbadd3d493f11e3674699ac1d8c896478823e50"
+    },
+    {
+      "bytes": 902161409,
+      "chunk": "41-50",
+      "path": "/shared/home/greg/data/ckdmip/evaluation2/sw_spectra/ckdmip_evaluation2_sw_spectra_rayleigh_present_41-50.h5",
+      "sha256": "000bc657951f095763401d262da878fcbdbfdb8c7f5ee54088c0f53c50c399db"
+    }
+  ],
+  "receipt_pin_note": "the termination-record file was first captured 2026-08-13T14:57:48 (full receipt sha 59d79073..., disclosed) and overwritten at 14:59:22 by session 40's re-capture of the same completed job (7328195a..., bound as evidence A; the re-capture lacks the DerivedExitCode line). Per the monitor's receipt ruling the ORIGINAL 14:57:48 watcher output is preserved at /shared/home/greg/data/ckdmip-logs/g4-g2d-4503-terminal-monitor-output.txt (stored read-only at preservation; content digest-bound to aaeed4d4... by this ledger) and bound as evidence B for the terminal-capture timestamp, DerivedExitCode, and the done/hash tail; common fields are cross-checked exactly. The two FULL receipts are NOT claimed byte- or field-identical.",
+  "reviewed": {
+    "checkpoint_json_sha256": "826e08828e863389f0ae10fd2e69a731032608f47cd8e67fc7965236ddd5ad60",
+    "checkpoint_source_sha256": "38f666f23b10693752bdae83bca08ee765dc69fd8ecde3c1f11b7edae66f1b18",
+    "commit_ancestor": "dec274d87efde77586903a705b288e1cb2b0aea7",
+    "sbatch_sha256": "06c1a97d49e289cb29a462bb1f1fb750d650c170f6aab8d5ab333568f7e2329d"
+  },
+  "status": "g2d_flux_completed_verified",
+  "timestamp_utc": "2026-08-13T15:31:08.484Z"
+}

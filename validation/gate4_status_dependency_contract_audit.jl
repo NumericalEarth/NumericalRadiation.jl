@@ -680,6 +680,15 @@ const DCA_EDGES = [
   accepted = ["g2c_fetch_completed_verified"],
   expected_case = "gate4_g2c_fetch_completion_ledger",
   consumer_checks_case = true, status_only = false, active_when = :always),
+ (id = "dep:g2d_completion_ledger<-g2d_checkpoint",
+  consumer = "gate4_g2d_flux_completion_ledger.jl",
+  anchors = ["fl_classify_checkpoint(FL_CKPT_JSON)",
+             "\"g2d_checkpoint_ready\"",
+             "\"gate4_g2d_eval2_rel415_flux_checkpoint\""],
+  producer = "gate4_g2d_eval2_rel415_flux_checkpoint.json", kind = :exact,
+  accepted = ["g2d_checkpoint_ready"],
+  expected_case = "gate4_g2d_eval2_rel415_flux_checkpoint",
+  consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:post_cleanup_census<-pending_rulings_register",
   consumer = "gate4_post_cleanup_input_census.jl",
   anchors = ["const PCC_REGISTER_JSON =",
@@ -1004,6 +1013,15 @@ const DCA_SITE_LEDGER = [
   reason = "gd_snapshot helper body: coupled byte snapshot (one read " *
            "supplies digest AND parsed content; the Unit L ledger pin " *
            "is a sha-over-the-same-bytes check), deliberately NOT " *
+           "JSON.parsefile -- source-bound directly by reconcile; the " *
+           "same helper also parses fixture tmp files"),
+ (file = "gate4_g2d_flux_completion_ledger.jl",
+  anchor = "JSON.parse(String(copy(bytes)))",
+  class = "declared-snapshot-extension",
+  edge_ids = ["dep:g2d_completion_ledger<-g2d_checkpoint"],
+  reason = "fl_snapshot helper body: coupled byte snapshot (one read " *
+           "supplies digest AND parsed content; the checkpoint pin is " *
+           "a sha-over-the-same-bytes check), deliberately NOT " *
            "JSON.parsefile -- source-bound directly by reconcile; the " *
            "same helper also parses fixture tmp files"),
  (file = "gate4_g3_acceptance_comparison.jl",
@@ -1583,10 +1601,10 @@ function dca_main()
         length(unique(ids)) == length(ids) ? "passed" : "failed"
     length(unique(ids)) == length(ids) ||
         push!(fails, "duplicate edge IDs in the declarative manifest")
-    gates["manifest_edge_count_41"] =
-        length(DCA_EDGES) == 41 ? "passed" : "failed"
-    length(DCA_EDGES) == 41 ||
-        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 41")
+    gates["manifest_edge_count_42"] =
+        length(DCA_EDGES) == 42 ? "passed" : "failed"
+    length(DCA_EDGES) == 42 ||
+        push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 42")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)
@@ -1954,8 +1972,9 @@ function dca_main()
                 "equal the manifest. Consumers that deliberately use a " *
                 "coupled BYTE-snapshot parse (one read supplies digest " *
                 "AND content, closing the hash-vs-parse TOCTOU) -- " *
-                "currently the rulings intake (ric_snapshot) and the " *
-                "post-cleanup input census (pcc_snapshot) -- are NOT " *
+                "each declared as its own extension record (currently " *
+                "ric_snapshot, pcc_snapshot, gd_snapshot, and " *
+                "fl_snapshot) -- are NOT " *
                 "parsefile sites: each such helper is carried as a " *
                 "declared-snapshot-extension ledger record whose anchor " *
                 "reconciliation binds directly against the consumer " *

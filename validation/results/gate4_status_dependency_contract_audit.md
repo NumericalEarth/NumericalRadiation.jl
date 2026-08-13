@@ -10,14 +10,14 @@ derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts m
 |---|---|
 | census_reconciles_with_edge_linkage | passed |
 | fixtures | passed |
-| manifest_edge_count_41 | passed |
+| manifest_edge_count_42 | passed |
 | manifest_ids_unique | passed |
 | manifest_schema_valid | passed |
 | no_contract_violations | passed |
 
 Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=historical sw_init=output_present g3_ledger_present=false.
 
-## Contract verdicts (40 satisfied / 1 inactive / 0 selftest-state / 0 violated)
+## Contract verdicts (41 satisfied / 1 inactive / 0 selftest-state / 0 violated)
 
 - dep:sw_init_checkpoint<-option_b [exact]: **satisfied** -- contract satisfied
 - dep:sw_init_checkpoint<-init_provenance_ledger:output_present [exact]: **satisfied** -- contract satisfied
@@ -52,6 +52,7 @@ Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:post_cleanup_census<-g3_scoped_preflight [exact]: **satisfied** -- contract satisfied
 - dep:post_cleanup_census<-g2c_fetch_checkpoint [exact]: **satisfied** -- contract satisfied
 - dep:g2d_checkpoint<-g2c_completion_ledger [exact]: **satisfied** -- contract satisfied
+- dep:g2d_completion_ledger<-g2d_checkpoint [exact]: **satisfied** -- contract satisfied
 - dep:post_cleanup_census<-pending_rulings_register [exact]: **satisfied** -- contract satisfied
 - dep:r1_probe<-r2_finding_ledger:followup [exact]: **satisfied** -- contract satisfied
 - dep:r1_probe<-option_b:followup [exact]: **satisfied** -- contract satisfied
@@ -72,4 +73,4 @@ Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `62c1a28` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `dec274d` (pre-own-commit).
