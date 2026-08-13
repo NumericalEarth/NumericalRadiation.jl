@@ -1,0 +1,237 @@
+{
+  "case": "gate4_g3_run_ledger",
+  "data_mode": "read_only_evidence_ledger",
+  "disclaimer": "read-only evidence ledger; writes nothing except its own JSON/MD results.",
+  "evidence_timestamp_rule": "fixed at max job EndTime (2026-08-13T18:04:12Z, job 4515); never wall-clock, so double runs are byte-identical",
+  "evidence_timestamp_utc": "2026-08-13T18:04:12Z",
+  "failures": [],
+  "fixture_verdicts": {
+    "dual_receipt_divergent_refuses": true,
+    "dual_receipt_identical_good": true,
+    "dual_receipt_missing_refuses": true,
+    "dual_receipt_pin_drift_refuses": true,
+    "ldd_alias_row_refuses": true,
+    "ldd_good_accepted": true,
+    "ldd_missing_row_refuses": true,
+    "ldd_out_of_order_refuses": true,
+    "ledger_selfcheck_bad_hex_refuses": true,
+    "ledger_selfcheck_bad_status_refuses": true,
+    "ledger_selfcheck_good": true,
+    "ledger_selfcheck_missing_band_refuses": true,
+    "ledger_selfcheck_raw_exit_refuses": true,
+    "log_apriori_count_refuses": true,
+    "log_banner_out_of_order_refuses": true,
+    "log_cov_out_of_order_refuses": true,
+    "log_duplicate_done_refuses": true,
+    "log_duplicate_publication_refuses": true,
+    "log_fraction_total_refuses": true,
+    "log_lowercase_error_covariance_accepted": true,
+    "log_lw_good_accepted": true,
+    "log_lw_missing_banner_refuses": true,
+    "log_lw_missing_cov_refuses": true,
+    "log_lw_missing_publication_refuses": true,
+    "log_lw_missing_ready_refuses": true,
+    "log_lw_missing_stage_refuses": true,
+    "log_lw_pass_status_drift_refuses": true,
+    "log_marker_child_failed_refuses": true,
+    "log_marker_child_killed_refuses": true,
+    "log_marker_fpe_refuses": true,
+    "log_marker_quota_refuses": true,
+    "log_marker_refused_refuses": true,
+    "log_marker_sigfpe_refuses": true,
+    "log_marker_slurmstepd_refuses": true,
+    "log_marker_traceback_refuses": true,
+    "log_marker_uppercase_error_refuses": true,
+    "log_marker_uppercase_failed_refuses": true,
+    "log_missing_staged_echo_refuses": true,
+    "log_stage_out_of_order_refuses": true,
+    "log_sw_good_accepted": true,
+    "log_sw_missing_banner_refuses": true,
+    "log_sw_missing_cov_refuses": true,
+    "log_sw_missing_publication_refuses": true,
+    "log_sw_missing_ready_refuses": true,
+    "log_sw_missing_stage_refuses": true,
+    "log_sw_pass_status_drift_refuses": true,
+    "log_wrong_publication_sha_refuses": true,
+    "overall_all_green": true,
+    "overall_any_issue_refuses": true,
+    "pass_records_extracted_in_order": true,
+    "receipt_endtime_refuses": true,
+    "receipt_jobid_refuses": true,
+    "receipt_jobname_refuses": true,
+    "receipt_lw_good_binds": true,
+    "receipt_nonzero_derived_refuses": true,
+    "receipt_nonzero_exit_refuses": true,
+    "receipt_restarts_refuses": true,
+    "receipt_runtime_refuses": true,
+    "receipt_stdout_refuses": true,
+    "receipt_submitline_injection_refuses": true,
+    "receipt_sw_good_binds": true,
+    "receipt_workdir_refuses": true,
+    "receipt_wrong_state_refuses": true,
+    "runroot_contents_good_accepted": true,
+    "runroot_missing_dir_refuses": true,
+    "runroot_raw_missing_refuses": true,
+    "runroot_raw_sha_drift_refuses": true,
+    "runroot_staged_final_missing_refuses": true,
+    "runroot_staged_final_sha_drift_refuses": true,
+    "runroot_staged_final_size_drift_refuses": true,
+    "schema_extra_absvar_census_refuses": true,
+    "schema_good_accepted": true,
+    "schema_group_missing_refuses": true,
+    "schema_group_sha_drift_refuses": true,
+    "schema_group_size_drift_refuses": true,
+    "schema_missing_var_refuses": true,
+    "schema_nonfinite_refuses": true,
+    "schema_wrong_band_dim_refuses": true
+  },
+  "gates": {
+    "consumer_validator_selfcheck": "passed",
+    "evidence_commit_ancestry": "passed",
+    "evidence_executor_source_pin": "passed",
+    "evidence_lw_canonical_output": "passed",
+    "evidence_lw_dual_receipts": "passed",
+    "evidence_lw_runroot_contents": "passed",
+    "evidence_lw_sbatch_pin": "passed",
+    "evidence_lw_terminal_log": "passed",
+    "evidence_sw_canonical_output": "passed",
+    "evidence_sw_dual_receipts": "passed",
+    "evidence_sw_runroot_contents": "passed",
+    "evidence_sw_sbatch_pin": "passed",
+    "evidence_sw_terminal_log": "passed",
+    "fixtures": "passed"
+  },
+  "jobs": {
+    "lw": {
+      "derived_exit_code_raw": "0:0",
+      "done_marker": "=== G3-lw done 2026-08-13T18:04:12Z ===",
+      "end_time": "2026-08-13T18:04:12",
+      "exit_code": 0,
+      "exit_code_raw": "0:0",
+      "job_id": 4515,
+      "job_name": "g4-g3-lw-optimizer",
+      "job_state": "COMPLETED",
+      "log_path": "/shared/home/greg/data/ckdmip-logs/g4-g3-lw-4515.log",
+      "log_sha256": "c0b840d6e1ab351538fd23908e6f7ea329d47cefb69d4b752b4da664cc856362",
+      "output_bytes": 872004,
+      "output_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+      "output_sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4",
+      "pass_status": [
+        {
+          "convergence_status_line": "Convergence status: Maximum iterations reached",
+          "final_iteration_line": "Iteration 2999: cost function = 16.7768, gradient norm = 0.114057",
+          "pass": "relative-base"
+        },
+        {
+          "convergence_status_line": "Convergence status: Maximum iterations reached",
+          "final_iteration_line": "Iteration 2999: cost function = 1.83547, gradient norm = 0.093339",
+          "pass": "relative-ch4"
+        },
+        {
+          "convergence_status_line": "Convergence status: Converged",
+          "final_iteration_line": "Iteration 840: cost function = 0.417307, gradient norm = 0.000438281",
+          "pass": "relative-n2o"
+        },
+        {
+          "convergence_status_line": "Convergence status: Converged",
+          "final_iteration_line": "Iteration 71: cost function = 0.023528, gradient norm = 0.000460102",
+          "pass": "relative-cfc"
+        }
+      ],
+      "receipt_paths": [
+        "/shared/home/greg/data/ckdmip-logs/g4-g3-lw-4515-scontrol-final-session40.txt",
+        "/shared/home/greg/data/ckdmip-logs/g4-g3-lw-4515-scontrol-final-agent42.txt"
+      ],
+      "receipt_sha256": "34bcd96548993d48674dd91c7a69595e10ccdd567c10120038d8366cd59fcec1",
+      "restarts": 0,
+      "run_time": "00:52:34",
+      "runroot_preserved": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4515/lw",
+      "sbatch_path": "validation/results/gate4_g3_lw_optimizer.sbatch",
+      "sbatch_sha256": "ccfa0d7c79b45aa203bf7c21582e13ea8eb4ebddc2da20defb4347bdb38c713e",
+      "staged_final_sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4",
+      "staged_raw_echoes": [
+        {
+          "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4515/lw/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+          "sha256": "4205489923dbc50c3c148a06f20e5781b3f1dbeb5a13d55d36b460c5f7b4378c"
+        },
+        {
+          "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4515/lw/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw3-ckd-definition_climate_fsck-tol0.0161.nc",
+          "sha256": "f95d613037f51ac13da964e28f449fde91cd1ec3e765fbdc75ee9868e92a1de7"
+        },
+        {
+          "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4515/lw/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw4-ckd-definition_climate_fsck-tol0.0161.nc",
+          "sha256": "6766fd8bc7d2bc56518ba41e2009e507b762ae499b9b188e3eae91a8b55f3c83"
+        }
+      ],
+      "start_time": "2026-08-13T17:11:38",
+      "submit_line": "sbatch --parsable validation/results/gate4_g3_lw_optimizer.sbatch",
+      "submit_time": "2026-08-13T17:09:05"
+    },
+    "sw": {
+      "derived_exit_code_raw": "0:0",
+      "done_marker": "=== G3-sw done 2026-08-13T17:56:03Z ===",
+      "end_time": "2026-08-13T17:56:03",
+      "exit_code": 0,
+      "exit_code_raw": "0:0",
+      "job_id": 4516,
+      "job_name": "g4-g3-sw-optimizer",
+      "job_state": "COMPLETED",
+      "log_path": "/shared/home/greg/data/ckdmip-logs/g4-g3-sw-4516.log",
+      "log_sha256": "1d9e36f38bff047df2d1f409586071dd5003fa7d017fc7ed29b3b03b2f1a18de",
+      "output_bytes": 854508,
+      "output_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc",
+      "output_sha256": "8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4",
+      "pass_status": [
+        {
+          "convergence_status_line": "Convergence status: Maximum iterations reached",
+          "final_iteration_line": "Iteration 1999: cost function = 66.3659, gradient norm = 0.384829",
+          "pass": "relative-base"
+        },
+        {
+          "convergence_status_line": "Convergence status: Converged",
+          "final_iteration_line": "Iteration 203: cost function = 4.56198, gradient norm = 0.000410846",
+          "pass": "relative-ch4"
+        },
+        {
+          "convergence_status_line": "Convergence status: Converged",
+          "final_iteration_line": "Iteration 132: cost function = 0.253514, gradient norm = 0.000465887",
+          "pass": "relative-n2o"
+        }
+      ],
+      "receipt_paths": [
+        "/shared/home/greg/data/ckdmip-logs/g4-g3-sw-4516-scontrol-final-session40.txt",
+        "/shared/home/greg/data/ckdmip-logs/g4-g3-sw-4516-scontrol-final-agent42.txt"
+      ],
+      "receipt_sha256": "1aa2762a601e0822e277f996f8d461ac3b2d4201430829f447b8eb0160be09ce",
+      "restarts": 0,
+      "run_time": "00:43:55",
+      "runroot_preserved": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4516/sw",
+      "sbatch_path": "validation/results/gate4_g3_sw_optimizer.sbatch",
+      "sbatch_sha256": "464fe754e60f7581585bc096ac745932175c9abd4607e1b1364ae9fdc635228a",
+      "staged_final_sha256": "8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4",
+      "staged_raw_echoes": [
+        {
+          "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4516/sw/work/sw_raw-ckd-definition/ecckd-1.4_sw_raw2-ckd-definition_climate_rgb-tol0.047.nc",
+          "sha256": "b500fa55b2da11abaf61a74437f39f1eb4ff6dbd9574bd69ab57e544a855a086"
+        },
+        {
+          "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4516/sw/work/sw_raw-ckd-definition/ecckd-1.4_sw_raw3-ckd-definition_climate_rgb-tol0.047.nc",
+          "sha256": "3afef930690e1b4aef61b22e6e84103f62c37ce63579dcd1e46442e6188e7cb0"
+        }
+      ],
+      "start_time": "2026-08-13T17:12:08",
+      "submit_line": "sbatch --parsable validation/results/gate4_g3_sw_optimizer.sbatch",
+      "submit_time": "2026-08-13T17:09:16"
+    }
+  },
+  "non_authorizing_note": "this ledger records and classifies evidence; it does not itself submit, publish, or accept the recovered models -- downstream consumers must bind this artifact (exact case/status/schema) rather than assume progression from its existence",
+  "pass_status_note": "PASS-STATUS FACTS (binding monitor correction 2026-08-13): LW relative-base and relative-ch4 terminated at the optimizer's iteration cap (Iteration 2999, \"Maximum iterations reached\"), as did SW relative-base (Iteration 1999); only LW relative-n2o (840) / relative-cfc (71) and SW relative-ch4 (203) / relative-n2o (132) report \"Converged\". It is NEVER claimed that all passes explicitly converged. Iteration caps are the upstream optimizer's own terminal state (child exit 0, outputs written); binding scientific acceptance belongs to the downstream consumers (G1 objective ratio, weight rel-L1).",
+  "reviewed": {
+    "commit_ancestor": "559892b013efb13f7bf1f9280f8c383d0d682ba7",
+    "executor_source_sha256": "18da8d72cf77a9eed8d8f58d433192ecb8a85e90a80e87e72b7176e05468bdf0",
+    "receipt_custody_note": "dual-custody receipts: session 40's watcher and Agent 42's watcher each captured scontrol show job -dd at first terminal observation with atomic O_CREAT|O_EXCL (noclobber) create-once semantics onto DISTINCT suffixed paths (-session40 / -agent42); for this attempt the two captures are byte-identical per band (equal pinned sha), unlike the 4503 single-path overwrite incident this protocol was adopted to prevent",
+    "submission_note": "both jobs submitted EXACTLY ONCE by session 40 directly under the monitor's g3_recovery_go #2 (2026-08-13; \"This GO is for these two submissions only\"); no retries, Restarts=0 bound from both receipts"
+  },
+  "status": "reviewed-complete",
+  "timestamp_utc": "2026-08-13T18:04:12Z"
+}

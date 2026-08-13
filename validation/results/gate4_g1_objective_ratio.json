@@ -13,7 +13,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "9e20993",
+    "generated_from_head": "559892b",
     "lw32": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "provenance_note": "artifact generated from the working tree before its own commit",
     "sw32": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
@@ -35,8 +35,19 @@
     "perturbed_value": 27.90958396366932
   },
   "recovered": {
-    "detail": "recovered pair absent (expected at the G3 executor output conventions); refusing to evaluate",
-    "status": "g1_waiting_for_optimizer_outputs"
+    "detail": "ok",
+    "hard_objective": {
+      "case": "ecckd_clear_sky_tropical_column",
+      "metric": "heating_rate_max_abs",
+      "metric_value": 11.412308998501551,
+      "threshold": 0.5,
+      "value": 22.824617997003102
+    },
+    "lw_sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4",
+    "ratio": 22.824617997003102,
+    "ratio_max": 1.05,
+    "status": "g1_objective_ratio_failed",
+    "sw_sha256": "8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4"
   },
   "recovered_conventions": {
     "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
@@ -47,6 +58,6 @@
     "ecckd_clear_sky_tropical_column",
     "ecckd_rcemip_style_column_subset"
   ],
-  "status": "g1_waiting_for_optimizer_outputs",
-  "timestamp_utc": "2026-08-12T10:34:40.967"
+  "status": "g1_objective_ratio_failed",
+  "timestamp_utc": "2026-08-13T18:29:10.245"
 }

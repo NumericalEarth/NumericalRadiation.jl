@@ -16,7 +16,7 @@ derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts m
 | no_contract_violations | passed |
 | snapshot_extension_count_6 | passed |
 
-Census: 23 parse sites reconciled with edge linkage; modes a2=historical r2=historical sw_init=output_present g3_ledger_present=false.
+Census: 23 parse sites reconciled with edge linkage; modes a2=historical r2=historical sw_init=output_present g3_ledger_present=true.
 
 ## Contract verdicts (42 satisfied / 1 inactive / 0 selftest-state / 0 violated)
 
@@ -61,8 +61,8 @@ Census: 23 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:v1_recon<-r1_probe:followup [exact]: **satisfied** -- contract satisfied
 - dep:v1_recon<-r2_finding_ledger:followup [exact]: **satisfied** -- contract satisfied
 - dep:v1_recon<-option_b:followup [exact]: **satisfied** -- contract satisfied
-- dep:g1_objective_ratio<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g1_waiting_for_optimizer_outputs"]; consumer status=g1_waiting_for_optimizer_outputs
-- dep:g3_acceptance<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs absent; ledger absent; allowed=["g3_acceptance_waiting_for_optimizer_outputs"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs
+- dep:g1_objective_ratio<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs present; ledger present (parse_success=true, object_ok=true, schema_ok=true); allowed=["g1_blocked_ledger_hash_mismatch", "g1_blocked_structural_mismatch", "g1_blocked_boundary_compatibility_drift", "g1_objective_ratio_passed", "g1_objective_ratio_failed"]; consumer status=g1_objective_ratio_failed
+- dep:g3_acceptance<-g3_run_ledger [absence_tolerant]: **satisfied** -- outputs present; ledger present (parse_success=true, object_ok=true, schema_ok=true); allowed=["g3_acceptance_blocked_ledger_hash_mismatch", "g3_acceptance_structural_mismatch", "g3_acceptance_incomplete_pending_objective_and_od", "g3_acceptance_failed_weight_l1"]; consumer status=g3_acceptance_incomplete_pending_objective_and_od
 
 ## Hardening findings (0)
 
@@ -75,4 +75,4 @@ Census: 23 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `8fc6cec` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `559892b` (pre-own-commit).

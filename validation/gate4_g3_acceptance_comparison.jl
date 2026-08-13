@@ -16,11 +16,14 @@
 #     (gate4_g2_matched_state_od_evaluator.jl 28/28), but the BINDING
 #     Gate-2 runner (dataset choice, aggregation, log-RMSE) remains
 #     unresolved/unimplemented pending recorded rulings.
-#   - final/target objective ratio (<= 1.05): UNEVALUATED gate HERE. The
-#     Gate-1 refusing runner is IMPLEMENTED (gate4_g1_objective_ratio.jl,
-#     self-tests green, archived published baseline bit-exact) but its
-#     live recovered result refuses pending G3 outputs + this unit's
-#     reviewed run ledger; this unit does not consume its result.
+#   - final/target objective ratio (<= 1.05): UNEVALUATED gate HERE --
+#     deliberately NOT consumed by this unit, and no claim is made about
+#     its state. The authoritative verdict is the SEPARATE Gate-1
+#     artifact (validation/results/gate4_g1_objective_ratio.json), named
+#     under objective_authority in this unit's JSON; consult that
+#     artifact for the current verdict (monitor correction 2026-08-13:
+#     this unit must never describe the G1 result, e.g. as "pending
+#     outputs/ledger"; authority is the separate artifact alone).
 # Because two acceptance gates are unevaluated in this unit, the overall
 # status after a metric run is ALWAYS
 # g3_acceptance_incomplete_pending_objective_and_od -- never a pass.
@@ -311,11 +314,16 @@ function acceptance_main()
         "case" => "gate4_g3_acceptance_comparison",
         "timestamp_utc" => string(Dates.now(Dates.UTC)),
         "selftests" => tests,
+        "objective_authority" => Dict(
+            "unit" => "gate4_g1_objective_ratio.jl",
+            "artifact" => "validation/results/gate4_g1_objective_ratio.json",
+            "note" => "authoritative separate artifact for the " *
+                "objective-ratio gate; deliberately not consumed here; " *
+                "consult it for the current verdict"),
         "unevaluated_acceptance_gates" => [
-            "final/target objective ratio <= 1.05: runner IMPLEMENTED " *
-            "(gate4_g1_objective_ratio.jl, refusing) but its live result " *
-            "refuses pending recovered outputs + reviewed run ledger; " *
-            "not consumed by this unit",
+            "final/target objective ratio <= 1.05: deliberately NOT " *
+            "consumed by this unit; the authoritative verdict is the " *
+            "separate G1 artifact named under objective_authority",
             "true OD log-RMSE <= 0.02: SW parity satisfied + " *
             "aggregation-independent matched-state evaluator IMPLEMENTED " *
             "(gate4_g2_matched_state_od_evaluator.jl); BINDING runner " *
@@ -431,17 +439,20 @@ function acceptance_main()
             "binding weight rel-L1 exceeded 0.02 in at least one band: " *
             "EXPLICIT acceptance failure; monitor review required." :
             "two acceptance gates unevaluated in this unit (objective " *
-            "ratio: implemented refusing runner, not consumed here; true " *
-            "OD log-RMSE: evaluator implemented, binding runner pending " *
+            "ratio: deliberately not consumed here -- the authoritative " *
+            "separate G1 artifact carries the current verdict; true OD " *
+            "log-RMSE: evaluator implemented, binding runner pending " *
             "rulings); this status is NEVER a pass; monitor review " *
             "required."))
     write_results(result, ["# Gate-4 G3 acceptance comparison", "",
         status_render_md(status), "",
         "See JSON for per-band binding weight rel-L1 and diagnostic " *
-        "coefficient log-RMSE; objective ratio (implemented refusing " *
-        "runner gate4_g1_objective_ratio.jl) and true OD (evaluator " *
-        "implemented; binding runner pending rulings) remain unevaluated " *
-        "gates in this unit."])
+        "coefficient log-RMSE. The objective-ratio gate is deliberately " *
+        "NOT consumed by this unit: the authoritative verdict lives in " *
+        "the separate gate4_g1_objective_ratio.json -- consult it for " *
+        "the current verdict. True OD (evaluator implemented; binding " *
+        "runner pending rulings) remains an unevaluated gate in this " *
+        "unit."])
     println(status_render_console(status))
     return status == "g3_acceptance_failed_weight_l1" ? 1 : 0
 end

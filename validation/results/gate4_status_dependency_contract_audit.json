@@ -351,12 +351,12 @@
       },
       {
         "file": "gate4_g3_acceptance_comparison.jl",
-        "line": 131,
+        "line": 134,
         "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_g3_acceptance_comparison.jl",
-        "line": 299,
+        "line": 302,
         "text": "JSON.parsefile(AC_RESULTS_JSON)"
       },
       {
@@ -938,9 +938,9 @@
       {
         "active": true,
         "consumer": "gate4_g1_objective_ratio.jl",
-        "consumer_artifact_sha256": "d09c4e9ba1bc3635afe85cbbab0dbb6cfe97d4ee8eb80b63a2c19eaf0677300d",
+        "consumer_artifact_sha256": "5e65cbb184037195b0c60c8462547c4c695b2a63157c62e007c18240933bc4a7",
         "consumer_sha256": "d778d66c2817138db80745924d77798a70b44dd4967ffd5ff16405e0aac55b6c",
-        "detail": "outputs absent; ledger absent; allowed=[\"g1_waiting_for_optimizer_outputs\"]; consumer status=g1_waiting_for_optimizer_outputs",
+        "detail": "outputs present; ledger present (parse_success=true, object_ok=true, schema_ok=true); allowed=[\"g1_blocked_ledger_hash_mismatch\", \"g1_blocked_structural_mismatch\", \"g1_blocked_boundary_compatibility_drift\", \"g1_objective_ratio_passed\", \"g1_objective_ratio_failed\"]; consumer status=g1_objective_ratio_failed",
         "id": "dep:g1_objective_ratio<-g3_run_ledger",
         "kind": "absence_tolerant",
         "status_only_contract": false,
@@ -949,9 +949,9 @@
       {
         "active": true,
         "consumer": "gate4_g3_acceptance_comparison.jl",
-        "consumer_artifact_sha256": "98750cdfdfeb8357a0f0d1dd26478c15dc4df1539fcf68c5221eb00459aa279d",
-        "consumer_sha256": "2e096801d36ba1f7ac39c264efb02def99be65af7be2c7e226d9bfaa1d7b727f",
-        "detail": "outputs absent; ledger absent; allowed=[\"g3_acceptance_waiting_for_optimizer_outputs\"]; consumer status=g3_acceptance_waiting_for_optimizer_outputs",
+        "consumer_artifact_sha256": "7df2c0db5bca8213b70eebc6456d13295b43383cd70a6fb102c4d24ebdd8afde",
+        "consumer_sha256": "b4916bbe4f99361d940e3955c0a4660c89d0a737e71c6c160e0e0997ddbed4b7",
+        "detail": "outputs present; ledger present (parse_success=true, object_ok=true, schema_ok=true); allowed=[\"g3_acceptance_blocked_ledger_hash_mismatch\", \"g3_acceptance_structural_mismatch\", \"g3_acceptance_incomplete_pending_objective_and_od\", \"g3_acceptance_failed_weight_l1\"]; consumer status=g3_acceptance_incomplete_pending_objective_and_od",
         "id": "dep:g3_acceptance<-g3_run_ledger",
         "kind": "absence_tolerant",
         "status_only_contract": false,
@@ -1005,13 +1005,13 @@
   "hardening_findings": [],
   "modes_observed": {
     "a2": "historical",
-    "g3_run_ledger_present": false,
+    "g3_run_ledger_present": true,
     "r2": "historical",
     "sw_init": "output_present"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "8fc6cec",
+    "generated_from_head": "559892b",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1023,5 +1023,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-13T17:05:32.706"
+  "timestamp_utc": "2026-08-13T18:42:16.784"
 }

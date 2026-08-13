@@ -1,12 +1,164 @@
 {
   "binding_metric": "weight relative L1 <= 0.02 (gpoint_weights: LW planck-derived, SW solar-derived)",
   "case": "gate4_g3_acceptance_comparison",
-  "data_mode": "refusal_no_g3_outputs",
-  "disclaimer": "refuses until both recovered ckd-definitions exist; no objective, floor, or recovery computation.",
-  "expected_outputs": {
-    "lw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
-    "sw": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc"
+  "comparisons": {
+    "lw": {
+      "coeff_log_rmse_diagnostic_below_0p02_nonbinding": false,
+      "coeff_log_rmse_worst": 0.3536222761056241,
+      "recovered_sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4",
+      "recovery_metrics_full": {
+        "status": "failed",
+        "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+        "candidate_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+        "kind": "longwave",
+        "coefficient_count": 8,
+        "coefficients": [
+          {
+            "name": "cfc11_molar_absorption_coeff",
+            "log_rmse": 0.00926666386594162,
+            "median_relative_error": 0.0,
+            "p99_relative_error": 0.05041009906766202,
+            "max_relative_error": 0.12115455131536565
+          },
+          {
+            "name": "cfc12_molar_absorption_coeff",
+            "log_rmse": 0.009560713614145191,
+            "median_relative_error": 0.0,
+            "p99_relative_error": 0.04965377807165421,
+            "max_relative_error": 0.13191469423984095
+          },
+          {
+            "name": "ch4_molar_absorption_coeff",
+            "log_rmse": 0.2110194072191104,
+            "median_relative_error": 3.9850096386873516e-6,
+            "p99_relative_error": 1.605900369048517,
+            "max_relative_error": 65.0100509964474
+          },
+          {
+            "name": "co2_molar_absorption_coeff",
+            "log_rmse": 0.2714830322140188,
+            "median_relative_error": 0.004693924104969973,
+            "p99_relative_error": 0.9486306366179028,
+            "max_relative_error": 13.69558978666667
+          },
+          {
+            "name": "composite_molar_absorption_coeff",
+            "log_rmse": 0.3536222761056241,
+            "median_relative_error": 0.0007578450537173623,
+            "p99_relative_error": 2.619226741716469,
+            "max_relative_error": 60.573128673381525
+          },
+          {
+            "name": "h2o_molar_absorption_coeff",
+            "log_rmse": 0.14009669118338583,
+            "median_relative_error": 0.0008318879348460371,
+            "p99_relative_error": 0.5594523062656428,
+            "max_relative_error": 36.19496298363329
+          },
+          {
+            "name": "n2o_molar_absorption_coeff",
+            "log_rmse": 0.12348390573464692,
+            "median_relative_error": 3.3535318943525063e-5,
+            "p99_relative_error": 0.6617043140488603,
+            "max_relative_error": 10.161095429542616
+          },
+          {
+            "name": "o3_molar_absorption_coeff",
+            "log_rmse": 0.09910667479503481,
+            "median_relative_error": 0.0008478481474169418,
+            "p99_relative_error": 0.4617382679527817,
+            "max_relative_error": 2.1925498981282856
+          }
+        ],
+        "worst_log_coefficient_rmse": 0.3536222761056241,
+        "worst_median_relative_coefficient_error": 0.004693924104969973,
+        "worst_p99_relative_coefficient_error": 2.619226741716469,
+        "gpoint_weight_max_abs_error": 2.0642989603802953e-7,
+        "band_weight_max_abs_error": 2.220446049250313e-16,
+        "thresholds": {
+          "log_coefficient_rmse": 0.001,
+          "median_relative_coefficient_error": 0.001,
+          "p99_relative_coefficient_error": 0.01,
+          "gpoint_weight_abs_error": 1.0e-6,
+          "band_weight_abs_error": 1.0e-8
+        }
+      },
+      "weight_rel_l1": 4.1306705583348544e-7,
+      "weight_rel_l1_pass_binding": true
+    },
+    "sw": {
+      "coeff_log_rmse_diagnostic_below_0p02_nonbinding": true,
+      "coeff_log_rmse_worst": 0.0032375548189504445,
+      "recovered_sha256": "8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4",
+      "recovery_metrics_full": {
+        "status": "failed",
+        "reference_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+        "candidate_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc",
+        "kind": "shortwave",
+        "coefficient_count": 6,
+        "coefficients": [
+          {
+            "name": "ch4_molar_absorption_coeff",
+            "log_rmse": 0.0032375548189504445,
+            "median_relative_error": 2.1414535779872925e-6,
+            "p99_relative_error": 0.017927643056684484,
+            "max_relative_error": 0.04538164629820305
+          },
+          {
+            "name": "co2_molar_absorption_coeff",
+            "log_rmse": 0.0015609738947554188,
+            "median_relative_error": 6.657020092220336e-5,
+            "p99_relative_error": 0.00641736432674056,
+            "max_relative_error": 0.011067547047965613
+          },
+          {
+            "name": "composite_molar_absorption_coeff",
+            "log_rmse": 0.0022399038583969036,
+            "median_relative_error": 0.00013326081430745578,
+            "p99_relative_error": 0.008029968597861205,
+            "max_relative_error": 0.03565221549622924
+          },
+          {
+            "name": "h2o_molar_absorption_coeff",
+            "log_rmse": 0.002965424022377586,
+            "median_relative_error": 0.0002917925644173422,
+            "p99_relative_error": 0.013808422504883842,
+            "max_relative_error": 0.037046297238808513
+          },
+          {
+            "name": "n2o_molar_absorption_coeff",
+            "log_rmse": 0.0006782888528889064,
+            "median_relative_error": 0.0,
+            "p99_relative_error": 0.003915539340383139,
+            "max_relative_error": 0.009438276772317953
+          },
+          {
+            "name": "o3_molar_absorption_coeff",
+            "log_rmse": 0.001079211324074172,
+            "median_relative_error": 2.0839896482634744e-5,
+            "p99_relative_error": 0.004427416253820327,
+            "max_relative_error": 0.016604618069245725
+          }
+        ],
+        "worst_log_coefficient_rmse": 0.0032375548189504445,
+        "worst_median_relative_coefficient_error": 0.0002917925644173422,
+        "worst_p99_relative_coefficient_error": 0.017927643056684484,
+        "gpoint_weight_max_abs_error": 1.5064587982334225e-8,
+        "band_weight_max_abs_error": 4.921653085077082e-10,
+        "thresholds": {
+          "log_coefficient_rmse": 0.001,
+          "median_relative_coefficient_error": 0.001,
+          "p99_relative_coefficient_error": 0.01,
+          "gpoint_weight_abs_error": 1.0e-6,
+          "band_weight_abs_error": 1.0e-8
+        }
+      },
+      "weight_rel_l1": 3.012917593134957e-8,
+      "weight_rel_l1_pass_binding": true
+    }
   },
+  "data_mode": "read_only_metric_comparison",
+  "disclaimer": "two acceptance gates unevaluated in this unit (objective ratio: deliberately not consumed here -- the authoritative separate G1 artifact carries the current verdict; true OD log-RMSE: evaluator implemented, binding runner pending rulings); this status is NEVER a pass; monitor review required.",
   "malformed_cases_covered": [
     "16g synthetic shape mismatch (metrics layer throws)",
     "cross-band structural false",
@@ -17,15 +169,12 @@
     "unparseable ledger JSON classified blocked_invalid (guarded loader; no uncaught exception)",
     "JSON null/array ledger classified non-object blocked_invalid (parse success distinguished from parse failure)"
   ],
-  "missing": [
-    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
-    "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc"
-  ],
-  "provenance_requirement": "metrics run only with gate4_g3_run_ledger.json present and hash-matching (written at post-G3 log/hash review)",
-  "published_targets": {
-    "lw": "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
-    "sw": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
+  "objective_authority": {
+    "artifact": "validation/results/gate4_g1_objective_ratio.json",
+    "note": "authoritative separate artifact for the objective-ratio gate; deliberately not consumed here; consult it for the current verdict",
+    "unit": "gate4_g1_objective_ratio.jl"
   },
+  "provenance_requirement": "metrics run only with gate4_g3_run_ledger.json present and hash-matching (written at post-G3 log/hash review)",
   "selftests": {
     "all_pass_selects_incomplete_pending": true,
     "array_ledger_classified_non_object": true,
@@ -53,10 +202,10 @@
     "weight_failure_selects_failed_status": true,
     "zero_string_job_id_rejected": true
   },
-  "status": "g3_acceptance_waiting_for_optimizer_outputs",
-  "timestamp_utc": "2026-08-12T14:47:53.449",
+  "status": "g3_acceptance_incomplete_pending_objective_and_od",
+  "timestamp_utc": "2026-08-13T18:41:39.407",
   "unevaluated_acceptance_gates": [
-    "final/target objective ratio <= 1.05: runner IMPLEMENTED (gate4_g1_objective_ratio.jl, refusing) but its live result refuses pending recovered outputs + reviewed run ledger; not consumed by this unit",
+    "final/target objective ratio <= 1.05: deliberately NOT consumed by this unit; the authoritative verdict is the separate G1 artifact named under objective_authority",
     "true OD log-RMSE <= 0.02: SW parity satisfied + aggregation-independent matched-state evaluator IMPLEMENTED (gate4_g2_matched_state_od_evaluator.jl); BINDING runner unimplemented pending dataset/aggregation rulings; coefficient log-RMSE is only a diagnostic"
   ]
 }
