@@ -14,8 +14,10 @@
 # authority the register emits UNASSIGNED -- never a guess. Quota figures
 # are an OBSERVED-AT snapshot quoted from the pinned 4440 failure ledger,
 # never a live read (the quota watcher runs separately so determinism is
-# not broken by changing usage). Deletion, quota change, and job
-# submission remain UNAUTHORIZED; this unit changes nothing.
+# not broken by changing usage). This unit authorizes nothing and changes
+# nothing: no authority exists here for ADDITIONAL deletions or quota
+# changes; G2c job submission is governed by the G2c checkpoint's
+# separately recorded authorization, not by this register.
 
 include(joinpath(@__DIR__, "validation_results.jl"))
 
@@ -322,7 +324,7 @@ function reg_main()
         verify_json_source(
             validation_results_path("gate4_g2c_eval2_fetch_checkpoint.json");
             expected_case = "gate4_g2c_eval2_fetch_checkpoint",
-            expected_status = "g2c_checkpoint_blocked_by_quota")
+            expected_status = "g2c_checkpoint_ready")
     catch err
         err isa RegisterRefusal || rethrow()
         push!(fails, err.reason); nothing
@@ -388,8 +390,13 @@ function reg_main()
                     "{lw_spectra,sw_spectra} ONLY: 66 files / " *
                     "217,901,253,443 B (~202.9 GiB); PRESERVE " *
                     "idealized/conc and ALL of evaluation1/ (eval1 is " *
-                    "NOT in the S3 archive); remains UNAUTHORIZED " *
-                    "until Greg rules"),
+                    "NOT in the S3 archive); EXECUTED out-of-band " *
+                    "2026-08-12 (runbook '## Path D' status note; the " *
+                    "census recorded a broader triage than this " *
+                    "registered scope, incl. eval1 spectra absent, per " *
+                    "the coordinator's delivered record of Greg's " *
+                    "broader approval); formal intake of this ruling " *
+                    "remains OPEN pending Greg's canonical assignment"),
             "quota_snapshot_observed_at" =>
                 reg_str(s3b.data["timestamp_utc"]),
             "snapshot_note" => "pinned 4440 failure-ledger accounting, " *
@@ -397,8 +404,13 @@ function reg_main()
                 "watcher runs separately so this register stays " *
                 "deterministic",
             "quota_snapshot" => snapshot,
-            "standing_constraint" => "deletion, quota change, and job " *
-                "submission remain UNAUTHORIZED pending this ruling",
+            "standing_constraint" => "no authority exists for ADDITIONAL " *
+                "deletions or quota changes; the executed Path D cleanup " *
+                "is recorded, not retroactively ruled; G2c job submission " *
+                "is governed by the G2c checkpoint's separately recorded " *
+                "durable authorization (2026-08-13) and its review gates; " *
+                "this row remains OPEN as a formal-intake/documentation " *
+                "gap pending Greg's canonical assignment",
             "source_paths" => [s3a.record["path"], s3b.record["path"],
                                s3c.record["path"]],
             "unblocks" => "G2c eval2 fetch resume -> G2d rel-415 fluxes " *

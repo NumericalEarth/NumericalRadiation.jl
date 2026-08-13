@@ -31,7 +31,7 @@
       "missing": [
         "R-QUOTA-PATH-AD"
       ],
-      "non_authorizing_note": "recording a ruling does NOT itself authorize any action: deletion, quota change, and job submission remain UNAUTHORIZED; the quota path executes only under the runbook's own protocol",
+      "non_authorizing_note": "recording a ruling does NOT itself authorize any action: this intake grants no authority for additional deletion, quota change, or job submission; execution requires separate independently verified authorization under the applicable runbook/checkpoint protocol",
       "requires": [
         "R-QUOTA-PATH-AD"
       ],
@@ -154,7 +154,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "46d4c06",
+    "generated_from_head": "9216204",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "refusal_reasons": [],
@@ -162,7 +162,7 @@
     "expected_case": "gate4_pending_rulings_register",
     "expected_status": "pending_rulings_register_recorded",
     "healthy": true,
-    "live_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+    "live_sha256": "510421eab3c563f000de590833de837c7927ab396a7bb9ccb3365118b53a28eb",
     "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_pending_rulings_register.json"
   },
   "resolutions": [
@@ -255,7 +255,7 @@
       "state": "OPEN"
     }
   ],
-  "standing_constraint": "recording a ruling does NOT itself authorize any action: deletion, quota change, and job submission remain UNAUTHORIZED; the quota path executes only under the runbook's own protocol",
+  "standing_constraint": "recording a ruling does NOT itself authorize any action: this intake grants no authority for additional deletion, quota change, or job submission; execution requires separate independently verified authorization under the applicable runbook/checkpoint protocol",
   "status": "rulings_intake_awaiting_assignments",
-  "timestamp_utc": "2026-08-12T14:36:24.411"
+  "timestamp_utc": "2026-08-13T09:51:00.671"
 }

@@ -150,7 +150,7 @@
       "id": "R-QUOTA-PATH-AD",
       "options_from_source": {
         "path_a": "uid quota raise (runbook '## Path A', admin action; preserves everything)",
-        "path_d_exact_byte_scope": "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); remains UNAUTHORIZED until Greg rules"
+        "path_d_exact_byte_scope": "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); EXECUTED out-of-band 2026-08-12 (runbook '## Path D' status note; the census recorded a broader triage than this registered scope, incl. eval1 spectra absent, per the coordinator's delivered record of Greg's broader approval); formal intake of this ruling remains OPEN pending Greg's canonical assignment"
       },
       "quota_snapshot": {
         "source_set_bytes": {
@@ -175,7 +175,7 @@
         "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_failure_ledger_4440.json",
         "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g2c_quota_recovery_runbook.md"
       ],
-      "standing_constraint": "deletion, quota change, and job submission remain UNAUTHORIZED pending this ruling",
+      "standing_constraint": "no authority exists for ADDITIONAL deletions or quota changes; the executed Path D cleanup is recorded, not retroactively ruled; G2c job submission is governed by the G2c checkpoint's separately recorded durable authorization (2026-08-13) and its review gates; this row remains OPEN as a formal-intake/documentation gap pending Greg's canonical assignment",
       "status": "OPEN",
       "title": "Quota recovery path authorization: Path A (uid quota raise) vs Path D (authorization-required scoped cleanup fallback, idealized spectra only)",
       "unblocks": "G2c eval2 fetch resume -> G2d rel-415 fluxes -> scoped preflight ready -> G3 executor ready_awaiting_go"
@@ -183,7 +183,7 @@
   ],
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "0d82813",
+    "generated_from_head": "9216204",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "sources": [
@@ -209,9 +209,9 @@
     {
       "kind": "json",
       "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_eval2_fetch_checkpoint.json",
-      "sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
+      "sha256": "dd45f8da06e12476f068945b6eb07e80cca9a3f1a93ffc1ec1d6b3877240b367",
       "verified_case": "gate4_g2c_eval2_fetch_checkpoint",
-      "verified_status": "g2c_checkpoint_blocked_by_quota"
+      "verified_status": "g2c_checkpoint_ready"
     },
     {
       "kind": "json",
@@ -223,7 +223,7 @@
     {
       "kind": "md",
       "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g2c_quota_recovery_runbook.md",
-      "sha256": "a3e59da88998d1b16a26ed6910ea9ce4115e3dc2522da98347f1798809c6251c",
+      "sha256": "a234869b8466924443edb6a966eed5d4c19e3b076c53a698ff0dc240fcbe8eba",
       "verified_anchors": [
         "## Path A",
         "## Path D",
@@ -235,5 +235,5 @@
     }
   ],
   "status": "pending_rulings_register_recorded",
-  "timestamp_utc": "2026-08-12T12:59:49.374"
+  "timestamp_utc": "2026-08-13T09:44:34.823"
 }

@@ -45,9 +45,12 @@
 # row (D1, D2, D4, AX1-4) is unenumerated and REFUSES resolution until a
 # source provides exact option IDs.
 #
-# Recording a ruling never authorizes execution: deletion, quota change,
-# and job submission remain UNAUTHORIZED regardless of intake state; the
-# quota path executes only under the runbook's own protocol.
+# Recording a ruling never authorizes execution: this intake grants no
+# authority for additional deletion, quota change, or job submission,
+# regardless of intake state; execution requires separate independently
+# verified authorization under the applicable runbook/checkpoint
+# protocol (e.g. G2c submission is governed by the G2c checkpoint's
+# recorded authorization, not by this intake).
 
 include(joinpath(@__DIR__, "validation_results.jl"))
 
@@ -115,9 +118,10 @@ const RIC_AX2_EQUIVALENCE_NOTE = "derived equivalence (not an election): " *
     "cannot change pass/fail absent a different threshold/transform"
 
 const RIC_NON_AUTHORIZING = "recording a ruling does NOT itself " *
-    "authorize any action: deletion, quota change, and job submission " *
-    "remain UNAUTHORIZED; the quota path executes only under the " *
-    "runbook's own protocol"
+    "authorize any action: this intake grants no authority for " *
+    "additional deletion, quota change, or job submission; execution " *
+    "requires separate independently verified authorization under the " *
+    "applicable runbook/checkpoint protocol"
 
 # fully anchored UTC shape: prefix-only matching would accept trailing
 # garbage, and *_at_utc field names require the terminal Z (an offset or

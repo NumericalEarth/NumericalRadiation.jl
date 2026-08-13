@@ -35,7 +35,7 @@ derivative fail-closed rulings intake; no election, no inferred authority, no de
 ## Domain readiness
 
 - `g2_binding_runner`: {"missing": ["R-G2-D1", "R-G2-D2", "R-G2-D3", "R-G2-D4"], "ready": false, "requires": ["R-G2-D1", "R-G2-D2", "R-G2-D3", "R-G2-D4"]}
-- `quota_path`: {"missing": ["R-QUOTA-PATH-AD"], "non_authorizing_note": "recording a ruling does NOT itself authorize any action: deletion, quota change, and job submission remain UNAUTHORIZED; the quota path executes only under the runbook's own protocol", "requires": ["R-QUOTA-PATH-AD"], "state": "awaiting_ruling"}
+- `quota_path`: {"missing": ["R-QUOTA-PATH-AD"], "non_authorizing_note": "recording a ruling does NOT itself authorize any action: this intake grants no authority for additional deletion, quota change, or job submission; execution requires separate independently verified authorization under the applicable runbook/checkpoint protocol", "requires": ["R-QUOTA-PATH-AD"], "state": "awaiting_ruling"}
 - `t45_evaluator`: {"missing": ["R-T45-AX1", "R-T45-AX2", "R-T45-AX3", "R-T45-AX4"], "ready": false, "requires": ["R-T45-AX1", "R-T45-AX2", "R-T45-AX3", "R-T45-AX4"]}
 
 ## Assignment source
@@ -49,4 +49,4 @@ derivative fail-closed rulings intake; no election, no inferred authority, no de
 {"authored_at_utc": "<ISO-8601>", "authored_by": "<nonempty; authorship is out of band>", "note": "<optional>", "register_pin": {"case": "gate4_pending_rulings_register", "sha256": "<sha256 of the live register artifact>", "status": "pending_rulings_register_recorded"}, "rulings": [{"decided_at_utc": "<fully anchored ISO-8601>", "decided_by": "<authority; quota requires exactly Greg>", "decision": "<verbatim machine-enumerated option id>", "evidence": {"kind": "<source kind, e.g. conversation_record/file>", "locator": "<independently reviewable locator/record>", "quote": "<exact verbatim quote>", "sha256": "<optional 64-hex digest of the evidence source>"}, "notes": "<optional>", "ruling_id": "<ALL 9 register IDs, each exactly once>", "state": "<OPEN | RESOLVED -- explicit; OPEN rows carry ONLY ruling_id+state; RESOLVED rows require every field below>"}], "schema": "gate4_rulings_assignment_v1"}
 ```
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `46d4c06` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `9216204` (pre-own-commit).

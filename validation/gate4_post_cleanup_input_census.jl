@@ -505,7 +505,7 @@ function pcc_main()
          "g3_scoped_preflight_waiting_for_eval2"),
         ("g2c_fetch_checkpoint", PCC_G2C_JSON,
          "gate4_g2c_eval2_fetch_checkpoint",
-         "g2c_checkpoint_blocked_by_quota"),
+         "g2c_checkpoint_ready"),
         ("pending_rulings_register", PCC_REGISTER_JSON,
          "gate4_pending_rulings_register",
          "pending_rulings_register_recorded"))
@@ -699,9 +699,10 @@ function pcc_main()
         "source_verification_semantics" => "exact case/status " *
             "verification authenticates ONLY the captured artifact's " *
             "role and recorded baseline (e.g. the G2c checkpoint " *
-            "recorded g2c_checkpoint_blocked_by_quota at its own write " *
-            "time); it is NOT an assertion of current quota state -- " *
-            "this unit intentionally performs no live quota read",
+            "recorded g2c_checkpoint_ready at its own write time); it " *
+            "is NOT an assertion of current source availability or " *
+            "quota state -- this unit intentionally performs no live " *
+            "probe or quota read",
         "preflight_census" => Dict(
             "rows" => census_rows,
             "counts" => counts,

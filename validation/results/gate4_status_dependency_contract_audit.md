@@ -71,4 +71,4 @@ Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `06681c4` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `9216204` (pre-own-commit).

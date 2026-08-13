@@ -23,7 +23,7 @@ Counts: {"observation_error": 0, "recorded_absent_now_absent": 3, "recorded_abse
 
 ## Registered scope claim vs observation
 
-Register RECORDED wording (a claim recorded at register time, not a statement of current authorization): "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); remains UNAUTHORIZED until Greg rules"
+Register RECORDED wording (a claim recorded at register time, not a statement of current authorization): "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); EXECUTED out-of-band 2026-08-12 (runbook '## Path D' status note; the census recorded a broader triage than this registered scope, incl. eval1 spectra absent, per the coordinator's delivered record of Greg's broader approval); formal intake of this ruling remains OPEN pending Greg's canonical assignment"
 
 - `/shared/home/greg/data/ckdmip/idealized/lw_spectra`: present=false files=0 bytes=0
 - `/shared/home/greg/data/ckdmip/idealized/sw_spectra`: present=false files=0 bytes=0
@@ -37,4 +37,4 @@ Register RECORDED wording (a claim recorded at register time, not a statement of
 
 registered_scope_claim_vs_observation: the register's RECORDED wording names idealized/conc and ALL of evaluation1/ in its PRESERVE clause; the live subdir set above is the observation. Both sides are facts about recorded text and current existence -- neither is a statement of current authorization, and this unit makes no claim about who removed anything or under what approval
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `6990dc3` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `9216204` (pre-own-commit).

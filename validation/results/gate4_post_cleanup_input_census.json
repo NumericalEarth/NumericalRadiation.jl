@@ -27,7 +27,7 @@
     "pinned_sources_verified": "passed"
   },
   "observation_semantics": "existence and size at observed_at only -- NO content read, NO hash re-verification, NO content-integrity conclusion of any kind",
-  "observed_at_utc": "2026-08-12T15:09:15.716Z",
+  "observed_at_utc": "2026-08-13T09:45:29.010Z",
   "preflight_census": {
     "counts": {
       "observation_error": 0,
@@ -501,7 +501,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "6990dc3",
+    "generated_from_head": "9216204",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "readiness": {
@@ -610,7 +610,7 @@
       "traversal_errors": []
     },
     "note": "registered_scope_claim_vs_observation: the register's RECORDED wording names idealized/conc and ALL of evaluation1/ in its PRESERVE clause; the live subdir set above is the observation. Both sides are facts about recorded text and current existence -- neither is a statement of current authorization, and this unit makes no claim about who removed anything or under what approval",
-    "register_quote_recorded_wording": "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); remains UNAUTHORIZED until Greg rules",
+    "register_quote_recorded_wording": "authorization-required scoped cleanup fallback: delete /shared/home/greg/data/ckdmip/idealized/{lw_spectra,sw_spectra} ONLY: 66 files / 217,901,253,443 B (~202.9 GiB); PRESERVE idealized/conc and ALL of evaluation1/ (eval1 is NOT in the S3 archive); EXECUTED out-of-band 2026-08-12 (runbook '## Path D' status note; the census recorded a broader triage than this registered scope, incl. eval1 spectra absent, per the coordinator's delivered record of Greg's broader approval); formal intake of this ruling remains OPEN pending Greg's canonical assignment",
     "scope_dirs_observed": [
       {
         "file_count": 0,
@@ -638,18 +638,18 @@
       }
     ]
   },
-  "source_verification_semantics": "exact case/status verification authenticates ONLY the captured artifact's role and recorded baseline (e.g. the G2c checkpoint recorded g2c_checkpoint_blocked_by_quota at its own write time); it is NOT an assertion of current quota state -- this unit intentionally performs no live quota read",
+  "source_verification_semantics": "exact case/status verification authenticates ONLY the captured artifact's role and recorded baseline (e.g. the G2c checkpoint recorded g2c_checkpoint_ready at its own write time); it is NOT an assertion of current source availability or quota state -- this unit intentionally performs no live probe or quota read",
   "sources": {
     "g2c_fetch_checkpoint": {
       "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g2c_eval2_fetch_checkpoint.json",
-      "snapshot_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
+      "snapshot_sha256": "dd45f8da06e12476f068945b6eb07e80cca9a3f1a93ffc1ec1d6b3877240b367",
       "verified": true,
       "verified_case": "gate4_g2c_eval2_fetch_checkpoint",
-      "verified_status": "g2c_checkpoint_blocked_by_quota"
+      "verified_status": "g2c_checkpoint_ready"
     },
     "pending_rulings_register": {
       "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_pending_rulings_register.json",
-      "snapshot_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+      "snapshot_sha256": "510421eab3c563f000de590833de837c7927ab396a7bb9ccb3365118b53a28eb",
       "verified": true,
       "verified_case": "gate4_pending_rulings_register",
       "verified_status": "pending_rulings_register_recorded"
@@ -663,5 +663,5 @@
     }
   },
   "status": "post_cleanup_census_recorded",
-  "timestamp_utc": "2026-08-12T15:09:15.716Z"
+  "timestamp_utc": "2026-08-13T09:45:29.010Z"
 }

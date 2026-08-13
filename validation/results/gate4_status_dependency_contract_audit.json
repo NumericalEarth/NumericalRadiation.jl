@@ -344,7 +344,7 @@
       },
       {
         "file": "gate4_pending_rulings_register.jl",
-        "line": 46,
+        "line": 48,
         "text": "JSON.parsefile(path)"
       },
       {
@@ -707,7 +707,7 @@
       {
         "active": true,
         "consumer": "gate4_pending_rulings_register.jl",
-        "consumer_sha256": "527e8bb242c021480cb0715fea7d8f9803b8aee8c0e97803e5cefbb7eed29cb5",
+        "consumer_sha256": "00bbd4dd2b6a23b06829f86f4c61566dd5dd7e0c76ca4794acdd2060f6d35395",
         "detail": "snapshot and live contract both satisfied",
         "id": "dep:rulings_register<-g2_binding_scaffold",
         "kind": "register_snapshot",
@@ -721,21 +721,21 @@
       {
         "active": true,
         "consumer": "gate4_pending_rulings_register.jl",
-        "consumer_sha256": "527e8bb242c021480cb0715fea7d8f9803b8aee8c0e97803e5cefbb7eed29cb5",
+        "consumer_sha256": "00bbd4dd2b6a23b06829f86f4c61566dd5dd7e0c76ca4794acdd2060f6d35395",
         "detail": "snapshot and live contract both satisfied",
         "id": "dep:rulings_register<-g2c_fetch_checkpoint",
         "kind": "register_snapshot",
         "producer_case": "gate4_g2c_eval2_fetch_checkpoint",
-        "producer_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
-        "producer_status": "g2c_checkpoint_blocked_by_quota",
-        "register_recorded_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
+        "producer_sha256": "dd45f8da06e12476f068945b6eb07e80cca9a3f1a93ffc1ec1d6b3877240b367",
+        "producer_status": "g2c_checkpoint_ready",
+        "register_recorded_sha256": "dd45f8da06e12476f068945b6eb07e80cca9a3f1a93ffc1ec1d6b3877240b367",
         "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
         "active": true,
         "consumer": "gate4_pending_rulings_register.jl",
-        "consumer_sha256": "527e8bb242c021480cb0715fea7d8f9803b8aee8c0e97803e5cefbb7eed29cb5",
+        "consumer_sha256": "00bbd4dd2b6a23b06829f86f4c61566dd5dd7e0c76ca4794acdd2060f6d35395",
         "detail": "snapshot and live contract both satisfied",
         "id": "dep:rulings_register<-g2c_failure_ledger_4440",
         "kind": "register_snapshot",
@@ -749,12 +749,12 @@
       {
         "active": true,
         "consumer": "gate4_rulings_intake_contract.jl",
-        "consumer_sha256": "3659cf61dc0883957ad9970ed5425ad969d7ed920ebef8820df037f3d4a8b6ad",
+        "consumer_sha256": "7adb3f7b0b8e0a4c6e9baa0ebf42f8aee1950f1c6e930d9c04dfbfb6931443ba",
         "detail": "contract satisfied",
         "id": "dep:rulings_intake<-pending_rulings_register",
         "kind": "exact",
         "producer_case": "gate4_pending_rulings_register",
-        "producer_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+        "producer_sha256": "510421eab3c563f000de590833de837c7927ab396a7bb9ccb3365118b53a28eb",
         "producer_status": "pending_rulings_register_recorded",
         "status_only_contract": false,
         "verdict": "satisfied"
@@ -762,8 +762,8 @@
       {
         "active": true,
         "consumer": "gate4_rulings_intake_contract.jl",
-        "consumer_artifact_sha256": "99376a768a4a07aac337cc7b6ecda4027f6ffdd6e60cd3fecb7b722e9d3bd0ce",
-        "consumer_sha256": "3659cf61dc0883957ad9970ed5425ad969d7ed920ebef8820df037f3d4a8b6ad",
+        "consumer_artifact_sha256": "4c9a89f535ab0e622ad297930c9eca513e6fbb0eedb8f01fc95fcfe6ff4c3a6a",
+        "consumer_sha256": "7adb3f7b0b8e0a4c6e9baa0ebf42f8aee1950f1c6e930d9c04dfbfb6931443ba",
         "detail": "register healthy; authority input absent; allowed=[\"rulings_intake_awaiting_assignments\"]; consumer status=rulings_intake_awaiting_assignments",
         "id": "dep:rulings_intake<-rulings_assignment:authority_input",
         "kind": "authority_input",
@@ -773,7 +773,7 @@
       {
         "active": true,
         "consumer": "gate4_post_cleanup_input_census.jl",
-        "consumer_sha256": "6a0ed44d9129dd5566b8db2363f76b1363ab97bb8af552d606658117f22b0355",
+        "consumer_sha256": "b686f7651d4bf3dff70abddb16b2aa9f11793116d62fafa480393cd3771f7810",
         "detail": "contract satisfied",
         "id": "dep:post_cleanup_census<-g3_scoped_preflight",
         "kind": "exact",
@@ -786,25 +786,25 @@
       {
         "active": true,
         "consumer": "gate4_post_cleanup_input_census.jl",
-        "consumer_sha256": "6a0ed44d9129dd5566b8db2363f76b1363ab97bb8af552d606658117f22b0355",
+        "consumer_sha256": "b686f7651d4bf3dff70abddb16b2aa9f11793116d62fafa480393cd3771f7810",
         "detail": "contract satisfied",
         "id": "dep:post_cleanup_census<-g2c_fetch_checkpoint",
         "kind": "exact",
         "producer_case": "gate4_g2c_eval2_fetch_checkpoint",
-        "producer_sha256": "cb9e6e26c4804052b3b6eb412f0a686c8bb07e87f20d9e52e5197bd64dc26e52",
-        "producer_status": "g2c_checkpoint_blocked_by_quota",
+        "producer_sha256": "dd45f8da06e12476f068945b6eb07e80cca9a3f1a93ffc1ec1d6b3877240b367",
+        "producer_status": "g2c_checkpoint_ready",
         "status_only_contract": false,
         "verdict": "satisfied"
       },
       {
         "active": true,
         "consumer": "gate4_post_cleanup_input_census.jl",
-        "consumer_sha256": "6a0ed44d9129dd5566b8db2363f76b1363ab97bb8af552d606658117f22b0355",
+        "consumer_sha256": "b686f7651d4bf3dff70abddb16b2aa9f11793116d62fafa480393cd3771f7810",
         "detail": "contract satisfied",
         "id": "dep:post_cleanup_census<-pending_rulings_register",
         "kind": "exact",
         "producer_case": "gate4_pending_rulings_register",
-        "producer_sha256": "1b2e714499c1f9c6b627e4b5c50bb531d88367c1082469615214c64add3eb615",
+        "producer_sha256": "510421eab3c563f000de590833de837c7927ab396a7bb9ccb3365118b53a28eb",
         "producer_status": "pending_rulings_register_recorded",
         "status_only_contract": false,
         "verdict": "satisfied"
@@ -949,7 +949,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "06681c4",
+    "generated_from_head": "9216204",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -961,5 +961,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-12T17:53:52.428"
+  "timestamp_utc": "2026-08-13T09:51:31.111"
 }
