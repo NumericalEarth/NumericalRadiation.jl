@@ -64,6 +64,22 @@ const CKDMIP_ROOT = "/shared/home/greg/data/ckdmip"
 const CKDMIP_BIN_ROOT = "/shared/home/greg/build/ckdmip-1.0"
 const SHIM_SO = "$G4WORK/tools/h5open_before_traps.so"
 const SHIM_SO_SHA = "28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f"
+# exact-version Netlib runtime libraries (4505/4506 SIGFPE remedy, per
+# gate4_g3_failure_ledger_4505_4506: ATLAS raises spurious FP flags
+# under the compiled-in feenableexcept traps at the first LAPACK call;
+# the monitor's bounded probes validated this exact preload-only route)
+const NETLIB_BLAS = "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0"
+const NETLIB_BLAS_SHA = "e748efcae5753fe4a652877fccdb5895ac6f7605668a2db878b19c914e78e3a8"
+const NETLIB_BLAS_BYTES = 677880
+const NETLIB_LAPACK = "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0"
+const NETLIB_LAPACK_SHA = "851bb1fc5833ede9ed704b4417a251a899976d5e0915de40452615187a65278f"
+const NETLIB_LAPACK_BYTES = 7268368
+# the committed 4505/4506 failure-ledger artifact (diagnosis of record):
+# bound by exact reviewed sha -- identity supplies case/status/content
+# without a new JSON parse edge; drift refuses generation AND refuses
+# in-job via GATEPINS, so submitted scripts bind the diagnosis too
+const FAILURE_LEDGER_JSON = validation_results_path("gate4_g3_failure_ledger_4505_4506.json")
+const FAILURE_LEDGER_SHA = "7e54b22a87e057bbb99b4c9f7922bcb25530573cfb6c415de0eddeee0f411c53"
 const LW_INIT_SHA = "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43"
 const SW_INIT_SHA = "74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74"
 const V12_BIN_SHA = "6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692"
@@ -207,6 +223,8 @@ function gx_input_manifest(band)
     push!(entries, ent(p.gpoints, "gpoints"))
     push!(entries, ent(joinpath(p.bindir, "optimize_lut"), "optimizer_binary"))
     push!(entries, ent(SHIM_SO, "fp_shim"))
+    push!(entries, ent(NETLIB_BLAS, "runtime_blas"))
+    push!(entries, ent(NETLIB_LAPACK, "runtime_lapack"))
     for f in (p.script, "config.h", "check_configuration.h", "version.h.in")
         push!(entries, ent(joinpath(p.srcdir, "test", f), "copied_source"))
     end
@@ -266,13 +284,17 @@ function make_sbatch(band)
     stage_lines = join(stage_rows, "\n")
     # pin the MUTABLE GATE CODE itself (verified before sourcing/running),
     # including THIS generator's own source
-    gate_pins = join(["$(sha256(joinpath(PROJECT_ROOT, f)))  $(joinpath(PROJECT_ROOT, f))"
-                      for f in ("validation/gate4_quota_guard.sh",
-                                "validation/gate4_g3_scoped_input_preflight.jl",
-                                "validation/gate4_g3_executor_checkpoint.jl",
-                                "validation/validation_results.jl",
-                                "test/Project.toml",
-                                "test/Manifest.toml")], "\n")
+    gate_pins = join(vcat(
+        ["$(sha256(joinpath(PROJECT_ROOT, f)))  $(joinpath(PROJECT_ROOT, f))"
+         for f in ("validation/gate4_quota_guard.sh",
+                   "validation/gate4_g3_scoped_input_preflight.jl",
+                   "validation/gate4_g3_executor_checkpoint.jl",
+                   "validation/validation_results.jl",
+                   "test/Project.toml",
+                   "test/Manifest.toml")],
+        # the diagnosis-of-record artifact, pinned by the REVIEWED sha
+        # (not a live hash): drift refuses in-job at stage 0a
+        ["$FAILURE_LEDGER_SHA  $FAILURE_LEDGER_JSON"]), "\n")
     text = """
 #!/bin/bash
 #SBATCH --job-name=g4-g3-$(band)-optimizer
@@ -366,14 +388,43 @@ $stage_lines
 STAGE
 echo "staged scientific-input snapshot verified under \$RUNROOT"
 
-echo "=== G3-$(band) stage 2: optimizer wrapper inside RUNROOT (FP-trap shim; env-only) ==="
+echo "=== G3-$(band) stage 2: optimizer wrapper inside RUNROOT (Netlib preload + FP-trap shim; env-only) ==="
+# exact-version preload-only order (BLAS, LAPACK, H5 shim); NO
+# LD_LIBRARY_PATH by design: both Netlib libraries carry SONAMEs
+# libblas.so.3/liblapack.so.3 and satisfy the DT_NEEDED entries
+# directly, displacing the ATLAS implementation that SIGFPEd attempts
+# 4505/4506 (see gate4_g3_failure_ledger_4505_4506). FP traps stay ON.
 cat > "\$WRAPPER" <<WRAP
 #!/bin/bash
-export LD_PRELOAD="$SHIM_SO"
+export LD_PRELOAD="$NETLIB_BLAS:$NETLIB_LAPACK:$SHIM_SO"
 exec "$(p.bindir)/optimize_lut" "\\\$@"
 WRAP
 chmod +x "\$WRAPPER"
 sha256sum "\$WRAPPER"
+
+echo "=== G3-$(band) stage 2b: loader-resolution proof (SONAME + exact preload rows + zero alias rows) ==="
+# NOTE ldd shape under SONAME-satisfying preloads: each preloaded
+# library prints ONE absolute row '/usr/.../lib*.so.3.12.0 (0x...)'
+# and there are ZERO 'lib*.so.3 =>' alias rows for blas/lapack (the
+# DT_NEEDED entries are satisfied by the preloads). All checks use
+# captured text + counted here-string greps (pipefail-safe; no
+# early-exit grep -q pipelines).
+command -v readelf >/dev/null || { echo "MISSING readelf" >&2; exit 65; }
+RE_BLAS=\$(readelf -d "$NETLIB_BLAS")
+RE_LAPACK=\$(readelf -d "$NETLIB_LAPACK")
+[ "\$(grep -cF 'Library soname: [libblas.so.3]' <<<"\$RE_BLAS" || true)" = 1 ] || { echo "REFUSED: netlib BLAS SONAME != libblas.so.3" >&2; exit 79; }
+[ "\$(grep -cF 'Library soname: [liblapack.so.3]' <<<"\$RE_LAPACK" || true)" = 1 ] || { echo "REFUSED: netlib LAPACK SONAME != liblapack.so.3" >&2; exit 79; }
+[ "\$(grep -cxF 'export LD_PRELOAD="$NETLIB_BLAS:$NETLIB_LAPACK:$SHIM_SO"' "\$WRAPPER" || true)" = 1 ] || { echo "REFUSED: wrapper preload line/order drifted" >&2; exit 79; }
+LDD_OUT=\$(LD_PRELOAD="$NETLIB_BLAS:$NETLIB_LAPACK:$SHIM_SO" ldd "$(p.bindir)/optimize_lut")
+echo "\$LDD_OUT"
+[ "\$(grep -cF "$NETLIB_BLAS" <<<"\$LDD_OUT" || true)" = 1 ] || { echo "REFUSED: exact BLAS preload row count != 1" >&2; exit 79; }
+[ "\$(grep -cF "$NETLIB_LAPACK" <<<"\$LDD_OUT" || true)" = 1 ] || { echo "REFUSED: exact LAPACK preload row count != 1" >&2; exit 79; }
+[ "\$(grep -cF 'liblapack.so.3 =>' <<<"\$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: liblapack.so.3 alias row present (second lapack in resolution)" >&2; exit 79; }
+[ "\$(grep -cF 'libblas.so.3 =>' <<<"\$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: libblas.so.3 alias row present (second blas in resolution)" >&2; exit 79; }
+LN_B=\$(grep -nF "$NETLIB_BLAS" <<<"\$LDD_OUT" | cut -d: -f1 | head -1 || true)
+LN_L=\$(grep -nF "$NETLIB_LAPACK" <<<"\$LDD_OUT" | cut -d: -f1 | head -1 || true)
+LN_S=\$(grep -nF "$SHIM_SO" <<<"\$LDD_OUT" | cut -d: -f1 | head -1 || true)
+{ [ -n "\$LN_B" ] && [ -n "\$LN_L" ] && [ -n "\$LN_S" ] && [ "\$LN_B" -lt "\$LN_L" ] && [ "\$LN_L" -lt "\$LN_S" ]; } || { echo "REFUSED: preload row order is not BLAS<LAPACK<H5shim" >&2; exit 79; }
 
 echo "=== G3-$(band) stage 3: isolated testcopy inside RUNROOT (config overrides) ==="
 cp -r "$(p.srcdir)/test" "\$TESTCOPY"
@@ -393,6 +444,13 @@ grep -E "^(CKDMIP_DIR|CKDMIP_DATA_DIR|WORK_DIR|BINDIR|TRAINING_BOTH|OPTIMIZE_LUT
 for kv in "CKDMIP_DIR=$CKDMIP_BIN_ROOT" "CKDMIP_DATA_DIR=\$RUNROOT/data" "WORK_DIR=\$RUNROOT/work" "BINDIR=$(p.bindir)" "TRAINING_BOTH=yes" "OPTIMIZE_LUT=\$WRAPPER"; do
     grep -qxF "\$kv" config.h || { echo "BAD config override: \$kv" >&2; exit 68; }
 done
+# surface the raw optimize_lut rc/signal (4505/4506 lesson: the
+# upstream PIPESTATUS test flattened 128+sig to a silent shell rc 1);
+# the child status now reaches the Slurm log and the pass exits with
+# the child's own rc
+sed -i 's|^[[:space:]]*test "\\\${PIPESTATUS\\[0\\]}" -eq 0[[:space:]]*\$|\\trc="\${PIPESTATUS[0]}"; if [ "\$rc" -ne 0 ]; then if [ "\$rc" -ge 128 ]; then echo "OPTIMIZE_LUT CHILD KILLED BY SIGNAL \$((rc-128)) (rc=\$rc)" >\\&2; else echo "OPTIMIZE_LUT CHILD FAILED rc=\$rc" >\\&2; fi; exit "\$rc"; fi|' $(p.script)
+grep -q "OPTIMIZE_LUT CHILD" $(p.script) || { echo "BAD sed: child-status surfacing not applied" >&2; exit 68; }
+grep -qF 'test "\${PIPESTATUS[0]}" -eq 0' $(p.script) && { echo "BAD sed: raw PIPESTATUS test remains" >&2; exit 68; } || true
 
 echo "=== G3-$(band) stage 4: staged optimizer ($modes; all writes under RUNROOT) ==="
 APPLICATION=climate BAND_STRUCTURE=$bandstruct TOLERANCE=$tol \\
@@ -444,11 +502,16 @@ const GX_TEXT_GATES = vcat(
                  "$(nm)_stale_output_refusal", "$(nm)_input_hash_gate",
                  "$(nm)_input_size_gate", "$(nm)_flock_single_flight",
                  "$(nm)_readonly_gates_before_lock",
-                 "$(nm)_gate_code_pinned", "$(nm)_quota_health_gate",
+                 "$(nm)_gate_code_pinned", "$(nm)_failure_ledger_pinned",
+                 "$(nm)_quota_health_gate",
                  "$(nm)_runtime_ready_preflight", "$(nm)_source_pins",
                  "$(nm)_config_asserts", "$(nm)_private_runroot",
                  "$(nm)_runroot_staging", "$(nm)_private_workdir",
                  "$(nm)_final_only_publish", "$(nm)_wrapper_in_runroot",
+                 "$(nm)_netlib_preload_order",
+                 "$(nm)_netlib_sha_pins",
+                 "$(nm)_loader_resolution_gate",
+                 "$(nm)_child_status_surfacing",
                  "$(nm)_bash_syntax", "$(nm)_input_manifest_counts"]],
     ["lw_mode_list", "sw_mode_list"])
 
@@ -530,9 +593,34 @@ function main()
     gates["reviewed_commit_ancestry"] = anc ? "passed" : "failed"
     anc || push!(fails, "reviewed commit $GX_ANCESTOR not an ancestor of HEAD")
 
-    # generation ONLY behind the ready decision (generator reads/hashes
-    # mutable inputs and may throw; invalid never invokes it)
-    texts = gx_generate_scripts(make_sbatch, pf_state)
+    # netlib remedy pins enforced against the REVIEWED constants BEFORE
+    # generation: a same-version library update must never be silently
+    # repinned into freshly generated scripts
+    netlib_ok = try
+        isfile(NETLIB_BLAS) && filesize(NETLIB_BLAS) == NETLIB_BLAS_BYTES &&
+        sha256(NETLIB_BLAS) == NETLIB_BLAS_SHA &&
+        isfile(NETLIB_LAPACK) &&
+        filesize(NETLIB_LAPACK) == NETLIB_LAPACK_BYTES &&
+        sha256(NETLIB_LAPACK) == NETLIB_LAPACK_SHA
+    catch; false end
+    gates["netlib_pins_live"] = netlib_ok ? "passed" : "failed"
+    netlib_ok ||
+        push!(fails, "netlib runtime library size/sha drift vs reviewed pins")
+
+    # the committed failure-ledger artifact bound by exact reviewed sha
+    ledger_ok = try
+        sha256(FAILURE_LEDGER_JSON) == FAILURE_LEDGER_SHA
+    catch; false end
+    gates["failure_ledger_pin_live"] = ledger_ok ? "passed" : "failed"
+    ledger_ok ||
+        push!(fails, "4505/4506 failure-ledger artifact sha drift vs reviewed pin")
+
+    # generation ONLY behind the ready decision AND intact netlib AND
+    # failure-ledger pins (generator reads/hashes mutable inputs and may
+    # throw; invalid never invokes it)
+    gen_state = (pf_state == "ready" && netlib_ok && ledger_ok) ?
+        "ready" : "invalid"
+    texts = gx_generate_scripts(make_sbatch, gen_state)
     sbatch_written = texts !== nothing
 
     gates["sbatch_written_not_submitted"] = "passed"
@@ -603,6 +691,10 @@ function main()
                     "gate4_g3_executor_checkpoint.jl",
                     "validation_results.jl",
                     "test/Project.toml", "test/Manifest.toml")) ? "passed" : "failed"
+            gates["$(nm)_failure_ledger_pinned"] =
+                (occursin(FAILURE_LEDGER_SHA, gp_block) &&
+                 occursin("gate4_g3_failure_ledger_4505_4506.json", gp_block)) ?
+                "passed" : "failed"
             gates["$(nm)_quota_health_gate"] =
                 occursin("quota_health ", txt) &&
                 occursin("before controlled optimizer workspace/output allocation", txt) &&
@@ -650,16 +742,39 @@ function main()
             gates["$(nm)_wrapper_in_runroot"] =
                 occursin("WRAPPER=\"\$RUNROOT/tools/optimize_lut_h5preinit", txt) &&
                 !occursin("\$G4WORK/tools/optimize_lut_h5preinit", txt) ? "passed" : "failed"
+            gates["$(nm)_netlib_preload_order"] =
+                occursin("export LD_PRELOAD=\"$NETLIB_BLAS:$NETLIB_LAPACK:$SHIM_SO\"", txt) &&
+                !occursin("export LD_LIBRARY_PATH=", txt) ? "passed" : "failed"
+            gates["$(nm)_netlib_sha_pins"] =
+                occursin(NETLIB_BLAS_SHA, txt) &&
+                occursin(NETLIB_LAPACK_SHA, txt) ? "passed" : "failed"
+            gates["$(nm)_loader_resolution_gate"] =
+                occursin("stage 2b: loader-resolution proof", txt) &&
+                occursin("Library soname: [libblas.so.3]", txt) &&
+                occursin("Library soname: [liblapack.so.3]", txt) &&
+                occursin("wrapper preload line/order drifted", txt) &&
+                occursin("exact BLAS preload row count != 1", txt) &&
+                occursin("exact LAPACK preload row count != 1", txt) &&
+                occursin("liblapack.so.3 alias row present", txt) &&
+                occursin("libblas.so.3 alias row present", txt) &&
+                occursin("preload row order is not BLAS<LAPACK<H5shim", txt) &&
+                !occursin("| grep -q", txt) ? "passed" : "failed"
+            gates["$(nm)_child_status_surfacing"] =
+                occursin("OPTIMIZE_LUT CHILD KILLED BY SIGNAL", txt) &&
+                occursin("OPTIMIZE_LUT CHILD FAILED rc=", txt) &&
+                occursin("raw PIPESTATUS test remains", txt) ? "passed" : "failed"
         end
         for (nm, man) in (("lw", texts["lw"].manifest),
                           ("sw", texts["sw"].manifest))
-            expected_n = nm == "lw" ? 29 : 25
+            expected_n = nm == "lw" ? 31 : 27
             expected_flux = nm == "lw" ? 20 : 16
             paths = [e["path"] for e in man]
             gates["$(nm)_input_manifest_counts"] =
                 (length(man) == expected_n &&
                  length(unique(paths)) == expected_n &&
-                 count(e -> e["role"] == "training_flux", man) == expected_flux) ?
+                 count(e -> e["role"] == "training_flux", man) == expected_flux &&
+                 count(e -> e["role"] == "runtime_blas", man) == 1 &&
+                 count(e -> e["role"] == "runtime_lapack", man) == 1) ?
                 "passed" : "failed"
         end
         gates["lw_mode_list"] =
@@ -762,6 +877,25 @@ function main()
         "quota_health_fixture_verdicts" => htests,
         "authorization_token_required" => "g3_recovery_go (submission is " *
             "a reviewed human step)",
+        "amendment_verification_summary" => Dict(
+            "attribution" => "Codex monitor independent generated-shell " *
+                "verification of the 4505/4506-remedy amendment " *
+                "(2026-08-13), recorded as attributed evidence",
+            "netlib_pins" => "live reviewed sizes+SHAs exact for both " *
+                "Netlib libraries",
+            "soname" => "readelf SONAME counts exact " *
+                "(libblas.so.3/liblapack.so.3)",
+            "loader_resolution" => "preload-only ldd shows exact " *
+                "BLAS/LAPACK/H5-shim rows once each, ZERO generic " *
+                "libblas/liblapack alias rows, preload order at lines " *
+                "2<3<4",
+            "child_status_sed" => "generated sed applied to a fresh " *
+                "exact upstream LW script: bash -n passes, replacement " *
+                "count 1, old PIPESTATUS test count 0",
+            "child_status_semantics" => "transformed status line " *
+                "executed against synthetic child rc 0/7/136: outer rc " *
+                "preserved 0/7/136 with messages empty / 'CHILD FAILED " *
+                "rc=7' / 'CHILD KILLED BY SIGNAL 8 (rc=136)'"),
         "acceptance_metrics_note" => "FIVE canonical thresholds, evaluated " *
             "by separate post-run runners, never inside the executor: " *
             "(1) final/target objective ratio <= 1.05; (2) weight rel-L1 " *

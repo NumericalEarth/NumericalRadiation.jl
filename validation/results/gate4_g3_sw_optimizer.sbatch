@@ -35,10 +35,11 @@ echo "=== G3-sw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
 sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code changed since generation; regenerate the checkpoint" >&2; exit 75; }
 e31e57f0446d3396ba86644f3aefd88284231c507feaba305160c97788fae664  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
 d06d1608152303cbf6bf73794447bbf59cf8deb40a5baf26a0231984cf93fc71  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g3_scoped_input_preflight.jl
-75eafc929232b6bb11f7baad3e52d8769290c80984c33904ecf4a748a110ea05  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g3_executor_checkpoint.jl
+18da8d72cf77a9eed8d8f58d433192ecb8a85e90a80e87e72b7176e05468bdf0  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_g3_executor_checkpoint.jl
 60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
 9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0  /shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Project.toml
 cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186  /shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Manifest.toml
+7e54b22a87e057bbb99b4c9f7922bcb25530573cfb6c415de0eddeee0f411c53  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_failure_ledger_4505_4506.json
 GATEPINS
 
 echo "=== G3-sw stage 0b: quota health (read-only; before controlled optimizer workspace/output allocation) ==="
@@ -82,6 +83,8 @@ aac07193510b1fcc32cece1014b1ec271071363c5afb82ecff091e5ee2452f01  /shared/home/g
 13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5
 101e41ed77c83c81c138494a2b950bbffd12caad27b0c64028666550d7c30d65  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut
 28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so
+e748efcae5753fe4a652877fccdb5895ac6f7605668a2db878b19c914e78e3a8  /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0
+851bb1fc5833ede9ed704b4417a251a899976d5e0915de40452615187a65278f  /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0
 618b210ed0b3fedf279596342426084047624cb866e437e4e6546b01bb98371f  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/optimize_lut_sw.sh
 d00a19fd16a7abb79b29748d00c5023c5ccee2a1c2a085c8ead30d2fd4e93b20  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/config.h
 34323fd3ecbcd64980b328eec463eedc692497ed3cdd685f2505ca4d1fdc5e2c  /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/check_configuration.h
@@ -112,6 +115,8 @@ done <<'SIZES'
 25458368 /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5
 22168448 /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut
 15328 /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so
+677880 /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0
+7268368 /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0
 12698 /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/optimize_lut_sw.sh
 6348 /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/config.h
 1369 /shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/check_configuration.h
@@ -161,14 +166,43 @@ aac07193510b1fcc32cece1014b1ec271071363c5afb82ecff091e5ee2452f01 1839369 /shared
 STAGE
 echo "staged scientific-input snapshot verified under $RUNROOT"
 
-echo "=== G3-sw stage 2: optimizer wrapper inside RUNROOT (FP-trap shim; env-only) ==="
+echo "=== G3-sw stage 2: optimizer wrapper inside RUNROOT (Netlib preload + FP-trap shim; env-only) ==="
+# exact-version preload-only order (BLAS, LAPACK, H5 shim); NO
+# LD_LIBRARY_PATH by design: both Netlib libraries carry SONAMEs
+# libblas.so.3/liblapack.so.3 and satisfy the DT_NEEDED entries
+# directly, displacing the ATLAS implementation that SIGFPEd attempts
+# 4505/4506 (see gate4_g3_failure_ledger_4505_4506). FP traps stay ON.
 cat > "$WRAPPER" <<WRAP
 #!/bin/bash
-export LD_PRELOAD="/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so"
+export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0:/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0:/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so"
 exec "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut" "\$@"
 WRAP
 chmod +x "$WRAPPER"
 sha256sum "$WRAPPER"
+
+echo "=== G3-sw stage 2b: loader-resolution proof (SONAME + exact preload rows + zero alias rows) ==="
+# NOTE ldd shape under SONAME-satisfying preloads: each preloaded
+# library prints ONE absolute row '/usr/.../lib*.so.3.12.0 (0x...)'
+# and there are ZERO 'lib*.so.3 =>' alias rows for blas/lapack (the
+# DT_NEEDED entries are satisfied by the preloads). All checks use
+# captured text + counted here-string greps (pipefail-safe; no
+# early-exit grep -q pipelines).
+command -v readelf >/dev/null || { echo "MISSING readelf" >&2; exit 65; }
+RE_BLAS=$(readelf -d "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0")
+RE_LAPACK=$(readelf -d "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0")
+[ "$(grep -cF 'Library soname: [libblas.so.3]' <<<"$RE_BLAS" || true)" = 1 ] || { echo "REFUSED: netlib BLAS SONAME != libblas.so.3" >&2; exit 79; }
+[ "$(grep -cF 'Library soname: [liblapack.so.3]' <<<"$RE_LAPACK" || true)" = 1 ] || { echo "REFUSED: netlib LAPACK SONAME != liblapack.so.3" >&2; exit 79; }
+[ "$(grep -cxF 'export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0:/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0:/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so"' "$WRAPPER" || true)" = 1 ] || { echo "REFUSED: wrapper preload line/order drifted" >&2; exit 79; }
+LDD_OUT=$(LD_PRELOAD="/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0:/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0:/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so" ldd "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut")
+echo "$LDD_OUT"
+[ "$(grep -cF "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0" <<<"$LDD_OUT" || true)" = 1 ] || { echo "REFUSED: exact BLAS preload row count != 1" >&2; exit 79; }
+[ "$(grep -cF "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0" <<<"$LDD_OUT" || true)" = 1 ] || { echo "REFUSED: exact LAPACK preload row count != 1" >&2; exit 79; }
+[ "$(grep -cF 'liblapack.so.3 =>' <<<"$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: liblapack.so.3 alias row present (second lapack in resolution)" >&2; exit 79; }
+[ "$(grep -cF 'libblas.so.3 =>' <<<"$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: libblas.so.3 alias row present (second blas in resolution)" >&2; exit 79; }
+LN_B=$(grep -nF "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0" <<<"$LDD_OUT" | cut -d: -f1 | head -1 || true)
+LN_L=$(grep -nF "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0" <<<"$LDD_OUT" | cut -d: -f1 | head -1 || true)
+LN_S=$(grep -nF "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so" <<<"$LDD_OUT" | cut -d: -f1 | head -1 || true)
+{ [ -n "$LN_B" ] && [ -n "$LN_L" ] && [ -n "$LN_S" ] && [ "$LN_B" -lt "$LN_L" ] && [ "$LN_L" -lt "$LN_S" ]; } || { echo "REFUSED: preload row order is not BLAS<LAPACK<H5shim" >&2; exit 79; }
 
 echo "=== G3-sw stage 3: isolated testcopy inside RUNROOT (config overrides) ==="
 cp -r "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test" "$TESTCOPY"
@@ -188,6 +222,13 @@ grep -E "^(CKDMIP_DIR|CKDMIP_DATA_DIR|WORK_DIR|BINDIR|TRAINING_BOTH|OPTIMIZE_LUT
 for kv in "CKDMIP_DIR=/shared/home/greg/build/ckdmip-1.0" "CKDMIP_DATA_DIR=$RUNROOT/data" "WORK_DIR=$RUNROOT/work" "BINDIR=/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd" "TRAINING_BOTH=yes" "OPTIMIZE_LUT=$WRAPPER"; do
     grep -qxF "$kv" config.h || { echo "BAD config override: $kv" >&2; exit 68; }
 done
+# surface the raw optimize_lut rc/signal (4505/4506 lesson: the
+# upstream PIPESTATUS test flattened 128+sig to a silent shell rc 1);
+# the child status now reaches the Slurm log and the pass exits with
+# the child's own rc
+sed -i 's|^[[:space:]]*test "\${PIPESTATUS\[0\]}" -eq 0[[:space:]]*$|\trc="${PIPESTATUS[0]}"; if [ "$rc" -ne 0 ]; then if [ "$rc" -ge 128 ]; then echo "OPTIMIZE_LUT CHILD KILLED BY SIGNAL $((rc-128)) (rc=$rc)" >\&2; else echo "OPTIMIZE_LUT CHILD FAILED rc=$rc" >\&2; fi; exit "$rc"; fi|' optimize_lut_sw.sh
+grep -q "OPTIMIZE_LUT CHILD" optimize_lut_sw.sh || { echo "BAD sed: child-status surfacing not applied" >&2; exit 68; }
+grep -qF 'test "${PIPESTATUS[0]}" -eq 0' optimize_lut_sw.sh && { echo "BAD sed: raw PIPESTATUS test remains" >&2; exit 68; } || true
 
 echo "=== G3-sw stage 4: staged optimizer (relative-base relative-ch4 relative-n2o; all writes under RUNROOT) ==="
 APPLICATION=climate BAND_STRUCTURE=rgb TOLERANCE=0.047 \

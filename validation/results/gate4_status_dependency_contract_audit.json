@@ -702,7 +702,7 @@
       {
         "active": true,
         "consumer": "gate4_g3_executor_checkpoint.jl",
-        "consumer_sha256": "75eafc929232b6bb11f7baad3e52d8769290c80984c33904ecf4a748a110ea05",
+        "consumer_sha256": "18da8d72cf77a9eed8d8f58d433192ecb8a85e90a80e87e72b7176e05468bdf0",
         "detail": "contract satisfied",
         "id": "dep:g3_executor<-scoped_preflight",
         "kind": "exact",
@@ -1011,7 +1011,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "e4bb81d",
+    "generated_from_head": "8fc6cec",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1023,5 +1023,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-13T16:13:51.652"
+  "timestamp_utc": "2026-08-13T17:05:32.706"
 }

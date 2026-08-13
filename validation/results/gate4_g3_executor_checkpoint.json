@@ -1,13 +1,24 @@
 {
   "acceptance_metrics_note": "FIVE canonical thresholds, evaluated by separate post-run runners, never inside the executor: (1) final/target objective ratio <= 1.05; (2) weight rel-L1 <= 0.02; (3) true OD log-RMSE <= 0.02; (4) forcing regression margin <= 0.03 W/m2; (5) heating-RMSE regression margin <= 0.005 K/day (aggregation semantics pending ruling)",
+  "amendment_verification_summary": {
+    "attribution": "Codex monitor independent generated-shell verification of the 4505/4506-remedy amendment (2026-08-13), recorded as attributed evidence",
+    "child_status_sed": "generated sed applied to a fresh exact upstream LW script: bash -n passes, replacement count 1, old PIPESTATUS test count 0",
+    "child_status_semantics": "transformed status line executed against synthetic child rc 0/7/136: outer rc preserved 0/7/136 with messages empty / 'CHILD FAILED rc=7' / 'CHILD KILLED BY SIGNAL 8 (rc=136)'",
+    "loader_resolution": "preload-only ldd shows exact BLAS/LAPACK/H5-shim rows once each, ZERO generic libblas/liblapack alias rows, preload order at lines 2<3<4",
+    "netlib_pins": "live reviewed sizes+SHAs exact for both Netlib libraries",
+    "soname": "readelf SONAME counts exact (libblas.so.3/liblapack.so.3)"
+  },
   "authorization_token_required": "g3_recovery_go (submission is a reviewed human step)",
   "case": "gate4_g3_executor_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted or executed; no objective, floor, or recovery computation in this unit.",
   "failures": [],
   "gates": {
+    "failure_ledger_pin_live": "passed",
     "lw_bash_syntax": "passed",
+    "lw_child_status_surfacing": "passed",
     "lw_config_asserts": "passed",
+    "lw_failure_ledger_pinned": "passed",
     "lw_final_only_publish": "passed",
     "lw_flock_single_flight": "passed",
     "lw_gate_code_pinned": "passed",
@@ -15,7 +26,10 @@
     "lw_input_hash_gate": "passed",
     "lw_input_manifest_counts": "passed",
     "lw_input_size_gate": "passed",
+    "lw_loader_resolution_gate": "passed",
     "lw_mode_list": "passed",
+    "lw_netlib_preload_order": "passed",
+    "lw_netlib_sha_pins": "passed",
     "lw_optimize_only": "passed",
     "lw_private_runroot": "passed",
     "lw_private_workdir": "passed",
@@ -28,6 +42,7 @@
     "lw_stale_output_refusal": "passed",
     "lw_training_both_sed": "passed",
     "lw_wrapper_in_runroot": "passed",
+    "netlib_pins_live": "passed",
     "preflight_loader_fixture_tests": "passed",
     "preflight_source_pin": "passed",
     "quota_health_fixture_tests": "passed",
@@ -35,7 +50,9 @@
     "sbatch_written_not_submitted": "passed",
     "scoped_preflight_prerequisite": "passed",
     "sw_bash_syntax": "passed",
+    "sw_child_status_surfacing": "passed",
     "sw_config_asserts": "passed",
+    "sw_failure_ledger_pinned": "passed",
     "sw_final_only_publish": "passed",
     "sw_flock_single_flight": "passed",
     "sw_gate_code_pinned": "passed",
@@ -43,7 +60,10 @@
     "sw_input_hash_gate": "passed",
     "sw_input_manifest_counts": "passed",
     "sw_input_size_gate": "passed",
+    "sw_loader_resolution_gate": "passed",
     "sw_mode_list": "passed",
+    "sw_netlib_preload_order": "passed",
+    "sw_netlib_sha_pins": "passed",
     "sw_optimize_only": "passed",
     "sw_private_runroot": "passed",
     "sw_private_workdir": "passed",
@@ -61,14 +81,14 @@
   },
   "generated_scripts": {
     "lw": {
-      "bytes": 24009,
+      "bytes": 28654,
       "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_lw_optimizer.sbatch",
-      "sha256": "a225d75728c245b9bdf1e508cc82f34464120baeb926b2bb4526940282773bdc"
+      "sha256": "ccfa0d7c79b45aa203bf7c21582e13ea8eb4ebddc2da20defb4347bdb38c713e"
     },
     "sw": {
-      "bytes": 21980,
+      "bytes": 26638,
       "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_sw_optimizer.sbatch",
-      "sha256": "024e2d3c91709ecc7fb4458cb9aa6344ace2393177e1ce3f4218fbd9a3df5d1e"
+      "sha256": "464fe754e60f7581585bc096ac745932175c9abd4607e1b1364ae9fdc635228a"
     }
   },
   "input_manifest": {
@@ -224,6 +244,18 @@
         "size": 15328
       },
       {
+        "path": "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0",
+        "role": "runtime_blas",
+        "sha256": "e748efcae5753fe4a652877fccdb5895ac6f7605668a2db878b19c914e78e3a8",
+        "size": 677880
+      },
+      {
+        "path": "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0",
+        "role": "runtime_lapack",
+        "sha256": "851bb1fc5833ede9ed704b4417a251a899976d5e0915de40452615187a65278f",
+        "size": 7268368
+      },
+      {
         "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/optimize_lut_lw.sh",
         "role": "copied_source",
         "sha256": "f0d77b16b97612687818e85615a103adaa948627846c9819e40e7754ab0743ba",
@@ -376,6 +408,18 @@
         "size": 15328
       },
       {
+        "path": "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0",
+        "role": "runtime_blas",
+        "sha256": "e748efcae5753fe4a652877fccdb5895ac6f7605668a2db878b19c914e78e3a8",
+        "size": 677880
+      },
+      {
+        "path": "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0",
+        "role": "runtime_lapack",
+        "sha256": "851bb1fc5833ede9ed704b4417a251a899976d5e0915de40452615187a65278f",
+        "size": 7268368
+      },
+      {
         "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/optimize_lut_sw.sh",
         "role": "copied_source",
         "sha256": "618b210ed0b3fedf279596342426084047624cb866e437e4e6546b01bb98371f",
@@ -432,7 +476,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "e4bb81d",
+    "generated_from_head": "8fc6cec",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "quota_health_fixture_verdicts": {
@@ -451,5 +495,5 @@
   "sbatch_scripts_state": "generated this run (unsubmitted)",
   "sbatch_written_this_run": true,
   "status": "g3_executor_ready_awaiting_go",
-  "timestamp_utc": "2026-08-13T16:13:36.066Z"
+  "timestamp_utc": "2026-08-13T17:07:05.205Z"
 }
