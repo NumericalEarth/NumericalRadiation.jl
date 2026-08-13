@@ -2,12 +2,14 @@
   "binary_difference_semantics": "the A0!=S1 binary-hash assertion is a NECESSARY sanity check only: identical binaries prove the patch did not change the executable; differing binaries do not by themselves prove the patch entered it (timestamp embedding can differ across builds) -- the patch proof is tree identity + patched-file pin + rebuild semantics (Agent 42 review nit, adopted)",
   "case": "gate4_s1_state_sync_checkpoint",
   "data_mode": "generator_checkpoint",
-  "design": "triple-arm (A0a/A0b pristine control repeats sharing ONE saved binary, S1 one-line sync patch) from ONE source copy, one configure matching the extant 4515-era build (--with-adept --with-netcdf ONLY, string asserted), sequential builds with immutable saved binaries, SANDWICH execution order A0a -> S1 -> A0b, independent testcopy/work/log clones per arm, identical staged inputs/options/preloads and explicit OpenMP controls (OMP_NUM_THREADS=SLURM_CPUS_PER_TASK, OMP_DYNAMIC=FALSE, logged per arm); A0a-vs-A0b establishes the repeatability floor across the full treatment interval, A0-vs-S1 is primary, historical 4515 is an informational echo unless the A0 arms match it",
+  "design": "triple-arm (A0a/A0b pristine control repeats sharing ONE saved binary, S1 one-line sync patch) from ONE source copy, ONE corrected fresh-autoreconf configure (path-only LDFLAGS + late LIBS=-ladept; BUILD-ENABLEMENT, not historical build equivalence -- see the reviewed 4555 failure ledger; config.status rendering asserted byte-exact), sequential builds with immutable saved binaries, SANDWICH execution order A0a -> S1 -> A0b, independent testcopy/work/log clones per arm, identical staged inputs/options/preloads and explicit OpenMP controls (OMP_NUM_THREADS=SLURM_CPUS_PER_TASK, OMP_DYNAMIC=FALSE, logged per arm); A0a-vs-A0b establishes the repeatability floor across the full treatment interval, A0-vs-S1 is primary, historical 4515 is an informational echo unless the A0 arms match it",
   "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch plus transient private temp fixtures (mktempdir).",
   "failures": [],
   "fixture_verdicts": {
     "bash_syntax_broken_refuses": true,
     "bash_syntax_good_accepted": true,
+    "fl5_ledger_green_accepted": true,
+    "fl5_ledger_status_mismatch_refuses": true,
     "ledger_green_accepted": true,
     "ledger_missing_refuses": true,
     "ledger_sha_drift_refuses": true,
@@ -18,14 +20,19 @@
     "patch_missing_anchor_refuses": true,
     "patch_preexisting_sync_refuses": true,
     "patch_region_hash_reproduces_pin": true,
+    "text_duplicate_config_status_expect_refuses": true,
+    "text_duplicate_configure_refuses": true,
     "text_extra_pass_refuses": true,
     "text_extra_sync_line_refuses": true,
+    "text_failure_ledger_pin_drift_refuses": true,
     "text_good_accepted": true,
     "text_head_pipeline_refuses": true,
-    "text_ldflags_reintroduced_refuses": true,
+    "text_ladept_inside_ldflags_refuses": true,
     "text_live_artifact_testcopy_refuses": true,
     "text_missing_a0_save_refuses": true,
     "text_missing_binary_diff_assert_refuses": true,
+    "text_missing_ldflags_assignment_refuses": true,
+    "text_missing_libs_assignment_refuses": true,
     "text_missing_patch_pin_refuses": true,
     "text_missing_toolchain_pin_refuses": true,
     "text_missing_tree_manifest_refuses": true,
@@ -42,6 +49,7 @@
     "evidence_input_pins": "passed",
     "evidence_modern_source_pins": "passed",
     "evidence_reviewed_b0_ledger": "passed",
+    "evidence_reviewed_failure_ledger_4555": "passed",
     "evidence_runtime_pins": "passed",
     "evidence_sbatch_bash_syntax": "passed",
     "evidence_sbatch_text_gates": "passed",
@@ -71,29 +79,39 @@
     "historical 4515 comparison (4205489923dbc50c3c148a06f20e5781b3f1dbeb5a13d55d36b460c5f7b4378c) is a bridge ONLY if the rebuilt A0 arms match it; otherwise historical hash differences are non-causal (informational echo; 4515 executed the pre-existing binary 6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692 via a wrapper named optimize_lut_h5preinit_v12)",
     "persistent effective-bound exceedances in S1 -> sync alone does not explain them; mapping/write behavior remains open"
   ],
-  "prerequisite": {
-    "b0_ledger": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_era_stack_completion_ledger.json",
-    "required_case": "gate4_b0_era_stack_completion_ledger",
-    "required_status": "b0_run_completed_verified",
-    "reviewed_sha256": "d109c0b6e5aa157716247cb05bdfdf806c96e7fc3367e3d5628c55baeda66012"
-  },
+  "prerequisites": [
+    {
+      "ledger": "B0 era-stack completion ledger",
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_era_stack_completion_ledger.json",
+      "required_case": "gate4_b0_era_stack_completion_ledger",
+      "required_status": "b0_run_completed_verified",
+      "reviewed_sha256": "d109c0b6e5aa157716247cb05bdfdf806c96e7fc3367e3d5628c55baeda66012"
+    },
+    {
+      "ledger": "S1 attempt-1 (4555) failure ledger",
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_s1_failure_ledger_4555.json",
+      "required_case": "gate4_s1_failure_ledger_4555",
+      "required_status": "s1_4555_failure_recorded",
+      "reviewed_sha256": "865b8c65dc48d6500ca7f71c311a0fce1f40b1fd2bab7cd2c35d276907f582cb"
+    }
+  ],
   "probe_omission_note": "no 1-iteration probe stage in this revision: a config failure costs up to one full arm and A0a acts as the de facto probe (Agent 42 review nit, accepted; probes must never mutate an arm)",
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_s1_lw_state_sync.sbatch",
-  "sbatch_sha256": "aba1d263fbacbdc8ce33f51a51d620e13c1698d24c87ae7e2c001088a0bf9ba5",
+  "sbatch_sha256": "666a9f4fc3727951d1fe7efdd715591f78e785e2a6d5f4de9b8326965509c44d",
   "source_tree": {
     "artifact": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
     "executables": 24,
     "files": 119,
     "gate_semantics": "exact 119-file content + executable-semantics + zero-symlink census; non-exec permission bits and empty directories are NOT pinned (content/exec semantics pinned; chmod intentionally changes writability on the working copy)",
     "manifest_sha256": "a96e78e818e5343bead52a1d2ebf52436f8c0e0e67033bb314b6a00530a93aeb",
-    "patched_manifest_note": "post-patch manifest differs in exactly one entry: src/ecckd/solve_adept.cpp 8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091 -> c23246d53a474540443a0e877992dc0d24cfda1ad6cbafa218e3a824cb72070b",
+    "patched_manifest_note": "post-patch check proves that AMONG THE 119 REGISTERED ARTIFACT FILES only solve_adept.cpp changed; it does not prove whole-working-tree identity or absence of legitimate generated build files (stage-3 autoreconf/make creates those outside the registered manifest); the manifest differs in exactly one entry: src/ecckd/solve_adept.cpp 8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091 -> c23246d53a474540443a0e877992dc0d24cfda1ad6cbafa218e3a824cb72070b",
     "symlinks": 0
   },
   "status": "s1_checkpoint_ready",
   "toolchain": {
     "adept_minimizer_h_sha256": "dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d",
     "automake": "1.16.5",
-    "configure_argv": "./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack",
+    "configure_argv": "./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'",
     "fingerprints": [
       {
         "path": "/usr/bin/gcc",

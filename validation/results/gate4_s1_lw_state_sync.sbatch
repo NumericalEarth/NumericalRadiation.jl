@@ -29,11 +29,12 @@ RUNROOT="$G4WORK/g4-diag/${SLURM_JOB_ID}/lw-s1"
 SRCDIR="$RUNROOT/src/ecckd-modern-paired"
 
 echo "=== S1-lw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
-sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/reviewed B0 ledger changed since generation; regenerate the checkpoint" >&2; exit 75; }
+sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/reviewed prerequisite ledgers changed since generation; regenerate the checkpoint" >&2; exit 75; }
 e31e57f0446d3396ba86644f3aefd88284231c507feaba305160c97788fae664  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
-45108188f881784a1f549cfe30d5595b8c0e22298dacc2f8a51e1986302ef144  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_s1_state_sync_checkpoint.jl
+4cf4d6c6e3b5b4e5888c4f6fc134003a60545e1f474242765f3c42dcc0bce9a6  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_s1_state_sync_checkpoint.jl
 60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
 d109c0b6e5aa157716247cb05bdfdf806c96e7fc3367e3d5628c55baeda66012  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_era_stack_completion_ledger.json
+865b8c65dc48d6500ca7f71c311a0fce1f40b1fd2bab7cd2c35d276907f582cb  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_s1_failure_ledger_4555.json
 GATEPINS
 
 echo "=== S1-lw stage 0b: quota health (read-only) ==="
@@ -654,10 +655,10 @@ a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810  $RUNROOT/test-
 TEMPLATEPINS
 chmod -R a-w "$RUNROOT/test-template"
 
-echo "=== S1-lw stage 3: A0 pristine control build (extant-matching configure; two flags only) ==="
+echo "=== S1-lw stage 3: A0 pristine control build (corrected fresh-autoreconf recipe; build-enablement, not historical equivalence) ==="
 cd "$SRCDIR"
 autoreconf -i
-./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack
+./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'
 make -j"$SLURM_CPUS_PER_TASK"
 test -x "$SRCDIR/src/ecckd/optimize_lut" || { echo "REFUSED: A0 optimize_lut not built" >&2; exit 68; }
 [ "$(strings "$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Adept LBFGS' || true)" -ge 1 ] || { echo "REFUSED: Adept LBFGS banner string absent from A0 binary" >&2; exit 68; }
@@ -667,12 +668,13 @@ cp -- "$SRCDIR/config.log" "$RUNROOT/config.log.a0"
 ./config.status --config > "$RUNROOT/config.status.config.txt"
 echo "--- config.status --config (all arms; single configure) ---"
 cat "$RUNROOT/config.status.config.txt"
-# assert the config string EXACTLY matches the extant 4515-era build
-[ "$(cat "$RUNROOT/config.status.config.txt")" = "--with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack" ] || { echo "REFUSED: config.status --config != historical two-flag invocation" >&2; exit 68; }
+# assert the config.status rendering EXACTLY matches the corrected
+# reviewed recipe (path-only LDFLAGS + late LIBS=-ladept)
+[ "$(cat "$RUNROOT/config.status.config.txt")" = "--with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' LIBS=-ladept" ] || { echo "REFUSED: config.status --config != corrected reviewed recipe rendering" >&2; exit 68; }
 sha256sum "$RUNROOT/bin/optimize_lut_a0" "$RUNROOT/config.log.a0" "$RUNROOT/config.status.config.txt"
 echo "historical 4515 pre-existing binary (informational echo only): 6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692"
 
-echo "=== S1-lw stage 4: EXACTLY ONE anchored sync-line patch + post-patch tree identity ==="
+echo "=== S1-lw stage 4: EXACTLY ONE anchored sync-line patch + post-patch REGISTERED-FILE identity (119 artifact files; generated build files out of scope) ==="
 SA="$SRCDIR/src/ecckd/solve_adept.cpp"
 echo "8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091  $SA" | sha256sum -c - >/dev/null || { echo "REFUSED: pre-patch solve_adept.cpp sha drift" >&2; exit 69; }
 [ "$(grep -cxF '  minimizer.set_converged_gradient_norm(convergence_criterion);' "$SA" || true)" = 1 ] || { echo "REFUSED: patch anchor not exactly once" >&2; exit 69; }
@@ -684,8 +686,12 @@ echo "c23246d53a474540443a0e877992dc0d24cfda1ad6cbafa218e3a824cb72070b  $SA" | s
 ORIG_LC=$(wc -l < "$RUNROOT/solve_adept.cpp.orig")
 NEW_LC=$(wc -l < "$SA")
 [ "$NEW_LC" = "$((ORIG_LC + 1))" ] || { echo "REFUSED: patch changed $((NEW_LC - ORIG_LC)) lines, expected exactly 1" >&2; exit 69; }
-# the ONLY source-tree content delta is solve_adept.cpp (full 119-file
-# manifest with exactly that one line substituted)
+# AMONG THE 119 REGISTERED ARTIFACT FILES, only solve_adept.cpp
+# changed (manifest with exactly that one entry substituted). This does
+# NOT prove literal whole-working-tree identity or the absence of
+# generated extras: stage-3 autoreconf/make legitimately creates
+# generated/build files outside the registered manifest. The pre-build
+# stage-2 census remains the exact whole-copied-tree gate.
 ( cd "$SRCDIR" && sha256sum -c <<'POSTPATCHTREE' >/dev/null ) || { echo "REFUSED: post-patch tree differs beyond the registered one-line change" >&2; exit 69; }
 49f9191f15b7e5f84ada99571e67e92905006f29d902f8623e388778b8ecb27e  .gitignore
 36bb30d4797db4f9c0fb2b9ee28ab5cc4cedb6bac8fd79df0c4d79474c3657f1  ChangeLog

@@ -1,0 +1,69 @@
+{
+  "case": "gate4_s1_failure_ledger_4555",
+  "data_mode": "evidence_ledger_no_campaign_writes",
+  "disclaimer": "evidence ledger; writes nothing except its own JSON/MD results plus transient private temp fixtures (mktempdir); zero campaign/canonical writes.",
+  "durable_evidence": {
+    "failed_config_log_sha256": "b70582b756dfc6d9379cccd073e77a354581135a469ae0f25cef89cc3b2d55e8",
+    "fresh_generated_configure_sha256": "9a2a690860ae3be9d6fe6f4eaead875ffb4394d27b2b5c10896736e5dc6a4219",
+    "historical_generated_configure_sha256": "9ed1baac13a17c5f537e0bad75afa38a43ece2c116ed38fee4a3446f54772dfc",
+    "m4_adept_m4_sha256_both_trees": "79d6078590dd7a44b912c6011f3aaf4caed909437880b3d4bd585d7ef1fbf520",
+    "scope": "content-pinned campaign evidence: these pins prove the 4555 root cause and the stale-configure finding"
+  },
+  "evidence_scope_note": "the corrected-recipe diagnostics were monitor-observed in EPHEMERAL /tmp copies and are NOT content-pinned campaign evidence. Durable pins in this ledger prove the 4555 root cause and the stale-configure finding (receipts/log/config.log/configure/m4 hashes); the corrected recipe is PREFLIGHT DESIGN EVIDENCE only, and the authoritative execution proof is attempt 2's fail-closed configure + byte-exact config.status assertion in the amended checkpoint.",
+  "evidence_timestamp_utc": "2026-08-13T21:54:01Z",
+  "failures": [],
+  "fixture_verdicts": {
+    "configlog_good_accepted": true,
+    "configlog_missing_order_evidence_refuses": true,
+    "configlog_missing_undef_refuses": true,
+    "log_duplicate_error_refuses": true,
+    "log_good_accepted": true,
+    "log_missing_error_refuses": true,
+    "log_missing_stage_refuses": true,
+    "log_reaches_arm_refuses": true,
+    "overall_all_green": true,
+    "overall_any_issue_refuses": true,
+    "receipt_good_binds": true,
+    "receipt_wrong_exit_refuses": true,
+    "receipt_wrong_runtime_refuses": true,
+    "receipt_wrong_state_refuses": true
+  },
+  "gates": {
+    "evidence_configure_vintage_evidence": "passed",
+    "evidence_dual_receipts": "passed",
+    "evidence_failed_config_log": "passed",
+    "evidence_job_log": "passed",
+    "fixtures": "passed"
+  },
+  "gates_passed_in_4555": "ONLY the two pre-patch tree-identity gates (stage-0c ARTTREE artifact manifest, stage-2 COPYTREE copied-tree manifest), the exec-bit census and zero-symlink checks, the frozen test-template snapshot+pins, and the fail-closed toolchain fingerprints passed; the job died in stage 3 BEFORE the patch, so the post-patch POSTPATCHTREE gate was NOT reached and no patch/rebuild/arm executed",
+  "job": {
+    "derived_exit_code_raw": "0:0",
+    "exit_code_raw": "1:0",
+    "job_id": 4555,
+    "job_state": "FAILED",
+    "log_path": "/shared/home/greg/data/ckdmip-logs/g4-s1-lw-4555.log",
+    "log_sha256": "32271da81abe3d369bb8573c50a3174d5f9e1ef954ece888f6c9a8f2da46c2ee",
+    "receipt_paths": [
+      "/shared/home/greg/data/ckdmip-logs/g4-s1-lw-4555-scontrol-final-session40.txt",
+      "/shared/home/greg/data/ckdmip-logs/g4-s1-lw-4555-scontrol-final-agent42.txt"
+    ],
+    "receipt_sha256": "f496e977287029170eaa9b324c6b113ba8ce2f389f010a9610687230a8e0abd8",
+    "run_time": "00:00:22",
+    "runroot_preserved": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4555/lw-s1"
+  },
+  "non_authorizing_note": "this ledger records and classifies evidence; the amended attempt-2 checkpoint must pin this ledger and monitor GO is required before any commit or resubmission",
+  "preflight_design_evidence": {
+    "corrected_recipe": {
+      "classification": "build-enablement correction, not a scientific change and not historical build equivalence; the same corrected build is common to A0/S1, preserving the internal one-factor triple-arm test; historical 4515 remains an output bridge only if the A0 raw2 matches",
+      "configure_argv": "./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'",
+      "diagnostic_result": "monitor-tested in fresh isolated artifact copies after autoreconf: Adept >= 2.1 yes, nc_create -lnetcdf, final LIBS = -lnetcdf -ladept",
+      "ldflags_semantics": "path + rpath ONLY, never -ladept (the m4 adds its own early -ladept; user LIBS supplies the resolving late -ladept because autoconf places LIBS after conftest.cpp)",
+      "libs_only_counterexample": "LIBS=-ladept alone fails at rc=77 'C++ compiler cannot create executables' (the nonstandard Adept lib path is unknown before the m4 check)"
+    },
+    "scope": "monitor-observed diagnostics in EPHEMERAL /tmp copies; NOT content-pinned campaign evidence; the corrected recipe is preflight design evidence only, and the authoritative execution proof is attempt 2's fail-closed configure + byte-exact config.status assertion in the amended checkpoint"
+  },
+  "root_cause": "ARGUMENT-POSITION link defect in the fresh (9a2a6908) configure's Adept >= 2.1 test: the m4 macro embeds its own -ladept AHEAD of conftest.cpp, so left-to-right linker scanning drops the library before the object that needs adept::compiler_version() (out-of-line, [abi:cxx11]) -> undefined reference -> 'Unable to find Adept library version >= 2.1'. Paths were present (-L + rpath in the failing command); no runtime environment involved.",
+  "stale_configure_finding": "generated configure vintage differs despite identical current m4 source: the extant built tree's configure (9ed1baac) checks Adept >= 1.1 while m4/adept.m4 is byte-identical (79d60785) between that tree and the artifact; the extant generated configure is stale generated state, so config.status --config (user options only) was insufficient build-equivalence evidence.",
+  "status": "s1_4555_failure_recorded",
+  "timestamp_utc": "2026-08-13T21:54:01Z"
+}

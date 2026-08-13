@@ -2,7 +2,7 @@
 
 Status: **s1_checkpoint_ready**
 
-triple-arm (A0a/A0b pristine control repeats sharing ONE saved binary, S1 one-line sync patch) from ONE source copy, one configure matching the extant 4515-era build (--with-adept --with-netcdf ONLY, string asserted), sequential builds with immutable saved binaries, SANDWICH execution order A0a -> S1 -> A0b, independent testcopy/work/log clones per arm, identical staged inputs/options/preloads and explicit OpenMP controls (OMP_NUM_THREADS=SLURM_CPUS_PER_TASK, OMP_DYNAMIC=FALSE, logged per arm); A0a-vs-A0b establishes the repeatability floor across the full treatment interval, A0-vs-S1 is primary, historical 4515 is an informational echo unless the A0 arms match it
+triple-arm (A0a/A0b pristine control repeats sharing ONE saved binary, S1 one-line sync patch) from ONE source copy, ONE corrected fresh-autoreconf configure (path-only LDFLAGS + late LIBS=-ladept; BUILD-ENABLEMENT, not historical build equivalence -- see the reviewed 4555 failure ledger; config.status rendering asserted byte-exact), sequential builds with immutable saved binaries, SANDWICH execution order A0a -> S1 -> A0b, independent testcopy/work/log clones per arm, identical staged inputs/options/preloads and explicit OpenMP controls (OMP_NUM_THREADS=SLURM_CPUS_PER_TASK, OMP_DYNAMIC=FALSE, logged per arm); A0a-vs-A0b establishes the repeatability floor across the full treatment interval, A0-vs-S1 is primary, historical 4515 is an informational echo unless the A0 arms match it
 
 | Gate | Result |
 |---|---|
@@ -10,6 +10,7 @@ triple-arm (A0a/A0b pristine control repeats sharing ONE saved binary, S1 one-li
 | evidence_input_pins | passed |
 | evidence_modern_source_pins | passed |
 | evidence_reviewed_b0_ledger | passed |
+| evidence_reviewed_failure_ledger_4555 | passed |
 | evidence_runtime_pins | passed |
 | evidence_sbatch_bash_syntax | passed |
 | evidence_sbatch_text_gates | passed |
@@ -18,7 +19,9 @@ triple-arm (A0a/A0b pristine control repeats sharing ONE saved binary, S1 one-li
 
 Patch pins: original `8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091` -> patched `c23246d53a474540443a0e877992dc0d24cfda1ad6cbafa218e3a824cb72070b` (region 305-320 `cb0c801d9875acf0a76c315e0eb2ec5aec0d723f641beff0341527838216d30c`); tree manifest `a96e78e818e5343bead52a1d2ebf52436f8c0e0e67033bb314b6a00530a93aeb` (119 files)
 
-Generated sbatch: `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_s1_lw_state_sync.sbatch` sha256 `aba1d263fbacbdc8ce33f51a51d620e13c1698d24c87ae7e2c001088a0bf9ba5`
+Generated sbatch: `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_s1_lw_state_sync.sbatch` sha256 `666a9f4fc3727951d1fe7efdd715591f78e785e2a6d5f4de9b8326965509c44d`
+
+Prerequisites (fail-closed, sha-chained): B0 completion ledger `d109c0b6e5aa157716247cb05bdfdf806c96e7fc3367e3d5628c55baeda66012` (b0_run_completed_verified) + 4555 failure ledger `865b8c65dc48d6500ca7f71c311a0fce1f40b1fd2bab7cd2c35d276907f582cb` (s1_4555_failure_recorded)
 
 Pre-registered outcome matrix:
 - A0a == A0b and S1 == A0a: sync had no effect in this paired deterministic trajectory

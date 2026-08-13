@@ -12,10 +12,23 @@
 #     with a third independent clone
 # Identical explicit OpenMP controls are set AND logged for every arm
 # (OMP_NUM_THREADS = SLURM_CPUS_PER_TASK, OMP_DYNAMIC=FALSE; all other
-# env identical). Configure matches the EXTANT 4515-era build exactly
-# (config.status --config: --with-adept + --with-netcdf ONLY; the m4
-# macros inject netCDF/Adept include/link/rpath flags themselves, so
-# NO extra LDFLAGS/LIBS); the config string is asserted.
+# env identical).
+#
+# BUILD RECIPE (corrected after the 4555 failure; see the reviewed
+# gate4_s1_failure_ledger_4555): the fresh autoreconf configure's
+# Adept >= 2.1 test is order-broken (the m4 embeds its own -ladept
+# AHEAD of conftest.cpp), so the recipe carries path-only LDFLAGS
+# (-L + rpath, NEVER -ladept) plus LIBS=-ladept (autoconf places user
+# LIBS after conftest.cpp, supplying the resolving late -ladept). This
+# is a BUILD-ENABLEMENT correction, not a scientific change and NOT
+# historical build equivalence: the extant tree's generated configure
+# (9ed1baac, Adept >= 1.1 check) is STALE GENERATED STATE relative to
+# its own m4 source (m4/adept.m4 byte-identical across trees), so
+# generated-configure vintage differs despite identical current m4
+# source and config.status --config alone was insufficient
+# build-equivalence evidence. The same corrected build is common to
+# A0/S1, preserving the internal one-factor triple-arm test; the
+# config.status rendering is asserted byte-exact.
 #
 # PRE-REGISTERED OUTCOME MATRIX (monitor ruling, verbatim substance):
 #   - A0a == A0b and S1 == A0a: sync had no effect in this paired
@@ -72,9 +85,21 @@ const S1_MINIMIZER_H_SHA = "dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230ea
 const S1_LIBADEPT = "$S1_ADEPT/lib/libadept.so.0.0.0"
 const S1_LIBADEPT_SHA = "1f9016af1b6982493dc8d53dd3a11b2b0c54d4e84c4dbb548b4b06093d43dbcb"
 const S1_NETCDF = "/shared/home/greg/local/ckdmip-stack"
-# EXACT match to the extant 4515-era build (config.status --config):
-# two flags only, no LDFLAGS/LIBS
-const S1_CONFIGURE_ARGV = "./configure --with-adept=$S1_ADEPT --with-netcdf=$S1_NETCDF"
+# corrected recipe (monitor-tested; reviewed failure ledger 4555):
+# path-only LDFLAGS (-L + rpath, never -ladept) + late LIBS=-ladept
+const S1_CONFIGURE_ARGV = "./configure --with-adept=$S1_ADEPT " *
+    "--with-netcdf=$S1_NETCDF " *
+    "'LDFLAGS=-L$S1_ADEPT/lib -Wl,-rpath,$S1_ADEPT/lib' 'LIBS=-ladept'"
+# exact config.status --config rendering observed for this recipe
+const S1_CONFIG_STATUS_EXPECT = "--with-adept=$S1_ADEPT " *
+    "--with-netcdf=$S1_NETCDF " *
+    "'LDFLAGS=-L$S1_ADEPT/lib -Wl,-rpath,$S1_ADEPT/lib' LIBS=-ladept"
+
+# reviewed attempt-1 failure ledger (prerequisite; fail-closed)
+const S1_FL5_JSON = validation_results_path("gate4_s1_failure_ledger_4555.json")
+const S1_FL5_CASE = "gate4_s1_failure_ledger_4555"
+const S1_FL5_STATUS = "s1_4555_failure_recorded"
+const S1_FL5_SHA = "865b8c65dc48d6500ca7f71c311a0fce1f40b1fd2bab7cd2c35d276907f582cb"
 
 # fail-closed toolchain fingerprints: exact command paths + complete
 # first version lines (monitor blocker 3)
@@ -201,7 +226,7 @@ function s1_snapshot(path; readfn = read)
     (ok = true, reason = "", sha = sha, data = data)
 end
 
-function s1_classify_b0_ledger(path; expected_case = S1_B0_LEDGER_CASE,
+function s1_classify_ledger(path; expected_case = S1_B0_LEDGER_CASE,
                                expected_status = S1_B0_LEDGER_STATUS,
                                expected_sha = S1_B0_LEDGER_SHA,
                                readfn = read)
@@ -263,7 +288,8 @@ function s1_make_sbatch(tree)
          for f in ("validation/gate4_quota_guard.sh",
                    "validation/gate4_s1_state_sync_checkpoint.jl",
                    "validation/validation_results.jl")],
-        ["$S1_B0_LEDGER_SHA  $S1_B0_LEDGER"]), "\n")
+        ["$S1_B0_LEDGER_SHA  $S1_B0_LEDGER",
+         "$S1_FL5_SHA  $S1_FL5_JSON"]), "\n")
     # full-tree manifests (monitor blocker 2)
     artifact_tree_lines = join(["$(e.sha)  $S1_SRC_ARTIFACT/$(e.rel)"
                                 for e in tree], "\n")
@@ -314,7 +340,7 @@ RUNROOT="\$G4WORK/g4-diag/\${SLURM_JOB_ID}/lw-s1"
 SRCDIR="\$RUNROOT/src/ecckd-modern-paired"
 
 echo "=== S1-lw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
-sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/reviewed B0 ledger changed since generation; regenerate the checkpoint" >&2; exit 75; }
+sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/reviewed prerequisite ledgers changed since generation; regenerate the checkpoint" >&2; exit 75; }
 $gate_pins
 GATEPINS
 
@@ -407,7 +433,7 @@ $(join(["$sha  \$RUNROOT/test-template/$(basename(path))"
 TEMPLATEPINS
 chmod -R a-w "\$RUNROOT/test-template"
 
-echo "=== S1-lw stage 3: A0 pristine control build (extant-matching configure; two flags only) ==="
+echo "=== S1-lw stage 3: A0 pristine control build (corrected fresh-autoreconf recipe; build-enablement, not historical equivalence) ==="
 cd "\$SRCDIR"
 autoreconf -i
 $S1_CONFIGURE_ARGV
@@ -420,12 +446,13 @@ cp -- "\$SRCDIR/config.log" "\$RUNROOT/config.log.a0"
 ./config.status --config > "\$RUNROOT/config.status.config.txt"
 echo "--- config.status --config (all arms; single configure) ---"
 cat "\$RUNROOT/config.status.config.txt"
-# assert the config string EXACTLY matches the extant 4515-era build
-[ "\$(cat "\$RUNROOT/config.status.config.txt")" = "--with-adept=$S1_ADEPT --with-netcdf=$S1_NETCDF" ] || { echo "REFUSED: config.status --config != historical two-flag invocation" >&2; exit 68; }
+# assert the config.status rendering EXACTLY matches the corrected
+# reviewed recipe (path-only LDFLAGS + late LIBS=-ladept)
+[ "\$(cat "\$RUNROOT/config.status.config.txt")" = "$S1_CONFIG_STATUS_EXPECT" ] || { echo "REFUSED: config.status --config != corrected reviewed recipe rendering" >&2; exit 68; }
 sha256sum "\$RUNROOT/bin/optimize_lut_a0" "\$RUNROOT/config.log.a0" "\$RUNROOT/config.status.config.txt"
 echo "historical 4515 pre-existing binary (informational echo only): $S1_4515_BINARY_SHA"
 
-echo "=== S1-lw stage 4: EXACTLY ONE anchored sync-line patch + post-patch tree identity ==="
+echo "=== S1-lw stage 4: EXACTLY ONE anchored sync-line patch + post-patch REGISTERED-FILE identity (119 artifact files; generated build files out of scope) ==="
 SA="\$SRCDIR/$S1_SOLVE_ADEPT_REL"
 echo "$S1_ORIG_SOLVE_ADEPT_SHA  \$SA" | sha256sum -c - >/dev/null || { echo "REFUSED: pre-patch solve_adept.cpp sha drift" >&2; exit 69; }
 [ "\$(grep -cxF '$S1_PATCH_ANCHOR' "\$SA" || true)" = 1 ] || { echo "REFUSED: patch anchor not exactly once" >&2; exit 69; }
@@ -437,8 +464,12 @@ echo "$S1_PATCHED_SOLVE_ADEPT_SHA  \$SA" | sha256sum -c - >/dev/null || { echo "
 ORIG_LC=\$(wc -l < "\$RUNROOT/solve_adept.cpp.orig")
 NEW_LC=\$(wc -l < "\$SA")
 [ "\$NEW_LC" = "\$((ORIG_LC + 1))" ] || { echo "REFUSED: patch changed \$((NEW_LC - ORIG_LC)) lines, expected exactly 1" >&2; exit 69; }
-# the ONLY source-tree content delta is solve_adept.cpp (full 119-file
-# manifest with exactly that one line substituted)
+# AMONG THE 119 REGISTERED ARTIFACT FILES, only solve_adept.cpp
+# changed (manifest with exactly that one entry substituted). This does
+# NOT prove literal whole-working-tree identity or the absence of
+# generated extras: stage-3 autoreconf/make legitimately creates
+# generated/build files outside the registered manifest. The pre-build
+# stage-2 census remains the exact whole-copied-tree gate.
 ( cd "\$SRCDIR" && sha256sum -c <<'POSTPATCHTREE' >/dev/null ) || { echo "REFUSED: post-patch tree differs beyond the registered one-line change" >&2; exit 69; }
 $postpatch_tree_lines
 POSTPATCHTREE
@@ -655,7 +686,11 @@ function s1_text_gate_issues(text)
         "PRIMARY COMPARISON",
         "BASELINE REPEATABILITY",
         "OMP_NUM_THREADS=\"\$SLURM_CPUS_PER_TASK\" OMP_DYNAMIC=FALSE",
-        "REFUSED: config.status --config != historical two-flag invocation",
+        "REFUSED: config.status --config != corrected reviewed recipe rendering",
+        S1_CONFIG_STATUS_EXPECT,
+        "'LDFLAGS=-L$S1_ADEPT/lib -Wl,-rpath,$S1_ADEPT/lib'",
+        "'LIBS=-ladept'",
+        S1_FL5_SHA,
         S1_MODERN_RAW2_SHA,
         S1_4515_BINARY_SHA,
         "raw2 independent schema/finite verification passed",
@@ -682,13 +717,25 @@ function s1_text_gate_issues(text)
     n == 1 || push!(iss, "expected exactly 1 SANDWICH-ordered run loop (a0a s1 a0b), got $n")
     n = length(collect(eachmatch(r"for b in a0 s1; do", text)))
     n == 1 || push!(iss, "expected exactly 1 per-binary ldd loop, got $n")
+    # exact occurrence counts (never mere substring presence) for the
+    # corrected configure invocation and the config.status expectation
+    n = length(collect(eachmatch(Regex("\\Q" * S1_CONFIGURE_ARGV * "\\E"), text)))
+    n == 1 || push!(iss, "corrected configure invocation not exactly once ($n)")
+    n = length(collect(eachmatch(Regex("\\Q" * S1_CONFIG_STATUS_EXPECT * "\\E"), text)))
+    n == 1 || push!(iss, "config.status expectation not exactly once ($n)")
+    n = length(collect(eachmatch(Regex("\\Q'LIBS=-ladept'\\E"), text)))
+    n == 1 || push!(iss, "quoted LIBS assignment not exactly once ($n)")
     n = length(collect(eachmatch(Regex("\\Q" * S1_PATCH_LINE * "\\E"), text)))
     n == 2 || push!(iss, "sync line must appear exactly twice (sed payload + count assert), got $n")
     for bad in ("relative-ch4", "relative-n2o", "relative-cfc",
                 "CANON_FINAL", "mv -n", ".g3.publish.",
-                "LDFLAGS=-L", "LIBS=-ladept",
                 "$S1_G4WORK/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition")
         occursin(bad, text) && push!(iss, "forbidden text present: $bad")
+    end
+    # user LDFLAGS must be path+rpath ONLY; -ladept inside LDFLAGS is
+    # the wrong (early, order-broken) position and is banned
+    for m in eachmatch(r"LDFLAGS=[^']*-ladept", text)
+        push!(iss, "-ladept inside LDFLAGS (order-broken position): $(m.match)")
     end
     for m in eachmatch(r"\|\s*head\b", text)
         push!(iss, "early-closing head pipeline present: $(m.match)")
@@ -709,7 +756,7 @@ function s1_fixtures(tree)
     fx = mktempdir()
     shaof(p) = bytes2hex(sha256(read(p)))
 
-    cls(p; kw...) = s1_classify_b0_ledger(p; kw...)
+    cls(p; kw...) = s1_classify_ledger(p; kw...)
     t["ledger_missing_refuses"] =
         cls(joinpath(fx, "absent.json")).class == "missing"
     p = joinpath(fx, "bad.json"); write(p, "{oops")
@@ -766,9 +813,37 @@ function s1_fixtures(tree)
     t["text_good_accepted"] = isempty(s1_text_gate_issues(text))
     t["text_missing_patch_pin_refuses"] = !isempty(s1_text_gate_issues(
         replace(text, S1_PATCHED_SOLVE_ADEPT_SHA => "0" ^ 64)))
-    t["text_ldflags_reintroduced_refuses"] = !isempty(s1_text_gate_issues(
-        replace(text, S1_CONFIGURE_ARGV =>
-            S1_CONFIGURE_ARGV * " 'LDFLAGS=-L$S1_ADEPT/lib' 'LIBS=-ladept'")))
+    # corrected-recipe integrity: omission or drift of EITHER link
+    # assignment refuses; -ladept smuggled into LDFLAGS refuses
+    t["text_missing_ldflags_assignment_refuses"] = !isempty(s1_text_gate_issues(
+        replace(text, "'LDFLAGS=-L$S1_ADEPT/lib -Wl,-rpath,$S1_ADEPT/lib'" => "")))
+    t["text_missing_libs_assignment_refuses"] = !isempty(s1_text_gate_issues(
+        replace(text, " 'LIBS=-ladept'" => "")))
+    t["text_ladept_inside_ldflags_refuses"] = !isempty(s1_text_gate_issues(
+        replace(text, "'LDFLAGS=-L$S1_ADEPT/lib -Wl,-rpath,$S1_ADEPT/lib'" =>
+                      "'LDFLAGS=-L$S1_ADEPT/lib -ladept'")))
+    t["text_failure_ledger_pin_drift_refuses"] = !isempty(s1_text_gate_issues(
+        replace(text, S1_FL5_SHA => "0" ^ 64)))
+    t["text_duplicate_configure_refuses"] = !isempty(s1_text_gate_issues(
+        text * "\n" * S1_CONFIGURE_ARGV * "\n"))
+    t["text_duplicate_config_status_expect_refuses"] = !isempty(
+        s1_text_gate_issues(text * "\n" * S1_CONFIG_STATUS_EXPECT * "\n"))
+    # failure-ledger prerequisite classifier (same guarded loader)
+    fx2 = mktempdir()
+    p = joinpath(fx2, "fl5.json")
+    write(p, JSON.json(Dict("case" => S1_FL5_CASE,
+                            "status" => S1_FL5_STATUS)))
+    t["fl5_ledger_green_accepted"] = s1_classify_ledger(p;
+        expected_case = S1_FL5_CASE, expected_status = S1_FL5_STATUS,
+        expected_sha = shaof(p)).ok
+    t["fl5_ledger_status_mismatch_refuses"] = begin
+        p2 = joinpath(fx2, "fl5bad.json")
+        write(p2, JSON.json(Dict("case" => S1_FL5_CASE,
+                                 "status" => "s1_4555_ledger_refused")))
+        s1_classify_ledger(p2; expected_case = S1_FL5_CASE,
+            expected_status = S1_FL5_STATUS,
+            expected_sha = shaof(p2)).class == "status mismatch"
+    end
     t["text_missing_a0_save_refuses"] = !isempty(s1_text_gate_issues(
         replace(text, "chmod a-w \"\$RUNROOT/bin/optimize_lut_a0\"" => "true")))
     t["text_missing_binary_diff_assert_refuses"] = !isempty(s1_text_gate_issues(
@@ -814,8 +889,13 @@ function main()
 
     groups = Dict{String, Vector{String}}()
 
-    led = s1_classify_b0_ledger(S1_B0_LEDGER)
+    led = s1_classify_ledger(S1_B0_LEDGER)
     groups["reviewed_b0_ledger"] = led.ok ? String[] : [led.reason]
+
+    fl5 = s1_classify_ledger(S1_FL5_JSON;
+        expected_case = S1_FL5_CASE, expected_status = S1_FL5_STATUS,
+        expected_sha = S1_FL5_SHA)
+    groups["reviewed_failure_ledger_4555"] = fl5.ok ? String[] : [fl5.reason]
 
     src = String[]
     length(tree) == S1_TREE_FILES ||
@@ -906,9 +986,12 @@ function main()
         "sbatch_sha256" => sb_sha,
         "design" => "triple-arm (A0a/A0b pristine control repeats " *
             "sharing ONE saved binary, S1 one-line sync patch) from ONE " *
-            "source copy, one configure matching the extant 4515-era " *
-            "build (--with-adept --with-netcdf ONLY, string asserted), " *
-            "sequential builds with immutable saved binaries, SANDWICH " *
+            "source copy, ONE corrected fresh-autoreconf configure " *
+            "(path-only LDFLAGS + late LIBS=-ladept; BUILD-ENABLEMENT, " *
+            "not historical build equivalence -- see the reviewed 4555 " *
+            "failure ledger; config.status rendering asserted " *
+            "byte-exact), sequential builds with immutable saved " *
+            "binaries, SANDWICH " *
             "execution order A0a -> S1 -> A0b, independent " *
             "testcopy/work/log clones per arm, identical staged " *
             "inputs/options/preloads and explicit OpenMP controls " *
@@ -928,7 +1011,12 @@ function main()
             "executables" => S1_TREE_EXEC,
             "symlinks" => 0,
             "manifest_sha256" => s1_manifest_hash(tree),
-            "patched_manifest_note" => "post-patch manifest differs in " *
+            "patched_manifest_note" => "post-patch check proves that AMONG " *
+                "THE 119 REGISTERED ARTIFACT FILES only solve_adept.cpp " *
+                "changed; it does not prove whole-working-tree identity " *
+                "or absence of legitimate generated build files " *
+                "(stage-3 autoreconf/make creates those outside the " *
+                "registered manifest); the manifest differs in " *
                 "exactly one entry: $S1_SOLVE_ADEPT_REL " *
                 "$S1_ORIG_SOLVE_ADEPT_SHA -> $S1_PATCHED_SOLVE_ADEPT_SHA"),
         "patch" => Dict(
@@ -951,11 +1039,17 @@ function main()
             "libtoolize" => S1_LIBTOOLIZE_VER,
             "adept_minimizer_h_sha256" => S1_MINIMIZER_H_SHA,
             "libadept_sha256" => S1_LIBADEPT_SHA),
-        "prerequisite" => Dict(
-            "b0_ledger" => S1_B0_LEDGER,
-            "reviewed_sha256" => S1_B0_LEDGER_SHA,
-            "required_case" => S1_B0_LEDGER_CASE,
-            "required_status" => S1_B0_LEDGER_STATUS),
+        "prerequisites" => [
+            Dict("ledger" => "B0 era-stack completion ledger",
+                 "path" => S1_B0_LEDGER,
+                 "required_case" => S1_B0_LEDGER_CASE,
+                 "required_status" => S1_B0_LEDGER_STATUS,
+                 "reviewed_sha256" => S1_B0_LEDGER_SHA),
+            Dict("ledger" => "S1 attempt-1 (4555) failure ledger",
+                 "path" => S1_FL5_JSON,
+                 "required_case" => S1_FL5_CASE,
+                 "required_status" => S1_FL5_STATUS,
+                 "reviewed_sha256" => S1_FL5_SHA)],
         "preregistered_outcome_matrix" => [
             "A0a == A0b and S1 == A0a: sync had no effect in this " *
                 "paired deterministic trajectory",
@@ -1019,6 +1113,10 @@ function main()
         println(io, "\nGenerated sbatch: `$S1_SBATCH`" *
                     (sb_sha === nothing ? " (NOT written; refused)" :
                      " sha256 `$sb_sha`"))
+        println(io, "\nPrerequisites (fail-closed, sha-chained): B0 " *
+                    "completion ledger `$S1_B0_LEDGER_SHA` " *
+                    "($S1_B0_LEDGER_STATUS) + 4555 failure ledger " *
+                    "`$S1_FL5_SHA` ($S1_FL5_STATUS)")
         println(io, "\nPre-registered outcome matrix:")
         for o in result["preregistered_outcome_matrix"]
             println(io, "- ", o)
