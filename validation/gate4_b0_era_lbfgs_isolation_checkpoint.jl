@@ -166,6 +166,35 @@ const B0_A4540_EXPECT = Dict(
     "WorkDir" => B0_PROJECT_ROOT,
     "StdOut" => B0_A4540_LOG)
 
+# --- attempt registry: job 4545 (FAILED 68:0; designed proof-gate false
+# --- positive at the stage-3 binary Adept-absence assertion; build green) ------
+const B0_A4545_RECEIPT_S40 = "$B0_LOG_DIR/g4-b0-lw-4545-scontrol-final-session40.txt"
+const B0_A4545_RECEIPT_A42 = "$B0_LOG_DIR/g4-b0-lw-4545-scontrol-final-agent42.txt"
+const B0_A4545_RECEIPT_SHA = "6f3632adab027e05ace8095a06ab4de62fe6cd4a62ccc2e514c4f2eb62f9ddad"
+const B0_A4545_LOG = "$B0_LOG_DIR/g4-b0-lw-4545.log"
+const B0_A4545_LOG_SHA = "ccad0ca47f096ad74aead4aa0634c1a40acf741e17f5e5ef63191dbdf91b59d9"
+const B0_A4545_REFUSAL_LINE = "REFUSED: Adept LBFGS string present in era binary"
+const B0_A4545_EXPECT = Dict(
+    "JobId" => "4545", "JobName" => "g4-b0-lw-era-lbfgs",
+    "JobState" => "FAILED", "Reason" => "NonZeroExitCode",
+    "ExitCode" => "68:0", "DerivedExitCode" => "0:0",
+    "Restarts" => "0", "RunTime" => "00:00:46",
+    "SubmitTime" => "2026-08-13T19:37:23",
+    "StartTime" => "2026-08-13T19:40:38",
+    "EndTime" => "2026-08-13T19:41:24",
+    "Command" => joinpath(B0_PROJECT_ROOT,
+        "validation/results/gate4_b0_lw_era_lbfgs.sbatch"),
+    "SubmitLine" => "sbatch --parsable validation/results/gate4_b0_lw_era_lbfgs.sbatch",
+    "WorkDir" => B0_PROJECT_ROOT,
+    "StdOut" => B0_A4545_LOG)
+
+# pinned dispatch-region source hash (monitor forensics 2026-08-13):
+# sha256 of lines 259-278 of the b42e5c0 optimize_lut.cpp -- the exact
+# '#define USE_LBFGS_LIBRARY 1' / '#ifdef' / solve_lbfgs call / '#else' /
+# solve_adept call / '#endif' block; byte-exact, so moving or removing
+# the #else cannot pass
+const B0_DISPATCH_REGION_SHA = "6b1b9fbec6a0de80b3b4cf2fc96be7f65d01c1e20636de8b7d7844873c349c21"
+
 const B0_RESULTS_JSON = validation_results_path("gate4_b0_era_lbfgs_isolation_checkpoint.json")
 const B0_RESULTS_MD = validation_results_path("gate4_b0_era_lbfgs_isolation_checkpoint.md")
 const B0_SBATCH = validation_results_path("gate4_b0_lw_era_lbfgs.sbatch")
@@ -251,36 +280,56 @@ function b0_receipt_issues(f, expect)
     sort(iss)
 end
 
-# content coupled to claims: byte-identity across custody, every
-# terminal field bound from EACH receipt, and the failed log must show
-# stages 0a-0d only -- never 0e/RUNROOT progress/done
-function b0_a4540_issues(r40bytes, r42bytes, logtext;
-                         expect = B0_A4540_EXPECT)
+# content coupled to claims (BOTH terminal attempts): byte-identity
+# across custody, every terminal field bound from EACH receipt, and the
+# failed log must show exactly the claimed stage shape plus any
+# required designed-refusal lines and none of the absent markers
+function b0_attempt_issues(job, r40bytes, r42bytes, logtext;
+                           expect, present_stages, absent_markers,
+                           required_lines = String[])
     iss = String[]
     r40bytes == r42bytes ||
-        push!(iss, "4540 receipts not byte-identical across custody")
+        push!(iss, "$job receipts not byte-identical across custody")
     for (label, bytes) in (("session40", r40bytes), ("agent42", r42bytes))
         f = b0_parse_receipt(String(copy(bytes)))
         for i in b0_receipt_issues(f, expect)
-            push!(iss, "4540 $label receipt: $i")
+            push!(iss, "$job $label receipt: $i")
         end
     end
-    for s in ("0a", "0b", "0c", "0d")
+    for s in present_stages
         occursin("=== B0-lw stage $s", logtext) ||
-            push!(iss, "4540 log missing stage $s marker")
+            push!(iss, "$job log missing stage $s marker")
     end
-    # the pre-RUNROOT claim binds generically: the verified clean 4540
-    # log contains ZERO occurrences of the token RUNROOT (no lock, no
-    # creation, no staging, no preservation lines)
-    for bad in ("=== B0-lw stage 0e", "=== B0-lw stage 1",
-                "staged scientific-input snapshot verified",
-                "RUNROOT",
-                "=== B0-lw done ")
+    for bad in absent_markers
         occursin(bad, logtext) &&
-            push!(iss, "4540 log falsely contains: $bad")
+            push!(iss, "$job log falsely contains: $bad")
+    end
+    for r in required_lines
+        n = length(collect(eachmatch(Regex("\\Q" * r * "\\E"), logtext)))
+        n == 1 ||
+            push!(iss, "$job log required line not exactly once ($n): $r")
     end
     iss
 end
+
+# 4540: pre-RUNROOT claim binds generically (verified clean log has ZERO
+# RUNROOT tokens: no lock, no creation, no staging, no preservation)
+b0_a4540_issues(r40, r42, logtext; expect = B0_A4540_EXPECT) =
+    b0_attempt_issues(4540, r40, r42, logtext; expect = expect,
+        present_stages = ["0a", "0b", "0c", "0d"],
+        absent_markers = ["=== B0-lw stage 0e", "=== B0-lw stage 1",
+                          "staged scientific-input snapshot verified",
+                          "RUNROOT", "=== B0-lw done "])
+
+# 4545: designed proof-gate false positive AFTER a green build (stages
+# 0a-3 complete, refusal line exactly present, never stage 4+ or done)
+b0_a4545_issues(r40, r42, logtext; expect = B0_A4545_EXPECT) =
+    b0_attempt_issues(4545, r40, r42, logtext; expect = expect,
+        present_stages = ["0a", "0b", "0c", "0d", "0e", "1", "2", "3"],
+        absent_markers = ["=== B0-lw stage 4", "=== B0-lw stage 5",
+                          "=== B0-lw stage 6", "=== B0-lw stage 7",
+                          "=== B0-lw done "],
+        required_lines = [B0_A4545_REFUSAL_LINE])
 
 # --- sbatch generation ------------------------------------------------------------
 
@@ -426,10 +475,26 @@ autoreconf -i
 $B0_CONFIGURE_ARGV
 make -j"\$SLURM_CPUS_PER_TASK"
 test -x "\$SRCDIR/src/ecckd/optimize_lut" || { echo "REFUSED: era optimize_lut not built" >&2; exit 68; }
-# binary-level era-stack proof: era banner string present, Adept-LBFGS
-# banner absent (the v1.2 banner string must NOT appear)
-[ "\$(strings "\$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Optimizing coefficients with LBFGS algorithm' || true)" -ge 1 ] || { echo "REFUSED: era LBFGS banner string absent from binary" >&2; exit 68; }
-[ "\$(strings "\$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Adept LBFGS' || true)" = 0 ] || { echo "REFUSED: Adept LBFGS string present in era binary" >&2; exit 68; }
+# call-path proof, layered (monitor contract 2026-08-13). The LINKED
+# binary legitimately contains BOTH banner strings: solve_lbfgs.o
+# references calc_cost_function_and_gradient, which is DEFINED in
+# solve_adept.o alongside solve_adept, so the linker pulls the whole
+# solve_adept.o object into the executable despite compile-time routing
+# to solve_lbfgs (4545 lesson: a strings-absence check is over-broad by
+# construction and is banned).
+# (1) byte-exact dispatch-region hash (lines 259-278: define/ifdef/
+#     solve_lbfgs call/else/solve_adept call/endif)
+[ "\$(sed -n '259,278p' "\$SRCDIR/src/ecckd/optimize_lut.cpp" | sha256sum | cut -d' ' -f1)" = "$B0_DISPATCH_REGION_SHA" ] || { echo "REFUSED: dispatch-region hash mismatch (lines 259-278)" >&2; exit 68; }
+# (2) exact macro line
+[ "\$(grep -cx '#define USE_LBFGS_LIBRARY 1' "\$SRCDIR/src/ecckd/optimize_lut.cpp" || true)" = 1 ] || { echo "REFUSED: USE_LBFGS_LIBRARY macro line not exactly once" >&2; exit 68; }
+# (3) object-level undefined-reference proof on the COMPILED call site
+command -v nm >/dev/null || { echo "MISSING nm" >&2; exit 65; }
+NM_OBJ=\$(nm -C "\$SRCDIR/src/ecckd/optimize_lut.o")
+[ "\$(grep -cE '^[[:space:]]*U solve_lbfgs\\(' <<<"\$NM_OBJ" || true)" = 1 ] || { echo "REFUSED: optimize_lut.o undefined solve_lbfgs reference != 1" >&2; exit 68; }
+[ "\$(grep -cE '^[[:space:]]*U solve_adept\\(' <<<"\$NM_OBJ" || true)" = 0 ] || { echo "REFUSED: optimize_lut.o has an undefined solve_adept reference" >&2; exit 68; }
+# composition evidence ONLY (never a routing claim): the era banner is
+# linked in via solve_lbfgs.o
+[ "\$(strings "\$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Optimizing coefficients with LBFGS algorithm' || true)" -ge 1 ] || { echo "REFUSED: era LBFGS banner string absent from linked binary" >&2; exit 68; }
 
 echo "=== B0-lw stage 4: optimizer wrapper (Netlib preload + FP-trap shim; env-only) ==="
 cat > "\$WRAPPER" <<WRAP
@@ -456,9 +521,11 @@ echo "\$LDD_OUT"
 [ "\$(grep -cF "$B0_NETLIB_LAPACK" <<<"\$LDD_OUT" || true)" = 1 ] || { echo "REFUSED: exact LAPACK preload row count != 1" >&2; exit 79; }
 [ "\$(grep -cF 'liblapack.so.3 =>' <<<"\$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: liblapack.so.3 alias row present" >&2; exit 79; }
 [ "\$(grep -cF 'libblas.so.3 =>' <<<"\$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: libblas.so.3 alias row present" >&2; exit 79; }
-LN_B=\$(grep -nF "$B0_NETLIB_BLAS" <<<"\$LDD_OUT" | cut -d: -f1 | head -1 || true)
-LN_L=\$(grep -nF "$B0_NETLIB_LAPACK" <<<"\$LDD_OUT" | cut -d: -f1 | head -1 || true)
-LN_S=\$(grep -nF "$B0_SHIM_SO" <<<"\$LDD_OUT" | cut -d: -f1 | head -1 || true)
+# line-number extraction reads ALL input (no early-closing head; each
+# exact-row count above is already required to equal 1, so first==only)
+LN_B=\$(awk -v pat="$B0_NETLIB_BLAS" 'index(\$0, pat) && !ln { ln = NR } END { if (ln) print ln }' <<<"\$LDD_OUT")
+LN_L=\$(awk -v pat="$B0_NETLIB_LAPACK" 'index(\$0, pat) && !ln { ln = NR } END { if (ln) print ln }' <<<"\$LDD_OUT")
+LN_S=\$(awk -v pat="$B0_SHIM_SO" 'index(\$0, pat) && !ln { ln = NR } END { if (ln) print ln }' <<<"\$LDD_OUT")
 { [ -n "\$LN_B" ] && [ -n "\$LN_L" ] && [ -n "\$LN_S" ] && [ "\$LN_B" -lt "\$LN_L" ] && [ "\$LN_L" -lt "\$LN_S" ]; } || { echo "REFUSED: preload row order is not BLAS<LAPACK<H5shim" >&2; exit 79; }
 
 echo "=== B0-lw stage 5: isolated v1.2 testcopy (exact 4515 config overrides; era binary via wrapper) ==="
@@ -507,6 +574,7 @@ PROBE_RC=\${PIPESTATUS[0]}
 set -e
 [ "\$PROBE_RC" = 0 ] || { echo "REFUSED: schema-open probe failed rc=\$PROBE_RC (old reader may reject the v1.2 init; NO stripping without monitor review; probe log preserved)" >&2; exit 71; }
 [ "\$(grep -cF '$probe_banner' "\$RUNROOT/probe-run.log" || true)" = 1 ] || { echo "REFUSED: probe did not show exactly one era banner with max iterations = 1" >&2; exit 71; }
+[ "\$(grep -cF 'Adept LBFGS' "\$RUNROOT/probe-run.log" || true)" = 0 ] || { echo "REFUSED: probe emitted a runtime Adept-LBFGS banner" >&2; exit 71; }
 test -s "\$RUNROOT/probe-work/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc" || { echo "REFUSED: probe produced no raw2 output" >&2; exit 71; }
 echo "schema-open probe PASSED: old reader accepted the v1.2 init with min/max arrays present (no strip needed)"
 
@@ -606,18 +674,42 @@ function b0_text_gate_issues(text)
         # expansion (the pipefail-safe form), never an early-closing pipe
         "AC_FULL=\$(autoconf --version)",
         "AM_FULL=\$(automake --version)",
-        "LT_FULL=\$(libtoolize --version)"]
+        "LT_FULL=\$(libtoolize --version)",
+        # 4545 lesson: layered call-path proof (region hash + macro +
+        # object-level nm) and runtime zero-Adept gates in BOTH logs
+        "sed -n '259,278p'",
+        B0_DISPATCH_REGION_SHA,
+        "grep -cx '#define USE_LBFGS_LIBRARY 1'",
+        "U solve_lbfgs\\(",
+        "U solve_adept\\(",
+        "REFUSED: probe emitted a runtime Adept-LBFGS banner",
+        "REFUSED: Adept LBFGS banner appeared in era run",
+        "index(\$0, pat) && !ln { ln = NR }"]
     for r in req
         occursin(r, text) || push!(iss, "required text missing: $r")
     end
     # single-pass only: the two real+probe invocations, never the later
-    # relative passes and never any canonical publish machinery
+    # relative passes and never any canonical publish machinery; the
+    # over-broad binary Adept-absence refusal (4545) is banned outright,
+    # as is ANY early-closing head pipeline (4540 class)
     n = length(collect(eachmatch(r"bash optimize_lut_lw\.sh relative-base", text)))
     n == 2 || push!(iss, "expected exactly 2 relative-base invocations (probe+run), got $n")
     for bad in ("relative-ch4", "relative-n2o", "relative-cfc",
                 "CANON_FINAL", "mv -n", ".g3.publish.",
-                "$B0_G4WORK/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition")
+                "$B0_G4WORK/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition",
+                B0_A4545_REFUSAL_LINE)
         occursin(bad, text) && push!(iss, "forbidden text present: $bad")
+    end
+    for m in eachmatch(r"\|\s*head\b", text)
+        push!(iss, "early-closing head pipeline present: $(m.match)")
+    end
+    # semantic ban (4545 class): ANY line that invokes strings on a
+    # binary AND tests/greps for the Adept banner is over-broad by
+    # construction, regardless of refusal wording; runtime LOG greps
+    # (no strings invocation) remain allowed
+    for m in eachmatch(r"(?m)^.*\bstrings\b.*Adept LBFGS.*$", text)
+        push!(iss, "binary strings test for the Adept banner (over-broad " *
+                   "4545 class, any wording): $(m.match)")
     end
     # the ONLY $G4WORK writes allowed are under \$RUNROOT (g4-diag) plus
     # the single duplicate-diagnosis lock file; the canonical
@@ -715,6 +807,51 @@ function b0_fixtures()
         !isempty(b0_a4540_issues(mk4540("SubmitTime" => "2026-08-13T00:00:00"),
                                  mk4540("SubmitTime" => "2026-08-13T00:00:00"),
                                  failedlog))
+
+    # attempt-4545 content binding: green build then the designed
+    # proof-gate refusal; mutations refuse
+    mk4545(over...) = begin
+        e = Dict{String, String}(B0_A4545_EXPECT)
+        for (k, v) in over
+            e[k] = v
+        end
+        Vector{UInt8}(codeunits(
+            "JobId=$(e["JobId"]) JobName=$(e["JobName"])\n" *
+            "   JobState=$(e["JobState"]) Reason=$(e["Reason"]) Dependency=(null)\n" *
+            "   Requeue=1 Restarts=$(e["Restarts"]) BatchFlag=1 ExitCode=$(e["ExitCode"])\n" *
+            "   DerivedExitCode=$(e["DerivedExitCode"])\n" *
+            "   RunTime=$(e["RunTime"]) TimeLimit=06:00:00 TimeMin=N/A\n" *
+            "   SubmitTime=$(e["SubmitTime"]) EligibleTime=$(e["SubmitTime"])\n" *
+            "   StartTime=$(e["StartTime"]) EndTime=$(e["EndTime"]) Deadline=N/A\n" *
+            "   Command=$(e["Command"])\n" *
+            "   SubmitLine=$(e["SubmitLine"])\n" *
+            "   WorkDir=$(e["WorkDir"])\n" *
+            "   StdOut=$(e["StdOut"])\n"))
+    end
+    failedlog45 = join(["=== B0-lw stage $s: x ===" for s in
+                        ("0a", "0b", "0c", "0d", "0e", "1", "2", "3")],
+                       "\nOK lines\n") * "\n" * B0_A4545_REFUSAL_LINE * "\n"
+    t["a4545_good_accepted"] =
+        isempty(b0_a4545_issues(mk4545(), mk4545(), failedlog45))
+    t["a4545_wrong_exit_code_refuses"] =
+        !isempty(b0_a4545_issues(mk4545("ExitCode" => "141:0"),
+                                 mk4545("ExitCode" => "141:0"), failedlog45))
+    t["a4545_receipt_divergence_refuses"] =
+        !isempty(b0_a4545_issues(mk4545(),
+                                 mk4545("EndTime" => "2026-08-13T19:41:25"),
+                                 failedlog45))
+    t["a4545_missing_refusal_line_refuses"] =
+        !isempty(b0_a4545_issues(mk4545(), mk4545(),
+            replace(failedlog45, B0_A4545_REFUSAL_LINE * "\n" => "")))
+    t["a4545_log_reaches_stage4_refuses"] =
+        !isempty(b0_a4545_issues(mk4545(), mk4545(),
+            failedlog45 * "=== B0-lw stage 4: optimizer wrapper ===\n"))
+    t["a4545_log_missing_build_stage_refuses"] =
+        !isempty(b0_a4545_issues(mk4545(), mk4545(),
+            replace(failedlog45, "=== B0-lw stage 3: x ===" => "")))
+    t["a4545_duplicate_refusal_line_refuses"] =
+        !isempty(b0_a4545_issues(mk4545(), mk4545(),
+            failedlog45 * B0_A4545_REFUSAL_LINE * "\n"))
     t["a4540_log_missing_stage_refuses"] =
         !isempty(b0_a4540_issues(mk4540(), mk4540(),
             replace(failedlog, "=== B0-lw stage 0c: x ===" => "")))
@@ -739,6 +876,33 @@ function b0_fixtures()
         replace(text, "flock -n 9" => "true")))
     t["text_version_head_pipeline_refuses"] = !isempty(b0_text_gate_issues(
         text * "\nlibtoolize --version | head -1\n"))
+    t["text_any_head_pipeline_refuses"] = !isempty(b0_text_gate_issues(
+        text * "\ngrep -nF x file | cut -d: -f1 | head -1\n"))
+    # an Adept string in the LINKED binary is NOT itself a refusal: the
+    # over-broad 4545 assertion is banned from generated text outright
+    t["binary_adept_string_not_refused"] =
+        !occursin(B0_A4545_REFUSAL_LINE, text)
+    t["text_readding_adept_absence_refusal_refuses"] =
+        !isempty(b0_text_gate_issues(text *
+            "\n[ x = 0 ] || { echo \"" * B0_A4545_REFUSAL_LINE *
+            "\" >&2; exit 68; }\n"))
+    # semantic ban: the same over-broad check under DIFFERENT refusal
+    # wording must also refuse (strings-on-binary + Adept-banner test)
+    t["text_reworded_strings_adept_check_refuses"] =
+        !isempty(b0_text_gate_issues(text *
+            "\n[ \"\$(strings \"\$SRCDIR/src/ecckd/optimize_lut\" | " *
+            "grep -cF 'Adept LBFGS' || true)\" = 0 ] || { echo " *
+            "\"bad era build\" >&2; exit 99; }\n"))
+    t["text_missing_region_hash_refuses"] = !isempty(b0_text_gate_issues(
+        replace(text, B0_DISPATCH_REGION_SHA => "0" ^ 64)))
+    t["text_missing_macro_gate_refuses"] = !isempty(b0_text_gate_issues(
+        replace(text, "grep -cx '#define USE_LBFGS_LIBRARY 1'" =>
+                      "true # no macro gate")))
+    t["text_missing_nm_gate_refuses"] = !isempty(b0_text_gate_issues(
+        replace(text, "U solve_adept\\(" => "U something_else\\(")))
+    t["text_missing_probe_adept_gate_refuses"] = !isempty(b0_text_gate_issues(
+        replace(text, "REFUSED: probe emitted a runtime Adept-LBFGS banner" =>
+                      "probe ok")))
     t["text_missing_probe_gpoints_refuses"] = !isempty(b0_text_gate_issues(
         replace(text,
             "probe-work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5"
@@ -783,6 +947,12 @@ function main()
             bytes2hex(sha256(blob)) == sha ||
                 push!(era, "era blob sha mismatch: $path")
         end
+        # dispatch-region hash at generation time too (lines 259-278 of
+        # the pinned optimize_lut.cpp blob)
+        blob = read(pipeline(`git -C $B0_ERA_REPO show $B0_ERA_COMMIT:src/ecckd/optimize_lut.cpp`))
+        region = join(split(String(blob), '\n')[259:278], '\n') * "\n"
+        bytes2hex(sha256(Vector{UInt8}(codeunits(region)))) == B0_DISPATCH_REGION_SHA ||
+            push!(era, "dispatch-region (259-278) hash mismatch at generation")
     catch err
         push!(era, "era repo inspection failed: $(sprint(showerror, err))")
     end
@@ -847,6 +1017,32 @@ function main()
     end
     groups["attempt_4540_evidence"] = a40
 
+    a45 = String[]
+    a45_reads = Dict{String, Union{Nothing, Vector{UInt8}}}()
+    for (p, pin, label) in ((B0_A4545_RECEIPT_S40, B0_A4545_RECEIPT_SHA,
+                             "session40 receipt"),
+                            (B0_A4545_RECEIPT_A42, B0_A4545_RECEIPT_SHA,
+                             "agent42 receipt"),
+                            (B0_A4545_LOG, B0_A4545_LOG_SHA, "log"))
+        bytes = try
+            isfile(p) ? read(p) : nothing
+        catch
+            nothing
+        end
+        a45_reads[label] = bytes
+        if bytes === nothing
+            push!(a45, "4545 $label missing/unreadable: $p")
+        elseif bytes2hex(sha256(bytes)) != pin
+            push!(a45, "4545 $label pin mismatch: $p")
+        end
+    end
+    if isempty(a45)
+        append!(a45, b0_a4545_issues(a45_reads["session40 receipt"],
+                                     a45_reads["agent42 receipt"],
+                                     String(copy(a45_reads["log"]))))
+    end
+    groups["attempt_4545_evidence"] = a45
+
     for (k, v) in groups
         gates["evidence_" * k] = isempty(v) ? "passed" : "failed"
         isempty(v) || append!(fails, ["$k: " * i for i in v])
@@ -887,7 +1083,8 @@ function main()
         "inputs" => [Dict("sha256" => sha, "size" => sz, "path" => path,
                           "staged_rel" => rel)
                      for (sha, sz, path, rel) in B0_INPUTS],
-        # attempt registry: every B0 submission with terminal evidence
+        # attempt registry: every B0 submission with terminal evidence,
+        # each fully content-coupled by the attempt_*_evidence gates
         "attempts" => [Dict(
             "job_id" => 4540,
             "job_state" => "FAILED",
@@ -910,7 +1107,55 @@ function main()
                 "--version | head -1 returns 141; all five " *
                 "version/head pipelines unsafe); fixed by full-output " *
                 "capture + Bash parameter expansion with no " *
-                "early-closing pipeline, enforced by a text gate")],
+                "early-closing pipeline, enforced by a text gate"),
+        Dict(
+            "job_id" => 4545,
+            "job_state" => "FAILED",
+            "exit_code_raw" => "68:0",
+            "derived_exit_code_raw" => "0:0",
+            "run_time" => "00:00:46",
+            "submit_time" => "2026-08-13T19:37:23",
+            "start_time" => "2026-08-13T19:40:38",
+            "end_time" => "2026-08-13T19:41:24",
+            "receipt_paths" => [B0_A4545_RECEIPT_S40, B0_A4545_RECEIPT_A42],
+            "receipt_sha256" => B0_A4545_RECEIPT_SHA,
+            "log_path" => B0_A4545_LOG,
+            "log_sha256" => B0_A4545_LOG_SHA,
+            "failure_point" => "stage 3 binary-identity gate AFTER a " *
+                "fully green b42e5c0 build (stages 0a-3 complete; " *
+                "era stack buildability proven in ~46s); RUNROOT " *
+                "preserved at g4-diag/4545/lw-b0 with config.log",
+            "cause" => "designed proof-gate FALSE POSITIVE (monitor " *
+                "verdict 2026-08-13), not a scientific failure: the " *
+                "stage-3 assertion required zero 'Adept LBFGS' strings " *
+                "in the linked binary, but optimize_lut.o has undefined " *
+                "references ONLY to solve_lbfgs and lbfgs_status_string " *
+                "(never solve_adept), while solve_lbfgs.o references " *
+                "calc_cost_function_and_gradient, which is DEFINED in " *
+                "solve_adept.o alongside solve_adept; that " *
+                "shared-symbol dependency pulls the whole solve_adept.o " *
+                "object into the executable, so both banner strings " *
+                "are legitimately present despite compile-time routing " *
+                "to solve_lbfgs. Replaced by the layered call-path " *
+                "proof: pinned dispatch-region hash (lines 259-278, " *
+                "$B0_DISPATCH_REGION_SHA), exact macro line, " *
+                "object-level nm (U solve_lbfgs required, U solve_adept " *
+                "forbidden), era-banner presence kept as composition " *
+                "evidence only, and runtime zero-Adept gates in BOTH " *
+                "probe and run logs")],
+        "call_path_proof" => Dict(
+            "dispatch_region_lines" => "259-278",
+            "dispatch_region_sha256" => B0_DISPATCH_REGION_SHA,
+            "macro_line" => "#define USE_LBFGS_LIBRARY 1",
+            "object_gate" => "nm -C optimize_lut.o: U solve_lbfgs( == 1, " *
+                "U solve_adept( == 0",
+            "runtime_gate" => "probe and run logs: exact era banner " *
+                "cardinality, zero 'Adept LBFGS' occurrences",
+            "linked_binary_note" => "era-banner strings presence in the " *
+                "linked binary is composition evidence ONLY; a strings " *
+                "Adept-absence check is over-broad because " *
+                "solve_adept.o is pulled in via the shared " *
+                "calc_cost_function_and_gradient symbol"),
         # causal to the exact-4515-config claim: the v1.2 testcopy root
         # and the four copied files verified at generation AND in-job
         "v12_testcopy" => Dict(

@@ -7,6 +7,7 @@ B0 bundled target-era stack viability: same ce057079 init (min/max arrays retain
 | Gate | Result |
 |---|---|
 | evidence_attempt_4540_evidence | passed |
+| evidence_attempt_4545_evidence | passed |
 | evidence_era_source_pins | passed |
 | evidence_input_pins | passed |
 | evidence_reviewed_run_ledger | passed |
@@ -17,4 +18,4 @@ B0 bundled target-era stack viability: same ce057079 init (min/max arrays retain
 
 Era pins: commit `b42e5c0b188f1e7b747990bc2b35e6c53c2c7258` tree `0d2a0454f758de7bec04790c1ece54551e465b94` archive `801542f43e6d9c0f444d6966fbe30d28fc3df7aabf147551c4485f352fbafa22`
 
-Generated sbatch: `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_lw_era_lbfgs.sbatch` sha256 `85c82f93ea1dde8ccf2954e8dc47ecbdbd0385502e88d3396c115b8af2a7b2eb`
+Generated sbatch: `/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_lw_era_lbfgs.sbatch` sha256 `87a529e865633133e9f6d548720c597c5e1021a2143af1a52c17c590ac76e575`

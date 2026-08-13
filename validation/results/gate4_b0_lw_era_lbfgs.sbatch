@@ -38,7 +38,7 @@ PROBECOPY="$RUNROOT/probe-testcopy"
 echo "=== B0-lw stage 0a: gate-code identity (verify BEFORE sourcing) ==="
 sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/reviewed ledger changed since generation; regenerate the checkpoint" >&2; exit 75; }
 e31e57f0446d3396ba86644f3aefd88284231c507feaba305160c97788fae664  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
-9cf66f3b72218ac028f11b38f21bb70631664617951c7a90f8b43277ea08caf9  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_b0_era_lbfgs_isolation_checkpoint.jl
+259f7b32b6cba4fd85ea4e1646dd0c89c6977dae11613a706a44b106b9569b55  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_b0_era_lbfgs_isolation_checkpoint.jl
 60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
 6fd7791834fe1ceb184afd4623c0f95ab311685bb849cfad0837b3c6ffd4aa4e  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_run_ledger.json
 GATEPINS
@@ -156,10 +156,26 @@ autoreconf -i
 ./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'
 make -j"$SLURM_CPUS_PER_TASK"
 test -x "$SRCDIR/src/ecckd/optimize_lut" || { echo "REFUSED: era optimize_lut not built" >&2; exit 68; }
-# binary-level era-stack proof: era banner string present, Adept-LBFGS
-# banner absent (the v1.2 banner string must NOT appear)
-[ "$(strings "$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Optimizing coefficients with LBFGS algorithm' || true)" -ge 1 ] || { echo "REFUSED: era LBFGS banner string absent from binary" >&2; exit 68; }
-[ "$(strings "$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Adept LBFGS' || true)" = 0 ] || { echo "REFUSED: Adept LBFGS string present in era binary" >&2; exit 68; }
+# call-path proof, layered (monitor contract 2026-08-13). The LINKED
+# binary legitimately contains BOTH banner strings: solve_lbfgs.o
+# references calc_cost_function_and_gradient, which is DEFINED in
+# solve_adept.o alongside solve_adept, so the linker pulls the whole
+# solve_adept.o object into the executable despite compile-time routing
+# to solve_lbfgs (4545 lesson: a strings-absence check is over-broad by
+# construction and is banned).
+# (1) byte-exact dispatch-region hash (lines 259-278: define/ifdef/
+#     solve_lbfgs call/else/solve_adept call/endif)
+[ "$(sed -n '259,278p' "$SRCDIR/src/ecckd/optimize_lut.cpp" | sha256sum | cut -d' ' -f1)" = "6b1b9fbec6a0de80b3b4cf2fc96be7f65d01c1e20636de8b7d7844873c349c21" ] || { echo "REFUSED: dispatch-region hash mismatch (lines 259-278)" >&2; exit 68; }
+# (2) exact macro line
+[ "$(grep -cx '#define USE_LBFGS_LIBRARY 1' "$SRCDIR/src/ecckd/optimize_lut.cpp" || true)" = 1 ] || { echo "REFUSED: USE_LBFGS_LIBRARY macro line not exactly once" >&2; exit 68; }
+# (3) object-level undefined-reference proof on the COMPILED call site
+command -v nm >/dev/null || { echo "MISSING nm" >&2; exit 65; }
+NM_OBJ=$(nm -C "$SRCDIR/src/ecckd/optimize_lut.o")
+[ "$(grep -cE '^[[:space:]]*U solve_lbfgs\(' <<<"$NM_OBJ" || true)" = 1 ] || { echo "REFUSED: optimize_lut.o undefined solve_lbfgs reference != 1" >&2; exit 68; }
+[ "$(grep -cE '^[[:space:]]*U solve_adept\(' <<<"$NM_OBJ" || true)" = 0 ] || { echo "REFUSED: optimize_lut.o has an undefined solve_adept reference" >&2; exit 68; }
+# composition evidence ONLY (never a routing claim): the era banner is
+# linked in via solve_lbfgs.o
+[ "$(strings "$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Optimizing coefficients with LBFGS algorithm' || true)" -ge 1 ] || { echo "REFUSED: era LBFGS banner string absent from linked binary" >&2; exit 68; }
 
 echo "=== B0-lw stage 4: optimizer wrapper (Netlib preload + FP-trap shim; env-only) ==="
 cat > "$WRAPPER" <<WRAP
@@ -186,9 +202,11 @@ echo "$LDD_OUT"
 [ "$(grep -cF "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0" <<<"$LDD_OUT" || true)" = 1 ] || { echo "REFUSED: exact LAPACK preload row count != 1" >&2; exit 79; }
 [ "$(grep -cF 'liblapack.so.3 =>' <<<"$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: liblapack.so.3 alias row present" >&2; exit 79; }
 [ "$(grep -cF 'libblas.so.3 =>' <<<"$LDD_OUT" || true)" = 0 ] || { echo "REFUSED: libblas.so.3 alias row present" >&2; exit 79; }
-LN_B=$(grep -nF "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0" <<<"$LDD_OUT" | cut -d: -f1 | head -1 || true)
-LN_L=$(grep -nF "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0" <<<"$LDD_OUT" | cut -d: -f1 | head -1 || true)
-LN_S=$(grep -nF "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so" <<<"$LDD_OUT" | cut -d: -f1 | head -1 || true)
+# line-number extraction reads ALL input (no early-closing head; each
+# exact-row count above is already required to equal 1, so first==only)
+LN_B=$(awk -v pat="/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0" 'index($0, pat) && !ln { ln = NR } END { if (ln) print ln }' <<<"$LDD_OUT")
+LN_L=$(awk -v pat="/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0" 'index($0, pat) && !ln { ln = NR } END { if (ln) print ln }' <<<"$LDD_OUT")
+LN_S=$(awk -v pat="/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so" 'index($0, pat) && !ln { ln = NR } END { if (ln) print ln }' <<<"$LDD_OUT")
 { [ -n "$LN_B" ] && [ -n "$LN_L" ] && [ -n "$LN_S" ] && [ "$LN_B" -lt "$LN_L" ] && [ "$LN_L" -lt "$LN_S" ]; } || { echo "REFUSED: preload row order is not BLAS<LAPACK<H5shim" >&2; exit 79; }
 
 echo "=== B0-lw stage 5: isolated v1.2 testcopy (exact 4515 config overrides; era binary via wrapper) ==="
@@ -237,6 +255,7 @@ PROBE_RC=${PIPESTATUS[0]}
 set -e
 [ "$PROBE_RC" = 0 ] || { echo "REFUSED: schema-open probe failed rc=$PROBE_RC (old reader may reject the v1.2 init; NO stripping without monitor review; probe log preserved)" >&2; exit 71; }
 [ "$(grep -cF 'Optimizing coefficients with LBFGS algorithm: max iterations = 1, convergence criterion = 0.02' "$RUNROOT/probe-run.log" || true)" = 1 ] || { echo "REFUSED: probe did not show exactly one era banner with max iterations = 1" >&2; exit 71; }
+[ "$(grep -cF 'Adept LBFGS' "$RUNROOT/probe-run.log" || true)" = 0 ] || { echo "REFUSED: probe emitted a runtime Adept-LBFGS banner" >&2; exit 71; }
 test -s "$RUNROOT/probe-work/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc" || { echo "REFUSED: probe produced no raw2 output" >&2; exit 71; }
 echo "schema-open probe PASSED: old reader accepted the v1.2 init with min/max arrays present (no strip needed)"
 
