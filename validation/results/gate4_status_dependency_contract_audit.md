@@ -14,9 +14,9 @@ derivative read-only STATUS/CASE-PROJECTION contract audit; consumer contracts m
 | manifest_ids_unique | passed |
 | manifest_schema_valid | passed |
 | no_contract_violations | passed |
-| snapshot_extension_count_5 | passed |
+| snapshot_extension_count_6 | passed |
 
-Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=historical sw_init=output_present g3_ledger_present=false.
+Census: 23 parse sites reconciled with edge linkage; modes a2=historical r2=historical sw_init=output_present g3_ledger_present=false.
 
 ## Contract verdicts (42 satisfied / 1 inactive / 0 selftest-state / 0 violated)
 
@@ -43,7 +43,7 @@ Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - dep:g2_g3_runner_scaffold<-covariance_stride_audit [exact]: **satisfied** -- contract satisfied
 - dep:g2a_checkpoint<-init_provenance_ledger [exact]: **satisfied** -- contract satisfied
 - dep:g2b_checkpoint<-g2a_data_ledger [exact]: **satisfied** -- contract satisfied
-- dep:g3_executor<-scoped_preflight [set]: **satisfied** -- contract satisfied
+- dep:g3_executor<-scoped_preflight [exact]: **satisfied** -- contract satisfied
 - dep:g2_binding_scaffold<-gate2_od_dataset_manifest:fingerprint_join [fingerprint_join]: **satisfied** -- all 3 manifest-joined rows re-verified (label, sha, live size+hash); manifest status gate2_dataset_manifest_pending_eval2 recorded as info only
 - dep:rulings_register<-g2_binding_scaffold [register_snapshot]: **satisfied** -- snapshot and live contract both satisfied
 - dep:rulings_register<-g2c_fetch_checkpoint [register_snapshot]: **satisfied** -- snapshot and live contract both satisfied
@@ -75,4 +75,4 @@ Census: 24 parse sites reconciled with edge linkage; modes a2=historical r2=hist
 - **fingerprint_join**: per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract
 - **register edges**: D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection
 
-Provenance: branch `glw/gate4-recovery`, generated_from_head `7735a03` (pre-own-commit).
+Provenance: branch `glw/gate4-recovery`, generated_from_head `e4bb81d` (pre-own-commit).

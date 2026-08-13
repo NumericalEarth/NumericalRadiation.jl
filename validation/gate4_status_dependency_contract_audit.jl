@@ -574,20 +574,17 @@ const DCA_EDGES = [
   consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:g3_executor<-scoped_preflight",
   consumer = "gate4_g3_executor_checkpoint.jl",
-  # HARDENED consumer: classify_scoped_preflight binds the exact case
-  # before the status ladder and classifies missing/unparseable/
-  # non-object/unknown-status fail-closed; generation is allowlist-gated
-  # behind the classified state (former status-only finding CLOSED)
-  anchors = ["pf_state, pf_reason = classify_scoped_preflight(",
-             "c == \"gate4_g3_scoped_input_preflight\"",
-             "s == \"g3_scoped_preflight_ready\"",
-             "gx_should_generate(pf_state) = pf_state in (\"waiting\", \"ready\")"],
-  producer = "gate4_g3_scoped_input_preflight.json", kind = :set,
-  # FAITHFUL: the executor tolerates waiting-for-eval2 (its own status
-  # becomes g3_executor_waiting_for_eval2, accepted exit-0); only the
-  # ready->go path needs g3_scoped_preflight_ready
-  accepted = ["g3_scoped_preflight_ready",
-              "g3_scoped_preflight_waiting_for_eval2"],
+  # FAIL-CLOSED consumer (2026-08-13): gx_classify_scoped_preflight is a
+  # coupled-byte-snapshot classifier binding exact case, exact status,
+  # AND the exact committed byte sha; READY is the only generation
+  # state (the former waiting tolerance is deleted with the preflight's
+  # waiting semantics)
+  anchors = ["gx_classify_scoped_preflight(GX_PF_JSON)",
+             "const GX_PF_SHA =",
+             "\"g3_scoped_preflight_ready\"",
+             "gx_should_generate(pf_state) = pf_state == \"ready\""],
+  producer = "gate4_g3_scoped_input_preflight.json", kind = :exact,
+  accepted = ["g3_scoped_preflight_ready"],
   expected_case = "gate4_g3_scoped_input_preflight",
   consumer_checks_case = true, status_only = false, active_when = :always),
  (id = "dep:g2_binding_scaffold<-gate2_od_dataset_manifest:fingerprint_join",
@@ -1045,10 +1042,14 @@ const DCA_SITE_LEDGER = [
   reason = "classify_run_ledger guarded-loader body (absence-tolerant " *
            "edge; live run-ledger load + tmp loader fixtures)"),
  (file = "gate4_g3_executor_checkpoint.jl",
-  anchor = "JSON.parsefile(path)",
-  class = "edge", edge_ids = ["dep:g3_executor<-scoped_preflight"],
-  reason = "classify_scoped_preflight guarded-loader body (exact-case " *
-           "prerequisite binding; live edge + tmp loader fixtures)"),
+  anchor = "JSON.parse(String(copy(bytes)))",
+  class = "declared-snapshot-extension",
+  edge_ids = ["dep:g3_executor<-scoped_preflight"],
+  reason = "gx_snapshot helper body: coupled byte snapshot (one read " *
+           "supplies digest AND parsed content; the preflight pin is a " *
+           "sha-over-the-same-bytes check), deliberately NOT " *
+           "JSON.parsefile -- source-bound directly by reconcile; the " *
+           "same helper also parses fixture tmp files"),
  (file = "gate4_g3_scoped_input_preflight.jl",
   anchor = "JSON.parse(String(copy(bytes)))",
   class = "declared-snapshot-extension",
@@ -1627,11 +1628,11 @@ function dca_main()
         push!(fails, "manifest has $(length(DCA_EDGES)) edges, expected 43")
     n_snapext = count(x -> x.class == "declared-snapshot-extension",
                       DCA_SITE_LEDGER)
-    gates["snapshot_extension_count_5"] =
-        n_snapext == 5 ? "passed" : "failed"
-    n_snapext == 5 ||
+    gates["snapshot_extension_count_6"] =
+        n_snapext == 6 ? "passed" : "failed"
+    n_snapext == 6 ||
         push!(fails, "site ledger has $n_snapext declared-snapshot-" *
-                     "extension records, expected 5")
+                     "extension records, expected 6")
     m_issues = dca_manifest_issues(DCA_EDGES)
     gates["manifest_schema_valid"] = isempty(m_issues) ? "passed" : "failed"
     append!(fails, m_issues)
@@ -2001,7 +2002,7 @@ function dca_main()
                 "AND content, closing the hash-vs-parse TOCTOU) -- " *
                 "each declared as its own extension record (currently " *
                 "ric_snapshot, pcc_snapshot, gd_snapshot, fl_snapshot, " *
-                "and pf_snapshot) -- are NOT " *
+                "pf_snapshot, and gx_snapshot) -- are NOT " *
                 "parsefile sites: each such helper is carried as a " *
                 "declared-snapshot-extension ledger record whose anchor " *
                 "reconciliation binds directly against the consumer " *

@@ -133,10 +133,10 @@ quota_object_recheck() {
 # quota_health <reserve_bytes> -- output-write health gate for compute
 # jobs (G3 executors): FAIL-CLOSED unless the uid quota is in a fully
 # healthy state: used <= soft (no grace clock running, grace field "-"),
-# soft>0, hard>0, and hard-limit headroom >= reserve_bytes. Row
-# acquisition/parsing via g4_quota_row; the HARD-headroom reserve policy
-# is unchanged from the pre-refactor version (its callers gate compute
-# output writes, where the hard limit is the operative failure line).
+# soft>0, hard>0, SOFT-limit headroom >= reserve_bytes (PRIMARY ceiling:
+# staying under soft keeps the account fully healthy and never starts
+# the grace clock), and hard-limit headroom >= reserve_bytes retained as
+# a SECONDARY sanity bound. Row acquisition/parsing via g4_quota_row.
 quota_health() {
     local reserve="$1"
     case "$reserve" in
@@ -148,8 +148,12 @@ quota_health() {
     read -r used soft hard grace <<< "$fields"
     [ "$used" -le "$soft" ] || { echo "QUOTA-HEALTH REFUSED: used ${used}KiB over soft ${soft}KiB (grace $grace)" >&2; return 67; }
     [ "$grace" = "-" ] || { echo "QUOTA-HEALTH REFUSED: grace clock active: $grace" >&2; return 67; }
-    local headroom=$(( (hard - used) * 1024 ))
-    [ "$headroom" -ge "$reserve" ] || { echo "QUOTA-HEALTH REFUSED: hard headroom ${headroom}B < reserve ${reserve}B" >&2; return 67; }
-    echo "quota-health: used=${used}KiB soft=${soft}KiB hard=${hard}KiB grace=- headroom=${headroom}B reserve=${reserve}B"
+    local soft_headroom=$(( (soft - used) * 1024 ))
+    [ "$soft_headroom" -ge 0 ] || soft_headroom=0
+    local hard_headroom=$(( (hard - used) * 1024 ))
+    [ "$hard_headroom" -ge 0 ] || hard_headroom=0
+    [ "$soft_headroom" -ge "$reserve" ] || { echo "QUOTA-HEALTH REFUSED: soft headroom ${soft_headroom}B < reserve ${reserve}B (primary ceiling)" >&2; return 67; }
+    [ "$hard_headroom" -ge "$reserve" ] || { echo "QUOTA-HEALTH REFUSED: hard headroom ${hard_headroom}B < reserve ${reserve}B (secondary sanity)" >&2; return 67; }
+    echo "quota-health: used=${used}KiB soft=${soft}KiB hard=${hard}KiB grace=- soft-headroom=${soft_headroom}B hard-headroom=${hard_headroom}B reserve=${reserve}B (soft primary)"
     return 0
 }

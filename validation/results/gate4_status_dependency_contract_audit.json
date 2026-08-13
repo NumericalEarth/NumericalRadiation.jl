@@ -1,9 +1,9 @@
 {
   "case": "gate4_status_dependency_contract_audit",
   "census": {
-    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each parsefile ledger record matched EXACTLY once; union(served IDs) must equal the manifest. Consumers that deliberately use a coupled BYTE-snapshot parse (one read supplies digest AND content, closing the hash-vs-parse TOCTOU) -- each declared as its own extension record (currently ric_snapshot, pcc_snapshot, gd_snapshot, fl_snapshot, and pf_snapshot) -- are NOT parsefile sites: each such helper is carried as a declared-snapshot-extension ledger record whose anchor reconciliation binds directly against the consumer source (and which must never match a live parsefile site). n_sites therefore counts live JSON.parsefile sites only; the extensions are counted separately in n_declared_snapshot_extensions.",
-    "n_declared_snapshot_extensions": 5,
-    "n_sites": 24,
+    "inclusion_rule": "every literal JSON.parsefile occurrence in validation/gate4*.jl (this audit excluded by name; other parsing forms are out of the censused contract surface); each live site AND each parsefile ledger record matched EXACTLY once; union(served IDs) must equal the manifest. Consumers that deliberately use a coupled BYTE-snapshot parse (one read supplies digest AND content, closing the hash-vs-parse TOCTOU) -- each declared as its own extension record (currently ric_snapshot, pcc_snapshot, gd_snapshot, fl_snapshot, pf_snapshot, and gx_snapshot) -- are NOT parsefile sites: each such helper is carried as a declared-snapshot-extension ledger record whose anchor reconciliation binds directly against the consumer source (and which must never match a live parsefile site). n_sites therefore counts live JSON.parsefile sites only; the extensions are counted separately in n_declared_snapshot_extensions.",
+    "n_declared_snapshot_extensions": 6,
+    "n_sites": 23,
     "site_ledger": [
       {
         "anchor": "JSON.parsefile(path)",
@@ -166,13 +166,13 @@
         "reason": "classify_run_ledger guarded-loader body (absence-tolerant edge; live run-ledger load + tmp loader fixtures)"
       },
       {
-        "anchor": "JSON.parsefile(path)",
-        "class": "edge",
+        "anchor": "JSON.parse(String(copy(bytes)))",
+        "class": "declared-snapshot-extension",
         "edge_ids": [
           "dep:g3_executor<-scoped_preflight"
         ],
         "file": "gate4_g3_executor_checkpoint.jl",
-        "reason": "classify_scoped_preflight guarded-loader body (exact-case prerequisite binding; live edge + tmp loader fixtures)"
+        "reason": "gx_snapshot helper body: coupled byte snapshot (one read supplies digest AND parsed content; the preflight pin is a sha-over-the-same-bytes check), deliberately NOT JSON.parsefile -- source-bound directly by reconcile; the same helper also parses fixture tmp files"
       },
       {
         "anchor": "JSON.parse(String(copy(bytes)))",
@@ -358,11 +358,6 @@
         "file": "gate4_g3_acceptance_comparison.jl",
         "line": 299,
         "text": "JSON.parsefile(AC_RESULTS_JSON)"
-      },
-      {
-        "file": "gate4_g3_executor_checkpoint.jl",
-        "line": 222,
-        "text": "JSON.parsefile(path)"
       },
       {
         "file": "gate4_init_generation_manifest.jl",
@@ -707,10 +702,10 @@
       {
         "active": true,
         "consumer": "gate4_g3_executor_checkpoint.jl",
-        "consumer_sha256": "3c0acdedc19d8d59857067f82856efa7b2cb5fadd876286ad63595610dfd60ae",
+        "consumer_sha256": "75eafc929232b6bb11f7baad3e52d8769290c80984c33904ecf4a748a110ea05",
         "detail": "contract satisfied",
         "id": "dep:g3_executor<-scoped_preflight",
-        "kind": "set",
+        "kind": "exact",
         "producer_case": "gate4_g3_scoped_input_preflight",
         "producer_sha256": "f5b7e1714b107a7307842389ea3bdfbbd1bb0111f9509cafcdee464327955f0b",
         "producer_status": "g3_scoped_preflight_ready",
@@ -1005,7 +1000,7 @@
     "manifest_ids_unique": "passed",
     "manifest_schema_valid": "passed",
     "no_contract_violations": "passed",
-    "snapshot_extension_count_5": "passed"
+    "snapshot_extension_count_6": "passed"
   },
   "hardening_findings": [],
   "modes_observed": {
@@ -1016,7 +1011,7 @@
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "7735a03",
+    "generated_from_head": "e4bb81d",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "scope": "status/case projection of every literal JSON.parsefile-MEDIATED cross-artifact contract in validation/gate4*.jl (other parsing forms, e.g. JSON.parse over network responses in the V1/R1 recon units, are not artifact contracts and are not censused), plus declared extensions (register snapshot-hash, E9 prerequisite truth table + reviewed-complete ledger schema, fingerprint-join post-hoc rows with artifact identity, authority-input truth table for the rulings intake); structural requirements beyond that projection are enforced in-unit by consumers and listed in structural_out_of_scope",
@@ -1028,5 +1023,5 @@
     "fingerprint_join": "per-scenario schema/dims -- enforced by the manifest; this audit verifies the post-hoc row label/sha/live size+hash contract",
     "register edges": "D-key set, quota arithmetic, MD anchors -- enforced by the register itself; this audit adds the snapshot-hash staleness projection"
   },
-  "timestamp_utc": "2026-08-13T15:52:54.283"
+  "timestamp_utc": "2026-08-13T16:13:51.652"
 }

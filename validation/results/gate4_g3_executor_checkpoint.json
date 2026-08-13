@@ -1,67 +1,447 @@
 {
-  "acceptance_metrics_note": "FIVE canonical thresholds, evaluated by separate post-run runners, never inside the executor: (1) final/target objective ratio <= 1.05 (Gate-1 runner implemented, refusing until reviewed ledger + outputs); (2) weight rel-L1 <= 0.02 (binding, acceptance unit); (3) true OD log-RMSE <= 0.02 (Gate-2 binding runner pending dataset/aggregation rulings; matched-state evaluator implemented); (4) forcing regression margin <= 0.03 W/m2 and (5) heating-RMSE regression margin <= 0.005 K/day (aggregation semantics pending ruling)",
-  "authorization_token_required": "g3_recovery_go (plus scoped preflight ready; submission is a reviewed human step)",
+  "acceptance_metrics_note": "FIVE canonical thresholds, evaluated by separate post-run runners, never inside the executor: (1) final/target objective ratio <= 1.05; (2) weight rel-L1 <= 0.02; (3) true OD log-RMSE <= 0.02; (4) forcing regression margin <= 0.03 W/m2; (5) heating-RMSE regression margin <= 0.005 K/day (aggregation semantics pending ruling)",
+  "authorization_token_required": "g3_recovery_go (submission is a reviewed human step)",
   "case": "gate4_g3_executor_checkpoint",
   "data_mode": "dry_run_script_generation_only",
   "disclaimer": "script generation only; nothing submitted or executed; no objective, floor, or recovery computation in this unit.",
   "failures": [],
   "gates": {
+    "lw_bash_syntax": "passed",
+    "lw_config_asserts": "passed",
+    "lw_final_only_publish": "passed",
     "lw_flock_single_flight": "passed",
     "lw_gate_code_pinned": "passed",
     "lw_headnode_refusal": "passed",
     "lw_input_hash_gate": "passed",
+    "lw_input_manifest_counts": "passed",
+    "lw_input_size_gate": "passed",
     "lw_mode_list": "passed",
     "lw_optimize_only": "passed",
+    "lw_private_runroot": "passed",
+    "lw_private_workdir": "passed",
     "lw_quota_health_gate": "passed",
     "lw_readonly_gates_before_lock": "passed",
+    "lw_runroot_staging": "passed",
     "lw_runtime_ready_preflight": "passed",
     "lw_shim_wrapper": "passed",
     "lw_source_pins": "passed",
     "lw_stale_output_refusal": "passed",
     "lw_training_both_sed": "passed",
+    "lw_wrapper_in_runroot": "passed",
     "preflight_loader_fixture_tests": "passed",
+    "preflight_source_pin": "passed",
     "quota_health_fixture_tests": "passed",
+    "reviewed_commit_ancestry": "passed",
     "sbatch_written_not_submitted": "passed",
-    "scoped_preflight_prerequisite": "waiting",
+    "scoped_preflight_prerequisite": "passed",
+    "sw_bash_syntax": "passed",
+    "sw_config_asserts": "passed",
+    "sw_final_only_publish": "passed",
     "sw_flock_single_flight": "passed",
     "sw_gate_code_pinned": "passed",
     "sw_headnode_refusal": "passed",
     "sw_input_hash_gate": "passed",
+    "sw_input_manifest_counts": "passed",
+    "sw_input_size_gate": "passed",
     "sw_mode_list": "passed",
     "sw_optimize_only": "passed",
+    "sw_private_runroot": "passed",
+    "sw_private_workdir": "passed",
     "sw_quota_health_gate": "passed",
     "sw_readonly_gates_before_lock": "passed",
+    "sw_runroot_staging": "passed",
     "sw_runtime_ready_preflight": "passed",
     "sw_script_version_identity": "passed",
     "sw_shim_wrapper": "passed",
     "sw_source_pins": "passed",
     "sw_stale_output_refusal": "passed",
     "sw_training_both_sed": "passed",
+    "sw_wrapper_in_runroot": "passed",
     "token_gated_submit": "passed"
+  },
+  "generated_scripts": {
+    "lw": {
+      "bytes": 24009,
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_lw_optimizer.sbatch",
+      "sha256": "a225d75728c245b9bdf1e508cc82f34464120baeb926b2bb4526940282773bdc"
+    },
+    "sw": {
+      "bytes": 21980,
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_sw_optimizer.sbatch",
+      "sha256": "024e2d3c91709ecc7fb4458cb9aa6344ace2393177e1ce3f4218fbd9a3df5d1e"
+    }
+  },
+  "input_manifest": {
+    "lw": [
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+        "role": "training_flux",
+        "sha256": "dde735608e57af934a2c1e99932c0ccce530883ab48910c7e17b621de7fa0bee",
+        "size": 450863
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+        "role": "training_flux",
+        "sha256": "b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85",
+        "size": 450863
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "role": "training_flux",
+        "sha256": "01836becbc96e7da2b3b33d586d148948df136457216625b7e60225e093e1792",
+        "size": 450863
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
+        "role": "training_flux",
+        "sha256": "c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2",
+        "size": 450863
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+        "role": "training_flux",
+        "sha256": "cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c",
+        "size": 450873
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+        "role": "training_flux",
+        "sha256": "75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8",
+        "size": 450873
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5",
+        "role": "training_flux",
+        "sha256": "98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4",
+        "size": 469175
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
+        "role": "training_flux",
+        "sha256": "67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4",
+        "size": 469174
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
+        "role": "training_flux",
+        "sha256": "5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759",
+        "size": 469174
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
+        "role": "training_flux",
+        "sha256": "0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842",
+        "size": 469184
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
+        "role": "training_flux",
+        "sha256": "6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4",
+        "size": 469184
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
+        "role": "training_flux",
+        "sha256": "f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb",
+        "size": 469184
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
+        "role": "training_flux",
+        "sha256": "eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560",
+        "size": 469175
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
+        "role": "training_flux",
+        "sha256": "34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0",
+        "size": 469175
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
+        "role": "training_flux",
+        "sha256": "ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8",
+        "size": 469175
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
+        "role": "training_flux",
+        "sha256": "e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2",
+        "size": 469175
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
+        "role": "training_flux",
+        "sha256": "f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2",
+        "size": 469173
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
+        "role": "training_flux",
+        "sha256": "557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4",
+        "size": 469203
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
+        "role": "training_flux",
+        "sha256": "d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c",
+        "size": 469173
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
+        "role": "training_flux",
+        "sha256": "9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b",
+        "size": 469193
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+        "role": "eval2_training_flux",
+        "sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc",
+        "size": 451045
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+        "role": "init",
+        "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+        "size": 2413144
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
+        "role": "gpoints",
+        "sha256": "c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e",
+        "size": 58404939
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd/src/ecckd/optimize_lut",
+        "role": "optimizer_binary",
+        "sha256": "6c3600fe6001d92e0d067cde1d57f19c82bae0c208a32dd2c48cd77031c05692",
+        "size": 22141288
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so",
+        "role": "fp_shim",
+        "sha256": "28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f",
+        "size": 15328
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/optimize_lut_lw.sh",
+        "role": "copied_source",
+        "sha256": "f0d77b16b97612687818e85615a103adaa948627846c9819e40e7754ab0743ba",
+        "size": 11792
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/config.h",
+        "role": "copied_source",
+        "sha256": "44dcddf099d69becab1c5e6674d013d6c676685e0b8a4ae51e85a1dda33cfc69",
+        "size": 6357
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/check_configuration.h",
+        "role": "copied_source",
+        "sha256": "34323fd3ecbcd64980b328eec463eedc692497ed3cdd685f2505ca4d1fdc5e2c",
+        "size": 1369
+      },
+      {
+        "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/version.h.in",
+        "role": "copied_source",
+        "sha256": "a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810",
+        "size": 92
+      }
+    ],
+    "sw": [
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-180.h5",
+        "role": "training_flux",
+        "sha256": "19016e05da9586e55e6e2a7b9629ea6a06e89e4ea9f6b4e4a2f9d66ea658513b",
+        "size": 1817472
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-280.h5",
+        "role": "training_flux",
+        "sha256": "01c5326f5f4d4c9f0b3a06dfeee2fb9a8f54b573ab2d76f08911a46081fa8879",
+        "size": 1817472
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-415.h5",
+        "role": "training_flux",
+        "sha256": "55cf6fffba18d950b716c2efd1b053db27cf6d48c20ca15ae1495a15f1c58cf0",
+        "size": 1817472
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-560.h5",
+        "role": "training_flux",
+        "sha256": "19c801655f5a594e4166a4d088656dc04ad4c88bb2d00e01cfca76981fd185d9",
+        "size": 1817472
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-1120.h5",
+        "role": "training_flux",
+        "sha256": "dddeeb6b97fdaae2c3a8fda140b38c982d2a56471afd75bcc104090304b1955f",
+        "size": 1817482
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_rel-2240.h5",
+        "role": "training_flux",
+        "sha256": "944c5957c33cf5d25163e4fdfd7d7777fc313a1e0ea91798e7c806808df22eb6",
+        "size": 1817482
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_present.h5",
+        "role": "training_flux",
+        "sha256": "ceb5872dd4ac39284b3071e42fd3a17068c161d7892eba873f5a99e6736ab4b5",
+        "size": 1839369
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-350.h5",
+        "role": "training_flux",
+        "sha256": "d15967da2873b4a4fa8e81ac764a24ed6fec046c88027951291361f10726a7a2",
+        "size": 1839368
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-700.h5",
+        "role": "training_flux",
+        "sha256": "9c355b0ca2597388a45b57f50bc6aab90b4b4ece5ad683870f64954e830c987a",
+        "size": 1839368
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-1200.h5",
+        "role": "training_flux",
+        "sha256": "f31d7c5628bfb17cdcaab63ee107a4e11181b04417c1d06ad4fdd61dd6ba2493",
+        "size": 1839378
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-2600.h5",
+        "role": "training_flux",
+        "sha256": "c22671d43a0ca055a79383353219df57b827d61547a7de7d4de3b2313329e53c",
+        "size": 1839378
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_ch4-3500.h5",
+        "role": "training_flux",
+        "sha256": "300adb48f0feb928538d94f84b45372d8880fcf995c43919560b6af59dfb3034",
+        "size": 1839378
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-190.h5",
+        "role": "training_flux",
+        "sha256": "d7bac1bcf8a094978b2870a442f125b4acf439089442c620e6a3ed30def947fe",
+        "size": 1839369
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-270.h5",
+        "role": "training_flux",
+        "sha256": "551c532d0661025f2d0a8a1ecb66eec7bdae36dbd191df20691d2c054799cad5",
+        "size": 1839369
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-405.h5",
+        "role": "training_flux",
+        "sha256": "d76927da116d65d0c2e2b3426e0c449e46b419ba1f3b7a3024afdb8f59a37a5f",
+        "size": 1839369
+      },
+      {
+        "path": "/shared/home/greg/data/ckdmip/evaluation1/sw_fluxes-rgb/ckdmip_evaluation1_sw_fluxes-rgb_n2o-540.h5",
+        "role": "training_flux",
+        "sha256": "aac07193510b1fcc32cece1014b1ec271071363c5afb82ecff091e5ee2452f01",
+        "size": 1839369
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_lbl_fluxes/ckdmip_evaluation2_sw_fluxes-rgb_rel-415.h5",
+        "role": "eval2_training_flux",
+        "sha256": "4ec6e8eb810dd4ad02f710dcbac4115f6d4d2002b28057ec68d20220a5b92291",
+        "size": 1817493
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_raw-ckd-definition/ecckd-1.4_sw_scaled-ckd-definition_climate_rgb-tol0.047.nc",
+        "role": "init",
+        "sha256": "74d8be65226f081f3d2882520ab374ed102d73cc3dd43bb2fa7c5a5c27602d74",
+        "size": 2234060
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_gpoints/ecckd-1.4_sw_gpoints_climate_rgb-tol0.047.h5",
+        "role": "gpoints",
+        "sha256": "13dd686acd0c3ca2201775270f876ce3e3a326576b58b24323b5ce95659b9b57",
+        "size": 25458368
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/src/ecckd/optimize_lut",
+        "role": "optimizer_binary",
+        "sha256": "101e41ed77c83c81c138494a2b950bbffd12caad27b0c64028666550d7c30d65",
+        "size": 22168448
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so",
+        "role": "fp_shim",
+        "sha256": "28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f",
+        "size": 15328
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/optimize_lut_sw.sh",
+        "role": "copied_source",
+        "sha256": "618b210ed0b3fedf279596342426084047624cb866e437e4e6546b01bb98371f",
+        "size": 12698
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/config.h",
+        "role": "copied_source",
+        "sha256": "d00a19fd16a7abb79b29748d00c5023c5ccee2a1c2a085c8ead30d2fd4e93b20",
+        "size": 6348
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/check_configuration.h",
+        "role": "copied_source",
+        "sha256": "34323fd3ecbcd64980b328eec463eedc692497ed3cdd685f2505ca4d1fdc5e2c",
+        "size": 1369
+      },
+      {
+        "path": "/shared/home/greg/ecckd-derived-flux-work/ecckd-v1.4-23adaca/test/version.h.in",
+        "role": "copied_source",
+        "sha256": "a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810",
+        "size": 92
+      }
+    ]
   },
   "preflight_loader_fixture_verdicts": {
     "array_invalid_non_object": true,
-    "exact_case_ready": true,
-    "exact_case_waiting": true,
+    "former_waiting_never_invokes_generator": true,
+    "former_waiting_token_rejected": true,
+    "green_accepted": true,
     "invalid_never_invokes_generator": true,
     "malformed_invalid": true,
     "missing_invalid": true,
     "null_invalid_non_object": true,
-    "unexpected_state_never_invokes_generator": true,
+    "ready_generates_both_bands": true,
+    "sha_drift_invalid": true,
     "unknown_status_invalid": true,
-    "waiting_and_ready_generate_both_bands": true,
+    "unreadable_invalid": true,
     "wrong_case_invalid": true
+  },
+  "prerequisite": {
+    "ancestor_commit": "e4bb81dee34a226ef0c007b7ad8f84ad9993aa6c",
+    "ancestor_observed": true,
+    "artifact": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_scoped_input_preflight.json",
+    "classifier_verdict": "green",
+    "expected_case": "gate4_g3_scoped_input_preflight",
+    "expected_sha256": "f5b7e1714b107a7307842389ea3bdfbbd1bb0111f9509cafcdee464327955f0b",
+    "expected_status": "g3_scoped_preflight_ready",
+    "observed_case": "gate4_g3_scoped_input_preflight",
+    "observed_sha256": "f5b7e1714b107a7307842389ea3bdfbbd1bb0111f9509cafcdee464327955f0b",
+    "observed_status": "g3_scoped_preflight_ready",
+    "source_expected_sha256": "d06d1608152303cbf6bf73794447bbf59cf8deb40a5baf26a0231984cf93fc71",
+    "source_observed_sha256": "d06d1608152303cbf6bf73794447bbf59cf8deb40a5baf26a0231984cf93fc71"
   },
   "provenance": {
     "branch": "glw/gate4-recovery",
-    "generated_from_head": "5d2b194",
+    "generated_from_head": "e4bb81d",
     "provenance_note": "artifact generated from the working tree before its own commit"
   },
   "quota_health_fixture_verdicts": {
+    "hard_reserve_shortfall_refuses": true,
     "healthy_passes": true,
     "malformed_refuses": true,
     "over_soft_grace_refuses": true,
-    "reserve_shortfall_refuses": true,
+    "soft_reserve_shortfall_hard_ample_refuses": true,
+    "used_over_soft_refuses": true,
     "zero_limits_refuse": true
   },
   "sbatch_paths": {
@@ -70,6 +450,6 @@
   },
   "sbatch_scripts_state": "generated this run (unsubmitted)",
   "sbatch_written_this_run": true,
-  "status": "g3_executor_waiting_for_eval2",
-  "timestamp_utc": "2026-08-12T15:20:16.206"
+  "status": "g3_executor_ready_awaiting_go",
+  "timestamp_utc": "2026-08-13T16:13:36.066Z"
 }
