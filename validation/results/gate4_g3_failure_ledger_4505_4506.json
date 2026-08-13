@@ -1,0 +1,183 @@
+{
+  "attempts": {
+    "lw": {
+      "childlog": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4505/lw/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.log",
+      "childlog_sha256": "725fae078febe65334a50767d84eecbdb4ba8f6f85435710bad6e72736f7c631",
+      "covariance_line": "Creating 318x318 error covariance matrix for COMPOSITE",
+      "expected_fields": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_lw_optimizer.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-13T16:24:51",
+        "ExitCode": "1:0",
+        "JobId": "4505",
+        "JobName": "g4-g3-lw-optimizer",
+        "JobState": "FAILED",
+        "Reason": "NonZeroExitCode",
+        "Restarts": "0",
+        "RunTime": "00:00:13",
+        "StartTime": "2026-08-13T16:24:38",
+        "StdOut": "/shared/home/greg/data/ckdmip-logs/g4-g3-lw-4505.log",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_g3_lw_optimizer.sbatch",
+        "TimeLimit": "1-00:00:00"
+      },
+      "expected_submit_line": "sbatch --parsable validation/results/gate4_g3_lw_optimizer.sbatch",
+      "fixed_error": "8",
+      "job_id": 4505,
+      "job_name": "g4-g3-lw-optimizer",
+      "joblog": "/shared/home/greg/data/ckdmip-logs/g4-g3-lw-4505.log",
+      "joblog_sha256": "10e7e6b511d202f1b70701200cf737c762fb8681472cf22a7f9622f12e4c5d3a",
+      "receipt": "/shared/home/greg/data/ckdmip-logs/g4-g3-lw-4505-scontrol-final-agent42.txt",
+      "receipt_sha256": "3881ce1a286ee3825febfee0aa1ffe91fd6fc9cedbe24c5b3a1b627c4ad529eb",
+      "runroot": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4505/lw",
+      "submitted_by": "Codex monitor mechanical submit under g3_recovery_go at reviewed commit 4a3667bd"
+    },
+    "sw": {
+      "childlog": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4506/sw/work/sw_raw-ckd-definition/ecckd-1.4_sw_raw2-ckd-definition_climate_rgb-tol0.047.log",
+      "childlog_sha256": "219b2388a200ae717f4ac06d7a955a630a0e4e116e49a317944e21cb563a12e4",
+      "covariance_line": "Creating 318x318 error covariance matrix for COMPOSITE",
+      "expected_fields": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_sw_optimizer.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-13T16:24:52",
+        "ExitCode": "1:0",
+        "JobId": "4506",
+        "JobName": "g4-g3-sw-optimizer",
+        "JobState": "FAILED",
+        "Reason": "NonZeroExitCode",
+        "Restarts": "0",
+        "RunTime": "00:00:14",
+        "StartTime": "2026-08-13T16:24:38",
+        "StdOut": "/shared/home/greg/data/ckdmip-logs/g4-g3-sw-4506.log",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_g3_sw_optimizer.sbatch",
+        "TimeLimit": "1-00:00:00"
+      },
+      "expected_submit_line": "sbatch --parsable validation/results/gate4_g3_sw_optimizer.sbatch",
+      "fixed_error": "2",
+      "job_id": 4506,
+      "job_name": "g4-g3-sw-optimizer",
+      "joblog": "/shared/home/greg/data/ckdmip-logs/g4-g3-sw-4506.log",
+      "joblog_sha256": "981a4af093823e28eead7485b1a516fdb5b1964ba1b4bea3332dae1213dbad75",
+      "receipt": "/shared/home/greg/data/ckdmip-logs/g4-g3-sw-4506-scontrol-final-agent42.txt",
+      "receipt_sha256": "87422acd3eea564122791c6351a8b5cfa62ed8a2e10113fb90c2be25cbe19816",
+      "runroot": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4506/sw",
+      "submitted_by": "Codex monitor mechanical submit under g3_recovery_go at reviewed commit 4a3667bd"
+    }
+  },
+  "canonical_finals": {
+    "observation": {
+      "lw": {
+        "absent_at_evidence_time": true,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc"
+      },
+      "sw": {
+        "absent_at_evidence_time": true,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc"
+      }
+    },
+    "semantics": "FIXED recorded fact at evidence time (2026-08-13T16:24:52Z), never re-read live: it remains absent_at_evidence_time=true permanently, regardless of any later remediated publication. Non-publication by the failed attempts is PROVEN by the gated evidence (FAILED receipts + digest-bound logs with stage 5/6 and done markers absent)."
+  },
+  "case": "gate4_g3_failure_ledger_4505_4506",
+  "data_mode": "read_only_evidence_ledger",
+  "diagnostic_observations": {
+    "atlas_libraries_observed": {
+      "f77blas": {
+        "resolved_at_evidence_time": "/usr/lib/x86_64-linux-gnu/libf77blas.so.3.10.3",
+        "sha256": "0962621e102076187bc6f01890eb6f8482b15dd1a994aaab24b2250eab74cbfb",
+        "symlink": "/lib/x86_64-linux-gnu/libf77blas.so.3"
+      },
+      "lapack": {
+        "resolved_at_evidence_time": "/usr/lib/x86_64-linux-gnu/atlas/liblapack.so.3.10.3",
+        "sha256": "f541fba68cbebded2fca2621dc3317df5b6a7363eaaf060dc653cea5027806ad",
+        "symlink": "/lib/x86_64-linux-gnu/liblapack.so.3"
+      }
+    },
+    "attribution": "Codex monitor bounded read-only diagnostics (gdb on retained LW first pass; temp diagnostic sources removed; repo clean); recorded here as attributed observations with hashes",
+    "full_netlib_positive": "Netlib BLAS preload + Netlib LAPACK (that probe supplied LAPACK via LD_LIBRARY_PATH) completed ALL four LW covariance matrices (318 COMPOSITE, 3816 H2O, 318 O3, 318 CO2), loaded all training scenes, and reached optimizer iteration 8 in a 60 s bounded /tmp-only run with no SIGFPE; loader binding: liblapack dcopy_ -> /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0",
+    "gdb_backtrace": "SIGFPE: ATL_dcopy_xp1yp1aXbX -> dlasyf_ -> dsytrf_ -> adept::inv (ckd_model.cpp:681); nx=318, corr=0.8, prior_error=8",
+    "partial_interposer_negative": "dcopy_-only interposer rebound LAPACK dcopy_ but ATLAS then SIGFPEd in ATL_diamax_xp1yp0aXbX in the same factorization -- partial interposition is insufficient",
+    "preload_only_final_order_positive": "the FINAL exact-version preload-only order (BLAS:LAPACK:H5-shim, NO LD_LIBRARY_PATH) has full-path bounded positive evidence: the monitor's 60 s /tmp-only probe completed ALL FOUR LW covariance inversions with identical inverse fractions (0.975159/0.994135/0.975159/0.975159), loaded all training scenes, and reached optimizer iteration 3; rc124 came only from the deliberate timeout, with no output written and no SIGFPE"
+  },
+  "disclaimer": "read-only evidence ledger; writes nothing except its own JSON/MD results.",
+  "evidence_time_utc": "2026-08-13T16:24:52Z",
+  "failure_mechanism": {
+    "h5_shim_verdict": "WORKED: all HDF5 gas-property reads succeeded before the kill; not an HDF5/input failure",
+    "kill_site": "adept::inv at ckd_model.cpp:681 (inv(background), nx=318 a-priori covariance)",
+    "signal_path": "SIGFPE in ATLAS ATL_dcopy_xp1yp1aXbX -> dlasyf_ -> dsytrf_ -> adept::inv",
+    "status_masking": "upstream `$OPTIMIZE_LUT ... |& tee $LOG` + `test \"${PIPESTATUS[0]}\" -eq 0` flattens child rc 128+sig to shell rc 1 (Slurm ExitCode=1:0) with no printed signal message",
+    "trap_source": "unconditional feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW) at optimize_lut.cpp:51 via src/include/floating_point_exceptions.h:20"
+  },
+  "failures": [],
+  "fixture_verdicts": {
+    "log_done_marker_present_refuses": true,
+    "log_duplicated_ready_line_refuses": true,
+    "log_failure_shape_accepted": true,
+    "log_final_line_suffix_refuses": true,
+    "log_missing_ready_line_refuses": true,
+    "log_missing_stage_refuses": true,
+    "log_publish_stage_present_refuses": true,
+    "log_refused_marker_refuses": true,
+    "log_wrong_last_line_refuses": true,
+    "overall_all_green": true,
+    "overall_any_issue_refuses": true,
+    "pin_good": true,
+    "pin_missing_refuses": true,
+    "pin_sha_drift_refuses": true,
+    "pin_size_drift_refuses": true,
+    "receipt_command_drift_refuses": true,
+    "receipt_exit_drift_refuses": true,
+    "receipt_good_binds": true,
+    "receipt_group_digest_drift_refuses": true,
+    "receipt_group_good": true,
+    "receipt_group_missing_refuses": true,
+    "receipt_jobid_drift_refuses": true,
+    "receipt_runtime_drift_refuses": true,
+    "receipt_state_drift_refuses": true,
+    "receipt_stdout_drift_refuses": true,
+    "receipt_submitline_drift_refuses": true
+  },
+  "gates": {
+    "evidence_childlog_lw": "passed",
+    "evidence_childlog_sw": "passed",
+    "evidence_commit_ancestry": "passed",
+    "evidence_joblog_lw": "passed",
+    "evidence_joblog_sw": "passed",
+    "evidence_receipt_lw": "passed",
+    "evidence_receipt_sw": "passed",
+    "evidence_runroot_preserved_lw": "passed",
+    "evidence_runroot_preserved_sw": "passed",
+    "evidence_script_blob_pin_lw": "passed",
+    "evidence_script_blob_pin_sw": "passed",
+    "fixtures": "passed"
+  },
+  "non_authorizing_note": "this ledger records and classifies evidence; it does not itself resubmit, edit the executor, or authorize anything -- downstream consumers must bind this artifact (exact case/status/sha)",
+  "remedy_decision": {
+    "fidelity_note": "FP traps stay ENABLED for the science code; only the flag-raising ATLAS implementation is displaced by reference Netlib",
+    "implemented_by": "the SEPARATE executor-amendment commit (raw child rc/signal surfacing included); this ledger records evidence and decides nothing",
+    "netlib_blas": {
+      "bytes": 677880,
+      "path": "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0",
+      "sha256": "e748efcae5753fe4a652877fccdb5895ac6f7605668a2db878b19c914e78e3a8"
+    },
+    "netlib_lapack": {
+      "bytes": 7268368,
+      "path": "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0",
+      "sha256": "851bb1fc5833ede9ed704b4417a251a899976d5e0915de40452615187a65278f"
+    },
+    "route": "exact-version preload-only (monitor-proven): LD_PRELOAD=/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0:/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0:/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so (BLAS, LAPACK, H5 shim order); NO LD_LIBRARY_PATH -- both libraries carry SONAMEs libblas.so.3/liblapack.so.3 and satisfy Adept's DT_NEEDED directly, removing symlink ambiguity"
+  },
+  "reviewed_commit": "4a3667bd1b15b58ff340e62ab00c28ae78916736",
+  "scripts": {
+    "lw": {
+      "bytes": 24009,
+      "repo_path": "validation/results/gate4_g3_lw_optimizer.sbatch",
+      "sha256": "a225d75728c245b9bdf1e508cc82f34464120baeb926b2bb4526940282773bdc"
+    },
+    "sw": {
+      "bytes": 21980,
+      "repo_path": "validation/results/gate4_g3_sw_optimizer.sbatch",
+      "sha256": "024e2d3c91709ecc7fb4458cb9aa6344ace2393177e1ce3f4218fbd9a3df5d1e"
+    }
+  },
+  "status": "g3_attempts_4505_4506_failed_semantic_diagnosed",
+  "timestamp_semantics": "fixed evidence timestamp (max job EndTime); no wall-clock generation time -- double runs are byte-identical"
+}
