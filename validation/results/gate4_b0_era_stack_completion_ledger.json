@@ -1,0 +1,266 @@
+{
+  "attempts": [
+    {
+      "classification": "stage-0d SIGPIPE (pipefail + version/head pipelines); pre-RUNROOT; fixed and text-gate banned",
+      "exit_code_raw": "141:0",
+      "job_id": 4540,
+      "job_state": "FAILED",
+      "log_sha256": "6c72105b1a748c12dd5d85232c0898443f9840af90178aecf55815f4b3f9b284",
+      "receipt_sha256": "b9e7542d21085f3fb8af9a63d4234e9f78768124b6d91e86e8a41b9591f0e79d"
+    },
+    {
+      "classification": "designed proof-gate false positive after a green era build (solve_adept.o pulled into the executable via the shared calc_cost_function_and_gradient symbol); replaced by the layered call-path proof",
+      "exit_code_raw": "68:0",
+      "job_id": 4545,
+      "job_state": "FAILED",
+      "log_sha256": "ccad0ca47f096ad74aead4aa0634c1a40acf741e17f5e5ef63191dbdf91b59d9",
+      "receipt_sha256": "6f3632adab027e05ace8095a06ab4de62fe6cd4a62ccc2e514c4f2eb62f9ddad"
+    },
+    {
+      "base_log_sha256": "7cd0309ae5aecd312ca4dcb01d6e71175ee4ce644717daffbb7ed8b957eee6e5",
+      "classification": "COMPLETED to design; base pass at the 3000-iteration cap (first record Iteration 1: cost function = 1906.44, gradient norm = 788.674; final record Iteration 3000: cost function = 16.7789, gradient norm = 0.0825603); probe accepted the unchanged v1.2 init with min/max arrays present; zero canonical writes",
+      "exit_code_raw": "0:0",
+      "job_id": 4546,
+      "job_state": "COMPLETED",
+      "log_sha256": "b6aac36459f86310aba8a93cf2382c200f1736b88449641cd053b73419c4c50b",
+      "probe_log_sha256": "3a67ae9ca9b29171d0c24983c40783b563cf02aac1388a523311b429113b2ead",
+      "raw2_bytes": 865748,
+      "raw2_sha256": "92f7be59bac9ae5cca74d4110bf878b3bbf50ff0ba5f45d1de1d77ab8cd8fa1a",
+      "receipt_sha256": "31c4f054320997be7950e623018e18819cfcea43965d6405e34c63c9af5ad0eb",
+      "run_time": "00:37:54",
+      "runroot_preserved": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4546/lw-b0"
+    }
+  ],
+  "case": "gate4_b0_era_stack_completion_ledger",
+  "confound_note": "the b42e5c0..23adaca diff includes optimize_lut.cpp, ckd_model.cpp/.h, lbl_fluxes.cpp, and average_optical_depth, plus build/script changes, the solve_lbfgs backend switch, and removal of the v1.2 bounded minimization -- changed TOGETHER; some underlying files (calc_cost_function_lw.cpp, radiative_transfer_lw.cpp) remain identical across that range. The experiment is never described as single-variable, mechanism-isolated, or backend-confirmed; the token 'isolation' persists only in legacy filenames/case identifiers for path stability.",
+  "data_mode": "evidence_ledger_no_campaign_writes",
+  "disclaimer": "evidence ledger; writes nothing except its own JSON/MD results plus transient private temp fixtures/snapshots (mktempdir); zero campaign/canonical writes.",
+  "evidence_timestamp_rule": "fixed at job 4546 EndTime; never wall-clock, so double runs are byte-identical",
+  "evidence_timestamp_utc": "2026-08-13T20:38:33Z",
+  "failures": [],
+  "fixture_verdicts": {
+    "a4540_good": true,
+    "a4540_receipt_good_binds": true,
+    "a4540_runroot_refuses": true,
+    "a4545_duplicate_refusal_refuses": true,
+    "a4545_good": true,
+    "a4545_receipt_good_binds": true,
+    "a4546_custody_divergence_refuses": true,
+    "a4546_good": true,
+    "a4546_missing_done_refuses": true,
+    "a4546_receipt_good_binds": true,
+    "baselog_adept_banner_refuses": true,
+    "baselog_cov_out_of_order_refuses": true,
+    "baselog_good": true,
+    "baselog_missing_cov_refuses": true,
+    "baselog_wrong_final_iteration_refuses": true,
+    "case_ecckd_clear_sky_tropical_column_sha_mutation_refuses": true,
+    "case_ecckd_rcemip_style_column_subset_sha_mutation_refuses": true,
+    "code_pin_missing_refuses": true,
+    "code_pin_mutation_refuses": true,
+    "code_pins_live_green": true,
+    "deltas_arithmetic_exact": true,
+    "h2o_env_immunity": true,
+    "joblog_duplicate_done_refuses": true,
+    "joblog_failure_marker_refuses": true,
+    "joblog_good": true,
+    "joblog_lowercase_error_covariance_accepted": true,
+    "joblog_missing_raw2_echo_refuses": true,
+    "joblog_missing_stage_refuses": true,
+    "joblog_stage_out_of_order_refuses": true,
+    "overall_all_green": true,
+    "overall_any_issue_refuses": true,
+    "probelog_adept_banner_refuses": true,
+    "probelog_good": true,
+    "probelog_missing_banner_refuses": true,
+    "receipt_nonzero_exit_refuses": true,
+    "receipt_wrong_runtime_refuses": true,
+    "receipt_wrong_state_refuses": true,
+    "ref_published_pair_sha_mutation_refuses": true,
+    "ref_published_pair_size_mutation_refuses": true,
+    "ref_published_pair_value_bitexact_accepted": true,
+    "ref_published_pair_value_mutation_refuses": true,
+    "ref_raw_init_sha_mutation_refuses": true,
+    "ref_raw_init_size_mutation_refuses": true,
+    "ref_raw_init_value_bitexact_accepted": true,
+    "ref_raw_init_value_mutation_refuses": true,
+    "ref_recovered_final_lw_sha_mutation_refuses": true,
+    "ref_recovered_final_lw_size_mutation_refuses": true,
+    "ref_recovered_final_lw_value_bitexact_accepted": true,
+    "ref_recovered_final_lw_value_mutation_refuses": true,
+    "ref_snapshot_good_accepted": true,
+    "ref_snapshot_missing_refuses": true,
+    "ref_snapshot_sha_mutation_refuses": true,
+    "ref_snapshot_size_mutation_refuses": true,
+    "ref_v12_raw2_sha_mutation_refuses": true,
+    "ref_v12_raw2_size_mutation_refuses": true,
+    "ref_v12_raw2_value_bitexact_accepted": true,
+    "ref_v12_raw2_value_mutation_refuses": true,
+    "schema_core_nonfinite_refuses": true,
+    "schema_extra_var_refuses": true,
+    "schema_good_accepted": true,
+    "schema_missing_var_refuses": true,
+    "schema_noncore_nonfinite_refuses": true,
+    "schema_unexpected_minmax_refuses": true,
+    "schema_wrong_band_refuses": true,
+    "scientific_complete_reports": true,
+    "scientific_drifted_era_withheld": true,
+    "scientific_drifted_reference_withheld": true,
+    "scientific_missing_era_withheld": true,
+    "scientific_missing_reference_withheld": true,
+    "scientific_wrong_pub_withheld": true,
+    "src_dirty_state_refuses": true,
+    "src_state_good_accepted": true,
+    "src_tree_mutation_refuses": true,
+    "sw_pin_sha_mutation_refuses": true,
+    "value_bitexact_accepted": true,
+    "value_drift_refuses": true
+  },
+  "followup_controls_proposed": [
+    "C1: PROPOSED one-factor fixed-run control -- v1.2 stack with bounded_minimization=false, all other factors held. C1 can quantify the one-factor effect of the bounds flag for this fixed setup; a null result shows no material effect under this setup ONLY and is never described as formally retiring the bounds factor",
+    "C2: PROPOSED, deferred -- era b42e5c0 stack with a one-line USE_LBFGS_LIBRARY removal (era-Adept backend inside the era stack; still source-confounded vs v1.2)",
+    "C3: bound-position census and the associated bounded-mode serialization anomaly are DEFERRED to a dedicated ledger with full pinned computation; no census numbers are recorded here because this ledger does not compute or evidence them; no causal claim",
+    "note: objective scoring is stack-independent (external package objective); the confound lives in optimization dynamics, not in scoring"
+  ],
+  "gates": {
+    "evidence_attempt_4540_evidence": "passed",
+    "evidence_attempt_4545_evidence": "passed",
+    "evidence_attempt_4546_evidence": "passed",
+    "evidence_commit_ancestry": "passed",
+    "evidence_comparator_code_pins": "passed",
+    "evidence_comparator_integrity": "passed",
+    "evidence_era_raw2_schema": "passed",
+    "evidence_generator_and_sbatch_pins": "passed",
+    "evidence_job_log_contract": "passed",
+    "evidence_runroot_artifacts": "passed",
+    "fixtures": "passed"
+  },
+  "non_authorizing_note": "this ledger records and classifies evidence; it does not itself submit, publish, or select follow-up experiments -- downstream steps require explicit monitor rulings",
+  "reviewed": {
+    "case_input_pins": [
+      {
+        "bytes": 207210,
+        "case": "ecckd_clear_sky_tropical_column",
+        "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/reference/ecrad/ecckd_clear_sky_tropical_column.nc",
+        "sha256": "3a1634b7c7b4e22ae4064ace9826ac76b6810fb4074a5437bfd30b5c911e68e7"
+      },
+      {
+        "bytes": 612490,
+        "case": "ecckd_rcemip_style_column_subset",
+        "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/reference/ecrad/ecckd_rcemip_style_column_subset.nc",
+        "sha256": "8c4a6974d74d09ae5f6679f76495538d1b9812edada7d87b1ed6737303710db3"
+      }
+    ],
+    "commit_ancestor": "28f7274666effe3a40b401bd110d83e3840faa0f",
+    "comparator_code_pins": [
+      {
+        "path": "validation/ecckd_published_model_accuracy.jl",
+        "sha256": "e6a10832650e668d88e9e903f222ba130d1e549489a637fbb75c67d1e0520446"
+      },
+      {
+        "path": "validation/reduced_ecckd_accuracy.jl",
+        "sha256": "a62520b88f460da681e7fb94eb0d852c863248f98c3cfe1dbaf49b46c8843e02"
+      },
+      {
+        "path": "validation/validation_results.jl",
+        "sha256": "60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12"
+      },
+      {
+        "path": "validation/write_ecrad_candidates.jl",
+        "sha256": "89a2cf69ca036a1762418853f72a09fd352fbe9904adf6c9f10eadbcaeb0c267"
+      },
+      {
+        "path": "validation/ecrad_reference_manifest.jl",
+        "sha256": "6bf4787a7fa2f5057217562d423dd6337dbf9702cfe29245276f6205fe1e6b23"
+      },
+      {
+        "path": "test/Project.toml",
+        "sha256": "9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0"
+      },
+      {
+        "path": "test/Manifest.toml",
+        "sha256": "cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186"
+      },
+      {
+        "path": "Project.toml",
+        "sha256": "e3921c81ac9c8f6f6d2210f59e6195399643b4c8f66625b59b1d950da3493058"
+      }
+    ],
+    "generator_source_sha256": "259f7b32b6cba4fd85ea4e1646dd0c89c6977dae11613a706a44b106b9569b55",
+    "h2o_mole_fraction": 0.005,
+    "published_lw_pin": {
+      "bytes": 869280,
+      "path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+      "sha256": "6087f62f9052653f8e7dbee26cef8bf1977c2516669a169bee8d110b62912ed9"
+    },
+    "published_sw_pin": {
+      "bytes": 851724,
+      "path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+      "sha256": "49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3"
+    },
+    "reviewed_src_tree": "7eaf80136e313c073416a815334493fc3b5434e7",
+    "sbatch_sha256": "87a529e865633133e9f6d548720c597c5e1021a2143af1a52c17c590ac76e575"
+  },
+  "scientific": {
+    "bounded_interpretation": "B0 execution completed and the bundled target-era stack is viable, but its fixed-input raw2 still fails the 1.05 objective gate and offers no material recovery versus the v1.2 raw2. This is one deterministic bundled comparison with confounded source/backend/bounds; it is never phrased as statistically equivalent/indistinguishable, backend disproven, hypothesis collapsed, or causality shifted (binding monitor wording 2026-08-13).",
+    "era_raw2_swap_objective": 22.788012978663616,
+    "internal_cost_note": "era internal LBFGS cost/gradient records are runtime evidence only and are never compared across stacks as a verdict; the pinned external comparator is the sole scoring instrument.",
+    "objective_gate_note": "the recovered-model objective gate is <= 1.05 (gate4_g1_objective_ratio contract); the era raw2 value reported here fails that gate",
+    "published_context_selfcheck": 0.18218645425029933,
+    "published_sw_pin": {
+      "bytes": 851724,
+      "note": "the SAME pinned published SW snapshot is used for every swap evaluation",
+      "path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+      "sha256": "49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3"
+    },
+    "references": [
+      {
+        "delta_era_minus_ref": -79.8825513979075,
+        "input_bytes": 2413144,
+        "input_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+        "input_sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+        "ratio_era_over_ref": 0.2219527390059202,
+        "recomputed_bit_exact": true,
+        "recomputed_value": 102.67056437657112,
+        "reference": "raw_init",
+        "reviewed_value": 102.67056437657112
+      },
+      {
+        "delta_era_minus_ref": -0.0032804856852095554,
+        "input_bytes": 2415168,
+        "input_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g3-runs/4515/lw/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "input_sha256": "4205489923dbc50c3c148a06f20e5781b3f1dbeb5a13d55d36b460c5f7b4378c",
+        "ratio_era_over_ref": 0.9998560640847198,
+        "recomputed_bit_exact": true,
+        "recomputed_value": 22.791293464348826,
+        "reference": "v12_raw2",
+        "reviewed_value": 22.791293464348826
+      },
+      {
+        "delta_era_minus_ref": -0.03687726494072763,
+        "input_bytes": 872004,
+        "input_path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+        "input_sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4",
+        "ratio_era_over_ref": 0.9983843398786524,
+        "recomputed_bit_exact": true,
+        "recomputed_value": 22.824890243604344,
+        "reference": "recovered_final_lw",
+        "reviewed_value": 22.824890243604344
+      },
+      {
+        "delta_era_minus_ref": 22.605826524413317,
+        "input_bytes": 869280,
+        "input_path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
+        "input_sha256": "6087f62f9052653f8e7dbee26cef8bf1977c2516669a169bee8d110b62912ed9",
+        "ratio_era_over_ref": 125.08072058615288,
+        "recomputed_bit_exact": true,
+        "recomputed_value": 0.18218645425029933,
+        "reference": "published_pair",
+        "reviewed_value": 0.18218645425029933
+      }
+    ],
+    "scientific_reporting_complete": true
+  },
+  "status": "b0_run_completed_verified",
+  "timestamp_utc": "2026-08-13T20:38:33Z"
+}
