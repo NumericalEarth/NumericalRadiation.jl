@@ -1,14 +1,27 @@
-# Gate-4 B0 ERA-LBFGS MECHANISM-ISOLATION CHECKPOINT (generator; writes
-# ONLY its own JSON/MD results + the generated sbatch). Diagnosis unit
-# downstream of the reviewed G3 run ledger: G1 objective FAILED at
+# Gate-4 B0 BUNDLED TARGET-ERA STACK VIABILITY CHECKPOINT (generator;
+# writes ONLY its own JSON/MD results + the generated sbatch). Diagnosis
+# unit downstream of the reviewed G3 run ledger: G1 objective FAILED at
 # 22.8246 with damage isolated to the LW relative-base pass, and public
 # history shows the v1.2 recovery ran a post-v1.0 optimizer mechanism
 # (Adept L-BFGS + bounded minimization with *_min/*_max arrays) while
 # the target-era v1.0/b42e5c0 code runs the in-tree third-party
 # solve_lbfgs backend, unbounded (USE_LBFGS_LIBRARY=1).
 #
+# SCIENTIFIC SCOPE (binding monitor correction, 2026-08-13): building
+# the full b42e5c0 tree is a full executable source version change --
+# the b42e5c0..23adaca diff includes optimize_lut.cpp, ckd_model.cpp/.h,
+# lbl_fluxes.cpp, and average_optical_depth, plus build/script changes,
+# the solve_lbfgs backend, and removal of the v1.2 bounds; some
+# underlying files (e.g. calc_cost_function_lw.cpp,
+# radiative_transfer_lw.cpp) remain identical across that range.
+# Source, backend, and bounds are CONFOUNDED. B0 is a bundled
+# TARGET-ERA STACK viability experiment with fixed
+# init/g-points/training/config; it can NEVER prove the backend alone
+# causes any outcome, and no artifact of this unit may claim
+# single-variable or backend-confirmed isolation.
+#
 # B0 (monitor-approved design, 2026-08-13): hold init/g-points/training
-# FIXED and change EXACTLY the optimizer mechanism --
+# FIXED and swap in the bundled target-era stack --
 #   - same ce057079... v1.2 LW raw init (16 min/max arrays retained;
 #     static source review: the old reader requests named variables and
 #     ignores extras; a controlled 1-iteration schema-open probe proves
@@ -131,6 +144,28 @@ const B0_INPUTS = [
      "$B0_G4WORK/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
      "work/lw_gpoints")]
 
+# --- attempt registry: job 4540 (FAILED 141:0 pre-RUNROOT; evidence pinned) ----
+const B0_A4540_RECEIPT_S40 = "$B0_LOG_DIR/g4-b0-lw-4540-scontrol-final-session40.txt"
+const B0_A4540_RECEIPT_A42 = "$B0_LOG_DIR/g4-b0-lw-4540-scontrol-final-agent42.txt"
+const B0_A4540_RECEIPT_SHA = "b9e7542d21085f3fb8af9a63d4234e9f78768124b6d91e86e8a41b9591f0e79d"
+const B0_A4540_LOG = "$B0_LOG_DIR/g4-b0-lw-4540.log"
+const B0_A4540_LOG_SHA = "6c72105b1a748c12dd5d85232c0898443f9840af90178aecf55815f4b3f9b284"
+
+# terminal fields bound by EXACT string from BOTH custody receipts
+const B0_A4540_EXPECT = Dict(
+    "JobId" => "4540", "JobName" => "g4-b0-lw-era-lbfgs",
+    "JobState" => "FAILED", "Reason" => "NonZeroExitCode",
+    "ExitCode" => "141:0", "DerivedExitCode" => "0:0",
+    "Restarts" => "0", "RunTime" => "00:00:02",
+    "SubmitTime" => "2026-08-13T19:19:31",
+    "StartTime" => "2026-08-13T19:22:38",
+    "EndTime" => "2026-08-13T19:22:40",
+    "Command" => joinpath(B0_PROJECT_ROOT,
+        "validation/results/gate4_b0_lw_era_lbfgs.sbatch"),
+    "SubmitLine" => "sbatch --parsable validation/results/gate4_b0_lw_era_lbfgs.sbatch",
+    "WorkDir" => B0_PROJECT_ROOT,
+    "StdOut" => B0_A4540_LOG)
+
 const B0_RESULTS_JSON = validation_results_path("gate4_b0_era_lbfgs_isolation_checkpoint.json")
 const B0_RESULTS_MD = validation_results_path("gate4_b0_era_lbfgs_isolation_checkpoint.md")
 const B0_SBATCH = validation_results_path("gate4_b0_lw_era_lbfgs.sbatch")
@@ -188,6 +223,65 @@ function b0_classify_run_ledger(path; expected_case = B0_RUN_LEDGER_CASE,
     (ok = true, class = "green", reason = "")
 end
 
+# --- attempt-4540 evidence binding (pure; fixture-testable) ------------------------
+
+const B0_TOKEN_KEYS = ("JobId", "JobName", "JobState", "Reason",
+    "ExitCode", "DerivedExitCode", "Restarts", "RunTime",
+    "SubmitTime", "StartTime", "EndTime")
+
+function b0_parse_receipt(text)
+    f = Dict{String, String}()
+    for k in B0_TOKEN_KEYS
+        m = match(Regex("\\b" * k * "=(\\S+)"), text)
+        m === nothing || (f[k] = String(m.captures[1]))
+    end
+    for k in ("Command", "SubmitLine", "WorkDir", "StdOut")
+        m = match(Regex("^\\s*" * k * "=(.*)\$", "m"), text)
+        m === nothing || (f[k] = String(strip(m.captures[1])))
+    end
+    f
+end
+
+function b0_receipt_issues(f, expect)
+    iss = String[]
+    for (k, v) in expect
+        get(f, k, "") == v ||
+            push!(iss, "$k mismatch (got $(repr(get(f, k, ""))))")
+    end
+    sort(iss)
+end
+
+# content coupled to claims: byte-identity across custody, every
+# terminal field bound from EACH receipt, and the failed log must show
+# stages 0a-0d only -- never 0e/RUNROOT progress/done
+function b0_a4540_issues(r40bytes, r42bytes, logtext;
+                         expect = B0_A4540_EXPECT)
+    iss = String[]
+    r40bytes == r42bytes ||
+        push!(iss, "4540 receipts not byte-identical across custody")
+    for (label, bytes) in (("session40", r40bytes), ("agent42", r42bytes))
+        f = b0_parse_receipt(String(copy(bytes)))
+        for i in b0_receipt_issues(f, expect)
+            push!(iss, "4540 $label receipt: $i")
+        end
+    end
+    for s in ("0a", "0b", "0c", "0d")
+        occursin("=== B0-lw stage $s", logtext) ||
+            push!(iss, "4540 log missing stage $s marker")
+    end
+    # the pre-RUNROOT claim binds generically: the verified clean 4540
+    # log contains ZERO occurrences of the token RUNROOT (no lock, no
+    # creation, no staging, no preservation lines)
+    for bad in ("=== B0-lw stage 0e", "=== B0-lw stage 1",
+                "staged scientific-input snapshot verified",
+                "RUNROOT",
+                "=== B0-lw done ")
+        occursin(bad, logtext) &&
+            push!(iss, "4540 log falsely contains: $bad")
+    end
+    iss
+end
+
 # --- sbatch generation ------------------------------------------------------------
 
 function b0_make_sbatch()
@@ -222,12 +316,18 @@ function b0_make_sbatch()
 #SBATCH --mem=60G
 #SBATCH --partition=cpu-large
 
-# Gate-4 B0: era-LBFGS mechanism isolation (DIAGNOSIS unit; PRIVATE
-# output only). Generated by gate4_b0_era_lbfgs_isolation_checkpoint.jl.
-# Same ce057079 init, same seven pinned training fluxes, exact 4515
-# relative-base config; ONLY the optimizer mechanism changes to the
-# pinned v1.0/b42e5c0 solve_lbfgs backend built in-job. ZERO canonical
-# writes; no publish stage; RUNROOT preserved on success AND failure.
+# Gate-4 B0: bundled target-era stack viability (DIAGNOSIS unit;
+# PRIVATE output only). Generated by
+# gate4_b0_era_lbfgs_isolation_checkpoint.jl. Same ce057079 init, same
+# seven pinned training fluxes, exact 4515 relative-base config; the
+# FULL pinned v1.0/b42e5c0 stack is built in-job -- a full executable
+# source version change (incl. optimize_lut/ckd_model/lbl_fluxes) plus
+# the old solve_lbfgs backend and no v1.2 bounds, while some files
+# (calc_cost_function_lw, radiative_transfer_lw) are identical across
+# the range. Source/backend/bounds CONFOUNDED by design; this tests
+# target-era stack viability, never backend-alone causality. ZERO
+# canonical writes; no publish stage; RUNROOT preserved on success AND
+# failure.
 set -euo pipefail
 if [ -z "\${SLURM_JOB_ID:-}" ]; then
     echo "REFUSED: head-node execution is not permitted; submit via sbatch." >&2
@@ -274,14 +374,18 @@ SIZES
 for t in autoreconf autoconf automake libtoolize gcc g++ make; do
     command -v "\$t" >/dev/null || { echo "REFUSED: build tool missing: \$t" >&2; exit 65; }
 done
-AC_V=\$(autoconf --version | head -1 | grep -oE '[0-9.]+\$')
-AM_V=\$(automake --version | head -1 | grep -oE '[0-9.]+\$')
-LT_V=\$(libtoolize --version | head -1 | grep -oE '[0-9.]+\$')
+# version extraction via pure parameter expansion: NO pipelines
+# (4540 lesson: piping a tool version banner into an early-closing
+# reader SIGPIPEs the producer under pipefail -> silent exit 141;
+# bash -n cannot catch it)
+AC_FULL=\$(autoconf --version); AC_LINE1=\${AC_FULL%%\$'\\n'*}; AC_V=\${AC_LINE1##* }
+AM_FULL=\$(automake --version); AM_LINE1=\${AM_FULL%%\$'\\n'*}; AM_V=\${AM_LINE1##* }
+LT_FULL=\$(libtoolize --version); LT_LINE1=\${LT_FULL%%\$'\\n'*}; LT_V=\${LT_LINE1##* }
 [ "\$AC_V" = "$B0_AUTOCONF_VER" ] || { echo "REFUSED: autoconf \$AC_V != pinned $B0_AUTOCONF_VER" >&2; exit 65; }
 [ "\$AM_V" = "$B0_AUTOMAKE_VER" ] || { echo "REFUSED: automake \$AM_V != pinned $B0_AUTOMAKE_VER" >&2; exit 65; }
 [ "\$LT_V" = "$B0_LIBTOOLIZE_VER" ] || { echo "REFUSED: libtoolize \$LT_V != pinned $B0_LIBTOOLIZE_VER" >&2; exit 65; }
-gcc --version | head -1
-g++ --version | head -1
+GCC_FULL=\$(gcc --version); echo "\${GCC_FULL%%\$'\\n'*}"
+GXX_FULL=\$(g++ --version); echo "\${GXX_FULL%%\$'\\n'*}"
 test -d "$B0_V12_TEST_SRC/test" || { echo "REFUSED: v1.2 testcopy source missing" >&2; exit 68; }
 test -d "$B0_ADEPT/lib" || { echo "REFUSED: adept install missing" >&2; exit 68; }
 test -d "$B0_NETCDF/lib" || { echo "REFUSED: netcdf stack missing" >&2; exit 68; }
@@ -322,8 +426,8 @@ autoreconf -i
 $B0_CONFIGURE_ARGV
 make -j"\$SLURM_CPUS_PER_TASK"
 test -x "\$SRCDIR/src/ecckd/optimize_lut" || { echo "REFUSED: era optimize_lut not built" >&2; exit 68; }
-# binary-level mechanism proof: era banner string present, Adept-LBFGS
-# banner absent (the v1.2 mechanism string must NOT appear)
+# binary-level era-stack proof: era banner string present, Adept-LBFGS
+# banner absent (the v1.2 banner string must NOT appear)
 [ "\$(strings "\$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Optimizing coefficients with LBFGS algorithm' || true)" -ge 1 ] || { echo "REFUSED: era LBFGS banner string absent from binary" >&2; exit 68; }
 [ "\$(strings "\$SRCDIR/src/ecckd/optimize_lut" | grep -cF 'Adept LBFGS' || true)" = 0 ] || { echo "REFUSED: Adept LBFGS string present in era binary" >&2; exit 68; }
 
@@ -497,7 +601,12 @@ function b0_text_gate_issues(text)
         "raw2 independent schema/finite verification passed",
         "RAW2_PATH=\"\$RUNROOT/work/lw_raw-ckd-definition/" *
             "ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc\" " *
-            "julia --project=test"]
+            "julia --project=test",
+        # 4540 lesson: version extraction must be capture + parameter
+        # expansion (the pipefail-safe form), never an early-closing pipe
+        "AC_FULL=\$(autoconf --version)",
+        "AM_FULL=\$(automake --version)",
+        "LT_FULL=\$(libtoolize --version)"]
     for r in req
         occursin(r, text) || push!(iss, "required text missing: $r")
     end
@@ -516,6 +625,12 @@ function b0_text_gate_issues(text)
     # HASHES/SIZES/STAGE blocks (cp -L sources)
     for m in eachmatch(r"(?m)^[^#\n]*> *\"?\$G4WORK/(?!g4-diag|locks/b0-lw\.lock)", text)
         push!(iss, "redirect toward shared G4WORK area: $(m.match)")
+    end
+    # 4540 lesson: '<tool> --version | head' SIGPIPEs the producer under
+    # pipefail (silent exit 141, invisible to bash -n); the form is
+    # banned outright in generated text
+    for m in eachmatch(r"--version *\| *head", text)
+        push!(iss, "unsafe version/head pipeline (4540 SIGPIPE class): $(m.match)")
     end
     iss
 end
@@ -556,6 +671,54 @@ function b0_fixtures()
         cls(p; expected_sha = shaof(p),
             readfn = _ -> error("io")).class == "unreadable"
 
+    # attempt-4540 content binding: synthetic receipt from the exact
+    # expectation table + minimal failed-shape log; mutations refuse
+    mk4540(over...) = begin
+        e = Dict{String, String}(B0_A4540_EXPECT)
+        for (k, v) in over
+            e[k] = v
+        end
+        Vector{UInt8}(codeunits(
+            "JobId=$(e["JobId"]) JobName=$(e["JobName"])\n" *
+            "   JobState=$(e["JobState"]) Reason=$(e["Reason"]) Dependency=(null)\n" *
+            "   Requeue=1 Restarts=$(e["Restarts"]) BatchFlag=1 ExitCode=$(e["ExitCode"])\n" *
+            "   DerivedExitCode=$(e["DerivedExitCode"])\n" *
+            "   RunTime=$(e["RunTime"]) TimeLimit=06:00:00 TimeMin=N/A\n" *
+            "   SubmitTime=$(e["SubmitTime"]) EligibleTime=$(e["SubmitTime"])\n" *
+            "   StartTime=$(e["StartTime"]) EndTime=$(e["EndTime"]) Deadline=N/A\n" *
+            "   Command=$(e["Command"])\n" *
+            "   SubmitLine=$(e["SubmitLine"])\n" *
+            "   WorkDir=$(e["WorkDir"])\n" *
+            "   StdOut=$(e["StdOut"])\n"))
+    end
+    failedlog = join(["=== B0-lw stage $s: x ===" for s in
+                      ("0a", "0b", "0c", "0d")], "\nOK lines\n") * "\n"
+    t["a4540_good_accepted"] =
+        isempty(b0_a4540_issues(mk4540(), mk4540(), failedlog))
+    t["a4540_wrong_receipt_field_refuses"] =
+        !isempty(b0_a4540_issues(mk4540("ExitCode" => "0:0"),
+                                 mk4540("ExitCode" => "0:0"), failedlog))
+    t["a4540_receipt_divergence_refuses"] =
+        !isempty(b0_a4540_issues(mk4540(),
+                                 mk4540("EndTime" => "2026-08-13T19:22:41"),
+                                 failedlog))
+    t["a4540_log_reaches_0e_refuses"] =
+        !isempty(b0_a4540_issues(mk4540(), mk4540(),
+            failedlog * "=== B0-lw stage 0e: B0 experiment lock ===\n"))
+    t["a4540_log_reaches_done_refuses"] =
+        !isempty(b0_a4540_issues(mk4540(), mk4540(),
+            failedlog * "=== B0-lw done 2026-08-13T19:30:00Z ===\n"))
+    t["a4540_log_runroot_marker_refuses"] =
+        !isempty(b0_a4540_issues(mk4540(), mk4540(),
+            failedlog * "RUNROOT preserved for diagnosis/forensics: x\n"))
+    t["a4540_wrong_submit_time_refuses"] =
+        !isempty(b0_a4540_issues(mk4540("SubmitTime" => "2026-08-13T00:00:00"),
+                                 mk4540("SubmitTime" => "2026-08-13T00:00:00"),
+                                 failedlog))
+    t["a4540_log_missing_stage_refuses"] =
+        !isempty(b0_a4540_issues(mk4540(), mk4540(),
+            replace(failedlog, "=== B0-lw stage 0c: x ===" => "")))
+
     # text gates: generated text passes; controlled mutations refuse
     text = b0_make_sbatch()
     t["text_good_accepted"] = isempty(b0_text_gate_issues(text))
@@ -574,6 +737,8 @@ function b0_fixtures()
         replace(text, B0_ERA_COMMIT => "f" ^ 40)))
     t["text_missing_flock_refuses"] = !isempty(b0_text_gate_issues(
         replace(text, "flock -n 9" => "true")))
+    t["text_version_head_pipeline_refuses"] = !isempty(b0_text_gate_issues(
+        text * "\nlibtoolize --version | head -1\n"))
     t["text_missing_probe_gpoints_refuses"] = !isempty(b0_text_gate_issues(
         replace(text,
             "probe-work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5"
@@ -653,6 +818,35 @@ function main()
     groups["sbatch_bash_syntax"] = b0_bash_syntax_ok(text) ? String[] :
         ["generated sbatch fails bash -n syntax verification"]
 
+    # attempt-4540 failure evidence: coupled byte reads (ONE read per
+    # file supplies both the pin digest and the parsed content), then
+    # content bound to every claim the JSON records; drift refuses
+    a40 = String[]
+    a40_reads = Dict{String, Union{Nothing, Vector{UInt8}}}()
+    for (p, pin, label) in ((B0_A4540_RECEIPT_S40, B0_A4540_RECEIPT_SHA,
+                             "session40 receipt"),
+                            (B0_A4540_RECEIPT_A42, B0_A4540_RECEIPT_SHA,
+                             "agent42 receipt"),
+                            (B0_A4540_LOG, B0_A4540_LOG_SHA, "log"))
+        bytes = try
+            isfile(p) ? read(p) : nothing
+        catch
+            nothing
+        end
+        a40_reads[label] = bytes
+        if bytes === nothing
+            push!(a40, "4540 $label missing/unreadable: $p")
+        elseif bytes2hex(sha256(bytes)) != pin
+            push!(a40, "4540 $label pin mismatch: $p")
+        end
+    end
+    if isempty(a40)
+        append!(a40, b0_a4540_issues(a40_reads["session40 receipt"],
+                                     a40_reads["agent42 receipt"],
+                                     String(copy(a40_reads["log"]))))
+    end
+    groups["attempt_4540_evidence"] = a40
+
     for (k, v) in groups
         gates["evidence_" * k] = isempty(v) ? "passed" : "failed"
         isempty(v) || append!(fails, ["$k: " * i for i in v])
@@ -693,20 +887,65 @@ function main()
         "inputs" => [Dict("sha256" => sha, "size" => sz, "path" => path,
                           "staged_rel" => rel)
                      for (sha, sz, path, rel) in B0_INPUTS],
+        # attempt registry: every B0 submission with terminal evidence
+        "attempts" => [Dict(
+            "job_id" => 4540,
+            "job_state" => "FAILED",
+            "exit_code_raw" => "141:0",
+            "derived_exit_code_raw" => "0:0",
+            "run_time" => "00:00:02",
+            "submit_time" => "2026-08-13T19:19:31",
+            "start_time" => "2026-08-13T19:22:38",
+            "end_time" => "2026-08-13T19:22:40",
+            "receipt_paths" => [B0_A4540_RECEIPT_S40, B0_A4540_RECEIPT_A42],
+            "receipt_sha256" => B0_A4540_RECEIPT_SHA,
+            "log_path" => B0_A4540_LOG,
+            "log_sha256" => B0_A4540_LOG_SHA,
+            "failure_point" => "stage 0d toolchain version checks; " *
+                "pre-RUNROOT (g4-diag never created); zero " *
+                "campaign-state mutation",
+            "cause" => "SIGPIPE under set -euo pipefail from " *
+                "'tool --version | head -1' pipelines (exit 141 = " *
+                "128+13); reproduced on the head node (libtoolize " *
+                "--version | head -1 returns 141; all five " *
+                "version/head pipelines unsafe); fixed by full-output " *
+                "capture + Bash parameter expansion with no " *
+                "early-closing pipeline, enforced by a text gate")],
         # causal to the exact-4515-config claim: the v1.2 testcopy root
         # and the four copied files verified at generation AND in-job
         "v12_testcopy" => Dict(
             "root" => B0_V12_TEST_SRC,
             "pins" => [Dict("sha256" => sha, "size" => sz, "path" => path)
                        for (sha, sz, path) in B0_V12_TEST_PINS]),
-        "design_note" => "B0 mechanism isolation: same ce057079 init " *
-            "(min/max arrays retained; controlled max_iterations=1 " *
-            "schema-open probe REFUSES rather than strips), same seven " *
-            "pinned training fluxes, exact 4515 relative-base config; " *
-            "ONLY the optimizer mechanism changes to the pinned " *
-            "v1.0/b42e5c0 solve_lbfgs backend built in-job. PRIVATE " *
-            "output under g4-diag; zero canonical writes; submission " *
-            "HELD for monitor review.",
+        "design_note" => "B0 bundled target-era stack viability: same " *
+            "ce057079 init (min/max arrays retained; controlled " *
+            "max_iterations=1 schema-open probe REFUSES rather than " *
+            "strips), same seven pinned training fluxes, exact 4515 " *
+            "relative-base config; the FULL pinned v1.0/b42e5c0 stack " *
+            "is built in-job -- a full executable source version " *
+            "change, including optimize_lut/ckd_model/lbl_fluxes, plus " *
+            "the old solve_lbfgs backend and no v1.2 bounds. " *
+            "Source, backend, and bounds are CONFOUNDED by design: this " *
+            "experiment tests target-era stack viability with fixed " *
+            "init/g-points/training/config and can never prove the " *
+            "backend alone causes any outcome. PRIVATE output under " *
+            "g4-diag; zero canonical writes; submission HELD for " *
+            "monitor review.",
+        "confound_note" => "the b42e5c0..23adaca diff includes " *
+            "optimize_lut.cpp, ckd_model.cpp/.h, lbl_fluxes.cpp, and " *
+            "average_optical_depth, plus build/script changes, the " *
+            "solve_lbfgs backend switch, and removal of the v1.2 " *
+            "bounded minimization -- changed TOGETHER; some underlying " *
+            "files (calc_cost_function_lw.cpp, " *
+            "radiative_transfer_lw.cpp) remain identical across that " *
+            "range. No artifact of this unit may DESCRIBE the " *
+            "experiment as single-variable, mechanism-isolated, or " *
+            "backend-confirmed (binding monitor corrections " *
+            "2026-08-13). Explicit exception: the literal token " *
+            "'isolation' persists ONLY inside legacy filenames and the " *
+            "case identifier (gate4_b0_era_lbfgs_isolation_*) retained " *
+            "for path stability; those identifiers are non-claim-" *
+            "bearing.",
         "non_authorizing_note" => "this checkpoint generates and " *
             "verifies the B0 sbatch; it never submits; submission " *
             "requires explicit monitor GO.",
@@ -718,7 +957,7 @@ function main()
         JSON.print(io, result, 2)
     end
     open(B0_RESULTS_MD, "w") do io
-        println(io, "# Gate-4 B0 era-LBFGS isolation checkpoint\n")
+        println(io, "# Gate-4 B0 bundled target-era stack viability checkpoint\n")
         println(io, "Status: **$status**\n")
         println(io, result["design_note"], "\n")
         println(io, "| Gate | Result |")

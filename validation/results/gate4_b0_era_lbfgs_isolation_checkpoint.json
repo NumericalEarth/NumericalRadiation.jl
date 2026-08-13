@@ -1,7 +1,29 @@
 {
+  "attempts": [
+    {
+      "cause": "SIGPIPE under set -euo pipefail from 'tool --version | head -1' pipelines (exit 141 = 128+13); reproduced on the head node (libtoolize --version | head -1 returns 141; all five version/head pipelines unsafe); fixed by full-output capture + Bash parameter expansion with no early-closing pipeline, enforced by a text gate",
+      "derived_exit_code_raw": "0:0",
+      "end_time": "2026-08-13T19:22:40",
+      "exit_code_raw": "141:0",
+      "failure_point": "stage 0d toolchain version checks; pre-RUNROOT (g4-diag never created); zero campaign-state mutation",
+      "job_id": 4540,
+      "job_state": "FAILED",
+      "log_path": "/shared/home/greg/data/ckdmip-logs/g4-b0-lw-4540.log",
+      "log_sha256": "6c72105b1a748c12dd5d85232c0898443f9840af90178aecf55815f4b3f9b284",
+      "receipt_paths": [
+        "/shared/home/greg/data/ckdmip-logs/g4-b0-lw-4540-scontrol-final-session40.txt",
+        "/shared/home/greg/data/ckdmip-logs/g4-b0-lw-4540-scontrol-final-agent42.txt"
+      ],
+      "receipt_sha256": "b9e7542d21085f3fb8af9a63d4234e9f78768124b6d91e86e8a41b9591f0e79d",
+      "run_time": "00:00:02",
+      "start_time": "2026-08-13T19:22:38",
+      "submit_time": "2026-08-13T19:19:31"
+    }
+  ],
   "case": "gate4_b0_era_lbfgs_isolation_checkpoint",
+  "confound_note": "the b42e5c0..23adaca diff includes optimize_lut.cpp, ckd_model.cpp/.h, lbl_fluxes.cpp, and average_optical_depth, plus build/script changes, the solve_lbfgs backend switch, and removal of the v1.2 bounded minimization -- changed TOGETHER; some underlying files (calc_cost_function_lw.cpp, radiative_transfer_lw.cpp) remain identical across that range. No artifact of this unit may DESCRIBE the experiment as single-variable, mechanism-isolated, or backend-confirmed (binding monitor corrections 2026-08-13). Explicit exception: the literal token 'isolation' persists ONLY inside legacy filenames and the case identifier (gate4_b0_era_lbfgs_isolation_*) retained for path stability; those identifiers are non-claim-bearing.",
   "data_mode": "generator_checkpoint",
-  "design_note": "B0 mechanism isolation: same ce057079 init (min/max arrays retained; controlled max_iterations=1 schema-open probe REFUSES rather than strips), same seven pinned training fluxes, exact 4515 relative-base config; ONLY the optimizer mechanism changes to the pinned v1.0/b42e5c0 solve_lbfgs backend built in-job. PRIVATE output under g4-diag; zero canonical writes; submission HELD for monitor review.",
+  "design_note": "B0 bundled target-era stack viability: same ce057079 init (min/max arrays retained; controlled max_iterations=1 schema-open probe REFUSES rather than strips), same seven pinned training fluxes, exact 4515 relative-base config; the FULL pinned v1.0/b42e5c0 stack is built in-job -- a full executable source version change, including optimize_lut/ckd_model/lbl_fluxes, plus the old solve_lbfgs backend and no v1.2 bounds. Source, backend, and bounds are CONFOUNDED by design: this experiment tests target-era stack viability with fixed init/g-points/training/config and can never prove the backend alone causes any outcome. PRIVATE output under g4-diag; zero canonical writes; submission HELD for monitor review.",
   "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch.",
   "era": {
     "archive_sha256": "801542f43e6d9c0f444d6966fbe30d28fc3df7aabf147551c4485f352fbafa22",
@@ -39,6 +61,14 @@
   },
   "failures": [],
   "fixture_verdicts": {
+    "a4540_good_accepted": true,
+    "a4540_log_missing_stage_refuses": true,
+    "a4540_log_reaches_0e_refuses": true,
+    "a4540_log_reaches_done_refuses": true,
+    "a4540_log_runroot_marker_refuses": true,
+    "a4540_receipt_divergence_refuses": true,
+    "a4540_wrong_receipt_field_refuses": true,
+    "a4540_wrong_submit_time_refuses": true,
     "bash_syntax_broken_refuses": true,
     "bash_syntax_good_accepted": true,
     "ledger_case_mismatch_refuses": true,
@@ -57,9 +87,11 @@
     "text_missing_probe_refuses": true,
     "text_publish_machinery_refuses": true,
     "text_shared_redirect_refuses": true,
+    "text_version_head_pipeline_refuses": true,
     "text_wrong_commit_refuses": true
   },
   "gates": {
+    "evidence_attempt_4540_evidence": "passed",
     "evidence_era_source_pins": "passed",
     "evidence_input_pins": "passed",
     "evidence_reviewed_run_ledger": "passed",
@@ -132,7 +164,7 @@
     "run_ledger": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_run_ledger.json"
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_b0_lw_era_lbfgs.sbatch",
-  "sbatch_sha256": "1339163ed81e6596a7e8555037387ac555a72b99ed4a0d41665e7ae59c73d9c0",
+  "sbatch_sha256": "85c82f93ea1dde8ccf2954e8dc47ecbdbd0385502e88d3396c115b8af2a7b2eb",
   "status": "b0_checkpoint_ready",
   "v12_testcopy": {
     "pins": [
