@@ -1,0 +1,309 @@
+{
+  "case": "gate4_c3_ib_checkpoint",
+  "checkers": {
+    "c3": "06ce129768bafaa8dcf18e6cff063e030dafeeeca428447342c2a6033e5a1b82",
+    "p1": "abebffc6146c93adc4d0ea9ed7d6d0e16cc62fd82805f34c63976418a8bb7e51",
+    "p2": "2ba2fac1947fa727bd35d5931923a62edd77f8a82646024781fd2f74960ac575"
+  },
+  "conclusion_ceiling": "BINDING (frozen design): private fixed-setup budget association only; any sub-1.05 placement is PRIVATE PLACEMENT, NOT recovered acceptance; no recovery claim; no mechanism localization or ranking; no objective/data change authorization; no automatic escalation; the external <=1.05 gate untouched; ZERO canonical writes; RUNROOT preserved",
+  "data_mode": "generator_checkpoint",
+  "derived_pins": {
+    "base_1_sha256": "25ced6422d4fd8a92dc526403a28b209af49bf19a0d71c016198a47a9bdfcbe1",
+    "base_3000_sha256": "9aa9c4a9eff18b7fcc4b368b3047facb058a1ff3d67597c9dae4ce2088cf6847",
+    "base_9000_sha256": "a951dd10af28a7ba8e4bfb2379761a3d3ca210eb1e06bc42786a089271b594cf",
+    "downstream_template_sha256": "a1cdbd6e1daa962752db226ea0c9597839824e8b3cf9acf6ca7a547f6c4ed1ce"
+  },
+  "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch plus transient private temp fixtures (mktempdir).",
+  "failures": [],
+  "fixture_count": 88,
+  "fixture_verdicts": {
+    "alternate_token_same_bits_refuses": true,
+    "anchor_hit_derived": true,
+    "anchor_miss_derived_on_tamper": true,
+    "base_variant_has_exactly_one_injection": true,
+    "base_variants_distinct_and_deterministic": true,
+    "bash_syntax_broken_refuses": true,
+    "bash_syntax_good": true,
+    "compare_extra_scorefile_census_refuses": true,
+    "compare_missing_records_fail_closed": true,
+    "cross_panel_lw_mismatch_refuses": true,
+    "delta_partitions_all_three": true,
+    "design_anchor_properties": true,
+    "design_ceiling_language": true,
+    "design_terminal_supersession_rule": true,
+    "design_thirteen_scores": true,
+    "design_two_script_discipline": true,
+    "downstream_child_hardening_applied": true,
+    "downstream_derivation_deterministic": true,
+    "downstream_has_zero_max_iterations": true,
+    "downstream_leak_negative_via_predicate": true,
+    "duplicate_header_refuses": true,
+    "g1_semantic_decoy_sha_refuses": true,
+    "g1_semantic_exact_fields_pass": true,
+    "g1_semantic_moved_value_refuses": true,
+    "g1_semantic_wrong_nested_status_refuses": true,
+    "identifier_scanner_detects_synthetic": true,
+    "ledger_mutations_refuse_via_classifier": true,
+    "ledgers_all_green": true,
+    "malformed_bits_refuse": true,
+    "marker_invalid_text_refuses": true,
+    "missing_summary_refuses": true,
+    "normalized_ratio_violation_refuses": true,
+    "objective_argmax_mismatch_refuses": true,
+    "pkg_manifest_complete": true,
+    "placement_exact_boundary": true,
+    "placement_sub105_private_not_acceptance": true,
+    "real_anchor_record_schema_pass": true,
+    "real_score_record_derives": true,
+    "record_key_permutation_refuses": true,
+    "row_permutation_refuses": true,
+    "scan_good_and_faults": true,
+    "severability_hit_licenses_phrase_once": true,
+    "severability_marker_mismatch_refuses": true,
+    "severability_miss_schema_valid_suppresses_phrase": true,
+    "source_census_clean_and_injected": true,
+    "staged_form_anchor_bitexact": true,
+    "staged_form_omitted_artifacts_refuses": true,
+    "stale_p2_identifier_sweep": true,
+    "terminal_policy_deletion_refuses": true,
+    "terminal_policy_duplication_refuses": true,
+    "terminal_policy_token_mutation_refuses": true,
+    "text_13_gate_removed_refuses": true,
+    "text_anchor_pin_drift_refuses": true,
+    "text_base_extra_token_gate_removed_refuses": true,
+    "text_base_pin_drift_refuses": true,
+    "text_bounded_override_refuses": true,
+    "text_canonical_write_refuses": true,
+    "text_census_row_drift_refuses": true,
+    "text_config_gate_removed_refuses": true,
+    "text_design_pin_drift_refuses": true,
+    "text_downstream_pin_drift_refuses": true,
+    "text_duplicate_marker_refuses": true,
+    "text_good_accepted": true,
+    "text_head_pipeline_refuses": true,
+    "text_leak_gate_removed_refuses": true,
+    "text_ledger_pin_drift_refuses": true,
+    "text_loop_role_duplicated_refuses": true,
+    "text_loop_role_removed_refuses": true,
+    "text_postfreeze_live_artifact_refuses": true,
+    "text_postfreeze_live_master_refuses": true,
+    "text_postfreeze_live_repo_refuses": true,
+    "text_postrun_reverify_removed_refuses": true,
+    "text_scan_call_removed_refuses": true,
+    "text_time_partition_refuses": true,
+    "text_upstream_call_removed_refuses": true,
+    "text_wrapper_gate_removed_refuses": true,
+    "token_bits_mismatch_refuses": true,
+    "tree_manifest_119_24": true,
+    "unknown_line_decoy_refuses": true,
+    "upstream_3x4_census_and_partitions": true,
+    "upstream_census_short_refuses": true,
+    "upstream_duplicate_key_refuses": true,
+    "upstream_extra_line_refuses": true,
+    "upstream_good_parses": true,
+    "upstream_status_inequality_refuses": true,
+    "upstream_three_branches": true,
+    "wrong_anchor_lw_mapping_refuses": true,
+    "wrong_panel_sw_mapping_refuses": true
+  },
+  "frozen_design": {
+    "durable_file": "validation/gate4_c3_ib_iteration_budget_frozen_design.md",
+    "sha256": "e5af535f2d1c9efb478bb1b856f632fe05a5dfd01dec634cfecc41a67e44bb63",
+    "verbatim_text": "# Gate-4 C3-IB FROZEN DESIGN: modern LW iteration-budget control\n# (monitor SEQUENCING RULING; C2/X2 DEFERRED, not disproven --\n# information-leverage sequencing, NOT mechanism ranking. Filename is\n# C3-IB / iteration-budget to disambiguate from the B0-era \"C3\" census\n# proposal.)\n\n## Unit identity\n- DIAGNOSIS unit; PRIVATE outputs only; ZERO canonical writes; RUNROOT\n  preserved on success AND failure; submission/commit only on explicit\n  monitor GO after the full package review chain.\n- Grounding (committed): the live campaign question is the committed\n  Gate-1 failure -- g1_objective_ratio_failed, recovered-pair\n  package-native hard objective 22.824617997003102 vs <=1.05\n  (validation/results/gate4_g1_objective_ratio.{json,md}); the C1\n  machinery (commit 6db5a23 family), the P2 evaluator working-set\n  pattern (commit 3f872216), and the P1/P2 completion ledgers (commits\n  4501220e, b37de8ac). The BINDING dual-endpoint requirement is\n  inherited from the MONITOR SEQUENCING RULING itself; the scratch\n  next-control matrix is NON-DURABLE CORRESPONDENCE only and grounds\n  nothing.\n\n## Question (fixed setup only)\nIs the modern bounded LW relative-base plateau budget-limited? Every\nrelevant committed modern LW relative-base arm terminates at\nmax_iterations=3000 with nonzero gradient norm (the SW chain's\n2000-pass cap is a different setting and is NOT swept into this\nstatement); this unit measures the association of a 3x budget (9000) with\nthe upstream endpoint AND the package-native hard objective, under one\nfactor, and decides nothing beyond those recorded placements.\n\n## Binding requirements (monitor ruling, verbatim-in-substance)\n1. SOLE SCIENTIFIC FACTOR: LW relative-base max_iterations -- control\n   3000 vs treatment 9000 (C1-proven anchored config-only injection\n   for the treatment; the compiled default bounded mode is ON in ALL\n   arms; no bounded_minimization override anywhere). HELD: the same\n   immutable modern source/binary (single pristine build; no patch),\n   the current pinned real-data inputs, wrapper/shim/netlib remedy,\n   OMP controls, and downstream pass settings of the committed\n   S1/X1/C1 family.\n2. SANDWICH ORDER: C0a(3000) -> C3IB(9000) -> C0b(3000), each in an\n   INDEPENDENT work dir; plus the cheap 1-iteration injection/identity\n   PROBE (structural evidence only) preceding the sandwich, per the C1\n   pattern. EXACT ARGV SHAPE (unambiguous, fail-closed exact-count\n   gates): the C0a and C0b base-pass scripts carry an EXPLICIT\n   max_iterations=3000 token EXACTLY ONCE each; the C3IB base-pass\n   script carries max_iterations=9000 EXACTLY ONCE; the probe script\n   carries max_iterations=1 EXACTLY ONCE; every downstream script in\n   every arm carries ZERO max_iterations tokens. No \"default\"\n   ambiguity exists anywhere.\n   DOWNSTREAM LEAK PREVENTION (monitor design-hardening blocker,\n   BINDING): the C1-style sed anchor injects at the COMMON optimize_lut\n   invocation, so a single modified optimize_lut_lw.sh reused for all\n   modes would leak the 9000 override into the downstream\n   relative-ch4/relative-n2o/relative-cfc passes and violate the\n   sole-factor contract. The contract therefore uses a TWO-SCRIPT\n   DISCIPLINE inside every arm work tree: (a) a BASE-ONLY script/\n   wrapper copy carrying the arm's max_iterations setting, used\n   EXCLUSIVELY for the relative-base pass; (b) a SEPARATELY PINNED\n   PRISTINE downstream script copy (byte-verified against the frozen\n   template before use) for relative-ch4/relative-n2o/relative-cfc\n   (equivalently: restore + re-pin the pristine script before the\n   downstream chain). EXACT-COUNT GATES (all fail-closed): the\n   treatment's max_iterations=9000 token appears EXACTLY ONCE and only\n   in the base-pass script/invocation; the controls carry the\n   EXPLICIT 3000 in the base pass ONLY; ZERO max_iterations\n   override tokens exist in ANY downstream script/invocation in ANY\n   arm; and the downstream scripts' convergence-relevant settings are\n   BYTE-IDENTICAL across all three arms (sha-gated against one pinned\n   downstream template). The generator carries a NEGATIVE LEAK FIXTURE\n   (a downstream script containing a max_iterations override must\n   refuse) alongside the exactly-once/leak fixtures of the C1 family.\n3. COMPLETE PRIVATE LW PASS CHAIN in each arm: the base raw2 AND the\n   final LW definition are BOTH produced and retained per arm inside\n   the RUNROOT; no canonical writes at any point.\n4. DUAL-ENDPOINT SCORING (BINDING, inherited from the MONITOR\n   SEQUENCING RULING; the scratch matrix is non-durable): every\n   arm's raw2 AND final LW definition are scored through the pinned\n   package hard-objective evaluator (the committed P2 evaluator\n   working-set pattern: staged package tree + chain + references +\n   julia-env, canonical eight-gas call, h2o_mole_fraction=0.005,\n   per-record tokens + UInt64 bit patterns, bit-exact same-artifact\n   duplicate discipline) against the SAME pinned CURRENT RECOVERED SW\n   from job 4516 (PRIMARY pairing -- directly adjacent to the current\n   Gate-1 failure). PRIMARY SW PIN EMBEDDED NOW (monitor early-review\n   fix; re-verified fail-closed at contract generation): the job-4516\n   recovered final SW definition, committed-ledger path\n   /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc,\n   854,508 B, sha256\n   8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4.\n   SECONDARY SCORING IS BINDING (not optional), with the FULL\n   committed pin (monitor pin-completeness fix): filename\n   ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc, 851,724 B, sha256\n   49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3,\n   staged and re-verified fail-closed like every master. TWELVE\n   arm-panel package scores are produced -- 3 arms x {raw2, final LW}\n   x {primary recovered-SW panel, secondary published-v1.4-SW panel}.\n   The <=1.05 placement test applies to the PRIMARY panel ONLY; the\n   secondary panel is a separately labeled P2-bridge metric, never\n   mixed with primary rows and never placement-tested.\n   FIXED CURRENT-G1 ANCHOR (bridge/instrument gate, monitor ruling;\n   NOT an experiment arm): the recovered LW from job 4515 at canonical\n   path\n   /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc,\n   872,004 B, sha256\n   a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4,\n   staged immutable and scored ONCE in-job through the SAME staged\n   evaluator paired with the pinned recovered SW. REQUIRED exact\n   reproduction: hard-objective token 22.824617997003102 with UInt64\n   bits 4627117776501264964 (the committed Gate-1 failure value).\n   THREE EXPLICIT PROPERTIES (Agent 42 challenge, binding):\n   (i) SEVERABILITY: an anchor miss fails its OWN gate class\n   (evidence_g1_anchor) and suppresses ONLY the adjacency\n   labels/claims -- the anchor licenses exactly the bridge phrase\n   \"current-G1-adjacent\" and nothing else; arm panels, duplicates,\n   controls, and sign partitions remain independently valid as\n   within-job placements. Suppression follows the P2\n   finalizer-suppression pattern and is FIXTURE-PROVEN in BOTH\n   directions (miss suppresses adjacency AND preserves arm evidence;\n   hit licenses the phrase).\n   (ii) NON-CIRCULARITY, both directions: the anchor is an INSTRUMENT\n   REPRODUCTION of a committed value, never a re-evaluation of Gate 1;\n   the committed acceptance state (g1_objective_ratio_failed) is\n   terminal and untouchable by this unit in BOTH branches -- an anchor\n   HIT does not refresh or reconfirm Gate 1, and an anchor MISS does\n   not cast doubt on it (the committed value stands on its own\n   ledger).\n   (iii) NO-ACCEPTANCE-IMPLICATION, pre-empted BY NAME: any arm score\n   placing at or below 1.05 on the primary panel is a PRIVATE\n   PLACEMENT under this fixed setup, NOT recovered acceptance;\n   acceptance remains exclusively the committed external gate on its\n   own instruments and provenance chain.\n   TOTAL PACKAGE SCORES: EXACTLY THIRTEEN (12 arm-panel + 1 fixed\n   anchor).\n5. UPSTREAM ENDPOINT RECORD: per-pass terminal status/cost/gradient\n   tokens recorded at their ACTUAL PRINTED PRECISION (six-significant-\n   figure formatted log tokens; the J0_reported max_digits10 semantics\n   do NOT apply to unpatched prints and no patch exists in this unit);\n   these upstream tokens are NEVER compared numerically to package\n   objectives -- the two endpoints are separately labeled instruments.\n6. SAME-JOB CONTROL REPEATABILITY GATES: C0a-vs-C0b exact equality on\n   the SCIENTIFIC PAYLOAD (logical raw2/final-definition identity per\n   the committed nonfinite-aware egal semantics) AND on the\n   hard-objective records (bit-pattern equality per the P2 record\n   discipline); terminal-status equality; NO log-byte claim of any\n   kind (path/timestamp noise is out of scope).\n7. OUTCOME STRUCTURE (preregistered, exhaustive): exact sign/equality\n   partitions (negative / zero-at-representation / positive) for every\n   treatment-minus-control delta on BOTH endpoints (upstream tokens as\n   textual facts; hard-objective deltas by exact decimal on the\n   recorded tokens), PLUS the source-grounded <=1.05 placement test\n   (does any arm's hard objective place at or under the committed\n   Gate-1 bound -- a recorded placement, not an acceptance statement).\n   NO post-hoc materiality threshold exists or may be introduced; NO\n   inference that longer internal descent implies hard-objective\n   improvement; values never averaged; any duplicate/control mismatch\n   is recorded drift + refusal of delta assignment.\n8. CONCLUSION CEILING (binding): C3-IB outcomes are PRIVATE\n   FIXED-SETUP BUDGET ASSOCIATION ONLY under this configuration,\n   binary, inputs, and SW pairing: NO recovered acceptance, NO\n   recovery claim, NO mechanism localization or ranking, NO\n   objective/data change authorization, NO automatic escalation (a\n   larger budget or any follow-on is a separate monitor ruling); the\n   external <=1.05 gate and its acceptance semantics are untouched by\n   this unit (its placement test is descriptive, and BY NAME: a\n   sub-1.05 placement is a private placement, never recovered\n   acceptance); all three mechanism\n   classes remain OPEN and UNRANKED globally; findings LOCAL to this\n   rebuilt trajectory.\n\n## Evidence machinery (committed-pattern reuse; contract-time pins)\nC1-family sbatch machinery (head-node refusal, quota soft-minus-50GiB,\nc3ib-lw experiment lock, fresh fail-closed RUNROOT, staged immutable\nmasters/data with the stage-0 preflight -> stage-1 copy/verify/freeze\nbracket, post-run no-mutation reverification of every staged input)\nPLUS the P2 evaluator working-set staging (package tree incl.\nArtifacts.toml, evaluator chain, reference files, julia-env, pinned\njulia launcher + exact --version gate, JULIA_LOAD_PATH staged form,\nNUMERICAL_RADIATION_VALIDATION_REFERENCE_DIR pin); committed P1/P2\ncheckers reused by byte pin where their gates apply; dual-custody\ncreate-once receipts; pinned terminal-log + emitted-inventory\nanchoring in the completion ledger; deterministic double generation;\nindependent bash -n; fixtures for every gate class including\nmapping/decoy/census/language-guard patterns already reviewed in P2.\n\n## Expected wall/quota and terminal stopping rule\n- WALL: probe (~2 min) + C0a (~35 min) + C3IB (up to ~105 min at 3x\n  budget; earlier if converged) + C0b (~35 min) + full pass-chain\n  completion per arm + exactly 13 evaluator scorings (~minutes each; 12 arm-panel + 1 fixed current-G1 anchor) ~= 4 h\n  envelope; SBATCH time limit 06:00:00.\n- QUOTA: budget <=2 GiB RUNROOT footprint (the analogous preserved C1\n  RUNROOT measured 547 MiB, and C3-IB adds full-chain outputs per arm\n  plus the evaluator working-set staging); trivial relative to the 50\n  GiB headroom guard.\n- TERMINAL STOPPING RULE: the unit runs the probe + three sandwich\n  arms EXACTLY ONCE each, scores the fixed endpoint set, and stops;\n  any semantic/build/schema/proof failure refuses fail-closed with the\n  RUNROOT preserved (no retry, no resubmission); the treatment arm\n  stops at its own convergence or the 9000 cap, whichever first, and\n  its terminal status is a recorded observation; NO budget escalation,\n  re-run, or follow-on unit without a new frozen contract and explicit\n  monitor GO.\n- TERMINAL SUPERSESSION RULE (BINDING FOR THIS UNIT): ANY terminal\n  state of the C3-IB job -- COMPLETED, FAILED, CANCELLED, NODE_FAIL,\n  OUT_OF_MEMORY, and TIMEOUT alike -- is a HOLD;\n  TIMEOUT is NOT a continuity exception, and the old campaign\n  protocol's TIMEOUT-continuity default is EXPLICITLY SUPERSEDED for\n  this unit; NO automatic retry or resubmission in any terminal\n  state; the next action after ANY terminal state requires a new\n  explicit Codex-monitor review and GO with hash verification; the\n  RUNROOT, once created, is preserved as forensics in every terminal\n  state.\n"
+  },
+  "gates": {
+    "evidence_derivations": "passed",
+    "evidence_frozen_pins": "passed",
+    "evidence_julia_provenance": "passed",
+    "evidence_master_pins": "passed",
+    "evidence_prerequisite_ledgers": "passed",
+    "evidence_runtime_build_provenance": "passed",
+    "evidence_sbatch_bash_syntax": "passed",
+    "evidence_sbatch_deterministic_render": "passed",
+    "evidence_sbatch_text_gates": "passed",
+    "evidence_source_census": "passed",
+    "evidence_source_tree": "passed",
+    "fixtures": "passed"
+  },
+  "julia_provenance": {
+    "launcher": "/shared/home/greg/.juliaup/bin/julia",
+    "test_manifest_bytes": 58343,
+    "test_manifest_sha256": "cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186",
+    "test_project_bytes": 606,
+    "test_project_sha256": "9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0",
+    "version_line": "julia version 1.12.6"
+  },
+  "masters": [
+    {
+      "bytes": 450863,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+      "sha256": "dde735608e57af934a2c1e99932c0ccce530883ab48910c7e17b621de7fa0bee"
+    },
+    {
+      "bytes": 450863,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+      "sha256": "b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85"
+    },
+    {
+      "bytes": 450863,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "sha256": "01836becbc96e7da2b3b33d586d148948df136457216625b7e60225e093e1792"
+    },
+    {
+      "bytes": 450863,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5",
+      "sha256": "c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2"
+    },
+    {
+      "bytes": 450873,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+      "sha256": "cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c"
+    },
+    {
+      "bytes": 450873,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+      "sha256": "75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8"
+    },
+    {
+      "bytes": 451045,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5",
+      "sha256": "e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc"
+    },
+    {
+      "bytes": 2413144,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc",
+      "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43"
+    },
+    {
+      "bytes": 58404939,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5",
+      "sha256": "c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e"
+    },
+    {
+      "bytes": 872004,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+      "sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4"
+    },
+    {
+      "bytes": 854508,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc",
+      "sha256": "8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4"
+    },
+    {
+      "bytes": 851724,
+      "path": "/shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+      "sha256": "49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3"
+    }
+  ],
+  "non_authorizing_note": "generates and verifies the C3-IB sbatch; never submits; submission requires explicit monitor GO.",
+  "package_tree": {
+    "exec_census": 0,
+    "files": 35,
+    "manifest_sha256": "2b22c4f6786e58a873d33a86521923ddda4fc2a1f74ea0316b42df8d32ee9b6f"
+  },
+  "prerequisites": [
+    {
+      "case": "gate4_g3_run_ledger",
+      "name": "G3RUN",
+      "sha256": "6fd7791834fe1ceb184afd4623c0f95ab311685bb849cfad0837b3c6ffd4aa4e",
+      "status": "reviewed-complete"
+    },
+    {
+      "case": "gate4_g1_objective_ratio",
+      "name": "G1",
+      "sha256": "5e65cbb184037195b0c60c8462547c4c695b2a63157c62e007c18240933bc4a7",
+      "status": "g1_objective_ratio_failed"
+    },
+    {
+      "case": "gate4_c1_bounds_flag_completion_ledger",
+      "name": "C1",
+      "sha256": "3c584417d4eba3459f58bbd182b395f7f8ed6c2cddb48e4fef54c057799d116f",
+      "status": "c1_run_completed_verified"
+    },
+    {
+      "case": "gate4_p1_completion_ledger",
+      "name": "P1",
+      "sha256": "9605cf64deb5cb14f2f3403d73c976b00ddfa2c7fc50adba9cb24e1dd51f2403",
+      "status": "p1_run_completed_verified"
+    },
+    {
+      "case": "gate4_p2_completion_ledger",
+      "name": "P2",
+      "sha256": "41cc574b28b1c55a6f2235d2dc9914e42c4806bb4ff5aac23b98e1379fdc2b2d",
+      "status": "p2_run_completed_verified"
+    }
+  ],
+  "runtime_build_provenance": {
+    "adept": {
+      "adept_source_h": {
+        "bytes": 157986,
+        "path": "/shared/home/greg/local/adept-2-install/include/adept_source.h",
+        "sha256": "8f29a64a2d8227e881a7a541e154d80b752f7746c8607f6a9f280b54f0312351"
+      },
+      "libadept": {
+        "bytes": 7172632,
+        "path": "/shared/home/greg/local/adept-2-install/lib/libadept.so.0.0.0",
+        "sha256": "1f9016af1b6982493dc8d53dd3a11b2b0c54d4e84c4dbb548b4b06093d43dbcb"
+      },
+      "minimizer_h": {
+        "bytes": 13383,
+        "path": "/shared/home/greg/local/adept-2-install/include/adept/Minimizer.h",
+        "sha256": "dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d"
+      }
+    },
+    "automake": "1.16.5",
+    "libtoolize": "2.4.7",
+    "netcdf": {
+      "include_dir_verified": true,
+      "lib_dir_verified": true,
+      "prefix": "/shared/home/greg/local/ckdmip-stack"
+    },
+    "netlib_blas": {
+      "bytes": 677880,
+      "path": "/usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0",
+      "sha256": "e748efcae5753fe4a652877fccdb5895ac6f7605668a2db878b19c914e78e3a8"
+    },
+    "netlib_lapack": {
+      "bytes": 7268368,
+      "path": "/usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0",
+      "sha256": "851bb1fc5833ede9ed704b4417a251a899976d5e0915de40452615187a65278f"
+    },
+    "shim": {
+      "bytes": 15328,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/tools/h5open_before_traps.so",
+      "sha256": "28003281a7f1c8470c1bfd94a654999a210581261a5c3e9cd662af2a13dd492f"
+    },
+    "toolchain": [
+      {
+        "path": "/usr/bin/gcc",
+        "tool": "gcc",
+        "version_line": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+      },
+      {
+        "path": "/usr/bin/g++",
+        "tool": "g++",
+        "version_line": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+      },
+      {
+        "path": "/usr/bin/make",
+        "tool": "make",
+        "version_line": "GNU Make 4.3"
+      },
+      {
+        "path": "/usr/bin/autoreconf",
+        "tool": "autoreconf",
+        "version_line": "autoreconf (GNU Autoconf) 2.71"
+      }
+    ]
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+  "sbatch_sha256": "fef89ea55c9bb8b2bb6fd7b18c4269da9428723b654b4c5ec031349a0fb8465a",
+  "score_matrix": "EXACTLY 13 (12 arm-panel: 3 arms x raw2/final x primary/secondary + 1 fixed current-G1 anchor); severability: anchor miss refuses only the current-G1-adjacent label",
+  "source_tree": {
+    "exec_census": 24,
+    "files": 119,
+    "manifest_sha256": "5de7558a97ed0e355b353fab8f3dddbeb6d3dabde9be9fd5be58eed70ac59b58"
+  },
+  "status": "c3ib_checkpoint_ready",
+  "terminal_contract": "TERMINAL POLICY (BINDING SUPERSESSION): ANY terminal state of this job -- COMPLETED, FAILED, CANCELLED, NODE_FAIL, OUT_OF_MEMORY, and TIMEOUT alike -- is a HOLD; TIMEOUT is NOT a continuity exception, and the old campaign protocol's TIMEOUT-continuity default is EXPLICITLY SUPERSEDED for this unit; NO automatic retry or resubmission in any terminal state; the next action after ANY terminal state requires a new explicit Codex-monitor review and GO with hash verification; the RUNROOT, once created, is preserved as forensics in every terminal state."
+}
