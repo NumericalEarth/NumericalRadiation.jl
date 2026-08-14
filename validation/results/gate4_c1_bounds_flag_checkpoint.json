@@ -1,0 +1,191 @@
+{
+  "case": "gate4_c1_bounds_flag_checkpoint",
+  "data_mode": "generator_checkpoint",
+  "design": "CONFIG-ONLY one-factor experiment on the identical modern pinned stack as X1: triple-arm SAME-BINARY sandwich C0a -> C1 -> C0b preceded by a 1-iteration UNBOUNDED probe (flag literal semantics; structural evidence only); the single factor is the command-line override bounded_minimization=0 (optimize_lut.cpp:148-149; compiled default true); pristine binary in ALL arms; no capture instrument, no sidecar; the returned solution is UNOBSERVED by design. C1 discriminates NO mechanism (the flag removes the bounded solver path AND the log-space bound construction simultaneously) and repairs nothing. TWO-TIER VALUE POLICY: structure failures refuse; nonfinite values in probe/C1 raw2 are recorded lawful observations; strict all-finite applies to C0a/C0b only. Internal validity (C0a==C0b logical identity AND terminal-status exact equality) is SEPARATE from the historical 4561 bridge; both are completion-ledger matters (in-job byte-compares are informational echoes). Zero canonical writes; RUNROOT preserved; no submission without explicit monitor GO.",
+  "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch plus transient private temp fixtures (mktempdir).",
+  "failures": [],
+  "fixture_count": 62,
+  "fixture_verdicts": {
+    "bash_syntax_broken_refuses": true,
+    "bash_syntax_good_accepted": true,
+    "design_internal_gate_both_conditions": true,
+    "design_no_mechanism_language": true,
+    "design_probe_structural_only": true,
+    "design_two_tier_present": true,
+    "dims_extent_drift_refuses": true,
+    "dims_unexpected_extra_refuses": true,
+    "inject_c0a_derives": true,
+    "inject_c0a_flag_count": true,
+    "inject_c0a_iter_count": true,
+    "inject_c1_derives": true,
+    "inject_c1_flag_count": true,
+    "inject_c1_iter_count": true,
+    "inject_missing_anchor_refuses": true,
+    "inject_preexisting_flag_refuses": true,
+    "inject_probe_derives": true,
+    "inject_probe_flag_count": true,
+    "inject_probe_iter_count": true,
+    "ledger_green_accepted": true,
+    "ledger_missing_refuses": true,
+    "ledger_sha_drift_refuses": true,
+    "ledger_status_mismatch_refuses": true,
+    "ledger_unparseable_refuses": true,
+    "nonfinite_strict_refuses": true,
+    "nonfinite_structural_recorded_not_refused": true,
+    "real_dims_complete_8": true,
+    "real_signature_47_entries": true,
+    "real_signature_coefficient_float32": true,
+    "schema_conforming_strict_accepted": true,
+    "schema_dim_drift_refuses": true,
+    "schema_extra_var_refuses": true,
+    "schema_missing_var_refuses": true,
+    "schema_type_drift_refuses": true,
+    "schema_type_drift_refuses_even_in_structural_mode": true,
+    "text_capture_machinery_refuses": true,
+    "text_design_pin_drift_refuses": true,
+    "text_dims_tamper_refuses": true,
+    "text_duplicate_configure_refuses": true,
+    "text_extra_pass_refuses": true,
+    "text_good_accepted": true,
+    "text_head_pipeline_refuses": true,
+    "text_ladept_inside_ldflags_refuses": true,
+    "text_missing_c1_unbounded_gate_refuses": true,
+    "text_missing_data_lock_refuses": true,
+    "text_missing_data_reverify_refuses": true,
+    "text_missing_dimset_gate_refuses": true,
+    "text_missing_leak_gate_refuses": true,
+    "text_missing_nonfinite_record_refuses": true,
+    "text_missing_probe_unbounded_gate_refuses": true,
+    "text_missing_status_allowlist_refuses": true,
+    "text_missing_strict_loop_refuses": true,
+    "text_missing_structural_loop_refuses": true,
+    "text_missing_type_gate_refuses": true,
+    "text_publish_machinery_refuses": true,
+    "text_shared_redirect_refuses": true,
+    "text_signature_tamper_refuses": true,
+    "text_strict_applied_to_c1_refuses": true,
+    "text_strings_absence_refuses": true,
+    "text_x1_ledger_pin_drift_refuses": true,
+    "tree_census_119": true,
+    "tree_exec_census_24": true
+  },
+  "frozen_design": {
+    "durable_file": "validation/gate4_c1_frozen_design.md",
+    "sha256": "60f55abec74287a9aaec62070bbd393420de16dd10042fa63fbb5094a3ffa888",
+    "verbatim_text": "# PAPER-ONLY C1 NEXT-CONTROL OUTLINE (draft 1, for monitor review)\n# No repo edits, no build, no submission, no code. Scratchpad only.\n# Baseline: X1 completion ledger committed/pushed at 4a3be7a\n# (checkpoint package at 9725cbb; frozen X1 design d4f8a689).\n\n## 1. What C1 is and is not (binding non-goals)\nC1 is a CONFIG-ONLY, one-factor experiment: the identical modern\npinned source/build/config/input/OMP stack as X1 (job 4561), with\nexactly ONE factor changed -- bounded_minimization=false. It\nquantifies the bounded-minimization flag factor FOR THIS FIXED SETUP\nONLY.\n- C1 does NOT isolate a mechanism: switching the flag to false removes\n  the bounded solver path AND the log-space bound construction\n  (solve_adept.cpp:325-334) SIMULTANEOUSLY -- the two are confounded\n  by design in this control, and the ledger must say so.\n- C1 does NOT repair or explain the 22.791293464348826 objective; any\n  objective movement is recorded as a flag-factor observation with no\n  causal upgrade and no \"recovery\" language.\n- All three mechanism classes remain OPEN and UNRANKED globally\n  regardless of the C1 outcome.\n\n## 2. Accounting for the X1 result (binding context)\nThe X1 ledger (bb1f87c5.../b588d18c...) established, LOCAL to that\nrebuilt trajectory: the returned x carries the 134 lower + 19 upper\nbound exceedances against the CAPTURED supplied bound vectors; no\ndiscrepancy was observed at the returned-vs-caller or\ncaller-vs-serialization interfaces in that run (mixed chain: one\n<=4-ULP tolerance-bounded exp link, then exact-bit links); the ORIGIN\nof the exceedances remains UNRESOLVED, with\nalgorithm-vs-bound-construction semantics explicitly undistinguished.\nConsequences for C1:\n- C1 CANNOT distinguish those semantics either (Section 1); its value\n  is a controlled measurement of what the flag is worth in serialized\n  state, census, and objective under the same fixed setup.\n- The X1 instrument is NOT carried into C1: the X1 patch is bounds-ON\n  only with the unbounded branch gated byte-identical, so an unbounded\n  run through the instrumented binary would execute NO capture. C1\n  therefore runs the PRISTINE binary in all THREE arms (single build),\n  and no sidecar exists. The unbounded path has the SAME possible\n  callback-state lag semantics as the bounded path; the returned\n  solution is UNOBSERVED in C1 by design. Axis-A/B/C language does not\n  apply to C1; serialized-domain census/objective/identity comparisons\n  are the instruments.\n- Internal validity is measured INSIDE the job (C0a/C0b sandwich,\n  Section 6); the historical connection to the 4561 pristine arm is a\n  SEPARATE bridge question and neither substitutes for the other.\n\n## 3. Design (triple-arm SAME-BINARY sandwich, one factor)\n- One job, one copied pinned source tree (7b210aef artifact; 119-file\n  census + exec bits + zero symlinks), ONE build with the corrected\n  fresh-autoreconf recipe (path-only LDFLAGS + late LIBS=-ladept;\n  config.status rendering asserted byte-exact), ONE saved immutable\n  binary optimize_lut_c shared by ALL THREE arms (new build; sha\n  recorded, not pre-pinned).\n- THREE sequential runs from independently cloned inputs/work/\n  testcopies off the frozen read-only test template, SANDWICH order\n  C0a -> C1 -> C0b (the repeated bounded control brackets the\n  treatment in time, per the S1 precedent: 36-thread run-to-run\n  variability must be measured INSIDE the experiment):\n    C0a, C0b (controls): defaults -- bounded (bounded_minimization\n        unset; compiled default true at optimize_lut.cpp:148-149).\n    C1 (treatment): the single injected command-line override\n        `bounded_minimization=0` via the same anchored sed machinery\n        as the X1 probe's max_iterations injection (model_id line\n        anchor; exactly-once gates; leak gates proving the token\n        absent from BOTH control testcopies).\n- 1-ITERATION UNBOUNDED PROBE before the full arms (X1-probe pattern;\n  Agent 42 minor A): a fourth cloned run-set injecting BOTH\n  `bounded_minimization=0` AND `max_iterations=1`, gated on the\n  \"Minimization is unbounded\" line and the 1-iteration banner, so a\n  literal-semantics mistake in the Real-typed truthiness routing\n  (optimize_lut.cpp:148-149) costs ~2 minutes, never a full arm.\n  Probe outputs are structural evidence only; no scientific value is\n  read from them.\n- Run order: probe -> C0a -> C1 -> C0b.\n- Identical explicit OMP controls\n  (OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK, OMP_DYNAMIC=FALSE, logged per\n  arm), identical staged inputs, Netlib preload + H5 shim wrappers\n  with ldd proofs -- all verbatim from the X1 machinery.\n- X1 hardening carried forward: staged data tree chmod -R a-w after\n  hash verification with fail-closed writable-entry scans post-staging\n  AND post-run, plus the six-file size+sha re-verification against the\n  same pinned manifest before any success claim.\n\n## 4. The single factor (source-cited)\n- Key: `bounded_minimization` -- optimize_lut.cpp:148-149\n  (`Real is_bounded = true; config.read(is_bounded,\n  \"bounded_minimization\");`), passed to solve_adept (:295); neither\n  test/optimize_lut_lw.sh nor test/config.h sets it, so the pinned\n  pipeline defaults to bounded (consistent with every prior arm's\n  \"Minimization is bounded\" banner).\n- Runtime authority (never inferred from config alone):\n    C0a/C0b log gates (each arm): \"Minimization is bounded\" exactly\n        once + the \"number bounded below:\" census line exactly once;\n        zero \"unbounded\" tokens.\n    C1 log gates: \"  Minimization is unbounded\" exactly once\n        (solve_adept.cpp:369) + ZERO \"Minimization is bounded\" lines +\n        ZERO bounded-census lines.\n- All three arms: Adept banner (3000/0.02) exactly once, gas banner\n  exactly once, \"Convergence status: \" exactly once with the terminal\n  status extracted and required in the allowed set {Converged, Maximum\n  iterations reached} (per-arm EXECUTION gate). Control-vs-C1 status\n  equality is NOT required -- different solver paths may lawfully\n  terminate differently. C0a-vs-C0b terminal-status EXACT EQUALITY is\n  part of the INTERNAL repeatability gate (Section 6), not a\n  descriptive note.\n\n## 5. Evidence pins and custody (S1/X1 pattern)\n- Prerequisites (fail-closed classifiers): X1 completion ledger JSON\n  (case gate4_x1_direct_capture_completion_ledger, status\n  x1_run_completed_verified, sha bb1f87c5..., commit 4a3be7a...) and\n  the committed X1 checkpoint chain (9725cbb pins).\n- Stage-0 GATEPINS: generator self-sha, frozen validator 163363a6...\n  (reused for the 47-var identity machinery), quota guard,\n  validation_results.jl, prerequisite ledger sha.\n- Input pins: identical 6 evaluation1 flux files + 3 work inputs\n  (staged per arm), test pins, Minimizer.h/libadept/adept_source.h/\n  Array.h, Netlib/shim, toolchain fingerprints -- all verbatim values\n  from the X1 sbatch.\n- Custody: dual create-once receipts (-session40 / -agent42),\n  submission + terminal scontrol raw fields; fixed evidence timestamps\n  = job EndTime; RUNROOT g4-diag/<jobid>/lw-c1 preserved on success\n  and failure; zero canonical writes.\n\n## 6. Pre-registered outcome matrix (no retrofitting; INTERNAL\n## validity and the HISTORICAL bridge are SEPARATE questions)\n- INTERNAL VALIDITY GATE (primary; BOTH conditions required):\n  (a) C0a-vs-C0b logical scientific identity (frozen validator\n  semantics: 47 vars, elementwise, typed attrs, value differences\n  allowed ONLY in config/history) AND (b) C0a-vs-C0b terminal-status\n  EXACT EQUALITY.\n    (i) Both hold: baseline repeatability holds INSIDE this job;\n        flag-associated interpretation of C1-vs-control differences\n        is licensed FOR THIS SETUP (still no mechanism claim).\n    (ii) Either fails: baseline repeatability FAILED; flag attribution\n        is INCONCLUSIVE; all C1 comparisons/objectives/censuses remain\n        DESCRIPTIVE; NO noise rule or threshold is invented post-hoc;\n        monitor HOLD decides any follow-up.\n- HISTORICAL BRIDGE (separate; connects to X1/history only): C0a and\n  C0b each compared to the PINNED 4561 pristine raw2 (49ff3df8...;\n  computed from the preserved RUNROOT on 2026-08-14 and re-verified\n  fail-closed against g4-diag/4561/lw-x1 at implementation -- Agent 42\n  minor B) under the same identity semantics.\n    - Bridge success extends the connection to the X1 trajectory; it\n      does NOT replace the C0a/C0b repeatability gate.\n    - Bridge failure LIMITS the connection to X1/history but does NOT\n      invalidate a repeatable same-job C0a/C1/C0b one-factor\n      comparison (internal validity stands or falls on (i)/(ii)\n      alone).\n- C1-vs-control serialized comparison: NONFINITE-AWARE full 47-var\n  logical diff against BOTH controls. The STRUCTURAL comparison\n  (dims/vars/stored types/typed attrs) is always computable and always\n  performed; the VALUE comparison uses isequal elementwise semantics\n  (NaN-tolerant, deterministic -- the frozen validator's identity core\n  is isequal-based and refuses nothing on nonfinite values; the strict\n  all-finite gates live only in the raw2 schema checks, which the\n  two-tier policy scopes to the controls) with EXPLICIT per-variable\n  nonfinite masks and counts reported alongside (which variables\n  differ, elementwise; coefficient-only vs broader), raw2\n  hashes/sizes. Fallback ONLY if the validator cannot be cleanly\n  extended: value diff marked \"not evaluated by preregistered policy\"\n  with structure verified and nonfinite counts recorded -- never a\n  silent route to instrument failure, and no post-hoc rules either\n  way. Differences EXPECTED (the flag is upstream of the solve) but\n  never presumed.\n- Census (pinned S1 kernel by exact extraction, as in the X1 ledger),\n  CONDITIONAL by the preregistered two-tier policy: C0a and C0b raw2\n  are ALWAYS censused; C1 raw2 is censused ONLY if structurally valid\n  and all-finite -- otherwise per-variable nonfinite counts and the\n  explicit reason REPLACE the C1 census under the preregistered\n  policy, never a refusal. Per gas, below/above separately,\n  denominators, worst dlog, index sets, event-sum vs computed-unique\n  with explicit overlap. Pre-registered reference points\n  (informational, never gates): committed 134/19 for bounded-family\n  arms. The C1 census is labeled EXACTLY: a POST-HOC SERIALIZED-OUTPUT\n  census of the unbounded arm's SERIALIZED STATE against file-derived\n  bounds that were NOT supplied to the unbounded solver; it measures\n  NEITHER returned-x feasibility NOR bound enforcement (no sidecar;\n  callback-state lag possible; the returned solution is unobserved in\n  C1 by design).\n- TWO-TIER VALUE POLICY for the C1 arm (Agent 42 challenge 1):\n  STRUCTURE failures (schema/dims/vars/types) refuse as instrument\n  faults in every arm. NONFINITE VALUES in the C1 arm's raw2 are a\n  LAWFUL SCIENTIFIC OUTCOME of removing bounds: they are a RECORDED\n  OBSERVATION (per-variable nonfinite counts) that gracefully HALTS\n  that arm's census and comparator evaluation with an explicit\n  recorded reason -- never a job refusal and never a ledger refusal.\n  The X1-inherited all-finite verification applies STRICTLY to C0a and\n  C0b only; applying it to C1 would destroy exactly the observation C1\n  exists to make.\n- Comparator (pinned, official_ecckd mode gated, H2O=0.005, code pins,\n  published self-check 0.18218645425029933 bit-exact), CONDITIONAL by\n  the preregistered two-tier policy: C0a and C0b are ALWAYS scored\n  twice each with PER-ARTIFACT bit-equality required. C1 is scored\n  twice (same bit-equality requirement) ONLY if its structurally\n  valid raw2 is all-finite; if nonfinite, the ledger records the\n  per-variable nonfinite counts and the explicit reason and marks the\n  C1 comparator \"not evaluated by preregistered policy\" -- never a\n  job or ledger refusal, and no post-hoc rule. Bounded reference\n  point 22.791293464348826 informational; when evaluated, C1's\n  objective is recorded exact with NO materiality threshold and NO\n  repair language, whatever its value.\n\n## 7. Runtime / quota\n- One build (~5 min) + 1-iteration unbounded probe (~2-5 min) + THREE\n  full arms: C0a (~35 min) + C1 (unknown; unbounded LBFGS at the same\n  3000-iteration cap -- budget 35-min class, could differ either way)\n  + C0b (~35 min). Wall estimate ~2 h; comfortably within the\n  06:00:00 sbatch limit; cpu-large, 36 cpus, --mem=60G (explicit, per\n  cluster discipline).\n- Quota guard 5 GiB (RUNROOT footprint ~ three work trees + build,\n  same class as 4561's; no sidecars).\n\n## 8. Interpretation ceiling (verbatim candidate, fixture-guarded)\n\"C1 quantifies the bounded_minimization flag factor for this fixed\nsetup only. It discriminates NO mechanism: disabling the flag removes\nthe bounded solver path and the log-space bound construction\nsimultaneously, so algorithm-vs-bound-construction semantics remain\nundistinguished, exactly as after X1. No repair, recovery, or causal\nclaim is made about the 22.791293464348826 objective or the published\n0.18218645425029933 baseline; C1 objective/census values are\ndescriptive observations local to this rebuilt trajectory. The C1\ncensus is a POST-HOC serialized-output census against file-derived\nbounds that were NOT supplied to the unbounded solver; it measures\nneither returned-x feasibility nor bound enforcement, and the returned\nsolution is unobserved in C1 by design. Nonfinite values in the C1\nserialized output, if present, are a recorded observation, not an\ninstrument fault. The X1 finding (returned-x exceedances 134/19 with\nzero observed discrepancy at the returned-vs-caller and\ncaller-vs-serialization interfaces) is carried as context only; C1\nneither confirms nor localizes its origin.\nAll three mechanism classes -- final-state synchronization,\nmapping/write, bounded-algorithm behavior -- remain OPEN and UNRANKED\nglobally; no historical or global claim; identity/bridge gates license\ncomparisons only for the pairs they test.\"\n\n## 9. Deliverables when (and only when) authorized\nCheckpoint generator + generated sbatch/JSON/MD + fixtures on the X1\nmachinery (text gates incl. exactly-once bounded/unbounded gates and\nthe single-factor leak gates; fixtures for the outcome-matrix\nclassifiers, census kernel reuse, comparator mode discrimination,\nidentity/bridge semantics, data-tree immutability); then a completion\nledger under the same review pipeline. NOTHING is built or submitted\nbefore explicit monitor GO at each step.\n"
+  },
+  "gates": {
+    "evidence_adept_toolchain_pins": "passed",
+    "evidence_bridge_target_pin": "passed",
+    "evidence_frozen_design_file": "passed",
+    "evidence_input_pins": "passed",
+    "evidence_modern_source_pins": "passed",
+    "evidence_reviewed_x1_completion_ledger": "passed",
+    "evidence_runtime_pins": "passed",
+    "evidence_sbatch_bash_syntax": "passed",
+    "evidence_sbatch_text_gates": "passed",
+    "evidence_schema_signature": "passed",
+    "evidence_toolchain_fingerprints": "passed",
+    "evidence_x1_ledger_commit_pin": "passed",
+    "fixtures": "passed"
+  },
+  "internal_validity_and_bridge": {
+    "historical_bridge": "C0a and C0b each vs the pinned 4561 pristine raw2 49ff3df8c02a1b62f7bfa6cd4b8dc2c6c96e93079c1d042eb8cfb5fc49c61e37 (re-verified fail-closed at generation); success does not replace the internal gate; failure does not invalidate the same-job one-factor comparison",
+    "in_job": "byte-compare BASELINE/FLAG echoes are informational only; nothing gates on them",
+    "internal_gate": "C0a-vs-C0b logical scientific identity AND terminal-status exact equality (ledger matter; either failing => flag attribution INCONCLUSIVE, all C1 comparisons descriptive, no post-hoc noise rule)"
+  },
+  "non_authorizing_note": "this checkpoint generates and verifies the C1 sbatch; it never submits; submission requires explicit monitor GO.",
+  "post_terminal_requirements": [
+    "completion ledger with the internal-validity gate (identity AND status equality), the separate historical bridge, the CONDITIONAL census/comparator/nonfinite-aware logical diff per the frozen design, and the verbatim ceiling; NOT in-job"
+  ],
+  "prerequisites": [
+    {
+      "ledger": "X1 direct-capture completion ledger",
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_x1_direct_capture_completion_ledger.json",
+      "pinned_commit": "4a3be7a596a3be1e4391c767f23de1f163e227f7",
+      "required_case": "gate4_x1_direct_capture_completion_ledger",
+      "required_status": "x1_run_completed_verified",
+      "reviewed_sha256": "bb1f87c597e673c8a5b5181d325d46eff7b4619c106e28e7ecf121db32c34170"
+    }
+  ],
+  "probe": {
+    "injection": "bounded_minimization=0 AND max_iterations=1",
+    "purpose": "flag literal-semantics verification at ~2-minute cost (Real-typed truthiness routing); STRUCTURAL evidence only; no scientific value read; status recorded WITHOUT the allowed-set gate"
+  },
+  "provenance": {
+    "generated_in_canonical_location": true,
+    "generation_dir": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation",
+    "note": "reproducibility: the generator's sibling package file (frozen design) is hash-pinned; the generated sbatch addresses the canonical paths under /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation regardless of where generation ran, and sbatch stage 0a refuses unless the bytes at those paths match the pins; final artifacts must be regenerated from the promoted byte-identical package before commit."
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c1_lw_bounds_flag.sbatch",
+  "sbatch_sha256": "817c16083af8eac2b335b70f68c10a6ecf3f465d171d22d17a3d4043f121017f",
+  "schema_signature": {
+    "dimension_map": {
+      "band": 1,
+      "composite_gas": 4,
+      "g_point": 32,
+      "h2o_mole_fraction": 12,
+      "pressure": 53,
+      "temperature": 6,
+      "temperature_planck": 231,
+      "wavenumber": 326
+    },
+    "dimension_map_semantics": "COMPLETE global dimension name+extent map (count 8), derived under the same sha-bracketed reads and required equal between the pinned initial raw and the 4561 pristine raw2; every arm requires the exact dimension-name SET plus extents (an unexpected unused global dimension refuses)",
+    "enforcement": "exact stored type AND exact dimension names per variable, enforced for probe/C0a/C1/C0b BEFORE the value policy via the shared c1_schema_value_check text (embedded verbatim in both in-job snippets and behaviorally fixture-tested); type/dim/schema drift refuses in EVERY arm; the two-tier value policy applies only after structure passes",
+    "entries": 47,
+    "sample": "band_number|Int16|g_point",
+    "source": "derived at generation from the pinned initial raw definition (ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43) and REQUIRED equal to the 4561 pristine raw2 signature (49ff3df8c02a1b62f7bfa6cd4b8dc2c6c96e93079c1d042eb8cfb5fc49c61e37); both reads sha-bracketed"
+  },
+  "single_factor": {
+    "injection": "anchored command-line override bounded_minimization=0 after the model_id line (exactly-once gates; leak gates prove the token absent from both control testcopies and the iteration override absent from c1)",
+    "key": "bounded_minimization",
+    "runtime_authority": "probe/c1: 'Minimization is unbounded' exactly once + zero bounded/bounded-census lines; c0a/c0b: bounded + bounded-census exactly once + zero unbounded lines",
+    "source": "optimize_lut.cpp:148-149 (Real is_bounded = true; config.read(is_bounded, \"bounded_minimization\"))"
+  },
+  "source_tree": {
+    "artifact": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
+    "executables": 24,
+    "files": 119,
+    "manifest_sha256": "a96e78e818e5343bead52a1d2ebf52436f8c0e0e67033bb314b6a00530a93aeb",
+    "symlinks": 0
+  },
+  "status": "c1_checkpoint_ready",
+  "statuses": {
+    "allowed_set": [
+      "Converged",
+      "Maximum iterations reached"
+    ],
+    "scope": "per-arm execution gate for c0a/c1/c0b; probe status recorded without the gate; control-vs-C1 equality NOT required; C0a-vs-C0b exact equality is part of the internal gate (ledger)"
+  },
+  "toolchain": {
+    "automake": "1.16.5",
+    "configure_argv": "./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'",
+    "fingerprints": [
+      {
+        "path": "/usr/bin/gcc",
+        "tool": "gcc",
+        "version_line": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+      },
+      {
+        "path": "/usr/bin/g++",
+        "tool": "g++",
+        "version_line": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+      },
+      {
+        "path": "/usr/bin/make",
+        "tool": "make",
+        "version_line": "GNU Make 4.3"
+      },
+      {
+        "path": "/usr/bin/autoreconf",
+        "tool": "autoreconf",
+        "version_line": "autoreconf (GNU Autoconf) 2.71"
+      }
+    ],
+    "libtoolize": "2.4.7"
+  },
+  "two_tier_policy": {
+    "structure": "schema/dims/vars/types failures refuse in every arm (instrument faults)",
+    "values": "nonfinite values in probe/C1 raw2 are LAWFUL recorded observations (per-variable NONFINITE RECORD lines + total), never a job refusal; the strict all-finite verification applies to C0a/C0b ONLY; the completion ledger applies the same conditionality to census/comparator/logical-diff per the frozen design"
+  }
+}
