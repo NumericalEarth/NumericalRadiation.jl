@@ -1,0 +1,352 @@
+{
+  "case": "gate4_c3_ib_4584_completion_ledger",
+  "data_mode": "run_completion_ledger",
+  "disclaimer": "writer reads the receipt, epoch sidecar, log, committed blobs, and preserved RUNROOT read-only; writes only its own JSON/MD results",
+  "durable_evidence": {
+    "anchor": {
+      "bits": "4036d31a2a40d244",
+      "lw_sha256": "a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4",
+      "marker": "HIT",
+      "token": "22.824617997003102"
+    },
+    "authorities": {
+      "checker": {
+        "repo_path": "validation/gate4_c3_ib_checker.jl",
+        "sha256": "06ce129768bafaa8dcf18e6cff063e030dafeeeca428447342c2a6033e5a1b82"
+      },
+      "commit": "05f635b3ef025116d322a28f40ac22c51e5747f8",
+      "design": {
+        "repo_path": "validation/gate4_c3_ib_iteration_budget_frozen_design.md",
+        "sha256": "e5af535f2d1c9efb478bb1b856f632fe05a5dfd01dec634cfecc41a67e44bb63"
+      },
+      "generator": {
+        "repo_path": "validation/gate4_c3_ib_checkpoint.jl",
+        "sha256": "46e55471bb3ba3ad0392c33c3d690ef0f4feb9a9e824cc4eae646c5753b60503"
+      },
+      "sbatch": {
+        "repo_path": "validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+        "sha256": "b564699530af5fa4569a4e29631772df6a49c717cda381463e1ebaa9ba0b24d3"
+      }
+    },
+    "compare_log": {
+      "bytes": 1640,
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/c3ib-compare.log",
+      "sha256": "6465d61a662c09594c09f79b736bf2c7cb0a3d1ce6b707c505cf523692977155"
+    },
+    "log": {
+      "bytes": 4089855,
+      "path": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4584.log",
+      "sha256": "9b2a0d62aa5b66016ee05f033fd1330a8a7f4dc7e00dec3ef369554e91f0c112"
+    },
+    "products": [
+      {
+        "arm": "probe",
+        "bytes": 2415324,
+        "endpoint": "raw2",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-probe/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "64ca26c7dafe118e278d9a93a083f76418b7075b68b5b9f5c18d78ac82da59a1"
+      },
+      {
+        "arm": "c0a",
+        "bytes": 2415316,
+        "endpoint": "raw2",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-c0a/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "7f52865910bf64c80a9df82a5e16e6dc13187c86d1a65132512a3d7d575c4756"
+      },
+      {
+        "arm": "c3ib",
+        "bytes": 2415324,
+        "endpoint": "raw2",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-c3ib/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "b03d93d3af63a6b4a631463f0f3b747b8d10346dd18485ac0406467d81074f3d"
+      },
+      {
+        "arm": "c0b",
+        "bytes": 2415316,
+        "endpoint": "raw2",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-c0b/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "a7af6baea792907839e118b46043e9b77d5640967bc595ae728191915472d25a"
+      },
+      {
+        "arm": "c0a",
+        "bytes": 872312,
+        "endpoint": "final",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-c0a/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "e6037e9d57a9e04233628e8770e364ee538986e8824c05aee73d021debc69cca"
+      },
+      {
+        "arm": "c3ib",
+        "bytes": 872340,
+        "endpoint": "final",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-c3ib/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "d272657bec96af016661bb68b13508da3bbc08ea49b9e0427b60e8cebbcd4ac4"
+      },
+      {
+        "arm": "c0b",
+        "bytes": 872312,
+        "endpoint": "final",
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib/work-c0b/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "e64f9217acaaf72c8ff0d0889871b61be67357240e6341d8a5c0ecb19c62115d"
+      }
+    ],
+    "receipt": {
+      "bytes": 1678,
+      "custody": "create-once noclobber scontrol -dd capture, -agent42 suffix (sole receipt writer)",
+      "epoch": "1786742841",
+      "epoch_sidecar": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4584-scontrol-final-agent42.txt.epoch",
+      "path": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4584-scontrol-final-agent42.txt",
+      "sha256": "b90962764f0f2a8078b7d0d2b4c49721988ea67b4ecccab9a2f282e11a78e664"
+    },
+    "runroot": {
+      "access_policy": "reviewer accesses read-only; no filesystem immutability seal applied",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4584/lw-c3ib",
+      "preserved": true
+    },
+    "score_arithmetic": {
+      "deltas": [
+        {
+          "branch": "POSITIVE",
+          "control_token": "22.791021217746845",
+          "delta_token": "0.012812853359393",
+          "endpoint": "raw2",
+          "panel": "primary",
+          "treatment_token": "22.803834071106238"
+        },
+        {
+          "branch": "POSITIVE",
+          "control_token": "22.791293464348826",
+          "delta_token": "0.01281285335942",
+          "endpoint": "raw2",
+          "panel": "secondary",
+          "treatment_token": "22.804106317708246"
+        },
+        {
+          "branch": "POSITIVE",
+          "control_token": "22.824617997003102",
+          "delta_token": "0.013840350139788",
+          "endpoint": "final",
+          "panel": "primary",
+          "treatment_token": "22.83845834714289"
+        },
+        {
+          "branch": "POSITIVE",
+          "control_token": "22.824890243604344",
+          "delta_token": "0.013840350140555",
+          "endpoint": "final",
+          "panel": "secondary",
+          "treatment_token": "22.838730593744899"
+        }
+      ],
+      "method": "exact rational arithmetic on the recorded decimal tokens; controls verified token-identical at printed precision before differencing"
+    },
+    "score_files": [
+      {
+        "bytes": 4227,
+        "name": "score-anchor-anchor-primary.txt",
+        "sha256": "db1f96d562867aa62671302e9e14f93e9e1fecda6a74fa73d995f460d08048e1"
+      },
+      {
+        "bytes": 4215,
+        "name": "score-c0a-final-primary.txt",
+        "sha256": "1dfb76a3385cc4fc8d4609dcbdcc1612b3873f60685830607c2a151ed6687d64"
+      },
+      {
+        "bytes": 4216,
+        "name": "score-c0a-final-secondary.txt",
+        "sha256": "8a0cebf0624dba680f5818c6b35d75eeaa1142362e3bac12e9ed8dbc4e1ad078"
+      },
+      {
+        "bytes": 4213,
+        "name": "score-c0a-raw2-primary.txt",
+        "sha256": "110092fa97bcf9989a3ee3102dc1c951886c55a243642056a481a06ec030f345"
+      },
+      {
+        "bytes": 4219,
+        "name": "score-c0a-raw2-secondary.txt",
+        "sha256": "6180aeeb702cb3c7b86cb3c4b3fd087d89f9f248b3e2f25e0896f3d5f6973d6d"
+      },
+      {
+        "bytes": 4215,
+        "name": "score-c0b-final-primary.txt",
+        "sha256": "b72263c476f5a6b8c62292a273bb0d3014abd7c001d8fb389d06fff35b7d86bd"
+      },
+      {
+        "bytes": 4216,
+        "name": "score-c0b-final-secondary.txt",
+        "sha256": "c64caa8511140ac72cfc65a1810406c43ce2ca1d5a369abc94429f6bdeb9662b"
+      },
+      {
+        "bytes": 4213,
+        "name": "score-c0b-raw2-primary.txt",
+        "sha256": "e90a8f9ce26ef00031b853b547dde34ef28376aa883ff9966274d3ff9c780395"
+      },
+      {
+        "bytes": 4219,
+        "name": "score-c0b-raw2-secondary.txt",
+        "sha256": "967725f13b71138ab09bfb8e3abd6c824ceb06d35dfe17b1467d9e1f70c5953a"
+      },
+      {
+        "bytes": 4218,
+        "name": "score-c3ib-final-primary.txt",
+        "sha256": "7ce0c4062502bae4f6265ae57b863e72723a5625114274a592b0f1a0d20e62c3"
+      },
+      {
+        "bytes": 4226,
+        "name": "score-c3ib-final-secondary.txt",
+        "sha256": "e6c0d37b636973b9fdcf5f5cee02d750c91dad1451cd405b8ece8872be093019"
+      },
+      {
+        "bytes": 4220,
+        "name": "score-c3ib-raw2-primary.txt",
+        "sha256": "2ec6403254b82a71803751f7697f92a06b822a6912f70b35bebc96308a173f04"
+      },
+      {
+        "bytes": 4224,
+        "name": "score-c3ib-raw2-secondary.txt",
+        "sha256": "2c13419d8449ee4f59daf8549e458041ee60526c8018d0ac48afadf2bd5f17a8"
+      }
+    ],
+    "stage7_no_refusal": {
+      "checker_pass_census": {
+        "C3C PASS: anchor": 1,
+        "C3C PASS: compare": 1,
+        "C3C PASS: identity": 2,
+        "C3C PASS: scan": 7,
+        "C3C PASS: score": 13,
+        "C3C PASS: upstream": 1,
+        "logical identity holds: controls-final": 1,
+        "logical identity holds: controls-raw2": 1
+      },
+      "child_failed_markers": 0,
+      "post_run_reverification": "stage-7 executed; POSTSTAGE/POSTPKG/CHECKPOST/SRCTPLPOST/SRCEXECPOST gates passed (zero REFUSED markers in the pinned log)",
+      "refused_markers": 0
+    },
+    "upstream_census": {
+      "controls_record_identical_per_pass": "true at printed status/cost/gradient token precision",
+      "records": {
+        "c0a-base-upstream.txt": {
+          "bytes": 77,
+          "cost_token": "16.7768",
+          "gradient_token": "0.114057",
+          "sha256": "d19f7d7ccfe534ae3d8aa28317752e83603a1d6aff489a3d6458c52cae4f0384",
+          "status": "Maximum iterations reached"
+        },
+        "c0a-relative-cfc-upstream.txt": {
+          "bytes": 64,
+          "cost_token": "0.023528",
+          "gradient_token": "0.000460102",
+          "sha256": "02f7f57e47414e4abdd4dbb7a57ce2495181d2a8599ffda163a288f695f4d771",
+          "status": "Converged"
+        },
+        "c0a-relative-ch4-upstream.txt": {
+          "bytes": 77,
+          "cost_token": "1.83547",
+          "gradient_token": "0.093339",
+          "sha256": "589cca98c587c1352db1461c3f13faf9a0cf272fdf35d285510fd2865612daf9",
+          "status": "Maximum iterations reached"
+        },
+        "c0a-relative-n2o-upstream.txt": {
+          "bytes": 64,
+          "cost_token": "0.417307",
+          "gradient_token": "0.000438281",
+          "sha256": "99e688284d29001b5223d9309fab5b8110a990ebd8a99c5df40d05ab7d701179",
+          "status": "Converged"
+        },
+        "c0b-base-upstream.txt": {
+          "bytes": 77,
+          "cost_token": "16.7768",
+          "gradient_token": "0.114057",
+          "sha256": "d19f7d7ccfe534ae3d8aa28317752e83603a1d6aff489a3d6458c52cae4f0384",
+          "status": "Maximum iterations reached"
+        },
+        "c0b-relative-cfc-upstream.txt": {
+          "bytes": 64,
+          "cost_token": "0.023528",
+          "gradient_token": "0.000460102",
+          "sha256": "02f7f57e47414e4abdd4dbb7a57ce2495181d2a8599ffda163a288f695f4d771",
+          "status": "Converged"
+        },
+        "c0b-relative-ch4-upstream.txt": {
+          "bytes": 77,
+          "cost_token": "1.83547",
+          "gradient_token": "0.093339",
+          "sha256": "589cca98c587c1352db1461c3f13faf9a0cf272fdf35d285510fd2865612daf9",
+          "status": "Maximum iterations reached"
+        },
+        "c0b-relative-n2o-upstream.txt": {
+          "bytes": 64,
+          "cost_token": "0.417307",
+          "gradient_token": "0.000438281",
+          "sha256": "99e688284d29001b5223d9309fab5b8110a990ebd8a99c5df40d05ab7d701179",
+          "status": "Converged"
+        },
+        "c3ib-base-upstream.txt": {
+          "bytes": 61,
+          "cost_token": "16.7515",
+          "gradient_token": "0.0178892",
+          "sha256": "1682491b9a24b21c64192081ae5f07dd74de2d9183a8a74c328fca5d88776651",
+          "status": "Converged"
+        },
+        "c3ib-relative-cfc-upstream.txt": {
+          "bytes": 65,
+          "cost_token": "0.0239354",
+          "gradient_token": "0.000441465",
+          "sha256": "f4578db8953e4acdee4a31508f296761b1c6c4ab45d19755d8fcdc55daf07fea",
+          "status": "Converged"
+        },
+        "c3ib-relative-ch4-upstream.txt": {
+          "bytes": 78,
+          "cost_token": "1.83534",
+          "gradient_token": "0.0497615",
+          "sha256": "f1439c143c34fc5e78b1bece09402f2a54a83aca636d2d4d9474d487539ccd66",
+          "status": "Maximum iterations reached"
+        },
+        "c3ib-relative-n2o-upstream.txt": {
+          "bytes": 64,
+          "cost_token": "0.414356",
+          "gradient_token": "0.000432674",
+          "sha256": "3d751c02c527c60b23574a96bf7b73ef341c1e581e0148c35c949815f4cbdc43",
+          "status": "Converged"
+        },
+        "probe-base-upstream.txt": {
+          "bytes": 76,
+          "cost_token": "2357.13",
+          "gradient_token": "1026.13",
+          "sha256": "8905230e66843fd15eec853c28de69d64305c3fb59368445bc9d18bee564b5ab",
+          "status": "Maximum iterations reached"
+        }
+      },
+      "treatment_base": {
+        "budget_consumed": "no (converged under the 9000 cap)",
+        "cost_token": "16.7515",
+        "gradient_token": "0.0178892",
+        "status": "Converged",
+        "terminal_iteration": "4211"
+      }
+    }
+  },
+  "job": {
+    "command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+    "derived_exit_code": "0:0",
+    "end_time": "2026-08-14T21:27:12",
+    "exit_code": "0:0",
+    "job_id": "4584",
+    "job_name": "g4-c3ib-lw-iteration-budget",
+    "reason": "None",
+    "restarts": "0",
+    "run_time": "03:11:06",
+    "start_time": "2026-08-14T18:16:06",
+    "state": "COMPLETED",
+    "stdout": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4584.log",
+    "submit_line": "sbatch --parsable validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+    "time_limit": "06:00:00"
+  },
+  "monitor_observations": {
+    "ceilings": "private fixed-setup budget association only; all six primary placements ABOVE 1.05 are descriptive; NO recovered acceptance; NO claim of a global or genuine optimum; NO mechanism localization, candidate-space reduction, or candidate ranking (all mechanism classes remain OPEN and UNRANKED); NO optimizer- or backend-behavior characterization; NO other-budget or next-campaign authorization; the anchor HIT licenses the current-G1-adjacent label only and does NOT refresh or reconfirm the committed terminal Gate-1 state; the external <=1.05 gate untouched",
+    "nonwrite_review": "REVIEWED, NON-EXHAUSTIVE: no canonical scientific output publish/install step was identified in the sha-verified committed sbatch blob or observed in the pinned log; all experimental CKD products reside under the 4584 RUNROOT; the Slurm log, receipt, and lock/state surfaces are expected writes outside this statement's scope",
+    "ruled_result_statement": "under this ONE fixed setup, the higher-cap (9000) base arm reported Converged at iteration 4211, and its pinned package objectives were +0.012812853359393 / +0.01281285335942 (raw2, primary/secondary evaluator) and +0.013840350139788 / +0.013840350140555 (final) relative to the two token-identical 3000-budget controls; raising this cap did not improve these measured pinned objectives. Nothing further. Converged is a REPORTED STATUS under one criterion in one fixed setup, never proof of an optimum",
+    "terminal_contract_applied": "COMPLETED is a HOLD state for any next action; no follow-on unit, budget change, or objective/data change without a new frozen contract and explicit Codex-monitor GO"
+  },
+  "non_authorizing_note": "this ledger records and verifies a completed diagnosis unit; it authorizes NOTHING (no recovered acceptance, no mechanism inference, no follow-on unit)",
+  "status": "c3ib_4584_run_completed_verified"
+}
