@@ -1,7 +1,13 @@
-# Gate-4 C3-IB ITERATION-BUDGET CHECKPOINT (generator; r2 RECOVERY
-# REVISION after job 4578 FAILED 134:0, staging-manifest-completeness
-# gap). CLI ACTIVE: running this file regenerates the checkpoint
-# artifacts fail-closed. Recovery scope (harness/provenance only; the
+# Gate-4 C3-IB ITERATION-BUDGET CHECKPOINT (generator; r3 RECOVERY
+# REVISION after job 4578 FAILED 134:0 staging-manifest gap and job
+# 4580 FAILED 71:0 instrument-gate false-refusal). CLI ACTIVE: running
+# this file regenerates the checkpoint artifacts fail-closed. r3: the
+# per-mode Adept banner convergence criteria are DERIVED under the
+# monitor-ruled SPLIT AUTHORITY: base = exactly-zero overrides + the
+# SHA-pinned optimize_lut.cpp source value; downstream = exactly-one
+# active SPECIFIC_OPTIONS/criterion token per mode, both authorities,
+# no C++ fallback; never hand-written; the downstream banner gate is
+# per-mode value-exact. Recovery scope (harness/provenance only; the
 # scientific design, selected modes, budgets, and scoring are byte-
 # unchanged): eval1 staging manifest = the EXACT 20-name selected-mode
 # closure (relative-base/ch4/n2o/cfc), generation-derived from the
@@ -272,6 +278,125 @@ function c3g_g3_executor_issues(; manifest = c3g_eval1_manifest(),
     end
     iss
 end
+
+# BANNER-CRITERION DERIVATION (4580 recovery, monitor-ruled SPLIT
+# AUTHORITY, mode-specific and NON-GENERIC):
+# (A) relative-base MUST have exactly ZERO uncommented active
+#     SPECIFIC_OPTIONS assignments in BOTH the published template and
+#     the generation-derived deployed block (any base override
+#     refuses); its criterion derives SOLELY from the SHA-pinned
+#     src/ecckd/optimize_lut.cpp with exactly one
+#     `Real convergence_criterion = TOKEN;` declaration and exactly
+#     one `config.read(convergence_criterion, ...)` site.
+# (B) relative-ch4/n2o/cfc MUST each have exactly ONE active
+#     SPECIFIC_OPTIONS and exactly ONE criterion token in both
+#     authorities; zero and >1 refuse; downstream NEVER falls back to
+#     the C++ source value.
+# All values cross-authority exact-matched and rendered. No
+# hand-written criterion constants.
+const C3G_OPTIMIZE_LUT_CPP =
+    joinpath(C3G_SRC_ARTIFACT, "src/ecckd/optimize_lut.cpp")
+const C3G_OPTIMIZE_LUT_CPP_SHA =
+    "3ebaef95bdb334f20016be8b7cb6a8f0b86a5608f682839a4f80641f843740e1"
+
+function c3g_mode_active_options(text, mode)
+    ms = collect(eachmatch(
+        Regex("(?ms)^\\s*" * mode * "\\)\\s*(.*?);;"), text))
+    length(ms) == 1 ||
+        return nothing, "mode block $mode count $(length(ms)) != 1"
+    opts = String[]
+    for ln in split(ms[1].captures[1], '\n')
+        startswith(strip(ln), "#") && continue
+        om = match(r"^\s*SPECIFIC_OPTIONS=\"([^\"]*)\"\s*$", ln)
+        om === nothing || push!(opts, String(om.captures[1]))
+    end
+    opts, nothing
+end
+
+function c3g_downstream_criterion(text, mode)
+    opts, err = c3g_mode_active_options(text, mode)
+    err === nothing || return nothing, err
+    length(opts) == 1 || return nothing,
+        "mode $mode active SPECIFIC_OPTIONS count $(length(opts)) != 1"
+    toks = [String(m.captures[1]) for m in
+            eachmatch(r"convergence_criterion=([0-9.eE+-]+)", opts[1])]
+    length(toks) == 1 || return nothing,
+        "mode $mode convergence_criterion count $(length(toks)) != 1"
+    toks[1], nothing
+end
+
+function c3g_base_zero_override(text)
+    opts, err = c3g_mode_active_options(text, "relative-base")
+    err === nothing || return err
+    isempty(opts) ||
+        return "mode relative-base active SPECIFIC_OPTIONS count " *
+               "$(length(opts)) != 0 (base override refuses)"
+    nothing
+end
+
+function c3g_base_source_criterion(cpp_text)
+    dm = collect(eachmatch(
+        r"(?m)^\s*Real convergence_criterion = ([0-9.eE+-]+);",
+        cpp_text))
+    length(dm) == 1 || return nothing,
+        "base source criterion declaration sites $(length(dm)) != 1"
+    rm_ = collect(eachmatch(
+        r"(?m)^\s*config\.read\(convergence_criterion, \"convergence_criterion\"\);",
+        cpp_text))
+    length(rm_) == 1 || return nothing,
+        "base source criterion config-read sites $(length(rm_)) != 1"
+    String(dm[1].captures[1]), nothing
+end
+
+function c3g_banner_criteria(published, derived_base, derived_down;
+        modes = C3G_EVAL1_SELECTED_MODES, cpp_text = nothing)
+    iss = String[]
+    crits = Dict{String, String}()
+    cpp = cpp_text
+    if cpp === nothing
+        if p2_try_sha(C3G_OPTIMIZE_LUT_CPP) == C3G_OPTIMIZE_LUT_CPP_SHA
+            cpp = read(C3G_OPTIMIZE_LUT_CPP, String)
+        else
+            push!(iss, "pinned optimize_lut.cpp sha drift")
+            cpp = ""
+        end
+    end
+    for mode in modes
+        if mode == "relative-base"
+            for (label, src) in (("published", published),
+                                 ("deployed", derived_base))
+                err = c3g_base_zero_override(src)
+                err === nothing || push!(iss, "$label: " * err)
+            end
+            tok, berr = c3g_base_source_criterion(cpp)
+            berr === nothing || push!(iss, berr)
+            tok === nothing || (crits[mode] = tok)
+        else
+            tp, ep = c3g_downstream_criterion(published, mode)
+            ep === nothing || push!(iss, "published: " * ep)
+            td, ed = c3g_downstream_criterion(derived_down, mode)
+            ed === nothing || push!(iss, "deployed: " * ed)
+            if tp !== nothing && td !== nothing
+                tp == td || push!(iss,
+                    "criterion cross-authority mismatch for $mode: " *
+                    "published $tp != deployed $td")
+                tp == td && (crits[mode] = tp)
+            end
+        end
+    end
+    iss, crits
+end
+
+function c3g_banner_crits()
+    iss, crits = c3g_banner_criteria(
+        read(joinpath(C3G_SRC_ARTIFACT, "test/optimize_lut_lw.sh"),
+             String),
+        c3g_astext(c3g_derive_base(3000)),
+        c3g_astext(c3g_derive_downstream()))
+    isempty(iss) ||
+        error("banner criteria underivable: " * join(iss, "; "))
+    crits
+end
 # three pinned scoring masters (frozen design; verified on disk at
 # design time)
 const C3G_ANCHOR_LW_PATH = "$C3G_G4WORK/work/lw_ckd-definition/" *
@@ -329,7 +454,11 @@ const C3G_LEDGERS = [
     (name = "C3IBF4578", case = "gate4_c3_ib_4578_failure_ledger",
      status = "c3ib_4578_failed_staging_manifest_gap",
      sha = "472088a799ab4bc53b54dedd405509835dbeef923d8bb39a84f89268d272bf84",
-     file = "gate4_c3_ib_4578_failure_ledger.json")]
+     file = "gate4_c3_ib_4578_failure_ledger.json"),
+    (name = "C3IBF4580", case = "gate4_c3_ib_4580_failure_ledger",
+     status = "c3ib_4580_failed_downstream_banner_gate_false_refusal",
+     sha = "c87b07477839c4e8d2f9093ae1c099efe152a2358777d0a24129a46de9c6ebf9",
+     file = "gate4_c3_ib_4580_failure_ledger.json")]
 c3g_ledger_path(l) = joinpath(P2_PROJECT_ROOT, "validation", "results",
                               l.file)
 # G1 SEMANTIC gates (value/pair provenance inside the pinned JSON):
@@ -402,6 +531,50 @@ function c3g_4578_semantic_issues(data)
         push!(iss, "4578 ledger classification mismatch")
     get(mo, "selected_mode_eval1_closure", nothing) == 20 ||
         push!(iss, "4578 ledger closure count != 20")
+    iss
+end
+
+# 4580 FAILURE-LEDGER SEMANTIC gates (exact-field):
+function c3g_4580_semantic_issues(data)
+    iss = String[]
+    job = get(data, "job", Dict{String, Any}())
+    for (k, v) in (("state", "FAILED"), ("reason", "NonZeroExitCode"),
+                   ("exit_code", "71:0"), ("run_time", "00:52:49"),
+                   ("end_time", "2026-08-14T17:29:30"),
+                   ("job_id", "4580"))
+        get(job, k, nothing) == v ||
+            push!(iss, "4580 ledger job.$k != $v")
+    end
+    de = get(data, "durable_evidence", Dict{String, Any}())
+    get(get(de, "receipt", Dict{String, Any}()), "sha256", nothing) ==
+        "28e71c26bc69834b145ce78fb3c8c5ac8e5eef1a2be9506a2832660de7276c19" ||
+        push!(iss, "4580 ledger receipt sha != pinned")
+    get(get(de, "log", Dict{String, Any}()), "sha256", nothing) ==
+        "292c9ce6fabba8a23ba27206718d33d22dfbec466e24c9874a40c582be897873" ||
+        push!(iss, "4580 ledger log sha != pinned")
+    rc = get(de, "root_cause_chain", Dict{String, Any}())
+    l1 = get(rc, "leg1_pinned_authorities", Dict{String, Any}())
+    get(get(l1, "compiled_base_source", Dict{String, Any}()),
+        "sha256", nothing) ==
+        "3ebaef95bdb334f20016be8b7cb6a8f0b86a5608f682839a4f80641f843740e1" ||
+        push!(iss, "4580 ledger compiled-base-source cpp sha mismatch")
+    get(get(l1, "template_downstream_overrides", Dict{String, Any}()),
+        "sha256", nothing) ==
+        "f0d77b16b97612687818e85615a103adaa948627846c9819e40e7754ab0743ba" ||
+        push!(iss, "4580 ledger template-overrides sha mismatch")
+    get(get(rc, "leg2_observed_banner", Dict{String, Any}()),
+        "text", nothing) ==
+        "Optimizing coefficients with Adept LBFGS algorithm: max " *
+        "iterations = 3000, convergence criterion = 0.0005" ||
+        push!(iss, "4580 ledger observed-banner text mismatch")
+    get(get(rc, "leg3_defective_gate", Dict{String, Any}()),
+        "sbatch_sha256", nothing) ==
+        "834cd0d32863ba299edb13075b2077d6f92b46ddc884282bdf1d87bac1397a9b" ||
+        push!(iss, "4580 ledger defective-gate sbatch sha mismatch")
+    mo = get(data, "monitor_observations", Dict{String, Any}())
+    get(mo, "classification", nothing) ==
+        "instrument_gate_false_refusal" ||
+        push!(iss, "4580 ledger classification mismatch")
     iss
 end
 
@@ -518,8 +691,8 @@ $(V)_FULL=\$($t --version); $(V)_L1=\${$(V)_FULL%%\$'\\n'*}
     base_sha_1 = bytes2hex(sha256(c3g_derive_base(1)))
     base_sha_3000 = bytes2hex(sha256(c3g_derive_base(3000)))
     base_sha_9000 = bytes2hex(sha256(c3g_derive_base(9000)))
-    banner(n) = "Optimizing coefficients with Adept LBFGS algorithm: " *
-        "max iterations = $n, convergence criterion = 0.02"
+    bcrits = c3g_banner_crits()
+    crit_base = bcrits["relative-base"]
     ev1_names = join(c3g_eval1_manifest(), "\n")
     """
 #!/bin/bash
@@ -831,10 +1004,10 @@ for arm in probe c0a c3ib c0b; do
         APPLICATION=climate BAND_STRUCTURE=fsck TOLERANCE=0.0161 \\
         bash optimize_lut_lw_base.sh relative-base |& tee -a "\$RUNROOT/\$arm-base.log"
     RL="\$RUNROOT/\$arm-base.log"
-    [ "\$(grep -cF "max iterations = \$NIT, convergence criterion = 0.02" "\$RL" || true)" = 1 ] || { echo "REFUSED: \$arm Adept banner (max iterations = \$NIT) not exactly once" >&2; exit 71; }
+    [ "\$(grep -cF "max iterations = \$NIT, convergence criterion = $crit_base" "\$RL" || true)" = 1 ] || { echo "REFUSED: \$arm Adept banner (max iterations = \$NIT) not exactly once" >&2; exit 71; }
     for N in 1 3000 9000; do
         [ "\$N" = "\$NIT" ] && continue
-        [ "\$(grep -cF "max iterations = \$N, convergence criterion = 0.02" "\$RL" || true)" = 0 ] || { echo "REFUSED: \$arm base log shows forbidden budget banner (\$N)" >&2; exit 71; }
+        [ "\$(grep -cF "max iterations = \$N, convergence criterion = $crit_base" "\$RL" || true)" = 0 ] || { echo "REFUSED: \$arm base log shows forbidden budget banner (\$N)" >&2; exit 71; }
     done
     [ "\$(grep -cF 'max iterations = ' "\$RL" || true)" = 1 ] || { echo "REFUSED: \$arm base log total budget banners != 1" >&2; exit 71; }
     [ "\$(grep -cF 'Minimization is bounded' "\$RL" || true)" = 1 ] || { echo "REFUSED: \$arm did not log bounded mode" >&2; exit 71; }
@@ -864,7 +1037,13 @@ for arm in probe c0a c3ib c0b; do
                 bash optimize_lut_lw.sh "\$mode" |& tee "\$RUNROOT/\$arm-\$mode.log"
             ML="\$RUNROOT/\$arm-\$mode.log"
             [ "\$(grep -cF 'Convergence status: ' "\$ML" || true)" = 1 ] || { echo "REFUSED: \$arm \$mode convergence-status not exactly once" >&2; exit 71; }
-            [ "\$(grep -cF 'max iterations = 3000, convergence criterion = 0.02' "\$ML" || true)" = 1 ] || { echo "REFUSED: \$arm \$mode default-3000 banner not exactly once" >&2; exit 71; }
+            case "\$mode" in
+                relative-ch4) EXPCRIT='$(bcrits["relative-ch4"])';;
+                relative-n2o) EXPCRIT='$(bcrits["relative-n2o"])';;
+                relative-cfc) EXPCRIT='$(bcrits["relative-cfc"])';;
+                *) echo "REFUSED: unknown downstream mode \$mode (no derived banner criterion)" >&2; exit 71;;
+            esac
+            [ "\$(grep -cF "max iterations = 3000, convergence criterion = \$EXPCRIT" "\$ML" || true)" = 1 ] || { echo "REFUSED: \$arm \$mode default-3000 banner not exactly once" >&2; exit 71; }
             [ "\$(grep -cF 'max iterations = ' "\$ML" || true)" = 1 ] || { echo "REFUSED: \$arm \$mode carries an extra budget banner" >&2; exit 71; }
             [ "\$(grep -cF 'max iterations = 9000' "\$ML" || true)" = 0 ] || { echo "REFUSED: \$arm \$mode shows 9000 budget (RUNTIME LEAK)" >&2; exit 71; }
             [ "\$(grep -cF 'max iterations = 1,' "\$ML" || true)" = 0 ] || { echo "REFUSED: \$arm \$mode shows probe budget (RUNTIME LEAK)" >&2; exit 71; }
@@ -1108,6 +1287,7 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
         C3G_LEDGERS[1].sha, C3G_LEDGERS[2].sha, C3G_LEDGERS[3].sha,
         C3G_LEDGERS[4].sha, C3G_LEDGERS[5].sha,
         C3G_LEDGERS[6].sha * "  " * c3g_ledger_path(C3G_LEDGERS[6]),
+        C3G_LEDGERS[7].sha * "  " * c3g_ledger_path(C3G_LEDGERS[7]),
         C3G_TRAINING_MANIFEST_SHA * "  " * C3G_TRAINING_MANIFEST_FILE,
         "artifact tree census != $C3G_TREE_FILES",
         "artifact exec census != $C3G_TREE_EXEC",
@@ -1124,6 +1304,15 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
         "-maxdepth 1 -printf '%f\\n' | LC_ALL=C sort"]
     append!(req, ["\$RUNROOT/data/evaluation1/lw_fluxes/" * n
                   for n in c3g_eval1_manifest()])
+    crits = c3g_banner_crits()
+    append!(req, [
+        "max iterations = \$NIT, convergence criterion = " *
+            crits["relative-base"],
+        "relative-ch4) EXPCRIT='" * crits["relative-ch4"] * "';;",
+        "relative-n2o) EXPCRIT='" * crits["relative-n2o"] * "';;",
+        "relative-cfc) EXPCRIT='" * crits["relative-cfc"] * "';;",
+        "max iterations = 3000, convergence criterion = \$EXPCRIT",
+        "REFUSED: unknown downstream mode \$mode (no derived banner criterion)"])
     for r in req
         occursin(r, text) || push!(iss, "required text missing: $r")
     end
@@ -1148,7 +1337,11 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
          "training-manifest stage-0 pin"),
         (Regex("\\Q" * C3G_LEDGERS[6].sha * "  " *
                c3g_ledger_path(C3G_LEDGERS[6]) * "\\E"), 1,
-         "4578 failure-ledger stage-0 pin"))
+         "4578 failure-ledger stage-0 pin"),
+        (Regex("\\Q" * C3G_LEDGERS[7].sha * "  " *
+               c3g_ledger_path(C3G_LEDGERS[7]) * "\\E"), 1,
+         "4580 failure-ledger stage-0 pin"),
+        (Regex("\\QEXPCRIT\\E"), 4, "per-mode expected-criterion sites"))
         m = length(collect(eachmatch(pat, text)))
         m == n || push!(iss, "$what expected exactly $n, got $m")
     end
@@ -1163,7 +1356,9 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
                 "recovered acceptance was", "acceptance-equivalent",
                 "ecckd-1.0_sw_", "ckdmip_evaluation1_lw_fluxes_5gas",
                 "ckdmip_evaluation1_lw_fluxes_co2-", "g4-diag/4578",
-                "ls \"\$RUNROOT/data/evaluation1/lw_fluxes\"")
+                "g4-diag/4580",
+                "ls \"\$RUNROOT/data/evaluation1/lw_fluxes\"",
+                "'max iterations = 3000, convergence criterion = 0.02'")
         occursin(bad, text) && push!(iss, "forbidden text present: $bad")
     end
     marks = length(collect(eachmatch(r"STAGE-1 FREEZE COMPLETE", text)))
@@ -1979,6 +2174,199 @@ function c3g_fixtures(pkg, text, downstream_sha, base_pins)
             !isempty(c3g_4578_semantic_issues(m3))
     end
 
+    # banner-criterion derivation fixtures (4580 recovery class)
+    bpub = read(joinpath(C3G_SRC_ARTIFACT, "test/optimize_lut_lw.sh"),
+                String)
+    n2oline = "\n\tSPECIFIC_OPTIONS=\"convergence_criterion=0.0005 " *
+              "flux_weight=0.5\"\n"
+    t["banner_all_modes_accept"] = begin
+        biss0, bcr0 = c3g_banner_criteria(bpub, dbase, ddown)
+        occursin(n2oline, bpub) && isempty(biss0) &&
+            bcr0 == Dict("relative-base" => "0.02",
+                         "relative-ch4" => "0.0005",
+                         "relative-n2o" => "0.0005",
+                         "relative-cfc" => "0.0005")
+    end
+    t["banner_base_zero_override_accepts"] =
+        c3g_base_zero_override(bpub) === nothing &&
+        c3g_base_zero_override(dbase) === nothing
+    t["banner_base_added_override_refuses"] = begin
+        mut = replace(bpub, "GASLIST=\"composite h2o o3 co2\"" =>
+            "GASLIST=\"composite h2o o3 co2\"\n\tSPECIFIC_OPTIONS=" *
+            "\"convergence_criterion=0.01\"")
+        iss, _ = c3g_banner_criteria(mut, dbase, ddown)
+        ("published: mode relative-base active SPECIFIC_OPTIONS " *
+         "count 1 != 0 (base override refuses)") in iss
+    end
+    bcpp = read(C3G_OPTIMIZE_LUT_CPP, String)
+    t["banner_cpp_declaration_duplicate_refuses"] = begin
+        mut = replace(bcpp, "Real convergence_criterion = 0.02;" =>
+            "Real convergence_criterion = 0.02;\n  " *
+            "Real convergence_criterion = 0.03;")
+        iss, _ = c3g_banner_criteria(bpub, dbase, ddown;
+                                     cpp_text = mut)
+        ("base source criterion declaration sites 2 != 1") in iss
+    end
+    t["banner_cpp_declaration_missing_refuses"] = begin
+        mut = replace(bcpp,
+            "Real convergence_criterion = 0.02;" => "// removed")
+        iss, _ = c3g_banner_criteria(bpub, dbase, ddown;
+                                     cpp_text = mut)
+        ("base source criterion declaration sites 0 != 1") in iss
+    end
+    t["banner_cpp_read_duplicate_refuses"] = begin
+        mut = bcpp * "\nconfig.read(convergence_criterion, " *
+              "\"convergence_criterion\");\n"
+        iss, _ = c3g_banner_criteria(bpub, dbase, ddown;
+                                     cpp_text = mut)
+        ("base source criterion config-read sites 2 != 1") in iss
+    end
+    t["banner_cpp_declaration_commented_refuses"] = begin
+        mut = replace(bcpp, "Real convergence_criterion = 0.02;" =>
+            "// Real convergence_criterion = 0.02;")
+        iss, _ = c3g_banner_criteria(bpub, dbase, ddown;
+                                     cpp_text = mut)
+        ("base source criterion declaration sites 0 != 1") in iss
+    end
+    t["banner_cpp_read_commented_refuses"] = begin
+        mut = replace(bcpp, "config.read(convergence_criterion, " *
+            "\"convergence_criterion\");" =>
+            "// config.read(convergence_criterion, " *
+            "\"convergence_criterion\");")
+        iss, _ = c3g_banner_criteria(bpub, dbase, ddown;
+                                     cpp_text = mut)
+        ("base source criterion config-read sites 0 != 1") in iss
+    end
+    t["banner_cpp_read_missing_refuses"] = begin
+        mut = replace(bcpp, "config.read(convergence_criterion, " *
+            "\"convergence_criterion\");" => "// removed")
+        iss, _ = c3g_banner_criteria(bpub, dbase, ddown;
+                                     cpp_text = mut)
+        ("base source criterion config-read sites 0 != 1") in iss
+    end
+    t["banner_missing_mode_refuses"] = begin
+        iss, _ = c3g_banner_criteria(
+            replace(bpub, "relative-n2o)" => "relative-xxx)"),
+            dbase, ddown)
+        ("published: mode block relative-n2o count 0 != 1") in iss
+    end
+    t["banner_duplicate_mode_refuses"] = begin
+        iss, _ = c3g_banner_criteria(
+            bpub * "\nrelative-n2o)\n\tGASLIST=\"n2o\"\n\t;;\n",
+            dbase, ddown)
+        ("published: mode block relative-n2o count 2 != 1") in iss
+    end
+    t["banner_missing_options_refuses"] = begin
+        mut = replace(bpub, n2oline =>
+            "\n\t#SPECIFIC_OPTIONS=\"convergence_criterion=0.0005 " *
+            "flux_weight=0.5\"\n")
+        iss, _ = c3g_banner_criteria(mut, dbase, ddown)
+        ("published: mode relative-n2o active SPECIFIC_OPTIONS " *
+         "count 0 != 1") in iss
+    end
+    t["banner_duplicate_options_refuses"] = begin
+        mut = replace(bpub, n2oline =>
+            n2oline * "\tSPECIFIC_OPTIONS=\"flux_weight=0.5\"\n")
+        iss, _ = c3g_banner_criteria(mut, dbase, ddown)
+        ("published: mode relative-n2o active SPECIFIC_OPTIONS " *
+         "count 2 != 1") in iss
+    end
+    t["banner_missing_criterion_refuses"] = begin
+        mut = replace(bpub, n2oline =>
+            "\n\tSPECIFIC_OPTIONS=\"flux_weight=0.5\"\n")
+        iss, _ = c3g_banner_criteria(mut, dbase, ddown)
+        ("published: mode relative-n2o convergence_criterion " *
+         "count 0 != 1") in iss
+    end
+    t["banner_duplicate_criterion_refuses"] = begin
+        mut = replace(bpub, n2oline =>
+            "\n\tSPECIFIC_OPTIONS=\"convergence_criterion=0.0005 " *
+            "convergence_criterion=0.0005 flux_weight=0.5\"\n")
+        iss, _ = c3g_banner_criteria(mut, dbase, ddown)
+        ("published: mode relative-n2o convergence_criterion " *
+         "count 2 != 1") in iss
+    end
+    t["banner_comment_decoy_immune"] = begin
+        mut = replace(bpub, n2oline =>
+            n2oline * "\t# SPECIFIC_OPTIONS=\"convergence_criterion=" *
+            "0.99\"\n")
+        iss, cr = c3g_banner_criteria(mut, dbase, ddown)
+        isempty(iss) && cr["relative-n2o"] == "0.0005"
+    end
+    t["banner_mutation_propagates"] = begin
+        mut = replace(bpub, n2oline =>
+            "\n\tSPECIFIC_OPTIONS=\"convergence_criterion=0.0006 " *
+            "flux_weight=0.5\"\n")
+        iss, _ = c3g_banner_criteria(mut, dbase, ddown)
+        ("criterion cross-authority mismatch for relative-n2o: " *
+         "published 0.0006 != deployed 0.0005") in iss
+    end
+    t["banner_old_handassumed_002_refuses"] = begin
+        mut = replace(text, "relative-ch4) EXPCRIT='0.0005';;" =>
+                            "relative-ch4) EXPCRIT='0.02';;")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        mut2 = text * "\n# decoy 'max iterations = 3000, convergence " *
+               "criterion = 0.02'\n"
+        iss2 = c3g_text_gate_issues(mut2, downstream_sha, base_pins)
+        any(occursin("relative-ch4) EXPCRIT=", i) for i in iss) &&
+            any(occursin("forbidden text present: 'max iterations = " *
+                         "3000, convergence criterion = 0.02'", i)
+                for i in iss2)
+    end
+    t["ledger_4580_classifier_mutations_refuse"] = begin
+        fxl = mktempdir()
+        src = read(c3g_ledger_path(C3G_LEDGERS[7]), String)
+        pgood = joinpath(fxl, "good.json"); write(pgood, src)
+        l0 = (name = "T", case = C3G_LEDGERS[7].case,
+              status = C3G_LEDGERS[7].status, sha = p2_sha(pgood),
+              file = "good.json")
+        green = c3g_classify_ledger(l0; path = pgood).ok
+        pst = joinpath(fxl, "st.json")
+        write(pst, replace(src, C3G_LEDGERS[7].status => "wrong"))
+        stbad = !c3g_classify_ledger((name = "T", case = l0.case,
+            status = l0.status, sha = p2_sha(pst), file = "st.json");
+            path = pst).ok
+        shabad = !c3g_classify_ledger((name = "T", case = l0.case,
+            status = l0.status, sha = "0"^64, file = "good.json");
+            path = pgood).ok
+        green && stbad && shabad
+    end
+    t["ledger_4580_semantic_mutations_refuse"] = begin
+        data = JSON.parse(read(c3g_ledger_path(C3G_LEDGERS[7]), String))
+        ok0 = isempty(c3g_4580_semantic_issues(data))
+        m1 = deepcopy(data); m1["job"]["exit_code"] = "0:0"
+        m2 = deepcopy(data)
+        m2["monitor_observations"]["classification"] = "other"
+        m3 = deepcopy(data)
+        m3["durable_evidence"]["root_cause_chain"][
+            "leg2_observed_banner"]["text"] = "wrong banner"
+        m4 = deepcopy(data)
+        m4["durable_evidence"]["root_cause_chain"][
+            "leg1_pinned_authorities"]["compiled_base_source"][
+            "sha256"] = "0"^64
+        ok0 && !isempty(c3g_4580_semantic_issues(m1)) &&
+            !isempty(c3g_4580_semantic_issues(m2)) &&
+            !isempty(c3g_4580_semantic_issues(m3)) &&
+            !isempty(c3g_4580_semantic_issues(m4))
+    end
+    t["ledger_4580_gatepins_deletion_refuses"] = begin
+        row = C3G_LEDGERS[7].sha * "  " *
+              c3g_ledger_path(C3G_LEDGERS[7])
+        mut = replace(text, row * "\n" => "")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        ("required text missing: " * row) in iss &&
+            ("4580 failure-ledger stage-0 pin expected exactly 1, " *
+             "got 0") in iss
+    end
+    t["ledger_4580_gatepins_duplicate_refuses"] = begin
+        row = C3G_LEDGERS[7].sha * "  " *
+              c3g_ledger_path(C3G_LEDGERS[7])
+        mut = replace(text, row * "\n" => row * "\n" * row * "\n")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        ("4580 failure-ledger stage-0 pin expected exactly 1, " *
+         "got 2") in iss
+    end
+
     # design guards
     design = read(C3G_DESIGN_FILE, String)
     t["design_two_script_discipline"] =
@@ -2145,6 +2533,13 @@ function main()
         nothing
     end
     fdata === nothing || append!(lg, c3g_4578_semantic_issues(fdata))
+    f80 = try
+        JSON.parse(read(c3g_ledger_path(C3G_LEDGERS[7]), String))
+    catch
+        push!(lg, "4580 failure ledger unreadable")
+        nothing
+    end
+    f80 === nothing || append!(lg, c3g_4580_semantic_issues(f80))
     groups["prerequisite_ledgers"] = lg
 
     inp = String[]
@@ -2205,12 +2600,26 @@ function main()
                  c3g_astext(c3g_derive_downstream())),
              c3g_g3_executor_issues())
 
-    text = c3g_make_sbatch(pkg)
-    groups["sbatch_deterministic_render"] =
-        text == c3g_make_sbatch(pkg) ? String[] :
-        ["sbatch render is not deterministic"]
-    groups["sbatch_text_gates"] =
-        c3g_text_gate_issues(text, downstream_sha, base_pins)
+    biss, bcrits_m = try
+        c3g_banner_criteria(
+            read(joinpath(C3G_SRC_ARTIFACT, "test/optimize_lut_lw.sh"),
+                 String),
+            c3g_astext(c3g_derive_base(3000)),
+            c3g_astext(c3g_derive_downstream()))
+    catch
+        (["banner criteria derivation inputs unreadable"],
+         Dict{String, String}())
+    end
+    groups["banner_criteria"] = biss
+    text = isempty(biss) ? c3g_make_sbatch(pkg) :
+        "REFUSED-RENDER: banner criteria underivable\n"
+    groups["sbatch_deterministic_render"] = !isempty(biss) ?
+        ["render skipped: banner criteria underivable"] :
+        (text == c3g_make_sbatch(pkg) ? String[] :
+         ["sbatch render is not deterministic"])
+    groups["sbatch_text_gates"] = isempty(biss) ?
+        c3g_text_gate_issues(text, downstream_sha, base_pins) :
+        ["skipped: banner criteria underivable"]
     groups["sbatch_bash_syntax"] = c3g_bash_syntax_ok(text) ? String[] :
         ["generated sbatch fails bash -n"]
 
@@ -2337,6 +2746,20 @@ function main()
             "escalation; the external <=1.05 gate untouched; ZERO " *
             "canonical writes; RUNROOT preserved",
         "terminal_contract" => C3G_TERMINAL_CONTRACT,
+        "banner_criteria" => Dict(
+            "per_mode" => bcrits_m,
+            "derivation" => "SPLIT AUTHORITY (mode-specific): " *
+                "relative-base requires exactly ZERO active " *
+                "SPECIFIC_OPTIONS in both authorities and derives its " *
+                "criterion solely from the SHA-pinned " *
+                "src/ecckd/optimize_lut.cpp (exactly one declaration " *
+                "site, exactly one config-read site); " *
+                "relative-ch4/n2o/cfc each require exactly ONE active " *
+                "SPECIFIC_OPTIONS and exactly ONE criterion token in " *
+                "both authorities; downstream never falls back to the " *
+                "C++ source value; all values cross-authority " *
+                "exact-matched; no hand-written constants",
+            "recovery_of" => "gate4_c3_ib_4580_failure_ledger"),
         "eval1_staging" => Dict(
             "selected_modes" => C3G_EVAL1_SELECTED_MODES,
             "closure_count" => 20,

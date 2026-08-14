@@ -1,0 +1,118 @@
+{
+  "case": "gate4_c3_ib_4580_failure_ledger",
+  "data_mode": "terminal_forensics_ledger",
+  "disclaimer": "writer reads the receipt, epoch sidecar, log, pinned template, committed sbatch blob, and preserved RUNROOT read-only; writes only its own JSON/MD results",
+  "durable_evidence": {
+    "log": {
+      "bytes": 1247306,
+      "lines": 16554,
+      "path": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4580.log",
+      "sha256": "292c9ce6fabba8a23ba27206718d33d22dfbec466e24c9874a40c582be897873"
+    },
+    "partial_output_reuse": "PROHIBITED; a fresh job must rerun the full sandwich in its own RUNROOT",
+    "partial_outputs_forensics_only": [
+      {
+        "bytes": 2415316,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4580/lw-c3ib/work-c0a/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "51e830c01e9202e8d3a5d69a0e40e7c2838398b43a3528c7f6ad5279d2e79503"
+      },
+      {
+        "bytes": 2417524,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4580/lw-c3ib/work-c0a/lw_raw-ckd-definition/ecckd-1.2_lw_raw3-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "162750414be8b949335172629ec460e9eb5cb922e1cf4056bf22a635cc54389b"
+      }
+    ],
+    "receipt": {
+      "bytes": 1687,
+      "custody": "create-once noclobber scontrol -dd capture, -agent42 suffix",
+      "epoch": "1786728580",
+      "epoch_sidecar": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4580-scontrol-final-agent42.txt.epoch",
+      "path": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4580-scontrol-final-agent42.txt",
+      "sha256": "28e71c26bc69834b145ce78fb3c8c5ac8e5eef1a2be9506a2832660de7276c19"
+    },
+    "recovery_evidence_narrow": {
+      "base_pass": "c0a base completed at its 3000-iteration cap (recorded observation only)",
+      "downstream": "relative-ch4 pass ran to its own terminal state and the raw3 product was written and closed BEFORE the defective gate refused",
+      "staging": "all 20 selected-mode eval1 inputs staged and byte-verified; the stage-1b census passed; present.h5 and all five CH4 perturbation files were read (the 4578 staging failure class did not recur)"
+    },
+    "root_cause_chain": {
+      "leg1_pinned_authorities": {
+        "compiled_base_source": {
+          "config_read_sites": 1,
+          "criterion_token": "0.02",
+          "declaration_line": "Real convergence_criterion = 0.02;",
+          "declaration_sites": 1,
+          "note": "relative-base has exactly ZERO active SPECIFIC_OPTIONS in its template block; the compiled default governs",
+          "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/src/ecckd/optimize_lut.cpp",
+          "sha256": "3ebaef95bdb334f20016be8b7cb6a8f0b86a5608f682839a4f80641f843740e1"
+        },
+        "template_downstream_overrides": {
+          "modes": {
+            "relative-cfc": {
+              "criterion_token": "0.0005",
+              "setting_line": "SPECIFIC_OPTIONS=\"convergence_criterion=0.0005 flux_weight=0.2 remove_min_max=1\""
+            },
+            "relative-ch4": {
+              "criterion_token": "0.0005",
+              "setting_line": "SPECIFIC_OPTIONS=\"convergence_criterion=0.0005 flux_weight=0.5 negative_od_penalty=1.0e1\""
+            },
+            "relative-n2o": {
+              "criterion_token": "0.0005",
+              "setting_line": "SPECIFIC_OPTIONS=\"convergence_criterion=0.0005 flux_weight=0.5\""
+            }
+          },
+          "path": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd/test/optimize_lut_lw.sh",
+          "sha256": "f0d77b16b97612687818e85615a103adaa948627846c9819e40e7754ab0743ba"
+        }
+      },
+      "leg2_observed_banner": {
+        "log_line": 3663,
+        "text": "Optimizing coefficients with Adept LBFGS algorithm: max iterations = 3000, convergence criterion = 0.0005"
+      },
+      "leg3_defective_gate": {
+        "commit": "01a6fa78d001c4f4e59cc02e0e9a245997361d8d",
+        "gate_line": 1261,
+        "gate_text": "            [ \"$(grep -cF 'max iterations = 3000, convergence criterion = 0.02' \"$ML\" || true)\" = 1 ] || { echo \"REFUSED: $arm $mode default-3000 banner not exactly once\" >&2; exit 71; }",
+        "raw3_closed_log_line": 16553,
+        "refusal_log_line": 16554,
+        "refusal_text": "REFUSED: c0a relative-ch4 default-3000 banner not exactly once",
+        "sbatch_repo_path": "validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+        "sbatch_sha256": "834cd0d32863ba299edb13075b2077d6f92b46ddc884282bdf1d87bac1397a9b"
+      }
+    },
+    "runroot": {
+      "access_policy": "reviewer accesses read-only; no filesystem immutability seal applied",
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4580/lw-c3ib",
+      "preserved": true,
+      "staged_eval1_count": 20
+    }
+  },
+  "job": {
+    "command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+    "derived_exit_code": "0:0",
+    "end_time": "2026-08-14T17:29:30",
+    "exit_code": "71:0",
+    "job_id": "4580",
+    "job_name": "g4-c3ib-lw-iteration-budget",
+    "reason": "NonZeroExitCode",
+    "restarts": "0",
+    "run_time": "00:52:49",
+    "start_time": "2026-08-14T16:36:41",
+    "state": "FAILED",
+    "stdout": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4580.log",
+    "submit_line": "sbatch --parsable validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
+    "time_limit": "06:00:00"
+  },
+  "monitor_observations": {
+    "classification": "instrument_gate_false_refusal",
+    "classified_by": "Codex monitor terminal audit; predicted live by Agent42 and independently confirmed by session40 and the monitor before the terminal event",
+    "defect": "the committed downstream banner gate hand-assumed the base-pass convergence criterion (0.02); the pinned template's downstream modes (relative-ch4/n2o/cfc) set convergence_criterion=0.0005, so the value-exact gate matched zero lines",
+    "fix_direction": "fail-closed SPLIT-AUTHORITY criterion derivation: relative-base requires exactly ZERO active SPECIFIC_OPTIONS in both authorities and derives its criterion solely from the SHA-pinned src/ecckd/optimize_lut.cpp (exactly one declaration site, exactly one config-read site); relative-ch4/n2o/cfc each require exactly ONE active SPECIFIC_OPTIONS and exactly ONE criterion token with cross-authority exact-match and no C++ fallback; per-mode rendered banner gates; derivation fixtures so no banner constant is hand-written",
+    "nonwrite_review": "REVIEWED, NON-EXHAUSTIVE: no canonical scientific output publish/install step was identified in the sha-verified committed sbatch blob or observed in the pinned log; the directly established experimental products (the raw2/raw3 pins in durable evidence) reside under the 4580 RUNROOT. This is a reviewed statement, not an exhaustive filesystem non-write proof; the Slurm log, receipt, and lock/state surfaces are expected writes outside its scope",
+    "review_miss_class": "unexercised-gate: job 4578 terminated before this gate ever ran, and the criterion constant was never derived from the pinned template per-mode settings",
+    "scientific_inference": "ZERO scientific inference is drawn from this run; no acceptance, budget, or mechanism claim; partial outputs are forensics only",
+    "terminal_contract_applied": "FAILED is a HOLD state; no automatic resubmission; the next action required a new explicit Codex-monitor review and GO with hash verification"
+  },
+  "non_authorizing_note": "this ledger records a terminal failure; it authorizes NOTHING (no resubmission, no recovered acceptance, no mechanism inference)",
+  "status": "c3ib_4580_failed_downstream_banner_gate_false_refusal"
+}

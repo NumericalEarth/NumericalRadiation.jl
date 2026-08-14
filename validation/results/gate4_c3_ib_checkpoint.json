@@ -1,4 +1,14 @@
 {
+  "banner_criteria": {
+    "derivation": "SPLIT AUTHORITY (mode-specific): relative-base requires exactly ZERO active SPECIFIC_OPTIONS in both authorities and derives its criterion solely from the SHA-pinned src/ecckd/optimize_lut.cpp (exactly one declaration site, exactly one config-read site); relative-ch4/n2o/cfc each require exactly ONE active SPECIFIC_OPTIONS and exactly ONE criterion token in both authorities; downstream never falls back to the C++ source value; all values cross-authority exact-matched; no hand-written constants",
+    "per_mode": {
+      "relative-base": "0.02",
+      "relative-cfc": "0.0005",
+      "relative-ch4": "0.0005",
+      "relative-n2o": "0.0005"
+    },
+    "recovery_of": "gate4_c3_ib_4580_failure_ledger"
+  },
   "case": "gate4_c3_ib_checkpoint",
   "checkers": {
     "c3": "06ce129768bafaa8dcf18e6cff063e030dafeeeca428447342c2a6033e5a1b82",
@@ -52,11 +62,29 @@
     }
   },
   "failures": [],
-  "fixture_count": 108,
+  "fixture_count": 130,
   "fixture_verdicts": {
     "alternate_token_same_bits_refuses": true,
     "anchor_hit_derived": true,
     "anchor_miss_derived_on_tamper": true,
+    "banner_all_modes_accept": true,
+    "banner_base_added_override_refuses": true,
+    "banner_base_zero_override_accepts": true,
+    "banner_comment_decoy_immune": true,
+    "banner_cpp_declaration_commented_refuses": true,
+    "banner_cpp_declaration_duplicate_refuses": true,
+    "banner_cpp_declaration_missing_refuses": true,
+    "banner_cpp_read_commented_refuses": true,
+    "banner_cpp_read_duplicate_refuses": true,
+    "banner_cpp_read_missing_refuses": true,
+    "banner_duplicate_criterion_refuses": true,
+    "banner_duplicate_mode_refuses": true,
+    "banner_duplicate_options_refuses": true,
+    "banner_missing_criterion_refuses": true,
+    "banner_missing_mode_refuses": true,
+    "banner_missing_options_refuses": true,
+    "banner_mutation_propagates": true,
+    "banner_old_handassumed_002_refuses": true,
     "base_variant_has_exactly_one_injection": true,
     "base_variants_distinct_and_deterministic": true,
     "bash_syntax_broken_refuses": true,
@@ -98,6 +126,10 @@
     "ledger_4578_gatepins_deletion_refuses": true,
     "ledger_4578_gatepins_duplicate_refuses": true,
     "ledger_4578_semantic_mutations_refuse": true,
+    "ledger_4580_classifier_mutations_refuse": true,
+    "ledger_4580_gatepins_deletion_refuses": true,
+    "ledger_4580_gatepins_duplicate_refuses": true,
+    "ledger_4580_semantic_mutations_refuse": true,
     "ledger_mutations_refuse_via_classifier": true,
     "ledgers_all_green": true,
     "malformed_bits_refuse": true,
@@ -169,6 +201,7 @@
     "verbatim_text": "# Gate-4 C3-IB FROZEN DESIGN: modern LW iteration-budget control\n# (monitor SEQUENCING RULING; C2/X2 DEFERRED, not disproven --\n# information-leverage sequencing, NOT mechanism ranking. Filename is\n# C3-IB / iteration-budget to disambiguate from the B0-era \"C3\" census\n# proposal.)\n\n## Unit identity\n- DIAGNOSIS unit; PRIVATE outputs only; ZERO canonical writes; RUNROOT\n  preserved on success AND failure; submission/commit only on explicit\n  monitor GO after the full package review chain.\n- Grounding (committed): the live campaign question is the committed\n  Gate-1 failure -- g1_objective_ratio_failed, recovered-pair\n  package-native hard objective 22.824617997003102 vs <=1.05\n  (validation/results/gate4_g1_objective_ratio.{json,md}); the C1\n  machinery (commit 6db5a23 family), the P2 evaluator working-set\n  pattern (commit 3f872216), and the P1/P2 completion ledgers (commits\n  4501220e, b37de8ac). The BINDING dual-endpoint requirement is\n  inherited from the MONITOR SEQUENCING RULING itself; the scratch\n  next-control matrix is NON-DURABLE CORRESPONDENCE only and grounds\n  nothing.\n\n## Question (fixed setup only)\nIs the modern bounded LW relative-base plateau budget-limited? Every\nrelevant committed modern LW relative-base arm terminates at\nmax_iterations=3000 with nonzero gradient norm (the SW chain's\n2000-pass cap is a different setting and is NOT swept into this\nstatement); this unit measures the association of a 3x budget (9000) with\nthe upstream endpoint AND the package-native hard objective, under one\nfactor, and decides nothing beyond those recorded placements.\n\n## Binding requirements (monitor ruling, verbatim-in-substance)\n1. SOLE SCIENTIFIC FACTOR: LW relative-base max_iterations -- control\n   3000 vs treatment 9000 (C1-proven anchored config-only injection\n   for the treatment; the compiled default bounded mode is ON in ALL\n   arms; no bounded_minimization override anywhere). HELD: the same\n   immutable modern source/binary (single pristine build; no patch),\n   the current pinned real-data inputs, wrapper/shim/netlib remedy,\n   OMP controls, and downstream pass settings of the committed\n   S1/X1/C1 family.\n2. SANDWICH ORDER: C0a(3000) -> C3IB(9000) -> C0b(3000), each in an\n   INDEPENDENT work dir; plus the cheap 1-iteration injection/identity\n   PROBE (structural evidence only) preceding the sandwich, per the C1\n   pattern. EXACT ARGV SHAPE (unambiguous, fail-closed exact-count\n   gates): the C0a and C0b base-pass scripts carry an EXPLICIT\n   max_iterations=3000 token EXACTLY ONCE each; the C3IB base-pass\n   script carries max_iterations=9000 EXACTLY ONCE; the probe script\n   carries max_iterations=1 EXACTLY ONCE; every downstream script in\n   every arm carries ZERO max_iterations tokens. No \"default\"\n   ambiguity exists anywhere.\n   DOWNSTREAM LEAK PREVENTION (monitor design-hardening blocker,\n   BINDING): the C1-style sed anchor injects at the COMMON optimize_lut\n   invocation, so a single modified optimize_lut_lw.sh reused for all\n   modes would leak the 9000 override into the downstream\n   relative-ch4/relative-n2o/relative-cfc passes and violate the\n   sole-factor contract. The contract therefore uses a TWO-SCRIPT\n   DISCIPLINE inside every arm work tree: (a) a BASE-ONLY script/\n   wrapper copy carrying the arm's max_iterations setting, used\n   EXCLUSIVELY for the relative-base pass; (b) a SEPARATELY PINNED\n   PRISTINE downstream script copy (byte-verified against the frozen\n   template before use) for relative-ch4/relative-n2o/relative-cfc\n   (equivalently: restore + re-pin the pristine script before the\n   downstream chain). EXACT-COUNT GATES (all fail-closed): the\n   treatment's max_iterations=9000 token appears EXACTLY ONCE and only\n   in the base-pass script/invocation; the controls carry the\n   EXPLICIT 3000 in the base pass ONLY; ZERO max_iterations\n   override tokens exist in ANY downstream script/invocation in ANY\n   arm; and the downstream scripts' convergence-relevant settings are\n   BYTE-IDENTICAL across all three arms (sha-gated against one pinned\n   downstream template). The generator carries a NEGATIVE LEAK FIXTURE\n   (a downstream script containing a max_iterations override must\n   refuse) alongside the exactly-once/leak fixtures of the C1 family.\n3. COMPLETE PRIVATE LW PASS CHAIN in each arm: the base raw2 AND the\n   final LW definition are BOTH produced and retained per arm inside\n   the RUNROOT; no canonical writes at any point.\n4. DUAL-ENDPOINT SCORING (BINDING, inherited from the MONITOR\n   SEQUENCING RULING; the scratch matrix is non-durable): every\n   arm's raw2 AND final LW definition are scored through the pinned\n   package hard-objective evaluator (the committed P2 evaluator\n   working-set pattern: staged package tree + chain + references +\n   julia-env, canonical eight-gas call, h2o_mole_fraction=0.005,\n   per-record tokens + UInt64 bit patterns, bit-exact same-artifact\n   duplicate discipline) against the SAME pinned CURRENT RECOVERED SW\n   from job 4516 (PRIMARY pairing -- directly adjacent to the current\n   Gate-1 failure). PRIMARY SW PIN EMBEDDED NOW (monitor early-review\n   fix; re-verified fail-closed at contract generation): the job-4516\n   recovered final SW definition, committed-ledger path\n   /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc,\n   854,508 B, sha256\n   8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4.\n   SECONDARY SCORING IS BINDING (not optional), with the FULL\n   committed pin (monitor pin-completeness fix): filename\n   ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc, 851,724 B, sha256\n   49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3,\n   staged and re-verified fail-closed like every master. TWELVE\n   arm-panel package scores are produced -- 3 arms x {raw2, final LW}\n   x {primary recovered-SW panel, secondary published-v1.4-SW panel}.\n   The <=1.05 placement test applies to the PRIMARY panel ONLY; the\n   secondary panel is a separately labeled P2-bridge metric, never\n   mixed with primary rows and never placement-tested.\n   FIXED CURRENT-G1 ANCHOR (bridge/instrument gate, monitor ruling;\n   NOT an experiment arm): the recovered LW from job 4515 at canonical\n   path\n   /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_ckd-definition/ecckd-1.2_lw_ckd-definition_climate_fsck-tol0.0161.nc,\n   872,004 B, sha256\n   a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4,\n   staged immutable and scored ONCE in-job through the SAME staged\n   evaluator paired with the pinned recovered SW. REQUIRED exact\n   reproduction: hard-objective token 22.824617997003102 with UInt64\n   bits 4627117776501264964 (the committed Gate-1 failure value).\n   THREE EXPLICIT PROPERTIES (Agent 42 challenge, binding):\n   (i) SEVERABILITY: an anchor miss fails its OWN gate class\n   (evidence_g1_anchor) and suppresses ONLY the adjacency\n   labels/claims -- the anchor licenses exactly the bridge phrase\n   \"current-G1-adjacent\" and nothing else; arm panels, duplicates,\n   controls, and sign partitions remain independently valid as\n   within-job placements. Suppression follows the P2\n   finalizer-suppression pattern and is FIXTURE-PROVEN in BOTH\n   directions (miss suppresses adjacency AND preserves arm evidence;\n   hit licenses the phrase).\n   (ii) NON-CIRCULARITY, both directions: the anchor is an INSTRUMENT\n   REPRODUCTION of a committed value, never a re-evaluation of Gate 1;\n   the committed acceptance state (g1_objective_ratio_failed) is\n   terminal and untouchable by this unit in BOTH branches -- an anchor\n   HIT does not refresh or reconfirm Gate 1, and an anchor MISS does\n   not cast doubt on it (the committed value stands on its own\n   ledger).\n   (iii) NO-ACCEPTANCE-IMPLICATION, pre-empted BY NAME: any arm score\n   placing at or below 1.05 on the primary panel is a PRIVATE\n   PLACEMENT under this fixed setup, NOT recovered acceptance;\n   acceptance remains exclusively the committed external gate on its\n   own instruments and provenance chain.\n   TOTAL PACKAGE SCORES: EXACTLY THIRTEEN (12 arm-panel + 1 fixed\n   anchor).\n5. UPSTREAM ENDPOINT RECORD: per-pass terminal status/cost/gradient\n   tokens recorded at their ACTUAL PRINTED PRECISION (six-significant-\n   figure formatted log tokens; the J0_reported max_digits10 semantics\n   do NOT apply to unpatched prints and no patch exists in this unit);\n   these upstream tokens are NEVER compared numerically to package\n   objectives -- the two endpoints are separately labeled instruments.\n6. SAME-JOB CONTROL REPEATABILITY GATES: C0a-vs-C0b exact equality on\n   the SCIENTIFIC PAYLOAD (logical raw2/final-definition identity per\n   the committed nonfinite-aware egal semantics) AND on the\n   hard-objective records (bit-pattern equality per the P2 record\n   discipline); terminal-status equality; NO log-byte claim of any\n   kind (path/timestamp noise is out of scope).\n7. OUTCOME STRUCTURE (preregistered, exhaustive): exact sign/equality\n   partitions (negative / zero-at-representation / positive) for every\n   treatment-minus-control delta on BOTH endpoints (upstream tokens as\n   textual facts; hard-objective deltas by exact decimal on the\n   recorded tokens), PLUS the source-grounded <=1.05 placement test\n   (does any arm's hard objective place at or under the committed\n   Gate-1 bound -- a recorded placement, not an acceptance statement).\n   NO post-hoc materiality threshold exists or may be introduced; NO\n   inference that longer internal descent implies hard-objective\n   improvement; values never averaged; any duplicate/control mismatch\n   is recorded drift + refusal of delta assignment.\n8. CONCLUSION CEILING (binding): C3-IB outcomes are PRIVATE\n   FIXED-SETUP BUDGET ASSOCIATION ONLY under this configuration,\n   binary, inputs, and SW pairing: NO recovered acceptance, NO\n   recovery claim, NO mechanism localization or ranking, NO\n   objective/data change authorization, NO automatic escalation (a\n   larger budget or any follow-on is a separate monitor ruling); the\n   external <=1.05 gate and its acceptance semantics are untouched by\n   this unit (its placement test is descriptive, and BY NAME: a\n   sub-1.05 placement is a private placement, never recovered\n   acceptance); all three mechanism\n   classes remain OPEN and UNRANKED globally; findings LOCAL to this\n   rebuilt trajectory.\n\n## Evidence machinery (committed-pattern reuse; contract-time pins)\nC1-family sbatch machinery (head-node refusal, quota soft-minus-50GiB,\nc3ib-lw experiment lock, fresh fail-closed RUNROOT, staged immutable\nmasters/data with the stage-0 preflight -> stage-1 copy/verify/freeze\nbracket, post-run no-mutation reverification of every staged input)\nPLUS the P2 evaluator working-set staging (package tree incl.\nArtifacts.toml, evaluator chain, reference files, julia-env, pinned\njulia launcher + exact --version gate, JULIA_LOAD_PATH staged form,\nNUMERICAL_RADIATION_VALIDATION_REFERENCE_DIR pin); committed P1/P2\ncheckers reused by byte pin where their gates apply; dual-custody\ncreate-once receipts; pinned terminal-log + emitted-inventory\nanchoring in the completion ledger; deterministic double generation;\nindependent bash -n; fixtures for every gate class including\nmapping/decoy/census/language-guard patterns already reviewed in P2.\n\n## Expected wall/quota and terminal stopping rule\n- WALL: probe (~2 min) + C0a (~35 min) + C3IB (up to ~105 min at 3x\n  budget; earlier if converged) + C0b (~35 min) + full pass-chain\n  completion per arm + exactly 13 evaluator scorings (~minutes each; 12 arm-panel + 1 fixed current-G1 anchor) ~= 4 h\n  envelope; SBATCH time limit 06:00:00.\n- QUOTA: budget <=2 GiB RUNROOT footprint (the analogous preserved C1\n  RUNROOT measured 547 MiB, and C3-IB adds full-chain outputs per arm\n  plus the evaluator working-set staging); trivial relative to the 50\n  GiB headroom guard.\n- TERMINAL STOPPING RULE: the unit runs the probe + three sandwich\n  arms EXACTLY ONCE each, scores the fixed endpoint set, and stops;\n  any semantic/build/schema/proof failure refuses fail-closed with the\n  RUNROOT preserved (no retry, no resubmission); the treatment arm\n  stops at its own convergence or the 9000 cap, whichever first, and\n  its terminal status is a recorded observation; NO budget escalation,\n  re-run, or follow-on unit without a new frozen contract and explicit\n  monitor GO.\n- TERMINAL SUPERSESSION RULE (BINDING FOR THIS UNIT): ANY terminal\n  state of the C3-IB job -- COMPLETED, FAILED, CANCELLED, NODE_FAIL,\n  OUT_OF_MEMORY, and TIMEOUT alike -- is a HOLD;\n  TIMEOUT is NOT a continuity exception, and the old campaign\n  protocol's TIMEOUT-continuity default is EXPLICITLY SUPERSEDED for\n  this unit; NO automatic retry or resubmission in any terminal\n  state; the next action after ANY terminal state requires a new\n  explicit Codex-monitor review and GO with hash verification; the\n  RUNROOT, once created, is preserved as forensics in every terminal\n  state.\n"
   },
   "gates": {
+    "evidence_banner_criteria": "passed",
     "evidence_derivations": "passed",
     "evidence_eval1_closure": "passed",
     "evidence_frozen_pins": "passed",
@@ -365,6 +398,12 @@
       "name": "C3IBF4578",
       "sha256": "472088a799ab4bc53b54dedd405509835dbeef923d8bb39a84f89268d272bf84",
       "status": "c3ib_4578_failed_staging_manifest_gap"
+    },
+    {
+      "case": "gate4_c3_ib_4580_failure_ledger",
+      "name": "C3IBF4580",
+      "sha256": "c87b07477839c4e8d2f9093ae1c099efe152a2358777d0a24129a46de9c6ebf9",
+      "status": "c3ib_4580_failed_downstream_banner_gate_false_refusal"
     }
   ],
   "runtime_build_provenance": {
@@ -431,7 +470,7 @@
     ]
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
-  "sbatch_sha256": "834cd0d32863ba299edb13075b2077d6f92b46ddc884282bdf1d87bac1397a9b",
+  "sbatch_sha256": "b564699530af5fa4569a4e29631772df6a49c717cda381463e1ebaa9ba0b24d3",
   "score_matrix": "EXACTLY 13 (12 arm-panel: 3 arms x raw2/final x primary/secondary + 1 fixed current-G1 anchor); severability: anchor miss refuses only the current-G1-adjacent label",
   "source_tree": {
     "exec_census": 24,

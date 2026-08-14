@@ -39,7 +39,7 @@ echo "=== C3IB stage 0a: gate-code identity (verify BEFORE sourcing) ==="
 sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/prerequisite changed since generation; regenerate" >&2; exit 75; }
 e31e57f0446d3396ba86644f3aefd88284231c507feaba305160c97788fae664  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
 60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
-6eae6649116a99023c2622aa244bae59e11378b63f492e8cc90f7137137eb9ef  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_checkpoint.jl
+46e55471bb3ba3ad0392c33c3d690ef0f4feb9a9e824cc4eae646c5753b60503  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_checkpoint.jl
 abebffc6146c93adc4d0ea9ed7d6d0e16cc62fd82805f34c63976418a8bb7e51  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_p1_splice_checker.jl
 2ba2fac1947fa727bd35d5931923a62edd77f8a82646024781fd2f74960ac575  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_p2_hard_objective_checker.jl
 06ce129768bafaa8dcf18e6cff063e030dafeeeca428447342c2a6033e5a1b82  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_checker.jl
@@ -53,6 +53,7 @@ cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186  /shared/home/g
 9605cf64deb5cb14f2f3403d73c976b00ddfa2c7fc50adba9cb24e1dd51f2403  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p1_completion_ledger.json
 41cc574b28b1c55a6f2235d2dc9914e42c4806bb4ff5aac23b98e1379fdc2b2d  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p2_completion_ledger.json
 472088a799ab4bc53b54dedd405509835dbeef923d8bb39a84f89268d272bf84  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_4578_failure_ledger.json
+c87b07477839c4e8d2f9093ae1c099efe152a2358777d0a24129a46de9c6ebf9  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_4580_failure_ledger.json
 GATEPINS
 
 echo "=== C3IB stage 0b: quota health (50 GiB soft-quota headroom) ==="
@@ -1258,7 +1259,13 @@ for arm in probe c0a c3ib c0b; do
                 bash optimize_lut_lw.sh "$mode" |& tee "$RUNROOT/$arm-$mode.log"
             ML="$RUNROOT/$arm-$mode.log"
             [ "$(grep -cF 'Convergence status: ' "$ML" || true)" = 1 ] || { echo "REFUSED: $arm $mode convergence-status not exactly once" >&2; exit 71; }
-            [ "$(grep -cF 'max iterations = 3000, convergence criterion = 0.02' "$ML" || true)" = 1 ] || { echo "REFUSED: $arm $mode default-3000 banner not exactly once" >&2; exit 71; }
+            case "$mode" in
+                relative-ch4) EXPCRIT='0.0005';;
+                relative-n2o) EXPCRIT='0.0005';;
+                relative-cfc) EXPCRIT='0.0005';;
+                *) echo "REFUSED: unknown downstream mode $mode (no derived banner criterion)" >&2; exit 71;;
+            esac
+            [ "$(grep -cF "max iterations = 3000, convergence criterion = $EXPCRIT" "$ML" || true)" = 1 ] || { echo "REFUSED: $arm $mode default-3000 banner not exactly once" >&2; exit 71; }
             [ "$(grep -cF 'max iterations = ' "$ML" || true)" = 1 ] || { echo "REFUSED: $arm $mode carries an extra budget banner" >&2; exit 71; }
             [ "$(grep -cF 'max iterations = 9000' "$ML" || true)" = 0 ] || { echo "REFUSED: $arm $mode shows 9000 budget (RUNTIME LEAK)" >&2; exit 71; }
             [ "$(grep -cF 'max iterations = 1,' "$ML" || true)" = 0 ] || { echo "REFUSED: $arm $mode shows probe budget (RUNTIME LEAK)" >&2; exit 71; }
