@@ -1,0 +1,194 @@
+{
+  "case": "gate4_p1_completion_ledger",
+  "conclusion_ceiling_verbatim": "PREREGISTERED CONCLUSION CEILING for P1 (binding, fixture-guard\ncandidate): P1 outcomes speak ONLY to whether the published LW32\nCOEFFICIENT BLOCK, spliced under the current fixed spectral mapping,\nconstitutes a lower internal-cost initial point under THIS fixed\nmodern configuration, binary, and pinned full real-data inputs --\nnever the full published parameter state/model. They\nare NOT recovered acceptance, NOT a floor claim of any kind (the single\ncomputed value is an upstream internal-cost value at the published\ncoefficient block under this configuration), NOT\npermission to change objective or data, and NOT a mechanism ranking;\ninternal J values are within-job descriptive instruments, never\ncross-stack verdicts; J0_reported token values are never numerically\ncompared to the 22.x package/comparator objectives except as\nseparately labeled metrics; the published model need not be the\nminimizer of this exact reconstructed pass and coefficient splicing\nchanges initialization AS A BLOCK; the external pinned comparator and\nthe <=1.05 gate remain the sole acceptance instruments; all three\nmechanism classes remain OPEN and UNRANKED globally; findings are\nLOCAL to this rebuilt trajectory; no historical or global claim.",
+  "custody": {
+    "commit": "55c952f971cdf0833af56fe45d3c5daeb452da2d",
+    "cross_receipt_note": "the two receipt sha256 values differ solely because the session40 capture carries one trailing blank line; all scheduler fields are byte-identical across holders (gated field-by-field above)",
+    "receipts": [
+      {
+        "holder": "session40",
+        "path": "/shared/home/greg/data/ckdmip-logs/g4-p1-lw-4567-scontrol-final-session40.txt",
+        "sha256": "2c50c3c98c261dc37b1c81c8da171d6413f28542dc61ba101bd601e5a2488a91"
+      },
+      {
+        "holder": "agent42",
+        "path": "/shared/home/greg/data/ckdmip-logs/g4-p1-lw-4567-scontrol-final-agent42.txt",
+        "sha256": "a980098fcf101398e4bd7ded758e5d66b47f4ea8c973aa0ba182bb0aee6faf36"
+      }
+    ],
+    "submit_line_receipt_verified": "sbatch --parsable validation/results/gate4_p1_lw_splice_probe.sbatch"
+  },
+  "data_mode": "completion_ledger",
+  "deltas_token_derived_exact_decimal": {
+    "D_plateau_init": "-2344.793594775700643",
+    "D_splice_init": "-2340.23686290190055",
+    "D_splice_plateau": "4.556731873800093"
+  },
+  "disclaimer": "completion ledger; mechanical matrix application; writes nothing except its own JSON/MD; no submission/commit authority; interpretation bounded by the verbatim ceiling above.",
+  "failures": [],
+  "fixture_count": 26,
+  "fixture_verdicts": {
+    "banned_scan_clean": true,
+    "banned_scan_fires": true,
+    "branch_negative": true,
+    "branch_positive": true,
+    "branch_unparseable_nothing": true,
+    "branch_zero_token": true,
+    "delta_exact_decimal": true,
+    "finalize_clean_preserves": true,
+    "finalize_fail_closed_on_banned_summary": true,
+    "finalize_pre_refusal_stays_refused": true,
+    "inventory_artifact_drift_refuses": true,
+    "inventory_duplicate_row_refuses": true,
+    "inventory_good_accepted": true,
+    "inventory_missing_row_refuses": true,
+    "log_pin_drift_refuses": true,
+    "log_pin_missing_refuses": true,
+    "receipt_failed_state_refuses": true,
+    "receipt_good_accepted": true,
+    "receipt_missing_refuses": true,
+    "receipt_restart_refuses": true,
+    "receipt_submitline_full_not_truncated": true,
+    "receipt_wrong_command_refuses": true,
+    "receipt_wrong_derived_exit_refuses": true,
+    "receipt_wrong_job_refuses": true,
+    "receipt_wrong_submit_line_refuses": true,
+    "tokens_extract_matches_files": true
+  },
+  "frozen_design_sha256": "288dda9e8549da32bed972d55a58c0a3e2ca1d2f9c05cce3d2ad6001b4cdb4e1",
+  "gates": {
+    "evidence_committed_package_pins": "passed",
+    "evidence_conclusion_ceiling_guard": "passed",
+    "evidence_input_state_regates": "passed",
+    "evidence_log_gates": "passed",
+    "evidence_runtime_artifact_pins": "passed",
+    "evidence_six_probe_comparison": "passed",
+    "evidence_structural_scans": "passed",
+    "evidence_summary_language_guard": "passed",
+    "evidence_terminal_inventory_anchoring": "passed",
+    "evidence_terminal_receipts": "passed",
+    "evidence_token_reextraction": "passed",
+    "fixtures": "passed"
+  },
+  "input_states": {
+    "bin_sha256": "0717d4c2f1d9935a65b64d9e3872dd0f98ba823443dc009183a4dc9248e89e4f",
+    "plateau_regate_counts": {
+      "cfc11_molar_absorption_coeff": 0,
+      "cfc12_molar_absorption_coeff": 0,
+      "ch4_molar_absorption_coeff": 0,
+      "co2_molar_absorption_coeff": 9641,
+      "composite_molar_absorption_coeff": 9677,
+      "h2o_molar_absorption_coeff": 121461,
+      "n2o_molar_absorption_coeff": 0,
+      "o3_molar_absorption_coeff": 9997
+    },
+    "splice_regate_counts": {
+      "cfc11_molar_absorption_coeff": 3207,
+      "cfc12_molar_absorption_coeff": 3395,
+      "ch4_molar_absorption_coeff": 7039,
+      "co2_molar_absorption_coeff": 9643,
+      "composite_molar_absorption_coeff": 9686,
+      "h2o_molar_absorption_coeff": 121016,
+      "n2o_molar_absorption_coeff": 8752,
+      "o3_molar_absorption_coeff": 9936
+    },
+    "splice_sha256": "a478b322308aca8b99635c2ab964c21eb3645a24ed21528eebac5a6707d48142"
+  },
+  "job": {
+    "id": 4567,
+    "log_pin": {
+      "bytes": 89262,
+      "sha256": "97ae2377526caee4886500fe8f9deb784eb4de45e7b5bad34ddf841f58b152e6"
+    },
+    "log_sha256": "97ae2377526caee4886500fe8f9deb784eb4de45e7b5bad34ddf841f58b152e6",
+    "raw_terminal_fields": {
+      "agent42": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p1_lw_splice_probe.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-14T10:16:02",
+        "ExitCode": "0:0",
+        "JobId": "4567",
+        "JobState": "COMPLETED",
+        "Restarts": "0",
+        "RunTime": "00:08:21",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_p1_lw_splice_probe.sbatch"
+      },
+      "session40": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p1_lw_splice_probe.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-14T10:16:02",
+        "ExitCode": "0:0",
+        "JobId": "4567",
+        "JobState": "COMPLETED",
+        "Restarts": "0",
+        "RunTime": "00:08:21",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_p1_lw_splice_probe.sbatch"
+      }
+    },
+    "runroot": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4567/lw-p1",
+    "runroot_disposition": "preserved for read-only forensic inspection; no cleanup"
+  },
+  "outcome": {
+    "branch": "POSITIVE",
+    "branch_assigned_after": "all duplicate token equality, status nonempty+equality, schema/structural, bridge, and receipt gates held; values never averaged",
+    "branch_statement_mechanical": "the current reconstructed relative-base objective does not prefer the published coefficient-block splice over the plateau state at initial evaluation; consistent with multiple contexts (data/objective/version/training-context mismatch) but attributes none of them; fixed setup only",
+    "narrows": "records the first real-data upstream internal-cost value at the published coefficient block under THIS configuration (J0_reported token 16.89168448685135, duplicate-confirmed), narrowing the committed outstanding upstream cost cross-check item; upstream's own historical cost values, any cross-configuration claim, and package-native Gate 1 remain untouched",
+    "next_control": "NONE decided here; candidate sequencing is a monitor ruling (rev6 section 4 relevance statements are neutral sequencing context only)",
+    "rev6_branch_text_verbatim": "(b') D_reported > 0 (positive): the current reconstructed relative-base objective does not prefer that splice at its initial evaluation. This is CONSISTENT with data/objective/version/training-context mismatch but ATTRIBUTES NONE of them.",
+    "scope": "RELATIVE-BASE PASS and the INTERNAL UPSTREAM OBJECTIVE under this fixed configuration/binary/pinned real-data inputs ONLY; J0_reported tokens are compared only within this job; initial-cost placement only; NO optimizer reachability; the splice is a coefficient block under this configuration's fixed spectral mapping, never the published parameter state/model"
+  },
+  "semantic_gates_source_citation": "in-job five-region SOURCE-SEMANTIC GATES (J_prior callback region, x_prior init site, algorithm request, unbounded LBFGS pre-step report region adept_source.h:3902-3977, calc_background_cost_function no-constant region ckd_model.cpp) passed with generation-derived hashes; J_prior == 0 at iteration 0 is source-proven for both prior branches (checkpoint JSON semantic_gates section, commit 55c952f971cdf0833af56fe45d3c5daeb452da2d)",
+  "status": "p1_run_completed_verified",
+  "structural_nonfinite_records": {
+    "init-a": [],
+    "init-b": [],
+    "plateau-a": [],
+    "plateau-b": [],
+    "published-a": [],
+    "published-b": []
+  },
+  "tokens": {
+    "init-a": {
+      "full_cost": "2357.1285473887519",
+      "full_gnorm": "1026.1349041908222",
+      "rounded_cost": "2357.13",
+      "rounded_gnorm": "1026.13",
+      "status": "Maximum iterations reached"
+    },
+    "init-b": {
+      "full_cost": "2357.1285473887519",
+      "full_gnorm": "1026.1349041908222",
+      "rounded_cost": "2357.13",
+      "rounded_gnorm": "1026.13",
+      "status": "Maximum iterations reached"
+    },
+    "plateau-a": {
+      "full_cost": "12.334952613051257",
+      "full_gnorm": "0.88393410881930434",
+      "rounded_cost": "12.335",
+      "rounded_gnorm": "0.883934",
+      "status": "Maximum iterations reached"
+    },
+    "plateau-b": {
+      "full_cost": "12.334952613051257",
+      "full_gnorm": "0.88393410881930434",
+      "rounded_cost": "12.335",
+      "rounded_gnorm": "0.883934",
+      "status": "Maximum iterations reached"
+    },
+    "published-a": {
+      "full_cost": "16.89168448685135",
+      "full_gnorm": "6.691409350683597",
+      "rounded_cost": "16.8917",
+      "rounded_gnorm": "6.69141",
+      "status": "Maximum iterations reached"
+    },
+    "published-b": {
+      "full_cost": "16.89168448685135",
+      "full_gnorm": "6.691409350683597",
+      "rounded_cost": "16.8917",
+      "rounded_gnorm": "6.69141",
+      "status": "Maximum iterations reached"
+    }
+  }
+}
