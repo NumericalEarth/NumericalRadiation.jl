@@ -1,0 +1,204 @@
+{
+  "arms": [
+    "init-a",
+    "plateau-a",
+    "splice-a",
+    "published-a",
+    "published-b",
+    "splice-b",
+    "plateau-b",
+    "init-b"
+  ],
+  "case": "gate4_p2_checkpoint",
+  "controls": {
+    "init": "102.67056437657112",
+    "plateau": "22.791293464348826",
+    "published": "0.18218645425029933"
+  },
+  "data_mode": "generator_checkpoint",
+  "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch plus transient private temp fixtures (mktempdir).",
+  "failures": [],
+  "fixture_count": 68,
+  "fixture_verdicts": {
+    "bash_syntax_broken_refuses": true,
+    "bash_syntax_good_accepted": true,
+    "branch_ceiling_line_present": true,
+    "branch_positive_exact": true,
+    "branch_zero_on_equal_tokens": true,
+    "branches_emit_both_deltas": true,
+    "control_double_line_refuses": true,
+    "control_miss_refuses": true,
+    "controls_pass_on_pinned_values": true,
+    "design_controls_present": true,
+    "design_license_covers_h2o_table": true,
+    "design_palindromic_order": true,
+    "design_staging_bracket_present": true,
+    "design_three_masters_present": true,
+    "duplicate_arm_label_line_refuses": true,
+    "duplicate_drift_refuses": true,
+    "duplicate_objective_token_line_refuses": true,
+    "duplicates_pass_on_equal_payloads": true,
+    "fields_tuple_is_fourteen": true,
+    "gas_axis_contract_real": true,
+    "identity_arm_record_drift_refuses": true,
+    "identity_binding_line_decoy_refuses": true,
+    "identity_body_drift_refuses_by_region_sha": true,
+    "instrument_identity_clean_passes": true,
+    "instrument_identity_mutations_refuse": true,
+    "label_mapping_violation_refuses": true,
+    "label_parse": true,
+    "metric_seq_is_twelve": true,
+    "mirror_body_drift_refuses_by_region_sha": true,
+    "payload_excludes_label": true,
+    "pkg_manifest_carries_exec_bits": true,
+    "pkg_manifest_has_project_src_ext_chain_refs": true,
+    "pkg_manifest_includes_artifacts_toml": true,
+    "pkg_manifest_reference_files_are_nc": true,
+    "record_duplicate_state_line_refuses": true,
+    "record_state_line_mismatch_refuses": true,
+    "row_line_has_8_fields": true,
+    "rows_24_exact": true,
+    "rows_key_order_exact": true,
+    "source_census_clean_passes_and_injected_refuses": true,
+    "staged_form_loads_package_extension_reader": true,
+    "staged_form_omitted_artifacts_refuses": true,
+    "tampered_manifest_refuses_via_pin_predicate": true,
+    "tampered_pkg_artifacts_refuses_via_pin_predicate": true,
+    "text_cli_comment_decoy_refuses": true,
+    "text_comment_decoy_mapping_refuses": true,
+    "text_design_pin_drift_refuses": true,
+    "text_duplicate_freeze_marker_refuses": true,
+    "text_external_splice_path_refuses": true,
+    "text_good_accepted": true,
+    "text_head_pipeline_refuses": true,
+    "text_live_project_refuses": true,
+    "text_missing_census_gate_refuses": true,
+    "text_missing_compare_gate_refuses": true,
+    "text_missing_exec_gate_refuses": true,
+    "text_missing_freeze_echo_refuses": true,
+    "text_missing_loadpath_pin_refuses": true,
+    "text_missing_postpkg_refuses": true,
+    "text_missing_postrun_census_refuses": true,
+    "text_missing_refdir_pin_refuses": true,
+    "text_missing_source_census_refuses": true,
+    "text_postfreeze_live_master_read_refuses": true,
+    "text_postfreeze_live_repo_read_refuses": true,
+    "text_published_mapped_to_wrong_master_refuses": true,
+    "text_shared_redirect_refuses": true,
+    "text_splice_mapped_to_plateau_refuses": true,
+    "text_sw_pin_drift_refuses": true,
+    "text_v10_sw_substitution_refuses": true
+  },
+  "frozen_design": {
+    "durable_file": "validation/gate4_p2_frozen_design.md",
+    "sha256": "c6c7638542f371ae1e44c91214d028e8f7ce9a9a61ca2be4fb0b2923f3b9f420",
+    "verbatim_text": "# Gate-4 P2 FROZEN DESIGN: four-state package-native hard-objective\n# placement (monitor NEXT-UNIT RULING 2026-08-14; Agent 42 review\n# focus folded at design time)\n\n## Unit identity\n- DIAGNOSIS unit; PRIVATE outputs only; zero canonical writes; RUNROOT\n  preserved on success AND failure; no optimizer anywhere; submission\n  and commit only on explicit monitor GO.\n- Grounding: committed P1 ledger (commit 4501220e; POSITIVE branch,\n  neutral sequencing context), next-control decision memo rev 3\n  (0b9f73f51a433e59e573b9957a781c4a820f482e36564a9d90089e008d677a09),\n  monitor next-unit ruling text (binding), Agent 42 acknowledgment\n  with the package-tree TOCTOU review focus (binding at design time).\n\n## Question (fixed setup only)\nUnder the package-native hard-objective instrument -- hard_objective\n(validation/ecckd_published_model_accuracy.jl:183) over REDUCED_CASES\nvia case_metrics and read_ecckd_tabulated_gas_optics -- where do FOUR\nfixed LW states place relative to EACH OTHER, holding ONE pinned\npublished SW32 state fixed?\n\n## Four LW states (content pins; committed P1 checker gates)\n1. init: pinned campaign init raw (ce057079..., 2,413,144 B).\n2. plateau: pinned 4561 pristine raw2 (49ff3df8..., 2,415,304 B).\n3. splice: PRIVATE published-coefficient splice, reconstructed IN-JOB\n   from the pinned init + published LW32 (6087f62f..., 869,280 B) by\n   the COMMITTED P1 checker (gate4_p1_splice_checker.jl, abebffc6...):\n   build-splice + gate-splice (exact eight-variable typed diff, pinned\n   per-array counts, attrs/signature) + gate-plateau for state 2.\n4. published-final: the pinned published LW32 ckd-definition itself\n   (6087f62f...) -- the fourth control (monitor panel ruling).\n\n## Arms and order (binding)\nEight arms, each a FRESH model load + scoring, palindromic\ndrift-control order:\n  init-a plateau-a splice-a published-a published-b splice-b plateau-b init-b\n(each state's duplicates straddle the job midpoint).\n\n## Instrument (one immutable evaluator; canonical eight-gas)\n- EXACT CALL SHAPE (the committed S1 kernel form,\n  gate4_s1_state_sync_completion_ledger.jl:541-544):\n  read_ecckd_tabulated_gas_optics(lw_path, sw_path;\n      gas_names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11,\n                   :cfc12),\n      h2o_mole_fraction = 0.005)\n  then hard_objective([case_metrics(c, model) for c in REDUCED_CASES]).\n- SOURCE PINS (byte-containment at generation AND in-job): the exact\n  REDUCED_CASES construction (reduced_ecckd_accuracy.jl:12-16 with\n  REQUIRED_CASES from ecrad_reference_manifest.jl), the exact\n  case_metrics text (reduced_ecckd_accuracy.jl:511+), the exact\n  hard_objective text (ecckd_published_model_accuracy.jl:183-244),\n  and the S1 kernel-identity containment (sl_swap_objective text in\n  the committed S1 ledger) -- the instrument-identity claim is gated,\n  not prose.\n- FIXED SW (binding rationale, monitor; filename corrected per\n  Agent 42 design review D1): the pinned published SW32 is\n  ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc from the hash-pinned\n  ecrad artifact tree (the published LW file is ecckd-1.0; the SW of\n  the :climate_32x32 pair and the comparator :shortwave_32 selector\n  is v1.4 -- verified read-only); 851,724 B, sha\n  49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3\n  (S1 ledger provenance :200-202), re-derived and embedded at\n  contract generation. The generator carries a REFUSAL FIXTURE for\n  v1.0-SW substitution (any ecckd-1.0_sw staging/reference refuses). It reproduces the 0.18218645425029933 same-instrument\n  control and removes recoverable SW error from the LW localization.\n  All conclusions conditional on this SW.\n- CASE-SET IDENTITY (Agent 42 R1, stated in the frozen text): the\n  committed S1 kernel scored snapshot_cases built from SL_CASE_INPUTS\n  = exactly the two REDUCED_CASE_NAMES reference files\n  (ecckd_clear_sky_tropical_column + ecckd_rcemip_style_column_subset,\n  sha/size-pinned), so the historical 102.67056437657112 /\n  22.791293464348826 / 0.18218645425029933 values are\n  same-instrument-SAME-CASESET readings and the refuse-on-miss\n  reproduction gates are well-founded on committed provenance.\n\n## Package-tree/environment TOCTOU closure (Agent 42 review focus;\n## designed-in, not retrofitted)\nThe evaluator consumes THE PACKAGE ITSELF, so the package tree is a\nscientific-code input staged/pinned exactly like the ecckd source\ntree in P1:\n- STAGED EVALUATOR WORKING SET, manifest-pinned at generation\n  (per-file sha + exec bits + census) and content-verified in-job\n  before use, chmod -R a-w, writable-scan, post-run reverified:\n  * $RUNROOT/pkg/Project.toml + Artifacts.toml + src/ (full tree) +\n    ext/ (all three extension files) -- the NumericalRadiation\n    package. Artifacts.toml is REQUIRED (monitor hard-hold finding,\n    reproduced staged-form failure): src/io/ecckd_definition.jl\n    expands @artifact_str(\"ecrad_data\") at MACRO TIME, which resolves\n    the package's (Julia)Artifacts.toml relative to the package root\n    -- a staged tree without it cannot even `using NumericalRadiation`.\n    The generator carries (i) a REAL staged-form behavioral fixture\n    (temp tree, rendered set, rendered invocation form) requiring\n    pathof(NumericalRadiation) under the staged pkg/src,\n    Base.get_extension(NumericalRadiation,\n    :NumericalRadiationNCDatasetsExt) !== nothing, and the reader\n    binding available -- a text gate is insufficient; and (ii) a\n    NEGATIVE fixture with Artifacts.toml omitted/tampered that\n    refuses. LOAD-TIME vs RUNTIME resolution (Agent 42 nuance; monitor\n    wording ruling, licensed statement): staging Artifacts.toml\n    enables MACRO-TIME resolution at `using`; live-depot artifact\n    metadata/path checks MAY still occur during package load (the\n    @artifact_str expansion may resolve/check/install via the live\n    depot even though P2 never calls official path selectors) -- that\n    behavior is exactly the recorded live-depot residual, and NO\n    claim of globally zero post-freeze artifact-content reads is\n    made. P2's SCIENTIFIC LW/SW payloads are nevertheless consumed\n    ONLY from the explicit staged masters, and no evaluator/checker\n    argument may carry a live artifact-tree path (text-gated); the\n    behavioral fixture proves staged package/extension/reader\n    resolution and explicit staged scientific paths, never the\n    absence of all depot accesses;\n  * $RUNROOT/pkg/validation/{validation_results.jl,\n    ecrad_reference_manifest.jl, write_ecrad_candidates.jl,\n    reduced_ecckd_accuracy.jl, ecckd_published_model_accuracy.jl} --\n    the include-safe evaluator chain (ABR_ROOT resolves via @__DIR__\n    to $RUNROOT/pkg, so the staged layout is self-consistent);\n  * $RUNROOT/pkg/validation/reference/ecrad/<REDUCED case files> --\n    the exact reference .nc files REDUCED_CASES consumes, resolved\n    mechanically at generation (path list derived from the pinned\n    chain, never hand-listed), sha+size pinned;\n  * $RUNROOT/julia-env/{Project.toml, Manifest.toml} -- the staged\n    test environment (sha-pinned; NCDatasets provider; NOTE the live\n    test/Manifest.toml is git-ignored yet exists (S1-pinned\n    cf9f318d...) -- usable ONLY under the staging bracket below);\n- STAGING READ BRACKET (binding, applied uniformly to package/env/\n  reference/scientific-input staging): stage 0 pins and preflights\n  the live sources (sha/size); stage 1 COPIES from live into the\n  RUNROOT and IMMEDIATELY verifies each staged copy's sha/size\n  against the stage-0 pin (with a source post-copy sha re-check where\n  a source is consumed more than once); after the successful stage-1\n  freeze (chmod a-w + writable-scan), no EXPLICIT live\n  repository/test-environment/scientific-input PATH is supplied to any\n  evaluator/checker/gate -- their explicit code/reference/LW/SW path\n  arguments resolve under $RUNROOT, while Julia\n  loader/dependency/depot reads remain the recorded residual.\n  * THREE external LW masters -- init, plateau, published LW -- plus\n    the SW master under $RUNROOT/source-inputs/ (P1 pattern). The\n    SPLICE IS NOT A MASTER and is NEVER copied from any\n    mutable/preserved P1 output path: it is reconstructed INSIDE the\n    RUNROOT from the staged init + staged published masters by the\n    staged committed P1 checker, then sha-pinned and gated in place.\n    The generator carries a NO-EXTERNAL-SPLICE-PATH fixture (any\n    staging row or checker argument sourcing a splice from outside\n    $RUNROOT refuses).\n- PINNED ENV RESOLUTION (explicit in the sbatch): the ONLY evaluator\n  invocation form is\n    JULIA_LOAD_PATH=\"@:$RUNROOT/pkg:@stdlib\"\n    \"$JULIA_BIN\" --project=\"$RUNROOT/julia-env\" <staged checker> ...\n  with the pinned julia launcher + exact --version gate (P1 pattern).\n  The live repository appears nowhere on evaluator LOAD_PATH; each\n  evaluator command's explicit project/package/checker/reference/\n  scientific path arguments are staged under $RUNROOT;\n  manifest-resolved dependency content may load from the live depot\n  under the recorded residual. A\n  generation-time behavioral fixture proves the staged form loads the\n  package and activates the NCDatasets extension from the staged\n  tree. validation_reference_dir()/env redirects are pinned or\n  explicitly neutralized so reference resolution stays inside\n  $RUNROOT/pkg (NUMERICAL_RADIATION_VALIDATION_REFERENCE_DIR pinned\n  to $RUNROOT/pkg/validation/reference).\n- RECORDED RESIDUAL (Agent 42 D2; accepted, P1 source-to-linked-\n  binary caveat precedent): julia-env Project/Manifest are staged and\n  sha-pinned, but the ~/.julia depot's installed package CONTENT\n  (NCDatasets and dependencies, compiled caches) remains a live\n  system surface -- an accepted, RECORDED residual, not gated by this\n  unit.\n\n## Per-arm record (reported-precision discipline, preregistered)\nFor every arm: fresh load, then record\n- the hard_objective value as BOTH a max_digits10 (%.17g) round-trip\n  token AND the UInt64 bit pattern (reinterpret of the Float64);\n- the COMPLETE ORDERED hard-objective row vector (case, metric,\n  value token + UInt64 bit pattern, threshold, normalized token +\n  bit pattern) in the exact order hard_objective produces;\n- the arm label, state sha, SW sha, and evaluator invocation form.\nDUPLICATE GATES (binding): for each state, EXACT bit-pattern equality\nof the objective AND of EVERY row between the a/b arms; values are\nNEVER averaged; any mismatch is recorded drift + refusal of ordering\nassignment.\n\n## Same-job control reproduction gates (binding; refuse-on-miss)\n- published-final arms must reproduce 0.18218645425029933 exactly;\n- init arms must reproduce 102.67056437657112 exactly;\n- plateau arms must reproduce 22.791293464348826 exactly\n(exact Float64 bit equality with the committed pinned literals; B0/S1\nprovenance). Any miss => the job records all values and REFUSES\ninterpretation (comparison stage refuses; RUNROOT preserved; the\nS1/X1/C1 historical readings remain bridges only -- same-job\nduplicates decide).\n\n## Residual-label license (binding, before ANY residual language;\n## tightened per monitor early review item 2)\n- EXACT equality between the loaded splice model and the loaded\n  published-final model of BOTH (a) EVERY ordered gas slice of the\n  materialized longwave_absorption array AND (b) the COMPLETE\n  longwave_h2o_absorption table (elementwise egal on the loaded\n  arrays). Rationale (binding; source-cited): the loader materializes\n  one 8-gas longwave_absorption array whose :h2o slice is ZEROED on\n  this path (NumericalRadiationNCDatasetsExt.jl:151, dynamic_h2o\n  returns zeros -- Agent 42 read-only confirmation) -- dynamic H2O is\n  carried separately in longwave_h2o_absorption, so gating \"all eight\n  tables\" alone would compare a trivially-equal zeroed slice and\n  silently miss the operative H2O payload.\n- a COMPLETE INVENTORY enumerating ALL EcCKDTabulatedGasOpticsModel\n  fields BY EXACT FIELD NAME -- pressure_grid, temperature_grid,\n  h2o_mole_fraction_grid, gas_reference_mole_fractions,\n  longwave_absorption, shortwave_absorption,\n  longwave_h2o_absorption, shortwave_h2o_absorption,\n  shortwave_rayleigh_molar_scattering, longwave_source_scale,\n  longwave_source_temperature_grid, longwave_source_table,\n  longwave_weights, shortwave_weights -- plus the gas_names/type\n  parameter ordering, comparing splice vs published-final, each field\n  recorded equal/differs (with counts), reported AS A BLOCK.\n- FIXED-SW FIELDS are EXACT-EQUALITY GATES across ALL FOUR states\n  (shortwave_absorption, shortwave_h2o_absorption,\n  shortwave_rayleigh_molar_scattering, shortwave_weights identical in\n  every loaded model), not merely reported counts.\nIf any license gate fails, the residual label is REFUSED and the\ndifference itself is the recorded evidence. None of this localizes a\nmechanism.\n\n## Preregistered outcome structure (exhaustive; token-derived exact\n## decimal, P1 checker machinery)\n- D_splice_plateau = J(splice) - J(plateau) and\n  D_splice_published = J(splice) - J(published-final), each computed\n  by exact decimal arithmetic on the max_digits10 tokens, each with\n  the exhaustive sign/equality partition\n  (negative / zero-at-token-representation / positive), assigned ONLY\n  after every duplicate, control, and schema gate; the full row\n  vectors are recorded for the ledger, and LW-only submetrics are\n  separately labeled (fixed-SW rows are constant by construction).\n- INSTRUMENT-ORDERING STATEMENT (ceiling-bounded): a reversal\n  relative to P1's upstream ordering may be REPORTED only if BOTH\n  exact orderings hold on their own instruments' committed records\n  (P1: J0_reported(splice) > J0_reported(plateau); P2: the exact\n  hard-objective ordering); it is a recorded placement fact, never an\n  explanation.\n\n## Conclusion ceiling (binding)\nP2 outcomes are PRIVATE DIAGNOSTIC PLACEMENT ONLY under this fixed\nconfiguration, instrument, SW state, and pinned inputs: NO recovered\nacceptance, NO objective-change authorization, NO optimizer\nreachability, NO mechanism localization or ranking, NO raw-vs-final\nclaim beyond the licensed residual block, NO automatic next-control\ndecision (monitor sequencing ruling); the external <=1.05 gate and\nits acceptance semantics are untouched; all three mechanism classes\nremain OPEN and UNRANKED globally; findings are LOCAL to this rebuilt\ntrajectory and these fixed states.\n\n## Evidence machinery (P1-class, binding)\nQuota soft-minus-50GiB guard; p2-lw experiment lock; head-node\nrefusal; fresh fail-closed RUNROOT; staged immutable\nmasters/env/code with post-run size+sha reverification of EVERY\nstaged input incl. the package tree, evaluator chain, reference\nfiles, checkers, julia-env, and shim-class runtime objects consumed;\ndual-custody create-once receipts; pinned terminal-log +\nemitted-inventory anchoring in the completion ledger; fixtures for\nevery gate class incl. behavioral negatives on the staged-evaluator\nload path; deterministic double generation; restart-safe sbatch\n(fresh RUNROOT per job id; no partial-state reuse). The six-file\npattern: this design, the shared P2 checker/evaluator, the checkpoint\ngenerator, the generated sbatch, and the checkpoint JSON/MD.\n"
+  },
+  "gate_instrument_provenance": {
+    "julia": "/shared/home/greg/.juliaup/bin/julia",
+    "julia_version_line": "julia version 1.12.6",
+    "p1_checker_sha256": "abebffc6146c93adc4d0ea9ed7d6d0e16cc62fd82805f34c63976418a8bb7e51",
+    "p2_checker_sha256": "2ba2fac1947fa727bd35d5931923a62edd77f8a82646024781fd2f74960ac575",
+    "test_manifest_sha256": "cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186",
+    "test_project_sha256": "9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0"
+  },
+  "gates": {
+    "evidence_frozen_pins": "passed",
+    "evidence_instrument_identity": "passed",
+    "evidence_julia_provenance": "passed",
+    "evidence_master_pins": "passed",
+    "evidence_prerequisite_ledgers": "passed",
+    "evidence_real_state_verification": "passed",
+    "evidence_sbatch_bash_syntax": "passed",
+    "evidence_sbatch_deterministic_render": "passed",
+    "evidence_sbatch_text_gates": "passed",
+    "evidence_source_census": "passed",
+    "fixtures": "passed"
+  },
+  "instrument_identity": {
+    "case_metrics": {
+      "expected": "96bfed7d3b24b5dda59a3684ffde5b18d70f5a8e64248bc988bd8dd746bf43df",
+      "observed": "96bfed7d3b24b5dda59a3684ffde5b18d70f5a8e64248bc988bd8dd746bf43df"
+    },
+    "hard_objective": {
+      "expected": "4b784c16d1e85a5b1647e59680f84e510d4da6fc2d84b136dbb51e2ed39fef5f",
+      "observed": "4b784c16d1e85a5b1647e59680f84e510d4da6fc2d84b136dbb51e2ed39fef5f"
+    },
+    "official_gases_line": {
+      "expected": "b267b0c693f908e3b86169463d31d61d0b99d31ed763f9b9bf182ef18a29b4c1",
+      "observed": "b267b0c693f908e3b86169463d31d61d0b99d31ed763f9b9bf182ef18a29b4c1"
+    },
+    "p2c_arm_record": {
+      "expected": "78bb92816cbaeaa406b8d368bb11e18dc78e9cf843883333da8b7108ae434504",
+      "observed": "78bb92816cbaeaa406b8d368bb11e18dc78e9cf843883333da8b7108ae434504"
+    },
+    "p2c_gases_line": {
+      "expected": "8eb801ca67b051705fc0005c4c22073785d5189a4b3ef2734d2ec93f4d6a4485",
+      "observed": "8eb801ca67b051705fc0005c4c22073785d5189a4b3ef2734d2ec93f4d6a4485"
+    },
+    "p2c_h2o_line": {
+      "expected": "ac762498ac94ccfa6ae42bb219a93b89b65b0456513beb41a7b200eae334c7ee",
+      "observed": "ac762498ac94ccfa6ae42bb219a93b89b65b0456513beb41a7b200eae334c7ee"
+    },
+    "p2c_rows_mirror": {
+      "expected": "17a8d8dcc803475639ef34668b5a1b23211547129a681b849188575ec331f645",
+      "observed": "17a8d8dcc803475639ef34668b5a1b23211547129a681b849188575ec331f645"
+    },
+    "reduced_cases_binding_line": {
+      "expected": "150915e65fcae11d7d31465f68c2c4c7ddda53a216a85408a7878c7ce5ceab67",
+      "observed": "150915e65fcae11d7d31465f68c2c4c7ddda53a216a85408a7878c7ce5ceab67"
+    },
+    "reduced_link": {
+      "expected": "04ecb565d56459da23d519da506d9298ff9af76b8de03a9502f6748f08e083ef",
+      "observed": "04ecb565d56459da23d519da506d9298ff9af76b8de03a9502f6748f08e083ef"
+    },
+    "required_cases": {
+      "expected": "4925ba0a844823e1e5e745918c3b8ec39796dd784f571f75364430a0db78f5ef",
+      "observed": "4925ba0a844823e1e5e745918c3b8ec39796dd784f571f75364430a0db78f5ef"
+    },
+    "s1_kernel": {
+      "expected": "c80b7bc54c8b34908be3ffb39ef3847956847e102a57847c21dfd5a629d141ba",
+      "observed": "c80b7bc54c8b34908be3ffb39ef3847956847e102a57847c21dfd5a629d141ba"
+    },
+    "s1_source_sha256": "844acaa615d1ab139272c7425bbd0a5241d2b489b8a7a2ae2fdc9786f2463a3b",
+    "sl_case_inputs": {
+      "expected": "4b2a0401b6baded30dc5fda074c99ec9b130d79a7343583f6bb2ba7053131480",
+      "observed": "4b2a0401b6baded30dc5fda074c99ec9b130d79a7343583f6bb2ba7053131480"
+    },
+    "sl_h2o_line": {
+      "expected": "340e928f103481494b140d09d03353715477e2854d1394517b2abcda0c9c3477",
+      "observed": "340e928f103481494b140d09d03353715477e2854d1394517b2abcda0c9c3477"
+    }
+  },
+  "invocation_identity": "read_ecckd_tabulated_gas_optics;gas_names=composite,h2o,o3,co2,ch4,n2o,cfc11,cfc12;h2o_mole_fraction=0.005;candidate_mode=official_ecckd",
+  "non_authorizing_note": "this checkpoint generates and verifies the P2 sbatch; it never submits; submission requires explicit monitor GO.",
+  "package_tree": {
+    "artifacts_toml_staged": true,
+    "exec_census": 0,
+    "files": 35,
+    "manifest_sha256": "80b2ee65e87f6af3eccdaec2c71f84fdd96a02e16d77a41aaee86e41d30ea9e0"
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p2_lw_hard_objective.sbatch",
+  "sbatch_sha256": "59f697d277d7228123f822f94c3b028f9954f0b57e6fd68bc85ecb9e2b977f39",
+  "states": {
+    "fixed_sw": {
+      "bytes": 851724,
+      "file": "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
+      "sha256": "49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3"
+    },
+    "init": {
+      "bytes": 2413144,
+      "sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43"
+    },
+    "plateau": {
+      "bytes": 2415304,
+      "sha256": "49ff3df8c02a1b62f7bfa6cd4b8dc2c6c96e93079c1d042eb8cfb5fc49c61e37"
+    },
+    "published_final": {
+      "bytes": 869280,
+      "sha256": "6087f62f9052653f8e7dbee26cef8bf1977c2516669a169bee8d110b62912ed9"
+    },
+    "splice": "in-RUNROOT reconstruction (NOT a master); P1 checker abebffc6146c93adc4d0ea9ed7d6d0e16cc62fd82805f34c63976418a8bb7e51 gates"
+  },
+  "status": "p2_checkpoint_ready"
+}
