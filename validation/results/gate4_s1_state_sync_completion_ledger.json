@@ -1,0 +1,443 @@
+{
+  "artifact_pins": {
+    "arm_logs": [
+      {
+        "arm": "a0a",
+        "sha256": "79068590277c0c0ebc01ec8c5dba63f940fb1fb9a0e7284cd2eab1892cb31209"
+      },
+      {
+        "arm": "a0b",
+        "sha256": "4af44d04270111c9085ef927b7b195ae00c3a3c71a0b6fd400feccd67b232def"
+      },
+      {
+        "arm": "s1",
+        "sha256": "f3a1cd3915e369be9fbd8e3c5c31ee5a0967ca6eec390cc8700fde3c81d40c1d"
+      }
+    ],
+    "binary_a0_sha256": "6f2ade09d6094635e5ee865e3d4376739dea0961d941637adfed8b6d25116e68",
+    "binary_s1_sha256": "f55eabb8dab518b7382b1cfd89dd9c883a064ddb532300994f4957007510e5a1",
+    "historical_raw2_sha256": "4205489923dbc50c3c148a06f20e5781b3f1dbeb5a13d55d36b460c5f7b4378c",
+    "init_sha256": "ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43",
+    "raw2": [
+      {
+        "arm": "a0a",
+        "bytes": 2415252,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4558/lw-s1/work-a0a/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "df740e622a28c19e6fa77ce34fb50ec7d52e73857b53b8bbec6c6f4def0090d4"
+      },
+      {
+        "arm": "a0b",
+        "bytes": 2415252,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4558/lw-s1/work-a0b/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "9c7796fdea183205fc7587807931a2a182daa6218cf72460e75f8a501dd25ca2"
+      },
+      {
+        "arm": "s1",
+        "bytes": 2415248,
+        "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4558/lw-s1/work-s1/lw_raw-ckd-definition/ecckd-1.2_lw_raw2-ckd-definition_climate_fsck-tol0.0161.nc",
+        "sha256": "95ac316f62909f5426bb9b9b6dcfb33a326041ae1d9184d6f0bc6c6a1cebb593"
+      }
+    ],
+    "solve_adept_orig_sha256": "8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091",
+    "solve_adept_patched_sha256": "c23246d53a474540443a0e877992dc0d24cfda1ad6cbafa218e3a824cb72070b"
+  },
+  "case": "gate4_s1_state_sync_completion_ledger",
+  "data_mode": "evidence_ledger_no_campaign_writes",
+  "disclaimer": "evidence ledger; writes nothing except its own JSON/MD results plus transient private temp fixtures/snapshots (mktempdir); zero campaign/canonical writes.",
+  "evidence_timestamp_utc": "2026-08-14T00:13:49Z",
+  "failures": [],
+  "fixture_verdicts": {
+    "armlog_good_accepted": true,
+    "armlog_missing_omp_refuses": true,
+    "armlog_wrong_terminal_refuses": true,
+    "array_identity_attr_type_drift_refuses": true,
+    "array_identity_dim_drift_refuses": true,
+    "array_identity_eltype_drift_refuses": true,
+    "array_identity_metadata_only_accepted": true,
+    "array_identity_required_set_exact_accepted": true,
+    "array_identity_required_set_missing_refuses": true,
+    "array_identity_unexpected_attr_refuses": true,
+    "array_identity_unlimited_failure_refuses": true,
+    "array_identity_value_diff_refuses": true,
+    "array_identity_var_attr_drift_refuses": true,
+    "array_identity_var_count_gate": true,
+    "census_expect_selfconsistency": true,
+    "census_logspace_synthetic_predicate": true,
+    "census_nonfinite_input_refuses": true,
+    "census_nonpositive_X_counts_below": true,
+    "census_nonpositive_X_worst_is_inf": true,
+    "census_nonpositive_bounds_excluded": true,
+    "census_raw_lower_violation_counted": true,
+    "census_synthetic_lower_satisfied_not_counted": true,
+    "census_synthetic_lower_violation_counted": true,
+    "census_upper_violation_counted": true,
+    "census_worst_dlog_computed": true,
+    "joblog_failure_marker_refuses": true,
+    "joblog_good_accepted": true,
+    "joblog_missing_stage_refuses": true,
+    "joblog_missing_verdict_refuses": true,
+    "joblog_out_of_order_refuses": true,
+    "joblog_wrong_schema_count_refuses": true,
+    "overall_all_green": true,
+    "overall_any_issue_refuses": true,
+    "prose_153_is_event_sum": true,
+    "prose_all_three_mechanisms_open": true,
+    "prose_no_global_sync_exclusion": true,
+    "prose_separate_below_above": true,
+    "read_pinned_good_accepted": true,
+    "read_pinned_missing_refuses": true,
+    "read_pinned_sha_drift_refuses": true,
+    "receipt_good_binds": true,
+    "receipt_wrong_runtime_refuses": true,
+    "receipt_wrong_state_refuses": true
+  },
+  "gates": {
+    "evidence_adept_context_pins": "passed",
+    "evidence_arm_logs": "passed",
+    "evidence_array_identity": "passed",
+    "evidence_census_integrity": "passed",
+    "evidence_commit_ancestry": "passed",
+    "evidence_comparator_code_pins": "passed",
+    "evidence_comparator_integrity": "passed",
+    "evidence_dual_receipts": "passed",
+    "evidence_job_log_contract": "passed",
+    "evidence_package_pins": "passed",
+    "evidence_runroot_artifacts": "passed",
+    "fixtures": "passed"
+  },
+  "job": {
+    "exit_code_raw": "0:0",
+    "job_id": 4558,
+    "job_state": "COMPLETED",
+    "log_path": "/shared/home/greg/data/ckdmip-logs/g4-s1-lw-4558.log",
+    "log_sha256": "338256742d049f2cb22525578aa549bed947f548ad75103c0d447210761ed380",
+    "receipt_paths": [
+      "/shared/home/greg/data/ckdmip-logs/g4-s1-lw-4558-scontrol-final-session40.txt",
+      "/shared/home/greg/data/ckdmip-logs/g4-s1-lw-4558-scontrol-final-agent42.txt"
+    ],
+    "receipt_sha256": "0d36f32d19c317c19616381ade089ae620d23161d06d7b4b7991f0f3bf87c75e",
+    "run_time": "01:53:10",
+    "runroot_preserved": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4558/lw-s1"
+  },
+  "non_authorizing_note": "this ledger records and classifies evidence; C1/C2 or any next experiment requires explicit monitor rulings; zero canonical writes",
+  "reviewed": {
+    "adept_context_pins": [
+      {
+        "path": "/shared/home/greg/local/adept-2-install/include/adept/Minimizer.h",
+        "sha256": "dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d"
+      },
+      {
+        "path": "/shared/home/greg/local/adept-2-install/lib/libadept.so.0.0.0",
+        "sha256": "1f9016af1b6982493dc8d53dd3a11b2b0c54d4e84c4dbb548b4b06093d43dbcb"
+      },
+      {
+        "path": "/shared/home/greg/local/adept-2-install/include/adept_source.h",
+        "sha256": "8f29a64a2d8227e881a7a541e154d80b752f7746c8607f6a9f280b54f0312351"
+      }
+    ],
+    "case_input_pins": [
+      {
+        "bytes": 207210,
+        "case": "ecckd_clear_sky_tropical_column",
+        "sha256": "3a1634b7c7b4e22ae4064ace9826ac76b6810fb4074a5437bfd30b5c911e68e7"
+      },
+      {
+        "bytes": 612490,
+        "case": "ecckd_rcemip_style_column_subset",
+        "sha256": "8c4a6974d74d09ae5f6679f76495538d1b9812edada7d87b1ed6737303710db3"
+      }
+    ],
+    "commit_ancestor": "9d94122d5c48fa881c65355511a17c91e5aab096",
+    "comparator_code_pins": [
+      {
+        "path": "validation/ecckd_published_model_accuracy.jl",
+        "sha256": "e6a10832650e668d88e9e903f222ba130d1e549489a637fbb75c67d1e0520446"
+      },
+      {
+        "path": "validation/reduced_ecckd_accuracy.jl",
+        "sha256": "a62520b88f460da681e7fb94eb0d852c863248f98c3cfe1dbaf49b46c8843e02"
+      },
+      {
+        "path": "validation/validation_results.jl",
+        "sha256": "60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12"
+      },
+      {
+        "path": "validation/write_ecrad_candidates.jl",
+        "sha256": "89a2cf69ca036a1762418853f72a09fd352fbe9904adf6c9f10eadbcaeb0c267"
+      },
+      {
+        "path": "validation/ecrad_reference_manifest.jl",
+        "sha256": "6bf4787a7fa2f5057217562d423dd6337dbf9702cfe29245276f6205fe1e6b23"
+      },
+      {
+        "path": "test/Project.toml",
+        "sha256": "9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0"
+      },
+      {
+        "path": "test/Manifest.toml",
+        "sha256": "cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186"
+      },
+      {
+        "path": "Project.toml",
+        "sha256": "e3921c81ac9c8f6f6d2210f59e6195399643b4c8f66625b59b1d950da3493058"
+      }
+    ],
+    "generator_source_sha256": "4cf4d6c6e3b5b4e5888c4f6fc134003a60545e1f474242765f3c42dcc0bce9a6",
+    "h2o_mole_fraction": 0.005,
+    "published_lw_pin": "6087f62f9052653f8e7dbee26cef8bf1977c2516669a169bee8d110b62912ed9",
+    "published_sw_pin": "49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3",
+    "reviewed_src_tree": "7eaf80136e313c073416a815334493fc3b5434e7",
+    "sbatch_sha256": "666a9f4fc3727951d1fe7efdd715591f78e785e2a6d5f4de9b8326965509c44d"
+  },
+  "scientific": {
+    "adept_source_observed_caveat": "Adept implementation statements are source-observed context only (source-to-linked-binary provenance unproven): installed Minimizer.h dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d, libadept 1f9016af1b6982493dc8d53dd3a11b2b0c54d4e84c4dbb548b4b06093d43dbcb, adept_source.h 8f29a64a2d8227e881a7a541e154d80b752f7746c8607f6a9f280b54f0312351; shallow/shared-storage Vector pass-by-value means minimizer updates reach the local x; only callbacks write ckd_model.x; no direct write from local x to ckd_model outside callbacks; default ensure_updated_state_=-1 suppresses the conditional final callback; unpatched ecckd has zero ensure_updated_state calls.",
+    "array_level_findings": {
+      "baseline_repeatability_array_level": "exact (A0a == A0b elementwise)",
+      "historical_bridge_array_level": "A0 arms match the historical 4515 raw2 elementwise; the byte-level bridge remains unlicensed (metadata differs), so historical byte differences do not license causal inference",
+      "metadata_differences": {
+        "a0a vs a0b": {
+          "differing_global_attributes": [
+            "config",
+            "history"
+          ],
+          "summary": {
+            "comparison_scope": "observed NetCDF LOGICAL structure/values only (typed attribute comparison, never stringified); literal NetCDF encoding/layout differences unexamined (raw hashes establish byte inequality, not per-byte localization)",
+            "differing_global_attributes": [
+              "config",
+              "history"
+            ],
+            "dimension_census": {
+              "band": 1,
+              "composite_gas": 4,
+              "g_point": 32,
+              "h2o_mole_fraction": 12,
+              "pressure": 53,
+              "temperature": 6,
+              "temperature_planck": 231,
+              "wavenumber": 326
+            },
+            "unlimited_dims": [],
+            "variable_count": 47
+          }
+        },
+        "a0a vs hist4515": {
+          "differing_global_attributes": [
+            "config",
+            "history"
+          ],
+          "summary": {
+            "comparison_scope": "observed NetCDF LOGICAL structure/values only (typed attribute comparison, never stringified); literal NetCDF encoding/layout differences unexamined (raw hashes establish byte inequality, not per-byte localization)",
+            "differing_global_attributes": [
+              "config",
+              "history"
+            ],
+            "dimension_census": {
+              "band": 1,
+              "composite_gas": 4,
+              "g_point": 32,
+              "h2o_mole_fraction": 12,
+              "pressure": 53,
+              "temperature": 6,
+              "temperature_planck": 231,
+              "wavenumber": 326
+            },
+            "unlimited_dims": [],
+            "variable_count": 47
+          }
+        },
+        "a0a vs s1": {
+          "differing_global_attributes": [
+            "config",
+            "history"
+          ],
+          "summary": {
+            "comparison_scope": "observed NetCDF LOGICAL structure/values only (typed attribute comparison, never stringified); literal NetCDF encoding/layout differences unexamined (raw hashes establish byte inequality, not per-byte localization)",
+            "differing_global_attributes": [
+              "config",
+              "history"
+            ],
+            "dimension_census": {
+              "band": 1,
+              "composite_gas": 4,
+              "g_point": 32,
+              "h2o_mole_fraction": 12,
+              "pressure": 53,
+              "temperature": 6,
+              "temperature_planck": 231,
+              "wavenumber": 326
+            },
+            "unlimited_dims": [],
+            "variable_count": 47
+          }
+        }
+      },
+      "patch_association_array_level": "the one-line sync patch is associated with ZERO change in the serialized scientific state in this run; per the committed contract no claim is made that an extra final callback executed (ensure_updated_state may find state already current)",
+      "scientific_variables": "elementwise identical across A0a, A0b, S1, AND the historical 4515 raw2 (gated in this unit); nothing inferred from file hashes or identical printed endpoints -- the array comparison is the instrument"
+    },
+    "attribute_difference_explanation": "the only OBSERVED NetCDF LOGICAL differences are the root 'config' and 'history' global attributes, which embed run-specific timestamps, arm paths, and the optimize_lut_a0 vs optimize_lut_s1 wrapper names. Literal NetCDF encoding/layout differences remain unexamined; the raw file hashes establish byte inequality but not localization of every differing byte. The DURABLE instrument for this claim is this unit's own gated NCDatasets logical comparison over sha-pinned snapshots (monitor-side ncdump header inspection was ephemeral cross-check tooling, not pinned evidence)",
+    "bounded_interpretation": "Serialized model effective-bound exceedances persist in every arm (134 below / 19 above, reported separately, never collapsed to unique positions without an overlap calculation). ALL THREE mechanism classes -- final-state SYNCHRONIZATION, mapping/write, and bounded-algorithm behavior -- remain OPEN and UNRANKED globally, with no localization and no causal attribution. This specific rebuilt trajectory did not distinguish refresh-executed from already-current / identical-callback-values: it observes no S1 scientific effect in this run without globally excluding synchronization for historical 4515. The internal returned x was and remains unobserved.",
+    "census": {
+      "definitions": "active state = composite/h2o/o3/co2 (n=152,640); lower effective where min>0; upper effective where max>0; synthetic lower init^3/max^2 where min==0 && init>0 && max>0; nonpositive raw bounds excluded from denominators",
+      "finding": "identical for all arms and the historical file: below 134/152,631, above 19/152,640, worst dlog below 0.41887799902470135 / above 0.6268579421960787; the serialized model effective-bound exceedances PERSIST unchanged through the sync line",
+      "results": {
+        "a0a": {
+          "above": 19,
+          "active": 152640,
+          "below": 134,
+          "hi_den": 152640,
+          "lo_den": 152631,
+          "per_gas": {
+            "co2": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10167
+            },
+            "composite": {
+              "above": 15,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            },
+            "h2o": {
+              "above": 4,
+              "below": 134,
+              "hi_den": 122112,
+              "lo_den": 122112
+            },
+            "o3": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            }
+          },
+          "worst_dlog_above": 0.6268579421960787,
+          "worst_dlog_below": 0.41887799902470135
+        },
+        "a0b": {
+          "above": 19,
+          "active": 152640,
+          "below": 134,
+          "hi_den": 152640,
+          "lo_den": 152631,
+          "per_gas": {
+            "co2": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10167
+            },
+            "composite": {
+              "above": 15,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            },
+            "h2o": {
+              "above": 4,
+              "below": 134,
+              "hi_den": 122112,
+              "lo_den": 122112
+            },
+            "o3": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            }
+          },
+          "worst_dlog_above": 0.6268579421960787,
+          "worst_dlog_below": 0.41887799902470135
+        },
+        "hist4515": {
+          "above": 19,
+          "active": 152640,
+          "below": 134,
+          "hi_den": 152640,
+          "lo_den": 152631,
+          "per_gas": {
+            "co2": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10167
+            },
+            "composite": {
+              "above": 15,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            },
+            "h2o": {
+              "above": 4,
+              "below": 134,
+              "hi_den": 122112,
+              "lo_den": 122112
+            },
+            "o3": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            }
+          },
+          "worst_dlog_above": 0.6268579421960787,
+          "worst_dlog_below": 0.41887799902470135
+        },
+        "s1": {
+          "above": 19,
+          "active": 152640,
+          "below": 134,
+          "hi_den": 152640,
+          "lo_den": 152631,
+          "per_gas": {
+            "co2": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10167
+            },
+            "composite": {
+              "above": 15,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            },
+            "h2o": {
+              "above": 4,
+              "below": 134,
+              "hi_den": 122112,
+              "lo_den": 122112
+            },
+            "o3": {
+              "above": 0,
+              "below": 0,
+              "hi_den": 10176,
+              "lo_den": 10176
+            }
+          },
+          "worst_dlog_above": 0.6268579421960787,
+          "worst_dlog_below": 0.41887799902470135
+        }
+      }
+    },
+    "exceedance_event_sum_note": "the figure 153 equals the SUM of exceedance EVENTS (134 below + 19 above) from this same corrected active-state effective census; it is not an earlier or distinct raw-bound counting, and no unique-coordinate collapse or overlap calculation is performed or implied",
+    "interpretation_ceiling": "BINDING CEILING (monitor, 2026-08-14): the exact claim set is -- file-byte branch inconclusive due to arm-specific root metadata; all 47 scientific variables elementwise identical; no observed S1 scientific effect in THIS rebuilt paired trajectory. ensure_updated_state(1) may execute zero refresh if state is already current, and the historical 4515 bridge remains conditional due to provenance. NO global mechanism exclusion, NO retroactive inference, hashes are NOT permanently retired campaign-wide, and synchronization is NOT taken off the board.",
+    "objectives": {
+      "finding": "bit-exact equal across all three arms and equal to the historical v1.2 raw2 reference (22.791293464348826)",
+      "per_target": {
+        "a0a": 22.791293464348826,
+        "a0b": 22.791293464348826,
+        "hist4515": 22.791293464348826,
+        "published_selfcheck": 0.18218645425029933,
+        "s1": 22.791293464348826
+      },
+      "pinned_value": 22.791293464348826,
+      "published_selfcheck": 0.18218645425029933
+    },
+    "registered_branch_fired": "A0a != A0b (raw2 file hashes): byte-level treatment inference is INCONCLUSIVE because baseline repeatability failed; S1 metrics are descriptive only (committed matrix, verbatim)"
+  },
+  "status": "s1_run_completed_verified",
+  "timestamp_utc": "2026-08-14T00:13:49Z"
+}
