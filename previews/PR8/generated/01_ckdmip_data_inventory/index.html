@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>CKDMIP data inventory · NumericalRadiation.jl</title><meta name="title" content="CKDMIP data inventory · NumericalRadiation.jl"/><meta property="og:title" content="CKDMIP data inventory · NumericalRadiation.jl"/><meta property="twitter:title" content="CKDMIP data inventory · NumericalRadiation.jl"/><meta name="description" content="Documentation for NumericalRadiation.jl."/><meta property="og:description" content="Documentation for NumericalRadiation.jl."/><meta property="twitter:description" content="Documentation for NumericalRadiation.jl."/><meta property="og:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/01_ckdmip_data_inventory/"/><meta property="twitter:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/01_ckdmip_data_inventory/"/><link rel="canonical" href="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/01_ckdmip_data_inventory/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">NumericalRadiation.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Design &amp; acceptance criteria</span><ul><li><a class="tocitem" href="../../design/">Design and acceptance criteria</a></li><li><a class="tocitem" href="../../architecture/">Architecture</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../../single_column/">Single-column radiation</a></li><li class="is-active"><a class="tocitem" href>CKDMIP data inventory</a><ul class="internal"><li><a class="tocitem" href="#Locate-candidate-data-roots"><span>Locate candidate data roots</span></a></li><li><a class="tocitem" href="#Check-the-layout"><span>Check the layout</span></a></li><li><a class="tocitem" href="#Interpret-the-result"><span>Interpret the result</span></a></li></ul></li><li><a class="tocitem" href="../02_staged_ecckd_column/">Staged ecCKD column</a></li></ul></li><li><span class="tocitem">Gas optics</span><ul><li><a class="tocitem" href="../../gas_optics/ecckd_files/">ecCKD files</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_runtime_workflow/">ecCKD runtime workflow</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_model_selection/">ecCKD model selection</a></li><li><a class="tocitem" href="../../gas_optics/correlated_k/">Correlated-k method</a></li><li><a class="tocitem" href="../../gas_optics/ckdmip_training_data/">CKDMIP training data</a></li><li><a class="tocitem" href="../../gas_optics/rrtmgp_comparison/">RRTMGP comparison</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_training_recovery/">Training and recovery</a></li><li><a class="tocitem" href="../../gas_optics/breeze_integration/">Breeze integration</a></li></ul></li><li><span class="tocitem">Solvers &amp; schemes</span><ul><li><a class="tocitem" href="../../radiative_transfer/">Radiative transfer</a></li><li><a class="tocitem" href="../../solvers/">Column solvers</a></li><li><a class="tocitem" href="../../cloud_optics/">Cloud and aerosol optics</a></li><li><a class="tocitem" href="../../longwave/">Longwave</a></li><li><a class="tocitem" href="../../shortwave/">Shortwave</a></li><li><a class="tocitem" href="../../notation/">Notation</a></li></ul></li><li><span class="tocitem">API reference</span><ul><li><a class="tocitem" href="../../api/">Overview</a></li><li><a class="tocitem" href="../../api/staged_runtime/">Staged runtime</a></li><li><a class="tocitem" href="../../api/ecckd/">ecCKD and data</a></li><li><a class="tocitem" href="../../api/column_schemes/">Column schemes</a></li><li><a class="tocitem" href="../../api/metrics/">Metrics</a></li></ul></li><li><a class="tocitem" href="../../validation/">Validation</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>CKDMIP data inventory</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>CKDMIP data inventory</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/01_ckdmip_data_inventory.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="CKDMIP-Data-Inventory"><a class="docs-heading-anchor" href="#CKDMIP-Data-Inventory">CKDMIP Data Inventory</a><a id="CKDMIP-Data-Inventory-1"></a><a class="docs-heading-anchor-permalink" href="#CKDMIP-Data-Inventory" title="Permalink"></a></h1><p>CKDMIP and ecCKD workflows use data in very different size classes. The package can resolve small ecRad/ecCKD assets through artifacts, while the full CKDMIP spectra and derived flux products live in a user-managed data tree. This example inventories local state without downloading anything.</p><pre><code class="language-julia hljs">using NumericalRadiation
+using Printf</code></pre><h2 id="Locate-candidate-data-roots"><a class="docs-heading-anchor" href="#Locate-candidate-data-roots">Locate candidate data roots</a><a id="Locate-candidate-data-roots-1"></a><a class="docs-heading-anchor-permalink" href="#Locate-candidate-data-roots" title="Permalink"></a></h2><p><code>RH_CKDMIP_DATA_PATH</code> is the training/recovery path. <code>CKDMIP_DATA_DIR</code> is accepted for compatibility with earlier examples, and <code>$HOME/data/ckdmip</code> is a conventional local fallback.</p><pre><code class="language-julia hljs">function candidate_ckdmip_roots()
+    roots = String[]
+    for key in (&quot;RH_CKDMIP_DATA_PATH&quot;, &quot;CKDMIP_DATA_DIR&quot;)
+        value = strip(get(ENV, key, &quot;&quot;))
+        isempty(value) || push!(roots, abspath(expanduser(value)))
+    end
+    push!(roots, abspath(joinpath(homedir(), &quot;data&quot;, &quot;ckdmip&quot;)))
+    return unique(roots)
+end
+
+function first_existing_root(roots)
+    for root in roots
+        isdir(root) &amp;&amp; return root
+    end
+    return first(roots)
+end
+
+ckdmip_root = first_existing_root(candidate_ckdmip_roots());</code></pre><h2 id="Check-the-layout"><a class="docs-heading-anchor" href="#Check-the-layout">Check the layout</a><a id="Check-the-layout-1"></a><a class="docs-heading-anchor-permalink" href="#Check-the-layout" title="Permalink"></a></h2><pre><code class="language-julia hljs">const EXPECTED_ITEMS = [
+    (&quot;data root&quot;, String[], true, &quot;CKDMIP root&quot;),
+    (&quot;evaluation1&quot;, [&quot;evaluation1&quot;], true, &quot;primary evaluation set&quot;),
+    (&quot;evaluation1 conc&quot;, [&quot;evaluation1&quot;, &quot;conc&quot;], true, &quot;gas concentrations&quot;),
+    (&quot;evaluation1 LW spectra&quot;, [&quot;evaluation1&quot;, &quot;lw_spectra&quot;], true, &quot;line-by-line longwave spectra&quot;),
+    (&quot;evaluation1 SW spectra&quot;, [&quot;evaluation1&quot;, &quot;sw_spectra&quot;], true, &quot;line-by-line shortwave spectra&quot;),
+    (&quot;evaluation1 LW fluxes&quot;, [&quot;evaluation1&quot;, &quot;lw_fluxes&quot;], false, &quot;public and locally derived LW fluxes&quot;),
+    (&quot;evaluation1 SW fluxes&quot;, [&quot;evaluation1&quot;, &quot;sw_fluxes&quot;], false, &quot;public and locally derived SW fluxes&quot;),
+    (&quot;evaluation2&quot;, [&quot;evaluation2&quot;], false, &quot;held-out evaluation set&quot;),
+]
+
+function count_files(path)
+    isdir(path) || return 0
+    return count(name -&gt; isfile(joinpath(path, name)), readdir(path))
+end
+
+function item_status(root, parts)
+    path = isempty(parts) ? root : joinpath(root, parts...)
+    return (path = path, present = isdir(path), files = count_files(path))
+end
+
+ckdmip_configured = any(key -&gt; !isempty(strip(get(ENV, key, &quot;&quot;))),
+                        (&quot;RH_CKDMIP_DATA_PATH&quot;, &quot;CKDMIP_DATA_DIR&quot;))
+ckdmip_status = isdir(ckdmip_root) ? &quot;present&quot; :
+    ckdmip_configured ? &quot;configured (missing)&quot; : &quot;missing&quot;
+
+println(&quot;ecRad data artifact: &quot;,
+        ecrad_data_path(; require = false) === nothing ? &quot;missing&quot; : &quot;available&quot;)
+println(&quot;ecCKD source artifact: &quot;,
+        ecckd_source_path(; require = false) === nothing ? &quot;missing&quot; : &quot;available&quot;)
+println(&quot;CKDMIP data root: &quot;, ckdmip_status)
+println(&quot;Official ecCKD definition files: &quot;, length(official_ecckd_model_inventory()))
+
+println()
+println(&quot;Expected CKDMIP/ecCKD inventory&quot;)
+println(&quot;--------------------------------------------------------------------------&quot;)
+@printf(&quot;%-24s %-10s %-8s %-7s %s\n&quot;, &quot;category&quot;, &quot;status&quot;, &quot;required&quot;, &quot;files&quot;, &quot;path&quot;)
+println(&quot;--------------------------------------------------------------------------&quot;)
+
+for (label, parts, required, _note) in EXPECTED_ITEMS
+    status = item_status(ckdmip_root, parts)
+    word = status.present ? &quot;present&quot; : required ? &quot;missing&quot; : &quot;optional&quot;
+    rel = status.path == ckdmip_root ? &quot;.&quot; : relpath(status.path, ckdmip_root)
+    @printf(&quot;%-24s %-10s %-8s %-7d %s\n&quot;, label, word, required ? &quot;yes&quot; : &quot;no&quot;, status.files, rel)
+end
+
+println(&quot;--------------------------------------------------------------------------&quot;)</code></pre><pre><code class="nohighlight hljs">ecRad data artifact: missing
+ecCKD source artifact: missing
+CKDMIP data root: missing
+Official ecCKD definition files: 6
+
+Expected CKDMIP/ecCKD inventory
+--------------------------------------------------------------------------
+category                 status     required files   path
+--------------------------------------------------------------------------
+data root                missing    yes      0       .
+evaluation1              missing    yes      0       evaluation1
+evaluation1 conc         missing    yes      0       evaluation1/conc
+evaluation1 LW spectra   missing    yes      0       evaluation1/lw_spectra
+evaluation1 SW spectra   missing    yes      0       evaluation1/sw_spectra
+evaluation1 LW fluxes    optional   no       0       evaluation1/lw_fluxes
+evaluation1 SW fluxes    optional   no       0       evaluation1/sw_fluxes
+evaluation2              optional   no       0       evaluation2
+--------------------------------------------------------------------------
+</code></pre><h2 id="Interpret-the-result"><a class="docs-heading-anchor" href="#Interpret-the-result">Interpret the result</a><a id="Interpret-the-result-1"></a><a class="docs-heading-anchor-permalink" href="#Interpret-the-result" title="Permalink"></a></h2><p>Missing public spectra block exact ecCKD objective reconstruction. Missing <code>5gas-*</code> or <code>rel-*</code> fluxes do not mean the public CKDMIP archive is incomplete; those are derived ecCKD training products generated locally from spectra.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../single_column/">« Single-column radiation</a><a class="docs-footer-nextpage" href="../02_staged_ecckd_column/">Staged ecCKD column »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 14 August 2026 05:34">Friday 14 August 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
