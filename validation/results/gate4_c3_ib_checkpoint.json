@@ -14,8 +14,45 @@
     "downstream_template_sha256": "a1cdbd6e1daa962752db226ea0c9597839824e8b3cf9acf6ca7a547f6c4ed1ce"
   },
   "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch plus transient private temp fixtures (mktempdir).",
+  "eval1_staging": {
+    "closure_count": 20,
+    "derivation": "PRIMARY: pinned structured published-training manifest (ecckd_published_training_manifest.json); INDEPENDENT CROSS-CHECK: generation-derived deployed script blocks; CORROBORATING: G3 executor staged sets (g3-runs 4505/4515); equality asserted, never superset; rendered four-context coverage gated per entry; unselected 5gas/co2 branches excluded",
+    "names": [
+      "ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
+      "ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
+      "ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
+      "ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
+      "ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
+      "ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
+      "ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
+      "ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
+      "ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
+      "ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
+      "ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
+      "ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
+      "ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
+      "ckdmip_evaluation1_lw_fluxes_present.h5",
+      "ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+      "ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+      "ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+      "ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+      "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+      "ckdmip_evaluation1_lw_fluxes_rel-560.h5"
+    ],
+    "recovery_of": "gate4_c3_ib_4578_failure_ledger",
+    "selected_modes": [
+      "relative-base",
+      "relative-ch4",
+      "relative-n2o",
+      "relative-cfc"
+    ],
+    "structured_manifest": {
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/ecckd_published_training_manifest.json",
+      "sha256": "bb421c92087449524d9bb8772c73ff87fcf5a42e1a435ad7ed3ced53b5f03715"
+    }
+  },
   "failures": [],
-  "fixture_count": 88,
+  "fixture_count": 108,
   "fixture_verdicts": {
     "alternate_token_same_bits_refuses": true,
     "anchor_hit_derived": true,
@@ -38,11 +75,29 @@
     "downstream_has_zero_max_iterations": true,
     "downstream_leak_negative_via_predicate": true,
     "duplicate_header_refuses": true,
+    "eval1_authority_drift_refuses": true,
+    "eval1_census_gate_deletion_refuses": true,
+    "eval1_census_ls_weakening_refuses": true,
+    "eval1_closure_exact_20": true,
+    "eval1_coverage_census_removal_refuses": true,
+    "eval1_coverage_reverify_drop_refuses": true,
+    "eval1_coverage_stage_drop_refuses": true,
+    "eval1_g3_evidence_drift_refuses": true,
+    "eval1_manifest_duplicate_refuses": true,
+    "eval1_manifest_extra_unselected_refuses": true,
+    "eval1_manifest_missing_refuses": true,
+    "eval1_manifest_pin_exact": true,
+    "eval1_unselected_row_injection_refuses": true,
+    "eval1_wrong_mode_refuses": true,
     "g1_semantic_decoy_sha_refuses": true,
     "g1_semantic_exact_fields_pass": true,
     "g1_semantic_moved_value_refuses": true,
     "g1_semantic_wrong_nested_status_refuses": true,
     "identifier_scanner_detects_synthetic": true,
+    "ledger_4578_classifier_mutations_refuse": true,
+    "ledger_4578_gatepins_deletion_refuses": true,
+    "ledger_4578_gatepins_duplicate_refuses": true,
+    "ledger_4578_semantic_mutations_refuse": true,
     "ledger_mutations_refuse_via_classifier": true,
     "ledgers_all_green": true,
     "malformed_bits_refuse": true,
@@ -94,6 +149,8 @@
     "text_upstream_call_removed_refuses": true,
     "text_wrapper_gate_removed_refuses": true,
     "token_bits_mismatch_refuses": true,
+    "training_manifest_pin_deletion_refuses": true,
+    "training_manifest_pin_drift_refuses": true,
     "tree_manifest_119_24": true,
     "unknown_line_decoy_refuses": true,
     "upstream_3x4_census_and_partitions": true,
@@ -113,6 +170,7 @@
   },
   "gates": {
     "evidence_derivations": "passed",
+    "evidence_eval1_closure": "passed",
     "evidence_frozen_pins": "passed",
     "evidence_julia_provenance": "passed",
     "evidence_master_pins": "passed",
@@ -163,6 +221,76 @@
       "bytes": 450873,
       "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
       "sha256": "75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8"
+    },
+    {
+      "bytes": 469175,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5",
+      "sha256": "98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4"
+    },
+    {
+      "bytes": 469174,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5",
+      "sha256": "67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4"
+    },
+    {
+      "bytes": 469174,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5",
+      "sha256": "5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759"
+    },
+    {
+      "bytes": 469184,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5",
+      "sha256": "0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842"
+    },
+    {
+      "bytes": 469184,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5",
+      "sha256": "6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4"
+    },
+    {
+      "bytes": 469184,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5",
+      "sha256": "f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb"
+    },
+    {
+      "bytes": 469175,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5",
+      "sha256": "eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560"
+    },
+    {
+      "bytes": 469175,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5",
+      "sha256": "34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0"
+    },
+    {
+      "bytes": 469175,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5",
+      "sha256": "ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8"
+    },
+    {
+      "bytes": 469175,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5",
+      "sha256": "e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2"
+    },
+    {
+      "bytes": 469173,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5",
+      "sha256": "f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2"
+    },
+    {
+      "bytes": 469203,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5",
+      "sha256": "557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4"
+    },
+    {
+      "bytes": 469173,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5",
+      "sha256": "d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c"
+    },
+    {
+      "bytes": 469193,
+      "path": "/shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5",
+      "sha256": "9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b"
     },
     {
       "bytes": 451045,
@@ -231,6 +359,12 @@
       "name": "P2",
       "sha256": "41cc574b28b1c55a6f2235d2dc9914e42c4806bb4ff5aac23b98e1379fdc2b2d",
       "status": "p2_run_completed_verified"
+    },
+    {
+      "case": "gate4_c3_ib_4578_failure_ledger",
+      "name": "C3IBF4578",
+      "sha256": "472088a799ab4bc53b54dedd405509835dbeef923d8bb39a84f89268d272bf84",
+      "status": "c3ib_4578_failed_staging_manifest_gap"
     }
   ],
   "runtime_build_provenance": {
@@ -297,7 +431,7 @@
     ]
   },
   "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_lw_iteration_budget.sbatch",
-  "sbatch_sha256": "fef89ea55c9bb8b2bb6fd7b18c4269da9428723b654b4c5ec031349a0fb8465a",
+  "sbatch_sha256": "834cd0d32863ba299edb13075b2077d6f92b46ddc884282bdf1d87bac1397a9b",
   "score_matrix": "EXACTLY 13 (12 arm-panel: 3 arms x raw2/final x primary/secondary + 1 fixed current-G1 anchor); severability: anchor miss refuses only the current-G1-adjacent label",
   "source_tree": {
     "exec_census": 24,

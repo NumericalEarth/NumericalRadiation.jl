@@ -1,0 +1,64 @@
+{
+  "case": "gate4_c3_ib_4578_failure_ledger",
+  "data_mode": "terminal_forensics_ledger",
+  "disclaimer": "writer reads the receipt, epoch sidecar, log, and preserved RUNROOT read-only; writes only its own JSON/MD results",
+  "durable_evidence": {
+    "child_failure_lines": [
+      "terminate called after throwing an instance of 'int'",
+      "OPTIMIZE_LUT CHILD FAILED rc=134"
+    ],
+    "failure_point": "arm c0a, first downstream pass (relative-ch4), TRAINING read of the first listed input; base passes (probe, c0a relative-base) had completed with zero REFUSED markers",
+    "first_missing_input": "ckdmip_evaluation1_lw_fluxes_present.h5",
+    "log": {
+      "bytes": 249091,
+      "path": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4578.log",
+      "sha256": "698cab0bdf65d42ebcd29796e15ece5848d679a9cbf04b4f31d7f5e535f1fbba"
+    },
+    "missing_input_error_line": "*** *** Error at line 43 of DataFile.cpp: Failed to find ckdmip_evaluation1_lw_fluxes_present.h5 in .:/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4578/lw-c3ib/data/evaluation1/lw_fluxes:/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4578/lw-c3ib/work-c0a/lw_lbl_fluxes",
+    "receipt": {
+      "bytes": 1688,
+      "custody": "create-once noclobber scontrol -dd capture, -agent42 suffix",
+      "epoch": "1786721517",
+      "epoch_sidecar": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4578-scontrol-final-agent42.txt.epoch",
+      "path": "/shared/home/greg/data/ckdmip-logs/g4-c3ib-lw-4578-scontrol-final-agent42.txt",
+      "sha256": "f6f3a3618b5207c5e9a6645586cbe65a69038636fcfb2c406bd7dd953797c5c7"
+    },
+    "runroot": {
+      "path": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4578/lw-c3ib",
+      "preserved": true,
+      "staged_eval1_count": 6,
+      "staged_eval1_names": [
+        "ckdmip_evaluation1_lw_fluxes_rel-1120.h5",
+        "ckdmip_evaluation1_lw_fluxes_rel-180.h5",
+        "ckdmip_evaluation1_lw_fluxes_rel-2240.h5",
+        "ckdmip_evaluation1_lw_fluxes_rel-280.h5",
+        "ckdmip_evaluation1_lw_fluxes_rel-415.h5",
+        "ckdmip_evaluation1_lw_fluxes_rel-560.h5"
+      ]
+    },
+    "zero_refused_markers_in_log": true
+  },
+  "job": {
+    "derived_exit_code": "0:0",
+    "end_time": "2026-08-14T15:31:43",
+    "exit_code": "134:0",
+    "job_id": "4578",
+    "job_name": "g4-c3ib-lw-iteration-budget",
+    "reason": "NonZeroExitCode",
+    "run_time": "00:38:32",
+    "state": "FAILED",
+    "time_limit": "06:00:00"
+  },
+  "monitor_observations": {
+    "classification": "staging_manifest_completeness_gap",
+    "classified_by": "Codex monitor terminal audit, with Agent42 independent mechanical confirmation",
+    "omitted_inputs": 14,
+    "root_cause": "the eval1 staging manifest was hand-inherited from base-pass-only prior units and never re-derived from the selected-mode pass scripts (relative-base/ch4/n2o/cfc)",
+    "scientific_inference": "ZERO scientific inference is drawn from this run; the partial C0a outputs are forensics only and MUST NOT be reused; a fresh job must rerun the full sandwich",
+    "selected_mode_eval1_closure": 20,
+    "staged_eval1_manifest": 6,
+    "terminal_contract_applied": "FAILED is a HOLD state; no automatic resubmission; the next action required a new explicit Codex-monitor review and GO with hash verification"
+  },
+  "non_authorizing_note": "this ledger records a terminal failure; it authorizes NOTHING (no resubmission, no recovered acceptance, no mechanism inference)",
+  "status": "c3ib_4578_failed_staging_manifest_gap"
+}

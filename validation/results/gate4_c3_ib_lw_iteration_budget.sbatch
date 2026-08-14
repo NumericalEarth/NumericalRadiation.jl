@@ -39,11 +39,12 @@ echo "=== C3IB stage 0a: gate-code identity (verify BEFORE sourcing) ==="
 sha256sum -c <<'GATEPINS' || { echo "REFUSED: gate code/prerequisite changed since generation; regenerate" >&2; exit 75; }
 e31e57f0446d3396ba86644f3aefd88284231c507feaba305160c97788fae664  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_quota_guard.sh
 60fbaa93cf5f7e34eac2fcf6e054ae4caaf99c2e4e0a63a6c74aa74eeff31d12  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/validation_results.jl
-115043928372cc6b1d31b8a26e4f6742c7bbee48aafa43ad9c36314c4ead470e  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_checkpoint.jl
+6eae6649116a99023c2622aa244bae59e11378b63f492e8cc90f7137137eb9ef  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_checkpoint.jl
 abebffc6146c93adc4d0ea9ed7d6d0e16cc62fd82805f34c63976418a8bb7e51  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_p1_splice_checker.jl
 2ba2fac1947fa727bd35d5931923a62edd77f8a82646024781fd2f74960ac575  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_p2_hard_objective_checker.jl
 06ce129768bafaa8dcf18e6cff063e030dafeeeca428447342c2a6033e5a1b82  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_checker.jl
 e5af535f2d1c9efb478bb1b856f632fe05a5dfd01dec634cfecc41a67e44bb63  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/gate4_c3_ib_iteration_budget_frozen_design.md
+bb421c92087449524d9bb8772c73ff87fcf5a42e1a435ad7ed3ced53b5f03715  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/ecckd_published_training_manifest.json
 9136a5f68b97123017182b5afaf30c93148188a0ea8681ac3d17a808f6012ef0  /shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Project.toml
 cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186  /shared/home/greg/Projects/AnalyticBandRadiation-platform/test/Manifest.toml
 6fd7791834fe1ceb184afd4623c0f95ab311685bb849cfad0837b3c6ffd4aa4e  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_g3_run_ledger.json
@@ -51,6 +52,7 @@ cf9f318d43221280a8ca1116fbfea20d66678267f4e9d5dd1bdf519093ceb186  /shared/home/g
 3c584417d4eba3459f58bbd182b395f7f8ed6c2cddb48e4fef54c057799d116f  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c1_bounds_flag_completion_ledger.json
 9605cf64deb5cb14f2f3403d73c976b00ddfa2c7fc50adba9cb24e1dd51f2403  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p1_completion_ledger.json
 41cc574b28b1c55a6f2235d2dc9914e42c4806bb4ff5aac23b98e1379fdc2b2d  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p2_completion_ledger.json
+472088a799ab4bc53b54dedd405509835dbeef923d8bb39a84f89268d272bf84  /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_c3_ib_4578_failure_ledger.json
 GATEPINS
 
 echo "=== C3IB stage 0b: quota health (50 GiB soft-quota headroom) ==="
@@ -65,6 +67,20 @@ b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85  /shared/home/g
 c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5
 cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5
 75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5
+98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5
+67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5
+5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5
+0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5
+6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5
+f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5
+eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5
+34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5
+ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5
+e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5
+f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5
+557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5
+d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5
+9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b  /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5
 e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5
 ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc
 c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e  /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5
@@ -413,6 +429,20 @@ b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85 450863 /shared/
 c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2 450863 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5
 cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c 450873 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5
 75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8 450873 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5
+98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4 469175 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5
+67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4 469174 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5
+5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759 469174 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5
+0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842 469184 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5
+6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4 469184 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5
+f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb 469184 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5
+eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560 469175 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5
+34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0 469175 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5
+ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8 469175 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5
+e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2 469175 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5
+f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2 469173 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5
+557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4 469203 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5
+d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c 469173 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5
+9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b 469193 /shared/home/greg/data/ckdmip/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5 $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5
 e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc 451045 /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5 $RUNROOT/work-probe/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5
 c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e 58404939 /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5 $RUNROOT/work-probe/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5
 ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43 2413144 /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc $RUNROOT/work-probe/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc
@@ -429,6 +459,32 @@ a3d93d3eb4e69894862fad682563d25a5636e7dbbcc59c197ecaa1cceb6f24b4 872004 /shared/
 8b54392eeddd303299881d6405dcf3de4d738667a3dfe605964a64863e2fbee4 854508 /shared/home/greg/ecckd-derived-flux-work/g4-init-generation/work-v14/sw_ckd-definition/ecckd-1.4_sw_ckd-definition_climate_rgb-tol0.047.nc $RUNROOT/source-inputs/primary_sw.nc
 49abc7bf88b80252e4f9934f8659d108ffee6a101124b2fd080f2eb65d144eb3 851724 /shared/home/greg/.julia/artifacts/49ce668ce0861f9d5e8299d68af7138485eb5f19/ecrad-131ac980517719b7a859e3ccc117919a1d888a20/data/ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc $RUNROOT/source-inputs/secondary_sw.nc
 STAGE
+echo "=== C3IB stage 1b: eval1 selected-mode closure census (pre-build gate) ==="
+find "$RUNROOT/data/evaluation1/lw_fluxes" -mindepth 1 -maxdepth 1 -printf '%f\n' | LC_ALL=C sort > "$RUNROOT/ev1-actual.txt"
+cat <<'EV1NAMES' > "$RUNROOT/ev1-expected.txt"
+ckdmip_evaluation1_lw_fluxes_cfc11-0.h5
+ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5
+ckdmip_evaluation1_lw_fluxes_cfc12-0.h5
+ckdmip_evaluation1_lw_fluxes_cfc12-550.h5
+ckdmip_evaluation1_lw_fluxes_ch4-1200.h5
+ckdmip_evaluation1_lw_fluxes_ch4-2600.h5
+ckdmip_evaluation1_lw_fluxes_ch4-350.h5
+ckdmip_evaluation1_lw_fluxes_ch4-3500.h5
+ckdmip_evaluation1_lw_fluxes_ch4-700.h5
+ckdmip_evaluation1_lw_fluxes_n2o-190.h5
+ckdmip_evaluation1_lw_fluxes_n2o-270.h5
+ckdmip_evaluation1_lw_fluxes_n2o-405.h5
+ckdmip_evaluation1_lw_fluxes_n2o-540.h5
+ckdmip_evaluation1_lw_fluxes_present.h5
+ckdmip_evaluation1_lw_fluxes_rel-1120.h5
+ckdmip_evaluation1_lw_fluxes_rel-180.h5
+ckdmip_evaluation1_lw_fluxes_rel-2240.h5
+ckdmip_evaluation1_lw_fluxes_rel-280.h5
+ckdmip_evaluation1_lw_fluxes_rel-415.h5
+ckdmip_evaluation1_lw_fluxes_rel-560.h5
+EV1NAMES
+cmp -s "$RUNROOT/ev1-expected.txt" "$RUNROOT/ev1-actual.txt" || { echo "REFUSED: staged eval1 census != generation-derived 20-name selected-mode closure (pre-build gate)" >&2; exit 76; }
+[ "$(wc -l < "$RUNROOT/ev1-actual.txt")" = 20 ] || { echo "REFUSED: staged eval1 count != 20 (pre-build gate)" >&2; exit 76; }
 while read -r esha esz src dst; do
     mkdir -p "$(dirname "$dst")"
     cp -L -- "$src" "$dst" || { echo "REFUSED: pkg staging copy failed: $src" >&2; exit 76; }
@@ -1263,6 +1319,20 @@ b0932f2648f720af74191d2a9d62f6178f73dfb9a620b773e55670f06ce2db85  $RUNROOT/data/
 c8aa819b9e7ea7ed73a0af74862ab49d4209866b74988529b2dfce0ef99710e2  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-560.h5
 cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5
 75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5
+98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5
+67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5
+5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5
+0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5
+6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5
+f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5
+eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5
+34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5
+ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5
+e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5
+f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5
+557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5
+d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5
+9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b  $RUNROOT/data/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5
 e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc  $RUNROOT/work-probe/lw_lbl_fluxes/ckdmip_evaluation2_lw_fluxes_rel-415.h5
 c96e64927c4d0d706d35f376be59f17517dae6d6d7041d0791d164641a017a3e  $RUNROOT/work-probe/lw_gpoints/ecckd-1.2_lw_gpoints_climate_fsck-tol0.0161.h5
 ce05707934e89dfea27c52352f8ca22f0cc28467daac3c122dae7c81edaf7b43  $RUNROOT/work-probe/lw_raw-ckd-definition/ecckd-1.2_lw_raw-ckd-definition_climate_fsck-tol0.0161.nc

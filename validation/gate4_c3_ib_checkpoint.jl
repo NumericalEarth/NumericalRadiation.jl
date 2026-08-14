@@ -1,6 +1,15 @@
-# Gate-4 C3-IB ITERATION-BUDGET CHECKPOINT (generator). CLI remains
-# STUBBED pending monitor clearance of the in-process Section-E suite;
-# no artifacts are written while stubbed.
+# Gate-4 C3-IB ITERATION-BUDGET CHECKPOINT (generator; r2 RECOVERY
+# REVISION after job 4578 FAILED 134:0, staging-manifest-completeness
+# gap). CLI ACTIVE: running this file regenerates the checkpoint
+# artifacts fail-closed. Recovery scope (harness/provenance only; the
+# scientific design, selected modes, budgets, and scoring are byte-
+# unchanged): eval1 staging manifest = the EXACT 20-name selected-mode
+# closure (relative-base/ch4/n2o/cfc), generation-derived from the
+# pinned structured published-training manifest and cross-checked
+# against the generation-derived deployed script blocks plus the
+# G3 executor staged sets; the 4578 failure ledger is a structured fail-closed
+# prerequisite; an early pre-build staged-census gate refuses input-
+# closure gaps in seconds.
 #
 # FROZEN DESIGN AUTHORITY (monitor freeze):
 # gate4_c3_ib_iteration_budget_frozen_design.md sha256
@@ -111,7 +120,35 @@ const C3G_DATA_INPUTS = [
     ("cfbda1d66decc14e6e91e8465f32f5a5e4bcf0310a73f620fe45bafbcec9ba7c", 450873,
      "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-1120.h5"),
     ("75239df6dbf578b3be6267c09995ff050f5c846be3c75492fad96dcab25610e8", 450873,
-     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5")]
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_rel-2240.h5"),
+    ("98ccb738a2cc9fe72a3da18ab1da9e10e1c639302e16b43640dcf4011b7aecb4", 469175,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_present.h5"),
+    ("67e386755139d0623dab0f0d45036940c1d7c497c3eeabb6bb046ad9a8c885e4", 469174,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-350.h5"),
+    ("5097a2044a6cc471a6658129bdbea48bdd7fb5da11c6f372a66fb9c5642f5759", 469174,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-700.h5"),
+    ("0db74ee83f804a826a03dcfc4a3b426294504f0251b3c67847c451609b8bd842", 469184,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-1200.h5"),
+    ("6560283bebe8696b34f609eef7907caaedb23775279ad4512915bce2a5de7ba4", 469184,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-2600.h5"),
+    ("f601efa7c37f58b56256d83f00686d09e48db06621b4ec802cf973b89a878edb", 469184,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_ch4-3500.h5"),
+    ("eee1cad7a4cc3c01bddf4149ff861ddea1fb90c9ee0c173d276f1463e9e9a560", 469175,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-190.h5"),
+    ("34048c6aacd362769c592d829f81f6bf3b3634af6baec292f0d397a9eee1bcc0", 469175,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-270.h5"),
+    ("ed6f69658fa5e4c82f53d7f03741c87e511673f08928c61f6864a348c01ce4f8", 469175,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-405.h5"),
+    ("e670a3f7a5e7e59194b06fcab2d075d4ac855dc366e032a789f8b956c1215bb2", 469175,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_n2o-540.h5"),
+    ("f80167edd631b12b55e98a3c652e5691f45cdafc69f34a8d414f853b317b36d2", 469173,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-0.h5"),
+    ("557b0e96e1c591b6906feeeae3768cb41f01dcac46002efde0e14ee4d9e948b4", 469203,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc11-2000.h5"),
+    ("d71cc1697a645320a0b027ce2d69e5643c2939c4f8e636b67b1cf75baf67377c", 469173,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-0.h5"),
+    ("9d8ea06d70a374a8d20a1812f30d4dc0159bdf4dfbeb202373778cf3b8eb4d1b", 469193,
+     "$C3G_CKDMIP_ROOT/evaluation1/lw_fluxes/ckdmip_evaluation1_lw_fluxes_cfc12-550.h5")]
 const C3G_G4WORK = "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation"
 const C3G_LBL_INPUT =
     ("e799eae4421afe12481533678963237198338b3979ec938c6e61c2759522d4bc", 451045,
@@ -130,6 +167,111 @@ const C3G_V12_TEST_PINS = [
      1369, "$C3G_SRC_ARTIFACT/test/check_configuration.h"),
     ("a5fe514dbcb656c99c11ca39d1c88eba953bda592ca35983de9c42da33dab810",
      92, "$C3G_SRC_ARTIFACT/test/version.h.in")]
+
+# EVAL1 SELECTED-MODE CLOSURE (4578 recovery): the staging manifest
+# must EQUAL (never superset) the union of eval1 basenames referenced
+# by exactly the executed modes, derived at generation time from the
+# pinned structured published-training manifest and cross-checked
+# against the generation-derived deployed script blocks plus the
+# G3 executor staged sets. Unselected branches (5gas/co2) must remain absent.
+const C3G_EVAL1_SELECTED_MODES = ["relative-base", "relative-ch4",
+                                  "relative-n2o", "relative-cfc"]
+const C3G_EVAL1_UNSELECTED_TOKENS = ["_5gas-", "_co2-"]
+const C3G_G3_EXECUTOR_EVAL1_DIRS = [
+    "$C3G_G4WORK/g3-runs/4505/lw/data/evaluation1/lw_fluxes",
+    "$C3G_G4WORK/g3-runs/4515/lw/data/evaluation1/lw_fluxes"]
+const C3G_TRAINING_MANIFEST_FILE = joinpath(P2_PROJECT_ROOT,
+    "validation", "results", "ecckd_published_training_manifest.json")
+const C3G_TRAINING_MANIFEST_SHA =
+    "bb421c92087449524d9bb8772c73ff87fcf5a42e1a435ad7ed3ced53b5f03715"
+c3g_eval1_manifest() = sort([basename(t[3]) for t in C3G_DATA_INPUTS])
+c3g_astext(x) = x isa String ? x : String(copy(Vector{UInt8}(x)))
+
+function c3g_eval1_mode_names(text, mode)
+    m = match(Regex("(?ms)^\\s*" * mode * "\\)\\s*(.*?);;"), text)
+    m === nothing && return nothing
+    names = String[]
+    for ln in split(m.captures[1], '\n')
+        startswith(strip(ln), "#") && continue
+        for x in eachmatch(
+            r"ckdmip_evaluation1_lw_fluxes_[A-Za-z0-9.\-]+\.h5", ln)
+            push!(names, x.match)
+        end
+    end
+    names
+end
+
+function c3g_manifest_mode_names(mdata, mode)
+    for scr in get(mdata, "optimization_scripts", Any[])
+        get(scr, "path", "") == "test/optimize_lut_lw.sh" || continue
+        for m in get(scr, "modes", Any[])
+            mode in get(m, "names", Any[]) || continue
+            names = String[]
+            for a in get(m, "assignments", Any[])
+                for x in eachmatch(
+                    r"ckdmip_evaluation1_lw_fluxes_[A-Za-z0-9.\-]+\.h5",
+                    String(a))
+                    push!(names, x.match)
+                end
+            end
+            return names
+        end
+    end
+    nothing
+end
+
+function c3g_eval1_closure_issues(mdata, derived_base, derived_down;
+        manifest = c3g_eval1_manifest(),
+        modes = C3G_EVAL1_SELECTED_MODES)
+    iss = String[]
+    length(manifest) == length(unique(manifest)) ||
+        push!(iss, "eval1 manifest carries duplicate basenames")
+    length(manifest) == 20 ||
+        push!(iss, "eval1 manifest count $(length(manifest)) != 20")
+    for n in manifest, tok in C3G_EVAL1_UNSELECTED_TOKENS
+        occursin(tok, n) &&
+            push!(iss, "eval1 manifest contains unselected-branch name: $n")
+    end
+    expected = sort(unique(manifest))
+    namesfor(label, mode) =
+        label == "structured-manifest" ?
+            c3g_manifest_mode_names(mdata, mode) :
+            c3g_eval1_mode_names(
+                mode == "relative-base" ? derived_base : derived_down,
+                mode)
+    for label in ("structured-manifest", "deployed")
+        u = Set{String}()
+        for mode in modes
+            names = namesfor(label, mode)
+            if names === nothing
+                push!(iss, "$label authority lacks mode block: $mode")
+                continue
+            end
+            union!(u, names)
+        end
+        cl = sort(collect(u))
+        for n in cl, tok in C3G_EVAL1_UNSELECTED_TOKENS
+            occursin(tok, n) && push!(iss,
+                "$label closure contains unselected-branch name: $n")
+        end
+        cl == expected || push!(iss,
+            "$label selected-mode closure != pinned manifest " *
+            "(closure $(length(cl)), manifest $(length(expected)))")
+    end
+    iss
+end
+
+function c3g_g3_executor_issues(; manifest = c3g_eval1_manifest(),
+        dirs = C3G_G3_EXECUTOR_EVAL1_DIRS)
+    iss = String[]
+    for d in dirs
+        isdir(d) ||
+            (push!(iss, "G3 executor evidence dir missing: $d"); continue)
+        sort(readdir(d)) == sort(unique(manifest)) ||
+            push!(iss, "G3 executor staged set != pinned manifest: $d")
+    end
+    iss
+end
 # three pinned scoring masters (frozen design; verified on disk at
 # design time)
 const C3G_ANCHOR_LW_PATH = "$C3G_G4WORK/work/lw_ckd-definition/" *
@@ -183,7 +325,11 @@ const C3G_LEDGERS = [
     (name = "P2", case = "gate4_p2_completion_ledger",
      status = "p2_run_completed_verified",
      sha = "41cc574b28b1c55a6f2235d2dc9914e42c4806bb4ff5aac23b98e1379fdc2b2d",
-     file = "gate4_p2_completion_ledger.json")]
+     file = "gate4_p2_completion_ledger.json"),
+    (name = "C3IBF4578", case = "gate4_c3_ib_4578_failure_ledger",
+     status = "c3ib_4578_failed_staging_manifest_gap",
+     sha = "472088a799ab4bc53b54dedd405509835dbeef923d8bb39a84f89268d272bf84",
+     file = "gate4_c3_ib_4578_failure_ledger.json")]
 c3g_ledger_path(l) = joinpath(P2_PROJECT_ROOT, "validation", "results",
                               l.file)
 # G1 SEMANTIC gates (value/pair provenance inside the pinned JSON):
@@ -227,6 +373,38 @@ p2_try_sha(path) = isfile(path) ? p2_sha(path) : nothing
 
 # package-tree manifest: Project.toml + src/** + ext/** + the chain
 # files + the resolved REDUCED reference files, as repo-relative rows
+# 4578 FAILURE-LEDGER SEMANTIC gates (exact-field; the classifier
+# covers case/status/sha, these gate the raw terminal fields and the
+# staging-gap classification inside the pinned JSON):
+function c3g_4578_semantic_issues(data)
+    iss = String[]
+    job = get(data, "job", Dict{String, Any}())
+    for (k, v) in (("state", "FAILED"), ("reason", "NonZeroExitCode"),
+                   ("exit_code", "134:0"), ("run_time", "00:38:32"),
+                   ("end_time", "2026-08-14T15:31:43"),
+                   ("job_id", "4578"))
+        get(job, k, nothing) == v ||
+            push!(iss, "4578 ledger job.$k != $v")
+    end
+    de = get(data, "durable_evidence", Dict{String, Any}())
+    get(get(de, "receipt", Dict{String, Any}()), "sha256", nothing) ==
+        "f6f3a3618b5207c5e9a6645586cbe65a69038636fcfb2c406bd7dd953797c5c7" ||
+        push!(iss, "4578 ledger receipt sha != pinned")
+    get(get(de, "log", Dict{String, Any}()), "sha256", nothing) ==
+        "698cab0bdf65d42ebcd29796e15ece5848d679a9cbf04b4f31d7f5e535f1fbba" ||
+        push!(iss, "4578 ledger log sha != pinned")
+    get(de, "first_missing_input", nothing) ==
+        "ckdmip_evaluation1_lw_fluxes_present.h5" ||
+        push!(iss, "4578 ledger first_missing_input mismatch")
+    mo = get(data, "monitor_observations", Dict{String, Any}())
+    get(mo, "classification", nothing) ==
+        "staging_manifest_completeness_gap" ||
+        push!(iss, "4578 ledger classification mismatch")
+    get(mo, "selected_mode_eval1_closure", nothing) == 20 ||
+        push!(iss, "4578 ledger closure count != 20")
+    iss
+end
+
 function p2_pkg_manifest()
     entries = NamedTuple[]
     add(rel) = begin
@@ -295,6 +473,7 @@ function c3g_make_sbatch(pkg)
          "$p2csha  $P2_PROJECT_ROOT/$P2_CHECKER_REPO",
          "$c3sha  $P2_PROJECT_ROOT/$C3G_CHECKER_REPO",
          "$C3G_DESIGN_SHA  $P2_PROJECT_ROOT/$C3G_DESIGN_REPO_PATH",
+         "$C3G_TRAINING_MANIFEST_SHA  $C3G_TRAINING_MANIFEST_FILE",
          "$(p2_sha(P2_TEST_PROJECT))  $P2_TEST_PROJECT",
          "$(p2_sha(P2_TEST_MANIFEST))  $P2_TEST_MANIFEST"],
         ["$(l.sha)  $(c3g_ledger_path(l))" for l in C3G_LEDGERS]), "\n")
@@ -341,6 +520,7 @@ $(V)_FULL=\$($t --version); $(V)_L1=\${$(V)_FULL%%\$'\\n'*}
     base_sha_9000 = bytes2hex(sha256(c3g_derive_base(9000)))
     banner(n) = "Optimizing coefficients with Adept LBFGS algorithm: " *
         "max iterations = $n, convergence criterion = 0.02"
+    ev1_names = join(c3g_eval1_manifest(), "\n")
     """
 #!/bin/bash
 #SBATCH --job-name=g4-c3ib-lw-iteration-budget
@@ -447,6 +627,13 @@ while read -r esha esz src dst; do
 done <<STAGE
 $stage_lines
 STAGE
+echo "=== C3IB stage 1b: eval1 selected-mode closure census (pre-build gate) ==="
+find "\$RUNROOT/data/evaluation1/lw_fluxes" -mindepth 1 -maxdepth 1 -printf '%f\\n' | LC_ALL=C sort > "\$RUNROOT/ev1-actual.txt"
+cat <<'EV1NAMES' > "\$RUNROOT/ev1-expected.txt"
+$ev1_names
+EV1NAMES
+cmp -s "\$RUNROOT/ev1-expected.txt" "\$RUNROOT/ev1-actual.txt" || { echo "REFUSED: staged eval1 census != generation-derived 20-name selected-mode closure (pre-build gate)" >&2; exit 76; }
+[ "\$(wc -l < "\$RUNROOT/ev1-actual.txt")" = 20 ] || { echo "REFUSED: staged eval1 count != 20 (pre-build gate)" >&2; exit 76; }
 while read -r esha esz src dst; do
     mkdir -p "\$(dirname "\$dst")"
     cp -L -- "\$src" "\$dst" || { echo "REFUSED: pkg staging copy failed: \$src" >&2; exit 76; }
@@ -837,6 +1024,38 @@ function c3g_bash_syntax_ok(text)
     end
 end
 
+# EVAL1 RENDERED-COVERAGE gate (item-4 binding): every manifest entry
+# must appear in ALL FOUR rendered contexts -- live preflight hash
+# row, stage source+destination row, expected-name census block, and
+# post-run reverify row -- each exactly once.
+function c3g_eval1_coverage_issues(text)
+    iss = String[]
+    m = match(r"(?s)cat <<'EV1NAMES' > \"\$RUNROOT/ev1-expected\.txt\"\n(.*?)\nEV1NAMES",
+              text)
+    if m === nothing
+        push!(iss, "eval1 expected-name census block missing")
+    else
+        census = [String(l) for l in split(m.captures[1], '\n')]
+        census == c3g_eval1_manifest() ||
+            push!(iss, "eval1 census block != pinned manifest")
+    end
+    for (sha, sz, path) in C3G_DATA_INPUTS
+        n = basename(path)
+        for (what, row) in (
+            ("live preflight", "$sha  $path"),
+            ("stage copy",
+             "$sha $sz $path \$RUNROOT/data/evaluation1/lw_fluxes/$n"),
+            ("post-run reverify",
+             "$sha  \$RUNROOT/data/evaluation1/lw_fluxes/$n"))
+            c = length(collect(eachmatch(Regex("\\Q" * row * "\\E"),
+                                         text)))
+            c == 1 || push!(iss, "eval1 coverage: $what row for $n " *
+                                 "expected exactly 1, got $c")
+        end
+    end
+    iss
+end
+
 function c3g_text_gate_issues(text, downstream_sha, base_pins)
     iss = String[]
     req = [
@@ -888,6 +1107,8 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
         "$(p2_sha(joinpath(P2_PROJECT_ROOT, C3G_CHECKER_REPO)))",
         C3G_LEDGERS[1].sha, C3G_LEDGERS[2].sha, C3G_LEDGERS[3].sha,
         C3G_LEDGERS[4].sha, C3G_LEDGERS[5].sha,
+        C3G_LEDGERS[6].sha * "  " * c3g_ledger_path(C3G_LEDGERS[6]),
+        C3G_TRAINING_MANIFEST_SHA * "  " * C3G_TRAINING_MANIFEST_FILE,
         "artifact tree census != $C3G_TREE_FILES",
         "artifact exec census != $C3G_TREE_EXEC",
         "symlink in artifact tree",
@@ -896,7 +1117,13 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
         "post-run source-template exec census != $C3G_TREE_EXEC",
         "ZERO canonical writes",
         "RUNROOT preserved for diagnosis/forensics",
-        "# " * C3G_TERMINAL_CONTRACT]
+        "# " * C3G_TERMINAL_CONTRACT,
+        "REFUSED: staged eval1 census != generation-derived 20-name selected-mode closure (pre-build gate)",
+        "REFUSED: staged eval1 count != 20 (pre-build gate)",
+        "find \"\$RUNROOT/data/evaluation1/lw_fluxes\" -mindepth 1 " *
+        "-maxdepth 1 -printf '%f\\n' | LC_ALL=C sort"]
+    append!(req, ["\$RUNROOT/data/evaluation1/lw_fluxes/" * n
+                  for n in c3g_eval1_manifest()])
     for r in req
         occursin(r, text) || push!(iss, "required text missing: $r")
     end
@@ -913,7 +1140,15 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
          "downstream invocation exactly once (inside the mode loop)"),
         (Regex("\\QC3C PASS: score\\E"), 1, "13-invocation log gate"),
         (Regex("\\Q# " * C3G_TERMINAL_CONTRACT * "\\E"), 1,
-         "terminal policy line"))
+         "terminal policy line"),
+        (Regex("\\QEV1NAMES\\E"), 2,
+         "eval1 expected-name heredoc delimiters"),
+        (Regex("\\Q" * C3G_TRAINING_MANIFEST_SHA * "  " *
+               C3G_TRAINING_MANIFEST_FILE * "\\E"), 1,
+         "training-manifest stage-0 pin"),
+        (Regex("\\Q" * C3G_LEDGERS[6].sha * "  " *
+               c3g_ledger_path(C3G_LEDGERS[6]) * "\\E"), 1,
+         "4578 failure-ledger stage-0 pin"))
         m = length(collect(eachmatch(pat, text)))
         m == n || push!(iss, "$what expected exactly $n, got $m")
     end
@@ -926,7 +1161,9 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
                 "GATE4_X1_CAPTURE_PATH",
                 "CANON_FINAL", "mv -n", ".g3.publish.",
                 "recovered acceptance was", "acceptance-equivalent",
-                "ecckd-1.0_sw_")
+                "ecckd-1.0_sw_", "ckdmip_evaluation1_lw_fluxes_5gas",
+                "ckdmip_evaluation1_lw_fluxes_co2-", "g4-diag/4578",
+                "ls \"\$RUNROOT/data/evaluation1/lw_fluxes\"")
         occursin(bad, text) && push!(iss, "forbidden text present: $bad")
     end
     marks = length(collect(eachmatch(r"STAGE-1 FREEZE COMPLETE", text)))
@@ -955,6 +1192,7 @@ function c3g_text_gate_issues(text, downstream_sha, base_pins)
     for m in eachmatch(r"(?m)^[^#\n]*> *\"?\$G4WORK/(?!g4-diag|locks/c3ib-lw\.lock)", text)
         push!(iss, "redirect toward shared G4WORK area: $(m.match)")
     end
+    append!(iss, c3g_eval1_coverage_issues(text))
     iss
 end
 
@@ -1575,6 +1813,172 @@ function c3g_fixtures(pkg, text, downstream_sha, base_pins)
                 "# P2_SBATCH in comment\nx = \"P2_SBATCH string\"\n",
                 ["P2_SBATCH"]))
     end
+    # eval1 selected-mode closure fixtures (4578 recovery class):
+    # primary authority = pinned structured published-training
+    # manifest; independent cross-check = deployed script blocks;
+    # corroborating = G3 executor staged sets
+    mdata = JSON.parse(read(C3G_TRAINING_MANIFEST_FILE, String))
+    dbase = c3g_astext(c3g_derive_base(3000))
+    ddown = c3g_astext(c3g_derive_downstream())
+    mani = c3g_eval1_manifest()
+    t["eval1_manifest_pin_exact"] =
+        p2_try_sha(C3G_TRAINING_MANIFEST_FILE) ==
+        C3G_TRAINING_MANIFEST_SHA
+    t["eval1_closure_exact_20"] =
+        isempty(c3g_eval1_closure_issues(mdata, dbase, ddown)) &&
+        isempty(c3g_g3_executor_issues())
+    t["eval1_manifest_missing_refuses"] = begin
+        iss = c3g_eval1_closure_issues(mdata, dbase, ddown;
+            manifest = mani[1:end-1])
+        ("eval1 manifest count 19 != 20") in iss &&
+            any(occursin("closure != pinned manifest", i) for i in iss)
+    end
+    t["eval1_manifest_duplicate_refuses"] = begin
+        iss = c3g_eval1_closure_issues(mdata, dbase, ddown;
+            manifest = vcat(mani, [mani[1]]))
+        ("eval1 manifest carries duplicate basenames") in iss &&
+            ("eval1 manifest count 21 != 20") in iss
+    end
+    t["eval1_manifest_extra_unselected_refuses"] = begin
+        iss = c3g_eval1_closure_issues(mdata, dbase, ddown;
+            manifest = vcat(mani,
+                ["ckdmip_evaluation1_lw_fluxes_5gas-415.h5"]))
+        any(occursin("unselected-branch name", i) for i in iss) &&
+            any(occursin("closure != pinned manifest", i) for i in iss)
+    end
+    t["eval1_wrong_mode_refuses"] = begin
+        iss = c3g_eval1_closure_issues(mdata, dbase, ddown;
+            modes = vcat(C3G_EVAL1_SELECTED_MODES, ["zero-minor2"]))
+        any(occursin("closure contains unselected-branch name", i)
+            for i in iss)
+    end
+    t["eval1_authority_drift_refuses"] = begin
+        mm = JSON.parse(replace(JSON.json(mdata),
+            "ckdmip_evaluation1_lw_fluxes_n2o-405.h5" =>
+            "ckdmip_evaluation1_lw_fluxes_n2o-406.h5"))
+        iss = c3g_eval1_closure_issues(mm, dbase, ddown)
+        any(occursin("structured-manifest selected-mode closure != " *
+                     "pinned manifest", i) for i in iss) &&
+            !any(occursin("deployed selected-mode closure", i)
+                 for i in iss)
+    end
+    t["eval1_g3_evidence_drift_refuses"] = begin
+        fxd = mktempdir()
+        for n in mani[1:end-1]
+            write(joinpath(fxd, n), "x")
+        end
+        !isempty(c3g_g3_executor_issues(dirs = [fxd]))
+    end
+    t["eval1_census_gate_deletion_refuses"] = begin
+        mut = replace(text,
+            "REFUSED: staged eval1 census != generation-derived " *
+            "20-name selected-mode closure (pre-build gate)" => "removed")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("staged eval1 census", i) for i in iss)
+    end
+    t["eval1_unselected_row_injection_refuses"] = begin
+        mut = text * "\n# ckdmip_evaluation1_lw_fluxes_5gas-415.h5\n"
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("forbidden text present: " *
+                     "ckdmip_evaluation1_lw_fluxes_5gas", i)
+            for i in iss)
+    end
+    t["eval1_coverage_stage_drop_refuses"] = begin
+        t3 = first(x for x in C3G_DATA_INPUTS
+                   if endswith(x[3], "_present.h5"))
+        n = basename(t3[3])
+        row = "$(t3[1]) $(t3[2]) $(t3[3]) " *
+              "\$RUNROOT/data/evaluation1/lw_fluxes/$n"
+        mut = replace(text, row * "\n" => "")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("stage copy row for $n", i) for i in iss)
+    end
+    t["eval1_coverage_reverify_drop_refuses"] = begin
+        t3 = first(x for x in C3G_DATA_INPUTS
+                   if endswith(x[3], "_present.h5"))
+        n = basename(t3[3])
+        row = "$(t3[1])  \$RUNROOT/data/evaluation1/lw_fluxes/$n"
+        mut = replace(text, row * "\n" => "")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("post-run reverify row for $n", i) for i in iss)
+    end
+    t["eval1_census_ls_weakening_refuses"] = begin
+        mut = replace(text,
+            "find \"\$RUNROOT/data/evaluation1/lw_fluxes\" -mindepth 1 " *
+            "-maxdepth 1 -printf '%f\\n'" =>
+            "ls \"\$RUNROOT/data/evaluation1/lw_fluxes\"")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("required text missing: find", i) for i in iss) &&
+            any(occursin("forbidden text present: ls \"\$RUNROOT/data",
+                         i) for i in iss)
+    end
+    t["eval1_coverage_census_removal_refuses"] = begin
+        mut = replace(text,
+            "cat <<'EV1NAMES' > \"\$RUNROOT/ev1-expected.txt\"" => "true")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("census block missing", i) for i in iss)
+    end
+    t["ledger_4578_gatepins_deletion_refuses"] = begin
+        row = C3G_LEDGERS[6].sha * "  " *
+              c3g_ledger_path(C3G_LEDGERS[6])
+        mut = replace(text, row * "\n" => "")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        ("required text missing: " * row) in iss &&
+            ("4578 failure-ledger stage-0 pin expected exactly 1, " *
+             "got 0") in iss
+    end
+    t["ledger_4578_gatepins_duplicate_refuses"] = begin
+        row = C3G_LEDGERS[6].sha * "  " *
+              c3g_ledger_path(C3G_LEDGERS[6])
+        mut = replace(text, row * "\n" => row * "\n" * row * "\n")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        ("4578 failure-ledger stage-0 pin expected exactly 1, " *
+         "got 2") in iss
+    end
+    t["training_manifest_pin_deletion_refuses"] = begin
+        row = C3G_TRAINING_MANIFEST_SHA * "  " *
+              C3G_TRAINING_MANIFEST_FILE
+        mut = replace(text, row * "\n" => "")
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        ("required text missing: " * row) in iss &&
+            ("training-manifest stage-0 pin expected exactly 1, got 0") in iss
+    end
+    t["training_manifest_pin_drift_refuses"] = begin
+        mut = replace(text, C3G_TRAINING_MANIFEST_SHA => "0"^64)
+        iss = c3g_text_gate_issues(mut, downstream_sha, base_pins)
+        any(occursin("training-manifest stage-0 pin", i) for i in iss)
+    end
+    t["ledger_4578_classifier_mutations_refuse"] = begin
+        fxl = mktempdir()
+        src = read(c3g_ledger_path(C3G_LEDGERS[6]), String)
+        pgood = joinpath(fxl, "good.json"); write(pgood, src)
+        l0 = (name = "T", case = C3G_LEDGERS[6].case,
+              status = C3G_LEDGERS[6].status, sha = p2_sha(pgood),
+              file = "good.json")
+        green = c3g_classify_ledger(l0; path = pgood).ok
+        pst = joinpath(fxl, "st.json")
+        write(pst, replace(src, C3G_LEDGERS[6].status => "wrong"))
+        stbad = !c3g_classify_ledger((name = "T", case = l0.case,
+            status = l0.status, sha = p2_sha(pst), file = "st.json");
+            path = pst).ok
+        shabad = !c3g_classify_ledger((name = "T", case = l0.case,
+            status = l0.status, sha = "0"^64, file = "good.json");
+            path = pgood).ok
+        green && stbad && shabad
+    end
+    t["ledger_4578_semantic_mutations_refuse"] = begin
+        data = JSON.parse(read(c3g_ledger_path(C3G_LEDGERS[6]), String))
+        ok0 = isempty(c3g_4578_semantic_issues(data))
+        m1 = deepcopy(data); m1["job"]["exit_code"] = "0:0"
+        m2 = deepcopy(data)
+        m2["monitor_observations"]["classification"] = "other"
+        m3 = deepcopy(data)
+        m3["durable_evidence"]["receipt"]["sha256"] = "0"^64
+        ok0 && !isempty(c3g_4578_semantic_issues(m1)) &&
+            !isempty(c3g_4578_semantic_issues(m2)) &&
+            !isempty(c3g_4578_semantic_issues(m3))
+    end
+
     # design guards
     design = read(C3G_DESIGN_FILE, String)
     t["design_two_script_discipline"] =
@@ -1734,6 +2138,13 @@ function main()
         nothing
     end
     g1data === nothing || append!(lg, c3g_g1_semantic_issues(g1data))
+    fdata = try
+        JSON.parse(read(c3g_ledger_path(C3G_LEDGERS[6]), String))
+    catch
+        push!(lg, "4578 failure ledger unreadable")
+        nothing
+    end
+    fdata === nothing || append!(lg, c3g_4578_semantic_issues(fdata))
     groups["prerequisite_ledgers"] = lg
 
     inp = String[]
@@ -1778,6 +2189,21 @@ function main()
                  bytes2hex(sha256(c3g_derive_base(9000))))
     groups["derivations"] =
         c3g_downstream_leak_issues(c3g_derive_downstream())
+    mferr = String[]
+    p2_try_sha(C3G_TRAINING_MANIFEST_FILE) == C3G_TRAINING_MANIFEST_SHA ||
+        push!(mferr, "structured training manifest sha != pinned")
+    mdata = try
+        JSON.parse(read(C3G_TRAINING_MANIFEST_FILE, String))
+    catch
+        push!(mferr, "structured training manifest unreadable")
+        nothing
+    end
+    groups["eval1_closure"] = mdata === nothing ? mferr :
+        vcat(mferr,
+             c3g_eval1_closure_issues(mdata,
+                 c3g_astext(c3g_derive_base(3000)),
+                 c3g_astext(c3g_derive_downstream())),
+             c3g_g3_executor_issues())
 
     text = c3g_make_sbatch(pkg)
     groups["sbatch_deterministic_render"] =
@@ -1911,6 +2337,23 @@ function main()
             "escalation; the external <=1.05 gate untouched; ZERO " *
             "canonical writes; RUNROOT preserved",
         "terminal_contract" => C3G_TERMINAL_CONTRACT,
+        "eval1_staging" => Dict(
+            "selected_modes" => C3G_EVAL1_SELECTED_MODES,
+            "closure_count" => 20,
+            "names" => c3g_eval1_manifest(),
+            "structured_manifest" => Dict(
+                "path" => C3G_TRAINING_MANIFEST_FILE,
+                "sha256" => C3G_TRAINING_MANIFEST_SHA),
+            "derivation" => "PRIMARY: pinned structured " *
+                "published-training manifest " *
+                "(ecckd_published_training_manifest.json); " *
+                "INDEPENDENT CROSS-CHECK: generation-derived " *
+                "deployed script blocks; CORROBORATING: G3 executor " *
+                "staged sets (g3-runs 4505/4515); equality asserted, " *
+                "never superset; rendered four-context coverage " *
+                "gated per entry; unselected 5gas/co2 branches " *
+                "excluded",
+            "recovery_of" => "gate4_c3_ib_4578_failure_ledger"),
         "non_authorizing_note" => "generates and verifies the C3-IB " *
             "sbatch; never submits; submission requires explicit " *
             "monitor GO.",
