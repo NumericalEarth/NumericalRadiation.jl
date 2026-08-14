@@ -137,6 +137,11 @@ using NumericalRadiation
         end
     end
 
+    mktempdir() do temp_root
+        missing_root = joinpath(temp_root, "missing-ecckd")
+        @test NumericalRadiation._source_root_with_file(missing_root, "README.md") === nothing
+    end
+
     source_root = ecckd_source_path(require = true)
     @test isfile(joinpath(source_root, "src", "ecckd", "optimize_lut.cpp"))
 
@@ -404,6 +409,15 @@ using Test
 using NumericalRadiation
 using Dates
 
+Base.@noinline function run_optical_properties!(longwave, shortwave, model, atmosphere)
+    optical_properties!(longwave, shortwave, model, atmosphere)
+    return nothing
+end
+
+Base.@noinline function optical_properties_allocations(longwave, shortwave, model, atmosphere)
+    return @allocated run_optical_properties!(longwave, shortwave, model, atmosphere)
+end
+
 # --- begin content of test_ecckd_forward.jl ---
 @testset "ecCKD-style forward gas optics" begin
     nlayers = 3
@@ -447,8 +461,9 @@ using Dates
     @test longwave.source[1, :] ≈ 0.5 .* stefan_boltzmann .* atmosphere.temperature_layers .^ 4
     @test longwave.source[2, :] ≈ stefan_boltzmann .* atmosphere.temperature_layers .^ 4
 
-    optical_properties!(longwave, shortwave, model, atmosphere)
-    @test (@allocated optical_properties!(longwave, shortwave, model, atmosphere)) == 0
+    # Julia 1.10 specializes the allocation measurement separately.
+    optical_properties_allocations(longwave, shortwave, model, atmosphere)
+    @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
     bad_longwave = LongwaveOpticalProperties(zeros(1, nlayers), zeros(1, nlayers);
                                              weights = zeros(1))
@@ -588,8 +603,9 @@ end
     @test longwave.source[1, :] ≈ stefan_boltzmann .* atmosphere.temperature_layers .^ 4
     @test longwave.source[2, :] ≈ 2 .* stefan_boltzmann .* atmosphere.temperature_layers .^ 4
 
-    optical_properties!(longwave, shortwave, model, atmosphere)
-    @test (@allocated optical_properties!(longwave, shortwave, model, atmosphere)) == 0
+    # Julia 1.10 specializes the allocation measurement separately.
+    optical_properties_allocations(longwave, shortwave, model, atmosphere)
+    @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
     @test_throws DimensionMismatch EcCKDTabulatedGasOpticsModel(
         gas_names = (:h2o, :co2),

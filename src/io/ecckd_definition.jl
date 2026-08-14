@@ -166,6 +166,7 @@ end
 
 function _source_root_with_file(root, filename)
     root === nothing && return nothing
+    isdir(root) || return nothing
     isfile(joinpath(root, filename)) && return normpath(root)
     for child in readdir(root)
         path = joinpath(root, child)
