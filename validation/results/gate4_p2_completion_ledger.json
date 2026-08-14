@@ -1,0 +1,151 @@
+{
+  "case": "gate4_p2_completion_ledger",
+  "conclusion_ceiling_verbatim": "## Conclusion ceiling (binding)\nP2 outcomes are PRIVATE DIAGNOSTIC PLACEMENT ONLY under this fixed\nconfiguration, instrument, SW state, and pinned inputs: NO recovered\nacceptance, NO objective-change authorization, NO optimizer\nreachability, NO mechanism localization or ranking, NO raw-vs-final\nclaim beyond the licensed residual block, NO automatic next-control\ndecision (monitor sequencing ruling); the external <=1.05 gate and\nits acceptance semantics are untouched; all three mechanism classes\nremain OPEN and UNRANKED globally; findings are LOCAL to this rebuilt\ntrajectory and these fixed states.",
+  "custody": {
+    "checkpoint_fixtures_executed": "68/68 at generation; dual-reviewed; Agent 42 third-party byte-identical regeneration",
+    "commit": "3f872216a0001d093d5de06f5ad27141958f74a1",
+    "duplicate_submission_job_4576": {
+      "classification": "pre-freeze DESIGNED LOCK REFUSAL (duplicate-submission race; stage 0d flock; exit 73:0 in ~1s; no stage-1 freeze, no evaluation; harness success, not a P2 scientific/package failure)",
+      "log": "/shared/home/greg/data/ckdmip-logs/g4-p2-lw-4576.log",
+      "log_bytes": 2772,
+      "log_sha256": "0857d6d2b6172b6d35f42e887c245d83825de273bdd4c14e6f1e79b228425ed8",
+      "receipt_session40": "/shared/home/greg/data/ckdmip-logs/g4-p2-lw-4576-scontrol-final-session40.txt",
+      "receipt_sha256": "9d89b3cc576c7f4d30d1cd0b5dabb2b74b4bdd5e6e124e8854e4fb25b048d715"
+    },
+    "receipts": [
+      {
+        "classification": "terminal custody leg",
+        "holder": "session40_terminal",
+        "path": "/shared/home/greg/data/ckdmip-logs/g4-p2-lw-4575-scontrol-terminal-session40.txt",
+        "sha256": "501d407945891879193a14e747347d61534d3f1e0c8896448a0888ae741af16a"
+      },
+      {
+        "classification": "terminal custody leg",
+        "holder": "agent42_terminal",
+        "path": "/shared/home/greg/data/ckdmip-logs/g4-p2-lw-4575-scontrol-final-agent42.txt",
+        "sha256": "b98b0796312f3a8499fc46f77900b5e44eed02d6549a12ea36c6e451f2bb7aa2"
+      },
+      {
+        "classification": "RUNNING snapshot (disclosed premature capture; NOT terminal evidence)",
+        "holder": "session40_running_snapshot",
+        "path": "/shared/home/greg/data/ckdmip-logs/g4-p2-lw-4575-scontrol-final-session40.txt",
+        "sha256": "9b981624d880f0da19fced779647193bdb7cbe4d0ffd4bf300d2de4651dea926"
+      }
+    ],
+    "submit_line_receipt_verified": "sbatch --parsable validation/results/gate4_p2_lw_hard_objective.sbatch"
+  },
+  "data_mode": "completion_ledger",
+  "disclaimer": "completion ledger; mechanical application; writes nothing except its own JSON/MD; no submission/commit authority; interpretation bounded by the verbatim ceiling above.",
+  "failures": [],
+  "fixture_count": 28,
+  "fixture_verdicts": {
+    "banned_case_variation_detects": true,
+    "banned_scan_clean_on_licensed_text": true,
+    "branch_signs_exact_decimal": true,
+    "ceiling_text_scans_green": true,
+    "custody_4576_positive": true,
+    "custody_4576_postfreeze_log_refuses": true,
+    "custody_4576_receipt_tamper_refuses": true,
+    "custody_4576_wrong_command_refuses": true,
+    "custody_4576_wrong_state_refuses": true,
+    "finalize_banned_outcome_only_refuses": true,
+    "finalize_clean_outcome_preserves": true,
+    "inventory_drift_refuses": true,
+    "inventory_good_accepted": true,
+    "inventory_missing_refuses": true,
+    "receipt_fields_parse": true,
+    "receipt_full_submitline": true,
+    "retracted_phrase_through_finalizer_refuses": true,
+    "snapshot_wrong_jobid_refuses_via_shared_helper": true,
+    "terminal_wrong_command_refuses_via_shared_helper": true,
+    "two_phase_banned_summary_refuses": true,
+    "two_phase_clean_candidate_preserves": true,
+    "two_phase_custody_only_refuses": true,
+    "two_phase_evidence_refusal_clean_prose_suppresses": true,
+    "two_phase_observations_only_refuses": true,
+    "whole_scan_clean_passes": true,
+    "whole_scan_custody_only_detects": true,
+    "whole_scan_md_body_detects": true,
+    "whole_scan_observations_only_detects": true
+  },
+  "frozen_design_sha256": "c6c7638542f371ae1e44c91214d028e8f7ce9a9a61ca2be4fb0b2923f3b9f420",
+  "gates": {
+    "evidence_committed_package_pins": "passed",
+    "evidence_conclusion_ceiling_guard": "passed",
+    "evidence_custody_receipts": "passed",
+    "evidence_log_gates": "passed",
+    "evidence_record_regates": "passed",
+    "evidence_terminal_inventory_anchoring": "passed",
+    "evidence_whole_result_language_guard": "passed",
+    "fixtures": "passed"
+  },
+  "job": {
+    "id": 4575,
+    "log_pin": {
+      "bytes": 13338,
+      "sha256": "ede18984920a2d8cd3b2c8511a499fbb97804ac6441e51c51e3d9130c129a7a7"
+    },
+    "raw_terminal_fields": {
+      "agent42_terminal": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p2_lw_hard_objective.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-14T12:07:20",
+        "ExitCode": "0:0",
+        "JobId": "4575",
+        "JobState": "COMPLETED",
+        "Restarts": "0",
+        "RunTime": "00:03:26",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_p2_lw_hard_objective.sbatch"
+      },
+      "session40_running_snapshot": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p2_lw_hard_objective.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-14T16:03:54",
+        "ExitCode": "0:0",
+        "JobId": "4575",
+        "JobState": "RUNNING",
+        "Restarts": "0",
+        "RunTime": "00:01:42",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_p2_lw_hard_objective.sbatch"
+      },
+      "session40_terminal": {
+        "Command": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_p2_lw_hard_objective.sbatch",
+        "DerivedExitCode": "0:0",
+        "EndTime": "2026-08-14T12:07:20",
+        "ExitCode": "0:0",
+        "JobId": "4575",
+        "JobState": "COMPLETED",
+        "Restarts": "0",
+        "RunTime": "00:03:26",
+        "SubmitLine": "sbatch --parsable validation/results/gate4_p2_lw_hard_objective.sbatch"
+      }
+    },
+    "runroot": "/shared/home/greg/ecckd-derived-flux-work/g4-init-generation/g4-diag/4575/lw-p2",
+    "runroot_disposition": "preserved for read-only forensic inspection; no cleanup"
+  },
+  "observations": {
+    "limiting_metric": "ecckd_clear_sky_tropical_column/heating_rate_max_abs (all eight arms)",
+    "objective_tokens": {
+      "init": "102.67056437657112",
+      "plateau": "22.791293464348826",
+      "published": "0.18218645425029933",
+      "splice": "0.18218653435647347"
+    }
+  },
+  "outcome": {
+    "branches": {
+      "D_splice_plateau": "NEGATIVE",
+      "D_splice_published": "POSITIVE"
+    },
+    "controls": "all three same-job controls reproduced their pinned literals exactly in BOTH arms (init 102.67056437657112, plateau 22.791293464348826, published 0.18218645425029933); duplicates exact-payload equal",
+    "deltas_token_derived_exact_decimal": {
+      "D_splice_plateau": "-22.60910692999235253",
+      "D_splice_published": "0.00000008010617414"
+    },
+    "instrument_ordering_statement": "REPORTABLE (both exact orderings hold on their own committed records): the P1 upstream internal J0_reported ordered splice ABOVE plateau (committed +4.556731873800093); the P2 package-native hard objective orders splice BELOW plateau (-22.60910692999235253). A recorded placement fact under two fixed instruments/setups; never an explanation, never a mechanism statement",
+    "next_control": "NONE decided here; sequencing is a monitor ruling",
+    "residual_label": "LICENSED AND USED: the eight materialized longwave_absorption gas slices AND the complete longwave_h2o_absorption table are exact-equal between the loaded splice and loaded published-final, so the +0.00000008010617414 splice-vs-published delta is the recorded non-coefficient/materialized-model residual AS A BLOCK at identical coefficient tables under this fixed setup (no attribution within the block)"
+  },
+  "status": "p2_run_completed_verified",
+  "summary_md_body": "Job 4575 COMPLETED (0:0, no restarts, 00:03:26). Eight palindromic arms; duplicate payloads exact; all three same-job controls reproduced their pinned literals exactly. Splice hard-objective 0.18218653435647347 (both arms). Exact token-derived deltas: D_splice_plateau=-22.60910692999235253 (NEGATIVE), D_splice_published=+0.00000008010617414 (POSITIVE). Residual label LICENSED (materialized tables exact-equal): the +8.0e-8 block is the recorded non-coefficient/materialized-model residual at identical coefficients. Instrument-ordering reversal REPORTABLE as a recorded placement fact (P1 upstream splice>plateau; P2 hard-objective splice<plateau). Private diagnostic placement only; no recovered acceptance; no objective-change authorization; no optimizer reachability; no mechanism localization or ranking; the <=1.05 gate untouched; no automatic next-control decision."
+}
