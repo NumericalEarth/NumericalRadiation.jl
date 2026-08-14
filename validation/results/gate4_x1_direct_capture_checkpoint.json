@@ -1,0 +1,476 @@
+{
+  "axis_a_alias_semantics": {
+    "array_h": "/shared/home/greg/local/adept-2-install/include/adept/Array.h",
+    "array_h_sha256": "e7ceba7e6a951e410446259de8c5e6b78f2ad4cc172548fa505b9d792a9099a1",
+    "behavioral_probe": {
+      "generator_fixture": "alias_probe_confirms_shallow_link (compiled AND run; fails unless mutating the by-value/copy alias mutates the original)",
+      "in_job": "recompiled and rerun under the pinned compiler/headers at stage 3 BEFORE any build; exact CONFIRMED line required",
+      "source_sha256": "6bf60486985ac0dc15b357f5dc3a5012ab41566ee78325255efae100d6417f16"
+    },
+    "bounded_claim": "caller-local x aliases the minimizer's by-value Vector storage under these pinned header semantics, so post-return x is the observed returned solution FOR THIS BUILD; no broader source-to-binary claim is made",
+    "copy_constructor_region": "Array.h:216-245 ('links to the source data rather than copying')",
+    "copy_constructor_region_sha256": "e7b8f7df33c108b19c1ea088c0ab75967cc24e80c8c819c2f6aaa3ef6cfb3de7",
+    "minimize_by_value_signature": "MinimizerStatus minimize(Optimizable& optimizable, Vector x, const Vector& x_lower, const Vector& x_upper); (installed Minimizer.h:111-112, sha256 dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d; x by value with shallow-link copy, bounds by const reference so the caller's locals ARE the passed vectors)"
+  },
+  "axis_c_projection": "raw2 values must EQUAL the correctly rounded Float32 projection (Float32(caller_phys[i])) of caller state under the proven gas/shape/index order -- covering BOTH the standard 3-D gas arrays (composite/o3/co2: nt,np,ng) AND the LUT concentration slices (h2o: nconc,nt,np,ng) -- with the active-gas concatenation order itself gated. ANY mismatch in order, dimensions, or the expected Float32 projection is INSTRUMENT REFUSAL, never a finding.",
+  "case": "gate4_x1_direct_capture_checkpoint",
+  "census_comparison_corollary": "the committed census was computed on raw2 (Float32-projected) values against Float64 bounds; sidecar-based censuses on Float64 caller state may differ marginally at bound-adjacent indices. The A/B/C-inconsistent-with-census REFUSAL branch must compare like-with-like: raw2-domain census vs Float32-projected caller census; Float64-domain comparisons reported separately.",
+  "citation_note": "byte-verified source anchors (pinned artifact solve_adept.cpp 8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091): MIN_X = -1.0e20 at :21; callback exp/MIN_X at :225-234; Vector x declared :316; x = MIN_X floor :319; log init :320; ckd_model.x_prior = x :322; bounds block :324-334 (synthetic lower :332-333); bounded call :366; unbounded call :370. The frozen draft's ':315-321' span includes the :315 comment line and is consistent with these anchors.",
+  "data_mode": "generator_checkpoint",
+  "design": "paired direct-capture instrument test from ONE pinned source/configure tree and TWO immutable saved binaries: 1-iteration PROBE (X1 binary; sidecar schema/rows/order/types/status/Axis-C Float32 readback validated fail-closed BEFORE any full arm), PRISTINE full-run control, X1 full run instrumented. The X1 patch is bounds-ON only (unbounded branch gated byte-identical); the capture executes strictly post-minimize; NON-PERTURBATION IS AN EMPIRICAL ALL-VARIABLE IDENTITY GATE against the in-job pristine arm, never a construction claim. Zero canonical writes; RUNROOT preserved as forensics; no submission without explicit monitor GO.",
+  "disclaimer": "generator checkpoint; writes nothing except its own JSON/MD results and the generated sbatch plus transient private temp fixtures (mktempdir).",
+  "failures": [],
+  "fixture_count": 103,
+  "fixture_verdicts": {
+    "alias_probe_confirms_shallow_link": true,
+    "axis_c_dim_order_refuses": true,
+    "axis_c_missing_var_refuses": true,
+    "axis_c_valid_accepted": true,
+    "axis_c_value_mismatch_refuses": true,
+    "bash_syntax_broken_refuses": true,
+    "bash_syntax_good_accepted": true,
+    "helper_atomic_rename_checked": true,
+    "helper_exact_bounds_kept": true,
+    "helper_exit_code_93": true,
+    "helper_global_scope_attr_writes": true,
+    "helper_global_x_index_var": true,
+    "helper_naming_rule_present": true,
+    "helper_noclobber_netcdf_open": true,
+    "helper_pre_minimize_classification": true,
+    "helper_requires_env_path": true,
+    "helper_syntax_check_passes": true,
+    "identity_allowed_type_mismatch_refuses": true,
+    "identity_config_history_allowed_accepted": true,
+    "identity_disallowed_global_diff_refuses": true,
+    "identity_extra_var_refuses": true,
+    "identity_required_diff_missing_refuses": true,
+    "identity_unallowed_by_default_refuses": true,
+    "identity_value_diff_refuses": true,
+    "identity_var_attr_diff_refuses": true,
+    "identity_var_count_and_required_diffs_accepted": true,
+    "identity_var_count_mismatch_refuses": true,
+    "ledger_green_accepted": true,
+    "ledger_missing_refuses": true,
+    "ledger_sha_drift_refuses": true,
+    "ledger_status_mismatch_refuses": true,
+    "ledger_unparseable_refuses": true,
+    "lw_expect_arithmetic": true,
+    "patch_calls_inside_bounded_region_only": true,
+    "patch_callsite_replaced": true,
+    "patch_capture_region_sha_reproduces": true,
+    "patch_derivation_reproduces_pin": true,
+    "patch_duplicate_anchor_refuses": true,
+    "patch_include_inserted_once": true,
+    "patch_line_count_plus4": true,
+    "patch_missing_callsite_anchor_refuses": true,
+    "patch_missing_include_anchor_refuses": true,
+    "patch_preexisting_token_refuses": true,
+    "patch_record_pre_first_line_of_bounded_block": true,
+    "patch_unbounded_tail_byte_identical": true,
+    "patch_unbounded_tail_free_of_x1_hooks": true,
+    "provenance_note_location_neutral": true,
+    "sidecar_arm_mismatch_refuses": true,
+    "sidecar_contract_mismatch_refuses": true,
+    "sidecar_duplicate_multiindex_refuses": true,
+    "sidecar_empty_file_refuses": true,
+    "sidecar_error_status_refuses": true,
+    "sidecar_expected_status_match_accepted": true,
+    "sidecar_expected_status_mismatch_refuses": true,
+    "sidecar_extra_var_refuses": true,
+    "sidecar_global_x_index_shift_refuses": true,
+    "sidecar_index_out_of_range_refuses": true,
+    "sidecar_mapped_floor_violation_refuses": true,
+    "sidecar_missing_refuses": true,
+    "sidecar_missing_var_refuses": true,
+    "sidecar_nan_bound_refuses": true,
+    "sidecar_nonfinite_caller_refuses": true,
+    "sidecar_nonfinite_mapped_refuses": true,
+    "sidecar_nonfinite_returned_refuses": true,
+    "sidecar_projection_mismatch_refuses": true,
+    "sidecar_sentinel_bound_refuses": true,
+    "sidecar_status_string_mismatch_refuses": true,
+    "sidecar_string_index_base_refuses": true,
+    "sidecar_temp_remnant_refuses": true,
+    "sidecar_unpinned_status_refuses": true,
+    "sidecar_valid_accepted": true,
+    "sidecar_wrong_gas_order_refuses": true,
+    "sidecar_wrong_rows_refuses": true,
+    "sidecar_wrong_type_refuses": true,
+    "text_capture_path_not_nc_refuses": true,
+    "text_duplicate_configure_refuses": true,
+    "text_extra_capture_export_refuses": true,
+    "text_extra_pass_refuses": true,
+    "text_good_accepted": true,
+    "text_head_pipeline_refuses": true,
+    "text_helper_pin_drift_refuses": true,
+    "text_ladept_inside_ldflags_refuses": true,
+    "text_missing_alias_probe_refuses": true,
+    "text_missing_call_census_refuses": true,
+    "text_missing_capture_export_refuses": true,
+    "text_missing_data_lock_refuses": true,
+    "text_missing_data_reverify_refuses": true,
+    "text_missing_identity_refuses": true,
+    "text_missing_probe_iterations_refuses": true,
+    "text_missing_status_allowlist_refuses": true,
+    "text_missing_status_equality_refuses": true,
+    "text_missing_unbounded_gate_refuses": true,
+    "text_patched_pin_drift_refuses": true,
+    "text_publish_machinery_refuses": true,
+    "text_s1_ledger_pin_drift_refuses": true,
+    "text_shared_redirect_refuses": true,
+    "text_single_writable_scan_refuses": true,
+    "text_strings_absence_refuses": true,
+    "tree_census_119": true,
+    "tree_contains_solve_adept_pin": true,
+    "tree_exec_census_24": true,
+    "tree_has_no_helper": true,
+    "tree_patched_manifest_single_delta": true
+  },
+  "frozen_design": {
+    "durable_file": "validation/gate4_x1_frozen_design.md",
+    "provenance": "the durable package file is byte-identical to the monitor-frozen reviewed draft (sha above) and is pinned in the sbatch stage-0a gate set; no ephemeral scratch path is load-bearing",
+    "sha256": "d4f8a689aa4fcadb91922120b7806939bba88c115fb6281d51b2fc3dbe325398",
+    "verbatim_text": "# PAPER-ONLY X1 design draft, revision 3 (monitor ruling applied)\n# X1-FIRST approved; C1 deferred; C2 deferred. No code, no submission,\n# no experiment until monitor review of this revision.\n# Baseline: S1 completion ledger committed at 5b6cea7.\n\n## Ruling applied\n- The earlier \"clean trichotomy\" is WITHDRAWN and replaced by the\n  fail-closed three-axis lattice below.\n- Removed: \"x_local and ckd_model identical -> mapping/write origin\";\n  all \"move to the foreground\" language; \"zero optimization-path\n  effect by construction\".\n- Replacement stance: capture executes post-return; NON-PERTURBATION\n  IS AN EMPIRICAL ALL-47-VARIABLE IDENTITY GATE against the in-job\n  pristine arm, never a construction claim.\n\n## Fail-closed three-axis lattice (monitor wording, binding)\nAxis A: returned internal x vs the EXACT x_min/x_max vectors passed to\n        minimize (log space, synthetic lowers included).\nAxis B: callback mapping of x (exp with MIN_X zero-floor, replicating\n        solve_adept.cpp:225-234) vs caller ckd_model.x.\nAxis C: caller ckd_model.x vs serialized raw2 coefficients under a\n        PROVEN index/write mapping (trace below; positional readback\n        verified in-ledger).\nNO mechanism conclusion is licensed unless the relevant mapping is\ndemonstrated. Required interpretations:\n- A in-bounds + B differs: supports a LOCAL caller-state/mapping\n  discrepancy -- not automatic desync causation.\n- A out-of-bounds: establishes ONLY that the captured returned x lies\n  outside the provided vectors for this run; algorithm vs\n  bound-construction semantics remain to be distinguished.\n- B equal + C differs: supports serialization/index mapping.\n- A/B/C mutually inconsistent with the existing census: instrument\n  REFUSAL, never elimination.\n\n## Read-only source trace: ckd_model.x index ordering into raw2\n(exact artifact lines; Agent 42 to audit independently)\n1. State-vector layout (ckd_model.cpp read path): x is ONE flat\n   vector; for each ACTIVE gas, a contiguous slice is SHARED-STORAGE\n   soft-linked into that gas's coefficient array:\n   - LUT gas (h2o): `this_gas.molar_abs_conc >>=\n     x(range(ix, ix+nconc*nt_*np_*ng_-1)).reshape(nconc,nt_,np_,ng_)`\n     (ckd_model.cpp:143), bounds slices likewise (:146-148),\n     `this_gas.ix = ix; ix += nconc*nt_*np_*ng_` (:149-150).\n   - linear/relative-linear gases: `this_gas.molar_abs >>=\n     x(range(ix, ix+nt_*np_*ng_-1)).reshape(nt_,np_,ng_)` (:206),\n     bounds likewise (:209-210), `ix += nt_*np_*ng_` (:213).\n   - Slice ORDER = the model constituent / single_gas_data_ READ\n     order (list built as gases are read from the model file),\n     FILTERED by active membership -- NOT inherently the config\n     gas-string order. The X1 ledger must GATE that this run\n     resolves to composite, h2o, o3, co2 with block sizes 10,176 /\n     122,112 / 10,176 / 10,176 (offsets 0 / 10,176 / 132,288 /\n     142,464; total 152,640 = the census active count); the in-job\n     log lines (\"Reading absorption properties of ...\" order,\n     ACTIVE banners, \"State variable size\") cross-check it, and\n     any deviation is instrument refusal.\n2. Serialization (ckd_model.cpp write path): `file.write(\n   (this_gas.molar_abs).inactive_link(), molecule + \"_\" + K_NAME)` at\n   :565/:576/:586 writes THE SAME linked storage verbatim (physical\n   values; inactive_link strips autodiff only, no transform) to\n   variable `<gas>_molar_absorption_coeff` with dims matching raw2\n   (temperature=6, pressure=53, g_point=32; +h2o_mole_fraction=12).\n3. Storage/index equivalence between the x slice and the serialized\n   variable is established ONLY by the source links above PLUS the\n   required per-index positional round-trip in the ledger (readback\n   comparison of the captured caller vector against raw2); no\n   memory-layout convention is assumed or asserted.\n4. Caveat retained: solve_adept's LOCAL x is log-space\n   (x = log(ckd_model.x) with MIN_X floor, :315-321); its log-space\n   bound copies are built at :324. ckd_model.x itself is physical.\n\n## Complete per-index sidecar schema (all 152,640 active indices)\nFields per index i:\n- gas_id + numeric intra-gas multi-index (iconc?, it, ip, ig) +\n  global x index i + gas slice offset (this_gas.ix); gas names are\n  recorded once as sidecar metadata\n- returned_x_log: x_local[i] exactly as returned (float64)\n- bound_lo_log, bound_hi_log: the EXACT log-space x_min/x_max\n  entries passed to minimize, preserved verbatim even where a bound\n  is inactive (no NaN or sentinel substitution ever)\n- separate classification fields: lower_class (file-lower /\n  synthetic-lower / none) and upper_active flag\n- mapped_x_phys: exp/MIN_X-floor mapping of returned_x_log\n  (replicating callback semantics :225-234)\n- caller_phys: ckd_model.x[i] at capture time (pre-write), full\n  double precision\n- caller_phys_f32: the round-to-nearest-even Float32 projection of\n  caller_phys (stored explicitly so the Axis-C comparison against the\n  Float32 raw2 variables is exact and auditable per index; Agent 42\n  amendment, adopted)\nRecord-level fields: minimizer status code (integer + string), arm id,\ncapture location tag (is_bounded branch), job id.\nENCODING: the sidecar exists for the X1 ARM ONLY (the pristine arm\nis uninstrumented by definition); gas_id and multi-indices encoded\nNUMERICALLY (int arrays) with the gas-name table recorded once as\nmetadata; Float64 fields stored as NetCDF DOUBLE and caller_phys_f32\nas NetCDF FLOAT (no text formatting anywhere on the numeric path);\nATOMIC PRIVATE WRITE: dot-temp, close, rename within the job-private\nRUNROOT, and a missing/unwritable private output path FAILS CLOSED\n(job refusal, never a skip); sha-echoed in the job log; never\ncanonical.\n\n## Instrument placement (Agent 42 design facts, adopted)\nThe bounded call at solve_adept.cpp:366 returns minimize(...) directly;\nX1 restructures to `status = minimize(...); CAPTURE; return status;`\ninside the is_bounded branch. The unbounded branch at :370 remains\nunchanged and is gated as such. The call-site restructuring is small;\nthe separately pinned sidecar-writer helper is not included in a\nline-count claim. Anchored-pin machinery is identical to S1\n(original/patched pins, region hash, registered-file tree identity).\nCapture executes post-return; const reads plus one private RUNROOT\nwrite; non-perturbation is the empirical all-47-variable identity gate\nagainst the pristine arm.\n\n## Evidence contract (X1 job + completion ledger)\n- Paired arms, one job, TWO immutable saved binaries built from ONE\n  pinned source/configure tree: pristine control + X1 instrumented; S1 machinery reused (frozen template, tree pins,\n  per-arm OMP logging, banner/bounded gates, dual receipts).\n- Identity gate: X1-arm raw2 elementwise identical to pristine-arm\n  raw2 (all 47 variables; typed attrs; exact-set config/history) --\n  REFUSAL of the instrument if violated.\n- Ledger computes the three axes with the committed log-space census\n  kernel definitions; positional Axis-C readback under the traced\n  mapping; census on returned/mapped/caller vectors; the lattice\n  interpretations verbatim; all findings LOCAL to this rebuilt\n  trajectory; ceiling discipline unchanged (no historical\n  attribution; provenance conditional; Adept statements\n  source-observed with pins).\n- RUNTIME: build ~5 min + 2 arms ~35 min each (~75-80 min compute).\n\n## Sequence (approved)\nX1 first. C1 deferred (config-only bounds-off; ~40 min; quantifies the\nflag factor for this fixed setup only; discriminates no mechanism;\nrun only if X1 makes the bounds factor decision-relevant). C2 deferred.\n\n## AXIS-C REFINEMENT: serialization type conversion (monitor, binding)\nckd_model.cpp defines the coefficient variables as FLOAT (Float32) at\n:396/:432/:459 while caller state is Float64; the write at\n:565/:576/:586/:598 therefore projects. Axis C accordingly requires:\nraw2 values EQUAL the correctly rounded Float32 projection\n(Float32(caller_phys[i])) of caller state under the proven\ngas/shape/index order -- covering BOTH the standard 3-D gas arrays\n(composite/o3/co2: nt,np,ng) AND the LUT concentration slices\n(h2o: nconc,nt,np,ng) -- with the active-gas concatenation order\nitself gated (composite, h2o, o3, co2; block offsets 0 / 10,176 /\n132,288 / 142,464; total 152,640). ANY mismatch in order, dimensions,\nor the expected Float32 projection is INSTRUMENT REFUSAL, never a\nfinding.\nCorollary for lattice-consistency checks: the committed census was\ncomputed on raw2 (Float32-projected) values against Float64 bounds;\nsidecar-based censuses on Float64 caller state may differ marginally\nat bound-adjacent indices. The \"A/B/C inconsistent with the existing\ncensus -> REFUSAL\" branch must therefore compare like-with-like:\nraw2-domain census vs Float32-projected caller census; Float64-domain\ncomparisons reported separately.\n\n## Agent 42 Axis-C audit convergence (independent, read-only)\nProven chain confirmed with exact citations (membership+order via\nsingle_gas_data_ iteration; layout links :143/:206 with bounds\nmirrors; write of the SAME linked storage :565/:576 with _min/_max\n:567-568/:578; 10,176+122,112+10,176+10,176 = 152,640 = logged state\nsize). Confirmed: NO copy or transform between caller state and\nserialization on this path other than the type projection above; the\nrelevant solver-to-caller mapping ON THIS TRACED PATH is the callback exp/MIN_X INTO\nckd_model.x (:225-234). The source links establish shared storage but\ndo not by themselves establish index order; the positional sidecar\nround-trip is the sole index-order proof, now with the Float32\nprojection explicit.\nTheir sidecar schema matches this draft's (adding the applicability\nclass file-lower/synthetic-lower/none, adopted); lattice language and\nthe identity-gate-as-sole-non-perturbation-proof adopted verbatim on\nboth sides.\n"
+  },
+  "gates": {
+    "evidence_adept_toolchain_pins": "passed",
+    "evidence_frozen_design_file": "passed",
+    "evidence_input_pins": "passed",
+    "evidence_modern_source_pins": "passed",
+    "evidence_reviewed_s1_completion_ledger": "passed",
+    "evidence_runtime_pins": "passed",
+    "evidence_s1_ledger_commit_pin": "passed",
+    "evidence_sbatch_bash_syntax": "passed",
+    "evidence_sbatch_text_gates": "passed",
+    "evidence_toolchain_fingerprints": "passed",
+    "fixtures": "passed"
+  },
+  "identity_gate": {
+    "on_violation": "INSTRUMENT REFUSAL (exit 95), never elimination and never a finding; RUNROOT preserved",
+    "raw2_global_attrs_observed": "composite_constituent_id,config,constituent_id,history,model_id,software_version,source,source_id,summary,title",
+    "semantics": "all-variable logical identity between pristine-arm and X1-arm raw2: dimension census, per-variable dims/stored types/typed attributes/elementwise values, EXACTLY 47 variables in each file, global attribute NAME-set equality, and the ACTUAL differing-global-attribute set required to EQUAL exactly [config, history] (typed comparison; attribute TYPE equality required even for the allowed value differences)"
+  },
+  "lattice": {
+    "axis_a": "returned internal x vs the EXACT x_min/x_max vectors passed to minimize (log space, synthetic lowers included)",
+    "axis_b": "callback mapping of x (exp with MIN_X zero-floor, replicating solve_adept.cpp:225-234) vs caller ckd_model.x",
+    "axis_c": "caller ckd_model.x vs serialized raw2 coefficients under a PROVEN index/write mapping (positional readback verified in-ledger)",
+    "interpretations": [
+      "A in-bounds + B differs: supports a LOCAL caller-state/mapping discrepancy -- not automatic desync causation.",
+      "A out-of-bounds: establishes ONLY that the captured returned x lies outside the provided vectors for this run; algorithm vs bound-construction semantics remain to be distinguished.",
+      "B equal + C differs: supports serialization/index mapping.",
+      "A/B/C mutually inconsistent with the existing census: instrument REFUSAL, never elimination."
+    ],
+    "note": "NO mechanism conclusion is licensed unless the relevant mapping is demonstrated; all three mechanism classes remain open/unranked globally"
+  },
+  "non_authorizing_note": "this checkpoint generates and verifies the X1 sbatch; it never submits; submission requires explicit monitor GO.",
+  "patch": {
+    "bounded_only_census": "gate4_x1 token appears exactly 3 times in the patched file (include + two call lines); gate4_x1:: exactly 2, both inside the capture region; ZERO X1 calls execute outside the bounded branch",
+    "capture_region": {
+      "lines": "365-372",
+      "sha256": "6181b7735fb1ed3612d56fa7127448289d24854ab5a86172dd915f7a2a839040"
+    },
+    "edits": [
+      {
+        "anchor": "#include \"Timer.h\"",
+        "inserted": "#include \"gate4_x1_capture.h\"",
+        "note": "global include: declarations only, no execution on any path"
+      },
+      {
+        "anchor": "    return minimizer.minimize(ckd_optimizable, x, x_min, x_max);",
+        "note": "bounded branch ONLY; record_pre is the FIRST line of the block, immediately before minimize: pre-minimize by construction AND bounded-branch-only by construction (lower_class/upper_active from the PHYSICAL member state before any callback mutation)",
+        "replaced_by": [
+          "    gate4_x1::PreState x1_pre = gate4_x1::record_pre(ckd_model);",
+          "    adept::MinimizerStatus x1_status = minimizer.minimize(ckd_optimizable, x, x_min, x_max);",
+          "    gate4_x1::write_capture(ckd_model, x, x_min, x_max, x1_pre, x1_status, MIN_X);",
+          "    return x1_status;"
+        ]
+      }
+    ],
+    "helper_file": "src/ecckd/gate4_x1_capture.h",
+    "helper_sha256": "183d8a534781e6378ee40ce348402ec491beaa1b58357a7f26560a6c57ec1872",
+    "line_count_delta": 4,
+    "original_solve_adept_sha256": "8c9822fac6e6efebadc3fd76c104fe563236221ca6297922e5e8a9467ee32091",
+    "patched_solve_adept_sha256": "7405c87905aae02971476e4b7585ce8267c28ce01fab216be12a938bdd7b0fa1",
+    "unbounded_tail": {
+      "note": "BOUNDS-ON ONLY: the ENTIRE tail from the unbounded else block to EOF is gated byte-identical in both trees and free of X1 tokens",
+      "original_start_line": 368,
+      "patched_start_line": 372,
+      "sha256_identical": "df4d69a8f597ed1182b353bc98731bbcefd528950cef2bb8f2974ee9be0b6848"
+    }
+  },
+  "post_terminal_requirements": [
+    "sidecar-based Axis-A/B/C evaluation with the committed log-space census kernel definitions in a dedicated completion ledger; NOT in-job",
+    "raw2 hashes + corrected active-state effective-bound census (pristine and X1 arms)",
+    "external pinned-comparator objective (both full arms)",
+    "all findings LOCAL to this rebuilt trajectory; no historical attribution; ceiling discipline unchanged"
+  ],
+  "prerequisites": [
+    {
+      "ledger": "S1 state-sync completion ledger",
+      "path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_s1_state_sync_completion_ledger.json",
+      "pinned_commit": "5b6cea7e97d552f0f2bbf80dbd5c998db065ddd4",
+      "required_case": "gate4_s1_state_sync_completion_ledger",
+      "required_status": "s1_run_completed_verified",
+      "reviewed_sha256": "de5b349e07b1f085e01f8a8fe6902ea50ac9ecce0821844ae99d8b3f9f40a586"
+    }
+  ],
+  "probe": {
+    "gates": [
+      "writer/path (capture-written line exactly once, no refusal line, no temp remnant)",
+      "schema (exact-set 23 variables, stored types, dims)",
+      "152640 rows",
+      "gas order/offsets",
+      "status (enum range + consistency fields)",
+      "Axis-C Float32 positional readback vs the probe raw2"
+    ],
+    "iterations": 1,
+    "purpose": "a schema bug must never consume a full arm"
+  },
+  "provenance": {
+    "generated_in_canonical_location": true,
+    "generation_dir": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation",
+    "note": "reproducibility: the generator's sibling package files (validator, capture helper, frozen design) are hash-pinned; the generated sbatch addresses the canonical paths under /shared/home/greg/Projects/AnalyticBandRadiation-platform/validation regardless of where generation ran, and sbatch stage 0a refuses unless the bytes at those paths match the pins; final artifacts must be regenerated from the promoted byte-identical package before commit."
+  },
+  "sbatch_path": "/shared/home/greg/Projects/AnalyticBandRadiation-platform/validation/results/gate4_x1_lw_direct_capture.sbatch",
+  "sbatch_sha256": "12b7bfeb5d20b595bd755436fa45a2e82a887febd999787e155385730b1c1e88",
+  "sidecar_schema": {
+    "atomicity": "private atomic write: same-directory dot-temp (name itself ends .nc because OutputDataFile infers format from the LAST extension) -> close -> rename to the exact required GATE4_X1_CAPTURE_PATH; missing/unwritable path or any write/rename failure exits 93 (refusal, never a skip); X1/probe arms use DISTINCT paths; the pristine arm is uninstrumented and exports nothing",
+    "bound_semantics": "bound_lo_log/bound_hi_log hold the EXACT vectors passed to minimize, including inactive -/+ numeric_limits<Real>::max() initialization values from minimizer_initialize_bounds; no NaN or sentinel substitution ever; lower_class (0=none,1=file-lower,2=synthetic-lower) and upper_active are computed PRE-minimize from the physical member state",
+    "contract": "gate4-x1-sidecar-v1",
+    "gas_order": [
+      "composite",
+      "h2o",
+      "o3",
+      "co2"
+    ],
+    "global_attributes": [
+      "arm",
+      "capture_location",
+      "contract",
+      "gas_names",
+      "index_base",
+      "job_id",
+      "minimizer_status_string"
+    ],
+    "index_semantics": "zero-based numeric positional indices; indexing base recorded as the numeric global attribute index_base=0; explicit global_x_index variable = 0:n-1",
+    "offsets": [
+      0,
+      10176,
+      132288,
+      142464
+    ],
+    "rows": 152640,
+    "sizes": [
+      10176,
+      122112,
+      10176,
+      10176
+    ],
+    "variables": {
+      "bound_hi_log": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Float64"
+      },
+      "bound_lo_log": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Float64"
+      },
+      "caller_phys": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Float64"
+      },
+      "caller_phys_f32": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Float32"
+      },
+      "gas_block_nconc": {
+        "dims": [
+          "active_gas"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_block_ng_point": {
+        "dims": [
+          "active_gas"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_block_npressure": {
+        "dims": [
+          "active_gas"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_block_ntemperature": {
+        "dims": [
+          "active_gas"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_block_offset": {
+        "dims": [
+          "active_gas"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_block_size": {
+        "dims": [
+          "active_gas"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_id": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "gas_offset": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "global_x_index": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "iconc": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "igpoint": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "ipress": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "itemp": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "lower_class": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      },
+      "mapped_x_phys": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Float64"
+      },
+      "min_x_log_floor": {
+        "dims": {},
+        "stored_type": "Float64"
+      },
+      "minimizer_status": {
+        "dims": {},
+        "stored_type": "Int32"
+      },
+      "returned_x_log": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Float64"
+      },
+      "upper_active": {
+        "dims": [
+          "x_index"
+        ],
+        "stored_type": "Int32"
+      }
+    }
+  },
+  "source_tree": {
+    "artifact": "/shared/home/greg/.julia/artifacts/7b210aef53e908cfe3c709945f0763c37ca82aaa/ecckd-6115f9b8e29a55cb0f48916857bdc77fec41badd",
+    "authority_note": "the 7b210aef artifact is the ONLY patch/source authority; extant work-tree reads were exploratory and enter no pins",
+    "executables": 24,
+    "files": 119,
+    "manifest_sha256": "a96e78e818e5343bead52a1d2ebf52436f8c0e0e67033bb314b6a00530a93aeb",
+    "symlinks": 0
+  },
+  "staged_input_immutability": {
+    "deferred": "no preserved-4558 live-data fixture in the package (monitor ruling); Agent 42's independent real-pair exercise remains non-load-bearing corroboration",
+    "per_runset_inputs": "the three work inputs are per-runset clones, each independently size+sha verified at staging",
+    "semantics": "ENFORCED, not intent-only (monitor ruling): immediately after the six shared data files are staged and hash-verified, the data tree is chmod -R a-w locked and the job fails closed unless it exists with ZERO writable files or directories (find exit status checked explicitly; no early-closing pipeline); after probe+pristine+X1 complete and BEFORE any success claim, all six staged files are re-verified size+sha against the SAME pinned manifest and the zero-writable state is reasserted (exit 78 on any drift)"
+  },
+  "status": "x1_checkpoint_ready",
+  "status_semantics": {
+    "experiment_allowed": {
+      "0": "Converged",
+      "2": "Maximum iterations reached"
+    },
+    "gates": [
+      "sidecar minimizer_status must be a pinned code AND minimizer_status_string must equal the pinned table entry exactly",
+      "sidecar status must lie in the experiment-allowed set {0 Converged, 2 Maximum iterations reached}",
+      "each run's exact terminal status is extracted from its log's single 'Convergence status: ' line and must lie in the allowed set (error/non-converged terminals refuse even when raw2 exists)",
+      "probe/X1 sidecar status string must equal the arm's log-extracted status",
+      "pristine and X1 full-arm statuses must be EQUAL before the identity gate can license non-perturbation (exit 95 otherwise)",
+      "a descriptive STATUS RECORD line is emitted for the completion ledger"
+    ],
+    "pinned_table": {
+      "0": "Converged",
+      "1": "Empty state vector, no minimization performed",
+      "10": "Minimization still in progress",
+      "2": "Maximum iterations reached",
+      "3": "Failed to converge",
+      "4": "Search direction points uphill",
+      "5": "Bound reached",
+      "6": "Non-finite cost function",
+      "7": "Non-finite gradient",
+      "8": "Invalid bounds for bounded minimization"
+    },
+    "table_authority": "installed /shared/home/greg/local/adept-2-install/include/adept_source.h lines 464-499 (sha256 8f29a64a2d8227e881a7a541e154d80b752f7746c8607f6a9f280b54f0312351); MinimizerStatus enum: installed Minimizer.h lines 27-38 (sha256 dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d); the default branch incl. enum sentinel 9 returns 'Status unrecognized' and is not pinned"
+  },
+  "toolchain": {
+    "adept_minimizer_h_sha256": "dad747936a66304266d0dd31990afa3a7534c589ac6b7a9230eaafbe671a1f8d",
+    "automake": "1.16.5",
+    "configure_argv": "./configure --with-adept=/shared/home/greg/local/adept-2-install --with-netcdf=/shared/home/greg/local/ckdmip-stack 'LDFLAGS=-L/shared/home/greg/local/adept-2-install/lib -Wl,-rpath,/shared/home/greg/local/adept-2-install/lib' 'LIBS=-ladept'",
+    "fingerprints": [
+      {
+        "path": "/usr/bin/gcc",
+        "tool": "gcc",
+        "version_line": "gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+      },
+      {
+        "path": "/usr/bin/g++",
+        "tool": "g++",
+        "version_line": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0"
+      },
+      {
+        "path": "/usr/bin/make",
+        "tool": "make",
+        "version_line": "GNU Make 4.3"
+      },
+      {
+        "path": "/usr/bin/autoreconf",
+        "tool": "autoreconf",
+        "version_line": "autoreconf (GNU Autoconf) 2.71"
+      }
+    ],
+    "libadept_sha256": "1f9016af1b6982493dc8d53dd3a11b2b0c54d4e84c4dbb548b4b06093d43dbcb",
+    "libtoolize": "2.4.7"
+  }
+}
