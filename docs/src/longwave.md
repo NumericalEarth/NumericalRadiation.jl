@@ -9,7 +9,8 @@ equations
 ```
 
 at each of `nwavenumber = 41` evenly spaced wavenumbers between 10 and
-2510 cm⁻¹ and integrates the resulting fluxes spectrally.
+2500 cm⁻¹ (inclusive of both endpoints, spacing 62.25 cm⁻¹) and integrates
+the resulting fluxes spectrally.
 
 ## Absorption spectra
 

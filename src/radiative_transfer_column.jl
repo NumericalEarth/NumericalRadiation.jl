@@ -28,9 +28,9 @@ struct RadiativeTransferColumn{NF, LW, SW, PC, TC, V<:AbstractVector{NF}, G<:Col
     profile::AP
     "Lower boundary state (SST/LST, albedos, emissivities, cos-zenith)"
     surface::SurfaceState{NF}
-    "Longwave scheme (`AnalyticBandLongwave`, `TransparentLongwave`, …)"
+    "Longwave scheme, e.g. [`AnalyticBandLongwave`](@ref)"
     longwave_scheme::LW
-    "Shortwave scheme (`OneBandShortwave`, `OneBandGreyShortwave`, …)"
+    "Shortwave scheme, e.g. [`OneBandShortwave`](@ref) or [`TransparentShortwave`](@ref)"
     shortwave_scheme::SW
     "Physical constants (gravity, heat capacity, Stefan–Boltzmann, solar constant)"
     physical_constants::PC

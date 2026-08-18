@@ -316,8 +316,11 @@ gas_names(::EcCKDTabulatedGasOpticsModel{<:Any, GasNames}) where GasNames = GasN
     return value isa Number ? value : value[k]
 end
 
+# Gas containers are keyed by `Symbol` throughout. A `String`-keyed container
+# must fail here rather than fall back silently: the `haskey(gases, :composite)`
+# guards below would miss its keys and quietly change the optical depth.
 @inline function _gas_value(gases::AbstractDict, name::Symbol, k)
-    value = haskey(gases, name) ? gases[name] : gases[String(name)]
+    value = gases[name]
     return value isa Number ? value : value[k]
 end
 

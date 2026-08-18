@@ -50,7 +50,7 @@ Layer heating follows from pressure-coordinate flux convergence:
 
 ```math
 \frac{\partial T}{\partial t}
-  = \frac{g}{c_p}\frac{\partial F_\mathrm{net}}{\partial p}.
+  = -\frac{g}{c_p}\frac{\partial F_\mathrm{net}}{\partial p}.
 ```
 
 For layer ``k`` bounded by interfaces ``k`` and ``k+1``, the discrete form used
@@ -59,7 +59,7 @@ by the staged column API is
 ```math
 \left(\frac{\partial T}{\partial t}\right)_k
   \approx \frac{g}{c_p}
-          \frac{F_{\mathrm{net}, k+1} - F_{\mathrm{net}, k}}
+          \frac{F_{\mathrm{net}, k} - F_{\mathrm{net}, k+1}}
                {p_{k+1} - p_k}.
 ```
 
