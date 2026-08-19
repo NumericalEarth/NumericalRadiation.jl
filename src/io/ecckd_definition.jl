@@ -445,6 +445,10 @@ package extension. Until that extension is loaded, this method errors with a
 clear message.
 """
 function read_ecckd_definition(path::AbstractString)
+    # The NCDatasets extension specializes `::String`, so convert other string
+    # types (a `SubString` from `strip`/`split`) instead of reporting them here as
+    # a missing extension.
+    path isa String || return read_ecckd_definition(String(path))
     throw(ArgumentError("read_ecckd_definition(\"$path\") requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
@@ -473,6 +477,12 @@ are the file's per-g-point solar irradiance normalized to unit sum.
 """
 function read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
                                          shortwave_path::AbstractString; kwargs...)
+    # The NCDatasets extension specializes `::String`, so convert other string
+    # types (a `SubString` from `strip`/`split`) instead of reporting them here as
+    # a missing extension.
+    (longwave_path isa String && shortwave_path isa String) ||
+        return read_ecckd_tabulated_gas_optics(String(longwave_path),
+                                               String(shortwave_path); kwargs...)
     throw(ArgumentError("read_ecckd_tabulated_gas_optics requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 

@@ -165,6 +165,50 @@ using Dates
 # --- begin content of test_ecckd_ncdatasets_ext.jl ---
 using NCDatasets
 
+@testset "NetCDF readers accept any AbstractString path" begin
+    # The extension specializes `::String`. Without a funnel in the package stub,
+    # a `SubString` misses it and is told to load NCDatasets — which is loaded
+    # here — so assert the two reach the same reader.
+    paths = official_ecckd_definition_paths(require = false)
+    if paths.longwave !== nothing && isfile(paths.longwave)
+        as_substring = strip(" " * paths.longwave * " ")
+        @test as_substring isa SubString{String}
+        @test as_substring == paths.longwave
+
+        from_string = read_ecckd_definition(String(paths.longwave))
+        from_substring = read_ecckd_definition(as_substring)
+        @test from_substring isa EcCKDDefinition
+        @test from_substring.model_name == from_string.model_name
+        @test from_substring.dimensions == from_string.dimensions
+
+        mapping_string = read_ecckd_spectral_mapping(String(paths.longwave))
+        mapping_substring = read_ecckd_spectral_mapping(as_substring)
+        @test mapping_substring isa EcCKDSpectralMapping
+        @test mapping_substring.wavenumber1 == mapping_string.wavenumber1
+
+        if paths.shortwave !== nothing && isfile(paths.shortwave)
+            sw_substring = strip(" " * paths.shortwave * " ")
+            model = read_ecckd_tabulated_gas_optics(as_substring, sw_substring)
+            @test model isa EcCKDTabulatedGasOpticsModel
+        end
+    end
+
+    # A path that is not a `String` must still reach the reader, so a missing
+    # file has to report the missing file rather than a missing extension.
+    missing_substring = strip(" " * tempname() * "-absent.nc ")
+    for reader in (read_ecckd_definition, read_ecckd_spectral_mapping,
+                   read_cloud_scattering_table)
+        err = try
+            reader(missing_substring)
+            nothing
+        catch caught
+            caught
+        end
+        @test err !== nothing
+        @test !occursin("load NCDatasets.jl", sprint(showerror, err))
+    end
+end
+
 @testset "NCDatasets ecCKD reader extension" begin
     path = tempname() * ".nc"
 

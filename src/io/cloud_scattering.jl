@@ -115,6 +115,10 @@ depend on NetCDF libraries; NetCDF-backed loading is provided by the
 NCDatasets extension.
 """
 function read_cloud_scattering_table(path::AbstractString)
+    # The NCDatasets extension specializes `::String`, so convert other string
+    # types (a `SubString` from `strip`/`split`) instead of reporting them here as
+    # a missing extension.
+    path isa String || return read_cloud_scattering_table(String(path))
     throw(ArgumentError("read_cloud_scattering_table requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
@@ -125,6 +129,10 @@ Read the ecCKD resolved-spectral to g-point mapping from a CKD-definition
 NetCDF file. NetCDF-backed loading is provided by the NCDatasets extension.
 """
 function read_ecckd_spectral_mapping(path::AbstractString)
+    # The NCDatasets extension specializes `::String`, so convert other string
+    # types (a `SubString` from `strip`/`split`) instead of reporting them here as
+    # a missing extension.
+    path isa String || return read_ecckd_spectral_mapping(String(path))
     throw(ArgumentError("read_ecckd_spectral_mapping requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
