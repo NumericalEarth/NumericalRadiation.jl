@@ -824,6 +824,108 @@ end
         @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
     end
 end
+
+# `optical_properties!` derives its interpolation stencil from each table's own
+# element type rather than from the grids, so type stability and Float32 support
+# are load-bearing rather than incidental, and `Adapt` has to carry all fourteen
+# fields across in the right order for a device model to agree with a host one.
+@testset "tabulated gas optics is inferrable, Float32-clean, and Adapt-stable" begin
+    function tabulated_fixture(FT, matrix_temperature_grid::Bool)
+        np, nt, nh2o = 4, 3, 3
+        ng_lw, ng_sw, ngas, nlayers = 3, 2, 3, 3
+        pressure_grid = FT[5_000, 20_000, 60_000, 100_000]
+        temperature_grid = matrix_temperature_grid ?
+            FT[180 + 30 * (ip - 1) + 40 * (it - 1) for ip in 1:np, it in 1:nt] :
+            FT[200, 250, 300]
+        gridded(ip, it) = matrix_temperature_grid ?
+            temperature_grid[ip, it] : temperature_grid[it]
+        source_temperature_grid = FT[180, 240, 300]
+
+        model = EcCKDTabulatedGasOpticsModel(
+            gas_names = (:h2o, :co2, :composite),
+            pressure_grid = pressure_grid,
+            temperature_grid = temperature_grid,
+            h2o_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
+            gas_reference_mole_fractions = FT[0, 4e-4, 0],
+            longwave_absorption =
+                FT[1e-4 * (7ig + 3j) * (1 + 1e-5 * pressure_grid[ip]) *
+                   (1 + 1e-3 * gridded(ip, it))
+                   for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            shortwave_absorption =
+                FT[1e-5 * (5ig + 2j) * (1 + 2e-5 * pressure_grid[ip]) *
+                   (1 + 2e-3 * gridded(ip, it))
+                   for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            longwave_h2o_absorption =
+                FT[1e-3 * ig * (1 + 10ih)
+                   for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+            shortwave_h2o_absorption =
+                FT[1e-4 * ig * (1 + 5ih)
+                   for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+            shortwave_rayleigh_molar_scattering = FT[1.1e-6, 3.7e-6],
+            longwave_source_temperature_grid = source_temperature_grid,
+            longwave_source_table = FT[(ig + 2) * st^2
+                                       for ig in 1:ng_lw, st in source_temperature_grid],
+            longwave_weights = FT[0.2, 0.3, 0.5],
+            shortwave_weights = FT[0.45, 0.55],
+        )
+        atmosphere = ColumnAtmosphere(
+            pressure_layers = FT[7_500, 33_000, 88_000],
+            pressure_interfaces = FT[1_000, 14_000, 52_000, 101_000],
+            temperature_layers = FT[217.3, 263.9, 291.4],
+            temperature_interfaces = FT[205.1, 231.7, 279.2, 297.8],
+            gases = (h2o = FT[3.1, 12.7, 41.9], co2 = FT(8.3),
+                     composite = FT[4.2e2, 1.1e3, 2.6e3]),
+            surface = (;),
+            geometry = (;),
+        )
+        longwave = LongwaveOpticalProperties(zeros(FT, ng_lw, nlayers),
+                                             zeros(FT, ng_lw, nlayers);
+                                             source_top = zeros(FT, ng_lw, nlayers),
+                                             source_bottom = zeros(FT, ng_lw, nlayers),
+                                             weights = zeros(FT, ng_lw))
+        shortwave = ShortwaveOpticalProperties(zeros(FT, ng_sw, nlayers);
+                                               weights = zeros(FT, ng_sw))
+        return model, atmosphere, longwave, shortwave
+    end
+
+    for FT in (Float64, Float32), matrix_temperature_grid in (false, true)
+        @testset "$FT, matrix temperature grid = $matrix_temperature_grid" begin
+            model, atmosphere, longwave, shortwave =
+                tabulated_fixture(FT, matrix_temperature_grid)
+
+            @test eltype(model) === FT
+            @test (@inferred optical_properties!(longwave, shortwave, model,
+                                                 atmosphere)) isa Tuple
+            @test eltype(longwave.optical_depth) === FT
+            @test eltype(shortwave.optical_depth) === FT
+            @test all(isfinite, longwave.optical_depth)
+            @test all(isfinite, shortwave.optical_depth)
+            @test all(>=(0), longwave.optical_depth)
+
+            adapted = NumericalRadiation.Adapt.adapt(Array, model)
+            @test adapted isa EcCKDTabulatedGasOpticsModel
+            @test eltype(adapted) === FT
+            @test NumericalRadiation.gas_names(adapted) ==
+                  NumericalRadiation.gas_names(model)
+            for name in fieldnames(typeof(model))
+                @test getfield(adapted, name) == getfield(model, name)
+            end
+
+            adapted_longwave =
+                LongwaveOpticalProperties(zero(longwave.optical_depth),
+                                          zero(longwave.source);
+                                          source_top = zero(longwave.source_top),
+                                          source_bottom = zero(longwave.source_bottom),
+                                          weights = zero(longwave.weights))
+            adapted_shortwave =
+                ShortwaveOpticalProperties(zero(shortwave.optical_depth);
+                                           weights = zero(shortwave.weights))
+            optical_properties!(adapted_longwave, adapted_shortwave, adapted, atmosphere)
+            @test adapted_longwave.optical_depth == longwave.optical_depth
+            @test adapted_shortwave.optical_depth == shortwave.optical_depth
+        end
+    end
+end
 # --- end content of test_ecckd_forward.jl ---
 
 end # module TestEcckdForward
