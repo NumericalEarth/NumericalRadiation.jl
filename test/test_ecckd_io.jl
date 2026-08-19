@@ -276,6 +276,15 @@ end
                 end
                 @test_throws ArgumentError read_ecckd_tabulated_gas_optics(lw_path, copied)
             end
+
+            copied = joinpath(dir, "reference-" * basename(sw_path))
+            cp(sw_path, copied)
+            chmod(copied, 0o644)
+            NCDataset(copied, "a") do ds
+                ds["ch4_reference_mole_fraction"][] *= 2
+            end
+            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(
+                lw_path, copied; gas_names = (:ch4, :n2o))
         end
     else
         @info "Skipping paired ecCKD axis check; ecRad data files are not present"
@@ -493,6 +502,12 @@ Base.@noinline function optical_properties_allocations(longwave, shortwave, mode
     return @allocated run_optical_properties!(longwave, shortwave, model, atmosphere)
 end
 
+struct GasView{H, C, A}
+    h2o::H
+    co2::C
+    composite::A
+end
+
 # --- begin content of test_ecckd_forward.jl ---
 @testset "ecCKD-style forward gas optics" begin
     nlayers = 3
@@ -689,6 +704,57 @@ end
         longwave_absorption = zeros(2, 2, 1, 2),
         shortwave_absorption = shortwave_table,
     )
+end
+
+@testset "property-backed gas views follow the Symbol-keyed gas contract" begin
+    pressure_grid = [10_000.0, 20_000.0]
+    temperature_grid = [250.0, 300.0]
+    longwave_absorption = zeros(1, 2, 2, 2)
+    shortwave_absorption = zeros(1, 2, 2, 2)
+    longwave_absorption[:, 2, :, :] .= 1.0
+    shortwave_absorption[:, 2, :, :] .= 1.0
+    longwave_h2o = zeros(1, 2, 2, 2)
+    shortwave_h2o = zeros(1, 2, 2, 2)
+    longwave_h2o[:, :, :, 1] .= 10.0
+    longwave_h2o[:, :, :, 2] .= 20.0
+    shortwave_h2o[:, :, :, 1] .= 1.0
+    shortwave_h2o[:, :, :, 2] .= 2.0
+    model = EcCKDTabulatedGasOpticsModel(
+        gas_names = (:h2o, :co2),
+        pressure_grid = pressure_grid,
+        temperature_grid = temperature_grid,
+        h2o_mole_fraction_grid = [1.0e-4, 1.0e-2],
+        gas_reference_mole_fractions = [0.0, 1.0],
+        longwave_absorption = longwave_absorption,
+        shortwave_absorption = shortwave_absorption,
+        longwave_h2o_absorption = longwave_h2o,
+        shortwave_h2o_absorption = shortwave_h2o,
+        longwave_weights = [1.0],
+        shortwave_weights = [1.0],
+    )
+
+    function run_with_gases(gases)
+        atmosphere = ColumnAtmosphere(
+            pressure_layers = [15_000.0],
+            pressure_interfaces = [10_000.0, 20_000.0],
+            temperature_layers = [275.0],
+            temperature_interfaces = [250.0, 300.0],
+            gases = gases,
+            surface = (;),
+            geometry = (;),
+        )
+        longwave = LongwaveOpticalProperties(zeros(1, 1), zeros(1, 1);
+                                             weights = zeros(1))
+        shortwave = ShortwaveOpticalProperties(zeros(1, 1); weights = zeros(1))
+        optical_properties!(longwave, shortwave, model, atmosphere)
+        return longwave.optical_depth, shortwave.optical_depth
+    end
+
+    named = (h2o = [1.0], co2 = [101.0], composite = [100.0])
+    expected = run_with_gases(named)
+    @test run_with_gases(GasView(named...)) == expected
+    @test run_with_gases(Dict(pairs(named))) == expected
+    @test_throws KeyError run_with_gases(Dict(string(key) => value for (key, value) in pairs(named)))
 end
 
 # Bit-exact pin on the tabulated interpolation path. `optical_properties!` hoists

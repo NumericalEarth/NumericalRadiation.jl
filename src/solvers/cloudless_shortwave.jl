@@ -68,13 +68,7 @@ TOA shortwave flux through the column, reflects a configurable fraction at the
 surface, and transmits that reflected flux upward through the same optical
 depths.
 """
-struct CloudlessShortwave{FT} <: AbstractRadiativeTransferSolver
-    "Fraction of scattered Rayleigh energy sent into the backward hemisphere."
-    rayleigh_backscatter_fraction::FT
-end
-
-CloudlessShortwave(; rayleigh_backscatter_fraction = 0.5) =
-    CloudlessShortwave(rayleigh_backscatter_fraction)
+struct CloudlessShortwave <: AbstractRadiativeTransferSolver end
 
 """
 $(TYPEDEF)
@@ -157,24 +151,6 @@ end
         end
     end
     return one(FT)
-end
-
-@inline function _scattering_layer_coefficients(::Type{FT},
-                                                absorption_tau,
-                                                rayleigh_tau,
-                                                path_factor,
-                                                backscatter_fraction) where FT
-    τa = max(FT(absorption_tau), zero(FT)) * path_factor
-    τr = max(FT(rayleigh_tau), zero(FT)) * path_factor
-    τ = τa + τr
-    τ == zero(FT) && return zero(FT), one(FT)
-
-    direct = exp(-τ)
-    scattering_fraction = τr / τ * (one(FT) - direct)
-    backscatter = clamp(FT(backscatter_fraction), zero(FT), one(FT))
-    reflectance = backscatter * scattering_fraction
-    transmittance = direct + (one(FT) - backscatter) * scattering_fraction
-    return reflectance, transmittance
 end
 
 """
@@ -368,7 +344,7 @@ the direct-beam path length `1 / cos_zenith`; otherwise the solver preserves the
 historical vertical-path convention.
 """
 function radiative_fluxes!(fluxes::RadiativeFluxes,
-                           solver::CloudlessShortwave,
+                           ::CloudlessShortwave,
                            optics::ShortwaveOpticalProperties{FT},
                            atmosphere,
                            boundary_conditions::ShortwaveBoundaryConditions{FT}) where FT

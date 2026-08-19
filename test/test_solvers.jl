@@ -1026,7 +1026,7 @@ using Dates
         @test all(>=(0), fluxes.shortwave_up)
     end
 
-    @testset "Rayleigh backscatter compatibility option preserves ecRad path" begin
+    @testset "Rayleigh scattering follows the ecRad two-stream path" begin
         fluxes = RadiativeFluxes(
             longwave_up = zeros(2),
             longwave_down = zeros(2),
@@ -1038,11 +1038,7 @@ using Dates
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
 
-        radiative_fluxes!(fluxes,
-                          CloudlessShortwave(rayleigh_backscatter_fraction = 0.5),
-                          optics,
-                          nothing,
-                          boundary)
+        radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
 
         @test fluxes.shortwave_down[2] ≈ 296.07982702762007
         @test fluxes.shortwave_up[1] ≈ 103.92017297152903
@@ -1641,6 +1637,13 @@ end
     @test length(thick.single_scattering_albedo) == 2
     @test all(0 .<= thick.single_scattering_albedo .<= 1)
     @test thick.single_scattering_albedo != thin.single_scattering_albedo
+
+    first_weights = @inferred NumericalRadiation._ecrad_cloud_mapping_matrix(table, mapping)
+    original_fraction = copy(mapping.gpoint_fraction)
+    mapping.gpoint_fraction .= original_fraction[:, end:-1:1]
+    second_weights = @inferred NumericalRadiation._ecrad_cloud_mapping_matrix(table, mapping)
+    @test second_weights != first_weights
+    @test second_weights == first_weights[end:-1:1, :]
 end
 
 @testset "NCDatasets cloud scattering table reader" begin

@@ -57,8 +57,6 @@ end
 
 Base.eltype(::EcCKDSpectralMapping{FT}) where FT = FT
 
-const ECRAD_CLOUD_MAPPING_MATRIX_CACHE = Dict{Tuple{UInt, UInt}, Any}()
-
 function EcCKDSpectralMapping(; wavenumber1::AbstractVector{FT},
                               wavenumber2::AbstractVector{FT},
                               gpoint_fraction::AbstractMatrix{FT},
@@ -283,10 +281,6 @@ end
 
 function _ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
                                      mapping::EcCKDSpectralMapping)
-    cache_key = (objectid(table), objectid(mapping))
-    cached = get(ECRAD_CLOUD_MAPPING_MATRIX_CACHE, cache_key, nothing)
-    cached === nothing || return cached
-
     FT = promote_type(eltype(table), eltype(mapping))
     nwav = length(table.wavenumber)
     nspectral = length(mapping.wavenumber1)
@@ -376,7 +370,6 @@ function _ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
         total = sum(view(matrix, ig, :))
         total > 0 && (matrix[ig, :] ./= total)
     end
-    ECRAD_CLOUD_MAPPING_MATRIX_CACHE[cache_key] = matrix
     return matrix
 end
 

@@ -21,7 +21,7 @@ struct ColumnAtmosphere{FT, A, G, S, Geo} <: AbstractAtmosphericState
     temperature_layers::A
     "Interface temperatures, indexed top-down."
     temperature_interfaces::A
-    "Gas concentrations or host-model gas view."
+    "Symbol-keyed gas concentrations or host-model property view."
     gases::G
     "Lower-boundary state."
     surface::S

@@ -331,6 +331,9 @@ end
     value isa Number ? value : value[k]
 end
 
+@inline _has_gas(gases::AbstractDict, name::Symbol) = haskey(gases, name)
+@inline _has_gas(gases, name::Symbol) = hasproperty(gases, name)
+
 @inline _source_temperature(atmosphere::ColumnAtmosphere, k) =
     atmosphere.temperature_layers[k]
 
@@ -528,7 +531,7 @@ end
     for j in eachindex(gas_names)
         amount = FT(_gas_value(gases, gas_names[j], k))
         reference = FT(gas_reference_mole_fractions[j])
-        if reference != zero(FT) && haskey(gases, :composite)
+        if reference != zero(FT) && _has_gas(gases, :composite)
             amount -= reference * FT(_gas_value(gases, :composite, k))
         end
         tau += _interp_table(coefficients, ig, j, stencil) * amount
@@ -657,7 +660,7 @@ end
                                     atmosphere::ColumnAtmosphere,
                                     k) where FT
     h2o_moles = max(FT(_gas_value(atmosphere.gases, :h2o, k)), zero(FT))
-    dry_air_moles = haskey(atmosphere.gases, :composite) ?
+    dry_air_moles = _has_gas(atmosphere.gases, :composite) ?
         max(FT(_gas_value(atmosphere.gases, :composite, k)), sqrt(eps(FT))) :
         max(FT(atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]) /
             (FT(9.80665) * FT(0.0289647)), sqrt(eps(FT)))
