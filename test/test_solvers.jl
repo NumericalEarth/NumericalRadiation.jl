@@ -1064,9 +1064,73 @@ using Dates
         radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
 
         @test fluxes.shortwave_down[1] == 400.0
-        @test fluxes.shortwave_down[2] ≈ 407.619005357698
-        @test fluxes.shortwave_up[1] == 0.0
+        @test fluxes.shortwave_down[2] ≈ 382.3317190775697
+        @test fluxes.shortwave_up[1] ≈ 17.66828093333854
         @test fluxes.shortwave_up[2] == 0.0
+
+        # Conservative scattering (no absorption) over a black surface: every
+        # photon leaves either downward through the surface or upward at the top.
+        @test fluxes.shortwave_down[2] + fluxes.shortwave_up[1] ≈ 400.0 rtol = 1e-9
+    end
+end
+
+@testset "shortwave two-stream conserves energy when scattering is conservative" begin
+    # A single non-absorbing layer over a black surface has an exact budget:
+    # reflected plus transmitted equals incident. Delta-Eddington scaling is what
+    # makes the two-stream layer solution satisfy it at cloud-like asymmetries —
+    # unscaled, it creates energy, and did so silently until this was pinned.
+    for τ in (0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 20.0),
+        g in (0.0, 0.4, 0.8, 0.85, 0.95)
+
+        fluxes = RadiativeFluxes(
+            longwave_up = zeros(2),
+            longwave_down = zeros(2),
+            shortwave_up = zeros(2),
+            shortwave_down = zeros(2),
+        )
+        optics = ShortwaveOpticalProperties([0.0];
+                                            scattering_optical_depth = [τ],
+                                            scattering_asymmetry = [g])
+        boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
+                                               surface_albedo = 0.0)
+        radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
+
+        outgoing = fluxes.shortwave_down[2] + fluxes.shortwave_up[1]
+        @test outgoing ≈ 400.0 rtol = 1e-8
+        @test fluxes.shortwave_up[1] >= 0.0
+        @test fluxes.shortwave_down[2] >= 0.0
+    end
+end
+
+@testset "delta-Eddington scaling" begin
+    scale(τ, ω, g) = NumericalRadiation._sw_delta_eddington(Float64, τ, ω, g)
+
+    # Rayleigh (g = 0) and backscattering layers have no forward peak to remove.
+    @test scale(1.5, 0.9, 0.0) == (1.5, 0.9, 0.0)
+    @test scale(1.5, 0.9, -0.3) == (1.5, 0.9, -0.3)
+
+    # Joseph, Wiscombe and Weinman (1976): f = g², τ' = (1 - ωf)τ,
+    # ω' = (1 - f)ω / (1 - ωf), g' = (g - f) / (1 - f).
+    τ, ω, g = 2.0, 0.99, 0.85
+    f = g^2
+    τd, ωd, gd = scale(τ, ω, g)
+    @test τd ≈ (1 - ω * f) * τ
+    @test ωd ≈ (1 - f) * ω / (1 - ω * f)
+    @test gd ≈ (g - f) / (1 - f)
+    @test 0 <= ωd <= 1
+    @test gd < g
+
+    # A pure forward peak scatters nothing into either stream, so what remains is
+    # absorption only. This is the corner where the rescaling is 0/0.
+    @test scale(3.0, 1.0, 1.0) == (0.0, 0.0, 0.0)
+    @test scale(3.0, 0.25, 1.0) == (3.0 * 0.75, 0.0, 0.0)
+
+    # Scaling never increases optical depth and never leaves ω or g out of range.
+    for τ in (0.01, 1.0, 30.0), ω in (0.0, 0.5, 0.999, 1.0), g in (0.0, 0.5, 0.9, 1.0)
+        τd, ωd, gd = scale(τ, ω, g)
+        @test 0 <= τd <= τ
+        @test 0 <= ωd <= 1
+        @test 0 <= gd <= g
     end
 end
 

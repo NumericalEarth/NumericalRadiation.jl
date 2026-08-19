@@ -181,10 +181,7 @@ end
     total_tau = absorption_tau + scattering_tau
     ssa = total_tau == zero(FT) ? zero(FT) : scattering_tau / total_tau
     asymmetry = clamp(FT(_sw_scattering_asymmetry(optics, ig, k)), -one(FT), one(FT))
-    gamma1, gamma2, gamma3 = _sw_two_stream_gammas(FT, μ0, ssa, asymmetry)
-    return _sw_reflectance_transmittance(FT, μ0, total_tau, ssa,
-                                         gamma1, gamma2, gamma3,
-                                         direct_source_limit)
+    return _sw_two_stream_layer(FT, μ0, total_tau, ssa, asymmetry, direct_source_limit)
 end
 
 @inline function _sw_layer_reflectance_transmittance_scaled(::Type{FT},
@@ -216,10 +213,7 @@ end
         clamp(scattering_moment / scattering_tau, -one(FT), one(FT))
     total_tau = absorption_tau + scattering_tau
     ssa = total_tau == zero(FT) ? zero(FT) : scattering_tau / total_tau
-    gamma1, gamma2, gamma3 = _sw_two_stream_gammas(FT, μ0, ssa, asymmetry)
-    return _sw_reflectance_transmittance(FT, μ0, total_tau, ssa,
-                                         gamma1, gamma2, gamma3,
-                                         direct_source_limit)
+    return _sw_two_stream_layer(FT, μ0, total_tau, ssa, asymmetry, direct_source_limit)
 end
 
 @inline function _gamma_tripleclouds_regions(::Type{FT}, cloud_fraction, fractional_std) where FT

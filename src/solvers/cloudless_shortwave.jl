@@ -177,6 +177,61 @@ end
     return reflectance, transmittance
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Delta-Eddington scaling (Joseph, Wiscombe and Weinman 1976) of a layer's optical
+depth, single-scattering albedo and asymmetry factor.
+
+A fraction `f = g²` of the phase function is treated as an unscattered forward
+peak and removed, and the remaining optics are rescaled so that the transported
+energy is unchanged. Two-stream solutions only resolve weakly anisotropic phase
+functions, so without this the strongly forward-scattering layers that clouds
+produce (`g ≈ 0.85`) are not just inaccurate but non-conservative: the two-stream
+layer solution then creates energy, by as much as 13% of the incident beam at
+`g = 0.95`.
+
+Backscattering layers have no forward peak to remove, so `g ≤ 0` — including the
+`g = 0` Rayleigh case — passes through unscaled.
+"""
+@inline function _sw_delta_eddington(::Type{FT},
+                                     optical_depth,
+                                     single_scattering_albedo,
+                                     asymmetry) where FT
+    τ = FT(optical_depth)
+    ω = FT(single_scattering_albedo)
+    g = FT(asymmetry)
+    forward_peak = max(g, zero(FT))^2
+    # A pure forward peak scatters nothing back into either stream, leaving a
+    # purely absorbing layer. Taking it separately also keeps the ω = g = 1
+    # corner, where the rescaling below is 0/0, finite.
+    forward_peak >= one(FT) && return (one(FT) - ω) * τ, zero(FT), zero(FT)
+    scale = one(FT) - ω * forward_peak
+    return scale * τ,
+           (one(FT) - forward_peak) * ω / scale,
+           (g - forward_peak) / (one(FT) - forward_peak)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Delta-Eddington-scale a layer and return its two-stream reflectance and
+transmittance. This is the single entry point every shortwave two-stream path
+uses, so the scaling cannot be skipped by one caller and applied by another.
+"""
+@inline function _sw_two_stream_layer(::Type{FT},
+                                      μ0,
+                                      optical_depth,
+                                      single_scattering_albedo,
+                                      asymmetry,
+                                      direct_source_limit = Val(:unit)) where FT
+    τ, ω, g = _sw_delta_eddington(FT, optical_depth, single_scattering_albedo, asymmetry)
+    gamma1, gamma2, gamma3 = _sw_two_stream_gammas(FT, μ0, ω, g)
+    return _sw_reflectance_transmittance(FT, μ0, τ, ω,
+                                         gamma1, gamma2, gamma3,
+                                         direct_source_limit)
+end
+
 @inline function _sw_two_stream_gammas(::Type{FT}, μ0, single_scattering_albedo, asymmetry) where FT
     factor = FT(0.75) * FT(asymmetry)
     gamma1 = FT(2) - FT(single_scattering_albedo) * (FT(1.25) + factor)
@@ -259,10 +314,8 @@ function _ecrad_shortwave_column!(up::AbstractVector{FT},
         total_tau = absorption_tau + rayleigh_tau
         ssa = total_tau == zero(FT) ? zero(FT) : rayleigh_tau / total_tau
         asymmetry = clamp(FT(_sw_scattering_asymmetry(optics, ig, k)), -one(FT), one(FT))
-        gamma1, gamma2, gamma3 = _sw_two_stream_gammas(FT, μ0, ssa, asymmetry)
         reflectance[k], transmittance[k], ref_dir[k], trans_dir_diff[k],
-            trans_dir_dir[k] = _sw_reflectance_transmittance(
-                FT, μ0, total_tau, ssa, gamma1, gamma2, gamma3)
+            trans_dir_dir[k] = _sw_two_stream_layer(FT, μ0, total_tau, ssa, asymmetry)
     end
 
     flux_direct = Vector{FT}(undef, nlayers + 1)

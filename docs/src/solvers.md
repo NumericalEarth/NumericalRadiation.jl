@@ -110,6 +110,28 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   those channels (see [Cloud and aerosol optics](cloud_optics.md)) is
   transported without solver changes.
 
+Every layer is delta-Eddington scaled (Joseph, Wiscombe and Weinman 1976) before
+the two-stream coefficients are formed. A fraction ``f = g^2`` of the phase
+function is treated as an unscattered forward peak and removed,
+
+```math
+\tau' = (1 - \omega f)\,\tau, \qquad
+\omega' = \frac{(1 - f)\,\omega}{1 - \omega f}, \qquad
+g' = \frac{g - f}{1 - f}.
+```
+
+This is not only an accuracy refinement. A two-stream solution resolves the
+phase function too coarsely to stay conservative at cloud-like asymmetries, so
+without the scaling a non-absorbing layer returns more energy than it received —
+by as much as 13 % of the incident beam at ``g = 0.95``. Rayleigh scattering has
+``g = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
+
+The scaling is applied to the combined gas, cloud, and aerosol optics of a
+layer, as RRTMGP does. ecRad instead defaults to scaling cloud and aerosol
+optics before they are added to the gas optics, so that a cloud's forward peak
+does not also thin the gas absorption; the two agree when scattering dominates
+the layer and differ slightly when gas absorption does.
+
 Surface albedos for diffuse and direct radiation are independent and may be
 broadband scalars or per-g-point vectors.
 
