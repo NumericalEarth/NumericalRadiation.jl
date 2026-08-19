@@ -677,15 +677,19 @@ end
 
     lw_coeff(ig, j, p, t) = 100ig + 10j + 0.001p + 0.01t
     sw_coeff(ig, j, p, t) = 10ig + j + 0.0001p + 0.001t
+    interpolated_pressure(p) = let (ip0, ip1, weight) =
+            NumericalRadiation._pressure_bracket(pressure_grid, p)
+        pressure_grid[ip0] + weight * (pressure_grid[ip1] - pressure_grid[ip0])
+    end
     @test longwave.optical_depth[1, 1] ≈
-          lw_coeff(1, 1, 15_000.0, 275.0) * 2.0 +
-          lw_coeff(1, 2, 15_000.0, 275.0) * 4.0
+          lw_coeff(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
+          lw_coeff(1, 2, interpolated_pressure(15_000.0), 275.0) * 4.0
     @test longwave.optical_depth[2, 2] ≈
-          lw_coeff(2, 1, 20_000.0, 250.0) * 3.0 +
-          lw_coeff(2, 2, 20_000.0, 250.0) * 4.0
+          lw_coeff(2, 1, interpolated_pressure(20_000.0), 250.0) * 3.0 +
+          lw_coeff(2, 2, interpolated_pressure(20_000.0), 250.0) * 4.0
     @test shortwave.optical_depth[1, 1] ≈
-          sw_coeff(1, 1, 15_000.0, 275.0) * 2.0 +
-          sw_coeff(1, 2, 15_000.0, 275.0) * 4.0
+          sw_coeff(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
+          sw_coeff(1, 2, interpolated_pressure(15_000.0), 275.0) * 4.0
     @test longwave.weights == [0.4, 0.6]
     @test shortwave.weights == [1.0]
 
@@ -704,6 +708,83 @@ end
         longwave_absorption = zeros(2, 2, 1, 2),
         shortwave_absorption = shortwave_table,
     )
+end
+
+@testset "ecCKD tabulated interpolation and atmosphere contracts" begin
+    @test NumericalRadiation._pressure_bracket(
+        [100.0, 1_000.0, 10_000.0], sqrt(100.0 * 1_000.0))[3] ≈ 0.5
+    @test NumericalRadiation._table_stencil(
+        Float64, [100.0, 1_000.0, 10_000.0], [200.0, 300.0],
+        sqrt(100.0 * 1_000.0), 250.0)[1][3] ≈ 0.5
+
+    function contract_model(; pressure_grid = [100.0, 1_000.0],
+                            temperature_grid = [200.0, 300.0],
+                            h2o_grid = Float64[])
+        np = length(pressure_grid)
+        nt = NumericalRadiation._temperature_grid_length(temperature_grid)
+        nh2o = length(h2o_grid)
+        h2o_table = nh2o == 0 ? nothing : zeros(1, np, nt, nh2o)
+        return EcCKDTabulatedGasOpticsModel(
+            gas_names = (:h2o,),
+            pressure_grid = pressure_grid,
+            temperature_grid = temperature_grid,
+            h2o_mole_fraction_grid = h2o_grid,
+            longwave_absorption = zeros(1, 1, np, nt),
+            shortwave_absorption = zeros(1, 1, np, nt),
+            longwave_h2o_absorption = h2o_table,
+            shortwave_h2o_absorption = h2o_table,
+        )
+    end
+
+    @test_throws ArgumentError contract_model(pressure_grid = [100.0, 1_000.0, 5_000.0])
+    @test_throws ArgumentError contract_model(h2o_grid = [1.0e-6, 1.0e-4, 1.0e-3])
+    @test_throws DimensionMismatch contract_model(
+        pressure_grid = [100.0, 1_000.0, 10_000.0],
+        temperature_grid = [200.0 250.0; 210.0 260.0],
+    )
+    @test_throws ArgumentError contract_model(
+        pressure_grid = [100.0, 1_000.0, 10_000.0],
+        temperature_grid = [200.0 250.0 300.0;
+                            210.0 270.0 330.0;
+                            220.0 280.0 340.0],
+    )
+
+    model = contract_model()
+    longwave = LongwaveOpticalProperties(zeros(1, 2), zeros(1, 2);
+                                         weights = zeros(1))
+    shortwave = ShortwaveOpticalProperties(zeros(1, 2); weights = zeros(1))
+    atmosphere(; pressure_layers = [200.0, 800.0],
+               pressure_interfaces = [100.0, 500.0, 1_000.0],
+               temperature_interfaces = Float64[],
+               gases = (h2o = [1.0, 2.0],)) = ColumnAtmosphere(
+        pressure_layers = pressure_layers,
+        pressure_interfaces = pressure_interfaces,
+        temperature_layers = [250.0, 260.0],
+        temperature_interfaces = temperature_interfaces,
+        gases = gases,
+        surface = (;),
+        geometry = (;),
+    )
+
+    @test_throws DimensionMismatch optical_properties!(
+        longwave, shortwave, model, atmosphere(pressure_layers = [200.0]))
+    @test_throws DimensionMismatch optical_properties!(
+        longwave, shortwave, model,
+        atmosphere(pressure_interfaces = [100.0, 1_000.0]))
+    @test_throws DimensionMismatch optical_properties!(
+        longwave, shortwave, model, atmosphere(gases = (h2o = [1.0],)))
+
+    interface_longwave = LongwaveOpticalProperties(
+        zeros(1, 2), zeros(1, 2);
+        source_top = zeros(1, 2), source_bottom = zeros(1, 2), weights = zeros(1))
+    @test_throws DimensionMismatch optical_properties!(
+        interface_longwave, shortwave, model,
+        atmosphere(temperature_interfaces = [240.0, 270.0]))
+    top_only = LongwaveOpticalProperties(
+        zeros(1, 2), zeros(1, 2); source_top = zeros(1, 2), weights = zeros(1))
+    @test_throws ArgumentError optical_properties!(
+        top_only, shortwave, model,
+        atmosphere(temperature_interfaces = [240.0, 255.0, 270.0]))
 end
 
 @testset "property-backed gas views follow the Symbol-keyed gas contract" begin
@@ -761,11 +842,12 @@ end
 # every interpolation bracket out of its g-point and gas loops, which is only
 # valid if it reproduces per-point bracketing to the last bit — approximate
 # comparison would hide exactly the rounding drift that invalidates the hoist.
-# Reference values were produced by the pre-hoist implementation; regenerate them
-# deliberately (and say so) if the interpolation itself is ever meant to change.
+# Reference values were regenerated after aligning the vector-temperature path
+# with ecCKD's log-pressure interpolation. Regenerate them deliberately (and
+# say so) if the interpolation itself is ever meant to change again.
 @testset "ecCKD tabulated interpolation is bit-exact" begin
-    pressure_grid = [5_000.0, 20_000.0, 60_000.0, 100_000.0]
     np, nt, nh2o = 4, 3, 3
+    pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length = np))
     ng_lw, ng_sw = 3, 2
 
     make_atmosphere(gases) = ColumnAtmosphere(
@@ -803,9 +885,9 @@ end
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
-            0.018176419275000005  0.03948638463  0.12792246808000002;
-            0.028619027325000004  0.06419689353  0.21323648456000002;
-            0.03906163537500001  0.08890740243  0.29855050104
+            0.01834222779874218  0.03986497250732625  0.13058610128569342;
+            0.028880095173397513  0.06481240102404381  0.2176765472750513;
+            0.03941796254805284  0.0897598295407614  0.3047669932644092
         ]
         @test longwave.source == [
             88.50110269925781  192.51622517560816  286.19890405283525;
@@ -813,8 +895,8 @@ end
             164.35919072719312  357.5301324689866  531.5122503838369
         ]
         @test shortwave.optical_depth == [
-            0.0015903975600000003  0.0041491381280000005  0.016076183040000004;
-            0.0025307778600000006  0.006812093528000001  0.027041188320000006
+            0.0016175210044801565  0.004212883810231699  0.016532208715782017;
+            0.002573939025801411  0.006916751781346176  0.027808253247470292
         ]
 
         optical_properties_allocations(longwave, shortwave, model, atmosphere)
@@ -862,9 +944,9 @@ end
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
-            1.038988107153748  3.7047430420059544  11.585312434596617;
-            1.5665497545609188  5.709921054577294  18.215134429347714;
-            2.0941114019680898  7.715099067148635  24.84495642409881
+            1.0301406480825668  3.695415852070532  13.668041563015269;
+            1.5532098667017444  5.6955455587363  21.489728124445143;
+            2.0762790853209223  7.695675265402066  29.31141468587502
         ]
         @test longwave.source == [
             144198.0  211517.99999999997  256067.99999999994;
@@ -882,8 +964,8 @@ end
             270570.0  393839.99999999994  444060.0
         ]
         @test shortwave.optical_depth == [
-            0.08880985743526217  0.3703675106164617  1.2739652348396093;
-            0.1339252653870883  0.5682224044917201  1.9866223473795563
+            0.08739237633927086  0.3684155726222718  1.605133348327489;
+            0.13178770388835268  0.5652277171374454  2.5030461531495627
         ]
 
         optical_properties_allocations(longwave, shortwave, model, atmosphere)
@@ -899,7 +981,7 @@ end
     function tabulated_fixture(FT, matrix_temperature_grid::Bool)
         np, nt, nh2o = 4, 3, 3
         ng_lw, ng_sw, ngas, nlayers = 3, 2, 3, 3
-        pressure_grid = FT[5_000, 20_000, 60_000, 100_000]
+        pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = np)))
         temperature_grid = matrix_temperature_grid ?
             FT[180 + 30 * (ip - 1) + 40 * (it - 1) for ip in 1:np, it in 1:nt] :
             FT[200, 250, 300]

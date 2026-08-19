@@ -105,6 +105,10 @@ interpolation.
 `(ng, ngas, npressure, ntemperature)`. The runtime method interpolates
 coefficients for each layer, multiplies them by layer absorber amounts from
 [`ColumnAtmosphere`](@ref), and writes caller-owned optical-property arrays.
+The pressure and optional H2O grids must be positive and uniformly spaced in
+log coordinates, matching the ecCKD file format. A matrix temperature grid is
+shaped `(npressure, ntemperature)` and must use one positive temperature
+increment throughout.
 
 Fields are
 
@@ -112,11 +116,11 @@ $(TYPEDFIELDS)
 """
 struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LHWA, SHWA, SWR, LWS, LST, LSTB, LWW, SWW} <:
        AbstractGasOpticsModel
-    "Pressure grid for coefficient tables."
+    "Positive, increasing, log-uniform pressure grid for coefficient tables."
     pressure_grid::PG
-    "Temperature grid for coefficient tables."
+    "Increasing temperature grid, or pressure-dependent matrix with one common increment."
     temperature_grid::TG
-    "Optional H2O mole-fraction grid for official H2O coefficient tables."
+    "Optional positive, increasing, log-uniform H2O mole-fraction grid."
     h2o_mole_fraction_grid::HG
     "Reference mole fractions for relative-linear gases, aligned with gas_names."
     gas_reference_mole_fractions::GREF
@@ -229,11 +233,14 @@ function EcCKDTabulatedGasOpticsModel(; gas_names,
     gas_refs = gas_reference_mole_fractions === nothing ?
         zeros(FT, length(gas_names)) : FT.(gas_reference_mole_fractions)
 
+    gas_name_tuple = Tuple(Symbol.(gas_names))
     ngas = length(gas_names)
     length(pressure_grid) >= 2 ||
         throw(DimensionMismatch("pressure_grid must contain at least two points"))
     _temperature_grid_length(temperature_grid) >= 2 ||
         throw(DimensionMismatch("temperature_grid must contain at least two points"))
+    _validate_log_uniform_grid(pressure_grid, "pressure_grid")
+    _validate_temperature_grid(temperature_grid, length(pressure_grid))
     size(longwave_absorption, 2) == ngas ||
         throw(DimensionMismatch("longwave_absorption gas dimension must match gas_names"))
     size(shortwave_absorption, 2) == ngas ||
@@ -249,6 +256,9 @@ function EcCKDTabulatedGasOpticsModel(; gas_names,
     if length(h2o_grid) > 0
         length(h2o_grid) >= 2 ||
             throw(DimensionMismatch("h2o_mole_fraction_grid must contain at least two points when supplied"))
+        :h2o in gas_name_tuple ||
+            throw(ArgumentError("h2o_mole_fraction_grid requires :h2o in gas_names"))
+        _validate_log_uniform_grid(h2o_grid, "h2o_mole_fraction_grid")
         size(lw_h2o) == (size(longwave_absorption, 1), length(pressure_grid),
                          _temperature_grid_length(temperature_grid), length(h2o_grid)) ||
             throw(DimensionMismatch("longwave_h2o_absorption must have shape (ng_lw, np, nt, nh2o)"))
@@ -265,6 +275,8 @@ function EcCKDTabulatedGasOpticsModel(; gas_names,
             throw(DimensionMismatch("longwave_source_table first dimension must match ng_lw"))
         size(longwave_source_table, 2) == length(longwave_source_temperature_grid) ||
             throw(DimensionMismatch("longwave_source_table temperature dimension must match longwave_source_temperature_grid"))
+        _validate_increasing_grid(longwave_source_temperature_grid,
+                                  "longwave_source_temperature_grid")
     end
     length(lw_weights) == size(longwave_absorption, 1) ||
         throw(DimensionMismatch("longwave_weights must have length ng_lw"))
@@ -275,7 +287,6 @@ function EcCKDTabulatedGasOpticsModel(; gas_names,
     length(gas_refs) == ngas ||
         throw(DimensionMismatch("gas_reference_mole_fractions must match gas_names length"))
 
-    gas_name_tuple = Tuple(Symbol.(gas_names))
     return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple,
                                         typeof(pressure_grid),
                                         typeof(temperature_grid),
@@ -334,6 +345,62 @@ end
 @inline _has_gas(gases::AbstractDict, name::Symbol) = haskey(gases, name)
 @inline _has_gas(gases, name::Symbol) = hasproperty(gases, name)
 
+@inline _gas_profile(gases::AbstractDict, name::Symbol) = gases[name]
+@inline _gas_profile(gases, name::Symbol) = getproperty(gases, name)
+
+@inline function _check_gas_profile_length(gases, name, nlayers)
+    profile = _gas_profile(gases, name)
+    profile isa Number && return nothing
+    length(profile) >= nlayers ||
+        throw(DimensionMismatch("gas profile $name must contain at least nlayers values"))
+    return nothing
+end
+
+@inline function _check_gas_profile_lengths(gases, names, nlayers)
+    for name in names
+        _check_gas_profile_length(gases, name, nlayers)
+    end
+    return nothing
+end
+
+@generated function _check_gas_profile_lengths(gases::NamedTuple{Keys},
+                                               ::Val{Names},
+                                               nlayers) where {Keys, Names}
+    checks = [:( _check_gas_profile_length(gases, $(QuoteNode(name)), nlayers) )
+              for name in Names]
+    return quote
+        $(checks...)
+        nothing
+    end
+end
+
+@inline _check_gas_profile_lengths(gases, ::Val{Names}, nlayers) where Names =
+    _check_gas_profile_lengths(gases, Names, nlayers)
+
+@inline function _check_tabulated_gas_profile_lengths(gases, names, nlayers)
+    _check_gas_profile_lengths(gases, names, nlayers)
+    if !(:composite in names) && _has_gas(gases, :composite)
+        _check_gas_profile_length(gases, :composite, nlayers)
+    end
+    return nothing
+end
+
+@generated function _check_tabulated_gas_profile_lengths(gases::NamedTuple{Keys},
+                                                         ::Val{Names},
+                                                         nlayers) where {Keys, Names}
+    names_to_check = collect(Names)
+    :composite in Keys && !(:composite in Names) && push!(names_to_check, :composite)
+    checks = [:( _check_gas_profile_length(gases, $(QuoteNode(name)), nlayers) )
+              for name in names_to_check]
+    return quote
+        $(checks...)
+        nothing
+    end
+end
+
+@inline _check_tabulated_gas_profile_lengths(gases, ::Val{Names}, nlayers) where Names =
+    _check_tabulated_gas_profile_lengths(gases, Names, nlayers)
+
 @inline _source_temperature(atmosphere::ColumnAtmosphere, k) =
     atmosphere.temperature_layers[k]
 
@@ -369,6 +436,54 @@ end
 @inline _temperature_grid_length(grid::AbstractVector) = length(grid)
 @inline _temperature_grid_length(grid::AbstractMatrix) = size(grid, 2)
 
+function _validate_increasing_grid(grid, name)
+    all(isfinite, grid) || throw(ArgumentError("$name must contain only finite values"))
+    for i in (firstindex(grid) + 1):lastindex(grid)
+        grid[i] > grid[i - 1] ||
+            throw(ArgumentError("$name must be strictly increasing"))
+    end
+    return nothing
+end
+
+function _validate_log_uniform_grid(grid, name)
+    all(>(zero(eltype(grid))), grid) ||
+        throw(ArgumentError("$name must contain only positive values"))
+    _validate_increasing_grid(grid, name)
+    # The ecCKD reference kernel derives every index from the first log-grid
+    # interval. Refuse tables that violate that format instead of interpolating
+    # them with a silently wrong coordinate transform.
+    expected_step = log(grid[firstindex(grid) + 1]) - log(grid[firstindex(grid)])
+    for i in (firstindex(grid) + 2):lastindex(grid)
+        step = log(grid[i]) - log(grid[i - 1])
+        isapprox(step, expected_step; rtol = 1.0e-5, atol = 0.0) ||
+            throw(ArgumentError("$name must be uniformly spaced in log coordinates"))
+    end
+    return nothing
+end
+
+_validate_temperature_grid(grid::AbstractVector, _) =
+    _validate_increasing_grid(grid, "temperature_grid")
+
+function _validate_temperature_grid(grid::AbstractMatrix, pressure_count)
+    size(grid, 1) == pressure_count ||
+        throw(DimensionMismatch("temperature_grid pressure dimension must match pressure_grid"))
+    all(isfinite, grid) ||
+        throw(ArgumentError("temperature_grid must contain only finite values"))
+    expected_step = grid[1, 2] - grid[1, 1]
+    expected_step > 0 ||
+        throw(ArgumentError("temperature_grid rows must be strictly increasing"))
+    # The reference kernel likewise carries one temperature increment for the
+    # whole pressure-dependent table.
+    for ip in axes(grid, 1), it in 2:size(grid, 2)
+        step = grid[ip, it] - grid[ip, it - 1]
+        step > 0 ||
+            throw(ArgumentError("temperature_grid rows must be strictly increasing"))
+        isapprox(step, expected_step; rtol = 1.0e-5, atol = 0.0) ||
+            throw(ArgumentError("temperature_grid must use one uniform temperature increment"))
+    end
+    return nothing
+end
+
 @inline function _pressure_bracket(pressure_grid, pressure)
     return _log_bracket(pressure_grid, pressure)
 end
@@ -395,7 +510,7 @@ end
                        temperature_grid::AbstractVector,
                        pressure,
                        temperature) where FT =
-    (_bracket(pressure_grid, pressure), _bracket(temperature_grid, temperature))
+    (_pressure_bracket(pressure_grid, pressure), _bracket(temperature_grid, temperature))
 
 @inline function _table_stencil(::Type{FT},
                                 pressure_grid,
@@ -554,6 +669,14 @@ function _check_ecCKD_optics_shapes(longwave::LongwaveOpticalProperties,
                                     model::EcCKDGasOpticsModel,
                                     atmosphere::ColumnAtmosphere)
     nlayers = length(atmosphere.temperature_layers)
+    _check_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), nlayers)
+    interface_sources = longwave.source_top !== nothing || longwave.source_bottom !== nothing
+    (longwave.source_top === nothing) == (longwave.source_bottom === nothing) ||
+        throw(ArgumentError("longwave source_top and source_bottom must both be provided or both be nothing"))
+    if interface_sources
+        length(atmosphere.temperature_interfaces) == nlayers + 1 ||
+            throw(DimensionMismatch("temperature_interfaces must contain nlayers + 1 values"))
+    end
     size(longwave.optical_depth) == (size(model.longwave_absorption, 1), nlayers) ||
         throw(DimensionMismatch("longwave optical_depth must have shape (ng_lw, nlayers)"))
     size(longwave.source) == size(longwave.optical_depth) ||
@@ -578,6 +701,18 @@ function _check_ecCKD_optics_shapes(longwave::LongwaveOpticalProperties,
                                     model::EcCKDTabulatedGasOpticsModel,
                                     atmosphere::ColumnAtmosphere)
     nlayers = length(atmosphere.temperature_layers)
+    length(atmosphere.pressure_layers) == nlayers ||
+        throw(DimensionMismatch("pressure_layers must contain nlayers values"))
+    length(atmosphere.pressure_interfaces) == nlayers + 1 ||
+        throw(DimensionMismatch("pressure_interfaces must contain nlayers + 1 values"))
+    _check_tabulated_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), nlayers)
+    interface_sources = longwave.source_top !== nothing || longwave.source_bottom !== nothing
+    (longwave.source_top === nothing) == (longwave.source_bottom === nothing) ||
+        throw(ArgumentError("longwave source_top and source_bottom must both be provided or both be nothing"))
+    if interface_sources
+        length(atmosphere.temperature_interfaces) == nlayers + 1 ||
+            throw(DimensionMismatch("temperature_interfaces must contain nlayers + 1 values"))
+    end
     size(longwave.optical_depth) == (size(model.longwave_absorption, 1), nlayers) ||
         throw(DimensionMismatch("longwave optical_depth must have shape (ng_lw, nlayers)"))
     size(longwave.source) == size(longwave.optical_depth) ||
