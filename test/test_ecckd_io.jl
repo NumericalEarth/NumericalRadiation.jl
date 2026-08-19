@@ -251,6 +251,37 @@ end
     @test summary.rayleigh_tables_present
 end
 
+@testset "paired ecCKD files must share their interpolation axes" begin
+    # The loader takes the pressure, temperature and H2O axes from the longwave
+    # file and interpolates the shortwave table against them, so a shortwave file
+    # that disagrees has to be rejected rather than silently mis-interpolated.
+    # Every official pair agrees, so perturb a copy to prove the check fires.
+    paths = official_ecckd_definition_paths(require = false)
+    lw_path, sw_path = paths.longwave, paths.shortwave
+
+    if lw_path !== nothing && sw_path !== nothing && isfile(lw_path) && isfile(sw_path)
+        @test read_ecckd_tabulated_gas_optics(lw_path, sw_path) isa
+              EcCKDTabulatedGasOpticsModel
+
+        mktempdir() do dir
+            for (label, perturb!) in (
+                    ("temperature", ds -> (ds["temperature"][1, 1] += 5.0)),
+                    ("h2o_mole_fraction", ds -> (ds["h2o_mole_fraction"][1] *= 2)),
+                )
+                copied = joinpath(dir, label * "-" * basename(sw_path))
+                cp(sw_path, copied)
+                chmod(copied, 0o644)
+                NCDataset(copied, "a") do ds
+                    perturb!(ds)
+                end
+                @test_throws ArgumentError read_ecckd_tabulated_gas_optics(lw_path, copied)
+            end
+        end
+    else
+        @info "Skipping paired ecCKD axis check; ecRad data files are not present"
+    end
+end
+
 @testset "official ecCKD runtime LUT ingestion" begin
     paths = official_ecckd_definition_paths(require = false)
     lw_path = paths.longwave

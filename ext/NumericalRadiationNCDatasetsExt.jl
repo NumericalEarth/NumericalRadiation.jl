@@ -214,6 +214,9 @@ function _longwave_source_table(ds, longwave_weights)
     return temperature_grid, source
 end
 
+_reference_mole_fraction_present(ds, gas_names) =
+    [haskey(ds, String(gas) * "_reference_mole_fraction") for gas in gas_names]
+
 function _reference_mole_fractions(ds, gas_names)
     refs = zeros(Float64, length(gas_names))
     for (igas, gas) in enumerate(gas_names)
@@ -283,14 +286,40 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
                                              dynamic_h2o = :h2o in gas_name_tuple,
                                              allow_missing = true),
             h2o_absorption = _h2o_absorption_table(ds, gas_name_tuple),
+            h2o_grid = haskey(ds, "h2o_mole_fraction") ?
+                Float64.(Array(ds["h2o_mole_fraction"])) : Float64[],
+            gas_reference_mole_fractions = _reference_mole_fractions(ds, gas_name_tuple),
+            reference_present = _reference_mole_fraction_present(ds, gas_name_tuple),
             rayleigh = haskey(ds, "rayleigh_molar_scattering_coeff") ?
                        Float64.(Array(ds["rayleigh_molar_scattering_coeff"])) :
                        Float64[],
             weights = _shortwave_weights(ds),
         )
     end
-    length(sw.temperature_grid) == length(lw.temperature_grid) ||
+
+    # The model carries a single pressure/temperature/H2O interpolation axis and
+    # a single set of reference mole fractions, all taken from the longwave file
+    # and then used to interpolate the shortwave table too. Check that the
+    # shortwave file actually agrees; otherwise its coefficients would be
+    # silently interpolated against the wrong axis. The official pairs agree
+    # exactly, so the tolerances here only absorb the same Float32 round-trip
+    # that the pressure check above already allows.
+    size(sw.temperature_grid) == size(lw.temperature_grid) ||
         throw(ArgumentError("longwave and shortwave ecCKD temperature grid sizes differ"))
+    isapprox(sw.temperature_grid, lw.temperature_grid; rtol = 0.0, atol = 1.0e-3) ||
+        throw(ArgumentError("longwave and shortwave ecCKD temperature grids differ"))
+    size(sw.h2o_grid) == size(lw.h2o_grid) ||
+        throw(ArgumentError("longwave and shortwave ecCKD H2O mole-fraction grid sizes differ"))
+    isapprox(sw.h2o_grid, lw.h2o_grid; rtol = 1.0e-9, atol = 0.0) ||
+        throw(ArgumentError("longwave and shortwave ecCKD H2O mole-fraction grids differ"))
+    for (igas, gas) in enumerate(gas_name_tuple)
+        # Gases absent from the shortwave file contribute zero and legitimately
+        # carry no reference of their own, so only compare what it defines.
+        sw.reference_present[igas] || continue
+        isapprox(sw.gas_reference_mole_fractions[igas],
+                 lw.gas_reference_mole_fractions[igas]; rtol = 1.0e-9, atol = 0.0) ||
+            throw(ArgumentError("longwave and shortwave ecCKD reference mole fractions differ for $gas"))
+    end
 
     return EcCKDTabulatedGasOpticsModel(
         gas_names = gas_name_tuple,
