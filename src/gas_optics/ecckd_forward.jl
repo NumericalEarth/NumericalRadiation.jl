@@ -370,32 +370,37 @@ end
     return _log_bracket(pressure_grid, pressure)
 end
 
-@inline function _interp_table(table::AbstractArray{FT, 4},
-                               ig,
-                               j,
-                               pressure,
-                               temperature,
-                               pressure_grid,
-                               temperature_grid) where FT
-    ip0, ip1, wp = _bracket(pressure_grid, pressure)
-    it0, it1, wt = _bracket(temperature_grid, temperature)
-    c00 = table[ig, j, ip0, it0]
-    c10 = table[ig, j, ip1, it0]
-    c01 = table[ig, j, ip0, it1]
-    c11 = table[ig, j, ip1, it1]
-    cp0 = c00 + wp * (c10 - c00)
-    cp1 = c01 + wp * (c11 - c01)
-    return cp0 + wt * (cp1 - cp0)
+# `_log_bracket` needs two grid points. Models without a dynamic H2O table carry
+# an empty grid, and `_dynamic_h2o_tau` short-circuits before the bracket is ever
+# indexed, so return a same-typed placeholder in that case.
+@inline function _h2o_bracket(h2o_grid, h2o_mole_fraction)
+    length(h2o_grid) < 2 &&
+        return firstindex(h2o_grid), firstindex(h2o_grid), zero(eltype(h2o_grid))
+    return _log_bracket(h2o_grid, h2o_mole_fraction)
 end
 
-@inline function _interp_table(table::AbstractArray{FT, 4},
-                               ig,
-                               j,
-                               pressure,
-                               temperature,
-                               pressure_grid,
-                               temperature_grid::AbstractMatrix) where FT
-    ip0, ip1, wp = _pressure_bracket(pressure_grid, pressure)
+# Pressure/temperature interpolation stencil for a coefficient table: a pair of
+# `(i0, i1, weight)` brackets. Brackets depend only on the layer state, so the
+# runtime builds one per layer and reuses it across every g point and gas.
+#
+# `FT` is the *table's* element type, threaded explicitly rather than taken from
+# the grids: the matrix-grid temperature index below is evaluated in it, and
+# `EcCKDTabulatedGasOpticsModel` stores absorption tables as given, so their
+# element type need not match the model's.
+@inline _table_stencil(::Type{FT},
+                       pressure_grid,
+                       temperature_grid::AbstractVector,
+                       pressure,
+                       temperature) where FT =
+    (_bracket(pressure_grid, pressure), _bracket(temperature_grid, temperature))
+
+@inline function _table_stencil(::Type{FT},
+                                pressure_grid,
+                                temperature_grid::AbstractMatrix,
+                                pressure,
+                                temperature) where FT
+    pressure_bracket = _pressure_bracket(pressure_grid, pressure)
+    ip0, ip1, wp = pressure_bracket
     temperature_origin = (one(FT) - wp) * temperature_grid[ip0, 1] +
                          wp * temperature_grid[ip1, 1]
     temperature_step = temperature_grid[1, 2] - temperature_grid[1, 1]
@@ -403,9 +408,11 @@ end
                                         zero(FT),
                                         FT(size(temperature_grid, 2)) - FT(1.0001))
     it0 = Int(floor(temperature_index))
-    it1 = it0 + 1
-    wt = temperature_index - it0
+    return pressure_bracket, (it0, it0 + 1, temperature_index - it0)
+end
 
+@inline function _interp_table(table::AbstractArray{<:Any, 4}, ig, j, stencil)
+    (ip0, ip1, wp), (it0, it1, wt) = stencil
     c00 = table[ig, j, ip0, it0]
     c10 = table[ig, j, ip1, it0]
     c01 = table[ig, j, ip0, it1]
@@ -415,33 +422,14 @@ end
     return cp0 + wt * (cp1 - cp0)
 end
 
-@inline function _interp_source_table(table::AbstractMatrix{FT},
-                                      temperature_grid,
-                                      ig,
-                                      temperature) where FT
-    it0, it1, wt = _bracket(temperature_grid, temperature)
+@inline function _interp_source_table(table::AbstractMatrix, ig, temperature_bracket)
+    it0, it1, wt = temperature_bracket
     return table[ig, it0] + wt * (table[ig, it1] - table[ig, it0])
 end
 
-@inline function _interp_h2o_table(table::AbstractArray{FT, 4},
-                                   ig,
-                                   pressure,
-                                   temperature,
-                                   h2o_mole_fraction,
-                                   pressure_grid,
-                                   temperature_grid::AbstractMatrix,
-                                   h2o_grid) where FT
-    ip0, ip1, wp = _pressure_bracket(pressure_grid, pressure)
-    temperature_origin = (one(FT) - wp) * temperature_grid[ip0, 1] +
-                         wp * temperature_grid[ip1, 1]
-    temperature_step = temperature_grid[1, 2] - temperature_grid[1, 1]
-    temperature_index = one(FT) + clamp((temperature - temperature_origin) / temperature_step,
-                                        zero(FT),
-                                        FT(size(temperature_grid, 2)) - FT(1.0001))
-    it0 = Int(floor(temperature_index))
-    it1 = it0 + 1
-    wt = temperature_index - it0
-    ih0, ih1, wh = _log_bracket(h2o_grid, h2o_mole_fraction)
+@inline function _interp_h2o_table(table::AbstractArray{<:Any, 4}, ig, stencil, h2o_bracket)
+    (ip0, ip1, wp), (it0, it1, wt) = stencil
+    ih0, ih1, wh = h2o_bracket
 
     c000 = table[ig, ip0, it0, ih0]
     c100 = table[ig, ip1, it0, ih0]
@@ -461,46 +449,17 @@ end
     return ct0 + wh * (ct1 - ct0)
 end
 
-@inline function _interp_h2o_table(table::AbstractArray{FT, 4},
-                                   ig,
-                                   pressure,
-                                   temperature,
-                                   h2o_mole_fraction,
-                                   pressure_grid,
-                                   temperature_grid::AbstractVector,
-                                   h2o_grid) where FT
-    ip0, ip1, wp = _bracket(pressure_grid, pressure)
-    it0, it1, wt = _bracket(temperature_grid, temperature)
-    ih0, ih1, wh = _log_bracket(h2o_grid, h2o_mole_fraction)
-
-    c000 = table[ig, ip0, it0, ih0]
-    c100 = table[ig, ip1, it0, ih0]
-    c010 = table[ig, ip0, it1, ih0]
-    c110 = table[ig, ip1, it1, ih0]
-    c001 = table[ig, ip0, it0, ih1]
-    c101 = table[ig, ip1, it0, ih1]
-    c011 = table[ig, ip0, it1, ih1]
-    c111 = table[ig, ip1, it1, ih1]
-
-    c00 = c000 + wp * (c100 - c000)
-    c10 = c010 + wp * (c110 - c010)
-    c01 = c001 + wp * (c101 - c001)
-    c11 = c011 + wp * (c111 - c011)
-    ct0 = c00 + wt * (c10 - c00)
-    ct1 = c01 + wt * (c11 - c01)
-    return ct0 + wh * (ct1 - ct0)
-end
+@inline _source_bracket(model::EcCKDTabulatedGasOpticsModel, temperature) =
+    model.longwave_source_table === nothing ?
+        nothing : _bracket(model.longwave_source_temperature_grid, temperature)
 
 @inline function _longwave_source(model::EcCKDTabulatedGasOpticsModel{FT},
                                   ig,
-                                  temperature) where FT
-    if model.longwave_source_table === nothing
+                                  temperature,
+                                  source_bracket) where FT
+    source_bracket === nothing &&
         return model.longwave_source_scale[ig] * FT(5.670374419e-8) * temperature^4
-    end
-    return _interp_source_table(model.longwave_source_table,
-                                model.longwave_source_temperature_grid,
-                                ig,
-                                temperature)
+    return _interp_source_table(model.longwave_source_table, ig, source_bracket)
 end
 
 @generated function _accumulate_tau(gases::NamedTuple,
@@ -541,10 +500,7 @@ end
                                               ::Val{GasNames},
                                               ig,
                                               k,
-                                              pressure,
-                                              temperature,
-                                              pressure_grid,
-                                              temperature_grid) where {FT, GasNames}
+                                              stencil) where {FT, GasNames}
     gas_fields = fieldnames(gases)
     has_composite = :composite in gas_fields
     terms = Expr[]
@@ -555,9 +511,7 @@ end
                        FT(gas_reference_mole_fractions[$j]) *
                        FT(_gas_value(gases, :composite, k)))
         end
-        push!(terms,
-              :(_interp_table(coefficients, ig, $j, pressure, temperature,
-                              pressure_grid, temperature_grid) * $amount))
+        push!(terms, :(_interp_table(coefficients, ig, $j, stencil) * $amount))
     end
     isempty(terms) && return :(zero(FT))
     return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
@@ -569,10 +523,7 @@ end
                                            gas_reference_mole_fractions,
                                            ig,
                                            k,
-                                           pressure,
-                                           temperature,
-                                           pressure_grid,
-                                           temperature_grid) where FT
+                                           stencil) where FT
     tau = zero(FT)
     for j in eachindex(gas_names)
         amount = FT(_gas_value(gases, gas_names[j], k))
@@ -580,9 +531,7 @@ end
         if reference != zero(FT) && haskey(gases, :composite)
             amount -= reference * FT(_gas_value(gases, :composite, k))
         end
-        tau += _interp_table(coefficients, ig, j, pressure, temperature,
-                             pressure_grid, temperature_grid) *
-               amount
+        tau += _interp_table(coefficients, ig, j, stencil) * amount
     end
     return tau
 end
@@ -593,13 +542,9 @@ end
                                   ::Val{GasNames},
                                   ig,
                                   k,
-                                  pressure,
-                                  temperature,
-                                  pressure_grid,
-                                  temperature_grid) where {FT, GasNames} =
+                                  stencil) where {FT, GasNames} =
     _accumulate_tabulated_tau(gases, coefficients, GasNames,
-                              gas_reference_mole_fractions, ig, k, pressure,
-                              temperature, pressure_grid, temperature_grid)
+                              gas_reference_mole_fractions, ig, k, stencil)
 
 function _check_ecCKD_optics_shapes(longwave::LongwaveOpticalProperties,
                                     shortwave::ShortwaveOpticalProperties,
@@ -724,16 +669,11 @@ end
                                   atmosphere::ColumnAtmosphere,
                                   ig,
                                   k,
-                                  pressure,
-                                  temperature,
-                                  h2o_mole_fraction) where FT
+                                  stencil,
+                                  h2o_bracket) where FT
     length(model.h2o_mole_fraction_grid) == 0 && return zero(FT)
     length(table) == 0 && return zero(FT)
-    coefficient = _interp_h2o_table(table, ig, pressure, temperature,
-                                    h2o_mole_fraction,
-                                    model.pressure_grid,
-                                    model.temperature_grid,
-                                    model.h2o_mole_fraction_grid)
+    coefficient = _interp_h2o_table(table, ig, stencil, h2o_bracket)
     return coefficient * FT(_gas_value(atmosphere.gases, :h2o, k))
 end
 
@@ -759,23 +699,49 @@ function optical_properties!(longwave::LongwaveOpticalProperties{FT, <:AbstractM
         h2o_mole_fraction = _has_dynamic_h2o(model) ?
             _h2o_mole_fraction(FT, atmosphere, k) : zero(FT)
 
+        # Interface sources are optional and `temperature_interfaces` is only
+        # required to be populated when they are requested, so fall back to the
+        # layer temperature otherwise rather than indexing it. The condition is
+        # decided by the optical-property types, so this folds away.
+        interface_sources = longwave.source_top !== nothing &&
+                            longwave.source_bottom !== nothing
+        temperature_top = interface_sources ?
+            atmosphere.temperature_interfaces[k] : temperature
+        temperature_bottom = interface_sources ?
+            atmosphere.temperature_interfaces[k + 1] : temperature
+
+        # Every interpolation bracket below depends only on the layer, so build
+        # them once here instead of once per g point and gas. The absorption
+        # tables are stored as supplied and may differ in element type, hence one
+        # stencil each; the constructor converts both H2O tables to `FT`.
+        longwave_stencil = _table_stencil(eltype(model.longwave_absorption),
+                                          model.pressure_grid, model.temperature_grid,
+                                          pressure, temperature)
+        shortwave_stencil = _table_stencil(eltype(model.shortwave_absorption),
+                                           model.pressure_grid, model.temperature_grid,
+                                           pressure, temperature)
+        h2o_stencil = _table_stencil(FT, model.pressure_grid, model.temperature_grid,
+                                     pressure, temperature)
+        h2o_bracket = _h2o_bracket(model.h2o_mole_fraction_grid, h2o_mole_fraction)
+        source_bracket = _source_bracket(model, temperature)
+        source_top_bracket = _source_bracket(model, temperature_top)
+        source_bottom_bracket = _source_bracket(model, temperature_bottom)
+
         for ig in axes(model.longwave_absorption, 1)
             longwave.optical_depth[ig, k] =
                 _accumulate_tabulated_tau(atmosphere.gases, model.longwave_absorption,
                                           model.gas_reference_mole_fractions,
                                           Val(names),
-                                          ig, k, pressure, temperature,
-                                          model.pressure_grid, model.temperature_grid)
+                                          ig, k, longwave_stencil)
             longwave.optical_depth[ig, k] +=
                 _dynamic_h2o_tau(model, model.longwave_h2o_absorption,
-                                 atmosphere, ig, k, pressure, temperature,
-                                 h2o_mole_fraction)
-            longwave.source[ig, k] = _longwave_source(model, ig, temperature)
-            if longwave.source_top !== nothing && longwave.source_bottom !== nothing
+                                 atmosphere, ig, k, h2o_stencil, h2o_bracket)
+            longwave.source[ig, k] = _longwave_source(model, ig, temperature, source_bracket)
+            if interface_sources
                 longwave.source_top[ig, k] =
-                    _longwave_source(model, ig, atmosphere.temperature_interfaces[k])
+                    _longwave_source(model, ig, temperature_top, source_top_bracket)
                 longwave.source_bottom[ig, k] =
-                    _longwave_source(model, ig, atmosphere.temperature_interfaces[k + 1])
+                    _longwave_source(model, ig, temperature_bottom, source_bottom_bracket)
             end
         end
 
@@ -784,12 +750,10 @@ function optical_properties!(longwave::LongwaveOpticalProperties{FT, <:AbstractM
                 _accumulate_tabulated_tau(atmosphere.gases, model.shortwave_absorption,
                                           model.gas_reference_mole_fractions,
                                           Val(names),
-                                          ig, k, pressure, temperature,
-                                          model.pressure_grid, model.temperature_grid)
+                                          ig, k, shortwave_stencil)
             shortwave.optical_depth[ig, k] +=
                 _dynamic_h2o_tau(model, model.shortwave_h2o_absorption,
-                                 atmosphere, ig, k, pressure, temperature,
-                                 h2o_mole_fraction)
+                                 atmosphere, ig, k, h2o_stencil, h2o_bracket)
             shortwave.rayleigh_optical_depth[ig, k] =
                 _rayleigh_optical_depth(model, atmosphere, ig, k)
             shortwave.scattering_asymmetry[ig, k] = zero(FT)

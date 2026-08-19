@@ -615,6 +615,140 @@ end
         shortwave_absorption = shortwave_table,
     )
 end
+
+# Bit-exact pin on the tabulated interpolation path. `optical_properties!` hoists
+# every interpolation bracket out of its g-point and gas loops, which is only
+# valid if it reproduces per-point bracketing to the last bit — approximate
+# comparison would hide exactly the rounding drift that invalidates the hoist.
+# Reference values were produced by the pre-hoist implementation; regenerate them
+# deliberately (and say so) if the interpolation itself is ever meant to change.
+@testset "ecCKD tabulated interpolation is bit-exact" begin
+    pressure_grid = [5_000.0, 20_000.0, 60_000.0, 100_000.0]
+    np, nt, nh2o = 4, 3, 3
+    ng_lw, ng_sw = 3, 2
+
+    make_atmosphere(gases) = ColumnAtmosphere(
+        pressure_layers = [7_500.0, 33_000.0, 88_000.0],
+        pressure_interfaces = [1_000.0, 14_000.0, 52_000.0, 101_000.0],
+        temperature_layers = [217.3, 263.9, 291.4],
+        temperature_interfaces = [205.1, 231.7, 279.2, 297.8],
+        gases = gases,
+        surface = (;),
+        geometry = (;),
+    )
+
+    lw_entry(ig, j, p, t) = 1e-4 * (7ig + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
+    sw_entry(ig, j, p, t) = 1e-5 * (5ig + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
+
+    @testset "vector temperature grid" begin
+        temperature_grid = [200.0, 250.0, 300.0]
+        ngas = 2
+        model = EcCKDTabulatedGasOpticsModel(
+            gas_names = (:h2o, :co2),
+            pressure_grid = pressure_grid,
+            temperature_grid = temperature_grid,
+            longwave_absorption = [lw_entry(ig, j, pressure_grid[ip], temperature_grid[it])
+                                   for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            shortwave_absorption = [sw_entry(ig, j, pressure_grid[ip], temperature_grid[it])
+                                    for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            longwave_source_scale = [0.7, 1.0, 1.3],
+            longwave_weights = [0.2, 0.3, 0.5],
+            shortwave_weights = [0.45, 0.55],
+        )
+        atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3))
+        longwave = LongwaveOpticalProperties(zeros(ng_lw, 3), zeros(ng_lw, 3);
+                                             weights = zeros(ng_lw))
+        shortwave = ShortwaveOpticalProperties(zeros(ng_sw, 3); weights = zeros(ng_sw))
+        optical_properties!(longwave, shortwave, model, atmosphere)
+
+        @test longwave.optical_depth == [
+            0.018176419275000005  0.03948638463  0.12792246808000002;
+            0.028619027325000004  0.06419689353  0.21323648456000002;
+            0.03906163537500001  0.08890740243  0.29855050104
+        ]
+        @test longwave.source == [
+            88.50110269925781  192.51622517560816  286.19890405283525;
+            126.43014671322547  275.0231788222974  408.85557721833607;
+            164.35919072719312  357.5301324689866  531.5122503838369
+        ]
+        @test shortwave.optical_depth == [
+            0.0015903975600000003  0.0041491381280000005  0.016076183040000004;
+            0.0025307778600000006  0.006812093528000001  0.027041188320000006
+        ]
+
+        optical_properties_allocations(longwave, shortwave, model, atmosphere)
+        @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
+    end
+
+    @testset "matrix temperature grid with dynamic H2O" begin
+        # Pressure-dependent temperature grid: origin shifts with pressure,
+        # uniform step, which is the layout the official ecCKD LUTs use.
+        temperature_grid = [180.0 + 30.0 * (ip - 1) + 40.0 * (it - 1)
+                            for ip in 1:np, it in 1:nt]
+        h2o_grid = [1e-6, 1e-4, 1e-2]
+        source_temperature_grid = [180.0, 240.0, 300.0]
+        ngas = 3
+        model = EcCKDTabulatedGasOpticsModel(
+            gas_names = (:h2o, :co2, :composite),
+            pressure_grid = pressure_grid,
+            temperature_grid = temperature_grid,
+            h2o_mole_fraction_grid = h2o_grid,
+            gas_reference_mole_fractions = [0.0, 4.0e-4, 0.0],
+            longwave_absorption = [lw_entry(ig, j, pressure_grid[ip], temperature_grid[ip, it])
+                                   for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            shortwave_absorption = [sw_entry(ig, j, pressure_grid[ip], temperature_grid[ip, it])
+                                    for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            longwave_h2o_absorption = [1e-3 * ig * (1 + 1e-5 * pressure_grid[ip]) *
+                                       (1 + 1e-3 * temperature_grid[ip, it]) * (1 + 10ih)
+                                       for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+            shortwave_h2o_absorption = [1e-4 * ig * (1 + 2e-5 * pressure_grid[ip]) *
+                                        (1 + 2e-3 * temperature_grid[ip, it]) * (1 + 5ih)
+                                        for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+            shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
+            longwave_source_temperature_grid = source_temperature_grid,
+            longwave_source_table = [1.0 * (ig + 2) * st^2
+                                     for ig in 1:ng_lw, st in source_temperature_grid],
+            longwave_weights = [0.2, 0.3, 0.5],
+            shortwave_weights = [0.45, 0.55],
+        )
+        atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3,
+                                      composite = [4.2e2, 1.1e3, 2.6e3]))
+        longwave = LongwaveOpticalProperties(zeros(ng_lw, 3), zeros(ng_lw, 3);
+                                             source_top = zeros(ng_lw, 3),
+                                             source_bottom = zeros(ng_lw, 3),
+                                             weights = zeros(ng_lw))
+        shortwave = ShortwaveOpticalProperties(zeros(ng_sw, 3); weights = zeros(ng_sw))
+        optical_properties!(longwave, shortwave, model, atmosphere)
+
+        @test longwave.optical_depth == [
+            1.038988107153748  3.7047430420059544  11.585312434596617;
+            1.5665497545609188  5.709921054577294  18.215134429347714;
+            2.0941114019680898  7.715099067148635  24.84495642409881
+        ]
+        @test longwave.source == [
+            144198.0  211517.99999999997  256067.99999999994;
+            192264.0  282023.99999999994  341423.99999999994;
+            240330.0  352529.99999999994  426779.99999999994
+        ]
+        @test longwave.source_top == [
+            128826.0  162342.0  236303.99999999997;
+            171768.0  216456.0  315072.0;
+            214710.0  270570.0  393839.99999999994
+        ]
+        @test longwave.source_bottom == [
+            162342.0  236303.99999999997  266436.0;
+            216456.0  315072.0  355248.0;
+            270570.0  393839.99999999994  444060.0
+        ]
+        @test shortwave.optical_depth == [
+            0.08880985743526217  0.3703675106164617  1.2739652348396093;
+            0.1339252653870883  0.5682224044917201  1.9866223473795563
+        ]
+
+        optical_properties_allocations(longwave, shortwave, model, atmosphere)
+        @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
+    end
+end
 # --- end content of test_ecckd_forward.jl ---
 
 end # module TestEcckdForward
