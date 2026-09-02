@@ -17,7 +17,8 @@ using NumericalRadiation
 using NCDatasets
 using Printf
 
-gas_optics = read_official_ecckd_gas_optics("32x32"; gas_names = (:h2o, :co2))
+gas_optics = read_official_ecckd_gas_optics("32x32";
+                                            gas_names = (:composite, :h2o, :co2))
 
 nlayers = 48
 p_i = collect(range(2_000.0, 101_325.0; length = nlayers + 1))   # Pa, TOA first

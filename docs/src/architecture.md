@@ -18,11 +18,13 @@ tendency insertion.
 
 The staged interface also defines [`optical_properties!`](@ref),
 [`cloud_optical_properties!`](@ref), [`aerosol_optical_properties!`](@ref), and
-[`radiative_fluxes!`](@ref) for future gas-optics and solver implementations.
-The first concrete staged solver is [`CloudlessLongwave`](@ref), which consumes
-[`LongwaveOpticalProperties`](@ref) and writes caller-owned
-[`RadiativeFluxes`](@ref). [`CloudlessShortwave`](@ref) does the same for
-absorptive shortwave optical depths stored in [`ShortwaveOpticalProperties`](@ref).
+[`radiative_fluxes!`](@ref) for gas-optics and solver implementations. The
+ecCKD tabulated models ([`EcCKDTabulatedGasOpticsModel`](@ref)) fill
+[`LongwaveOpticalProperties`](@ref) and [`ShortwaveOpticalProperties`](@ref),
+and the staged solvers cover clear-sky ([`CloudlessLongwave`](@ref),
+[`CloudlessShortwave`](@ref)) and cloud-overlap
+([`CloudOverlapLongwave`](@ref), [`CloudOverlapShortwave`](@ref)) transport,
+all writing caller-owned [`RadiativeFluxes`](@ref).
 
 [`heating_rates!`](@ref) can convert [`RadiativeFluxes`](@ref) into layer
 heating rates for a [`ColumnAtmosphere`](@ref) using explicit `gravity` and
@@ -36,5 +38,6 @@ calls. For the current analytic-band path, [`RadiativeTransferColumn`](@ref) is
 already the workspace: it owns the temperature-tendency vector, shortwave
 transmissivity scratch, and diagnostics.
 
-Future Breeze and SpeedyWeather integrations should prefer caller-owned arrays,
-views, or explicit workspaces over per-call temporary arrays.
+Host integrations — such as the SpeedyWeather and RRTMGP package extensions —
+should prefer caller-owned arrays, views, or explicit workspaces over
+per-call temporary arrays.

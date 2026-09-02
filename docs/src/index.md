@@ -28,7 +28,8 @@ column amounts in mol m⁻².
 using NumericalRadiation
 using NCDatasets   # activates the NetCDF reader extension
 
-gas_optics = read_official_ecckd_gas_optics("32x32"; gas_names = (:h2o, :co2))
+gas_optics = read_official_ecckd_gas_optics("32x32";
+                                            gas_names = (:composite, :h2o, :co2))
 
 nlayers = 24
 p_i = collect(range(10_000.0, 100_000.0; length = nlayers + 1))  # Pa, TOA first
@@ -96,15 +97,16 @@ The complete script, including the shortwave leg, is
 
 ## Where to go next
 
-- Examples: [CO₂ forcing with ecCKD](generated/03_co2_forcing.md), the
-  [staged ecCKD column](generated/02_staged_ecckd_column.md), and
-  [single-column radiation](single_column.md).
-- [Design and acceptance criteria](design.md) — what the package is and the
-  architecture rules it keeps.
-- [Gas optics](gas_optics/ecckd_files.md) — ecCKD files, model selection, the
-  runtime workflow, and training/recovery.
+- Examples: [single-column radiation](single_column.md), the
+  [staged ecCKD column](generated/02_staged_ecckd_column.md),
+  [CO₂ forcing with ecCKD](generated/03_co2_forcing.md), and
+  [ecCKD vs RRTMGP](generated/04_rrtmgp_comparison.md).
+- [Architecture](architecture.md) — the API levels and the conventions they
+  keep.
+- [Gas optics](gas_optics/ecckd_files.md) — ecCKD files, model selection, and
+  the runtime workflow.
 - [Column solvers](solvers.md) and [cloud and aerosol optics](cloud_optics.md)
   — the solver stack; [notation](notation.md) for symbol conventions.
 - [API reference](api.md) — the exported interface, by subsystem.
-- [Validation](validation.md) — tests, the validation platform, and reference
-  data.
+- [Validation](validation.md) — running the tests, and where the validation
+  platform lives.

@@ -12,9 +12,9 @@ mkpath(GENERATED_ROOT)
 mkpath(ASSET_ROOT)
 
 for example in (
-    "01_ckdmip_data_inventory.jl",
     "02_staged_ecckd_column.jl",
     "03_co2_forcing.jl",
+    "04_rrtmgp_comparison.jl",
 )
     Literate.markdown(
         joinpath(LITERATE_ROOT, example),
@@ -38,19 +38,14 @@ makedocs(
         "Home" => "index.md",
         "Examples" => [
             "Single-column radiation" => "single_column.md",
-            "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
             "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
+            "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
+            "ecCKD vs RRTMGP" => "generated/04_rrtmgp_comparison.md",
         ],
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",
             "ecCKD runtime workflow" => "gas_optics/ecckd_runtime_workflow.md",
-            "ecCKD model selection" => "gas_optics/ecckd_model_selection.md",
             "Correlated-k method" => "gas_optics/correlated_k.md",
-            "CKDMIP training data" => "gas_optics/ckdmip_training_data.md",
-            "CKDMIP data inventory" => "generated/01_ckdmip_data_inventory.md",
-            "RRTMGP comparison" => "gas_optics/rrtmgp_comparison.md",
-            "Training and recovery" => "gas_optics/ecckd_training_recovery.md",
-            "Breeze integration" => "gas_optics/breeze_integration.md",
         ],
         "Solvers & schemes" => [
             "Radiative transfer" => "radiative_transfer.md",
@@ -67,10 +62,7 @@ makedocs(
             "Column schemes" => "api/column_schemes.md",
             "Metrics" => "api/metrics.md",
         ],
-        "Design & acceptance criteria" => [
-            "Design and acceptance criteria" => "design.md",
-            "Architecture" => "architecture.md",
-        ],
+        "Architecture" => "architecture.md",
         "Validation" => "validation.md",
     ],
     checkdocs = :exports,

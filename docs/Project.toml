@@ -1,15 +1,19 @@
 [deps]
-NumericalRadiation = "cd8119b0-1744-44d6-9ede-6ad1ad750b26"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ClimaComms = "3a4d1b5c-c61d-41fd-a00a-5873ba7a1b0d"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
+NumericalRadiation = "cd8119b0-1744-44d6-9ede-6ad1ad750b26"
+RRTMGP = "a01a1ee8-cea4-48fc-987c-fc7878d79da1"
 
 [compat]
 CairoMakie = "0.12, 0.13"
+ClimaComms = "0.6"
 Documenter = "1"
 Literate = "2"
 NCDatasets = "0.14"
+RRTMGP = "0.21"
 
 [sources]
 NumericalRadiation = {path = ".."}

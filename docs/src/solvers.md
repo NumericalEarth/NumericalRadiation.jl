@@ -28,7 +28,8 @@ layer air column):
 ```julia
 using NumericalRadiation, NCDatasets
 
-gas_optics = read_official_ecckd_gas_optics("32x32"; gas_names = (:h2o, :co2))
+gas_optics = read_official_ecckd_gas_optics("32x32";
+                                            gas_names = (:composite, :h2o, :co2))
 
 atmosphere = ColumnAtmosphere(; pressure_layers, pressure_interfaces,
                               temperature_layers, temperature_interfaces,

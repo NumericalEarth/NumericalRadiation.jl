@@ -20,6 +20,19 @@ paths = official_ecckd_definition_paths(spec; require = false)
 (name = spec.name, longwave = spec.longwave, shortwave = spec.shortwave)
 ```
 
+Compact selectors such as `"32x64"` and full selectors such as
+`:climate_32x64` are equivalent; the published pairs are enumerable:
+
+```@example ecckd_runtime
+collect(keys(official_ecckd_model_specs()))
+```
+
+Use the smallest model that meets your application's accuracy needs:
+`"32x32"` is the lowest-cost published pair, the mixed pairs (`"32x64"`,
+`"32x96"`, `"64x32"`) raise resolution on one side only, and `"64x96"` is the
+largest promoted combination. Select once during setup, allocate radiation
+work arrays once, and reuse them every update.
+
 Use `require=false` for inventory and docs so Julia does not download data as
 a side effect. Use the default `require=true` in a real run:
 
@@ -28,10 +41,14 @@ using NumericalRadiation
 using NCDatasets
 
 gas_optics = read_official_ecckd_gas_optics("32x32";
-    gas_names = (:h2o, :co2),
+    gas_names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
 ```
+
+Gases omitted from `gas_names` are not removed: their reference abundances
+remain represented through the `:composite` background. Include a gas
+explicitly to vary its amount — or to set it to zero.
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
 of NetCDF after loading and can be moved into a host model's radiation state.
@@ -61,7 +78,7 @@ The script follows this structure:
 ```julia
 spec = official_ecckd_model_spec("32x32")
 gas_optics = read_official_ecckd_gas_optics(spec;
-    gas_names = (:h2o, :co2),
+    gas_names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
 
@@ -89,6 +106,5 @@ radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere, shortwave
 heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
 ```
 
-Host integrations such as Breeze should keep the same division of
-responsibility: select and load the gas-optics model during setup, allocate
+Host integrations should keep the same division of responsibility: select and load the gas-optics model during setup, allocate
 work arrays once, then call the staged methods inside each radiation update.
