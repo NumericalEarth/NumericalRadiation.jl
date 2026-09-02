@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>ecCKD vs RRTMGP · NumericalRadiation.jl</title><meta name="title" content="ecCKD vs RRTMGP · NumericalRadiation.jl"/><meta property="og:title" content="ecCKD vs RRTMGP · NumericalRadiation.jl"/><meta property="twitter:title" content="ecCKD vs RRTMGP · NumericalRadiation.jl"/><meta name="description" content="Documentation for NumericalRadiation.jl."/><meta property="og:description" content="Documentation for NumericalRadiation.jl."/><meta property="twitter:description" content="Documentation for NumericalRadiation.jl."/><meta property="og:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/04_rrtmgp_comparison/"/><meta property="twitter:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/04_rrtmgp_comparison/"/><link rel="canonical" href="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/04_rrtmgp_comparison/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">NumericalRadiation.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../single_column/">Single-column radiation</a></li><li><a class="tocitem" href="../02_staged_ecckd_column/">Staged ecCKD column</a></li><li><a class="tocitem" href="../03_co2_forcing/">CO₂ forcing with ecCKD</a></li><li class="is-active"><a class="tocitem" href>ecCKD vs RRTMGP</a><ul class="internal"><li><a class="tocitem" href="#One-physical-column,-two-gas-representations"><span>One physical column, two gas representations</span></a></li><li><a class="tocitem" href="#RRTMGP-leg"><span>RRTMGP leg</span></a></li><li><a class="tocitem" href="#ecCKD-leg"><span>ecCKD leg</span></a></li><li><a class="tocitem" href="#Longwave-only-heating-rates"><span>Longwave-only heating rates</span></a></li><li><a class="tocitem" href="#The-comparison,-panel-by-panel"><span>The comparison, panel by panel</span></a></li></ul></li></ul></li><li><span class="tocitem">Gas optics</span><ul><li><a class="tocitem" href="../../gas_optics/ecckd_files/">ecCKD files</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_runtime_workflow/">ecCKD runtime workflow</a></li><li><a class="tocitem" href="../../gas_optics/correlated_k/">Correlated-k method</a></li></ul></li><li><span class="tocitem">Solvers &amp; schemes</span><ul><li><a class="tocitem" href="../../radiative_transfer/">Radiative transfer</a></li><li><a class="tocitem" href="../../solvers/">Column solvers</a></li><li><a class="tocitem" href="../../cloud_optics/">Cloud and aerosol optics</a></li><li><a class="tocitem" href="../../longwave/">Longwave</a></li><li><a class="tocitem" href="../../shortwave/">Shortwave</a></li><li><a class="tocitem" href="../../notation/">Notation</a></li></ul></li><li><span class="tocitem">API reference</span><ul><li><a class="tocitem" href="../../api/">Overview</a></li><li><a class="tocitem" href="../../api/staged_runtime/">Staged runtime</a></li><li><a class="tocitem" href="../../api/ecckd/">ecCKD and data</a></li><li><a class="tocitem" href="../../api/column_schemes/">Column schemes</a></li><li><a class="tocitem" href="../../api/metrics/">Metrics</a></li></ul></li><li><a class="tocitem" href="../../architecture/">Architecture</a></li><li><a class="tocitem" href="../../validation/">Validation</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>ecCKD vs RRTMGP</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>ecCKD vs RRTMGP</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/04_rrtmgp_comparison.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="ecCKD-vs-RRTMGP:-clear-sky-longwave"><a class="docs-heading-anchor" href="#ecCKD-vs-RRTMGP:-clear-sky-longwave">ecCKD vs RRTMGP: clear-sky longwave</a><a id="ecCKD-vs-RRTMGP:-clear-sky-longwave-1"></a><a class="docs-heading-anchor-permalink" href="#ecCKD-vs-RRTMGP:-clear-sky-longwave" title="Permalink"></a></h1><p>This example asks one question: <em>for a single clear-sky column defined once physically, how do the ecCKD-32×32 staged path and RRTMGP (through the package&#39;s <code>NumericalRadiationRRTMGPExt</code> adapter) compare in longwave fluxes and heating rates?</em> Both are correlated-k implementations; they differ in their gas-optics tables (ecCKD&#39;s trained 32-g-point tables with a composite O₂/N₂ background versus RRTMGP&#39;s lookup with explicit O₂/N₂) and in their transfer implementations, so the result is an <em>inter-implementation difference</em> on this column, not an error measurement for either model.</p><h2 id="One-physical-column,-two-gas-representations"><a class="docs-heading-anchor" href="#One-physical-column,-two-gas-representations">One physical column, two gas representations</a><a id="One-physical-column,-two-gas-representations-1"></a><a class="docs-heading-anchor-permalink" href="#One-physical-column,-two-gas-representations" title="Permalink"></a></h2><p>The shared definition is the physical state: pressures, temperatures, and per-gas <strong>volume mixing ratios relative to dry air</strong> (RRTMGP&#39;s native convention, established by its <code>compute_col_gas_kernel!</code>). RRTMGP consumes the VMRs directly; the ecCKD path consumes <strong>layer molar amounts in mol m⁻²</strong>, so the conversion between the two representations is written out explicitly below and cross-checked against RRTMGP&#39;s own column computation.</p><pre><code class="language-julia hljs">using NumericalRadiation
+using NCDatasets     # NetCDF reader extension (ecCKD files)
+using ClimaComms     # RRTMGP adapter extension trigger …
+using RRTMGP         # … and RRTMGP itself
+using Printf
+
+nlayers = 48
+p_i = collect(range(2_000.0, 101_325.0; length = nlayers + 1))   # Pa, TOA first
+p_layers = 0.5 .* (p_i[1:end-1] .+ p_i[2:end])
+
+Tsfc = 300.0
+T_layers = clamp.(Tsfc .- 65.0 .* (1 .- (p_layers ./ 101325.0) .^ 0.286), 200.0, Tsfc)
+T_interfaces = clamp.(Tsfc .- 65.0 .* (1 .- (p_i ./ 101325.0) .^ 0.286), 200.0, Tsfc)
+
+vmr_h2o = @. 0.015 * (p_layers / 101325.0)^3 + 3.0e-6   # moist below, dry aloft
+vmr_o3  = @. 3.0e-8 + 5.0e-6 * (2_000.0 / p_layers)     # crude ozone increase aloft
+vmr_co2 = 420.0e-6
+vmr_ch4 = 1.8e-6
+vmr_n2o = 330.0e-9</code></pre><p>The hydrostatic relation gives the dry-air molar amount of each layer. With <code>vmr</code> relative to dry air, the layer&#39;s mass per area is <span>$n_\mathrm{dry} (M_\mathrm{dry} + \mathrm{vmr}_{\mathrm{H_2O}} M_{\mathrm{H_2O}})$</span>, so (dry-air molar-mass convention, matching RRTMGP):</p><pre><code class="language-julia hljs">const GRAVITY = 9.80665        # m s⁻²
+const M_DRY = 0.028964         # kg mol⁻¹
+const M_H2O = 0.018016         # kg mol⁻¹
+
+dry_layer_amounts(vmr_h2o, p_i) =
+    [(p_i[k + 1] - p_i[k]) / (GRAVITY * (M_DRY + M_H2O * vmr_h2o[k]))
+     for k in 1:(length(p_i) - 1)]
+
+n_dry = dry_layer_amounts(vmr_h2o, p_i)                  # mol m⁻²</code></pre><p>Each representation gets its own <code>ColumnAtmosphere</code>. Gas-set parity needs care on the ecCKD side: the tabulated composite background <em>contains the reference contribution of every tabulated gas</em>, and activating a gas subtracts its reference mole fraction times the composite amount before adding the requested amount. A gas left out of <code>gas_names</code> is therefore kept at its reference abundance, not removed. So the full tuple is activated here: CH₄ and N₂O carry the same abundances as the RRTMGP side, and the CFCs are activated with zero amount — which removes their reference contribution — because RRTMGP&#39;s clear-sky lookup has no CFC fields. Both surfaces emit as blackbodies.</p><pre><code class="language-julia hljs">ecckd_atmosphere = ColumnAtmosphere(;
+    pressure_layers = p_layers, pressure_interfaces = p_i,
+    temperature_layers = T_layers, temperature_interfaces = T_interfaces,
+    gases = (composite = n_dry,
+             h2o = vmr_h2o .* n_dry,
+             o3 = vmr_o3 .* n_dry,
+             co2 = vmr_co2 .* n_dry,
+             ch4 = vmr_ch4 .* n_dry,
+             n2o = vmr_n2o .* n_dry,
+             cfc11 = 0.0,
+             cfc12 = 0.0),
+    surface = (temperature = Tsfc,),
+    geometry = (cos_zenith = 0.5,))
+
+rrtmgp_atmosphere = ColumnAtmosphere(;
+    pressure_layers = p_layers, pressure_interfaces = p_i,
+    temperature_layers = T_layers, temperature_interfaces = T_interfaces,
+    gases = (h2o = vmr_h2o, o3 = vmr_o3, co2 = vmr_co2,
+             ch4 = vmr_ch4, n2o = vmr_n2o,
+             o2 = 0.20946, n2 = 0.78084, co = 0.0),
+    surface = (temperature = Tsfc,),
+    geometry = (cos_zenith = 0.5,))</code></pre><h2 id="RRTMGP-leg"><a class="docs-heading-anchor" href="#RRTMGP-leg">RRTMGP leg</a><a id="RRTMGP-leg-1"></a><a class="docs-heading-anchor-permalink" href="#RRTMGP-leg" title="Permalink"></a></h2><p>The adapter types live in the <code>NumericalRadiationRRTMGPExt</code> package extension:</p><pre><code class="language-julia hljs">EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
+rrtmgp_model = EXT.RRTMGPClearSkyModel(Float64)
+rrtmgp_boundary = EXT.RRTMGPBoundaryConditions(surface_temperature = Tsfc,
+                                               surface_emissivity = 1.0,
+                                               surface_albedo = 0.0,
+                                               toa_shortwave_down = 0.0,   # longwave-only page
+                                               cos_zenith = 0.5)
+workspace = radiation_workspace(rrtmgp_model, rrtmgp_atmosphere)
+rrtmgp_fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
+                                longwave_down = zeros(nlayers + 1),
+                                shortwave_up = zeros(nlayers + 1),
+                                shortwave_down = zeros(nlayers + 1))
+radiative_fluxes!(rrtmgp_fluxes, rrtmgp_model, rrtmgp_atmosphere,
+                  rrtmgp_boundary, workspace)</code></pre><p>Before using the fluxes, verify the representation bridge: the dry-air amounts computed by <code>dry_layer_amounts</code> must equal the dry column RRTMGP itself computed from the same pressures and VMRs (RRTMGP stores molecules cm⁻², and its levels are bottom-up, hence the unit factor and the index reversal):</p><pre><code class="language-julia hljs">AVOGADRO = 6.02214076e23
+col_dry_rrtmgp = reverse(workspace.atmospheric_state.layerdata[1, :, 1])
+col_dry_ours = n_dry .* AVOGADRO ./ 1e4
+maxrel = maximum(abs.(col_dry_rrtmgp .- col_dry_ours) ./ col_dry_ours)
+@assert maxrel &lt; 1e-6
+maxrel</code></pre><pre><code class="nohighlight hljs">3.0806725697470684e-16</code></pre><h2 id="ecCKD-leg"><a class="docs-heading-anchor" href="#ecCKD-leg">ecCKD leg</a><a id="ecCKD-leg-1"></a><a class="docs-heading-anchor-permalink" href="#ecCKD-leg" title="Permalink"></a></h2><pre><code class="language-julia hljs">intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+gas_optics = read_official_ecckd_gas_optics(&quot;32x32&quot;; gas_names = intended_gases)
+@assert NumericalRadiation.gas_names(gas_optics) == intended_gases
+
+ng_lw = length(gas_optics.longwave_weights)
+ng_sw = length(gas_optics.shortwave_weights)
+longwave = LongwaveOpticalProperties(zeros(ng_lw, nlayers), zeros(ng_lw, nlayers);
+                                     source_top = zeros(ng_lw, nlayers),
+                                     source_bottom = zeros(ng_lw, nlayers),
+                                     weights = zeros(ng_lw))
+shortwave = ShortwaveOpticalProperties(zeros(ng_sw, nlayers); weights = zeros(ng_sw))
+ecckd_fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
+                               longwave_down = zeros(nlayers + 1),
+                               shortwave_up = zeros(nlayers + 1),
+                               shortwave_down = zeros(nlayers + 1))
+optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
+σ = 5.670374419e-8
+radiative_fluxes!(ecckd_fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
+                  LongwaveBoundaryConditions(surface_longwave_up = σ * Tsfc^4))</code></pre><h2 id="Longwave-only-heating-rates"><a class="docs-heading-anchor" href="#Longwave-only-heating-rates">Longwave-only heating rates</a><a id="Longwave-only-heating-rates-1"></a><a class="docs-heading-anchor-permalink" href="#Longwave-only-heating-rates" title="Permalink"></a></h2><p>With a zero shortwave boundary the returned shortwave fluxes are zero, so <code>heating_rates!</code> (which differences the total net flux) sees longwave only:</p><pre><code class="language-julia hljs">@assert all(iszero, rrtmgp_fluxes.shortwave_up)
+@assert all(iszero, rrtmgp_fluxes.shortwave_down)
+
+heating_ecckd = zeros(nlayers)
+heating_rrtmgp = zeros(nlayers)
+heating_rates!(heating_ecckd, ecckd_fluxes, ecckd_atmosphere;
+               gravity = GRAVITY, heat_capacity = 1004.0)
+heating_rates!(heating_rrtmgp, rrtmgp_fluxes, rrtmgp_atmosphere;
+               gravity = GRAVITY, heat_capacity = 1004.0)
+
+@printf(&quot;OLR, ecCKD 32×32:   %7.2f W m⁻²\n&quot;, ecckd_fluxes.longwave_up[1])
+@printf(&quot;OLR, RRTMGP:        %7.2f W m⁻²\n&quot;, rrtmgp_fluxes.longwave_up[1])
+@printf(&quot;ΔOLR (ecCKD − RRTMGP): %+6.2f W m⁻²\n&quot;,
+        ecckd_fluxes.longwave_up[1] - rrtmgp_fluxes.longwave_up[1])</code></pre><pre><code class="nohighlight hljs">OLR, ecCKD 32×32:    323.78 W m⁻²
+OLR, RRTMGP:         378.01 W m⁻²
+ΔOLR (ecCKD − RRTMGP): -54.22 W m⁻²
+</code></pre><h2 id="The-comparison,-panel-by-panel"><a class="docs-heading-anchor" href="#The-comparison,-panel-by-panel">The comparison, panel by panel</a><a id="The-comparison,-panel-by-panel-1"></a><a class="docs-heading-anchor-permalink" href="#The-comparison,-panel-by-panel" title="Permalink"></a></h2><p>Left: both flux profiles. Middle: the signed flux differences. Right: the signed heating-rate difference. Units are homogeneous within each panel.</p><pre><code class="language-julia hljs">using CairoMakie
+
+fig = Figure(size = (1000, 420))
+
+ax1 = Axis(fig[1, 1]; xlabel = &quot;longwave flux (W m⁻²)&quot;,
+           ylabel = &quot;pressure (hPa)&quot;, yreversed = true, title = &quot;Fluxes&quot;)
+lines!(ax1, ecckd_fluxes.longwave_up, p_i ./ 100;
+       color = :firebrick, linewidth = 2, label = &quot;up, ecCKD&quot;)
+lines!(ax1, rrtmgp_fluxes.longwave_up, p_i ./ 100;
+       color = :firebrick, linewidth = 2, linestyle = :dash, label = &quot;up, RRTMGP&quot;)
+lines!(ax1, ecckd_fluxes.longwave_down, p_i ./ 100;
+       color = :steelblue4, linewidth = 2, label = &quot;down, ecCKD&quot;)
+lines!(ax1, rrtmgp_fluxes.longwave_down, p_i ./ 100;
+       color = :steelblue4, linewidth = 2, linestyle = :dash, label = &quot;down, RRTMGP&quot;)
+axislegend(ax1; position = :lt, framevisible = false)
+
+ax2 = Axis(fig[1, 2]; xlabel = &quot;Δ flux, ecCKD − RRTMGP (W m⁻²)&quot;,
+           ylabel = &quot;pressure (hPa)&quot;, yreversed = true, title = &quot;Flux difference&quot;)
+vlines!(ax2, [0.0]; color = (:black, 0.4), linestyle = :dash)
+lines!(ax2, ecckd_fluxes.longwave_up .- rrtmgp_fluxes.longwave_up, p_i ./ 100;
+       color = :firebrick, linewidth = 2, label = &quot;up&quot;)
+lines!(ax2, ecckd_fluxes.longwave_down .- rrtmgp_fluxes.longwave_down, p_i ./ 100;
+       color = :steelblue4, linewidth = 2, label = &quot;down&quot;)
+axislegend(ax2; position = :rb, framevisible = false)
+
+ax3 = Axis(fig[1, 3]; xlabel = &quot;Δ heating rate, ecCKD − RRTMGP (K day⁻¹)&quot;,
+           ylabel = &quot;pressure (hPa)&quot;, yreversed = true, title = &quot;Heating difference&quot;)
+vlines!(ax3, [0.0]; color = (:black, 0.4), linestyle = :dash)
+lines!(ax3, (heating_ecckd .- heating_rrtmgp) .* 86400, p_layers ./ 100;
+       color = :darkorange3, linewidth = 2)
+</code></pre><p><img src="../rrtmgp_comparison.png" alt="ecCKD vs RRTMGP comparison"/></p><p>The printed OLR values and the difference panels above are the result: on this one idealized clear-sky column, with matched pressures, temperatures, and treated-gas composition, the two implementations differ by the amounts shown. This experiment does not separate the gas-optics tables from the transfer implementations — each leg uses both as a whole — and nothing here ranks either implementation or measures an error against a reference; a line-by-line benchmark would be required for that.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../03_co2_forcing/">« CO₂ forcing with ecCKD</a><a class="docs-footer-nextpage" href="../../gas_optics/ecckd_files/">ecCKD files »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Wednesday 2 September 2026 19:44">Wednesday 2 September 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
