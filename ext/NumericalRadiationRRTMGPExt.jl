@@ -136,26 +136,34 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     n2 = FT(_gas_value(gases, :n2, 0.78084))
     co = FT(_gas_value(gases, :co, 0))
 
+    # RRTMGP's kernels are bottom-at-index-1 (surface source/albedo and the
+    # hydrostatic Δp in compute_col_gas_kernel! assume p decreasing with
+    # index), while ColumnAtmosphere is top-down by contract, so every
+    # per-layer/per-level copy reverses the vertical index.
     for k in 1:nlayers
-        p_top = FT(atmosphere.pressure_interfaces[k])
-        p_bottom = FT(atmosphere.pressure_interfaces[k + 1])
-        Δp = max(p_bottom - p_top, zero(FT))
+        kr = nlayers - k + 1
         h2o_k = max(FT(_layer_value(h2o, k)), zero(FT))
-        dry_mass_fraction = max(one(FT) - h2o_k, FT(0.01))
-        column_dry = (Δp / model.parameters.grav) * dry_mass_fraction /
-                     model.parameters.molmass_dryair * model.parameters.avogad / FT(1e4)
-        state.layerdata[1, k, 1] = column_dry
-        state.layerdata[2, k, 1] = FT(atmosphere.pressure_layers[k])
-        state.layerdata[3, k, 1] = clamp(FT(atmosphere.temperature_layers[k]), FT(160), FT(355))
-        state.layerdata[4, k, 1] = zero(FT)
-        state.vmr.vmr_h2o[k, 1] = h2o_k
-        state.vmr.vmr_o3[k, 1] = max(FT(_layer_value(o3, k)), zero(FT))
+        state.layerdata[2, kr, 1] = FT(atmosphere.pressure_layers[k])
+        state.layerdata[3, kr, 1] = clamp(FT(atmosphere.temperature_layers[k]), FT(160), FT(355))
+        state.layerdata[4, kr, 1] = zero(FT)
+        state.vmr.vmr_h2o[kr, 1] = h2o_k
+        state.vmr.vmr_o3[kr, 1] = max(FT(_layer_value(o3, k)), zero(FT))
     end
 
     for k in 1:(nlayers + 1)
-        state.p_lev[k, 1] = FT(atmosphere.pressure_interfaces[k])
-        state.t_lev[k, 1] = clamp(FT(atmosphere.temperature_interfaces[k]), FT(160), FT(355))
+        kr = nlayers + 2 - k
+        state.p_lev[kr, 1] = FT(atmosphere.pressure_interfaces[k])
+        state.t_lev[kr, 1] = clamp(FT(atmosphere.temperature_interfaces[k]), FT(160), FT(355))
     end
+
+    # Dry column amounts via RRTMGP's own kernel (dry-air VMR convention,
+    # moist molar mass; CPU and CUDA methods) on the reversed state.
+    RRTMGP.Optics.compute_col_gas!(ClimaComms.device(model.context),
+                                   state.p_lev,
+                                   view(state.layerdata, 1, :, :),
+                                   model.parameters,
+                                   state.vmr.vmr_h2o,
+                                   nothing)
     state.t_sfc[1] = clamp(FT(boundary.surface_temperature), FT(160), FT(355))
 
     vmr = state.vmr.vmr
@@ -183,19 +191,27 @@ function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
                                                  boundary::RRTMGPBoundaryConditions,
                                                  workspace::RRTMGPWorkspace =
                                                      radiation_workspace(model, atmosphere))
+    nlayers = length(atmosphere.temperature_layers)
+    for (name, v) in ((:longwave_up, fluxes.longwave_up),
+                      (:longwave_down, fluxes.longwave_down),
+                      (:shortwave_up, fluxes.shortwave_up),
+                      (:shortwave_down, fluxes.shortwave_down))
+        length(v) == nlayers + 1 ||
+            throw(DimensionMismatch("$name must have length nlayers + 1"))
+    end
+
     fill_atmospheric_state!(workspace, model, atmosphere, boundary)
     solver = workspace.solver
     Base.invokelatest(RRTMGP.update_lw_fluxes!, solver)
     Base.invokelatest(RRTMGP.update_sw_fluxes!, solver)
-
-    nlayers = length(atmosphere.temperature_layers)
-    length(fluxes.longwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_up must have length nlayers + 1"))
+    # RRTMGP level fluxes are bottom-at-index-1; reverse back to the
+    # package's top-down convention.
     for k in 1:(nlayers + 1)
-        fluxes.longwave_up[k] = solver.lws.flux.flux_up[k, 1]
-        fluxes.longwave_down[k] = solver.lws.flux.flux_dn[k, 1]
-        fluxes.shortwave_up[k] = solver.sws.flux.flux_up[k, 1]
-        fluxes.shortwave_down[k] = solver.sws.flux.flux_dn[k, 1]
+        kr = nlayers + 2 - k
+        fluxes.longwave_up[k] = solver.lws.flux.flux_up[kr, 1]
+        fluxes.longwave_down[k] = solver.lws.flux.flux_dn[kr, 1]
+        fluxes.shortwave_up[k] = solver.sws.flux.flux_up[kr, 1]
+        fluxes.shortwave_down[k] = solver.sws.flux.flux_dn[kr, 1]
     end
     return fluxes
 end
