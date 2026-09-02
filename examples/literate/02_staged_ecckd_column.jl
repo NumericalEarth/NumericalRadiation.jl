@@ -119,18 +119,18 @@ heating_day = seconds_per_day .* heating
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
            fluxes.shortwave_down .- fluxes.shortwave_up
 
-println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m^-2")
-println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m^-2")
+println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m⁻²")
+println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m⁻²")
 println("Heating range:    ",
         round(minimum(heating_day); digits = 3), " to ",
-        round(maximum(heating_day); digits = 3), " K day^-1")
+        round(maximum(heating_day); digits = 3), " K day⁻¹")
 
 # ## Visualization
 
 fig = Figure(size = (900, 420))
 
 ax_flux = Axis(fig[1, 1],
-    xlabel = "Net downward flux (W m^-2)",
+    xlabel = "Net downward flux (W m⁻²)",
     ylabel = "Pressure (hPa)",
     title = "Interface flux")
 lines!(ax_flux, net_flux, pressure_interfaces ./ 100; linewidth = 2)
@@ -138,7 +138,7 @@ scatter!(ax_flux, net_flux, pressure_interfaces ./ 100; markersize = 5)
 ax_flux.yreversed = true
 
 ax_heat = Axis(fig[1, 2],
-    xlabel = "Heating rate (K day^-1)",
+    xlabel = "Heating rate (K day⁻¹)",
     ylabel = "Pressure (hPa)",
     title = "Layer heating")
 lines!(ax_heat, heating_day, pressure_layers ./ 100; linewidth = 2)

@@ -18,13 +18,14 @@ greedy reduced-model program live in `validation/FROZEN_DIAGNOSTICS.md` on the
 
 ## What the package is
 
-NumericalRadiation.jl is a standalone, GPU-capable, differentiable radiation
-and gas-optics library. It contains two layers:
+NumericalRadiation.jl is a standalone, differentiable radiation and
+gas-optics library with `Adapt.jl`-aware model types. It contains two layers:
 
 - **Analytic-band column schemes** for intermediate-complexity models: the
   Williams (2026) 41-wavenumber clear-sky longwave solver and a SPEEDY-style
   one-band shortwave with diagnostic clouds. These are pure scalar per-column
-  operations, allocation-free and GPU-safe.
+  operations, allocation-free per column, and expressed as scalar
+  ingredients a host model can fuse into its own kernels.
 - **An ecRad-style radiative transfer platform**: staged runtime API, official
   ecCKD gas-optics ingestion, cloudless and cloud-overlap (Tripleclouds-style)
   solvers, cloud/aerosol optics, a package-native RRTMGP comparison surface,
@@ -70,8 +71,11 @@ low-level (preallocated arrays/views into optimized kernels).
 
 Two non-negotiable separations:
 
-- **Runtime vs. offline generation.** The runtime path is fast, typed,
-  allocation-free, GPU-capable, and does no I/O. Offline ecCKD model
+- **Runtime vs. offline generation.** The runtime path is fast, typed, and
+  does no I/O; the warmed ecCKD gas-optics path with caller-preallocated
+  outputs is measured allocation-free, and model tables are `Adapt.jl`-aware
+  so hosts can move them to device memory (device-side execution of the
+  staged solvers is not yet demonstrated in this package). Offline ecCKD model
   generation/training is data-heavy and CKDMIP-aware and never leaks into the
   runtime path.
 - **Solvers do not know where optics came from.** Solvers accept optical

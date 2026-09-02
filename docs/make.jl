@@ -14,6 +14,7 @@ mkpath(ASSET_ROOT)
 for example in (
     "01_ckdmip_data_inventory.jl",
     "02_staged_ecckd_column.jl",
+    "03_co2_forcing.jl",
 )
     Literate.markdown(
         joinpath(LITERATE_ROOT, example),
@@ -35,13 +36,9 @@ makedocs(
     ),
     pages = [
         "Home" => "index.md",
-        "Design & acceptance criteria" => [
-            "Design and acceptance criteria" => "design.md",
-            "Architecture" => "architecture.md",
-        ],
-        "Tutorials" => [
+        "Examples" => [
             "Single-column radiation" => "single_column.md",
-            "CKDMIP data inventory" => "generated/01_ckdmip_data_inventory.md",
+            "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
             "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
         ],
         "Gas optics" => [
@@ -50,6 +47,7 @@ makedocs(
             "ecCKD model selection" => "gas_optics/ecckd_model_selection.md",
             "Correlated-k method" => "gas_optics/correlated_k.md",
             "CKDMIP training data" => "gas_optics/ckdmip_training_data.md",
+            "CKDMIP data inventory" => "generated/01_ckdmip_data_inventory.md",
             "RRTMGP comparison" => "gas_optics/rrtmgp_comparison.md",
             "Training and recovery" => "gas_optics/ecckd_training_recovery.md",
             "Breeze integration" => "gas_optics/breeze_integration.md",
@@ -68,6 +66,10 @@ makedocs(
             "ecCKD and data" => "api/ecckd.md",
             "Column schemes" => "api/column_schemes.md",
             "Metrics" => "api/metrics.md",
+        ],
+        "Design & acceptance criteria" => [
+            "Design and acceptance criteria" => "design.md",
+            "Architecture" => "architecture.md",
         ],
         "Validation" => "validation.md",
     ],

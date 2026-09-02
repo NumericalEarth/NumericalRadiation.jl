@@ -1,5 +1,11 @@
 # ecCKD Training and Recovery
 
+!!! warning "Status: recovery is a goal, not yet a demonstrated result"
+    This page documents the *intended* training/recovery method. Recovering a
+    published ecCKD model has **not yet been demonstrated**; recorded attempts
+    and their evidence live on the validation platform
+    (`glw/gate4-recovery` branch).
+
 The training/recovery workflow has two goals:
 
 1. reconstruct the published ecCKD objective closely enough to recover an
