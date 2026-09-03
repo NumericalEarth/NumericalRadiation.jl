@@ -11,6 +11,7 @@ read_ecckd_definition
 read_ecckd_spectral_mapping
 read_ecckd_tabulated_gas_optics
 read_official_ecckd_gas_optics
+surface_longwave_emission
 summarize_ecckd_definition
 validate_ecckd_definition
 official_ecckd_model_inventory

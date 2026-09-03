@@ -580,6 +580,28 @@ end
     return _interp_source_table(model.longwave_source_table, ig, source_bracket)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Per-g-point surface longwave emission of `model` at the surface `temperature`,
+scaled by `emissivity`, in the same per-unit-weight flux convention as the
+model's Planck source tables. Pass the result as `surface_longwave_up` in
+`LongwaveBoundaryConditions`.
+
+For multi-g spectral models a scalar ``σT⁴`` boundary is spectrally gray:
+every g point then emits the same flux, misallocating surface emission from
+transparent window g points into opaque ones (≈ 50 W m⁻² of outgoing
+longwave for the official 32-g models on an Earth-like column).
+"""
+function surface_longwave_emission(model::EcCKDTabulatedGasOpticsModel{FT},
+                                   temperature;
+                                   emissivity = one(FT)) where FT
+    ng = length(model.longwave_weights)
+    source_bracket = _source_bracket(model, temperature)
+    return FT[emissivity * _longwave_source(model, ig, temperature, source_bracket)
+              for ig in 1:ng]
+end
+
 @generated function _accumulate_tau(gases::NamedTuple,
                                     coefficients::AbstractMatrix{FT},
                                     ::Val{GasNames},
@@ -874,6 +896,11 @@ function optical_properties!(longwave::LongwaveOpticalProperties{FT, <:AbstractM
             longwave.optical_depth[ig, k] +=
                 _dynamic_h2o_tau(model, model.longwave_h2o_absorption,
                                  atmosphere, ig, k, h2o_stencil, h2o_bracket)
+            # Relative-linear gases legitimately contribute negative optical
+            # depth below their reference mole fraction; only the summed total
+            # is clamped, matching upstream run_ckd.
+            longwave.optical_depth[ig, k] =
+                max(longwave.optical_depth[ig, k], zero(FT))
             longwave.source[ig, k] = _longwave_source(model, ig, temperature, source_bracket)
             if interface_sources
                 longwave.source_top[ig, k] =
@@ -892,6 +919,8 @@ function optical_properties!(longwave::LongwaveOpticalProperties{FT, <:AbstractM
             shortwave.optical_depth[ig, k] +=
                 _dynamic_h2o_tau(model, model.shortwave_h2o_absorption,
                                  atmosphere, ig, k, h2o_stencil, h2o_bracket)
+            shortwave.optical_depth[ig, k] =
+                max(shortwave.optical_depth[ig, k], zero(FT))
             shortwave.rayleigh_optical_depth[ig, k] =
                 _rayleigh_optical_depth(model, atmosphere, ig, k)
             shortwave.scattering_asymmetry[ig, k] = zero(FT)

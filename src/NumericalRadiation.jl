@@ -25,6 +25,7 @@ export EcCKDGasOpticsModel, EcCKDTabulatedGasOpticsModel
 export EcCKDDefinition, EcCKDSchemaSummary, EcCKDModelSpec
 export read_ecckd_definition, summarize_ecckd_definition, validate_ecckd_definition
 export read_ecckd_tabulated_gas_optics, read_official_ecckd_gas_optics
+export surface_longwave_emission
 export official_ecckd_model_inventory, official_ecckd_definition_path,
        official_ecckd_definition_paths, official_ecckd_model_specs,
        official_ecckd_model_spec, ecrad_data_path, ecckd_source_path
