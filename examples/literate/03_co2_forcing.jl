@@ -18,7 +18,7 @@ using NCDatasets
 using Printf
 
 gas_optics = read_official_ecckd_gas_optics("32x32";
-    gas_names = (:composite, :h2o, :co2))
+    names = (:composite, :h2o, :co2))
 nothing #hide
 
 # The column: ``N`` layers with interface pressures ``pᵢ`` (Pa, top of

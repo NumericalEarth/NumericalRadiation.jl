@@ -82,6 +82,8 @@ end
 """$(TYPEDSIGNATURES)
 Construct a [`SurfaceState`](@ref). Floating-point type defaults to `Float64`.
 """
+SurfaceState(::Type{NF}; kwargs...) where NF = SurfaceState{NF}(; kwargs...)
+
 function SurfaceState(; sea_surface_temperature, land_surface_temperature,
                        land_fraction, kwargs...)
     NF = Float64
@@ -112,6 +114,8 @@ function PhysicalConstants{NF}(;
     ) where NF
     return PhysicalConstants{NF}(gravity, heat_capacity, stefan_boltzmann, solar_constant)
 end
+
+PhysicalConstants(::Type{NF}; kwargs...) where NF = PhysicalConstants{NF}(; kwargs...)
 
 PhysicalConstants(; kwargs...) = PhysicalConstants{Float64}(; kwargs...)
 
@@ -144,6 +148,8 @@ function ThermodynamicConstants{NF}(;
         molar_mass_ratio,
     )
 end
+
+ThermodynamicConstants(::Type{NF}; kwargs...) where NF = ThermodynamicConstants{NF}(; kwargs...)
 
 ThermodynamicConstants(; kwargs...) = ThermodynamicConstants{Float64}(; kwargs...)
 
@@ -185,6 +191,8 @@ mutable struct LongwaveDiagnostics{NF}
     land_surface_longwave_up::NF
 end
 
+LongwaveDiagnostics(::Type{NF}) where NF = LongwaveDiagnostics{NF}()
+
 LongwaveDiagnostics{NF}() where NF = LongwaveDiagnostics{NF}(
     zero(NF), zero(NF), zero(NF), zero(NF), zero(NF))
 
@@ -208,6 +216,9 @@ mutable struct ShortwaveDiagnostics{NF}
     cloud_top::Int
     stratocumulus_cover::NF
 end
+
+ShortwaveDiagnostics(::Type{NF}, nlayers::Integer = 1) where NF =
+    ShortwaveDiagnostics{NF}(nlayers)
 
 ShortwaveDiagnostics{NF}(nlayers::Integer = 1) where NF = ShortwaveDiagnostics{NF}(
     zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF),

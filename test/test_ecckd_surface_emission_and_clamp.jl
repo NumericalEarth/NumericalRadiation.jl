@@ -13,7 +13,7 @@ const σ_SB = 5.670374419e-8
     @testset "fallback source path (no source table)" begin
         for FT in (Float64, Float32)
             model = EcCKDTabulatedGasOpticsModel(
-                gas_names = (:h2o, :co2),
+                names = (:h2o, :co2),
                 pressure_grid = FT[10_000, 100_000],
                 temperature_grid = FT[220, 300],
                 longwave_absorption = ones(FT, 2, 2, 2, 2),
@@ -35,7 +35,7 @@ const σ_SB = 5.670374419e-8
 
     @testset "tabulated source path (official 32x32)" begin
         model = read_official_ecckd_gas_optics("32x32";
-            gas_names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+            names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
         emission = surface_longwave_emission(model, 300.0)
         @test length(emission) == length(model.longwave_weights)
         @test all(>(0), emission)
@@ -62,7 +62,7 @@ end
     # -reference * composite * k and can exceed the composite term, driving
     # the summed optical depth negative before the clamp.
     model = EcCKDTabulatedGasOpticsModel(
-        gas_names = (:composite, :ch4),
+        names = (:composite, :ch4),
         pressure_grid = [10_000.0, 100_000.0],
         temperature_grid = [220.0, 300.0],
         longwave_absorption = cat(fill(1e-4, 1, 1, 2, 2),   # composite: weak

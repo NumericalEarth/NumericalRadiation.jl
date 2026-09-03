@@ -61,7 +61,7 @@ Published model pairs can be selected with compact names:
 ```julia
 official_ecckd_model_specs()
 read_official_ecckd_gas_optics("64x32";
-    gas_names = (:composite, :h2o, :co2),
+    names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
 ```

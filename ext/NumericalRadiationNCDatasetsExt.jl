@@ -119,11 +119,14 @@ function read_ecckd_spectral_mapping(path::String)
     end
 end
 
+# Second radiation constant c₂ = hc/k_B in cm K (CODATA).
+const c₂ = 1.438776877
+
 function _planck_wavenumber_weight(wavenumber_cm, temperature)
-    w = max(Float64(wavenumber_cm), 0.0)
+    w = max(Float64(wavenumber_cm), 0)
     t = max(Float64(temperature), eps(Float64))
-    exponent = 1.438776877 * w / t
-    return exponent > 700 ? 0.0 : w^3 / expm1(exponent)
+    exponent = c₂ * w / t
+    return exponent > 700 ? 0.0 : w^3 / expm1(exponent)   # expm1 overflows past 700
 end
 
 function _nearest_index(values, target)
@@ -227,7 +230,7 @@ function _reference_mole_fractions(ds, gas_names)
 end
 
 """
-    read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path; gas_names=(:h2o, :co2))
+    read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path; names=(:h2o, :co2))
 
 Materialize selected official ecCKD gas coefficient tables into
 `EcCKDTabulatedGasOpticsModel`.
@@ -251,15 +254,16 @@ shortwave weights are the file's `solar_irradiance` normalized to unit sum
 """
 function read_ecckd_tabulated_gas_optics(longwave_path::String,
                                          shortwave_path::String;
-                                         gas_names = (:h2o, :co2),
+                                         names = (:h2o, :co2),
                                          h2o_mole_fraction = 0.005)
-    gas_name_tuple = Tuple(Symbol.(gas_names))
+    gas_name_tuple = Tuple(Symbol.(names))
     lw = NCDataset(longwave_path, "r") do ds
         (
             pressure_grid = Float64.(Array(ds["pressure"])),
             temperature_grid = _temperature_grid(ds),
             h2o_grid = haskey(ds, "h2o_mole_fraction") ?
-                Float64.(Array(ds["h2o_mole_fraction"])) : Float64[],
+                       Float64.(Array(ds["h2o_mole_fraction"])) :
+                       Float64[],
             absorption = _stack_coefficients(ds, gas_name_tuple;
                                              h2o_mole_fraction = h2o_mole_fraction,
                                              dynamic_h2o = :h2o in gas_name_tuple,
@@ -271,10 +275,9 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
             source = nothing,
         )
     end
-    lw_source_temperature_grid, lw_source_table =
-        NCDataset(longwave_path, "r") do ds
-            _longwave_source_table(ds, lw.weights)
-        end
+    lw_source_temperature_grid, lw_source_table = NCDataset(longwave_path, "r") do ds
+        _longwave_source_table(ds, lw.weights)
+    end
     sw = NCDataset(shortwave_path, "r") do ds
         pressure_grid = Float64.(Array(ds["pressure"]))
         isapprox(pressure_grid, lw.pressure_grid; rtol = 0.0, atol = 1.0e-3) ||
@@ -287,7 +290,8 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
                                              allow_missing = true),
             h2o_absorption = _h2o_absorption_table(ds, gas_name_tuple),
             h2o_grid = haskey(ds, "h2o_mole_fraction") ?
-                Float64.(Array(ds["h2o_mole_fraction"])) : Float64[],
+                       Float64.(Array(ds["h2o_mole_fraction"])) :
+                       Float64[],
             gas_reference_mole_fractions = _reference_mole_fractions(ds, gas_name_tuple),
             reference_present = _reference_mole_fraction_present(ds, gas_name_tuple),
             rayleigh = haskey(ds, "rayleigh_molar_scattering_coeff") ?
@@ -322,7 +326,7 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
     end
 
     return EcCKDTabulatedGasOpticsModel(
-        gas_names = gas_name_tuple,
+        names = gas_name_tuple,
         pressure_grid = lw.pressure_grid,
         temperature_grid = lw.temperature_grid,
         h2o_mole_fraction_grid = lw.h2o_grid,

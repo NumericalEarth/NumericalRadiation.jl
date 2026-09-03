@@ -41,18 +41,18 @@ using NumericalRadiation
 using NCDatasets
 
 gas_optics = read_official_ecckd_gas_optics("32x32";
-    gas_names = (:composite, :h2o, :co2),
+    names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
 ```
 
-Gases omitted from `gas_names` are not removed: their reference abundances
+Gases omitted from `names` are not removed: their reference abundances
 remain represented through the `:composite` background. Include a gas
 explicitly to vary its amount — or to set it to zero.
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
 of NetCDF after loading and can be moved into a host model's radiation state.
-Because `:h2o` is in `gas_names`, the official H2O mole-fraction table
+Because `:h2o` is in `names`, the official H2O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes
 the layer H2O mole fraction from the `h2o` and `composite` gas amounts and
 interpolates the table per layer. The `h2o_mole_fraction` keyword is not a gas

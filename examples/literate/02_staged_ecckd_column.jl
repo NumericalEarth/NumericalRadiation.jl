@@ -44,7 +44,7 @@ atmosphere = ColumnAtmosphere(
 FT = Float64
 pressure_grid = FT[10_000, 100_000]
 temperature_grid = FT[220, 300]
-gas_names = (:h2o, :co2)
+names = (:h2o, :co2)
 
 function synthetic_absorption(ng, ngas, pressure_grid, temperature_grid; scale)
     table = zeros(FT, ng, ngas, length(pressure_grid), length(temperature_grid))
@@ -58,8 +58,8 @@ function synthetic_absorption(ng, ngas, pressure_grid, temperature_grid; scale)
     return table
 end
 
-model = EcCKDTabulatedGasOpticsModel(
-    gas_names = gas_names,
+model = EcCKDTabulatedGasOpticsModel(;
+    names,
     pressure_grid = pressure_grid,
     temperature_grid = temperature_grid,
     longwave_absorption = synthetic_absorption(2, 2, pressure_grid, temperature_grid; scale = 0.010),

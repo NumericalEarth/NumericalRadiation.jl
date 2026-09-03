@@ -22,8 +22,8 @@ profile = AtmosphereProfile(
     surface_pressure = 100_000,
 )
 FT = Float64
-constants = PhysicalConstants{FT}()
-thermo    = ThermodynamicConstants{FT}()
+constants = PhysicalConstants(FT)
+thermo    = ThermodynamicConstants(FT)
 scheme    = NumericalRadiation.OneBandShortwave(FT)
 
 zenith_cosines = [0.2, 0.4, 0.6, 0.8, 1]
@@ -35,14 +35,14 @@ ax  = Axis(fig[1, 1];
            title  = "Shortwave heating rate vs zenith angle")
 
 for μ₀ in zenith_cosines
-    surface = SurfaceState{FT}(sea_surface_temperature = 295,
+    surface = SurfaceState(FT; sea_surface_temperature = 295,
                                land_surface_temperature = NaN,
                                land_fraction = 0,
                                ocean_albedo = 0.07,
                                land_albedo  = 0.07,
                                cos_zenith   = μ₀)
     Ṫ = zeros(N)
-    diagnostics = ShortwaveDiagnostics{FT}(N)
+    diagnostics = ShortwaveDiagnostics(FT, N)
     transmissivity = similar(profile.temperature)
     solve_shortwave!(Ṫ, diagnostics, scheme, profile, grid, surface,
                      constants, thermo; transmissivity_scratch = transmissivity)
@@ -78,14 +78,14 @@ base_profile = AtmosphereProfile(
     surface_pressure = 100_000,
 )
 FT = Float64
-surface = SurfaceState{FT}(sea_surface_temperature = 295,
+surface = SurfaceState(FT; sea_surface_temperature = 295,
                            land_surface_temperature = NaN,
                            land_fraction = 0,
                            ocean_albedo = 0.07,
                            land_albedo  = 0.07,
                            cos_zenith   = 0.6)
-constants = PhysicalConstants{FT}()
-thermo    = ThermodynamicConstants{FT}()
+constants = PhysicalConstants(FT)
+thermo    = ThermodynamicConstants(FT)
 scheme    = NumericalRadiation.OneBandShortwave(FT)
 
 rain_rates = [0, 1e-7, 1e-6, 5e-6, 1e-5, 5e-5, 1e-4]   # m/s
@@ -99,7 +99,7 @@ for rain_rate in rain_rates
                                 surface_pressure = base_profile.surface_pressure,
                                 rain_rate = rain_rate)
     Ṫ = zeros(N)
-    diagnostics = ShortwaveDiagnostics{FT}(N)
+    diagnostics = ShortwaveDiagnostics(FT, N)
     transmissivity = similar(profile.temperature)
     solve_shortwave!(Ṫ, diagnostics, scheme, profile, grid, surface,
                      constants, thermo; transmissivity_scratch = transmissivity)

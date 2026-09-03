@@ -22,14 +22,14 @@ base_profile = AtmosphereProfile(
     surface_pressure = 100_000,
 )
 FT = Float64
-surface = SurfaceState{FT}(sea_surface_temperature = 295,
+surface = SurfaceState(FT; sea_surface_temperature = 295,
                            land_surface_temperature = NaN,
                            land_fraction = 0,
                            ocean_albedo = 0.07,
                            land_albedo  = 0.07,
                            cos_zenith   = 0.5)
-constants = PhysicalConstants{FT}()
-thermo    = ThermodynamicConstants{FT}()
+constants = PhysicalConstants(FT)
+thermo    = ThermodynamicConstants(FT)
 
 longwave  = AnalyticBandLongwave(FT)
 shortwave = NumericalRadiation.OneBandShortwave(FT)
@@ -44,8 +44,8 @@ function solve_column(carbon_dioxide_ppmv)
     )
     Ṫˡʷ = zeros(N)
     Ṫˢʷ = zeros(N)
-    longwave_diagnostics  = LongwaveDiagnostics{FT}()
-    shortwave_diagnostics = ShortwaveDiagnostics{FT}(N)
+    longwave_diagnostics  = LongwaveDiagnostics(FT)
+    shortwave_diagnostics = ShortwaveDiagnostics(FT, N)
     transmissivity = similar(profile.temperature)
 
     solve_longwave!(Ṫˡʷ, longwave_diagnostics, longwave, profile, grid,

@@ -69,7 +69,7 @@ function component_smoke()
         geometry = (; cos_zenith = 0.5),
     )
     gas_model = EcCKDGasOpticsModel(
-        gas_names = (:h2o, :co2),
+        names = (:h2o, :co2),
         longwave_absorption = [0.08 0.004; 0.03 0.002],
         shortwave_absorption = [0.010 0.0008],
         longwave_source_scale = [1.0, 1.05],

@@ -70,7 +70,7 @@ nothing #hide
 # Wetherald's gas set.
 
 gas_optics = read_official_ecckd_gas_optics("32x32";
-    gas_names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+    names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
 nothing #hide
 
 # Water vapor follows Manabe and Wetherald's fixed-relative-humidity profile

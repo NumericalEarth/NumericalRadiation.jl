@@ -64,7 +64,7 @@ nothing #hide
 # care on the ecCKD side: the tabulated composite background *contains the
 # reference contribution of every tabulated gas*, and activating a gas
 # subtracts its reference mole fraction times the composite amount before
-# adding the requested amount. A gas left out of `gas_names` is therefore
+# adding the requested amount. A gas left out of `names` is therefore
 # kept at its reference abundance, not removed. So the full tuple is
 # activated here: CH₄ and N₂O carry the same abundances as the RRTMGP side,
 # and the CFCs are activated with zero amount — which removes their reference
@@ -110,7 +110,7 @@ nothing #hide
 intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
 
 function ecckd_member(selector)
-    gas_optics = read_official_ecckd_gas_optics(selector; gas_names = intended_gases)
+    gas_optics = read_official_ecckd_gas_optics(selector; names = intended_gases)
     @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)

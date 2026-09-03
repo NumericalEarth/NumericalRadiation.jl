@@ -98,7 +98,7 @@ nothing #hide
 # is gate-verified below, not assumed.
 
 gas_optics = read_official_ecckd_gas_optics("32x32";
-    gas_names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+    names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
 
 function gas_optics_containers()
     longwave_gpoints = length(gas_optics.longwave_weights)

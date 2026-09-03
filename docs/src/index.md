@@ -28,13 +28,15 @@ column amounts in mol m⁻².
 using NumericalRadiation
 using NCDatasets   # activates the NetCDF reader extension
 
-gas_optics = read_official_ecckd_gas_optics("32x32";
-                                            gas_names = (:composite, :h2o, :co2))
+gas_optics = read_official_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
+
+g  = 9.80665     # gravitational acceleration, m s⁻²
+mᵈ = 0.0289647   # dry-air molar mass, kg mol⁻¹
 
 N  = 24
 pᵢ = collect(range(10_000, 100_000; length = N + 1))   # Pa, TOA first
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
-nᵈ = diff(pᵢ) ./ (9.80665 * 0.0289647)                 # dry-air amount, mol m⁻²
+nᵈ = diff(pᵢ) ./ (g * mᵈ)                              # dry-air amount, mol m⁻²
 
 atmosphere = ColumnAtmosphere(;
     pressure_layers = p,

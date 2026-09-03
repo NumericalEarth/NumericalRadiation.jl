@@ -67,10 +67,10 @@ N  = 32
 grid = ColumnGrid(σᵢ)
 
 FT = Float64
-surface   = SurfaceState{FT}(sea_surface_temperature = 295,
+surface   = SurfaceState(FT; sea_surface_temperature = 295,
                              land_surface_temperature = 285,
                              land_fraction = 0.3)
-constants = PhysicalConstants{FT}()
+constants = PhysicalConstants(FT)
 longwave  = AnalyticBandLongwave(FT)
 
 # Sweep CO₂
@@ -85,7 +85,7 @@ for CO₂ in carbon_dioxide_ppm
         CO₂              = CO₂,
     )
     Ṫ = zeros(N)
-    diagnostics = LongwaveDiagnostics{FT}()
+    diagnostics = LongwaveDiagnostics(FT)
     solve_longwave!(Ṫ, diagnostics, longwave, profile, grid, surface, constants)
     push!(OLR, diagnostics.outgoing_longwave)
 end

@@ -454,7 +454,7 @@ end
 
 """
     read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path;
-                                    gas_names = (:h2o, :co2),
+                                    names = (:h2o, :co2),
                                     h2o_mole_fraction = 0.005)
 
 Read official ecCKD CKD-definition files into a lightweight runtime
@@ -464,7 +464,7 @@ extension.
 
 This loader is a runtime-ingestion bridge, not a full ecRad-equivalent
 ingestion path: it materializes coefficient tables for the requested
-`gas_names` only, together with each gas's reference mole fraction for the
+`names` only, together with each gas's reference mole fraction for the
 ecCKD relative-linear convention, the shortwave Rayleigh molar scattering
 table, and the longwave Planck source table. When `:h2o` is requested, the
 official H2O mole-fraction table dimension is kept; at runtime
@@ -492,7 +492,7 @@ end
 Load an official ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref).
 `model` accepts selectors such as `:climate_32x32`, `:climate_64x32`, or
 `"32x96"`. Keyword arguments are forwarded to
-[`read_ecckd_tabulated_gas_optics`](@ref), for example `gas_names` and
+[`read_ecckd_tabulated_gas_optics`](@ref), for example `names` and
 `h2o_mole_fraction`.
 
 This method resolves the package's lazy ecRad artifact when needed. Load
