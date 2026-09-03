@@ -34,7 +34,7 @@ One radiation update is four staged calls on caller-owned state:
 
 The complete, executed construction of the atmosphere, work arrays, and
 boundary conditions is the [staged ecCKD column
-example](generated/02_staged_ecckd_column.md); `examples/ecckd_column.jl` is
+example](generated/staged_ecckd_column.md); `examples/ecckd_column.jl` is
 the same workflow against official model files.
 
 ## Cloudless longwave

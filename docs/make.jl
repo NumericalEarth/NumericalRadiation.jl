@@ -12,11 +12,11 @@ mkpath(GENERATED_ROOT)
 mkpath(ASSET_ROOT)
 
 for example in (
-    "02_staged_ecckd_column.jl",
-    "03_co2_forcing.jl",
-    "04_rrtmgp_comparison.jl",
-    "05_manabe_rce.jl",
-    "06_all_sky_cre.jl",
+    "staged_ecckd_column.jl",
+    "co2_forcing.jl",
+    "rrtmgp_comparison.jl",
+    "manabe_rce.jl",
+    "all_sky_cre.jl",
 )
     Literate.markdown(
         joinpath(LITERATE_ROOT, example),
@@ -40,11 +40,11 @@ makedocs(
         "Home" => "index.md",
         "Examples" => [
             "Single-column analytical radiation" => "single_column.md",
-            "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
-            "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
-            "Correlated-k model spread" => "generated/04_rrtmgp_comparison.md",
-            "Manabe radiative-convective equilibrium" => "generated/05_manabe_rce.md",
-            "All-sky cloud radiative effect" => "generated/06_all_sky_cre.md",
+            "The staged interface" => "generated/staged_ecckd_column.md",
+            "CO₂ forcing with ecCKD" => "generated/co2_forcing.md",
+            "Correlated-k model spread" => "generated/rrtmgp_comparison.md",
+            "Manabe radiative-convective equilibrium" => "generated/manabe_rce.md",
+            "All-sky cloud radiative effect" => "generated/all_sky_cre.md",
         ],
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",

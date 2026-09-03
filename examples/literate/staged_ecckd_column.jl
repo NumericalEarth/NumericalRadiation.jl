@@ -1,9 +1,15 @@
-# # Staged ecCKD column
+# # The staged interface: an ecCKD column, call by call
 #
-# This tutorial runs the staged runtime API end-to-end. It uses a tiny
-# synthetic tabulated gas-optics model so the documentation build does not need
-# NetCDF data, but the staged calls are the same calls used by official ecCKD
-# models loaded with `read_official_ecckd_gas_optics`.
+# One radiation update in this package is *staged*: it is split into three
+# explicit calls on caller-owned arrays — [`optical_properties!`](@ref)
+# fills the g-point optics, [`radiative_fluxes!`](@ref) solves each stream's
+# transport, and [`heating_rates!`](@ref) converts the flux convergence into
+# a temperature tendency. Nothing is hidden inside a monolithic solver, and
+# a host model can own, reuse, or replace any stage. This tutorial runs the
+# three stages end-to-end on a tiny synthetic tabulated gas-optics model, so
+# the documentation build needs no NetCDF data — but these are exactly the
+# calls used by official ecCKD models loaded with
+# `read_official_ecckd_gas_optics`.
 
 using CairoMakie
 using NumericalRadiation

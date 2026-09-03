@@ -102,9 +102,9 @@ The complete script, including the shortwave leg, is
 ## Where to go next
 
 - Examples: [single-column analytical radiation](single_column.md), the
-  [staged ecCKD column](generated/02_staged_ecckd_column.md),
-  [CO₂ forcing with ecCKD](generated/03_co2_forcing.md), and
-  [correlated-k model spread](generated/04_rrtmgp_comparison.md).
+  [the staged interface](generated/staged_ecckd_column.md),
+  [CO₂ forcing with ecCKD](generated/co2_forcing.md), and
+  [correlated-k model spread](generated/rrtmgp_comparison.md).
 - [Architecture](architecture.md) — the API levels and the conventions they
   keep.
 - [Gas optics](gas_optics/ecckd_files.md) — ecCKD files, model selection, and

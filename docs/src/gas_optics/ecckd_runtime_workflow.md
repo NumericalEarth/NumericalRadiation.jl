@@ -78,7 +78,7 @@ the staged sequence documented on the [solvers page](../solvers.md) —
 `optical_properties!` → `radiative_fluxes!` (longwave, then shortwave) →
 `heating_rates!` — inside each radiation update. The fully executed version
 of this construction is the [staged ecCKD column
-example](../generated/02_staged_ecckd_column.md).
+example](../generated/staged_ecckd_column.md).
 
 Host integrations should keep the same division of responsibility: select
 and load the gas-optics model during setup, allocate work arrays once, then

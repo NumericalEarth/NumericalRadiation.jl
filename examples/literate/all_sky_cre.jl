@@ -19,7 +19,7 @@ using Printf
 # ## The column
 #
 # The gas state reuses the family column of the
-# [correlated-k spread](04_rrtmgp_comparison.md) page: ``N`` layers with
+# [correlated-k spread](rrtmgp_comparison.md) page: ``N`` layers with
 # interface pressures ``pᵢ`` (Pa, top of atmosphere first), an idealized
 # capped lapse rate, analytic moisture and ozone profiles, and the full
 # ecCKD gas activation.

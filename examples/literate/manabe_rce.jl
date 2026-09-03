@@ -324,7 +324,7 @@ weighted_emission = sum(gas_optics.longwave_weights .*
 # reported range, but those calculations differ from this one in radiation
 # scheme, gas set, insolation, albedo, and cloud treatment, so the numbers
 # remain an outcome of *this* configuration rather than a reproduction; the
-# [correlated-k model spread](04_rrtmgp_comparison.md) page reports the
+# [correlated-k model spread](rrtmgp_comparison.md) page reports the
 # package's separate fixed-column measurement of the correlated-k
 # implementation spread.
 
