@@ -16,6 +16,7 @@ for example in (
     "03_co2_forcing.jl",
     "04_rrtmgp_comparison.jl",
     "05_manabe_rce.jl",
+    "06_all_sky_cre.jl",
 )
     Literate.markdown(
         joinpath(LITERATE_ROOT, example),
@@ -43,6 +44,7 @@ makedocs(
             "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
             "Correlated-k model spread" => "generated/04_rrtmgp_comparison.md",
             "Manabe radiative-convective equilibrium" => "generated/05_manabe_rce.md",
+            "All-sky cloud radiative effect" => "generated/06_all_sky_cre.md",
         ],
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",
