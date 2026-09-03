@@ -73,38 +73,13 @@ julia --project=examples examples/ecckd_column.jl
 ECCKD_MODEL=64x32 julia --project=examples examples/ecckd_column.jl
 ```
 
-The script follows this structure:
+The script selects a model, allocates the work arrays once, and then runs
+the staged sequence documented on the [solvers page](../solvers.md) —
+`optical_properties!` → `radiative_fluxes!` (longwave, then shortwave) →
+`heating_rates!` — inside each radiation update. The fully executed version
+of this construction is the [staged ecCKD column
+example](../generated/02_staged_ecckd_column.md).
 
-```julia
-spec = official_ecckd_model_spec("32x32")
-gas_optics = read_official_ecckd_gas_optics(spec;
-    gas_names = (:composite, :h2o, :co2),
-    h2o_mole_fraction = 0.005,
-)
-
-ng_lw = length(gas_optics.longwave_weights)
-ng_sw = length(gas_optics.shortwave_weights)
-
-longwave = LongwaveOpticalProperties(
-    zeros(ng_lw, nlayers),
-    zeros(ng_lw, nlayers);
-    source_top = zeros(ng_lw, nlayers),
-    source_bottom = zeros(ng_lw, nlayers),
-    weights = zeros(ng_lw),
-)
-
-shortwave = ShortwaveOpticalProperties(
-    zeros(ng_sw, nlayers);
-    rayleigh_optical_depth = zeros(ng_sw, nlayers),
-    scattering_asymmetry = zeros(ng_sw, nlayers),
-    weights = zeros(ng_sw),
-)
-
-optical_properties!(longwave, shortwave, gas_optics, atmosphere)
-radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere, longwave_boundary)
-radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere, shortwave_boundary)
-heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
-```
-
-Host integrations should keep the same division of responsibility: select and load the gas-optics model during setup, allocate
-work arrays once, then call the staged methods inside each radiation update.
+Host integrations should keep the same division of responsibility: select
+and load the gas-optics model during setup, allocate work arrays once, then
+call the staged methods inside each radiation update.

@@ -20,15 +20,15 @@ The scheme represents three analytic sources of clear-sky absorption:
 using NumericalRadiation
 using CairoMakie
 
-lw = AnalyticBandLongwave(Float64)
-ν̃  = range(lw.wavenumber_min, lw.wavenumber_max, length = 500)
+longwave = AnalyticBandLongwave(Float64)
+ν̃ = range(longwave.wavenumber_min, longwave.wavenumber_max, length = 500)
 
 # Replace zeros with NaN so the log-y plot shows gaps where a band is inactive.
 nan_zero(v) = [x == 0 ? NaN : x for x in v]
 
-κ_h2o_line = nan_zero([h2o_line_kappa_ref(ν, lw) for ν in ν̃])
-κ_h2o_cont =          [h2o_cont_kappa_ref(ν, lw) for ν in ν̃]
-κ_CO₂      = nan_zero([co2_kappa_ref(ν, lw)      for ν in ν̃])
+h2o_line_absorption      = nan_zero([h2o_line_kappa_ref(ν, longwave) for ν in ν̃])
+h2o_continuum_absorption =          [h2o_cont_kappa_ref(ν, longwave) for ν in ν̃]
+co2_absorption           = nan_zero([co2_kappa_ref(ν, longwave)      for ν in ν̃])
 
 fig = Figure(size = (760, 440))
 ax  = Axis(fig[1, 1];
@@ -36,9 +36,9 @@ ax  = Axis(fig[1, 1];
            ylabel = "κ [m² kg⁻¹]",
            yscale = log10,
            title  = "Williams (2026) reference absorption (T = 260 K, p = 500 hPa)")
-lines!(ax, ν̃, κ_h2o_line; label = "H₂O line",      linewidth = 2)
-lines!(ax, ν̃, κ_h2o_cont; label = "H₂O continuum", linewidth = 2)
-lines!(ax, ν̃, κ_CO₂;      label = "CO₂ 15 μm",      linewidth = 2, linestyle = :dash)
+lines!(ax, ν̃, h2o_line_absorption;      label = "H₂O line",      linewidth = 2)
+lines!(ax, ν̃, h2o_continuum_absorption; label = "H₂O continuum", linewidth = 2)
+lines!(ax, ν̃, co2_absorption;           label = "CO₂ 15 μm",      linewidth = 2, linestyle = :dash)
 axislegend(ax; position = :rt)
 save("absorption.png", fig); nothing # hide
 ```
@@ -62,31 +62,32 @@ specific humidity `q = 5 g kg⁻¹` and surface pressure 1000 hPa.
 using NumericalRadiation
 using CairoMakie
 
-nlayers = 32
-σ_half  = collect(range(0.0, 1.0, length = nlayers + 1))
-geom    = ColumnGrid(σ_half)
+N  = 32
+σᵢ = collect(range(0, 1, length = N + 1))   # interface sigma coordinate
+grid = ColumnGrid(σᵢ)
 
-surface   = SurfaceState{Float64}(sea_surface_temperature = 295.0,
-                                   land_surface_temperature = 285.0,
-                                   land_fraction = 0.3)
-constants = PhysicalConstants{Float64}()
-lw        = AnalyticBandLongwave(Float64)
+FT = Float64
+surface   = SurfaceState{FT}(sea_surface_temperature = 295,
+                             land_surface_temperature = 285,
+                             land_fraction = 0.3)
+constants = PhysicalConstants{FT}()
+longwave  = AnalyticBandLongwave(FT)
 
 # Sweep CO₂
-co2s = [50.0, 100.0, 200.0, 280.0, 400.0, 560.0, 800.0, 1120.0]
-olrs = Float64[]
-for c in co2s
+carbon_dioxide_ppm = [50, 100, 200, 280, 400, 560, 800, 1120]
+OLR = FT[]
+for CO₂ in carbon_dioxide_ppm
     profile = AtmosphereProfile(
-        temperature      = collect(range(220.0, 295.0, length = nlayers)),
-        humidity         = fill(0.005, nlayers),
-        geopotential     = zeros(nlayers),
-        surface_pressure = 100_000.0,
-        CO₂              = c,
+        temperature      = collect(range(220, 295, length = N)),
+        humidity         = fill(0.005, N),
+        geopotential     = zeros(N),
+        surface_pressure = 100_000,
+        CO₂              = CO₂,
     )
-    dT  = zeros(nlayers)
-    dg  = LongwaveDiagnostics{Float64}()
-    solve_longwave!(dT, dg, lw, profile, geom, surface, constants)
-    push!(olrs, dg.outgoing_longwave)
+    Ṫ = zeros(N)
+    diagnostics = LongwaveDiagnostics{FT}()
+    solve_longwave!(Ṫ, diagnostics, longwave, profile, grid, surface, constants)
+    push!(OLR, diagnostics.outgoing_longwave)
 end
 
 fig = Figure(size = (820, 360))
@@ -95,21 +96,21 @@ ax1 = Axis(fig[1, 1];
            ylabel = "ℐꜛˡʷ at TOA [W m⁻²]",
            xscale = log10,
            title  = "Clear-sky outgoing longwave vs CO₂")
-lines!(ax1, co2s, olrs;   color = :black, linestyle = :dash)
-scatter!(ax1, co2s, olrs; markersize = 10, color = :black)
+lines!(ax1, carbon_dioxide_ppm, OLR;   color = :black, linestyle = :dash)
+scatter!(ax1, carbon_dioxide_ppm, OLR; markersize = 10, color = :black)
 
 ax2 = Axis(fig[1, 2];
            xlabel = "CO₂ [ppmv]",
            ylabel = "ℐꜛˡʷ(280) − ℐꜛˡʷ(CO₂) [W m⁻²]",
            xscale = log10,
            title  = "Clear-sky CO₂ radiative forcing")
-lines!(ax2, co2s, olrs[4] .- olrs; color = :crimson, linewidth = 2)
-scatter!(ax2, co2s, olrs[4] .- olrs; markersize = 10, color = :crimson)
+lines!(ax2, carbon_dioxide_ppm, OLR[4] .- OLR; color = :crimson, linewidth = 2)
+scatter!(ax2, carbon_dioxide_ppm, OLR[4] .- OLR; markersize = 10, color = :crimson)
 vlines!(ax2, 560; color = :gray70, linestyle = :dot)
 hlines!(ax2, 0;   color = :gray70)
 
-forcing_280_560 = olrs[4] - olrs[6]
-Label(fig[2, 1:2], "2× CO₂ forcing (280 → 560 ppmv) = $(round(forcing_280_560, digits = 2)) W m⁻²";
+ΔOLR = OLR[4] - OLR[6]
+Label(fig[2, 1:2], "2× CO₂ forcing (280 → 560 ppmv) = $(round(ΔOLR, digits = 2)) W m⁻²";
       tellwidth = false, fontsize = 12)
 save("forcing.png", fig); nothing # hide
 ```

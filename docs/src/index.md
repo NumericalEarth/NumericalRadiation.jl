@@ -31,35 +31,36 @@ using NCDatasets   # activates the NetCDF reader extension
 gas_optics = read_official_ecckd_gas_optics("32x32";
                                             gas_names = (:composite, :h2o, :co2))
 
-nlayers = 24
-p_i = collect(range(10_000.0, 100_000.0; length = nlayers + 1))  # Pa, TOA first
-air = diff(p_i) ./ (9.80665 * 0.0289647)                          # mol m⁻²
-p_layers = 0.5 .* (p_i[1:end-1] .+ p_i[2:end])
+N  = 24
+pᵢ = collect(range(10_000, 100_000; length = N + 1))   # Pa, TOA first
+p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
+nᵈ = diff(pᵢ) ./ (9.80665 * 0.0289647)                 # dry-air amount, mol m⁻²
 
 atmosphere = ColumnAtmosphere(;
-    pressure_layers = p_layers,
-    pressure_interfaces = p_i,
-    temperature_layers = collect(range(220.0, 295.0; length = nlayers)),
-    temperature_interfaces = collect(range(215.0, 300.0; length = nlayers + 1)),
-    gases = (composite = air, h2o = 0.005 .* air, co2 = 420.0e-6 .* air),
-    surface = (temperature = 300.0,),
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = collect(range(220, 295; length = N)),
+    temperature_interfaces = collect(range(215, 300; length = N + 1)),
+    gases = (composite = nᵈ, h2o = 0.005 .* nᵈ, co2 = 420e-6 .* nᵈ),
+    surface = (temperature = 300,),
     geometry = (cos_zenith = 0.55,))
 
-ng_lw = length(gas_optics.longwave_weights)
-ng_sw = length(gas_optics.shortwave_weights)
-longwave = LongwaveOpticalProperties(zeros(ng_lw, nlayers), zeros(ng_lw, nlayers);
-                                     source_top = zeros(ng_lw, nlayers),
-                                     source_bottom = zeros(ng_lw, nlayers),
-                                     weights = zeros(ng_lw))
-shortwave = ShortwaveOpticalProperties(zeros(ng_sw, nlayers); weights = zeros(ng_sw))
-fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
-                         longwave_down = zeros(nlayers + 1),
-                         shortwave_up = zeros(nlayers + 1),
-                         shortwave_down = zeros(nlayers + 1))
+longwave_gpoints = length(gas_optics.longwave_weights)
+shortwave_gpoints = length(gas_optics.shortwave_weights)
+longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
+                                     source_top = zeros(longwave_gpoints, N),
+                                     source_bottom = zeros(longwave_gpoints, N),
+                                     weights = zeros(longwave_gpoints))
+shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+                                       weights = zeros(shortwave_gpoints))
+fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                         longwave_down = zeros(N + 1),
+                         shortwave_up = zeros(N + 1),
+                         shortwave_down = zeros(N + 1))
 
 optical_properties!(longwave, shortwave, gas_optics, atmosphere)
 radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                  LongwaveBoundaryConditions(surface_longwave_up = 5.67e-8 * 300.0^4))
+                  LongwaveBoundaryConditions(surface_longwave_up = 5.67e-8 * 300^4))
 
 using Printf
 @printf("outgoing longwave radiation (TOA): %6.1f W m⁻²\n", fluxes.longwave_up[1])
@@ -77,18 +78,18 @@ fig = Figure(size = (780, 400))
 ax1 = Axis(fig[1, 1]; xlabel = "g point", ylabel = "pressure (hPa)",
            yreversed = true,
            title = "log₁₀ layer optical depth (ecCKD 32×32)")
-hm = heatmap!(ax1, 1:ng_lw, p_layers ./ 100,
+hm = heatmap!(ax1, 1:longwave_gpoints, p ./ 100,
               log10.(max.(longwave.optical_depth, 1e-8));
               colormap = :viridis)
 Colorbar(fig[1, 2], hm)
 
 ax2 = Axis(fig[1, 3]; xlabel = "longwave flux (W m⁻²)",
            ylabel = "pressure (hPa)", yreversed = true)
-lines!(ax2, fluxes.longwave_up, p_i ./ 100;
+lines!(ax2, fluxes.longwave_up, pᵢ ./ 100;
        color = :firebrick, linewidth = 2, label = "upwelling")
-lines!(ax2, fluxes.longwave_down, p_i ./ 100;
+lines!(ax2, fluxes.longwave_down, pᵢ ./ 100;
        color = :steelblue4, linewidth = 2, label = "downwelling")
-axislegend(ax2; position = :lt, framevisible = false)
+axislegend(ax2; position = :rt, framevisible = false)
 fig
 ```
 
@@ -97,7 +98,7 @@ The complete script, including the shortwave leg, is
 
 ## Where to go next
 
-- Examples: [single-column radiation](single_column.md), the
+- Examples: [single-column analytical radiation](single_column.md), the
   [staged ecCKD column](generated/02_staged_ecckd_column.md),
   [CO₂ forcing with ecCKD](generated/03_co2_forcing.md), and
   [ecCKD vs RRTMGP](generated/04_rrtmgp_comparison.md).

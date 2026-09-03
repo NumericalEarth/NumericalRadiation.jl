@@ -12,9 +12,9 @@
 # ## One physical column, two gas representations
 #
 # The shared definition is the physical state: pressures, temperatures, and
-# per-gas **volume mixing ratios relative to dry air** (RRTMGP's native
-# convention, established by its `compute_col_gas_kernel!`). RRTMGP consumes
-# the VMRs directly; the ecCKD path consumes **layer molar amounts in
+# per-gas **dry-air volume mixing ratios** ``χ`` (RRTMGP's native convention,
+# established by its `compute_col_gas_kernel!`). RRTMGP consumes the mixing
+# ratios directly; the ecCKD path consumes **layer molar amounts in
 # mol m⁻²**, so the conversion between the two representations is written out
 # explicitly below and cross-checked against RRTMGP's own column computation.
 
@@ -24,35 +24,38 @@ using ClimaComms     # RRTMGP adapter extension trigger …
 using RRTMGP         # … and RRTMGP itself
 using Printf
 
-nlayers = 48
-p_i = collect(range(2_000.0, 101_325.0; length = nlayers + 1))   # Pa, TOA first
-p_layers = 0.5 .* (p_i[1:end-1] .+ p_i[2:end])
+# The column: ``N`` layers with interface pressures ``pᵢ`` (Pa, top of
+# atmosphere first), layer pressures ``p``, an idealized capped lapse rate,
+# and analytic moisture and ozone mixing-ratio profiles:
 
-Tsfc = 300.0
-T_layers = clamp.(Tsfc .- 65.0 .* (1 .- (p_layers ./ 101325.0) .^ 0.286), 200.0, Tsfc)
-T_interfaces = clamp.(Tsfc .- 65.0 .* (1 .- (p_i ./ 101325.0) .^ 0.286), 200.0, Tsfc)
+N  = 48
+pᵢ = collect(range(2_000, 101_325; length = N + 1))
+p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
-vmr_h2o = @. 0.015 * (p_layers / 101325.0)^3 + 3.0e-6   # moist below, dry aloft
-vmr_o3  = @. 3.0e-8 + 5.0e-6 * (2_000.0 / p_layers)     # crude ozone increase aloft
-vmr_co2 = 420.0e-6
-vmr_ch4 = 1.8e-6
-vmr_n2o = 330.0e-9
+Tₛ = 300
+T  = clamp.(Tₛ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tₛ)
+Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
+
+χH₂O = @. 0.015 * (p / 101_325)^3 + 3e-6      # moist below, dry aloft
+χO₃  = @. 3e-8 + 5e-6 * (2_000 / p)           # crude ozone increase aloft
+χCO₂ = 420e-6
+χCH₄ = 1.8e-6
+χN₂O = 330e-9
 nothing #hide
 
-# The hydrostatic relation gives the dry-air molar amount of each layer. With
-# `vmr` relative to dry air, the layer's mass per area is
-# ``n_\mathrm{dry} (M_\mathrm{dry} + \mathrm{vmr}_{\mathrm{H_2O}} M_{\mathrm{H_2O}})``,
-# so (dry-air molar-mass convention, matching RRTMGP):
+# The hydrostatic relation gives the dry-air molar amount ``nᵈ`` of each
+# layer. With ``χ`` relative to dry air, the layer's mass per area is
+# ``nᵈ (m^d + χ_{H₂O}\, m^v)``, so (dry-air molar-mass convention, matching
+# RRTMGP):
 
-const GRAVITY = 9.80665        # m s⁻²
-const M_DRY = 0.028964         # kg mol⁻¹
-const M_H2O = 0.018016         # kg mol⁻¹
+g  = 9.80665         # m s⁻²
+mᵈ = 0.028964        # kg mol⁻¹
+mᵛ = 0.018016        # kg mol⁻¹
 
-dry_layer_amounts(vmr_h2o, p_i) =
-    [(p_i[k + 1] - p_i[k]) / (GRAVITY * (M_DRY + M_H2O * vmr_h2o[k]))
-     for k in 1:(length(p_i) - 1)]
+dry_air_amounts(χH₂O, pᵢ) =
+    [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
 
-n_dry = dry_layer_amounts(vmr_h2o, p_i)                  # mol m⁻²
+nᵈ = dry_air_amounts(χH₂O, pᵢ)                # mol m⁻²
 nothing #hide
 
 # Each representation gets its own `ColumnAtmosphere`. Gas-set parity needs
@@ -67,26 +70,30 @@ nothing #hide
 # surfaces emit as blackbodies.
 
 ecckd_atmosphere = ColumnAtmosphere(;
-    pressure_layers = p_layers, pressure_interfaces = p_i,
-    temperature_layers = T_layers, temperature_interfaces = T_interfaces,
-    gases = (composite = n_dry,
-             h2o = vmr_h2o .* n_dry,
-             o3 = vmr_o3 .* n_dry,
-             co2 = vmr_co2 .* n_dry,
-             ch4 = vmr_ch4 .* n_dry,
-             n2o = vmr_n2o .* n_dry,
-             cfc11 = 0.0,
-             cfc12 = 0.0),
-    surface = (temperature = Tsfc,),
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = T,
+    temperature_interfaces = Tᵢ,
+    gases = (composite = nᵈ,
+             h2o = χH₂O .* nᵈ,
+             o3 = χO₃ .* nᵈ,
+             co2 = χCO₂ .* nᵈ,
+             ch4 = χCH₄ .* nᵈ,
+             n2o = χN₂O .* nᵈ,
+             cfc11 = 0,
+             cfc12 = 0),
+    surface = (temperature = Tₛ,),
     geometry = (cos_zenith = 0.5,))
 
 rrtmgp_atmosphere = ColumnAtmosphere(;
-    pressure_layers = p_layers, pressure_interfaces = p_i,
-    temperature_layers = T_layers, temperature_interfaces = T_interfaces,
-    gases = (h2o = vmr_h2o, o3 = vmr_o3, co2 = vmr_co2,
-             ch4 = vmr_ch4, n2o = vmr_n2o,
-             o2 = 0.20946, n2 = 0.78084, co = 0.0),
-    surface = (temperature = Tsfc,),
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = T,
+    temperature_interfaces = Tᵢ,
+    gases = (h2o = χH₂O, o3 = χO₃, co2 = χCO₂,
+             ch4 = χCH₄, n2o = χN₂O,
+             o2 = 0.20946, n2 = 0.78084, co = 0),
+    surface = (temperature = Tₛ,),
     geometry = (cos_zenith = 0.5,))
 nothing #hide
 
@@ -95,34 +102,37 @@ nothing #hide
 # The adapter types live in the `NumericalRadiationRRTMGPExt` package
 # extension:
 
-EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
-rrtmgp_model = EXT.RRTMGPClearSkyModel(Float64)
-rrtmgp_boundary = EXT.RRTMGPBoundaryConditions(surface_temperature = Tsfc,
-                                               surface_emissivity = 1.0,
-                                               surface_albedo = 0.0,
-                                               toa_shortwave_down = 0.0,   # longwave-only page
-                                               cos_zenith = 0.5)
+rrtmgp_extension = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
+rrtmgp_model = rrtmgp_extension.RRTMGPClearSkyModel(Float64)
+rrtmgp_boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
+    surface_temperature = Tₛ,
+    surface_emissivity = 1,
+    surface_albedo = 0,
+    toa_shortwave_down = 0,   # longwave-only page
+    cos_zenith = 0.5)
 workspace = radiation_workspace(rrtmgp_model, rrtmgp_atmosphere)
-rrtmgp_fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
-                                longwave_down = zeros(nlayers + 1),
-                                shortwave_up = zeros(nlayers + 1),
-                                shortwave_down = zeros(nlayers + 1))
+rrtmgp_fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                                longwave_down = zeros(N + 1),
+                                shortwave_up = zeros(N + 1),
+                                shortwave_down = zeros(N + 1))
 radiative_fluxes!(rrtmgp_fluxes, rrtmgp_model, rrtmgp_atmosphere,
                   rrtmgp_boundary, workspace)
 nothing #hide
 
 # Before using the fluxes, verify the representation bridge: the dry-air
-# amounts computed by `dry_layer_amounts` must equal the dry column RRTMGP
-# itself computed from the same pressures and VMRs (RRTMGP stores
-# molecules cm⁻², and its levels are bottom-up, hence the unit factor and the
-# index reversal):
+# amounts computed by `dry_air_amounts` must equal the dry column RRTMGP
+# itself computed from the same pressures and mixing ratios (RRTMGP stores
+# molecules cm⁻², and its levels are bottom-up, hence the unit factor with
+# Avogadro's number ``Nᴬ`` and the index reversal):
 
-AVOGADRO = 6.02214076e23
-col_dry_rrtmgp = reverse(workspace.atmospheric_state.layerdata[1, :, 1])
-col_dry_ours = n_dry .* AVOGADRO ./ 1e4
-maxrel = maximum(abs.(col_dry_rrtmgp .- col_dry_ours) ./ col_dry_ours)
-@assert maxrel < 1e-6
-maxrel
+Nᴬ = 6.02214076e23
+
+molecular_column_rrtmgp = reverse(workspace.atmospheric_state.layerdata[1, :, 1])
+molecular_column_ecckd = nᵈ .* Nᴬ ./ 1e4
+relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./
+                         molecular_column_ecckd)
+@assert relative_error < 1e-6
+relative_error
 
 # ## ecCKD leg
 
@@ -130,21 +140,22 @@ intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
 gas_optics = read_official_ecckd_gas_optics("32x32"; gas_names = intended_gases)
 @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
 
-ng_lw = length(gas_optics.longwave_weights)
-ng_sw = length(gas_optics.shortwave_weights)
-longwave = LongwaveOpticalProperties(zeros(ng_lw, nlayers), zeros(ng_lw, nlayers);
-                                     source_top = zeros(ng_lw, nlayers),
-                                     source_bottom = zeros(ng_lw, nlayers),
-                                     weights = zeros(ng_lw))
-shortwave = ShortwaveOpticalProperties(zeros(ng_sw, nlayers); weights = zeros(ng_sw))
-ecckd_fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
-                               longwave_down = zeros(nlayers + 1),
-                               shortwave_up = zeros(nlayers + 1),
-                               shortwave_down = zeros(nlayers + 1))
+longwave_gpoints = length(gas_optics.longwave_weights)
+shortwave_gpoints = length(gas_optics.shortwave_weights)
+longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
+                                     source_top = zeros(longwave_gpoints, N),
+                                     source_bottom = zeros(longwave_gpoints, N),
+                                     weights = zeros(longwave_gpoints))
+shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+                                       weights = zeros(shortwave_gpoints))
+ecckd_fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                               longwave_down = zeros(N + 1),
+                               shortwave_up = zeros(N + 1),
+                               shortwave_down = zeros(N + 1))
 optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
 σ = 5.670374419e-8
 radiative_fluxes!(ecckd_fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
-                  LongwaveBoundaryConditions(surface_longwave_up = σ * Tsfc^4))
+                  LongwaveBoundaryConditions(surface_longwave_up = σ * Tₛ^4))
 nothing #hide
 
 # ## Longwave-only heating rates
@@ -155,12 +166,12 @@ nothing #hide
 @assert all(iszero, rrtmgp_fluxes.shortwave_up)
 @assert all(iszero, rrtmgp_fluxes.shortwave_down)
 
-heating_ecckd = zeros(nlayers)
-heating_rrtmgp = zeros(nlayers)
-heating_rates!(heating_ecckd, ecckd_fluxes, ecckd_atmosphere;
-               gravity = GRAVITY, heat_capacity = 1004.0)
-heating_rates!(heating_rrtmgp, rrtmgp_fluxes, rrtmgp_atmosphere;
-               gravity = GRAVITY, heat_capacity = 1004.0)
+ecckd_heating = zeros(N)
+rrtmgp_heating = zeros(N)
+heating_rates!(ecckd_heating, ecckd_fluxes, ecckd_atmosphere;
+               gravity = g, heat_capacity = 1004)
+heating_rates!(rrtmgp_heating, rrtmgp_fluxes, rrtmgp_atmosphere;
+               gravity = g, heat_capacity = 1004)
 
 @printf("OLR, ecCKD 32×32:   %7.2f W m⁻²\n", ecckd_fluxes.longwave_up[1])
 @printf("OLR, RRTMGP:        %7.2f W m⁻²\n", rrtmgp_fluxes.longwave_up[1])
@@ -170,38 +181,49 @@ heating_rates!(heating_rrtmgp, rrtmgp_fluxes, rrtmgp_atmosphere;
 # ## The comparison, panel by panel
 #
 # Left: both flux profiles. Middle: the signed flux differences. Right: the
-# signed heating-rate difference. Units are homogeneous within each panel.
+# signed heating-rate difference. Units are homogeneous within each panel,
+# and the shared legend encodes direction by color and model by line style.
 
 using CairoMakie
 
-fig = Figure(size = (1000, 420))
+fig = Figure(size = (1000, 460))
 
-ax1 = Axis(fig[1, 1]; xlabel = "longwave flux (W m⁻²)",
-           ylabel = "pressure (hPa)", yreversed = true, title = "Fluxes")
-lines!(ax1, ecckd_fluxes.longwave_up, p_i ./ 100;
-       color = :firebrick, linewidth = 2, label = "up, ecCKD")
-lines!(ax1, rrtmgp_fluxes.longwave_up, p_i ./ 100;
-       color = :firebrick, linewidth = 2, linestyle = :dash, label = "up, RRTMGP")
-lines!(ax1, ecckd_fluxes.longwave_down, p_i ./ 100;
-       color = :steelblue4, linewidth = 2, label = "down, ecCKD")
-lines!(ax1, rrtmgp_fluxes.longwave_down, p_i ./ 100;
-       color = :steelblue4, linewidth = 2, linestyle = :dash, label = "down, RRTMGP")
-axislegend(ax1; position = :lt, framevisible = false)
+pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
+
+ax1 = Axis(fig[1, 1]; xlabel = "Longwave flux (W m⁻²)",
+           ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
+           yticks = (pressure_ticks, string.(pressure_ticks)), title = "Fluxes")
+lines!(ax1, ecckd_fluxes.longwave_up, pᵢ ./ 100;
+       color = :firebrick, linewidth = 2)
+lines!(ax1, rrtmgp_fluxes.longwave_up, pᵢ ./ 100;
+       color = :firebrick, linewidth = 2, linestyle = :dash)
+lines!(ax1, ecckd_fluxes.longwave_down, pᵢ ./ 100;
+       color = :steelblue4, linewidth = 2)
+lines!(ax1, rrtmgp_fluxes.longwave_down, pᵢ ./ 100;
+       color = :steelblue4, linewidth = 2, linestyle = :dash)
 
 ax2 = Axis(fig[1, 2]; xlabel = "Δ flux, ecCKD − RRTMGP (W m⁻²)",
-           ylabel = "pressure (hPa)", yreversed = true, title = "Flux difference")
-vlines!(ax2, [0.0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax2, ecckd_fluxes.longwave_up .- rrtmgp_fluxes.longwave_up, p_i ./ 100;
-       color = :firebrick, linewidth = 2, label = "up")
-lines!(ax2, ecckd_fluxes.longwave_down .- rrtmgp_fluxes.longwave_down, p_i ./ 100;
-       color = :steelblue4, linewidth = 2, label = "down")
-axislegend(ax2; position = :rb, framevisible = false)
+           ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
+           yticks = (pressure_ticks, string.(pressure_ticks)), title = "Flux difference")
+vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
+lines!(ax2, ecckd_fluxes.longwave_up .- rrtmgp_fluxes.longwave_up, pᵢ ./ 100;
+       color = :firebrick, linewidth = 2)
+lines!(ax2, ecckd_fluxes.longwave_down .- rrtmgp_fluxes.longwave_down, pᵢ ./ 100;
+       color = :steelblue4, linewidth = 2)
 
-ax3 = Axis(fig[1, 3]; xlabel = "Δ heating rate, ecCKD − RRTMGP (K day⁻¹)",
-           ylabel = "pressure (hPa)", yreversed = true, title = "Heating difference")
-vlines!(ax3, [0.0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax3, (heating_ecckd .- heating_rrtmgp) .* 86400, p_layers ./ 100;
+ax3 = Axis(fig[1, 3]; xlabel = "ΔṪ, ecCKD − RRTMGP (K day⁻¹)",
+           ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
+           yticks = (pressure_ticks, string.(pressure_ticks)), title = "Heating difference")
+vlines!(ax3, [0]; color = (:black, 0.4), linestyle = :dash)
+lines!(ax3, (ecckd_heating .- rrtmgp_heating) .* 86_400, p ./ 100;
        color = :darkorange3, linewidth = 2)
+
+legend_entries = [LineElement(color = :firebrick, linewidth = 2),
+                  LineElement(color = :steelblue4, linewidth = 2),
+                  LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
+                  LineElement(color = :gray30, linewidth = 2, linestyle = :dash)]
+Legend(fig[2, 1:3], legend_entries, ["up", "down", "ecCKD", "RRTMGP"];
+       orientation = :horizontal, framevisible = false)
 
 save("rrtmgp_comparison.png", fig); nothing #hide
 

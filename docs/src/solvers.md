@@ -6,7 +6,7 @@ properties. They do not know where the optics came from: the same
 tables, analytic bands, or a comparison model. All solvers write caller-owned
 [`RadiativeFluxes`](@ref) arrays and follow the package conventions: arrays
 are ordered top-to-bottom, with pressure increasing downward (index 1 = top of
-atmosphere); interface flux arrays have `nlayers + 1` entries; fluxes are in
+atmosphere); interface flux arrays have `N + 1` entries; fluxes are in
 W m⁻².
 
 ## Data flow
@@ -21,40 +21,21 @@ ColumnAtmosphere ── optical_properties! ──▶ LongwaveOpticalProperties
                                               RadiativeFluxes ── heating_rates! ──▶ K s⁻¹
 ```
 
-A condensed version of `examples/ecckd_column.jl` (gas entries are layer
-absorber amounts — column amounts in mol m⁻², i.e. mole fraction times the
-layer air column):
+One radiation update is four staged calls on caller-owned state:
 
-```julia
-using NumericalRadiation, NCDatasets
+1. [`optical_properties!`](@ref) fills the g-point optics from the gas-optics
+   model and the atmosphere;
+2. [`radiative_fluxes!`](@ref) with [`CloudlessLongwave`](@ref) solves the
+   longwave stream against its boundary conditions;
+3. [`radiative_fluxes!`](@ref) with [`CloudlessShortwave`](@ref) does the
+   same for the shortwave stream;
+4. [`heating_rates!`](@ref) converts the flux convergence into the
+   temperature tendency `Ṫ` (K s⁻¹).
 
-gas_optics = read_official_ecckd_gas_optics("32x32";
-                                            gas_names = (:composite, :h2o, :co2))
-
-atmosphere = ColumnAtmosphere(; pressure_layers, pressure_interfaces,
-                              temperature_layers, temperature_interfaces,
-                              gases = (composite = air_column,       # mol m⁻²
-                                       h2o = x_h2o .* air_column,
-                                       co2 = 420.0e-6 .* air_column),
-                              surface = (temperature = 300.0,),
-                              geometry = (cos_zenith = 0.55,))
-
-ng_lw = length(gas_optics.longwave_weights)
-longwave = LongwaveOpticalProperties(zeros(ng_lw, nlayers), zeros(ng_lw, nlayers);
-                                     source_top = zeros(ng_lw, nlayers),
-                                     source_bottom = zeros(ng_lw, nlayers),
-                                     weights = zeros(ng_lw))
-ng_sw = length(gas_optics.shortwave_weights)
-shortwave = ShortwaveOpticalProperties(zeros(ng_sw, nlayers);
-                                       rayleigh_optical_depth = zeros(ng_sw, nlayers),
-                                       scattering_asymmetry = zeros(ng_sw, nlayers),
-                                       weights = zeros(ng_sw))
-
-optical_properties!(longwave, shortwave, gas_optics, atmosphere)
-radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere, lw_boundary)
-radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere, sw_boundary)
-heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
-```
+The complete, executed construction of the atmosphere, work arrays, and
+boundary conditions is the [staged ecCKD column
+example](generated/02_staged_ecckd_column.md); `examples/ecckd_column.jl` is
+the same workflow against official model files.
 
 ## Cloudless longwave
 
@@ -147,7 +128,7 @@ separate from the optical depths:
 - `cloud_fraction` — one value per layer; never used to weaken cloudy-region
   optical depth before transport;
 - `overlap_parameter` — the ecRad/Hogan–Illingworth ``\alpha`` between each
-  pair of adjacent layers (`nlayers - 1` values, default 1);
+  pair of adjacent layers (`N - 1` values, default 1);
 - `fractional_std` — the fractional standard deviation of in-cloud condensate,
   used by the Tripleclouds split (default 1).
 

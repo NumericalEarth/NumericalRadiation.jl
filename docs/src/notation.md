@@ -37,13 +37,30 @@ pressure-normalized `σ = p / pₛ` convention inherited from SpeedyWeather.
 
 | Math | Code | Description |
 |:-----|:-----|:------------|
-| `σₖ` at midpoints | `σ_full` | Length `nlayers` |
-| `σₖ₊½` at interfaces | `σ_half` | Length `nlayers + 1`, monotonic from 0 (TOA) to 1 (surface) |
+| `σₖ` at midpoints | `σ_full` | Length `N` |
+| `σₖ₊½` at interfaces | `σ_half` | Length `N + 1`, monotonic from 0 (TOA) to 1 (surface) |
 | `Δσₖ` | `σ_thick` | Layer thickness, `= diff(σ_half)` |
 
 Note: the package uses `σ` for the vertical coordinate *and* `σ` in context
 for the Stefan–Boltzmann constant (e.g. `PhysicalConstants.stefan_boltzmann`).
 Local variables in the solvers disambiguate with `σ_SB`.
+
+## Column-example symbols
+
+The executable documentation examples share one vocabulary for column state,
+defined at first use on each page:
+
+| Symbol | Meaning |
+|:-------|:--------|
+| `N` | Number of layers |
+| `pᵢ`, `p` | Interface and layer pressures (Pa), top-down, increasing downward |
+| `Tᵢ`, `T`, `Tₛ` | Interface, layer, and surface temperatures (K) |
+| `χH₂O`, `χO₃`, `χCO₂`, … | Dry-air volume mixing ratios (mole fractions relative to dry air) |
+| `nᵈ` | Dry-air molar amount per layer (mol m⁻²); gas amounts are `χ .* nᵈ` |
+| `Ṫ` | Temperature tendency (K s⁻¹); example plots show `Ṫ * 86_400` in K day⁻¹ |
+| `mᵈ`, `mᵛ` | Dry-air and water molar masses (kg mol⁻¹) |
+| `μ₀` | Cosine of the solar zenith angle |
+| `longwave_gpoints`, `shortwave_gpoints` | g-point counts of the loaded gas-optics model |
 
 ## Longwave spectroscopy
 

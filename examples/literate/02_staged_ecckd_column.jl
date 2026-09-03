@@ -1,4 +1,4 @@
-# # Staged ecCKD Column
+# # Staged ecCKD column
 #
 # This tutorial runs the staged runtime API end-to-end. It uses a tiny
 # synthetic tabulated gas-optics model so the documentation build does not need
@@ -8,47 +8,53 @@
 using CairoMakie
 using NumericalRadiation
 
-const sigma_SB = 5.670374419e-8
-const seconds_per_day = 86_400.0
+σ = 5.670374419e-8   # Stefan-Boltzmann constant, W m⁻² K⁻⁴
+day = 86_400         # s
 
 # ## A top-down column
 #
-# Interface pressure increases from top of atmosphere to surface. Gas values in
-# this minimal staged model are layer path amounts.
+# The ``N``-layer column has interface pressures ``pᵢ`` increasing from top
+# of atmosphere to surface, layer pressures ``p`` at their midpoints, and
+# layer and interface temperatures ``T`` and ``Tᵢ``. Gas values in this
+# minimal staged model are layer path amounts.
 
-nlayers = 24
-pressure_interfaces = collect(range(10_000.0, 100_000.0; length = nlayers + 1))
-pressure_layers = 0.5 .* (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end])
-temperature_layers = collect(range(220.0, 295.0; length = nlayers))
-temperature_interfaces = collect(range(215.0, 300.0; length = nlayers + 1))
+N  = 24
+pᵢ = collect(range(10_000, 100_000; length = N + 1))
+p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
+T  = collect(range(220, 295; length = N))
+Tᵢ = collect(range(215, 300; length = N + 1))
 
 atmosphere = ColumnAtmosphere(
-    pressure_layers = pressure_layers,
-    pressure_interfaces = pressure_interfaces,
-    temperature_layers = temperature_layers,
-    temperature_interfaces = temperature_interfaces,
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = T,
+    temperature_interfaces = Tᵢ,
     gases = (
-        h2o = collect(range(0.2, 2.2; length = nlayers)),
-        co2 = fill(1.0, nlayers),
+        h2o = collect(range(0.2, 2.2; length = N)),
+        co2 = fill(1, N),
     ),
-    surface = (temperature = temperature_interfaces[end],),
+    surface = (temperature = Tᵢ[end],),
     geometry = (cos_zenith = 0.55,),
 )
 
 # ## A small tabulated gas-optics model
+#
+# The element type is chosen once. The constructor stores the grids exactly
+# as given (it does not convert them), so they are built as `FT` vectors:
 
-pressure_grid = [10_000.0, 100_000.0]
-temperature_grid = [220.0, 300.0]
+FT = Float64
+pressure_grid = FT[10_000, 100_000]
+temperature_grid = FT[220, 300]
 gas_names = (:h2o, :co2)
 
 function synthetic_absorption(ng, ngas, pressure_grid, temperature_grid; scale)
-    table = zeros(Float64, ng, ngas, length(pressure_grid), length(temperature_grid))
+    table = zeros(FT, ng, ngas, length(pressure_grid), length(temperature_grid))
     for ig in 1:ng, j in 1:ngas, ip in eachindex(pressure_grid), it in eachindex(temperature_grid)
         pressure_factor = pressure_grid[ip] / maximum(pressure_grid)
         temperature_factor = temperature_grid[it] / maximum(temperature_grid)
         table[ig, j, ip, it] =
-            scale * ig * (0.7 + 0.5j) * (0.4 + pressure_factor) *
-            (0.8 + 0.3temperature_factor)
+            scale * ig * (0.7 + 0.5 * j) * (0.4 + pressure_factor) *
+            (0.8 + 0.3 * temperature_factor)
     end
     return table
 end
@@ -59,7 +65,7 @@ model = EcCKDTabulatedGasOpticsModel(
     temperature_grid = temperature_grid,
     longwave_absorption = synthetic_absorption(2, 2, pressure_grid, temperature_grid; scale = 0.010),
     shortwave_absorption = synthetic_absorption(2, 2, pressure_grid, temperature_grid; scale = 0.006),
-    shortwave_rayleigh_molar_scattering = [1.0e-7, 2.0e-7],
+    shortwave_rayleigh_molar_scattering = [1e-7, 2e-7],
     longwave_weights = [0.45, 0.55],
     shortwave_weights = [0.55, 0.45],
 )
@@ -67,27 +73,27 @@ model = EcCKDTabulatedGasOpticsModel(
 # ## Caller-owned work arrays
 
 longwave = LongwaveOpticalProperties(
-    zeros(2, nlayers),
-    zeros(2, nlayers);
-    source_top = zeros(2, nlayers),
-    source_bottom = zeros(2, nlayers),
+    zeros(2, N),
+    zeros(2, N);
+    source_top = zeros(2, N),
+    source_bottom = zeros(2, N),
     weights = zeros(2),
 )
 
 shortwave = ShortwaveOpticalProperties(
-    zeros(2, nlayers);
-    rayleigh_optical_depth = zeros(2, nlayers),
-    scattering_asymmetry = zeros(2, nlayers),
+    zeros(2, N);
+    rayleigh_optical_depth = zeros(2, N),
+    scattering_asymmetry = zeros(2, N),
     weights = zeros(2),
 )
 
 optical_properties!(longwave, shortwave, model, atmosphere)
 
 fluxes = RadiativeFluxes(
-    longwave_up = zeros(nlayers + 1),
-    longwave_down = zeros(nlayers + 1),
-    shortwave_up = zeros(nlayers + 1),
-    shortwave_down = zeros(nlayers + 1),
+    longwave_up = zeros(N + 1),
+    longwave_down = zeros(N + 1),
+    shortwave_up = zeros(N + 1),
+    shortwave_down = zeros(N + 1),
 )
 
 radiative_fluxes!(
@@ -96,8 +102,8 @@ radiative_fluxes!(
     longwave,
     atmosphere,
     LongwaveBoundaryConditions(
-        surface_longwave_up = sigma_SB * atmosphere.surface.temperature^4,
-        surface_albedo = 0.0,
+        surface_longwave_up = σ * atmosphere.surface.temperature^4,
+        surface_albedo = 0,
     ),
 )
 
@@ -107,14 +113,14 @@ radiative_fluxes!(
     shortwave,
     atmosphere,
     ShortwaveBoundaryConditions(
-        toa_shortwave_down = 1361.0 * atmosphere.geometry.cos_zenith,
+        toa_shortwave_down = 1361 * atmosphere.geometry.cos_zenith,
         surface_albedo = 0.15,
     ),
 )
 
-heating = zeros(nlayers)
-heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
-heating_day = seconds_per_day .* heating
+Ṫ = zeros(N)
+heating_rates!(Ṫ, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004)
+daily_heating_rate = day .* Ṫ
 
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
            fluxes.shortwave_down .- fluxes.shortwave_up
@@ -122,8 +128,8 @@ net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
 println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m⁻²")
 println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m⁻²")
 println("Heating range:    ",
-        round(minimum(heating_day); digits = 3), " to ",
-        round(maximum(heating_day); digits = 3), " K day⁻¹")
+        round(minimum(daily_heating_rate); digits = 3), " to ",
+        round(maximum(daily_heating_rate); digits = 3), " K day⁻¹")
 
 # ## Visualization
 
@@ -133,17 +139,17 @@ ax_flux = Axis(fig[1, 1],
     xlabel = "Net downward flux (W m⁻²)",
     ylabel = "Pressure (hPa)",
     title = "Interface flux")
-lines!(ax_flux, net_flux, pressure_interfaces ./ 100; linewidth = 2)
-scatter!(ax_flux, net_flux, pressure_interfaces ./ 100; markersize = 5)
+lines!(ax_flux, net_flux, pᵢ ./ 100; linewidth = 2)
+scatter!(ax_flux, net_flux, pᵢ ./ 100; markersize = 5)
 ax_flux.yreversed = true
 
 ax_heat = Axis(fig[1, 2],
     xlabel = "Heating rate (K day⁻¹)",
     ylabel = "Pressure (hPa)",
     title = "Layer heating")
-lines!(ax_heat, heating_day, pressure_layers ./ 100; linewidth = 2)
-scatter!(ax_heat, heating_day, pressure_layers ./ 100; markersize = 5)
-vlines!(ax_heat, [0.0]; color = (:gray50, 0.5), linestyle = :dash)
+lines!(ax_heat, daily_heating_rate, p ./ 100; linewidth = 2)
+scatter!(ax_heat, daily_heating_rate, p ./ 100; markersize = 5)
+vlines!(ax_heat, [0]; color = (:gray50, 0.5), linestyle = :dash)
 ax_heat.yreversed = true
 
 function docs_asset_dir()
