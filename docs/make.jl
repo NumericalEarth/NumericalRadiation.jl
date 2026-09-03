@@ -15,6 +15,7 @@ for example in (
     "02_staged_ecckd_column.jl",
     "03_co2_forcing.jl",
     "04_rrtmgp_comparison.jl",
+    "05_manabe_rce.jl",
 )
     Literate.markdown(
         joinpath(LITERATE_ROOT, example),
@@ -41,6 +42,7 @@ makedocs(
             "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
             "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
             "Correlated-k model spread" => "generated/04_rrtmgp_comparison.md",
+            "Manabe radiative-convective equilibrium" => "generated/05_manabe_rce.md",
         ],
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",

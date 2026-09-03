@@ -60,6 +60,10 @@ defined at first use on each page:
 | `Ṫ` | Temperature tendency (K s⁻¹); example plots show `Ṫ * 86_400` in K day⁻¹ |
 | `mᵈ`, `mᵛ` | Dry-air and water molar masses (kg mol⁻¹) |
 | `μ₀` | Cosine of the solar zenith angle |
+| `Rᵈ` | Dry-air gas constant (J kg⁻¹ K⁻¹) |
+| `S₀` | Prescribed TOA downwelling shortwave flux (W m⁻²) |
+| `Γ` | Critical lapse rate (K m⁻¹) |
+| `Cₛ` | Surface slab heat capacity (J m⁻² K⁻¹) |
 | `longwave_gpoints`, `shortwave_gpoints` | g-point counts of the loaded gas-optics model |
 
 ## Longwave spectroscopy
