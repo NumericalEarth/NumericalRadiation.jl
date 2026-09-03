@@ -115,9 +115,9 @@ For spectral (multi-g) optics such as the tabulated ecCKD models,
 `surface_longwave_up` must be a length-`ng` vector in the same
 per-unit-weight convention as the optics' Planck sources — build it with
 [`surface_longwave_emission`](@ref). A scalar is interpreted as
-spectrally-gray emission (every g point emits the same flux), which is
-physically wrong for tabulated ecCKD models by ≈ 50 W m⁻² of outgoing
-longwave on Earth-like columns.
+spectrally-gray emission (every g point emits the same flux), a gray
+approximation that does not reproduce a tabulated model's Planck spectrum
+and may bias outgoing longwave fluxes.
 
 Fields are
 

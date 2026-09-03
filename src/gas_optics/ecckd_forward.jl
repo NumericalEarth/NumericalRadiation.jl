@@ -588,10 +588,13 @@ scaled by `emissivity`, in the same per-unit-weight flux convention as the
 model's Planck source tables. Pass the result as `surface_longwave_up` in
 `LongwaveBoundaryConditions`.
 
-For multi-g spectral models a scalar ``σT⁴`` boundary is spectrally gray:
-every g point then emits the same flux, misallocating surface emission from
-transparent window g points into opaque ones (≈ 50 W m⁻² of outgoing
-longwave for the official 32-g models on an Earth-like column).
+For multi-g spectral models a scalar ``σT⁴`` boundary is a gray
+approximation: it does not reproduce the model's tabulated Planck spectrum
+across g points and may bias outgoing longwave fluxes.
+
+This is a host-side setup utility: it returns a host `Vector` and indexes
+the model's source table on the host. For device workflows, build the
+boundary before adapting arrays to the device.
 """
 function surface_longwave_emission(model::EcCKDTabulatedGasOpticsModel{FT},
                                    temperature;

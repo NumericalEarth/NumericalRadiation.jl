@@ -8,8 +8,8 @@
 # narrow-band model, and RRTMGP (256 g points, through the package's
 # `NumericalRadiationRRTMGPExt` adapter) — three members of one model class
 # on equal footing. Nothing here ranks a model or measures error against a
-# truth; the *spread itself* is the message: it is the uncertainty
-# contributed by the k-reduction choice on this column.
+# truth; the *spread itself* is the message — a measured correlated-k
+# implementation spread on this column.
 #
 # ## One physical column, two gas representations
 #
@@ -247,5 +247,6 @@ save("rrtmgp_comparison.png", fig); nothing #hide
 # transfer implementation — each member runs both as a whole — and nothing
 # here ranks a member or measures an error against a reference; a
 # line-by-line benchmark would be required for that. What the spread *does*
-# measure is how much the k-reduction choice alone moves clear-sky longwave
-# fluxes and heating rates on this column.
+# measure is how much choosing among these correlated-k implementations —
+# tables, training, spectroscopy, and transfer together — moves clear-sky
+# longwave fluxes and heating rates on this column.
