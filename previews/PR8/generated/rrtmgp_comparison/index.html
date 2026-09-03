@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Correlated-k model spread · NumericalRadiation.jl</title><meta name="title" content="Correlated-k model spread · NumericalRadiation.jl"/><meta property="og:title" content="Correlated-k model spread · NumericalRadiation.jl"/><meta property="twitter:title" content="Correlated-k model spread · NumericalRadiation.jl"/><meta name="description" content="Documentation for NumericalRadiation.jl."/><meta property="og:description" content="Documentation for NumericalRadiation.jl."/><meta property="twitter:description" content="Documentation for NumericalRadiation.jl."/><meta property="og:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/rrtmgp_comparison/"/><meta property="twitter:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/rrtmgp_comparison/"/><link rel="canonical" href="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/rrtmgp_comparison/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">NumericalRadiation.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../single_column/">Single-column analytical radiation</a></li><li><a class="tocitem" href="../staged_ecckd_column/">The staged interface</a></li><li><a class="tocitem" href="../co2_forcing/">CO₂ forcing with ecCKD</a></li><li class="is-active"><a class="tocitem" href>Correlated-k model spread</a><ul class="internal"><li><a class="tocitem" href="#One-physical-column,-two-gas-representations"><span>One physical column, two gas representations</span></a></li><li><a class="tocitem" href="#The-ecCKD-members"><span>The ecCKD members</span></a></li><li><a class="tocitem" href="#The-RRTMGP-member"><span>The RRTMGP member</span></a></li><li><a class="tocitem" href="#The-family,-assembled"><span>The family, assembled</span></a></li><li><a class="tocitem" href="#The-spread,-panel-by-panel"><span>The spread, panel by panel</span></a></li></ul></li><li><a class="tocitem" href="../manabe_rce/">Manabe radiative-convective equilibrium</a></li><li><a class="tocitem" href="../all_sky_cre/">All-sky cloud radiative effect</a></li></ul></li><li><span class="tocitem">Gas optics</span><ul><li><a class="tocitem" href="../../gas_optics/ecckd_files/">ecCKD files</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_runtime_workflow/">ecCKD runtime workflow</a></li><li><a class="tocitem" href="../../gas_optics/correlated_k/">Correlated-k method</a></li></ul></li><li><span class="tocitem">Solvers &amp; schemes</span><ul><li><a class="tocitem" href="../../radiative_transfer/">Radiative transfer</a></li><li><a class="tocitem" href="../../solvers/">Column solvers</a></li><li><a class="tocitem" href="../../cloud_optics/">Cloud and aerosol optics</a></li><li><a class="tocitem" href="../../longwave/">Longwave</a></li><li><a class="tocitem" href="../../shortwave/">Shortwave</a></li><li><a class="tocitem" href="../../notation/">Notation</a></li></ul></li><li><span class="tocitem">API reference</span><ul><li><a class="tocitem" href="../../api/">Overview</a></li><li><a class="tocitem" href="../../api/staged_runtime/">Staged runtime</a></li><li><a class="tocitem" href="../../api/ecckd/">ecCKD and data</a></li><li><a class="tocitem" href="../../api/column_schemes/">Column schemes</a></li><li><a class="tocitem" href="../../api/metrics/">Metrics</a></li></ul></li><li><a class="tocitem" href="../../architecture/">Architecture</a></li><li><a class="tocitem" href="../../validation/">Validation</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Correlated-k model spread</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Correlated-k model spread</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/rrtmgp_comparison.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Correlated-k-model-spread:-clear-sky-longwave"><a class="docs-heading-anchor" href="#Correlated-k-model-spread:-clear-sky-longwave">Correlated-k model spread: clear-sky longwave</a><a id="Correlated-k-model-spread:-clear-sky-longwave-1"></a><a class="docs-heading-anchor-permalink" href="#Correlated-k-model-spread:-clear-sky-longwave" title="Permalink"></a></h1><p>Every correlated-k radiation model makes a <em>k-reduction choice</em>: how many g points, what band structure, which training data. This example runs a small family of such models on one clear-sky column defined once physically and shows the spread of their longwave fluxes and heating rates. The family is the ecCKD 32-g-point FSCK model, the ecCKD 64-g-point narrow-band model, and RRTMGP (256 g points, through the package&#39;s <code>NumericalRadiationRRTMGPExt</code> adapter) — three members of one model class on equal footing. Nothing here ranks a model or measures error against a truth; the <em>spread itself</em> is the message — a measured correlated-k implementation spread on this column.</p><h2 id="One-physical-column,-two-gas-representations"><a class="docs-heading-anchor" href="#One-physical-column,-two-gas-representations">One physical column, two gas representations</a><a id="One-physical-column,-two-gas-representations-1"></a><a class="docs-heading-anchor-permalink" href="#One-physical-column,-two-gas-representations" title="Permalink"></a></h2><p>The shared definition is the physical state: pressures, temperatures, and per-gas <strong>dry-air volume mixing ratios</strong> <span>$χ$</span> (RRTMGP&#39;s native convention, established by its <code>compute_col_gas_kernel!</code>). RRTMGP consumes the mixing ratios directly; the ecCKD path consumes <strong>layer molar amounts in mol m⁻²</strong>, so the conversion between the two representations is written out explicitly below and cross-checked against RRTMGP&#39;s own column computation.</p><pre><code class="language-julia hljs">using NumericalRadiation
+using NCDatasets     # NetCDF reader extension (ecCKD files)
+using ClimaComms     # RRTMGP adapter extension trigger …
+using RRTMGP         # … and RRTMGP itself
+using Printf</code></pre><p>The column: <span>$N$</span> layers with interface pressures <span>$pᵢ$</span> (Pa, top of atmosphere first), layer pressures <span>$p$</span>, an idealized capped lapse rate, and analytic moisture and ozone mixing-ratio profiles:</p><pre><code class="language-julia hljs">N  = 48
+pᵢ = collect(range(2_000, 101_325; length = N + 1))
+p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
+
+Tₛ = 300
+T  = clamp.(Tₛ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tₛ)
+Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
+
+χH₂O = @. 0.015 * (p / 101_325)^3 + 3e-6      # moist below, dry aloft
+χO₃  = @. 3e-8 + 5e-6 * (2_000 / p)           # crude ozone increase aloft
+χCO₂ = 420e-6
+χCH₄ = 1.8e-6
+χN₂O = 330e-9</code></pre><p>The hydrostatic relation gives the dry-air molar amount <span>$nᵈ$</span> of each layer. With <span>$χ$</span> relative to dry air, the layer&#39;s mass per area is <span>$nᵈ (m^d + χ_{H₂O}\, m^v)$</span>, so (dry-air molar-mass convention, matching RRTMGP):</p><pre><code class="language-julia hljs">g  = 9.80665         # m s⁻²
+mᵈ = 0.028964        # kg mol⁻¹
+mᵛ = 0.018016        # kg mol⁻¹
+
+dry_air_amounts(χH₂O, pᵢ) =
+    [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
+
+nᵈ = dry_air_amounts(χH₂O, pᵢ)                # mol m⁻²</code></pre><p>Each representation gets its own <code>ColumnAtmosphere</code>. Gas-set parity needs care on the ecCKD side: the tabulated composite background <em>contains the reference contribution of every tabulated gas</em>, and activating a gas subtracts its reference mole fraction times the composite amount before adding the requested amount. A gas left out of <code>names</code> is therefore kept at its reference abundance, not removed. So the full tuple is activated here: CH₄ and N₂O carry the same abundances as the RRTMGP side, and the CFCs are activated with zero amount — which removes their reference contribution — because RRTMGP&#39;s clear-sky lookup has no CFC fields. Both surfaces emit as blackbodies.</p><pre><code class="language-julia hljs">ecckd_atmosphere = ColumnAtmosphere(;
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = T,
+    temperature_interfaces = Tᵢ,
+    gases = (composite = nᵈ,
+             h2o = χH₂O .* nᵈ,
+             o3 = χO₃ .* nᵈ,
+             co2 = χCO₂ .* nᵈ,
+             ch4 = χCH₄ .* nᵈ,
+             n2o = χN₂O .* nᵈ,
+             cfc11 = 0,
+             cfc12 = 0),
+    surface = (temperature = Tₛ,),
+    geometry = (cos_zenith = 0.5,))
+
+rrtmgp_atmosphere = ColumnAtmosphere(;
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = T,
+    temperature_interfaces = Tᵢ,
+    gases = (h2o = χH₂O, o3 = χO₃, co2 = χCO₂,
+             ch4 = χCH₄, n2o = χN₂O,
+             o2 = 0.20946, n2 = 0.78084, co = 0),
+    surface = (temperature = Tₛ,),
+    geometry = (cos_zenith = 0.5,))</code></pre><h2 id="The-ecCKD-members"><a class="docs-heading-anchor" href="#The-ecCKD-members">The ecCKD members</a><a id="The-ecCKD-members-1"></a><a class="docs-heading-anchor-permalink" href="#The-ecCKD-members" title="Permalink"></a></h2><p>Both official longwave models — the 32-g single-band FSCK table and the 64-g narrow-band table — run through the same staged calls. The surface boundary uses each model&#39;s own per-g Planck emission via <a href="../../api/ecckd/#NumericalRadiation.surface_longwave_emission"><code>surface_longwave_emission</code></a>; a scalar <span>$σT⁴$</span> boundary would be spectrally gray and misplace surface emission across g points.</p><pre><code class="language-julia hljs">intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+
+function ecckd_member(selector)
+    gas_optics = read_official_ecckd_gas_optics(selector; names = intended_gases)
+    @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
+    longwave_gpoints = length(gas_optics.longwave_weights)
+    shortwave_gpoints = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N),
+                                         zeros(longwave_gpoints, N);
+                                         source_top = zeros(longwave_gpoints, N),
+                                         source_bottom = zeros(longwave_gpoints, N),
+                                         weights = zeros(longwave_gpoints))
+    shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+                                           weights = zeros(shortwave_gpoints))
+    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                             longwave_down = zeros(N + 1),
+                             shortwave_up = zeros(N + 1),
+                             shortwave_down = zeros(N + 1))
+    optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
+    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
+    radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
+                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
+    Ṫ = zeros(N)
+    heating_rates!(Ṫ, fluxes, ecckd_atmosphere; gravity = g, heat_capacity = 1004)
+    return (; fluxes, Ṫ)
+end</code></pre><h2 id="The-RRTMGP-member"><a class="docs-heading-anchor" href="#The-RRTMGP-member">The RRTMGP member</a><a id="The-RRTMGP-member-1"></a><a class="docs-heading-anchor-permalink" href="#The-RRTMGP-member" title="Permalink"></a></h2><p>One member of the same family, with its own k-reduction (256 longwave g points), run through the package&#39;s adapter extension:</p><pre><code class="language-julia hljs">rrtmgp_extension = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
+
+function rrtmgp_member()
+    model = rrtmgp_extension.RRTMGPClearSkyModel(Float64)
+    boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
+        surface_temperature = Tₛ,
+        surface_emissivity = 1,
+        surface_albedo = 0,
+        toa_shortwave_down = 0,   # longwave-only page
+        cos_zenith = 0.5)
+    workspace = radiation_workspace(model, rrtmgp_atmosphere)
+    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                             longwave_down = zeros(N + 1),
+                             shortwave_up = zeros(N + 1),
+                             shortwave_down = zeros(N + 1))
+    radiative_fluxes!(fluxes, model, rrtmgp_atmosphere, boundary, workspace)
+    @assert all(iszero, fluxes.shortwave_up)
+    @assert all(iszero, fluxes.shortwave_down)
+    Ṫ = zeros(N)
+    heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere; gravity = g, heat_capacity = 1004)
+    return (; fluxes, Ṫ, workspace)
+end
+
+rrtmgp = rrtmgp_member()</code></pre><p>Before using the fluxes, verify the representation bridge: the dry-air amounts computed by <code>dry_air_amounts</code> must equal the dry column RRTMGP itself computed from the same pressures and mixing ratios (RRTMGP stores molecules cm⁻², and its levels are bottom-up, hence the unit factor with Avogadro&#39;s number <span>$Nᴬ$</span> and the index reversal):</p><pre><code class="language-julia hljs">Nᴬ = 6.02214076e23
+
+molecular_column_rrtmgp = reverse(rrtmgp.workspace.atmospheric_state.layerdata[1, :, 1])
+molecular_column_ecckd = nᵈ .* Nᴬ ./ 1e4
+relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./
+                         molecular_column_ecckd)
+@assert relative_error &lt; 1e-6
+relative_error</code></pre><pre><code class="nohighlight hljs">3.0806725697470684e-16</code></pre><h2 id="The-family,-assembled"><a class="docs-heading-anchor" href="#The-family,-assembled">The family, assembled</a><a id="The-family,-assembled-1"></a><a class="docs-heading-anchor-permalink" href="#The-family,-assembled" title="Permalink"></a></h2><pre><code class="language-julia hljs">family = [(name = &quot;ecCKD 32 (FSCK)&quot;, member = ecckd_member(&quot;32x32&quot;),
+           color = :steelblue4),
+          (name = &quot;ecCKD 64 (narrow-band)&quot;, member = ecckd_member(&quot;64x32&quot;),
+           color = :darkorange3),
+          (name = &quot;RRTMGP (256 g)&quot;, member = rrtmgp, color = :firebrick)]
+
+println(&quot;OLR by family member:&quot;)
+for f in family
+    @printf(&quot;  %-24s %7.2f W m⁻²\n&quot;, f.name, f.member.fluxes.longwave_up[1])
+end
+olr = [f.member.fluxes.longwave_up[1] for f in family]
+@printf(&quot;family spread, max − min:  %7.2f W m⁻²\n&quot;, maximum(olr) - minimum(olr))</code></pre><pre><code class="nohighlight hljs">OLR by family member:
+  ecCKD 32 (FSCK)           380.14 W m⁻²
+  ecCKD 64 (narrow-band)    379.26 W m⁻²
+  RRTMGP (256 g)            378.01 W m⁻²
+family spread, max − min:     2.14 W m⁻²
+</code></pre><h2 id="The-spread,-panel-by-panel"><a class="docs-heading-anchor" href="#The-spread,-panel-by-panel">The spread, panel by panel</a><a id="The-spread,-panel-by-panel-1"></a><a class="docs-heading-anchor-permalink" href="#The-spread,-panel-by-panel" title="Permalink"></a></h2><p>Left: up- and downwelling flux profiles for every member (color = model, solid = up, dashed = down). Right: the heating-rate profiles. The shared legend sits outside the axes.</p><pre><code class="language-julia hljs">using CairoMakie
+
+fig = Figure(size = (940, 480))
+
+pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
+
+ax1 = Axis(fig[1, 1]; xlabel = &quot;Longwave flux (W m⁻²)&quot;,
+           ylabel = &quot;Pressure (hPa)&quot;, yscale = log10, yreversed = true,
+           yticks = (pressure_ticks, string.(pressure_ticks)),
+           title = &quot;Fluxes&quot;)
+for f in family
+    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100;
+           color = f.color, linewidth = 2)
+    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100;
+           color = f.color, linewidth = 2, linestyle = :dash)
+end
+
+ax2 = Axis(fig[1, 2]; xlabel = &quot;Ṫ (K day⁻¹)&quot;,
+           ylabel = &quot;Pressure (hPa)&quot;, yscale = log10, yreversed = true,
+           yticks = (pressure_ticks, string.(pressure_ticks)),
+           title = &quot;Heating rates&quot;)
+vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
+for f in family
+    lines!(ax2, f.member.Ṫ .* 86_400, p ./ 100; color = f.color, linewidth = 2)
+end
+
+legend_entries = vcat(
+    [LineElement(color = f.color, linewidth = 2) for f in family],
+    [LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
+     LineElement(color = :gray30, linewidth = 2, linestyle = :dash)])
+Legend(fig[2, 1:2], legend_entries,
+       vcat([f.name for f in family], [&quot;up&quot;, &quot;down&quot;]);
+       orientation = :horizontal, framevisible = false)
+</code></pre><p><img src="../rrtmgp_comparison.png" alt="Correlated-k model spread"/></p><p>The printed table and the panels above are the result: on this one idealized clear-sky column, with matched pressures, temperatures, and treated-gas composition, the family members differ by the amounts shown. The experiment does not separate a member&#39;s gas-optics tables from its transfer implementation — each member runs both as a whole — and nothing here ranks a member or measures an error against a reference; a line-by-line benchmark would be required for that. What the spread <em>does</em> measure is how much choosing among these correlated-k implementations — tables, training, spectroscopy, and transfer together — moves clear-sky longwave fluxes and heating rates on this column.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../co2_forcing/">« CO₂ forcing with ecCKD</a><a class="docs-footer-nextpage" href="../manabe_rce/">Manabe radiative-convective equilibrium »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Thursday 3 September 2026 22:10">Thursday 3 September 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
