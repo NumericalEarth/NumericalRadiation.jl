@@ -40,7 +40,7 @@ makedocs(
             "Single-column analytical radiation" => "single_column.md",
             "Staged ecCKD column" => "generated/02_staged_ecckd_column.md",
             "CO₂ forcing with ecCKD" => "generated/03_co2_forcing.md",
-            "ecCKD vs RRTMGP" => "generated/04_rrtmgp_comparison.md",
+            "Correlated-k model spread" => "generated/04_rrtmgp_comparison.md",
         ],
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",

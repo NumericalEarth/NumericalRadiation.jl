@@ -8,7 +8,6 @@
 using CairoMakie
 using NumericalRadiation
 
-σ = 5.670374419e-8   # Stefan-Boltzmann constant, W m⁻² K⁻⁴
 day = 86_400         # s
 
 # ## A top-down column
@@ -102,7 +101,8 @@ radiative_fluxes!(
     longwave,
     atmosphere,
     LongwaveBoundaryConditions(
-        surface_longwave_up = σ * atmosphere.surface.temperature^4,
+        surface_longwave_up = surface_longwave_emission(model,
+                                  atmosphere.surface.temperature),
         surface_albedo = 0,
     ),
 )

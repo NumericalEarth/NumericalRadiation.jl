@@ -70,9 +70,8 @@ radiative_fluxes!(
     longwave,
     atmosphere,
     LongwaveBoundaryConditions(
-        surface_longwave_up = σ_SB * atmosphere.surface.temperature^4,
-        surface_albedo = 0.0,
-    ),
+        surface_longwave_up = surface_longwave_emission(
+            gas_optics, atmosphere.surface.temperature)),
 )
 
 radiative_fluxes!(

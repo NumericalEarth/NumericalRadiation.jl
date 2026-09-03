@@ -1,13 +1,15 @@
-# # ecCKD vs RRTMGP: clear-sky longwave
+# # Correlated-k model spread: clear-sky longwave
 #
-# This example asks one question: *for a single clear-sky column defined once
-# physically, how do the ecCKD-32×32 staged path and RRTMGP (through the
-# package's `NumericalRadiationRRTMGPExt` adapter) compare in longwave fluxes
-# and heating rates?* Both are correlated-k implementations; they differ in
-# their gas-optics tables (ecCKD's trained 32-g-point tables with a composite
-# O₂/N₂ background versus RRTMGP's lookup with explicit O₂/N₂) and in their
-# transfer implementations, so the result is an *inter-implementation
-# difference* on this column, not an error measurement for either model.
+# Every correlated-k radiation model makes a *k-reduction choice*: how many
+# g points, what band structure, which training data. This example runs a
+# small family of such models on one clear-sky column defined once
+# physically and shows the spread of their longwave fluxes and heating
+# rates. The family is the ecCKD 32-g-point FSCK model, the ecCKD 64-g-point
+# narrow-band model, and RRTMGP (256 g points, through the package's
+# `NumericalRadiationRRTMGPExt` adapter) — three members of one model class
+# on equal footing. Nothing here ranks a model or measures error against a
+# truth; the *spread itself* is the message: it is the uncertainty
+# contributed by the k-reduction choice on this column.
 #
 # ## One physical column, two gas representations
 #
@@ -97,26 +99,71 @@ rrtmgp_atmosphere = ColumnAtmosphere(;
     geometry = (cos_zenith = 0.5,))
 nothing #hide
 
-# ## RRTMGP leg
+# ## The ecCKD members
 #
-# The adapter types live in the `NumericalRadiationRRTMGPExt` package
-# extension:
+# Both official longwave models — the 32-g single-band FSCK table and the
+# 64-g narrow-band table — run through the same staged calls. The surface
+# boundary uses each model's own per-g Planck emission via
+# [`surface_longwave_emission`](@ref); a scalar ``σT⁴`` boundary would be
+# spectrally gray and misplace surface emission across g points.
+
+intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+
+function ecckd_member(selector)
+    gas_optics = read_official_ecckd_gas_optics(selector; gas_names = intended_gases)
+    @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
+    longwave_gpoints = length(gas_optics.longwave_weights)
+    shortwave_gpoints = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N),
+                                         zeros(longwave_gpoints, N);
+                                         source_top = zeros(longwave_gpoints, N),
+                                         source_bottom = zeros(longwave_gpoints, N),
+                                         weights = zeros(longwave_gpoints))
+    shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+                                           weights = zeros(shortwave_gpoints))
+    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                             longwave_down = zeros(N + 1),
+                             shortwave_up = zeros(N + 1),
+                             shortwave_down = zeros(N + 1))
+    optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
+    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
+    radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
+                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
+    Ṫ = zeros(N)
+    heating_rates!(Ṫ, fluxes, ecckd_atmosphere; gravity = g, heat_capacity = 1004)
+    return (; fluxes, Ṫ)
+end
+nothing #hide
+
+# ## The RRTMGP member
+#
+# One member of the same family, with its own k-reduction (256 longwave
+# g points), run through the package's adapter extension:
 
 rrtmgp_extension = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
-rrtmgp_model = rrtmgp_extension.RRTMGPClearSkyModel(Float64)
-rrtmgp_boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
-    surface_temperature = Tₛ,
-    surface_emissivity = 1,
-    surface_albedo = 0,
-    toa_shortwave_down = 0,   # longwave-only page
-    cos_zenith = 0.5)
-workspace = radiation_workspace(rrtmgp_model, rrtmgp_atmosphere)
-rrtmgp_fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                                longwave_down = zeros(N + 1),
-                                shortwave_up = zeros(N + 1),
-                                shortwave_down = zeros(N + 1))
-radiative_fluxes!(rrtmgp_fluxes, rrtmgp_model, rrtmgp_atmosphere,
-                  rrtmgp_boundary, workspace)
+
+function rrtmgp_member()
+    model = rrtmgp_extension.RRTMGPClearSkyModel(Float64)
+    boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
+        surface_temperature = Tₛ,
+        surface_emissivity = 1,
+        surface_albedo = 0,
+        toa_shortwave_down = 0,   # longwave-only page
+        cos_zenith = 0.5)
+    workspace = radiation_workspace(model, rrtmgp_atmosphere)
+    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                             longwave_down = zeros(N + 1),
+                             shortwave_up = zeros(N + 1),
+                             shortwave_down = zeros(N + 1))
+    radiative_fluxes!(fluxes, model, rrtmgp_atmosphere, boundary, workspace)
+    @assert all(iszero, fluxes.shortwave_up)
+    @assert all(iszero, fluxes.shortwave_down)
+    Ṫ = zeros(N)
+    heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere; gravity = g, heat_capacity = 1004)
+    return (; fluxes, Ṫ, workspace)
+end
+
+rrtmgp = rrtmgp_member()
 nothing #hide
 
 # Before using the fluxes, verify the representation bridge: the dry-air
@@ -127,112 +174,78 @@ nothing #hide
 
 Nᴬ = 6.02214076e23
 
-molecular_column_rrtmgp = reverse(workspace.atmospheric_state.layerdata[1, :, 1])
+molecular_column_rrtmgp = reverse(rrtmgp.workspace.atmospheric_state.layerdata[1, :, 1])
 molecular_column_ecckd = nᵈ .* Nᴬ ./ 1e4
 relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./
                          molecular_column_ecckd)
 @assert relative_error < 1e-6
 relative_error
 
-# ## ecCKD leg
+# ## The family, assembled
 
-intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
-gas_optics = read_official_ecckd_gas_optics("32x32"; gas_names = intended_gases)
-@assert NumericalRadiation.gas_names(gas_optics) == intended_gases
+family = [(name = "ecCKD 32 (FSCK)", member = ecckd_member("32x32"),
+           color = :steelblue4),
+          (name = "ecCKD 64 (narrow-band)", member = ecckd_member("64x32"),
+           color = :darkorange3),
+          (name = "RRTMGP (256 g)", member = rrtmgp, color = :firebrick)]
 
-longwave_gpoints = length(gas_optics.longwave_weights)
-shortwave_gpoints = length(gas_optics.shortwave_weights)
-longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
-                                     source_top = zeros(longwave_gpoints, N),
-                                     source_bottom = zeros(longwave_gpoints, N),
-                                     weights = zeros(longwave_gpoints))
-shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
-                                       weights = zeros(shortwave_gpoints))
-ecckd_fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                               longwave_down = zeros(N + 1),
-                               shortwave_up = zeros(N + 1),
-                               shortwave_down = zeros(N + 1))
-optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
-σ = 5.670374419e-8
-radiative_fluxes!(ecckd_fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
-                  LongwaveBoundaryConditions(surface_longwave_up = σ * Tₛ^4))
-nothing #hide
+println("OLR by family member:")
+for f in family
+    @printf("  %-24s %7.2f W m⁻²\n", f.name, f.member.fluxes.longwave_up[1])
+end
+olr = [f.member.fluxes.longwave_up[1] for f in family]
+@printf("family spread, max − min:  %7.2f W m⁻²\n", maximum(olr) - minimum(olr))
 
-# ## Longwave-only heating rates
+# ## The spread, panel by panel
 #
-# With a zero shortwave boundary the returned shortwave fluxes are zero, so
-# `heating_rates!` (which differences the total net flux) sees longwave only:
-
-@assert all(iszero, rrtmgp_fluxes.shortwave_up)
-@assert all(iszero, rrtmgp_fluxes.shortwave_down)
-
-ecckd_heating = zeros(N)
-rrtmgp_heating = zeros(N)
-heating_rates!(ecckd_heating, ecckd_fluxes, ecckd_atmosphere;
-               gravity = g, heat_capacity = 1004)
-heating_rates!(rrtmgp_heating, rrtmgp_fluxes, rrtmgp_atmosphere;
-               gravity = g, heat_capacity = 1004)
-
-@printf("OLR, ecCKD 32×32:   %7.2f W m⁻²\n", ecckd_fluxes.longwave_up[1])
-@printf("OLR, RRTMGP:        %7.2f W m⁻²\n", rrtmgp_fluxes.longwave_up[1])
-@printf("ΔOLR (ecCKD − RRTMGP): %+6.2f W m⁻²\n",
-        ecckd_fluxes.longwave_up[1] - rrtmgp_fluxes.longwave_up[1])
-
-# ## The comparison, panel by panel
-#
-# Left: both flux profiles. Middle: the signed flux differences. Right: the
-# signed heating-rate difference. Units are homogeneous within each panel,
-# and the shared legend encodes direction by color and model by line style.
+# Left: up- and downwelling flux profiles for every member (color = model,
+# solid = up, dashed = down). Right: the heating-rate profiles. The shared
+# legend sits outside the axes.
 
 using CairoMakie
 
-fig = Figure(size = (1000, 460))
+fig = Figure(size = (940, 480))
 
 pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
 
 ax1 = Axis(fig[1, 1]; xlabel = "Longwave flux (W m⁻²)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
-           yticks = (pressure_ticks, string.(pressure_ticks)), title = "Fluxes")
-lines!(ax1, ecckd_fluxes.longwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2)
-lines!(ax1, rrtmgp_fluxes.longwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2, linestyle = :dash)
-lines!(ax1, ecckd_fluxes.longwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2)
-lines!(ax1, rrtmgp_fluxes.longwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2, linestyle = :dash)
+           yticks = (pressure_ticks, string.(pressure_ticks)),
+           title = "Fluxes")
+for f in family
+    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100;
+           color = f.color, linewidth = 2)
+    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100;
+           color = f.color, linewidth = 2, linestyle = :dash)
+end
 
-ax2 = Axis(fig[1, 2]; xlabel = "Δ flux, ecCKD − RRTMGP (W m⁻²)",
+ax2 = Axis(fig[1, 2]; xlabel = "Ṫ (K day⁻¹)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
-           yticks = (pressure_ticks, string.(pressure_ticks)), title = "Flux difference")
+           yticks = (pressure_ticks, string.(pressure_ticks)),
+           title = "Heating rates")
 vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax2, ecckd_fluxes.longwave_up .- rrtmgp_fluxes.longwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2)
-lines!(ax2, ecckd_fluxes.longwave_down .- rrtmgp_fluxes.longwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2)
+for f in family
+    lines!(ax2, f.member.Ṫ .* 86_400, p ./ 100; color = f.color, linewidth = 2)
+end
 
-ax3 = Axis(fig[1, 3]; xlabel = "ΔṪ, ecCKD − RRTMGP (K day⁻¹)",
-           ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
-           yticks = (pressure_ticks, string.(pressure_ticks)), title = "Heating difference")
-vlines!(ax3, [0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax3, (ecckd_heating .- rrtmgp_heating) .* 86_400, p ./ 100;
-       color = :darkorange3, linewidth = 2)
-
-legend_entries = [LineElement(color = :firebrick, linewidth = 2),
-                  LineElement(color = :steelblue4, linewidth = 2),
-                  LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
-                  LineElement(color = :gray30, linewidth = 2, linestyle = :dash)]
-Legend(fig[2, 1:3], legend_entries, ["up", "down", "ecCKD", "RRTMGP"];
+legend_entries = vcat(
+    [LineElement(color = f.color, linewidth = 2) for f in family],
+    [LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
+     LineElement(color = :gray30, linewidth = 2, linestyle = :dash)])
+Legend(fig[2, 1:2], legend_entries,
+       vcat([f.name for f in family], ["up", "down"]);
        orientation = :horizontal, framevisible = false)
 
 save("rrtmgp_comparison.png", fig); nothing #hide
 
-# ![ecCKD vs RRTMGP comparison](rrtmgp_comparison.png)
+# ![Correlated-k model spread](rrtmgp_comparison.png)
 
-# The printed OLR values and the difference panels above are the result: on
-# this one idealized clear-sky column, with matched pressures, temperatures,
-# and treated-gas composition, the two implementations differ by the amounts
-# shown. This experiment does not separate the gas-optics tables from the
-# transfer implementations — each leg uses both as a whole — and nothing here
-# ranks either implementation or measures an error against a reference; a
-# line-by-line benchmark would be required for that.
+# The printed table and the panels above are the result: on this one
+# idealized clear-sky column, with matched pressures, temperatures, and
+# treated-gas composition, the family members differ by the amounts shown.
+# The experiment does not separate a member's gas-optics tables from its
+# transfer implementation — each member runs both as a whole — and nothing
+# here ranks a member or measures an error against a reference; a
+# line-by-line benchmark would be required for that. What the spread *does*
+# measure is how much the k-reduction choice alone moves clear-sky longwave
+# fluxes and heating rates on this column.

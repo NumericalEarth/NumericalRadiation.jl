@@ -59,8 +59,9 @@ fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
                          shortwave_down = zeros(N + 1))
 
 optical_properties!(longwave, shortwave, gas_optics, atmosphere)
+surface_emission = surface_longwave_emission(gas_optics, 300)
 radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                  LongwaveBoundaryConditions(surface_longwave_up = 5.67e-8 * 300^4))
+                  LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
 
 using Printf
 @printf("outgoing longwave radiation (TOA): %6.1f W m⁻²\n", fluxes.longwave_up[1])
@@ -101,7 +102,7 @@ The complete script, including the shortwave leg, is
 - Examples: [single-column analytical radiation](single_column.md), the
   [staged ecCKD column](generated/02_staged_ecckd_column.md),
   [CO₂ forcing with ecCKD](generated/03_co2_forcing.md), and
-  [ecCKD vs RRTMGP](generated/04_rrtmgp_comparison.md).
+  [correlated-k model spread](generated/04_rrtmgp_comparison.md).
 - [Architecture](architecture.md) — the API levels and the conventions they
   keep.
 - [Gas optics](gas_optics/ecckd_files.md) — ecCKD files, model selection, and

@@ -26,7 +26,6 @@ nothing #hide
 # dry-air molar amount ``nᵈ`` of each layer from the hydrostatic relation:
 
 g  = 9.80665         # m s⁻²
-σ  = 5.670374419e-8  # W m⁻² K⁻⁴
 mᵈ = 0.0289647       # kg mol⁻¹
 
 N  = 48
@@ -68,8 +67,9 @@ function solve_column(χCO₂)
                              shortwave_down = zeros(N + 1))
 
     optical_properties!(longwave, shortwave, gas_optics, atmosphere)
+    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = σ * Tₛ^4))
+                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
     return (; olr = fluxes.longwave_up[1], up = fluxes.longwave_up)
 end
 nothing #hide
