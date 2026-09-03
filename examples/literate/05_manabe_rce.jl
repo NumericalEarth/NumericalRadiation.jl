@@ -166,9 +166,10 @@ nothing #hide
 # complete radiative-plus-convective step minus temperatures before it —
 # because the raw radiative tendencies stay large in equilibrium, balanced
 # by the convective flux. The march stops once that residual stays below
-# `tolerance` for 50 consecutive model days, the elapsed model days are
-# returned, and the returned fluxes are recomputed at the final adjusted
-# state.
+# `tolerance` for 50 consecutive model days — only then is the returned
+# `converged` flag true; hitting `max_days` leaves it false and fails the
+# build gates below. The elapsed model days are returned, and the returned
+# fluxes are recomputed at the final adjusted state.
 
 FT = Float64   # element type where floating-point storage is required
 
@@ -230,6 +231,7 @@ function radiative_convective_equilibrium(χCO₂; T₀ = nothing, Tₛ₀ = 288
     sustained_steps = round(Int, 50day / Δt)
     streak = 0
     days_elapsed = max_days
+    converged = false
     for step in 1:round(Int, max_days * day / Δt)
         fixed_water_vapor === nothing && fixed_relative_humidity!(χH₂O, T)
         previous_temperature .= T
@@ -246,12 +248,13 @@ function radiative_convective_equilibrium(χCO₂; T₀ = nothing, Tₛ₀ = 288
         streak = residual < tolerance ? streak + 1 : 0
         if streak >= sustained_steps
             days_elapsed = step * Δt / day
+            converged = true
             break
         end
     end
     fixed_water_vapor === nothing && fixed_relative_humidity!(χH₂O, T)
     solve_radiation!(Tₛ)     # fluxes at the final adjusted state
-    return (; T = copy(T), Tₛ, χH₂O = copy(χH₂O), residual,
+    return (; T = copy(T), Tₛ, χH₂O = copy(χH₂O), residual, converged,
             days = days_elapsed,
             olr = fluxes.longwave_up[1],
             asr = fluxes.shortwave_down[1] - fluxes.shortwave_up[1])
@@ -285,6 +288,7 @@ frozen = radiative_convective_equilibrium(840e-6; T₀ = base.T, Tₛ₀ = base.
 
 for (name, r) in (("baseline", base), ("2×", doubled),
                   ("4×", quadrupled), ("2× frozen-q", frozen))
+    @assert r.converged "$name: never sustained residual < tolerance for 50 days"
     @assert r.residual < tolerance_gate "$name: residual $(r.residual) K/day above gate"
     @assert abs(r.asr - r.olr) < imbalance_gate "$name: TOA imbalance $(r.asr - r.olr) W/m²"
     inversion_limit = minimum(diff(r.T)[p[1:end-1] .> 40_000])
@@ -320,9 +324,9 @@ weighted_emission = sum(gas_optics.longwave_weights .*
 # reported range, but those calculations differ from this one in radiation
 # scheme, gas set, insolation, albedo, and cloud treatment, so the numbers
 # remain an outcome of *this* configuration rather than a reproduction; the
-# [correlated-k model spread](04_rrtmgp_comparison.md) page is this
-# package's separate fixed-column diagnostic of how much the radiation
-# model choice alone can move fluxes.
+# [correlated-k model spread](04_rrtmgp_comparison.md) page reports the
+# package's separate fixed-column measurement of the correlated-k
+# implementation spread.
 
 # ## The equilibrium and its response
 #

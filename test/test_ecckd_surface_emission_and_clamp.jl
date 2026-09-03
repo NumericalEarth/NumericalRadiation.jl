@@ -104,4 +104,6 @@ end
                         atmosphere(atmosphere_gases(reference_amount)))
     @test longwave.optical_depth[1, 1] > 0
     @test isapprox(longwave.optical_depth[1, 1], 1e-4 * 100.0; rtol = 1e-10)
+    @test shortwave.optical_depth[1, 1] > 0
+    @test isapprox(shortwave.optical_depth[1, 1], 1e-4 * 100.0; rtol = 1e-10)
 end
