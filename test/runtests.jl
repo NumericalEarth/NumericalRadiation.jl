@@ -1,16 +1,17 @@
 using Test
-using AnalyticBandRadiation
+using NumericalRadiation
 using Dates
 
-@testset "AnalyticBandRadiation" begin
-    include("test_planck.jl")
-    include("test_absorption.jl")
-    include("test_williams_longwave.jl")
-    include("test_shortwave.jl")
-    include("test_zenith.jl")
-    include("test_rtc.jl")
+include_test(filename::AbstractString) = include(joinpath(@__DIR__, filename))
+
+@testset "NumericalRadiation" begin
+    include_test("test_solvers.jl")
+    include_test("test_ecckd_io.jl")
+    include_test("test_misc.jl")
+    include_test("test_rrtmgp_adapter.jl")
+    include_test("test_ecckd_surface_emission_and_clamp.jl")
 end
 
-@testset "SpeedyWeather Extension" begin 
-    include("test_with_speedyweather.jl")
-end 
+@testset "SpeedyWeather Extension" begin
+    include_test("test_with_speedyweather.jl")
+end

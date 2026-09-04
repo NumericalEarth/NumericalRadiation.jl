@@ -1,10 +1,10 @@
-module AnalyticBandRadiationSpeedyWeatherExt
+module NumericalRadiationSpeedyWeatherExt
 
-using AnalyticBandRadiation
+using NumericalRadiation
 using SpeedyWeather
 using Adapt
 
-import AnalyticBandRadiation: AtmosphereProfile, ColumnGrid, SurfaceState,
+import NumericalRadiation: AtmosphereProfile, ColumnGrid, SurfaceState,
     PhysicalConstants, ThermodynamicConstants, LongwaveDiagnostics,
     ShortwaveDiagnostics, solve_longwave!, solve_shortwave!,
     AnalyticBandLongwave, TransparentShortwave, OneBandShortwave, OneBandGreyShortwave
@@ -16,7 +16,7 @@ import AnalyticBandRadiation: AtmosphereProfile, ColumnGrid, SurfaceState,
 """
     SpeedyAnalyticBandLongwave{NF} <: SpeedyWeather.AbstractLongwave
 
-SpeedyWeather wrapper around [`AnalyticBandRadiation.AnalyticBandLongwave`](@ref). 
+SpeedyWeather wrapper around [`NumericalRadiation.AnalyticBandLongwave`](@ref). 
 Allows for setting the default CO₂ concentration [ppmv], if the model does not specify one.
 
 Usage: 

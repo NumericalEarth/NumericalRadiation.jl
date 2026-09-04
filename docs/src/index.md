@@ -1,58 +1,116 @@
-# AnalyticBandRadiation.jl
+# NumericalRadiation.jl
 
-Analytic-band atmospheric radiation for intermediate-complexity models.
-
-This package bundles two per-column radiation schemes:
-
-- [`AnalyticBandLongwave`](@ref) — 41-wavenumber clear-sky two-stream Schwarzschild
-  solver using analytic H₂O line, H₂O continuum and CO₂ absorption coefficients
-  after Williams (2026), *J. Adv. Model. Earth Syst.*,
-  doi:[10.1029/2025MS005405](https://doi.org/10.1029/2025MS005405).
-- [`OneBandShortwave`](@ref) — SPEEDY-style one-band solver with transparent,
-  constant, or background-transmissivity options and a diagnostic cloud and
-  stratocumulus model, after Kucharski, Molteni & Bracco (2006).
-
-The column solvers are pure scalar operations — no allocations, no host-side
-loops, GPU-safe — so the same code can be driven by
-[SpeedyWeather.jl](https://github.com/SpeedyWeather/SpeedyWeather.jl) or by
-[Breeze](https://github.com/NumericalEarth/Breeze.jl). Package extensions
-wire each host automatically when both packages are loaded.
+NumericalRadiation.jl is a standalone atmospheric radiation and gas-optics
+library compatible with ECMWF's ecRad/ecCKD data. It ingests official ecCKD
+CKD-definition files into typed, `Adapt.jl`-aware look-up tables, evaluates
+g-point optical depths in a streaming gas-optics path that is allocation-free
+once warmed with caller-preallocated outputs, and solves clear-sky and all-sky
+two-stream column transport. It also bundles two
+analytic-band column schemes for intermediate-complexity models: the Williams
+(2026) 41-wavenumber clear-sky longwave and a SPEEDY-style one-band shortwave
+with diagnostic clouds.
 
 ## Installation
 
 ```julia
 using Pkg
-Pkg.add(url = "https://github.com/NumericalEarth/AnalyticBandRadiation.jl")
+Pkg.add(url = "https://github.com/NumericalEarth/NumericalRadiation.jl")
 ```
 
-## Quick look: Planck-function recovery of σ T⁴
+## Quickstart
 
-The spectral quadrature captures ≥99 % of the blackbody flux at 300 K between
-10 and 2510 cm⁻¹ — the truncation is deliberate (the scheme represents a
-terrestrial atmosphere, not interstellar space).
+Run a clear-sky longwave column with an official ecCKD model. The
+CKD-definition files resolve through lazy artifacts on first use; arrays are
+ordered top-to-bottom (pressure increasing downward), and gas entries are layer
+column amounts in mol m⁻².
 
-```@example index
-using AnalyticBandRadiation
+```@example quickstart
+using NumericalRadiation
+using NCDatasets   # activates the NetCDF reader extension
+
+gas_optics = read_official_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
+
+g  = 9.80665     # gravitational acceleration, m s⁻²
+mᵈ = 0.0289647   # dry-air molar mass, kg mol⁻¹
+
+N  = 24
+pᵢ = collect(range(10_000, 100_000; length = N + 1))   # Pa, TOA first
+p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
+nᵈ = diff(pᵢ) ./ (g * mᵈ)                              # dry-air amount, mol m⁻²
+
+atmosphere = ColumnAtmosphere(;
+    pressure_layers = p,
+    pressure_interfaces = pᵢ,
+    temperature_layers = collect(range(220, 295; length = N)),
+    temperature_interfaces = collect(range(215, 300; length = N + 1)),
+    gases = (composite = nᵈ, h2o = 0.005 .* nᵈ, co2 = 420e-6 .* nᵈ),
+    surface = (temperature = 300,),
+    geometry = (cos_zenith = 0.55,))
+
+longwave_gpoints = length(gas_optics.longwave_weights)
+shortwave_gpoints = length(gas_optics.shortwave_weights)
+longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
+                                     source_top = zeros(longwave_gpoints, N),
+                                     source_bottom = zeros(longwave_gpoints, N),
+                                     weights = zeros(longwave_gpoints))
+shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+                                       weights = zeros(shortwave_gpoints))
+fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
+                         longwave_down = zeros(N + 1),
+                         shortwave_up = zeros(N + 1),
+                         shortwave_down = zeros(N + 1))
+
+optical_properties!(longwave, shortwave, gas_optics, atmosphere)
+surface_emission = surface_longwave_emission(gas_optics, 300)
+radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
+                  LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
+
+using Printf
+@printf("outgoing longwave radiation (TOA): %6.1f W m⁻²\n", fluxes.longwave_up[1])
+@printf("downwelling longwave at surface:   %6.1f W m⁻²\n", fluxes.longwave_down[end])
+```
+
+The g-point optical-depth table the model evaluated, and the resulting flux
+profiles:
+
+```@example quickstart
 using CairoMakie
 
-T = 300.0
-lw = AnalyticBandLongwave(Float64)
-ν̃  = range(lw.wavenumber_min, lw.wavenumber_max, length = lw.nwavenumber)
-πB = [π * planck_wavenumber(T, ν) for ν in ν̃]
+fig = Figure(size = (780, 400))
 
-fig = Figure(size = (640, 360))
-ax  = Axis(fig[1, 1];
-           xlabel = "Wavenumber ν̃ [cm⁻¹]",
-           ylabel = "π B(T, ν̃) [W m⁻² / cm⁻¹]",
-           title  = "Planck function at T = 300 K")
-lines!(ax, ν̃, πB, linewidth = 2, color = :tomato)
+ax1 = Axis(fig[1, 1]; xlabel = "g point", ylabel = "pressure (hPa)",
+           yreversed = true,
+           title = "log₁₀ layer optical depth (ecCKD 32×32)")
+hm = heatmap!(ax1, 1:longwave_gpoints, p ./ 100,
+              log10.(max.(longwave.optical_depth, 1e-8));
+              colormap = :viridis)
+Colorbar(fig[1, 2], hm)
 
-σ_SB = 5.670374419e-8
-integrated = sum(πB) * (lw.wavenumber_max - lw.wavenumber_min) / (lw.nwavenumber - 1)
-Label(fig[2, 1],
-      "Σ π B Δν̃ = $(round(integrated, digits = 2)) W/m²,  σ T⁴ = $(round(σ_SB * T^4, digits = 2)) W/m²";
-      tellwidth = false, fontsize = 12)
-save("planck.png", fig); nothing # hide
+ax2 = Axis(fig[1, 3]; xlabel = "longwave flux (W m⁻²)",
+           ylabel = "pressure (hPa)", yreversed = true)
+lines!(ax2, fluxes.longwave_up, pᵢ ./ 100;
+       color = :firebrick, linewidth = 2, label = "upwelling")
+lines!(ax2, fluxes.longwave_down, pᵢ ./ 100;
+       color = :steelblue4, linewidth = 2, label = "downwelling")
+axislegend(ax2; position = :rt, framevisible = false)
+fig
 ```
 
-![](planck.png)
+The complete script, including the shortwave leg, is
+[`examples/ecckd_column.jl`](https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/ecckd_column.jl).
+
+## Where to go next
+
+- Examples: [single-column analytical radiation](single_column.md), the
+  [the staged interface](generated/staged_ecckd_column.md),
+  [CO₂ forcing with ecCKD](generated/co2_forcing.md), and
+  [correlated-k model spread](generated/rrtmgp_comparison.md).
+- [Architecture](architecture.md) — the API levels and the conventions they
+  keep.
+- [Gas optics](gas_optics/ecckd_files.md) — ecCKD files, model selection, and
+  the runtime workflow.
+- [Column solvers](solvers.md) and [cloud and aerosol optics](cloud_optics.md)
+  — the solver stack; [notation](notation.md) for symbol conventions.
+- [API reference](api.md) — the exported interface, by subsystem.
+- [Validation](validation.md) — running the tests, and where the validation
+  platform lives.

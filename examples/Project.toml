@@ -1,16 +1,15 @@
 [deps]
-AnalyticBandRadiation = "cd8119b0-1744-44d6-9ede-6ad1ad750b26"
-Breeze = "660aa2fb-d4c8-4359-a52c-9c057bc511da"
+NumericalRadiation = "cd8119b0-1744-44d6-9ede-6ad1ad750b26"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 ClimaComms = "3a4d1b5c-c61d-41fd-a00a-5873ba7a1b0d"
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
-Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 RRTMGP = "a01a1ee8-cea4-48fc-987c-fc7878d79da1"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-Breeze = "0.4"
+CairoMakie = "0.12, 0.13"
 ClimaComms = "0.6"
-Oceananigans = "0.107"
 RRTMGP = "0.21"
+
+[sources]
+NumericalRadiation = {path = ".."}

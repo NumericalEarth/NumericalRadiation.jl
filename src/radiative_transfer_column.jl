@@ -28,9 +28,9 @@ struct RadiativeTransferColumn{NF, LW, SW, PC, TC, V<:AbstractVector{NF}, G<:Col
     profile::AP
     "Lower boundary state (SST/LST, albedos, emissivities, cos-zenith)"
     surface::SurfaceState{NF}
-    "Longwave scheme (`AnalyticBandLongwave`, `TransparentLongwave`, …)"
+    "Longwave scheme, e.g. [`AnalyticBandLongwave`](@ref)"
     longwave_scheme::LW
-    "Shortwave scheme (`OneBandShortwave`, `OneBandGreyShortwave`, …)"
+    "Shortwave scheme, e.g. [`OneBandShortwave`](@ref) or [`TransparentShortwave`](@ref)"
     shortwave_scheme::SW
     "Physical constants (gravity, heat capacity, Stefan–Boltzmann, solar constant)"
     physical_constants::PC
@@ -96,18 +96,32 @@ Zero the temperature tendency and scalar diagnostics on `rtm` so a fresh
 """
 function reset!(rtm::RadiativeTransferColumn)
     rtm.temperature_tendency .= 0
-    _zero_mutable!(rtm.longwave_diagnostics)
-    _zero_mutable!(rtm.shortwave_diagnostics)
+    reset!(rtm.longwave_diagnostics)
+    reset!(rtm.shortwave_diagnostics)
     return rtm
 end
 
-@inline function _zero_mutable!(d)
-    for name in fieldnames(typeof(d))
-        T = fieldtype(typeof(d), name)
-        if T <: Number
-            setfield!(d, name, zero(T))
-        end
-    end
+function reset!(d::LongwaveDiagnostics{NF}) where NF
+    d.outgoing_longwave = zero(NF)
+    d.surface_longwave_down = zero(NF)
+    d.surface_longwave_up = zero(NF)
+    d.ocean_surface_longwave_up = zero(NF)
+    d.land_surface_longwave_up = zero(NF)
+    return d
+end
+
+function reset!(d::ShortwaveDiagnostics{NF}) where NF
+    d.outgoing_shortwave = zero(NF)
+    d.surface_shortwave_down = zero(NF)
+    d.surface_shortwave_up = zero(NF)
+    d.ocean_surface_shortwave_down = zero(NF)
+    d.land_surface_shortwave_down = zero(NF)
+    d.ocean_surface_shortwave_up = zero(NF)
+    d.land_surface_shortwave_up = zero(NF)
+    d.albedo = zero(NF)
+    d.cloud_cover = zero(NF)
+    d.cloud_top = 0
+    d.stratocumulus_cover = zero(NF)
     return d
 end
 

@@ -62,12 +62,11 @@ Reference: Williams (2026), Eq. 6.
 end
 
 """
-    williams_delta_tau(k, ν̃, temperature, humidity, surface_pressure,
-                       geometry, scheme, gravity) -> Δτ
+$(TYPEDSIGNATURES)
 
 Optical depth increment through layer `k` at wavenumber `ν̃`. Combines H₂O
-line absorption (Williams 2026, Eq. 7), H₂O continuum (Eq. 8) and CO₂ (Eq. 9). 
-The result already includes the two-stream diffusivity factor `D ≈ 1.5` 
+line absorption (Williams 2026, Eq. 7), H₂O continuum (Eq. 8) and CO₂ (Eq. 9).
+The result already includes the two-stream diffusivity factor `D ≈ 1.5`
 (Armstrong 1968).
 
 `temperature` and `humidity` are length-`nlayers` column vectors; `geometry`
@@ -104,7 +103,7 @@ is a [`ColumnGrid`](@ref).
     # CO₂ (well-mixed): analytic integral across the layer.
     # For a well-mixed gas with κ ∝ p / p_ref the column integral from the TOA
     # to pressure p gives τ = D κ q_CO₂ p² / (2 g p_ref). The layer increment
-    # is the difference of τ at the two bounding half levels.    
+    # is the difference of τ at the two bounding half levels.
     q_co2 = NF(CO₂ * NF(1e-6) * 44 / 29)
     κ_CO₂_v = co2_kappa_ref(ν̃, scheme)
     p_half_k   = NF(σ_half[k])   * pₛ

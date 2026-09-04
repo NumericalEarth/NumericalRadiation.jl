@@ -1,0 +1,26 @@
+[ecrad_data]
+git-tree-sha1 = "49ce668ce0861f9d5e8299d68af7138485eb5f19"
+lazy = true
+
+    [[ecrad_data.download]]
+    url = "https://github.com/ecmwf-ifs/ecrad/archive/131ac980517719b7a859e3ccc117919a1d888a20.tar.gz"
+    sha256 = "43d536e170b150887c1cd515446ab9f6d209e63a4bc84e1bb44300119c8a553e"
+
+[ecckd_source]
+git-tree-sha1 = "7b210aef53e908cfe3c709945f0763c37ca82aaa"
+lazy = true
+
+    [[ecckd_source.download]]
+    url = "https://github.com/ecmwf-ifs/ecckd/archive/6115f9b8e29a55cb0f48916857bdc77fec41badd.tar.gz"
+    sha256 = "f22280bcdf657ab1d6faa4ff9f365a0fffb6951541454a387671857e17ce4c0b"
+
+# ecRad reference NetCDF products for validation/reference. The download URL
+# becomes live once the validation-data-v1 release asset is published; local
+# checkouts that still carry validation/reference data never hit it.
+[ecrad_reference_data]
+git-tree-sha1 = "6070697d4ab162dc2180c2187d855e711fb3ad38"
+lazy = true
+
+    [[ecrad_reference_data.download]]
+    url = "https://github.com/NumericalEarth/NumericalRadiation.jl/releases/download/validation-data-v1/ecrad_reference_data.tar.gz"
+    sha256 = "91e6ff211a8936c7bc9befac32f27baafeed05b1370f516466ed90848d9bfe4f"

@@ -2,8 +2,20 @@ Manifest.toml
 docs/Manifest.toml
 docs/build/
 docs/site/
+docs/src/generated/
 *.jl.*.cov
 *.jl.cov
 *.jl.mem
 .DS_Store
 .vscode/
+
+# Local developer checkouts of external reference data (ecrad, ecckd source).
+# These are user-provided or artifact-backed via Artifacts.toml; do not
+# track them in this repository. (This is also where the validation-platform
+# branch keeps its external checkouts.)
+validation/
+
+# Local session/tooling state
+.claude/
+.handoff_monitor.log
+.handoff_monitor.pid
