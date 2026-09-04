@@ -20,23 +20,23 @@ using NCDatasets   # activates the NetCDF loader for the ecCKD file
 using CairoMakie
 using Printf
 
-Γ  = 6.5e-3                  # critical lapse rate, K m⁻¹ (Manabe-Wetherald)
-μ₀ = cosd(47.9)              # cosine of the solar zenith angle
-S₀ = 509 * μ₀                # horizontal TOA shortwave flux, W m⁻²
-α  = 0.3                     # surface albedo
+Γ  = 6.5e-3      # critical lapse rate, K m⁻¹ (Manabe-Wetherald)
+μ₀ = cosd(47.9)  # cosine of the solar zenith angle
+S₀ = 509 * μ₀    # horizontal TOA shortwave flux, W m⁻²
+α  = 0.3         # surface albedo
 
-surface_relative_humidity = 0.77   # Manabe-Wetherald humidity profile parameter
-water_vapor_floor = 4.8e-6         # stratospheric χH₂O floor, mole fraction
+ℋₛ                = 0.77    # Manabe-Wetherald surface relative humidity
+water_vapor_floor = 4.8e-6  # stratospheric χH₂O floor, mole fraction
 
-χCH₄ = 1.9e-6                # present-day global means for the
-χN₂O = 3.4e-7                # well-mixed trace gases
+χCH₄ = 1.9e-6        # present-day global means for the
+χN₂O = 3.4e-7        # well-mixed trace gases
 
-N  = 60                      # physical layers, uniform in altitude
-zₜ = 60e3                    # m; one isothermal lookup-boundary layer above
-pₛ = 101_325                 # Pa
+N  = 60              # physical layers, uniform in altitude
+zₜ = 60e3            # m; one isothermal lookup-boundary layer above
+pₛ = 101_325         # Pa
 
 g  = 9.80665         # gravitational acceleration, m s⁻²
-cₚ = 1004            # isobaric heat capacity, J kg⁻¹ K⁻¹
+cᵖᵈ = 1004           # isobaric heat capacity, J kg⁻¹ K⁻¹
 σ  = 5.670374419e-8  # Stefan-Boltzmann constant, W m⁻² K⁻⁴
 Rᵈ = 287.05          # dry-air gas constant, J kg⁻¹ K⁻¹
 mᵈ = 0.028964        # dry-air molar mass, kg mol⁻¹
@@ -120,16 +120,16 @@ save("manabe_rce_initial_state.png", fig); nothing #hide
 
 # ## The humidity closure
 #
-# Fixed relative humidity on cell-center temperatures — Manabe and Wetherald's profile shape, Magnus saturation
-# vapor pressure, and a stratospheric floor — applied to the full radiation column including the extension layer:
+# Fixed relative humidity ℋ on cell-center temperatures — Manabe and Wetherald's profile shape, Magnus saturation
+# vapor pressure pᵛ⁺, and a stratospheric floor — applied to the full radiation column including the extension layer:
 
-saturation_vapor_pressure(T) = 610.94 * exp(17.625 * (T - 273.15) / (T - 30.11))
+pᵛ⁺(T) = 610.94 * exp(17.625 * (T - 273.15) / (T - 30.11))
 
 function fixed_relative_humidity!(χH₂O_ext, Tᶜ_ext)
     for k in eachindex(χH₂O_ext)
-        relative_humidity = max(surface_relative_humidity * (pᶜ_ext[k] / pₛ - 0.02) / 0.98, 0)
-        eₛ = saturation_vapor_pressure(Tᶜ_ext[k])
-        χH₂O_ext[k] = max(relative_humidity * eₛ / max(pᶜ_ext[k] - relative_humidity * eₛ, 1), water_vapor_floor)
+        ℋ = max(ℋₛ * (pᶜ_ext[k] / pₛ - 0.02) / 0.98, 0)
+        pᵛ = ℋ * pᵛ⁺(Tᶜ_ext[k])
+        χH₂O_ext[k] = max(pᵛ / max(pᶜ_ext[k] - pᵛ, 1), water_vapor_floor)
     end
     return χH₂O_ext
 end
@@ -226,7 +226,7 @@ function equilibrate!(Tᶠ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
             break
         end
         previous .= Tᶠ
-        heating_rates!(Q, fluxes, atmosphere; gravity = g, heat_capacity = cₚ)
+        heating_rates!(Q, fluxes, atmosphere; gravity = g, heat_capacity = cᵖᵈ)
         ## discard the extension tendency Q[1]; physical layer j is Q[j + 1]
         Ṫᶠ[1] = Q[2]
         Ṫᶠ[N+1] = Q[N_ext]
@@ -306,7 +306,7 @@ nothing #hide
 
 # ## The experiments, and the answer
 #
-# The main experiment runs 1×, 2×, and 4× CO₂ with the fixed-RH closure, plus the discriminating control:
+# The main experiment runs 1×, 2×, and 4× CO₂ with the fixed-ℋ closure, plus the discriminating control:
 # 4× CO₂ with water vapor *frozen* at the control field. Every equilibration must pass the verification gates at
 # the end of this page, or the page fails to build.
 
@@ -318,13 +318,13 @@ quadrupled   = rce(4χCO₂; warm_start = control.Tᶠ)
 frozen_vapor = rce(4χCO₂; warm_start = control.Tᶠ, fixed_water_vapor = control.χH₂O)
 
 for (name, state) in (("control, 420 ppm CO₂", control),
-                      ("2× CO₂, fixed RH", doubled),
-                      ("4× CO₂, fixed RH", quadrupled),
+                      ("2× CO₂, fixed ℋ", doubled),
+                      ("4× CO₂, fixed ℋ", quadrupled),
                       ("4× CO₂, frozen water vapor", frozen_vapor))
     @printf("%-28s Tₛ = %7.2f K   ΔTₛ = %+6.2f K\n", name, state.Tₛ, state.Tₛ - control.Tₛ)
 end
 
-# Comparing the two 4× equilibria isolates the fixed-RH water-vapor amplification in this configuration: the
+# Comparing the two 4× equilibria isolates the fixed-ℋ water-vapor amplification in this configuration: the
 # same quadrupled CO₂ warms the surface nearly twice as much when the vapor is allowed to rise with temperature
 # as when it is frozen at the control field.
 #
@@ -342,9 +342,9 @@ end
 fig = Figure(size = (700, 660))
 ax = profile_axis(fig; title = "RCE response to CO₂")
 for (state, label, color, style) in
-        ((control, "1× CO₂ (420 ppm), fixed RH", :steelblue4, :solid),
-         (doubled, "2× CO₂, fixed RH", :darkorange3, :solid),
-         (quadrupled, "4× CO₂, fixed RH", :firebrick, :solid),
+        ((control, "1× CO₂ (420 ppm), fixed ℋ", :steelblue4, :solid),
+         (doubled, "2× CO₂, fixed ℋ", :darkorange3, :solid),
+         (quadrupled, "4× CO₂, fixed ℋ", :firebrick, :solid),
          (frozen_vapor, "4× CO₂, frozen water vapor", :firebrick, :dash))
     lines!(ax, state.Tᶜ_ext[2:N_ext], pᶜ ./ 100; color, label, linewidth = 2, linestyle = style)
     scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
@@ -428,7 +428,7 @@ verify_equilibria([("control", control), ("2×", doubled),
 # **Convective adjustment** is the instantaneous limit of the convection that such a profile would trigger: any
 # level colder than the critical profile ``T_c(p) = Tₛ (p/pₛ)^{Γ R^{\mathrm{d}}/g}`` anchored at the surface is
 # clamped onto it, so the troposphere rides the critical lapse rate over a radiatively balanced stratosphere
-# while the surface temperature itself is solved from top-of-atmosphere balance. **The fixed-RH humidity
+# while the surface temperature itself is solved from top-of-atmosphere balance. **The fixed-ℋ humidity
 # closure** is Manabe and Wetherald's third ingredient: holding *relative* humidity fixed means a warmer column
 # holds more vapor — itself a greenhouse gas — so any CO₂-driven warming is amplified, which the frozen-vapor
 # control isolates by turning exactly that closure off.
