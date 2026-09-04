@@ -10,7 +10,7 @@ julia --project=. -e 'using Pkg; Pkg.test()'
 ```
 
 The suite runs in about a minute and needs no manual data setup; the
-official ecRad/ecCKD snapshots resolve through the lazy artifacts pinned in
+reference ecRad/ecCKD snapshots resolve through the lazy artifacts pinned in
 `Artifacts.toml`.
 
 ## The validation platform

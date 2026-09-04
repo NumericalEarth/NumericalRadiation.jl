@@ -5,7 +5,7 @@
 [![Documenter](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml/badge.svg)](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml)
 
 Atmospheric radiation and gas optics compatible with ECMWF's ecRad/ecCKD
-data. The package ingests official ecCKD CKD-definition files into typed,
+data. The package ingests reference ecCKD CKD-definition files into typed,
 `Adapt.jl`-aware look-up tables, evaluates g-point optical properties through
 a staged runtime (`optical_properties!` → `radiative_fluxes!` →
 `heating_rates!`), and solves clear-sky and cloud-overlap two-stream column

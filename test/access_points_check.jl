@@ -19,12 +19,12 @@ const REQUIRED_EXPORTS = (
     :AbstractRadiationBackend,
     :ColumnAtmosphere,
     :RadiativeFluxes,
-    :LongwaveOpticalProperties,
-    :ShortwaveOpticalProperties,
-    :ShortwaveCloudOverlapOpticalProperties,
-    :CloudOpticalProperties,
-    :CloudyRegionCloudOpticalProperties,
-    :AerosolOpticalProperties,
+    :LongwaveOptics,
+    :ShortwaveOptics,
+    :ShortwaveCloudOverlapOptics,
+    :CloudOptics,
+    :CloudyRegionCloudOptics,
+    :AerosolOptics,
     :CloudScatteringTable,
     :EcCKDSpectralMapping,
     :EcCKDGasOpticsModel,
@@ -94,12 +94,12 @@ function component_smoke()
                                             shortwave_mass_extinction = 0.1,
                                             shortwave_single_scattering_albedo = 0.7,
                                             shortwave_scattering_asymmetry = 0.6)
-    longwave = LongwaveOpticalProperties(zeros(2, 2), zeros(2, 2); weights = zeros(2))
-    shortwave = ShortwaveOpticalProperties(zeros(1, 2); weights = zeros(1))
-    cloud = CloudOpticalProperties(zeros(2), zeros(2))
-    cloudy_region_cloud = CloudyRegionCloudOpticalProperties(zeros(2), zeros(1),
+    longwave = LongwaveOptics(zeros(2, 2), zeros(2, 2); weights = zeros(2))
+    shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
+    cloud = CloudOptics(zeros(2), zeros(2))
+    cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1),
                                                              zeros(2), zeros(2))
-    aerosol = AerosolOpticalProperties(zeros(2), zeros(2))
+    aerosol = AerosolOptics(zeros(2), zeros(2))
     fluxes = RadiativeFluxes(
         longwave_up = zeros(3),
         longwave_down = zeros(3),

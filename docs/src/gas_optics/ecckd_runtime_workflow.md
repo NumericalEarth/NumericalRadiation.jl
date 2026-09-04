@@ -1,7 +1,7 @@
 # ecCKD Runtime Workflow
 
 This tutorial shows the public runtime path for published ecCKD models:
-choose a model pair, load the official CKD-definition files, allocate staged
+choose a model pair, load the reference CKD-definition files, allocate staged
 work arrays, compute optical properties, solve fluxes, and convert flux
 convergence to heating rates.
 
@@ -14,8 +14,8 @@ pairs currently exposed are `"32x32"`, `"32x64"`, `"32x96"`, `"64x32"`,
 ```@example ecckd_runtime
 using NumericalRadiation
 
-spec = official_ecckd_model_spec("32x32")
-paths = official_ecckd_definition_paths(spec; require = false)
+spec = reference_ecckd_model_spec("32x32")
+paths = reference_ecckd_definition_paths(spec; require = false)
 
 (name = spec.name, longwave = spec.longwave, shortwave = spec.shortwave)
 ```
@@ -24,7 +24,7 @@ Compact selectors such as `"32x64"` and full selectors such as
 `:climate_32x64` are equivalent; the published pairs are enumerable:
 
 ```@example ecckd_runtime
-collect(keys(official_ecckd_model_specs()))
+collect(keys(reference_ecckd_model_specs()))
 ```
 
 Use the smallest model that meets your application's accuracy needs:
@@ -40,7 +40,7 @@ a side effect. Use the default `require=true` in a real run:
 using NumericalRadiation
 using NCDatasets
 
-gas_optics = read_official_ecckd_gas_optics("32x32";
+gas_optics = read_reference_ecckd_gas_optics("32x32";
     names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
@@ -52,7 +52,7 @@ explicitly to vary its amount — or to set it to zero.
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
 of NetCDF after loading and can be moved into a host model's radiation state.
-Because `:h2o` is in `names`, the official H2O mole-fraction table
+Because `:h2o` is in `names`, the reference H2O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes
 the layer H2O mole fraction from the `h2o` and `composite` gas amounts and
 interpolates the table per layer. The `h2o_mole_fraction` keyword is not a gas

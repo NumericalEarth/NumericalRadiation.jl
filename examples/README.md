@@ -16,7 +16,7 @@ julia --project=. examples/analytic_column.jl
 
 ## `ecckd_column.jl`
 
-Select a published ecCKD model pair, load its official CKD-definition files,
+Select a published ecCKD model pair, load its reference CKD-definition files,
 run one clear-sky staged column, and print flux/heating diagnostics.
 
 ```bash

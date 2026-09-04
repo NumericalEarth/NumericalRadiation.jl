@@ -114,11 +114,11 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
     return RRTMGPWorkspace(grid_params, atmospheric_state, solver)
 end
 
-_gas_value(gases, name::Symbol, default) =
+gas_value(gases, name::Symbol, default) =
     hasproperty(gases, name) ? getproperty(gases, name) : default
 
-_layer_value(x::Number, k) = x
-_layer_value(x, k) = x[k]
+layer_value(x::Number, k) = x
+layer_value(x, k) = x[k]
 
 function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
                                  model::RRTMGPClearSkyModel{FT},
@@ -127,14 +127,14 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     nlayers = length(atmosphere.temperature_layers)
     state = workspace.atmospheric_state
     gases = atmosphere.gases
-    h2o = _gas_value(gases, :h2o, zero(FT))
-    o3 = _gas_value(gases, :o3, zero(FT))
-    co2 = FT(_gas_value(gases, :co2, 400e-6))
-    ch4 = FT(_gas_value(gases, :ch4, 1.8e-6))
-    n2o = FT(_gas_value(gases, :n2o, 330e-9))
-    o2 = FT(_gas_value(gases, :o2, 0.20946))
-    n2 = FT(_gas_value(gases, :n2, 0.78084))
-    co = FT(_gas_value(gases, :co, 0))
+    h2o = gas_value(gases, :h2o, zero(FT))
+    o3 = gas_value(gases, :o3, zero(FT))
+    co2 = FT(gas_value(gases, :co2, 400e-6))
+    ch4 = FT(gas_value(gases, :ch4, 1.8e-6))
+    n2o = FT(gas_value(gases, :n2o, 330e-9))
+    o2 = FT(gas_value(gases, :o2, 0.20946))
+    n2 = FT(gas_value(gases, :n2, 0.78084))
+    co = FT(gas_value(gases, :co, 0))
 
     # RRTMGP's kernels are bottom-at-index-1 (surface source/albedo and the
     # hydrostatic Δp in compute_col_gas_kernel! assume p decreasing with
@@ -142,12 +142,12 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     # per-layer/per-level copy reverses the vertical index.
     for k in 1:nlayers
         kr = nlayers - k + 1
-        h2o_k = max(FT(_layer_value(h2o, k)), zero(FT))
+        h2o_k = max(FT(layer_value(h2o, k)), zero(FT))
         state.layerdata[2, kr, 1] = FT(atmosphere.pressure_layers[k])
         state.layerdata[3, kr, 1] = clamp(FT(atmosphere.temperature_layers[k]), FT(160), FT(355))
         state.layerdata[4, kr, 1] = zero(FT)
         state.vmr.vmr_h2o[kr, 1] = h2o_k
-        state.vmr.vmr_o3[kr, 1] = max(FT(_layer_value(o3, k)), zero(FT))
+        state.vmr.vmr_o3[kr, 1] = max(FT(layer_value(o3, k)), zero(FT))
     end
 
     for k in 1:(nlayers + 1)

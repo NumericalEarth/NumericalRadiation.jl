@@ -4,7 +4,7 @@ using NumericalRadiation
 
 const DOCS_ROOT = @__DIR__
 const REPO_ROOT = normpath(joinpath(DOCS_ROOT, ".."))
-const LITERATE_ROOT = joinpath(REPO_ROOT, "examples", "literate")
+const LITERATE_ROOT = joinpath(REPO_ROOT, "examples")
 const GENERATED_ROOT = joinpath(DOCS_ROOT, "src", "generated")
 const ASSET_ROOT = joinpath(DOCS_ROOT, "src", "assets")
 

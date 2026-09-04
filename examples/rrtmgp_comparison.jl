@@ -101,7 +101,7 @@ nothing #hide
 
 # ## The ecCKD members
 #
-# Both official longwave models — the 32-g single-band FSCK table and the
+# Both reference longwave models — the 32-g single-band FSCK table and the
 # 64-g narrow-band table — run through the same staged calls. The surface
 # boundary uses each model's own per-g Planck emission via
 # [`surface_longwave_emission`](@ref); a scalar ``σT⁴`` boundary would be
@@ -110,16 +110,16 @@ nothing #hide
 intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
 
 function ecckd_member(selector)
-    gas_optics = read_official_ecckd_gas_optics(selector; names = intended_gases)
+    gas_optics = read_reference_ecckd_gas_optics(selector; names = intended_gases)
     @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N),
+    longwave = LongwaveOptics(zeros(longwave_gpoints, N),
                                          zeros(longwave_gpoints, N);
                                          source_top = zeros(longwave_gpoints, N),
                                          source_bottom = zeros(longwave_gpoints, N),
                                          weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
                                            weights = zeros(shortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
                              longwave_down = zeros(N + 1),

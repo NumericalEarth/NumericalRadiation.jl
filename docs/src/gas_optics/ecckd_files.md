@@ -27,9 +27,9 @@ validate_ecckd_definition(definition)
 Without `NCDatasets`, path-based loading throws a clear error while the core
 schema types remain available.
 
-## Official ecCKD Data
+## Reference ecCKD Data
 
-The package resolves official ecCKD definition files through
+The package resolves reference ecCKD definition files through
 `Artifacts.toml`. The pinned `ecrad_data` artifact points at the upstream ecRad
 source archive used by the validation suite. Users can override this with
 `RH_ECRAD_DATA_PATH` when they already have an ecRad checkout or unpacked data
@@ -38,9 +38,9 @@ directory.
 ```julia
 using NumericalRadiation
 
-official_ecckd_model_inventory()
-spec = official_ecckd_model_spec("32x32")
-paths = official_ecckd_definition_paths(spec)
+reference_ecckd_model_inventory()
+spec = reference_ecckd_model_spec("32x32")
+paths = reference_ecckd_definition_paths(spec)
 paths.longwave
 paths.shortwave
 ```
@@ -59,8 +59,8 @@ Individual files can be addressed by filename or by stable keys:
 Published model pairs can be selected with compact names:
 
 ```julia
-official_ecckd_model_specs()
-read_official_ecckd_gas_optics("64x32";
+reference_ecckd_model_specs()
+read_reference_ecckd_gas_optics("64x32";
     names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
@@ -69,11 +69,11 @@ read_official_ecckd_gas_optics("64x32";
 Path lookup with `require=false` is non-mutating: it checks environment paths,
 installed artifacts, and local validation data without downloading the lazy
 artifact. Use the default `require=true` in production workflows when the
-official files should be downloaded automatically if needed.
+reference files should be downloaded automatically if needed.
 
-## Official ecCKD Source
+## Reference ecCKD Source
 
-The package also resolves the official ecCKD source tree through the lazy
+The package also resolves the reference ecCKD source tree through the lazy
 `ecckd_source` artifact. This is the small C++/shell source release containing
 the original `optimize_lut`, cost-function, and training-script machinery. It
 does not include the large CKDMIP line-by-line spectral absorption database.

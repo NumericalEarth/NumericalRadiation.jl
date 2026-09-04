@@ -6,14 +6,14 @@ This keeps gas optics, cloud optics, and solvers independently testable.
 
 ## Containers
 
-- [`CloudOpticalProperties`](@ref) stores grid-mean layer cloud optical depths:
+- [`CloudOptics`](@ref) stores grid-mean layer cloud optical depths:
   longwave absorption, shortwave absorption, shortwave scattering, and the
   shortwave scattering asymmetry factor.
-- [`CloudyRegionCloudOpticalProperties`](@ref) stores the same channels for the
+- [`CloudyRegionCloudOptics`](@ref) stores the same channels for the
   *cloudy region only*, with `cloud_fraction` and `overlap_parameter` carried
   separately. This matches the all-sky solver convention: cloud cover must not
   be encoded by weakening in-cloud optical depth.
-- [`AerosolOpticalProperties`](@ref) mirrors the cloud container for aerosols.
+- [`AerosolOptics`](@ref) mirrors the cloud container for aerosols.
 
 ## Layer models
 
@@ -60,7 +60,7 @@ ice scattering tables and maps them onto ecCKD g-point grids:
 - [`CloudScatteringTable`](@ref) stores mass extinction, single-scattering
   albedo, and asymmetry factor as functions of wavenumber (cm⁻¹) and effective
   radius (m), read by [`read_cloud_scattering_table`](@ref) (requires the
-  NCDatasets extension). The official files are the Mie liquid-droplet and
+  NCDatasets extension). The reference files are the Mie liquid-droplet and
   Baum ice tables from the pinned ecRad data artifact.
 - [`EcCKDSpectralMapping`](@ref) stores the resolved spectral intervals and
   the `gpoint_fraction` matrix from a CKD-definition file — ecCKD's fixed
