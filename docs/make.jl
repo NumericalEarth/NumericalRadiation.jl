@@ -11,6 +11,11 @@ const ASSET_ROOT = joinpath(DOCS_ROOT, "src", "assets")
 mkpath(GENERATED_ROOT)
 mkpath(ASSET_ROOT)
 
+# Literate executes each page from GENERATED_ROOT, so the setup file the RCE
+# page includes must sit alongside the generated source.
+cp(joinpath(LITERATE_ROOT, "manabe_rce_setup.jl"),
+   joinpath(GENERATED_ROOT, "manabe_rce_setup.jl"); force = true)
+
 for example in (
     "analytic_column.jl",
     "staged_ecckd_column.jl",

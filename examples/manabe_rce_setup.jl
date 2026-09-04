@@ -1,8 +1,9 @@
-# Implementation for the Manabe radiative-convective equilibrium tutorial
+# Support for the Manabe radiative-convective equilibrium tutorial
 # (examples/manabe_rce.jl). The tutorial page defines the headline
-# experiment parameters, includes this file, and shows only the experiment
-# calls and results; physical constants, the initial-state prescription,
-# and the solver live here. The formulation follows the RRTMGP.jl Manabe tutorial: level
+# experiment parameters, includes this file, and defines the outer
+# energy-balance solve `rce`; physical constants, the initial-state
+# prescription, the inner march `equilibrate!`, the `bracketed_secant`
+# root bookkeeping, and the verification gates live here. The formulation follows the RRTMGP.jl Manabe tutorial: level
 # temperatures are prognostic, convective adjustment is a one-line clamp
 # onto the critical profile anchored at a fixed trial surface temperature,
 # and the surface temperature is solved externally from top-of-atmosphere
@@ -191,23 +192,14 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
             asr = fluxes.shortwave_down[1] - fluxes.shortwave_up[1])
 end
 
-# Outer closure: solve F(Tₛ) = ASR − OLR = 0 by a bracketed secant iteration.
-# The bracket expands repeatedly (doubling, hard-bounded) until it changes
-# sign — necessary because absorber-removal roots sit tens of kelvin from
-# the control. Every inner equilibration must converge, or the build fails.
+# Bracketed secant bookkeeping for the tutorial page's rce: expand the
+# initial guesses (doubling, hard-bounded to [150, 350] K) until F changes
+# sign, then iterate a secant step with bisection fallback. evaluate must
+# return (F, state); returns the root, its state, and iteration counts.
 
-function rce(χCO₂; ozone = χO₃_ext, fixed_water_vapor = nothing,
-             Tₛ_guesses = (285, 295), warm_start = nothing,
-             imbalance_tolerance = 0.1, max_expansions = 8, max_iterations = 12)
-    T_state = warm_start === nothing ? standard_T.(reverse(zᵢ)) : copy(warm_start)
-    evaluate(Tₛ) = begin
-        r = equilibrate!(T_state, Tₛ; χCO₂, ozone, fixed_water_vapor)
-        r.converged || error("inner equilibration at trial Tₛ = $Tₛ did not converge")
-        F = r.asr - r.olr
-        isfinite(F) || error("nonfinite TOA residual at trial Tₛ = $Tₛ")
-        (F, r)
-    end
-    lo, hi = min(Tₛ_guesses...), max(Tₛ_guesses...)
+function bracketed_secant(evaluate, guesses; imbalance_tolerance = 0.1,
+                          max_expansions = 8, max_iterations = 12)
+    lo, hi = min(guesses...), max(guesses...)
     F_lo, r_lo = evaluate(lo)
     F_hi, r_hi = evaluate(hi)
     expansion = 8
@@ -244,8 +236,7 @@ function rce(χCO₂; ozone = χO₃_ext, fixed_water_vapor = nothing,
         Tₛ, F, r = candidate, F_c, r_c
         iterations += 1
     end
-    return (; r..., Tₛ, secant_iterations = iterations,
-            bracket_expansions = expansions)
+    return Tₛ, r, iterations, expansions
 end
 
 # Verification gates, executed silently; every one is build-failing.
