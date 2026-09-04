@@ -77,9 +77,9 @@ end
 # surface nearly twice as much when the vapor is allowed to rise with
 # temperature as when it is frozen at the control field.
 #
-# The solver marches level temperatures; the figures show the layer-center
-# profiles — the adjacent-level means the radiation actually sees — as the
-# RRTMGP tutorial does.
+# The solver marches level temperatures; the figures show the derived
+# layer-center profiles, where gas optical properties and heating rates are
+# evaluated, as the current RRTMGP tutorial does.
 
 using CairoMakie
 
