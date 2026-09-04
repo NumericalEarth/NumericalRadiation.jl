@@ -1,238 +1,94 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manabe radiative-convective equilibrium · NumericalRadiation.jl</title><meta name="title" content="Manabe radiative-convective equilibrium · NumericalRadiation.jl"/><meta property="og:title" content="Manabe radiative-convective equilibrium · NumericalRadiation.jl"/><meta property="twitter:title" content="Manabe radiative-convective equilibrium · NumericalRadiation.jl"/><meta name="description" content="Documentation for NumericalRadiation.jl."/><meta property="og:description" content="Documentation for NumericalRadiation.jl."/><meta property="twitter:description" content="Documentation for NumericalRadiation.jl."/><meta property="og:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/manabe_rce/"/><meta property="twitter:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/manabe_rce/"/><link rel="canonical" href="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/manabe_rce/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">NumericalRadiation.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../single_column/">Single-column analytical radiation</a></li><li><a class="tocitem" href="../staged_ecckd_column/">The staged interface</a></li><li><a class="tocitem" href="../co2_forcing/">CO₂ forcing with ecCKD</a></li><li><a class="tocitem" href="../rrtmgp_comparison/">Correlated-k model spread</a></li><li class="is-active"><a class="tocitem" href>Manabe radiative-convective equilibrium</a><ul class="internal"><li><a class="tocitem" href="#The-model-column-and-its-fixed-ingredients"><span>The model column and its fixed ingredients</span></a></li><li><a class="tocitem" href="#Convective-adjustment"><span>Convective adjustment</span></a></li><li><a class="tocitem" href="#Work-arrays"><span>Work arrays</span></a></li><li><a class="tocitem" href="#Time-marching-to-equilibrium"><span>Time-marching to equilibrium</span></a></li><li><a class="tocitem" href="#Four-equilibria"><span>Four equilibria</span></a></li><li><a class="tocitem" href="#The-equilibrium-and-its-response"><span>The equilibrium and its response</span></a></li></ul></li><li><a class="tocitem" href="../all_sky_cre/">All-sky cloud radiative effect</a></li></ul></li><li><span class="tocitem">Gas optics</span><ul><li><a class="tocitem" href="../../gas_optics/ecckd_files/">ecCKD files</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_runtime_workflow/">ecCKD runtime workflow</a></li><li><a class="tocitem" href="../../gas_optics/correlated_k/">Correlated-k method</a></li></ul></li><li><span class="tocitem">Solvers &amp; schemes</span><ul><li><a class="tocitem" href="../../radiative_transfer/">Radiative transfer</a></li><li><a class="tocitem" href="../../solvers/">Column solvers</a></li><li><a class="tocitem" href="../../cloud_optics/">Cloud and aerosol optics</a></li><li><a class="tocitem" href="../../longwave/">Longwave</a></li><li><a class="tocitem" href="../../shortwave/">Shortwave</a></li><li><a class="tocitem" href="../../notation/">Notation</a></li></ul></li><li><span class="tocitem">API reference</span><ul><li><a class="tocitem" href="../../api/">Overview</a></li><li><a class="tocitem" href="../../api/staged_runtime/">Staged runtime</a></li><li><a class="tocitem" href="../../api/ecckd/">ecCKD and data</a></li><li><a class="tocitem" href="../../api/column_schemes/">Column schemes</a></li><li><a class="tocitem" href="../../api/metrics/">Metrics</a></li></ul></li><li><a class="tocitem" href="../../architecture/">Architecture</a></li><li><a class="tocitem" href="../../validation/">Validation</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Manabe radiative-convective equilibrium</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Manabe radiative-convective equilibrium</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/manabe_rce.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Manabe-style-radiative-convective-equilibrium"><a class="docs-heading-anchor" href="#Manabe-style-radiative-convective-equilibrium">Manabe-style radiative-convective equilibrium</a><a id="Manabe-style-radiative-convective-equilibrium-1"></a><a class="docs-heading-anchor-permalink" href="#Manabe-style-radiative-convective-equilibrium" title="Permalink"></a></h1><p>Manabe and Wetherald (1967, <em>J. Atmos. Sci.</em>, doi: <a href="https://doi.org/10.1175/1520-0469(1967)024%3C0241:TEOTAW%3E2.0.CO;2">10.1175/1520-0469(1967)024&lt;0241:TEOTAW&gt;2.0.CO;2</a>) computed the temperature of an atmospheric column in <em>radiative-convective equilibrium</em>: radiation heats and cools each layer, and wherever radiation would leave the column steeper than a critical lapse rate, convection instantly restores it. Two of their choices made the calculation famous — holding <em>relative</em> humidity fixed, so water vapor rises and falls with temperature, and asking how the equilibrium surface temperature responds to doubled CO₂.</p><p>This page runs a Manabe-<em>style</em> version of that calculation with the staged ecCKD runtime. It is not a numerical reproduction of Manabe and Wetherald&#39;s result: the radiation is modern correlated-k gas optics rather than their band model, the sky is clear, the ozone profile is idealized, insolation is a prescribed global-mean value, and the surface is a slab. Every response measured here is an outcome of <em>this</em> configuration, not a canonical sensitivity.</p><pre><code class="language-julia hljs">using NumericalRadiation
-using NCDatasets     # NetCDF reader extension (ecCKD files)
-using Printf</code></pre><h2 id="The-model-column-and-its-fixed-ingredients"><a class="docs-heading-anchor" href="#The-model-column-and-its-fixed-ingredients">The model column and its fixed ingredients</a><a id="The-model-column-and-its-fixed-ingredients-1"></a><a class="docs-heading-anchor-permalink" href="#The-model-column-and-its-fixed-ingredients" title="Permalink"></a></h2><p>All parameters of the configuration, stated plainly. Physical constants carry their mathematical symbols: gravity <span>$g$</span>, heat capacity <span>$c_p$</span>, the Stefan-Boltzmann constant <span>$σ$</span>, the dry-air gas constant <span>$R^d$</span>, and the dry-air and water molar masses <span>$m^d$</span> and <span>$m^v$</span>:</p><pre><code class="language-julia hljs">g  = 9.80665         # m s⁻²
-cₚ = 1004            # J kg⁻¹ K⁻¹
-σ  = 5.670374419e-8  # W m⁻² K⁻⁴
-Rᵈ = 287.05          # J kg⁻¹ K⁻¹
-mᵈ = 0.028964        # kg mol⁻¹
-mᵛ = 0.018016        # kg mol⁻¹
-day = 86_400         # s</code></pre><pre><code class="nohighlight hljs">86400</code></pre><p>The Manabe-Wetherald ingredients: critical lapse rate <span>$Γ$</span>, prescribed global-mean insolation <span>$S_0$</span> at zenith cosine <span>$μ_0$</span>, surface albedo <span>$α$</span>, and a surface slab of heat capacity <span>$C_s$</span>:</p><pre><code class="language-julia hljs">Γ  = 6.5e-3          # K m⁻¹
-S₀ = 340.25          # TOA downwelling shortwave flux, W m⁻²
-μ₀ = 0.5
-α  = 0.22            # crude stand-in for a cloud-free planet
-Cₛ = 1e7             # J m⁻² K⁻¹
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manabe radiative-convective equilibrium · NumericalRadiation.jl</title><meta name="title" content="Manabe radiative-convective equilibrium · NumericalRadiation.jl"/><meta property="og:title" content="Manabe radiative-convective equilibrium · NumericalRadiation.jl"/><meta property="twitter:title" content="Manabe radiative-convective equilibrium · NumericalRadiation.jl"/><meta name="description" content="Documentation for NumericalRadiation.jl."/><meta property="og:description" content="Documentation for NumericalRadiation.jl."/><meta property="twitter:description" content="Documentation for NumericalRadiation.jl."/><meta property="og:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/manabe_rce/"/><meta property="twitter:url" content="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/manabe_rce/"/><link rel="canonical" href="https://NumericalEarth.github.io/NumericalRadiation.jl/generated/manabe_rce/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">NumericalRadiation.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../single_column/">Single-column analytical radiation</a></li><li><a class="tocitem" href="../staged_ecckd_column/">The staged interface</a></li><li><a class="tocitem" href="../co2_forcing/">CO₂ forcing with ecCKD</a></li><li><a class="tocitem" href="../rrtmgp_comparison/">Correlated-k model spread</a></li><li class="is-active"><a class="tocitem" href>Manabe radiative-convective equilibrium</a><ul class="internal"><li><a class="tocitem" href="#The-configuration"><span>The configuration</span></a></li><li><a class="tocitem" href="#The-experiments,-and-the-answer"><span>The experiments, and the answer</span></a></li><li><a class="tocitem" href="#What-each-absorber-contributes"><span>What each absorber contributes</span></a></li><li><a class="tocitem" href="#Three-ideas-behind-the-calculation"><span>Three ideas behind the calculation</span></a></li></ul></li><li><a class="tocitem" href="../all_sky_cre/">All-sky cloud radiative effect</a></li></ul></li><li><span class="tocitem">Gas optics</span><ul><li><a class="tocitem" href="../../gas_optics/ecckd_files/">ecCKD files</a></li><li><a class="tocitem" href="../../gas_optics/ecckd_runtime_workflow/">ecCKD runtime workflow</a></li><li><a class="tocitem" href="../../gas_optics/correlated_k/">Correlated-k method</a></li></ul></li><li><span class="tocitem">Solvers &amp; schemes</span><ul><li><a class="tocitem" href="../../radiative_transfer/">Radiative transfer</a></li><li><a class="tocitem" href="../../solvers/">Column solvers</a></li><li><a class="tocitem" href="../../cloud_optics/">Cloud and aerosol optics</a></li><li><a class="tocitem" href="../../longwave/">Longwave</a></li><li><a class="tocitem" href="../../shortwave/">Shortwave</a></li><li><a class="tocitem" href="../../notation/">Notation</a></li></ul></li><li><span class="tocitem">API reference</span><ul><li><a class="tocitem" href="../../api/">Overview</a></li><li><a class="tocitem" href="../../api/staged_runtime/">Staged runtime</a></li><li><a class="tocitem" href="../../api/ecckd/">ecCKD and data</a></li><li><a class="tocitem" href="../../api/column_schemes/">Column schemes</a></li><li><a class="tocitem" href="../../api/metrics/">Metrics</a></li></ul></li><li><a class="tocitem" href="../../architecture/">Architecture</a></li><li><a class="tocitem" href="../../validation/">Validation</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Manabe radiative-convective equilibrium</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Manabe radiative-convective equilibrium</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/manabe_rce.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Manabe-radiative-convective-equilibrium-with-ecCKD"><a class="docs-heading-anchor" href="#Manabe-radiative-convective-equilibrium-with-ecCKD">Manabe radiative-convective equilibrium with ecCKD</a><a id="Manabe-radiative-convective-equilibrium-with-ecCKD-1"></a><a class="docs-heading-anchor-permalink" href="#Manabe-radiative-convective-equilibrium-with-ecCKD" title="Permalink"></a></h1><p>What surface temperature does an atmospheric column choose, and how much does it warm when CO₂ doubles? Manabe and Wetherald answered those questions in 1967 (<em>J. Atmos. Sci.</em>, doi: <a href="https://doi.org/10.1175/1520-0469(1967)024%3C0241:TEOTAW%3E2.0.CO;2">10.1175/1520-0469(1967)024&lt;0241:TEOTAW&gt;2.0.CO;2</a>). This page runs a Manabe-<em>style</em> version of that calculation: radiation heats and cools each level, convection instantly clamps the column onto a critical lapse-rate profile anchored at the surface, the surface temperature is solved from top-of-atmosphere energy balance, and — their famous choice — <em>relative</em> humidity stays fixed, so water vapor rises and falls with temperature.</p><h2 id="The-configuration"><a class="docs-heading-anchor" href="#The-configuration">The configuration</a><a id="The-configuration-1"></a><a class="docs-heading-anchor-permalink" href="#The-configuration" title="Permalink"></a></h2><p>The experiment&#39;s headline parameters are below. Physical constants, the initial-state prescription, the level marching, the convective clamp, the surface-temperature solve, and the verification gates live in <a href="https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/manabe_rce_setup.jl"><code>manabe_rce_setup.jl</code></a>.</p><pre><code class="language-julia hljs">using NumericalRadiation
+using NCDatasets
+using Printf
 
-surface_relative_humidity = 0.77   # Manabe-Wetherald profile parameter
-water_vapor_floor = 5e-6                   # stratospheric water-vapor floor</code></pre><pre><code class="nohighlight hljs">5.0e-6</code></pre><p>The column: <span>$N$</span> layers with interface pressures <span>$pᵢ$</span> from 20 hPa down to the surface pressure <span>$pₛ$</span>, layer pressures <span>$p$</span> at their midpoints, and an idealized ozone dry-air mole fraction <span>$χ_{O₃}(p)$</span>:</p><pre><code class="language-julia hljs">N  = 60
-pₛ = 101_325
-pᵢ = collect(range(2_000, pₛ; length = N + 1))
-p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
-χO₃ = @. 3e-8 + 5e-6 * (2_000 / p)</code></pre><p>The gas-optics model is read once and shared by every run. The full published gas set is activated; CH₄, N₂O, and the CFCs are then given zero amounts, which — because activating a gas subtracts its reference contribution from the composite background — removes them from the atmosphere entirely. The greenhouse gases here are H₂O, O₃, and CO₂, plus the O₂/N₂ composite continuum, matching the spirit of Manabe and Wetherald&#39;s gas set.</p><pre><code class="language-julia hljs">gas_optics = read_official_ecckd_gas_optics(&quot;32x32&quot;;
-    names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))</code></pre><p>Water vapor follows Manabe and Wetherald&#39;s fixed-relative-humidity profile <span>$h(p) = 0.77\,(p/p_s - 0.02)/0.98$</span> with a Magnus saturation vapor pressure and a stratospheric floor; <span>$χ_{H₂O}$</span> is the dry-air mole fraction. Because the <em>relative</em> humidity is fixed, the vapor is recomputed from the temperature at every step — this is the water-vapor feedback.</p><pre><code class="language-julia hljs">saturation_vapor_pressure(T) = 610.94 * exp(17.625 * (T - 273.15) / (T - 30.11))
+Γ  = 6.5e-3                  # critical lapse rate, K m⁻¹ (Manabe-Wetherald)
+μ₀ = cosd(47.9)              # cosine of the solar zenith angle
+S₀ = 509 * μ₀                # horizontal TOA shortwave flux, W m⁻²
+α  = 0.3                     # surface albedo
 
-function fixed_relative_humidity!(χH₂O, T)
-    for k in eachindex(χH₂O)
-        h = max(surface_relative_humidity * (p[k] / pₛ - 0.02) / 0.98, 0)
-        eₛ = saturation_vapor_pressure(T[k])
-        χH₂O[k] = max(h * eₛ / max(p[k] - h * eₛ, 1), water_vapor_floor)
-    end
-    return χH₂O
-end</code></pre><h2 id="Convective-adjustment"><a class="docs-heading-anchor" href="#Convective-adjustment">Convective adjustment</a><a id="Convective-adjustment-1"></a><a class="docs-heading-anchor-permalink" href="#Convective-adjustment" title="Permalink"></a></h2><p>Wherever an adjacent pair of levels — including the surface and the lowest layer — is steeper than the critical lapse rate <span>$Γ$</span>, the pair is relaxed exactly onto it while conserving the pressure-weighted enthalpy (the surface slab contributes its own heat capacity <span>$C_s$</span>). Sweeps repeat until no pair violates the criterion; this is the instantaneous limit of convection, as in Manabe and Wetherald.</p><pre><code class="language-julia hljs">layer_heat_capacity = [cₚ * (pᵢ[k + 1] - pᵢ[k]) / g for k in 1:N]
+surface_relative_humidity = 0.77   # Manabe-Wetherald humidity profile parameter
+water_vapor_floor = 4.8e-6         # stratospheric χH₂O floor, mole fraction
 
-function convective_adjustment!(T, Tₛ)
-    c = layer_heat_capacity
-    for _ in 1:200
-        changed = false
-        Δz = Rᵈ * 0.5 * (Tₛ + T[N]) / g * log(pᵢ[N + 1] / p[N])
-        target = Γ * Δz
-        if Tₛ - T[N] &gt; target + 1e-10
-            H = Cₛ * Tₛ + c[N] * T[N]
-            T[N] = (H - Cₛ * target) / (Cₛ + c[N])
-            Tₛ = T[N] + target
-            changed = true
-        end
-        for k in N-1:-1:1
-            Δz = Rᵈ * 0.5 * (T[k] + T[k + 1]) / g * log(p[k + 1] / p[k])
-            target = Γ * Δz
-            if T[k + 1] - T[k] &gt; target + 1e-10
-                H = c[k] * T[k] + c[k + 1] * T[k + 1]
-                T[k + 1] = (H + c[k] * target) / (c[k] + c[k + 1])
-                T[k] = T[k + 1] - target
-                changed = true
-            end
-        end
-        changed || break
-    end
-    return Tₛ
-end</code></pre><h2 id="Work-arrays"><a class="docs-heading-anchor" href="#Work-arrays">Work arrays</a><a id="Work-arrays-1"></a><a class="docs-heading-anchor-permalink" href="#Work-arrays" title="Permalink"></a></h2><p>The staged runtime writes into caller-owned arrays sized by the g-point counts of the loaded model:</p><pre><code class="language-julia hljs">function radiation_work_arrays(gas_optics, N)
-    longwave_gpoints = length(gas_optics.longwave_weights)
-    shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
-                                         source_top = zeros(longwave_gpoints, N),
-                                         source_bottom = zeros(longwave_gpoints, N),
-                                         weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
-                                           rayleigh_optical_depth = zeros(shortwave_gpoints, N),
-                                           scattering_asymmetry = zeros(shortwave_gpoints, N),
-                                           weights = zeros(shortwave_gpoints))
-    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                             longwave_down = zeros(N + 1),
-                             shortwave_up = zeros(N + 1),
-                             shortwave_down = zeros(N + 1))
-    return longwave, shortwave, fluxes
-end</code></pre><h2 id="Time-marching-to-equilibrium"><a class="docs-heading-anchor" href="#Time-marching-to-equilibrium">Time-marching to equilibrium</a><a id="Time-marching-to-equilibrium-1"></a><a class="docs-heading-anchor-permalink" href="#Time-marching-to-equilibrium" title="Permalink"></a></h2><p>Each step: refresh water vapor from the current temperatures, solve radiation through the staged runtime — with the surface emitting its per-g Planck spectrum via <a href="../../api/ecckd/#NumericalRadiation.surface_longwave_emission"><code>surface_longwave_emission</code></a>, never a gray <span>$σT⁴$</span> scalar — apply the radiative tendencies and the surface energy budget, then convectively adjust. Convergence is diagnosed from the <em>net</em> state change per day — temperatures after a complete radiative-plus-convective step minus temperatures before it — because the raw radiative tendencies stay large in equilibrium, balanced by the convective flux. The march stops once that residual stays below <code>tolerance</code> for 50 consecutive model days — only then is the returned <code>converged</code> flag true; hitting <code>max_days</code> leaves it false and fails the build gates below. The elapsed model days are returned, and the returned fluxes are recomputed at the final adjusted state.</p><pre><code class="language-julia hljs">FT = Float64   # element type where floating-point storage is required
+χCH₄ = 1.9e-6                # present-day global means for the
+χN₂O = 3.4e-7                # well-mixed trace gases
 
-function radiative_convective_equilibrium(χCO₂; T₀ = nothing, Tₛ₀ = 288,
-                                          fixed_water_vapor = nothing,
-                                          max_days = 3000, Δt = 21_600,
-                                          tolerance = 1e-4)
-    T  = T₀ === nothing ? fill(FT(280), N) : copy(T₀)
-    Tᵢ = zeros(N + 1)
-    Tₛ = Tₛ₀
-    χH₂O = zeros(N)
-    nᵈ = zeros(N)
-    fixed_relative_humidity!(χH₂O, T)
-    fixed_water_vapor !== nothing &amp;&amp; (χH₂O .= fixed_water_vapor)
+N  = 60                      # physical layers, uniform in altitude
+zₜ = 60e3                    # m; one isothermal lookup-boundary layer above
+pₛ = 101_325                 # Pa
+</code></pre><h2 id="The-experiments,-and-the-answer"><a class="docs-heading-anchor" href="#The-experiments,-and-the-answer">The experiments, and the answer</a><a id="The-experiments,-and-the-answer-1"></a><a class="docs-heading-anchor-permalink" href="#The-experiments,-and-the-answer" title="Permalink"></a></h2><p>Each experiment is a full radiative-convective equilibrium: an inner time-march at fixed trial surface temperature (convective clamp, staged radiation, level tendencies) inside an outer root solve that adjusts the surface temperature until absorbed shortwave balances outgoing longwave. The main experiment runs 1×, 2×, and 4× CO₂ with the fixed-RH closure, plus the discriminating control: 4× CO₂ with water vapor <em>frozen</em> at the control field. Every equilibration must pass the verification gates or this page fails to build.</p><pre><code class="language-julia hljs">χCO₂ = 420e-6
 
-    gases = (composite = zeros(N), h2o = zeros(N), o3 = zeros(N),
-             co2 = zeros(N), ch4 = zeros(N), n2o = zeros(N),
-             cfc11 = zeros(N), cfc12 = zeros(N))
+control      = rce(χCO₂)
+doubled      = rce(2χCO₂; warm_start = control.Tᵢ)
+quadrupled   = rce(4χCO₂; warm_start = control.Tᵢ)
+frozen_vapor = rce(4χCO₂; warm_start = control.Tᵢ,
+                   fixed_water_vapor = control.χH₂O)
 
-    # The evolving surface temperature is supplied to the solver through
-    # LongwaveBoundaryConditions each step, so the static state carries none.
-    atmosphere = ColumnAtmosphere(; pressure_layers = p,
-                                  pressure_interfaces = pᵢ,
-                                  temperature_layers = T,
-                                  temperature_interfaces = Tᵢ,
-                                  gases,
-                                  surface = nothing,
-                                  geometry = (cos_zenith = μ₀,))
+verify_equilibria([(&quot;control&quot;, control), (&quot;2×&quot;, doubled),
+                   (&quot;4×&quot;, quadrupled), (&quot;4× frozen vapor&quot;, frozen_vapor)])
 
-    longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, N)
-    shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = S₀,
-                                                     surface_albedo = α)
-    Ṫ = zeros(N)
-    previous_temperature = zeros(N)
+for (name, state) in ((&quot;control, 420 ppm CO₂&quot;, control),
+                      (&quot;2× CO₂, fixed RH&quot;, doubled),
+                      (&quot;4× CO₂, fixed RH&quot;, quadrupled),
+                      (&quot;4× CO₂, frozen water vapor&quot;, frozen_vapor))
+    @printf(&quot;%-28s Tₛ = %7.2f K   ΔTₛ = %+6.2f K\n&quot;,
+            name, state.Tₛ, state.Tₛ - control.Tₛ)
+end</code></pre><pre><code class="nohighlight hljs">control, 420 ppm CO₂         Tₛ =  288.09 K   ΔTₛ =  +0.00 K
+2× CO₂, fixed RH             Tₛ =  290.72 K   ΔTₛ =  +2.63 K
+4× CO₂, fixed RH             Tₛ =  293.85 K   ΔTₛ =  +5.77 K
+4× CO₂, frozen water vapor   Tₛ =  291.11 K   ΔTₛ =  +3.02 K
+</code></pre><p>Comparing the two 4× equilibria isolates the fixed-RH water-vapor amplification in this configuration: the same quadrupled CO₂ warms the surface nearly twice as much when the vapor is allowed to rise with temperature as when it is frozen at the control field.</p><pre><code class="language-julia hljs">using CairoMakie
 
-    solve_radiation!(Tₛ) = begin
-        for k in 1:N
-            nᵈ[k] = (pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k]))
-            gases.composite[k] = nᵈ[k]
-            gases.h2o[k] = χH₂O[k] * nᵈ[k]
-            gases.o3[k] = χO₃[k] * nᵈ[k]
-            gases.co2[k] = χCO₂ * nᵈ[k]
-        end
-        for k in 2:N
-            w = (pᵢ[k] - p[k - 1]) / (p[k] - p[k - 1])
-            Tᵢ[k] = (1 - w) * T[k - 1] + w * T[k]
-        end
-        Tᵢ[1] = T[1]
-        Tᵢ[end] = T[N] + (T[N] - T[N - 1]) / (p[N] - p[N - 1]) * (pᵢ[end] - p[N])
-        optical_properties!(longwave, shortwave, gas_optics, atmosphere)
-        surface_emission = surface_longwave_emission(gas_optics, Tₛ)
-        radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                          LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
-        radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
-                          shortwave_boundary)
-    end
+pressure_ticks = ([0.3, 1, 3, 10, 30, 100, 300, 1000],
+                  [&quot;0.3&quot;, &quot;1&quot;, &quot;3&quot;, &quot;10&quot;, &quot;30&quot;, &quot;100&quot;, &quot;300&quot;, &quot;1000&quot;])
 
-    residual = Inf
-    sustained_steps = round(Int, 50day / Δt)
-    streak = 0
-    days_elapsed = max_days
-    converged = false
-    for step in 1:round(Int, max_days * day / Δt)
-        fixed_water_vapor === nothing &amp;&amp; fixed_relative_humidity!(χH₂O, T)
-        previous_temperature .= T
-        previous_surface_temperature = Tₛ
-        solve_radiation!(Tₛ)
-        heating_rates!(Ṫ, fluxes, atmosphere; gravity = g, heat_capacity = cₚ)
-        @. T += Δt * Ṫ
-        surface_net = fluxes.shortwave_down[end] - fluxes.shortwave_up[end] +
-                      fluxes.longwave_down[end] - fluxes.longwave_up[end]
-        Tₛ += Δt * surface_net / Cₛ
-        Tₛ = convective_adjustment!(T, Tₛ)
-        residual = max(maximum(abs, T .- previous_temperature),
-                       abs(Tₛ - previous_surface_temperature)) / Δt * day
-        streak = residual &lt; tolerance ? streak + 1 : 0
-        if streak &gt;= sustained_steps
-            days_elapsed = step * Δt / day
-            converged = true
-            break
-        end
-    end
-    fixed_water_vapor === nothing &amp;&amp; fixed_relative_humidity!(χH₂O, T)
-    solve_radiation!(Tₛ)     # fluxes at the final adjusted state
-    return (; T = copy(T), Tₛ, χH₂O = copy(χH₂O), residual, converged,
-            days = days_elapsed,
-            olr = fluxes.longwave_up[1],
-            asr = fluxes.shortwave_down[1] - fluxes.shortwave_up[1])
-end</code></pre><h2 id="Four-equilibria"><a class="docs-heading-anchor" href="#Four-equilibria">Four equilibria</a><a id="Four-equilibria-1"></a><a class="docs-heading-anchor-permalink" href="#Four-equilibria" title="Permalink"></a></h2><p>A baseline at 420 ppm CO₂ spun up from a physically motivated initial state — a capped lapse-rate profile — then doubled and quadrupled CO₂ warm-started from the baseline, and — following Manabe and Wetherald&#39;s discriminating experiment — a doubled-CO₂ run with the water vapor <em>frozen</em> at the baseline field, which removes the feedback. The initialization is disclosed because equilibrium uniqueness is not proven; during development an isothermal start converged to the same state on this configuration, but the published calculation pins the lapse start. Every returned state must beat verified convergence gates — including a tropospheric inversion-limit check (adjacent-layer cooling with depth no stronger than a small numerical tolerance) — or the page fails to build:</p><pre><code class="language-julia hljs">tolerance_gate = 1e-3    # K day⁻¹, post-adjustment residual
-imbalance_gate = 0.1     # W m⁻², |ASR − OLR| at the returned state
-
-initial_temperature = clamp.(288 .- 65 .* (1 .- (p ./ pₛ) .^ 0.286), 200, 288)
-
-base = radiative_convective_equilibrium(420e-6; T₀ = initial_temperature)
-doubled = radiative_convective_equilibrium(840e-6; T₀ = base.T, Tₛ₀ = base.Tₛ)
-quadrupled = radiative_convective_equilibrium(1680e-6; T₀ = base.T, Tₛ₀ = base.Tₛ)
-frozen = radiative_convective_equilibrium(840e-6; T₀ = base.T, Tₛ₀ = base.Tₛ,
-                                          fixed_water_vapor = base.χH₂O)
-
-for (name, r) in ((&quot;baseline&quot;, base), (&quot;2×&quot;, doubled),
-                  (&quot;4×&quot;, quadrupled), (&quot;2× frozen-q&quot;, frozen))
-    @assert r.converged &quot;$name: never sustained residual &lt; tolerance for 50 days&quot;
-    @assert r.residual &lt; tolerance_gate &quot;$name: residual $(r.residual) K/day above gate&quot;
-    @assert abs(r.asr - r.olr) &lt; imbalance_gate &quot;$name: TOA imbalance $(r.asr - r.olr) W/m²&quot;
-    inversion_limit = minimum(diff(r.T)[p[1:end-1] .&gt; 40_000])
-    @assert inversion_limit &gt; -0.05 &quot;$name: tropospheric inversion-limit gate: $(inversion_limit) K per layer&quot;
+function profile_axis(fig; title)
+    return Axis(fig[1, 1]; xlabel = &quot;Temperature (K)&quot;, ylabel = &quot;Pressure (hPa)&quot;,
+                yscale = log10, yreversed = true,
+                yticks = pressure_ticks, title)
 end
 
-weighted_emission = sum(gas_optics.longwave_weights .*
-                        surface_longwave_emission(gas_optics, base.Tₛ))
-@assert abs(weighted_emission - σ * base.Tₛ^4) &lt; 0.2
-@printf(&quot;weighted surface emission: %.3f W m⁻² (σTₛ⁴ = %.3f)\n&quot;,
-        weighted_emission, σ * base.Tₛ^4)
+fig = Figure(size = (700, 660))
+ax = profile_axis(fig; title = &quot;RCE response to CO₂&quot;)
+for (state, label, color, style) in
+        ((control, &quot;1× CO₂ (420 ppm), fixed RH&quot;, :steelblue4, :solid),
+         (doubled, &quot;2× CO₂, fixed RH&quot;, :darkorange3, :solid),
+         (quadrupled, &quot;4× CO₂, fixed RH&quot;, :firebrick, :solid),
+         (frozen_vapor, &quot;4× CO₂, frozen water vapor&quot;, :firebrick, :dash))
+    lines!(ax, state.Tᵢ, pᵢ ./ 100; color, label, linewidth = 2,
+           linestyle = style)
+    scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
+end
+Legend(fig[2, 1], ax; orientation = :horizontal, nbanks = 2, framevisible = false)</code></pre><p><img src="../manabe_rce_states.png" alt="Equilibrium temperature profiles"/></p><p>A troposphere on the critical lapse-rate profile anchored at the solved surface temperature (marked at the bottom), a tropopause, and a stratosphere in radiative equilibrium. CO₂ warms the coupled surface-troposphere state while cooling the stratosphere, and the dashed frozen-vapor state shows how much smaller the same 4× forcing leaves the response when vapor cannot rise with temperature.</p><h2 id="What-each-absorber-contributes"><a class="docs-heading-anchor" href="#What-each-absorber-contributes">What each absorber contributes</a><a id="What-each-absorber-contributes-1"></a><a class="docs-heading-anchor-permalink" href="#What-each-absorber-contributes" title="Permalink"></a></h2><p>A companion RCE experiment removes one absorber at a time and re-solves the full equilibrium — water vapor frozen to zero, CO₂ removed, or ozone removed, each through the same solver and gates:</p><pre><code class="language-julia hljs">without_H₂O = rce(χCO₂; warm_start = control.Tᵢ,
+                  fixed_water_vapor = zero(control.χH₂O),
+                  Tₛ_guesses = (255, 275))
+without_CO₂ = rce(0; warm_start = control.Tᵢ,
+                  Tₛ_guesses = (265, 285))
+without_O₃  = rce(χCO₂; warm_start = control.Tᵢ, ozone = zero(χO₃_ext),
+                  Tₛ_guesses = (275, 292))
 
-@printf(&quot;baseline (420 ppm):   Tₛ = %7.2f K   TOA imbalance (ASR − OLR) = %+.3f W m⁻²\n&quot;,
-        base.Tₛ, base.asr - base.olr)
-@printf(&quot;  converged in %.0f model days; final residual %.1e K day⁻¹\n&quot;,
-        base.days, base.residual)
-@printf(&quot;2× CO₂, fixed RH:     Tₛ = %7.2f K   ΔTₛ = %+.2f K\n&quot;,
-        doubled.Tₛ, doubled.Tₛ - base.Tₛ)
-@printf(&quot;4× CO₂, fixed RH:     Tₛ = %7.2f K   ΔTₛ = %+.2f K\n&quot;,
-        quadrupled.Tₛ, quadrupled.Tₛ - base.Tₛ)
-@printf(&quot;2× CO₂, frozen vapor: Tₛ = %7.2f K   ΔTₛ = %+.2f K\n&quot;,
-        frozen.Tₛ, frozen.Tₛ - base.Tₛ)</code></pre><pre><code class="nohighlight hljs">weighted surface emission: 422.691 W m⁻² (σTₛ⁴ = 422.722)
-baseline (420 ppm):   Tₛ =  293.84 K   TOA imbalance (ASR − OLR) = -0.013 W m⁻²
-  converged in 795 model days; final residual 6.4e-05 K day⁻¹
-2× CO₂, fixed RH:     Tₛ =  296.65 K   ΔTₛ = +2.81 K
-4× CO₂, fixed RH:     Tₛ =  300.06 K   ΔTₛ = +6.22 K
-2× CO₂, frozen vapor: Tₛ =  295.24 K   ΔTₛ = +1.40 K
-</code></pre><p>The comparison Manabe and Wetherald made famous is the contrast between the fixed-relative-humidity and frozen-vapor doublings: letting water vapor rise with temperature amplifies the surface response, and the measured amplification here is the ratio of those two printed numbers. For context — not as targets — Manabe and Wetherald reported roughly 2–3 K for doubled CO₂ depending on cloud treatment, and a modern RRTMGP.jl radiative-convective calculation (<a href="https://clima.caltech.edu/2026/08/19/a-nobel-winning-calculation-runnable-in-minutes-rrtmgp-jl/">CliMA blog</a>) reports 2.9 K. The response measured above falls in that historically reported range, but those calculations differ from this one in radiation scheme, gas set, insolation, albedo, and cloud treatment, so the numbers remain an outcome of <em>this</em> configuration rather than a reproduction; the <a href="../rrtmgp_comparison/">correlated-k model spread</a> page reports the package&#39;s separate fixed-column measurement of the correlated-k implementation spread.</p><h2 id="The-equilibrium-and-its-response"><a class="docs-heading-anchor" href="#The-equilibrium-and-its-response">The equilibrium and its response</a><a id="The-equilibrium-and-its-response-1"></a><a class="docs-heading-anchor-permalink" href="#The-equilibrium-and-its-response" title="Permalink"></a></h2><p>In the right panel, color encodes the CO₂ level and line style the humidity treatment, so the discriminating frozen-vapor experiment is visible next to the fixed-relative-humidity responses.</p><pre><code class="language-julia hljs">using CairoMakie
+verify_equilibria([(&quot;no H₂O&quot;, without_H₂O), (&quot;no CO₂&quot;, without_CO₂),
+                   (&quot;no O₃&quot;, without_O₃)])
 
-fig = Figure(size = (900, 480))
+for (name, state) in ((&quot;without water vapor&quot;, without_H₂O),
+                      (&quot;without CO₂&quot;, without_CO₂),
+                      (&quot;without O₃&quot;, without_O₃))
+    @printf(&quot;%-28s Tₛ = %7.2f K   ΔTₛ = %+6.2f K\n&quot;,
+            name, state.Tₛ, state.Tₛ - control.Tₛ)
+end
 
-pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
-
-ax1 = Axis(fig[1, 1]; xlabel = &quot;Temperature (K)&quot;, ylabel = &quot;Pressure (hPa)&quot;,
-           yscale = log10, yreversed = true,
-           yticks = (pressure_ticks, string.(pressure_ticks)),
-           title = &quot;Equilibrium temperature&quot;)
-lines!(ax1, base.T, p ./ 100; color = :steelblue4, linewidth = 2)
-lines!(ax1, doubled.T, p ./ 100; color = :darkorange3, linewidth = 2)
-lines!(ax1, quadrupled.T, p ./ 100; color = :firebrick, linewidth = 2)
-scatter!(ax1, [base.Tₛ, doubled.Tₛ, quadrupled.Tₛ], fill(pₛ / 100, 3);
-         color = [:steelblue4, :darkorange3, :firebrick], markersize = 10)
-
-ax2 = Axis(fig[1, 2]; xlabel = &quot;ΔT vs 420 ppm (K)&quot;, ylabel = &quot;Pressure (hPa)&quot;,
-           yscale = log10, yreversed = true,
-           yticks = (pressure_ticks, string.(pressure_ticks)),
-           title = &quot;CO₂ response&quot;)
-vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax2, doubled.T .- base.T, p ./ 100;
-       color = :darkorange3, linewidth = 2)
-lines!(ax2, quadrupled.T .- base.T, p ./ 100;
-       color = :firebrick, linewidth = 2)
-lines!(ax2, frozen.T .- base.T, p ./ 100;
-       color = :darkorange3, linewidth = 2, linestyle = :dash)
-
-legend_entries = [LineElement(color = :steelblue4, linewidth = 2),
-                  LineElement(color = :darkorange3, linewidth = 2),
-                  LineElement(color = :firebrick, linewidth = 2),
-                  LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
-                  LineElement(color = :gray30, linewidth = 2, linestyle = :dash)]
-Legend(fig[2, 1:2], legend_entries,
-       [&quot;420 ppm&quot;, &quot;840 ppm&quot;, &quot;1680 ppm&quot;, &quot;fixed RH&quot;, &quot;frozen vapor&quot;];
-       orientation = :horizontal, framevisible = false)
-</code></pre><p><img src="../manabe_rce.png" alt="Manabe-style RCE equilibria"/></p><p>The left panel shows the three fixed-relative-humidity equilibria: a troposphere bounded by the critical lapse rate over a slab surface (surface temperatures marked at the bottom axis), a tropopause, and a stratosphere in radiative equilibrium. The right panel shows the response structure: CO₂ cools the stratosphere while the troposphere warms, with the crossover near the tropopause — the vertical signature Manabe and Wetherald first computed — and the dashed frozen-vapor doubling shows how much of the tropospheric response the water-vapor feedback carries. All panels are this configuration&#39;s measured response; none is a reproduction of any published sensitivity.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rrtmgp_comparison/">« Correlated-k model spread</a><a class="docs-footer-nextpage" href="../all_sky_cre/">All-sky cloud radiative effect »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Thursday 3 September 2026 22:10">Thursday 3 September 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+fig = Figure(size = (700, 660))
+ax = profile_axis(fig; title = &quot;Absorber contributions&quot;)
+for (state, label, color) in
+        ((control, &quot;all modeled absorbers&quot;, :steelblue4),
+         (without_H₂O, &quot;no H₂O&quot;, :darkorange3),
+         (without_CO₂, &quot;no CO₂&quot;, :firebrick),
+         (without_O₃, &quot;no O₃&quot;, :seagreen))
+    lines!(ax, state.Tᵢ, pᵢ ./ 100; color, label, linewidth = 2)
+    scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
+end
+Legend(fig[2, 1], ax; orientation = :horizontal, framevisible = false)</code></pre><pre><code class="nohighlight hljs">without water vapor          Tₛ =  263.47 K   ΔTₛ = -24.62 K
+without CO₂                  Tₛ =  272.75 K   ΔTₛ = -15.33 K
+without O₃                   Tₛ =  284.37 K   ΔTₛ =  -3.72 K
+</code></pre><p><img src="../manabe_rce_absorbers.png" alt="Absorber contributions"/></p><h2 id="Three-ideas-behind-the-calculation"><a class="docs-heading-anchor" href="#Three-ideas-behind-the-calculation">Three ideas behind the calculation</a><a id="Three-ideas-behind-the-calculation-1"></a><a class="docs-heading-anchor-permalink" href="#Three-ideas-behind-the-calculation" title="Permalink"></a></h2><p><strong>Radiative equilibrium</strong> alone would make each level&#39;s temperature settle where its absorption of solar and terrestrial radiation balances its own emission — producing an unstably steep profile in the lower atmosphere. <strong>Convective adjustment</strong> is the instantaneous limit of the convection that such a profile would trigger: any level colder than the critical profile <span>$T_c(p) = Tₛ (p/pₛ)^{Γ R^{\mathrm{d}}/g}$</span> anchored at the surface is clamped onto it, so the troposphere rides the critical lapse rate over a radiatively balanced stratosphere while the surface temperature itself is solved from top-of-atmosphere balance. <strong>The fixed-RH humidity closure</strong> is Manabe and Wetherald&#39;s third ingredient: holding <em>relative</em> humidity fixed means a warmer column holds more vapor — itself a greenhouse gas — so any CO₂-driven warming is amplified, which the frozen-vapor control isolates by turning exactly that closure off.</p><div class="admonition is-info" id="Scope-of-this-configuration-e8651e9de6f5ce82"><header class="admonition-header">Scope of this configuration<a class="admonition-anchor" href="#Scope-of-this-configuration-e8651e9de6f5ce82" title="Permalink"></a></header><div class="admonition-body"><p>This is a Manabe-<em>style</em> calculation, not a reproduction of Manabe and Wetherald or of any modern rerun: it uses ecCKD correlated-k gas optics, a clear sky, an analytic midlatitude-summer initial state and idealized ozone, prescribed insolation over an α = 0.3 surface, 60 altitude-uniform layers to 60 km, and one isothermal lookup-boundary layer above that supplies the downwelling flux a truncated column would miss. Manabe and Wetherald reported roughly 2–3 K per doubling depending on cloud treatment, and a modern <a href="https://clima.caltech.edu/2026/08/19/a-nobel-winning-calculation-runnable-in-minutes-rrtmgp-jl/">RRTMGP.jl calculation</a> — whose formulation this page follows — reports 2.9 K; the numbers above are outcomes of <em>this</em> configuration. Build-time gates assert inner convergence at every trial surface temperature, final top-of-atmosphere closure, level/layer consistency, the isothermal top, a tropospheric inversion limit, and surface-emission consistency.</p></div></div><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rrtmgp_comparison/">« Correlated-k model spread</a><a class="docs-footer-nextpage" href="../all_sky_cre/">All-sky cloud radiative effect »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Friday 4 September 2026 00:35">Friday 4 September 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
