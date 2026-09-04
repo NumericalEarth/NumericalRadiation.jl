@@ -60,8 +60,9 @@ pᵗʳ = pₛ * (Tᵗʳ / T₀)^(g / (Rᵈ * Γ))  # Pa, tropopause pressure
 standard_temperature(z) = z ≤ zᵗʳ ? T₀ - Γ * z : Tᵗʳ + Γˢᵗ * (z - zᵗʳ)
 
 function standard_pressure(z)
-    z ≤ zᵗʳ && return pₛ * (standard_temperature(z) / T₀)^(g / (Rᵈ * Γ))
-    return pᵗʳ * (standard_temperature(z) / Tᵗʳ)^(-g / (Rᵈ * Γˢᵗ))
+    pᵗˢ = pₛ * (standard_temperature(z) / T₀)^(g / (Rᵈ * Γ))
+    pˢᵗ = pᵗʳ * (standard_temperature(z) / Tᵗʳ)^(-g / (Rᵈ * Γˢᵗ))
+    return ifelse(z ≤ zᵗʳ, pᵗˢ, pˢᵗ)
 end
 
 standard_ozone(p) = 3e-8 + 7.5e-6 * exp(-(log(p / 1_200))^2 / (2 * 1.2^2))
