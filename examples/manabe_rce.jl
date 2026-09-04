@@ -14,11 +14,12 @@
 # ## The configuration
 #
 # The experiment's headline parameters are below. Physical constants, the
-# initial-state prescription, the level marching, the convective clamp, the
-# surface-temperature solve, and the verification gates live in
+# initial-state prescription, the level marching, the convective clamp, and
+# the verification gates live in
 # [`manabe_rce_setup.jl`](https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/manabe_rce_setup.jl),
-# included below, which defines the `rce` driver and the `verify_equilibria`
-# gates.
+# included below, which defines the inner march `equilibrate!` and the
+# `verify_equilibria` gates; the outer energy-balance solve `rce` is defined
+# on this page.
 
 using NumericalRadiation
 using NCDatasets
@@ -42,12 +43,35 @@ pₛ = 101_325                 # Pa
 include("manabe_rce_setup.jl")
 nothing #hide
 
+# ## The energy-balance solve
+#
+# The setup file's `equilibrate!` marches the column to equilibrium at a
+# fixed trial surface temperature and reports the absorbed shortwave and
+# outgoing longwave. `rce` wraps it in a safeguarded root solve for
+# ASR − OLR = 0; the generic root-finding bookkeeping stays in the support
+# file as `bracketed_secant`.
+
+function rce(χCO₂; ozone = χO₃_ext, fixed_water_vapor = nothing,
+             Tₛ_guesses = (285, 295), warm_start = nothing,
+             imbalance_tolerance = 0.1, max_expansions = 8, max_iterations = 12)
+    Tᵢ = isnothing(warm_start) ? standard_T.(reverse(zᵢ)) : copy(warm_start)
+    toa_imbalance(Tₛ) = begin
+        state = equilibrate!(Tᵢ, Tₛ; χCO₂, ozone, fixed_water_vapor)
+        state.converged || error("inner equilibration at trial Tₛ = $Tₛ did not converge")
+        ΔF = state.asr - state.olr
+        isfinite(ΔF) || error("nonfinite TOA residual at trial Tₛ = $Tₛ")
+        (ΔF, state)
+    end
+    Tₛ, state, iterations, expansions =
+        bracketed_secant(toa_imbalance, Tₛ_guesses; imbalance_tolerance,
+                         max_expansions, max_iterations)
+    return (; state..., Tₛ, secant_iterations = iterations,
+            bracket_expansions = expansions)
+end
+nothing #hide
+
 # ## The experiments, and the answer
 #
-# Each experiment is a full radiative-convective equilibrium: an inner
-# time-march at fixed trial surface temperature (convective clamp, staged
-# radiation, level tendencies) inside an outer root solve that adjusts the
-# surface temperature until absorbed shortwave balances outgoing longwave.
 # The main experiment runs 1×, 2×, and 4× CO₂ with the fixed-RH closure,
 # plus the discriminating control: 4× CO₂ with water vapor *frozen* at the
 # control field. Every equilibration must pass the verification gates or
