@@ -5,6 +5,8 @@ guide](https://github.com/NumericalEarth/NumericalEarth.jl/blob/main/docs/src/ap
 for symbolic names in math, in docstring equations, and in plot labels. Julia
 struct fields stay descriptive snake_case (matching Breeze's public API
 convention), but the mapping to the symbolic notation is always unambiguous.
+Thermodynamic symbols such as `pᵛ`, `pᵛ⁺`, and `ℋ` follow the
+[Breeze.jl notation guide](https://github.com/NumericalEarth/Breeze.jl/blob/main/docs/src/appendix/notation.md).
 
 ## Radiative fluxes
 
@@ -56,11 +58,14 @@ defined at first use on each page:
 | `pᵢ`, `p` | Interface and layer pressures (Pa), top-down, increasing downward |
 | `Tᵢ`, `T`, `Tₛ` | Interface, layer, and surface temperatures (K) |
 | `χH₂O`, `χO₃`, `χCO₂`, … | Dry-air volume mixing ratios (mole fractions relative to dry air) |
+| `ℋ`, `ℋₛ` | Relative humidity and its surface value |
+| `pᵛ`, `pᵛ⁺` | Water-vapor partial pressure and saturation vapor pressure (Pa) |
 | `nᵈ` | Dry-air molar amount per layer (mol m⁻²); gas amounts are `χ .* nᵈ` |
 | `Ṫ` | Temperature tendency (K s⁻¹); example plots show `Ṫ * 86_400` in K day⁻¹ |
 | `mᵈ`, `mᵛ` | Dry-air and water molar masses (kg mol⁻¹) |
 | `μ₀` | Cosine of the solar zenith angle |
 | `Rᵈ` | Dry-air gas constant (J kg⁻¹ K⁻¹) |
+| `cᵖᵈ` | Dry-air isobaric heat capacity (J kg⁻¹ K⁻¹) |
 | `S₀` | Prescribed TOA downwelling shortwave flux (W m⁻²) |
 | `Γ` | Critical lapse rate (K m⁻¹) |
 | `Cₛ` | Surface slab heat capacity (J m⁻² K⁻¹) |
