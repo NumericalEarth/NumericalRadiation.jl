@@ -1,3 +1,9 @@
+# # Analytic band column
+#
+# A single-column run of the analytic Williams band radiation model. It reports
+# the top-of-atmosphere and surface net fluxes, the column-integrated heating,
+# and the energy-closure residual as a consistency check.
+
 using NumericalRadiation
 
 nlayers = 32

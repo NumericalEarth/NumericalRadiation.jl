@@ -1,3 +1,9 @@
+# # ecCKD model selection on a column
+#
+# Selects one of the reference ecCKD model pairs, loads its gas optics, and runs
+# a single clear-sky column through the staged runtime, reporting the runtime
+# g-point counts, the net fluxes, and the heating-rate range.
+
 using NumericalRadiation
 using NCDatasets
 
