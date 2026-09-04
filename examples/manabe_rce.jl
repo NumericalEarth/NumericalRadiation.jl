@@ -76,6 +76,10 @@ end
 # amplification in this configuration: the same quadrupled CO₂ warms the
 # surface nearly twice as much when the vapor is allowed to rise with
 # temperature as when it is frozen at the control field.
+#
+# The solver marches level temperatures; the figures show the layer-center
+# profiles — the adjacent-level means the radiation actually sees — as the
+# RRTMGP tutorial does.
 
 using CairoMakie
 
@@ -95,7 +99,7 @@ for (state, label, color, style) in
          (doubled, "2× CO₂, fixed RH", :darkorange3, :solid),
          (quadrupled, "4× CO₂, fixed RH", :firebrick, :solid),
          (frozen_vapor, "4× CO₂, frozen water vapor", :firebrick, :dash))
-    lines!(ax, state.Tᵢ, pᵢ ./ 100; color, label, linewidth = 2,
+    lines!(ax, state.T_ext[2:N_ext], p ./ 100; color, label, linewidth = 2,
            linestyle = style)
     scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
 end
@@ -142,7 +146,7 @@ for (state, label, color) in
          (without_H₂O, "no H₂O", :darkorange3),
          (without_CO₂, "no CO₂", :firebrick),
          (without_O₃, "no O₃", :seagreen))
-    lines!(ax, state.Tᵢ, pᵢ ./ 100; color, label, linewidth = 2)
+    lines!(ax, state.T_ext[2:N_ext], p ./ 100; color, label, linewidth = 2)
     scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
 end
 Legend(fig[2, 1], ax; orientation = :horizontal, framevisible = false)
