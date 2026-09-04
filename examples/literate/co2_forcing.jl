@@ -117,8 +117,8 @@ lines!(ax2, base.up .- doubled.up, pᵢ ./ 100;
        color = :firebrick, linewidth = 2)
 scatter!(ax2, [ΔOLR], [pᵢ[1] / 100]; color = :firebrick, markersize = 10)
 text!(ax2, ΔOLR, pᵢ[1] / 100;
-      text = " TOA: $(round(ΔOLR; digits = 2)) W m⁻²",
-      align = (:left, :top), fontsize = 12)
+      text = "TOA: $(round(ΔOLR; digits = 2)) W m⁻² ",
+      align = (:right, :top), offset = (-6, 0), fontsize = 12)
 
 save("co2_forcing.png", fig); nothing #hide
 
