@@ -3,7 +3,7 @@
 # This example computes the *instantaneous, clear-sky* longwave effect of
 # doubling CO₂ — the reduction in outgoing longwave radiation (OLR) at the top
 # of the atmosphere when the CO₂ column amount is doubled with temperature,
-# humidity, and everything else held fixed — using an *official ecCKD
+# humidity, and everything else held fixed — using an *reference ecCKD
 # gas-optics model*, i.e. the full tabulated g-point machinery a host model
 # would run. The [longwave page](../longwave.md) computes the same class of
 # benchmark with the analytic-band Williams scheme; the two pages pose a
@@ -17,7 +17,7 @@ using NumericalRadiation
 using NCDatasets
 using Printf
 
-gas_optics = read_official_ecckd_gas_optics("32x32";
+gas_optics = read_reference_ecckd_gas_optics("32x32";
     names = (:composite, :h2o, :co2))
 nothing #hide
 
@@ -55,11 +55,11 @@ function solve_column(χCO₂)
 
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
+    longwave = LongwaveOptics(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
                                          source_top = zeros(longwave_gpoints, N),
                                          source_bottom = zeros(longwave_gpoints, N),
                                          weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
                                            weights = zeros(shortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
                              longwave_down = zeros(N + 1),

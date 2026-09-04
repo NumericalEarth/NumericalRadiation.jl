@@ -59,7 +59,7 @@ function model_kind(summary)
 end
 
 function inventory_entry(filename)
-    path = official_ecckd_definition_path(filename)
+    path = reference_ecckd_definition_path(filename)
     definition = read_ecckd_definition(path)
     valid, errors = validate_ecckd_definition(definition; throw_on_error = false)
     summary = summarize_ecckd_definition(definition)
@@ -85,7 +85,7 @@ function inventory_entry(filename)
 end
 
 function run_ecckd_model_inventory()
-    entries = [inventory_entry(filename) for filename in official_ecckd_model_inventory()]
+    entries = [inventory_entry(filename) for filename in reference_ecckd_model_inventory()]
     return (
         case = "ecckd_model_inventory",
         timestamp_utc = string(Dates.now()),

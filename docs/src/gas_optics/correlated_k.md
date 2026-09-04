@@ -76,7 +76,7 @@ spectral data. NumericalRadiation loads these files into
 
 At runtime, [`optical_properties!`](@ref) interpolates the tables to each
 layer, multiplies by gas path amounts, and fills
-[`LongwaveOpticalProperties`](@ref) and [`ShortwaveOpticalProperties`](@ref).
+[`LongwaveOptics`](@ref) and [`ShortwaveOptics`](@ref).
 
 ## Accuracy and Cost
 

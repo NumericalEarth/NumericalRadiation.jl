@@ -134,7 +134,7 @@ function read_ecckd_spectral_mapping(path::AbstractString)
     throw(ArgumentError("read_ecckd_spectral_mapping requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
-@inline function _linear_radius_index(table::CloudScatteringTable, effective_radius)
+@inline function linear_radius_index(table::CloudScatteringTable, effective_radius)
     radius = table.effective_radius
     target = clamp(effective_radius, first(radius), last(radius))
     upper = searchsortedfirst(radius, target)
@@ -148,7 +148,7 @@ end
     return lower, upper, weight
 end
 
-@inline function _nearest_wavenumber_index(table::CloudScatteringTable, wavenumber)
+@inline function nearest_wavenumber_index(table::CloudScatteringTable, wavenumber)
     grid = table.wavenumber
     upper = searchsortedfirst(grid, wavenumber)
     if upper <= firstindex(grid)
@@ -170,7 +170,7 @@ asymmetry factor.
 """
 function cloud_scattering_properties(table::CloudScatteringTable, iwavenumber::Integer,
                                      effective_radius)
-    lower, upper, weight = _linear_radius_index(table, effective_radius)
+    lower, upper, weight = linear_radius_index(table, effective_radius)
     w1 = one(eltype(table)) - weight
     mass_ext = w1 * table.mass_extinction_coefficient[iwavenumber, lower] +
                weight * table.mass_extinction_coefficient[iwavenumber, upper]
@@ -205,7 +205,7 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
                                             delta_eddington_average::Bool = false,
                                             thick_averaging::Bool = false)
     if mapping_method == :ecrad
-        return _cloud_scattering_gpoint_properties_ecrad(
+        return cloud_scattering_gpoint_properties_ecrad(
             table, mapping, effective_radius;
             delta_eddington_average = delta_eddington_average,
             thick_averaging = thick_averaging,
@@ -224,13 +224,13 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
     for iw in axes(mapping.gpoint_fraction, 1)
         width = abs(FT(mapping.wavenumber2[iw]) - FT(mapping.wavenumber1[iw]))
         midpoint = (FT(mapping.wavenumber1[iw]) + FT(mapping.wavenumber2[iw])) / FT(2)
-        itable = _nearest_wavenumber_index(table, midpoint)
+        itable = nearest_wavenumber_index(table, midpoint)
         props = cloud_scattering_properties(table, itable, effective_radius)
         ext = FT(props.mass_extinction_coefficient)
         ssa = FT(props.single_scattering_albedo)
         asym = FT(props.asymmetry_factor)
         if delta_eddington_average
-            ext, ssa, asym = _delta_eddington(ext, ssa, asym)
+            ext, ssa, asym = delta_eddington(ext, ssa, asym)
         end
         for ig in 1:ng
             weight = width * FT(mapping.interval_weight[iw]) *
@@ -260,7 +260,7 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
         end
         if delta_eddington_average
             mass_ext[ig], ssa[ig], asymmetry[ig] =
-                _revert_delta_eddington(mass_ext[ig], ssa[ig], asymmetry[ig])
+                revert_delta_eddington(mass_ext[ig], ssa[ig], asymmetry[ig])
         end
     end
     return (
@@ -270,7 +270,7 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
     )
 end
 
-@inline function _find_spectral_interval(mapping::EcCKDSpectralMapping, wavenumber)
+@inline function find_spectral_interval(mapping::EcCKDSpectralMapping, wavenumber)
     for i in eachindex(mapping.wavenumber1)
         if wavenumber >= mapping.wavenumber1[i] && wavenumber <= mapping.wavenumber2[i]
             return i
@@ -279,7 +279,7 @@ end
     return 0
 end
 
-function _ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
+function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
                                      mapping::EcCKDSpectralMapping)
     FT = promote_type(eltype(table), eltype(mapping))
     nwav = length(table.wavenumber)
@@ -291,12 +291,12 @@ function _ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
     for jwav in 1:nwav
         fill!(interval_weight, zero(FT))
         wavenum1 = FT(table.wavenumber[jwav])
-        isd1 = _find_spectral_interval(mapping, wavenum1)
+        isd1 = find_spectral_interval(mapping, wavenum1)
         isd1 < 1 && continue
 
         if jwav > 1
             wavenum0 = FT(table.wavenumber[jwav - 1])
-            isd0 = _find_spectral_interval(mapping, wavenum0)
+            isd0 = find_spectral_interval(mapping, wavenum0)
             if isd0 == isd1
                 interval_weight[isd0] = FT(0.5) * (wavenum1 - wavenum0) /
                     (FT(mapping.wavenumber2[isd0]) - FT(mapping.wavenumber1[isd0]))
@@ -329,7 +329,7 @@ function _ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
 
         if jwav < nwav
             wavenum2 = FT(table.wavenumber[jwav + 1])
-            isd2 = _find_spectral_interval(mapping, wavenum2)
+            isd2 = find_spectral_interval(mapping, wavenum2)
             if isd1 == isd2
                 interval_weight[isd1] += FT(0.5) * (wavenum2 - wavenum1) /
                     (FT(mapping.wavenumber2[isd1]) - FT(mapping.wavenumber1[isd1]))
@@ -373,7 +373,7 @@ function _ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
     return matrix
 end
 
-@inline function _delta_eddington(od, ssa, asymmetry)
+@inline function delta_eddington(od, ssa, asymmetry)
     f = asymmetry * asymmetry
     denom = one(od) - ssa * f
     return (
@@ -383,7 +383,7 @@ end
     )
 end
 
-@inline function _revert_delta_eddington(od, ssa, asymmetry)
+@inline function revert_delta_eddington(od, ssa, asymmetry)
     g = asymmetry / (one(asymmetry) - asymmetry)
     f = g * g
     reverted_ssa = ssa / (one(ssa) - f + f * ssa)
@@ -391,13 +391,13 @@ end
     return reverted_od, reverted_ssa, g
 end
 
-function _cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
+function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
                                                    mapping::EcCKDSpectralMapping,
                                                    effective_radius;
                                                    delta_eddington_average::Bool,
                                                    thick_averaging::Bool)
     FT = promote_type(eltype(table), eltype(mapping), typeof(float(effective_radius)))
-    weights = _ecrad_cloud_mapping_matrix(table, mapping)
+    weights = ecrad_cloud_mapping_matrix(table, mapping)
     ng = size(weights, 1)
     mass_ext = zeros(FT, ng)
     scattering_ext = zeros(FT, ng)
@@ -410,7 +410,7 @@ function _cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
         ssa = FT(props.single_scattering_albedo)
         asym = FT(props.asymmetry_factor)
         if delta_eddington_average
-            ext, ssa, asym = _delta_eddington(ext, ssa, asym)
+            ext, ssa, asym = delta_eddington(ext, ssa, asym)
         end
         scat = ext * ssa
         ref_inf = zero(FT)
@@ -447,7 +447,7 @@ function _cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
         end
         if delta_eddington_average
             mass_ext[ig], ssa[ig], asymmetry[ig] =
-                _revert_delta_eddington(mass_ext[ig], ssa[ig], asymmetry[ig])
+                revert_delta_eddington(mass_ext[ig], ssa[ig], asymmetry[ig])
         end
     end
 

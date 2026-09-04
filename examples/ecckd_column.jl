@@ -1,17 +1,23 @@
+# # ecCKD model selection on a column
+#
+# Selects one of the reference ecCKD model pairs, loads its gas optics, and runs
+# a single clear-sky column through the staged runtime, reporting the runtime
+# g-point counts, the net fluxes, and the heating-rate range.
+
 using NumericalRadiation
 using NCDatasets
 
 const σ_SB = 5.670374419e-8
 
 model_name = get(ENV, "ECCKD_MODEL", "32x32")
-spec = official_ecckd_model_spec(model_name)
-paths = official_ecckd_definition_paths(spec)
+spec = reference_ecckd_model_spec(model_name)
+paths = reference_ecckd_definition_paths(spec)
 
 println("Selected ecCKD model: ", spec.name)
 println("  LW: ", basename(paths.longwave))
 println("  SW: ", basename(paths.shortwave))
 
-gas_optics = read_official_ecckd_gas_optics(spec;
+gas_optics = read_reference_ecckd_gas_optics(spec;
     names = (:composite, :h2o, :co2),
     h2o_mole_fraction = 0.005,
 )
@@ -40,7 +46,7 @@ atmosphere = ColumnAtmosphere(
 ng_lw = length(gas_optics.longwave_weights)
 ng_sw = length(gas_optics.shortwave_weights)
 
-longwave = LongwaveOpticalProperties(
+longwave = LongwaveOptics(
     zeros(ng_lw, nlayers),
     zeros(ng_lw, nlayers);
     source_top = zeros(ng_lw, nlayers),
@@ -48,7 +54,7 @@ longwave = LongwaveOpticalProperties(
     weights = zeros(ng_lw),
 )
 
-shortwave = ShortwaveOpticalProperties(
+shortwave = ShortwaveOptics(
     zeros(ng_sw, nlayers);
     rayleigh_optical_depth = zeros(ng_sw, nlayers),
     scattering_asymmetry = zeros(ng_sw, nlayers),

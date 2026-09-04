@@ -4,7 +4,7 @@ using NumericalRadiation
 
 const DOCS_ROOT = @__DIR__
 const REPO_ROOT = normpath(joinpath(DOCS_ROOT, ".."))
-const LITERATE_ROOT = joinpath(REPO_ROOT, "examples", "literate")
+const LITERATE_ROOT = joinpath(REPO_ROOT, "examples")
 const GENERATED_ROOT = joinpath(DOCS_ROOT, "src", "generated")
 const ASSET_ROOT = joinpath(DOCS_ROOT, "src", "assets")
 
@@ -12,7 +12,9 @@ mkpath(GENERATED_ROOT)
 mkpath(ASSET_ROOT)
 
 for example in (
+    "analytic_column.jl",
     "staged_ecckd_column.jl",
+    "ecckd_column.jl",
     "co2_forcing.jl",
     "rrtmgp_comparison.jl",
     "manabe_rce.jl",
@@ -40,7 +42,9 @@ makedocs(
         "Home" => "index.md",
         "Examples" => [
             "Single-column analytical radiation" => "single_column.md",
+            "Analytic band column" => "generated/analytic_column.md",
             "The staged interface" => "generated/staged_ecckd_column.md",
+            "ecCKD model selection" => "generated/ecckd_column.md",
             "CO₂ forcing with ecCKD" => "generated/co2_forcing.md",
             "Correlated-k model spread" => "generated/rrtmgp_comparison.md",
             "Manabe radiative-convective equilibrium" => "generated/manabe_rce.md",

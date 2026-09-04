@@ -12,8 +12,8 @@ W m⁻².
 ## Data flow
 
 ```text
-ColumnAtmosphere ── optical_properties! ──▶ LongwaveOpticalProperties
-                                            ShortwaveOpticalProperties
+ColumnAtmosphere ── optical_properties! ──▶ LongwaveOptics
+                                            ShortwaveOptics
                                                      │
                                             radiative_fluxes!
                                                      │
@@ -35,12 +35,12 @@ One radiation update is four staged calls on caller-owned state:
 The complete, executed construction of the atmosphere, work arrays, and
 boundary conditions is the [staged ecCKD column
 example](generated/staged_ecckd_column.md); `examples/ecckd_column.jl` is
-the same workflow against official model files.
+the same workflow against reference model files.
 
 ## Cloudless longwave
 
 [`CloudlessLongwave`](@ref) is a plane-parallel clear-sky solver for
-[`LongwaveOpticalProperties`](@ref). Optical depth and source arrays may be
+[`LongwaveOptics`](@ref). Optical depth and source arrays may be
 vectors of length `nlayers` (broadband) or matrices shaped `(ng, nlayers)`;
 `source` is the layer Planck source in flux units (``\pi B``, W m⁻²). The
 atmosphere argument is accepted for interface consistency and is not inspected.
@@ -71,7 +71,7 @@ diffuse surface albedo (default zero, i.e. a blackbody surface).
 ## Cloudless shortwave
 
 [`CloudlessShortwave`](@ref) transports the direct solar beam through
-[`ShortwaveOpticalProperties`](@ref). When `atmosphere.geometry.cos_zenith`
+[`ShortwaveOptics`](@ref). When `atmosphere.geometry.cos_zenith`
 is present, optical depths are scaled by the slant path ``1/\mu_0`` (with
 ``\mu_0`` clamped away from zero); otherwise the historical vertical-path
 convention applies. `toa_shortwave_down` in
@@ -120,8 +120,8 @@ broadband scalars or per-g-point vectors.
 ## All-sky overlap solvers
 
 The all-sky solvers operate on two-region optical properties:
-[`LongwaveCloudOverlapOpticalProperties`](@ref) and
-[`ShortwaveCloudOverlapOpticalProperties`](@ref) hold *clear* and *cloudy*
+[`LongwaveCloudOverlapOptics`](@ref) and
+[`ShortwaveCloudOverlapOptics`](@ref) hold *clear* and *cloudy*
 optics with the same `(ng, nlayers)` shape, plus three layer fields that stay
 separate from the optical depths:
 
@@ -173,7 +173,7 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
 
 - [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(ng, ngas)`
   coefficients — the path used by unit tests and teacher–student training.
-- [`EcCKDTabulatedGasOpticsModel`](@ref) holds official
+- [`EcCKDTabulatedGasOpticsModel`](@ref) holds reference
   `(ng, ngas, np, nt)` look-up tables. Per layer it brackets pressure on a
   logarithmic grid, interpolates bilinearly in pressure and temperature
   (supporting ecCKD's pressure-dependent temperature grids), and accumulates

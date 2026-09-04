@@ -1,5 +1,5 @@
 # Implementation for the Manabe radiative-convective equilibrium tutorial
-# (examples/literate/manabe_rce.jl). The tutorial page defines the headline
+# (examples/manabe_rce.jl). The tutorial page defines the headline
 # experiment parameters, includes this file, and shows only the experiment
 # calls and results; physical constants, the initial-state prescription,
 # and the solver live here. The formulation follows the RRTMGP.jl Manabe tutorial: level
@@ -18,7 +18,7 @@ mᵛ = 0.018016        # water molar mass, kg mol⁻¹
 day = 86_400         # s
 
 
-gas_optics = read_official_ecckd_gas_optics("32x32";
+gas_optics = read_reference_ecckd_gas_optics("32x32";
     names = (:composite, :h2o, :o3, :co2, :ch4, :n2o))
 
 # Analytic midlatitude-summer initial state, transcribed locally from
@@ -83,12 +83,12 @@ end
 function radiation_work_arrays(gas_optics, N)
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N),
+    longwave = LongwaveOptics(zeros(longwave_gpoints, N),
                                          zeros(longwave_gpoints, N);
                                          source_top = zeros(longwave_gpoints, N),
                                          source_bottom = zeros(longwave_gpoints, N),
                                          weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
                                            rayleigh_optical_depth = zeros(shortwave_gpoints, N),
                                            scattering_asymmetry = zeros(shortwave_gpoints, N),
                                            weights = zeros(shortwave_gpoints))

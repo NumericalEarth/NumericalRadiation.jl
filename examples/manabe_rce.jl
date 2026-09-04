@@ -16,7 +16,7 @@
 # The experiment's headline parameters are below. Physical constants, the
 # initial-state prescription, the level marching, the convective clamp, the
 # surface-temperature solve, and the verification gates live in
-# [`manabe_rce_setup.jl`](https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/literate/manabe_rce_setup.jl).
+# [`manabe_rce_setup.jl`](https://github.com/NumericalEarth/NumericalRadiation.jl/blob/main/examples/manabe_rce_setup.jl).
 
 using NumericalRadiation
 using NCDatasets
@@ -39,7 +39,7 @@ pₛ = 101_325                 # Pa
 
 setup = joinpath(@__DIR__, "manabe_rce_setup.jl")                        #hide
 isfile(setup) || (setup = normpath(joinpath(@__DIR__, "..", "..", "..",  #hide
-                                            "examples", "literate",     #hide
+                                            "examples",     #hide
                                             "manabe_rce_setup.jl")))    #hide
 include(setup)                                                           #hide
 nothing #hide

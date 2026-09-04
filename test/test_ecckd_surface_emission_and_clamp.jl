@@ -33,8 +33,8 @@ const σ_SB = 5.670374419e-8
         end
     end
 
-    @testset "tabulated source path (official 32x32)" begin
-        model = read_official_ecckd_gas_optics("32x32";
+    @testset "tabulated source path (reference 32x32)" begin
+        model = read_reference_ecckd_gas_optics("32x32";
             names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
         emission = surface_longwave_emission(model, 300.0)
         @test length(emission) == length(model.longwave_weights)
@@ -84,9 +84,9 @@ end
         surface = nothing,
         geometry = (;),
     )
-    longwave = LongwaveOpticalProperties(zeros(1, nlayers), zeros(1, nlayers);
+    longwave = LongwaveOptics(zeros(1, nlayers), zeros(1, nlayers);
                                          weights = zeros(1))
-    shortwave = ShortwaveOpticalProperties(zeros(1, nlayers);
+    shortwave = ShortwaveOptics(zeros(1, nlayers);
                                            rayleigh_optical_depth = zeros(1, nlayers),
                                            scattering_asymmetry = zeros(1, nlayers),
                                            weights = zeros(1))

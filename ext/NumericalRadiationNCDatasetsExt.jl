@@ -8,21 +8,21 @@ import NumericalRadiation: CloudScatteringTable, EcCKDSpectralMapping
 import NumericalRadiation: read_ecckd_definition, read_ecckd_tabulated_gas_optics
 import NumericalRadiation: read_cloud_scattering_table, read_ecckd_spectral_mapping
 
-_sym(name) = Symbol(String(name))
+sym(name) = Symbol(String(name))
 
-function _dimensions(ds)
-    pairs = (_sym(name) => Int(length) for (name, length) in ds.dim)
+function dataset_dimensions(ds)
+    pairs = (sym(name) => Int(length) for (name, length) in ds.dim)
     return (; pairs...)
 end
 
-function _variables(ds)
-    pairs = (_sym(name) => Tuple(Symbol.(NCDatasets.dimnames(ds[String(name)])))
+function dataset_variables(ds)
+    pairs = (sym(name) => Tuple(Symbol.(NCDatasets.dimnames(ds[String(name)])))
              for name in keys(ds))
     return (; pairs...)
 end
 
-function _attributes(ds)
-    attributes = Dict{Symbol, Any}(_sym(name) => ds.attrib[String(name)] for name in keys(ds.attrib))
+function dataset_attributes(ds)
+    attributes = Dict{Symbol, Any}(sym(name) => ds.attrib[String(name)] for name in keys(ds.attrib))
     if haskey(ds, "n_gases")
         attributes[:n_gases] = Int(Array(ds["n_gases"])[1])
     end
@@ -39,7 +39,7 @@ function _attributes(ds)
     return attributes
 end
 
-function _attribute(attributes, names, default)
+function attribute(attributes, names, default)
     for name in names
         haskey(attributes, name) && return attributes[name]
     end
@@ -53,20 +53,20 @@ Read ecCKD schema metadata from a NetCDF file using `NCDatasets.jl`.
 """
 function read_ecckd_definition(path::String)
     NCDataset(path, "r") do ds
-        attributes = _attributes(ds)
-        model_name = _attribute(attributes, (:model_name, :title, :name), basename(path))
-        version = _attribute(attributes, (:version, :model_version), "unknown")
+        attributes = dataset_attributes(ds)
+        model_name = attribute(attributes, (:model_name, :title, :name), basename(path))
+        version = attribute(attributes, (:version, :model_version), "unknown")
         return EcCKDDefinition(;
             model_name,
             version,
-            dimensions = _dimensions(ds),
-            variables = _variables(ds),
+            dimensions = dataset_dimensions(ds),
+            variables = dataset_variables(ds),
             attributes,
         )
     end
 end
 
-function _string_attribute(ds, name, default = "")
+function string_attribute(ds, name, default = "")
     haskey(ds.attrib, name) || return default
     return String(ds.attrib[name])
 end
@@ -79,8 +79,8 @@ Read an ecRad-style cloud scattering NetCDF file using `NCDatasets.jl`.
 function read_cloud_scattering_table(path::String)
     NCDataset(path, "r") do ds
         return CloudScatteringTable(
-            medium = _string_attribute(ds, "medium"),
-            particle_type = _string_attribute(ds, "particle_type"),
+            medium = string_attribute(ds, "medium"),
+            particle_type = string_attribute(ds, "particle_type"),
             wavenumber = Float64.(Array(ds["wavenumber"])),
             effective_radius = Float64.(Array(ds["effective_radius"])),
             mass_extinction_coefficient =
@@ -106,7 +106,7 @@ function read_ecckd_spectral_mapping(path::String)
             wavenumber_midpoint =
                 0.5 .* (Float64.(Array(ds["wavenumber1"])) .+
                         Float64.(Array(ds["wavenumber2"])))
-            _planck_wavenumber_weight.(wavenumber_midpoint, 273.15)
+            planck_wavenumber_weight.(wavenumber_midpoint, 273.15)
         else
             ones(Float64, length(ds["wavenumber1"]))
         end
@@ -122,25 +122,25 @@ end
 # Second radiation constant c₂ = hc/k_B in cm K (CODATA).
 const c₂ = 1.438776877
 
-function _planck_wavenumber_weight(wavenumber_cm, temperature)
+function planck_wavenumber_weight(wavenumber_cm, temperature)
     w = max(Float64(wavenumber_cm), 0)
     t = max(Float64(temperature), eps(Float64))
     exponent = c₂ * w / t
     return exponent > 700 ? 0.0 : w^3 / expm1(exponent)   # expm1 overflows past 700
 end
 
-function _nearest_index(values, target)
+function nearest_index(values, target)
     _, index = findmin(abs.(values .- target))
     return index
 end
 
-function _temperature_grid(ds)
+function read_temperature_grid(ds)
     temperature = Array(ds["temperature"])
     ndims(temperature) == 1 && return Float64.(temperature)
     return Float64.(temperature)
 end
 
-function _coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = false,
+function coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = false,
                             allow_missing = false)
     name = String(gas) * "_molar_absorption_coeff"
     if !haskey(ds, name)
@@ -153,7 +153,7 @@ function _coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = fa
             throw(ArgumentError("unsupported four-dimensional coefficient table for gas $gas"))
         dynamic_h2o && return zeros(Float64, size(table, 1), size(table, 2), size(table, 3))
         h2o_grid = Float64.(Array(ds["h2o_mole_fraction"]))
-        ih2o = _nearest_index(h2o_grid, h2o_mole_fraction)
+        ih2o = nearest_index(h2o_grid, h2o_mole_fraction)
         return Float64.(table[:, :, :, ih2o])
     elseif ndims(table) == 3
         return Float64.(table)
@@ -162,11 +162,11 @@ function _coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = fa
     end
 end
 
-function _stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = false,
+function stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = false,
                              allow_missing = false)
     first_table = nothing
     for gas in gas_names
-        first_table = _coefficient_table(ds, gas;
+        first_table = coefficient_table(ds, gas;
                                          h2o_mole_fraction = h2o_mole_fraction,
                                          dynamic_h2o = dynamic_h2o,
                                          allow_missing = allow_missing)
@@ -177,7 +177,7 @@ function _stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = fal
     output = zeros(Float64, size(first_table, 1), length(gas_names),
                    size(first_table, 2), size(first_table, 3))
     for (igas, gas) in enumerate(gas_names)
-        table = _coefficient_table(ds, gas;
+        table = coefficient_table(ds, gas;
                                    h2o_mole_fraction = h2o_mole_fraction,
                                    dynamic_h2o = dynamic_h2o,
                                    allow_missing = allow_missing)
@@ -187,7 +187,7 @@ function _stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = fal
     return output
 end
 
-function _h2o_absorption_table(ds, gas_names)
+function h2o_absorption_table(ds, gas_names)
     :h2o in gas_names || return nothing
     haskey(ds, "h2o_molar_absorption_coeff") || return nothing
     table = Array(ds["h2o_molar_absorption_coeff"])
@@ -195,7 +195,7 @@ function _h2o_absorption_table(ds, gas_names)
     return Float64.(table)
 end
 
-function _shortwave_weights(ds)
+function read_shortwave_weights(ds)
     if haskey(ds, "solar_irradiance")
         weights = Float64.(Array(ds["solar_irradiance"]))
         total = sum(weights)
@@ -205,7 +205,7 @@ function _shortwave_weights(ds)
     return fill(inv(Float64(ng)), ng)
 end
 
-function _longwave_source_table(ds, longwave_weights)
+function read_longwave_source_table(ds, longwave_weights)
     temperature_grid = Float64.(Array(ds["temperature_planck"]))
     planck = Float64.(Array(ds["planck_function"]))
     size(planck, 1) == length(longwave_weights) ||
@@ -217,10 +217,10 @@ function _longwave_source_table(ds, longwave_weights)
     return temperature_grid, source
 end
 
-_reference_mole_fraction_present(ds, gas_names) =
+reference_mole_fraction_present(ds, gas_names) =
     [haskey(ds, String(gas) * "_reference_mole_fraction") for gas in gas_names]
 
-function _reference_mole_fractions(ds, gas_names)
+function reference_mole_fractions(ds, gas_names)
     refs = zeros(Float64, length(gas_names))
     for (igas, gas) in enumerate(gas_names)
         name = String(gas) * "_reference_mole_fraction"
@@ -232,16 +232,16 @@ end
 """
     read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path; names=(:h2o, :co2))
 
-Materialize selected official ecCKD gas coefficient tables into
+Materialize selected reference ecCKD gas coefficient tables into
 `EcCKDTabulatedGasOpticsModel`.
 
 This helper is intentionally a runtime-ingestion bridge, not a claim of full
 ecRad equivalence. It stacks the `<gas>_molar_absorption_coeff` tables for the
 requested `gas_names` only (gases absent from the shortwave file contribute
-zero), passes the pressure-dependent official temperature grid through as a
+zero), passes the pressure-dependent reference temperature grid through as a
 matrix for the runtime interpolation kernel, and reads each gas's
 `<gas>_reference_mole_fraction` so the runtime can apply the ecCKD
-relative-linear convention. When `:h2o` is requested, the official
+relative-linear convention. When `:h2o` is requested, the reference
 four-dimensional H2O table is carried with its mole-fraction dimension intact;
 the runtime computes the layer H2O mole fraction from the `h2o` and
 `composite` gas amounts and interpolates the table per layer. The
@@ -260,44 +260,44 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
     lw = NCDataset(longwave_path, "r") do ds
         (
             pressure_grid = Float64.(Array(ds["pressure"])),
-            temperature_grid = _temperature_grid(ds),
+            temperature_grid = read_temperature_grid(ds),
             h2o_grid = haskey(ds, "h2o_mole_fraction") ?
                        Float64.(Array(ds["h2o_mole_fraction"])) :
                        Float64[],
-            absorption = _stack_coefficients(ds, gas_name_tuple;
+            absorption = stack_coefficients(ds, gas_name_tuple;
                                              h2o_mole_fraction = h2o_mole_fraction,
                                              dynamic_h2o = :h2o in gas_name_tuple,
                                              allow_missing = false),
-            h2o_absorption = _h2o_absorption_table(ds, gas_name_tuple),
-            gas_reference_mole_fractions = _reference_mole_fractions(ds, gas_name_tuple),
+            h2o_absorption = h2o_absorption_table(ds, gas_name_tuple),
+            gas_reference_mole_fractions = reference_mole_fractions(ds, gas_name_tuple),
             weights = fill(inv(Float64(size(ds["band_number"], 1))),
                            size(ds["band_number"], 1)),
             source = nothing,
         )
     end
     lw_source_temperature_grid, lw_source_table = NCDataset(longwave_path, "r") do ds
-        _longwave_source_table(ds, lw.weights)
+        read_longwave_source_table(ds, lw.weights)
     end
     sw = NCDataset(shortwave_path, "r") do ds
         pressure_grid = Float64.(Array(ds["pressure"]))
         isapprox(pressure_grid, lw.pressure_grid; rtol = 0.0, atol = 1.0e-3) ||
             throw(ArgumentError("longwave and shortwave ecCKD pressure grids differ"))
         (
-            temperature_grid = _temperature_grid(ds),
-            absorption = _stack_coefficients(ds, gas_name_tuple;
+            temperature_grid = read_temperature_grid(ds),
+            absorption = stack_coefficients(ds, gas_name_tuple;
                                              h2o_mole_fraction = h2o_mole_fraction,
                                              dynamic_h2o = :h2o in gas_name_tuple,
                                              allow_missing = true),
-            h2o_absorption = _h2o_absorption_table(ds, gas_name_tuple),
+            h2o_absorption = h2o_absorption_table(ds, gas_name_tuple),
             h2o_grid = haskey(ds, "h2o_mole_fraction") ?
                        Float64.(Array(ds["h2o_mole_fraction"])) :
                        Float64[],
-            gas_reference_mole_fractions = _reference_mole_fractions(ds, gas_name_tuple),
-            reference_present = _reference_mole_fraction_present(ds, gas_name_tuple),
+            gas_reference_mole_fractions = reference_mole_fractions(ds, gas_name_tuple),
+            reference_present = reference_mole_fraction_present(ds, gas_name_tuple),
             rayleigh = haskey(ds, "rayleigh_molar_scattering_coeff") ?
                        Float64.(Array(ds["rayleigh_molar_scattering_coeff"])) :
                        Float64[],
-            weights = _shortwave_weights(ds),
+            weights = read_shortwave_weights(ds),
         )
     end
 
@@ -305,7 +305,7 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
     # a single set of reference mole fractions, all taken from the longwave file
     # and then used to interpolate the shortwave table too. Check that the
     # shortwave file actually agrees; otherwise its coefficients would be
-    # silently interpolated against the wrong axis. The official pairs agree
+    # silently interpolated against the wrong axis. The reference pairs agree
     # exactly, so the tolerances here only absorb the same Float32 round-trip
     # that the pressure check above already allows.
     size(sw.temperature_grid) == size(lw.temperature_grid) ||

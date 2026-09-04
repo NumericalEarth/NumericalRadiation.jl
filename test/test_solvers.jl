@@ -571,7 +571,7 @@ using Dates
     atmosphere = nothing
 
     @testset "no-atmosphere limit" begin
-        optics = LongwaveOpticalProperties(zeros(nlayers), zeros(nlayers))
+        optics = LongwaveOptics(zeros(nlayers), zeros(nlayers))
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -589,7 +589,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = LongwaveOpticalProperties(tau, source)
+        optics = LongwaveOptics(tau, source)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(one_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -611,7 +611,7 @@ using Dates
             shortwave_up = zeros(3),
             shortwave_down = zeros(3),
         )
-        optics = LongwaveOpticalProperties(tau, source)
+        optics = LongwaveOptics(tau, source)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_up,
                                               toa_longwave_down = toa_down)
 
@@ -648,7 +648,7 @@ using Dates
             shortwave_up = zeros(3),
             shortwave_down = zeros(3),
         )
-        optics = LongwaveOpticalProperties(tau, source; weights)
+        optics = LongwaveOptics(tau, source; weights)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(two_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -670,7 +670,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = LongwaveOpticalProperties(tau, source; weights)
+        optics = LongwaveOptics(tau, source; weights)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = [100.0, 500.0])
 
         radiative_fluxes!(one_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -691,7 +691,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = LongwaveOpticalProperties(tau, source; source_top, source_bottom)
+        optics = LongwaveOptics(tau, source; source_top, source_bottom)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(one_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -727,9 +727,9 @@ using Dates
             shortwave_up = zeros(3),
             shortwave_down = zeros(3),
         )
-        no_scattering = LongwaveOpticalProperties(
+        no_scattering = LongwaveOptics(
             tau, source; source_top, source_bottom)
-        scattering = LongwaveOpticalProperties(
+        scattering = LongwaveOptics(
             tau, source;
             source_top,
             source_bottom,
@@ -750,13 +750,13 @@ end
 
 @testset "CloudOverlapLongwave all-sky access point" begin
     atmosphere = nothing
-    clear = LongwaveOpticalProperties(
+    clear = LongwaveOptics(
         [0.1 0.1],
         zeros(1, 2);
         source_top = [100.0 120.0],
         source_bottom = [120.0 140.0],
     )
-    cloudy = LongwaveOpticalProperties(
+    cloudy = LongwaveOptics(
         [0.5 0.5],
         zeros(1, 2);
         source_top = [100.0 120.0],
@@ -785,26 +785,26 @@ end
     radiative_fluxes!(clear_fluxes, CloudlessLongwave(), clear, atmosphere, boundary)
     radiative_fluxes!(cloudy_fluxes, CloudlessLongwave(), cloudy, atmosphere, boundary)
 
-    clear_overlap = LongwaveCloudOverlapOpticalProperties(clear, cloudy, [0.0, 0.0])
+    clear_overlap = LongwaveCloudOverlapOptics(clear, cloudy, [0.0, 0.0])
     radiative_fluxes!(overlap_fluxes, CloudOverlapLongwave(), clear_overlap,
                       atmosphere, boundary)
     @test overlap_fluxes.longwave_up ≈ clear_fluxes.longwave_up
     @test overlap_fluxes.longwave_down ≈ clear_fluxes.longwave_down
 
     full_cloud_overlap =
-        LongwaveCloudOverlapOpticalProperties(clear, cloudy, [1.0, 1.0])
+        LongwaveCloudOverlapOptics(clear, cloudy, [1.0, 1.0])
     radiative_fluxes!(overlap_fluxes, CloudOverlapLongwave(), full_cloud_overlap,
                       atmosphere, boundary)
     @test overlap_fluxes.longwave_up ≈ cloudy_fluxes.longwave_up
     @test overlap_fluxes.longwave_down ≈ cloudy_fluxes.longwave_down
 
-    mixed_overlap = LongwaveCloudOverlapOpticalProperties(clear, cloudy, [0.5, 0.5])
+    mixed_overlap = LongwaveCloudOverlapOptics(clear, cloudy, [0.5, 0.5])
     radiative_fluxes!(overlap_fluxes, CloudOverlapLongwave(), mixed_overlap,
                       atmosphere, boundary)
     @test all(isfinite, overlap_fluxes.longwave_up)
     @test all(isfinite, overlap_fluxes.longwave_down)
 
-    tripleclouds_overlap = LongwaveCloudOverlapOpticalProperties(
+    tripleclouds_overlap = LongwaveCloudOverlapOptics(
         clear, cloudy, [0.2, 0.8];
         overlap_parameter = [0.5],
         fractional_std = [1.5, 2.0],
@@ -820,7 +820,7 @@ end
     @test all(isfinite, overlap_fluxes.longwave_down)
 
     clear_tripleclouds =
-        LongwaveCloudOverlapOpticalProperties(clear, cloudy, [0.0, 0.0])
+        LongwaveCloudOverlapOptics(clear, cloudy, [0.0, 0.0])
     radiative_fluxes!(
         overlap_fluxes,
         CloudOverlapLongwave(overlap = :tripleclouds_alpha),
@@ -831,7 +831,7 @@ end
     @test overlap_fluxes.longwave_up ≈ clear_fluxes.longwave_up
     @test overlap_fluxes.longwave_down ≈ clear_fluxes.longwave_down
 
-    @test_throws DimensionMismatch LongwaveCloudOverlapOpticalProperties(
+    @test_throws DimensionMismatch LongwaveCloudOverlapOptics(
         clear, cloudy, [0.5])
     @test_throws ArgumentError CloudOverlapLongwave(overlap = :invalid)
 end
@@ -854,7 +854,7 @@ using Dates
             shortwave_up = zeros(nlayers + 1),
             shortwave_down = zeros(nlayers + 1),
         )
-        optics = ShortwaveOpticalProperties(zeros(nlayers))
+        optics = ShortwaveOptics(zeros(nlayers))
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 500.0,
                                                surface_albedo = 0.0)
 
@@ -871,7 +871,7 @@ using Dates
             shortwave_up = zeros(1),
             shortwave_down = zeros(1),
         )
-        optics = ShortwaveOpticalProperties(Float64[])
+        optics = ShortwaveOptics(Float64[])
         atmosphere = (; geometry = (; cos_zenith = 0.25))
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 700.0,
                                                surface_albedo = 0.9,
@@ -891,7 +891,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([log(2.0)])
+        optics = ShortwaveOptics([log(2.0)])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.25)
 
@@ -913,7 +913,7 @@ using Dates
         )
         tau = [0.0 0.0;
                log(2.0) log(2.0)]
-        optics = ShortwaveOpticalProperties(tau; weights = [0.25, 0.75])
+        optics = ShortwaveOptics(tau; weights = [0.25, 0.75])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.25)
 
@@ -933,7 +933,7 @@ using Dates
             shortwave_down = zeros(2),
         )
         tau = reshape([0.0, 0.0], 2, 1)
-        optics = ShortwaveOpticalProperties(tau; weights = [0.25, 0.75])
+        optics = ShortwaveOptics(tau; weights = [0.25, 0.75])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = [0.2, 0.4])
 
@@ -950,7 +950,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([0.0])
+        optics = ShortwaveOptics([0.0])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.25,
                                                surface_albedo_direct = 0.1)
@@ -968,7 +968,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([log(2.0)])
+        optics = ShortwaveOptics([log(2.0)])
         atmosphere = (; geometry = (; cos_zenith = 0.5))
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.25)
@@ -988,7 +988,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([0.0];
+        optics = ShortwaveOptics([0.0];
                                             rayleigh_optical_depth = [log(2.0)])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
@@ -1009,7 +1009,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([0.0];
+        optics = ShortwaveOptics([0.0];
                                             scattering_optical_depth = [0.7],
                                             scattering_asymmetry = [0.0])
         atmosphere = (; geometry = (; cos_zenith = 1.0))
@@ -1033,7 +1033,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([0.0];
+        optics = ShortwaveOptics([0.0];
                                             rayleigh_optical_depth = [log(2.0)])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
@@ -1051,7 +1051,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([0.0];
+        optics = ShortwaveOptics([0.0];
                                             scattering_optical_depth = [log(2.0)],
                                             scattering_asymmetry = [0.8])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
@@ -1084,7 +1084,7 @@ end
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOpticalProperties([0.0];
+        optics = ShortwaveOptics([0.0];
                                             scattering_optical_depth = [τ],
                                             scattering_asymmetry = [g])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
@@ -1099,7 +1099,7 @@ end
 end
 
 @testset "delta-Eddington scaling" begin
-    scale(τ, ω, g) = NumericalRadiation._sw_delta_eddington(Float64, τ, ω, g)
+    scale(τ, ω, g) = NumericalRadiation.sw_delta_eddington(Float64, τ, ω, g)
 
     # Rayleigh (g = 0) and backscattering layers have no forward peak to remove.
     @test scale(1.5, 0.9, 0.0) == (1.5, 0.9, 0.0)
@@ -1138,9 +1138,9 @@ end
         shortwave_up = zeros(nlayers + 1),
         shortwave_down = zeros(nlayers + 1),
     )
-    clear = ShortwaveOpticalProperties(zeros(nlayers))
-    cloudy = ShortwaveOpticalProperties([log(2.0), log(2.0)])
-    optics = ShortwaveCloudOverlapOpticalProperties(clear, cloudy, [0.0, 1.0])
+    clear = ShortwaveOptics(zeros(nlayers))
+    cloudy = ShortwaveOptics([log(2.0), log(2.0)])
+    optics = ShortwaveCloudOverlapOptics(clear, cloudy, [0.0, 1.0])
     boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                            surface_albedo = 0.0)
 
@@ -1183,7 +1183,7 @@ end
         shortwave_up = zeros(nlayers + 1),
         shortwave_down = zeros(nlayers + 1),
     )
-    alpha_optics = ShortwaveCloudOverlapOpticalProperties(
+    alpha_optics = ShortwaveCloudOverlapOptics(
         clear, cloudy, [0.0, 1.0]; overlap_parameter = [0.5])
     radiative_fluxes!(alpha_fluxes, CloudOverlapShortwave(overlap = :matrix_alpha),
                       alpha_optics, nothing, boundary)
@@ -1197,7 +1197,7 @@ end
         shortwave_up = zeros(nlayers + 1),
         shortwave_down = zeros(nlayers + 1),
     )
-    tripleclouds_optics = ShortwaveCloudOverlapOpticalProperties(
+    tripleclouds_optics = ShortwaveCloudOverlapOptics(
         clear,
         cloudy,
         [0.0, 1.0];
@@ -1211,9 +1211,9 @@ end
     @test 0.0 <= tripleclouds_fluxes.shortwave_down[3] <= 400.0
     @test tripleclouds_fluxes.shortwave_up == zeros(nlayers + 1)
 
-    @test_throws DimensionMismatch ShortwaveCloudOverlapOpticalProperties(
+    @test_throws DimensionMismatch ShortwaveCloudOverlapOptics(
         clear, cloudy, [0.0, 1.0]; overlap_parameter = [0.5, 0.5])
-    @test_throws DimensionMismatch ShortwaveCloudOverlapOpticalProperties(
+    @test_throws DimensionMismatch ShortwaveCloudOverlapOptics(
         clear, cloudy, [0.0, 1.0]; fractional_std = [1.0])
     @test_throws ArgumentError CloudOverlapShortwave(overlap = :invalid)
 end
@@ -1229,7 +1229,7 @@ using Dates
 # --- begin content of test_cloud_optics.jl ---
 @testset "Layer cloud optics" begin
     @testset "cloud optical properties" begin
-        cloud = CloudOpticalProperties(zeros(3), zeros(3))
+        cloud = CloudOptics(zeros(3), zeros(3))
         model = LayerCloudOpticsModel(cloud_water_path = [0.0, 0.05, 0.10],
                                       longwave_mass_absorption = 2.0,
                                       shortwave_mass_extinction = 5.0)
@@ -1241,9 +1241,9 @@ using Dates
     end
 
     @testset "add cloud optical depths to gas optics" begin
-        longwave = LongwaveOpticalProperties([0.1, 0.2], [50.0, 60.0])
-        shortwave = ShortwaveOpticalProperties([0.01, 0.02])
-        cloud = CloudOpticalProperties([0.3, 0.4], [0.5, 0.6])
+        longwave = LongwaveOptics([0.1, 0.2], [50.0, 60.0])
+        shortwave = ShortwaveOptics([0.01, 0.02])
+        cloud = CloudOptics([0.3, 0.4], [0.5, 0.6])
 
         add_cloud_optical_depths!(longwave, shortwave, cloud)
 
@@ -1254,9 +1254,9 @@ using Dates
     end
 
     @testset "cloud shortwave scattering is composed separately" begin
-        longwave = LongwaveOpticalProperties([0.1, 0.2], [50.0, 60.0])
-        shortwave = ShortwaveOpticalProperties([0.01, 0.02])
-        cloud = CloudOpticalProperties([0.3, 0.4], [0.5, 0.6];
+        longwave = LongwaveOptics([0.1, 0.2], [50.0, 60.0])
+        shortwave = ShortwaveOptics([0.01, 0.02])
+        cloud = CloudOptics([0.3, 0.4], [0.5, 0.6];
                                        shortwave_scattering_optical_depth = [0.05, 0.06],
                                        shortwave_scattering_asymmetry = [0.7, 0.8])
 
@@ -1269,11 +1269,11 @@ using Dates
     end
 
     @testset "cloud scattering asymmetry is optical-depth weighted" begin
-        longwave = LongwaveOpticalProperties([0.1], [50.0])
-        shortwave = ShortwaveOpticalProperties([0.01];
+        longwave = LongwaveOptics([0.1], [50.0])
+        shortwave = ShortwaveOptics([0.01];
                                                scattering_optical_depth = [0.2],
                                                scattering_asymmetry = [0.1])
-        cloud = CloudOpticalProperties([0.0], [0.0];
+        cloud = CloudOptics([0.0], [0.0];
                                        shortwave_scattering_optical_depth = [0.3],
                                        shortwave_scattering_asymmetry = [0.6])
 
@@ -1284,7 +1284,7 @@ using Dates
     end
 
     @testset "liquid/ice cloud optical properties with cloud fraction" begin
-        cloud = CloudOpticalProperties(zeros(3), zeros(3))
+        cloud = CloudOptics(zeros(3), zeros(3))
         model = LayerLiquidIceCloudOpticsModel(
             liquid_water_path = [0.10, 0.20, 0.30],
             ice_water_path = [0.30, 0.20, 0.10],
@@ -1303,7 +1303,7 @@ using Dates
     end
 
     @testset "liquid/ice cloud scattering partition" begin
-        cloud = CloudOpticalProperties(zeros(2), zeros(2))
+        cloud = CloudOptics(zeros(2), zeros(2))
         model = LayerLiquidIceCloudOpticsModel(
             liquid_water_path = [0.10, 0.20],
             ice_water_path = [0.30, 0.20],
@@ -1330,7 +1330,7 @@ using Dates
     end
 
     @testset "liquid/ice cloud fraction exponent" begin
-        cloud = CloudOpticalProperties(zeros(1), zeros(1))
+        cloud = CloudOptics(zeros(1), zeros(1))
         model = LayerLiquidIceCloudOpticsModel(
             liquid_water_path = [0.10],
             ice_water_path = [0.30],
@@ -1349,7 +1349,7 @@ using Dates
     end
 
     @testset "cloudy-region liquid/ice optical properties keep cloud fraction separate" begin
-        cloud = CloudyRegionCloudOpticalProperties(
+        cloud = CloudyRegionCloudOptics(
             zeros(2),
             zeros(1),
             zeros(2),
@@ -1387,7 +1387,7 @@ using Dates
     end
 
     @testset "liquid/ice model reads atmosphere properties" begin
-        cloud = CloudOpticalProperties(zeros(2), zeros(2))
+        cloud = CloudOptics(zeros(2), zeros(2))
         model = LayerLiquidIceCloudOpticsModel(
             liquid_water_path = 0.0,
             ice_water_path = 0.0,
@@ -1423,10 +1423,10 @@ using Dates
             shortwave_up = zeros(nlayers + 1),
             shortwave_down = zeros(nlayers + 1),
         )
-        clear_shortwave = ShortwaveOpticalProperties(zeros(nlayers))
-        cloudy_shortwave = ShortwaveOpticalProperties(zeros(nlayers))
-        longwave = LongwaveOpticalProperties(zeros(nlayers), zeros(nlayers))
-        cloud = CloudOpticalProperties(zeros(nlayers), [log(2.0), 0.0])
+        clear_shortwave = ShortwaveOptics(zeros(nlayers))
+        cloudy_shortwave = ShortwaveOptics(zeros(nlayers))
+        longwave = LongwaveOptics(zeros(nlayers), zeros(nlayers))
+        cloud = CloudOptics(zeros(nlayers), [log(2.0), 0.0])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
 
@@ -1439,7 +1439,7 @@ using Dates
     end
 
     @testset "mapped cloud scattering composition" begin
-        shortwave = ShortwaveOpticalProperties(zeros(2, 2);
+        shortwave = ShortwaveOptics(zeros(2, 2);
                                                scattering_optical_depth = zeros(2, 2),
                                                scattering_asymmetry = zeros(2, 2))
         liquid = (
@@ -1463,7 +1463,7 @@ using Dates
         @test shortwave.rayleigh_optical_depth[:, 2] ≈ [1.8, 1.0]
         @test shortwave.scattering_asymmetry[:, 2] ≈ [0.5, 0.4]
 
-        scaled = ShortwaveOpticalProperties(zeros(2, 1);
+        scaled = ShortwaveOptics(zeros(2, 1);
                                             scattering_optical_depth = zeros(2, 1),
                                             scattering_asymmetry = zeros(2, 1))
         add_mapped_cloud_scattering!(scaled, liquid, ice,
@@ -1472,7 +1472,7 @@ using Dates
         @test scaled.optical_depth[:, 1] ≈ [0.4, 2.0]
         @test scaled.rayleigh_optical_depth[:, 1] ≈ [1.6, 2.0]
 
-        delta_scaled = ShortwaveOpticalProperties(zeros(1, 1);
+        delta_scaled = ShortwaveOptics(zeros(1, 1);
                                                   scattering_optical_depth = zeros(1, 1),
                                                   scattering_asymmetry = zeros(1, 1))
         add_mapped_cloud_scattering!(
@@ -1496,7 +1496,7 @@ end
 
 @testset "Layer aerosol optics" begin
     @testset "aerosol optical properties" begin
-        aerosol = AerosolOpticalProperties(zeros(3), zeros(3))
+        aerosol = AerosolOptics(zeros(3), zeros(3))
         model = LayerAerosolOpticsModel(aerosol_path = [0.0, 0.02, 0.04],
                                         longwave_mass_absorption = 1.5,
                                         shortwave_mass_extinction = 4.0)
@@ -1510,7 +1510,7 @@ end
     end
 
     @testset "aerosol shortwave scattering partition" begin
-        aerosol = AerosolOpticalProperties(zeros(2), zeros(2))
+        aerosol = AerosolOptics(zeros(2), zeros(2))
         model = LayerAerosolOpticsModel(aerosol_path = [0.02, 0.04],
                                         longwave_mass_absorption = 1.5,
                                         shortwave_mass_extinction = 4.0,
@@ -1526,9 +1526,9 @@ end
     end
 
     @testset "add aerosol optical depths to gas optics" begin
-        longwave = LongwaveOpticalProperties([0.1, 0.2], [50.0, 60.0])
-        shortwave = ShortwaveOpticalProperties([0.01, 0.02])
-        aerosol = AerosolOpticalProperties([0.03, 0.04], [0.05, 0.06];
+        longwave = LongwaveOptics([0.1, 0.2], [50.0, 60.0])
+        shortwave = ShortwaveOptics([0.01, 0.02])
+        aerosol = AerosolOptics([0.03, 0.04], [0.05, 0.06];
                                            shortwave_scattering_optical_depth = [0.01, 0.02],
                                            shortwave_scattering_asymmetry = [0.3, 0.4])
 
@@ -1541,10 +1541,10 @@ end
     end
 
     @testset "absorptive gas cloud aerosol composition" begin
-        longwave = LongwaveOpticalProperties([0.1, 0.2], [50.0, 60.0])
-        shortwave = ShortwaveOpticalProperties([0.01, 0.02])
-        cloud = CloudOpticalProperties([0.3, 0.4], [0.5, 0.6])
-        aerosol = AerosolOpticalProperties([0.03, 0.04], [0.05, 0.06])
+        longwave = LongwaveOptics([0.1, 0.2], [50.0, 60.0])
+        shortwave = ShortwaveOptics([0.01, 0.02])
+        cloud = CloudOptics([0.3, 0.4], [0.5, 0.6])
+        aerosol = AerosolOptics([0.03, 0.04], [0.05, 0.06])
 
         add_cloud_optical_depths!(longwave, shortwave, cloud)
         add_aerosol_optical_depths!(longwave, shortwave, aerosol)
@@ -1638,10 +1638,10 @@ end
     @test all(0 .<= thick.single_scattering_albedo .<= 1)
     @test thick.single_scattering_albedo != thin.single_scattering_albedo
 
-    first_weights = @inferred NumericalRadiation._ecrad_cloud_mapping_matrix(table, mapping)
+    first_weights = @inferred NumericalRadiation.ecrad_cloud_mapping_matrix(table, mapping)
     original_fraction = copy(mapping.gpoint_fraction)
     mapping.gpoint_fraction .= original_fraction[:, end:-1:1]
-    second_weights = @inferred NumericalRadiation._ecrad_cloud_mapping_matrix(table, mapping)
+    second_weights = @inferred NumericalRadiation.ecrad_cloud_mapping_matrix(table, mapping)
     @test second_weights != first_weights
     @test second_weights == first_weights[end:-1:1, :]
 end
@@ -1698,12 +1698,12 @@ end
     @test mapping.interval_weight == [1.0, 1.0]
 end
 
-@testset "official ecRad cloud scattering files" begin
-    # Resolve through the package's official-data path (RH_ECRAD_DATA_PATH,
+@testset "reference ecRad cloud scattering files" begin
+    # Resolve through the package's reference-data path (RH_ECRAD_DATA_PATH,
     # the lazy ecrad_data artifact, or a local checkout).
-    liquid_path = NumericalRadiation._ecrad_data_file("mie_droplet_scattering.nc";
+    liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc";
                                                       require = false)
-    ice_path = NumericalRadiation._ecrad_data_file(
+    ice_path = NumericalRadiation.ecrad_data_file(
         "baum-general-habit-mixture_ice_scattering.nc"; require = false)
 
     if liquid_path !== nothing && ice_path !== nothing
@@ -1723,7 +1723,7 @@ end
         @test all(-1 .<= ice.asymmetry_factor .<= 1)
 
         sw_mapping = read_ecckd_spectral_mapping(
-            official_ecckd_definition_path("ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"))
+            reference_ecckd_definition_path("ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"))
         liquid_gpoints = cloud_scattering_gpoint_properties(liquid, sw_mapping, 10.0e-6)
         ice_gpoints = cloud_scattering_gpoint_properties(ice, sw_mapping, 30.0e-6)
         liquid_ecrad_gpoints = cloud_scattering_gpoint_properties(
@@ -1741,8 +1741,8 @@ end
         @test all(0 .<= ice_gpoints.single_scattering_albedo .<= 1)
         @test all(0 .<= liquid_ecrad_gpoints.single_scattering_albedo .<= 1)
     else
-        @info "Skipping official cloud scattering table check; ecRad data files are not present" liquid_path ice_path
-        @test_skip "official cloud scattering table files are not present"
+        @info "Skipping reference cloud scattering table check; ecRad data files are not present" liquid_path ice_path
+        @test_skip "reference cloud scattering table files are not present"
     end
 end
 # --- end content of test_cloud_scattering_table.jl ---

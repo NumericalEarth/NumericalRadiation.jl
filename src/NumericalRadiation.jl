@@ -13,22 +13,22 @@ export AbstractAerosolOpticsModel, AbstractRadiativeTransferSolver, AbstractRadi
 
 export AtmosphereProfile, ColumnGrid, SurfaceState
 export ColumnAtmosphere, RadiativeFluxes
-export LongwaveOpticalProperties, CloudlessLongwave, LongwaveBoundaryConditions
-export LongwaveCloudOverlapOpticalProperties, CloudOverlapLongwave
-export ShortwaveOpticalProperties, CloudlessShortwave, ShortwaveBoundaryConditions
-export ShortwaveCloudOverlapOpticalProperties, CloudOverlapShortwave
-export CloudOpticalProperties, CloudyRegionCloudOpticalProperties
+export LongwaveOptics, CloudlessLongwave, LongwaveBoundaryConditions
+export LongwaveCloudOverlapOptics, CloudOverlapLongwave
+export ShortwaveOptics, CloudlessShortwave, ShortwaveBoundaryConditions
+export ShortwaveCloudOverlapOptics, CloudOverlapShortwave
+export CloudOptics, CloudyRegionCloudOptics
 export LayerCloudOpticsModel, LayerLiquidIceCloudOpticsModel
 export add_cloud_optical_depths!, add_mapped_cloud_scattering!
-export AerosolOpticalProperties, LayerAerosolOpticsModel, add_aerosol_optical_depths!
+export AerosolOptics, LayerAerosolOpticsModel, add_aerosol_optical_depths!
 export EcCKDGasOpticsModel, EcCKDTabulatedGasOpticsModel
 export EcCKDDefinition, EcCKDSchemaSummary, EcCKDModelSpec
 export read_ecckd_definition, summarize_ecckd_definition, validate_ecckd_definition
-export read_ecckd_tabulated_gas_optics, read_official_ecckd_gas_optics
+export read_ecckd_tabulated_gas_optics, read_reference_ecckd_gas_optics
 export surface_longwave_emission
-export official_ecckd_model_inventory, official_ecckd_definition_path,
-       official_ecckd_definition_paths, official_ecckd_model_specs,
-       official_ecckd_model_spec, ecrad_data_path, ecckd_source_path
+export reference_ecckd_model_inventory, reference_ecckd_definition_path,
+       reference_ecckd_definition_paths, reference_ecckd_model_specs,
+       reference_ecckd_model_spec, ecrad_data_path, ecckd_source_path
 export CloudScatteringTable, EcCKDSpectralMapping
 export read_cloud_scattering_table, read_ecckd_spectral_mapping
 export cloud_scattering_properties, cloud_scattering_gpoint_properties

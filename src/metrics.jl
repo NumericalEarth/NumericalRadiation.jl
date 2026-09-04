@@ -77,20 +77,20 @@ function RadiationThresholds(; flux_rmse = Inf,
     )
 end
 
-@inline _squared(x) = x * x
+@inline squared(x) = x * x
 
-function _rmse(candidate, reference)
+function rmse(candidate, reference)
     length(candidate) == length(reference) ||
         throw(DimensionMismatch("candidate and reference arrays must have equal length"))
     isempty(candidate) && throw(ArgumentError("metric arrays must be non-empty"))
     err2 = zero(promote_type(eltype(candidate), eltype(reference)))
     for i in eachindex(candidate, reference)
-        err2 += _squared(candidate[i] - reference[i])
+        err2 += squared(candidate[i] - reference[i])
     end
     return sqrt(err2 / length(candidate))
 end
 
-function _max_abs_error(candidate, reference)
+function max_abs_error(candidate, reference)
     length(candidate) == length(reference) ||
         throw(DimensionMismatch("candidate and reference arrays must have equal length"))
     isempty(candidate) && throw(ArgumentError("metric arrays must be non-empty"))
@@ -101,7 +101,7 @@ function _max_abs_error(candidate, reference)
     return err
 end
 
-function _bias(candidate, reference)
+function bias(candidate, reference)
     length(candidate) == length(reference) ||
         throw(DimensionMismatch("candidate and reference arrays must have equal length"))
     isempty(candidate) && throw(ArgumentError("metric arrays must be non-empty"))
@@ -136,18 +136,18 @@ function radiation_error_metrics(; candidate_flux,
                       typeof(candidate_toa_flux), typeof(reference_toa_flux),
                       typeof(candidate_surface_flux), typeof(reference_surface_flux))
     return RadiationErrorMetrics{FT}(
-        FT(_rmse(candidate_flux, reference_flux)),
-        FT(_max_abs_error(candidate_flux, reference_flux)),
-        FT(_bias(candidate_flux, reference_flux)),
-        FT(_rmse(candidate_heating_rate, reference_heating_rate)),
-        FT(_max_abs_error(candidate_heating_rate, reference_heating_rate)),
-        FT(_bias(candidate_heating_rate, reference_heating_rate)),
+        FT(rmse(candidate_flux, reference_flux)),
+        FT(max_abs_error(candidate_flux, reference_flux)),
+        FT(bias(candidate_flux, reference_flux)),
+        FT(rmse(candidate_heating_rate, reference_heating_rate)),
+        FT(max_abs_error(candidate_heating_rate, reference_heating_rate)),
+        FT(bias(candidate_heating_rate, reference_heating_rate)),
         FT(candidate_toa_flux - reference_toa_flux),
         FT(candidate_surface_flux - reference_surface_flux),
     )
 end
 
-function _append_flux_components!(storage, fluxes::RadiativeFluxes)
+function append_flux_components!(storage, fluxes::RadiativeFluxes)
     append!(storage, fluxes.longwave_up)
     append!(storage, fluxes.longwave_down)
     append!(storage, fluxes.shortwave_up)
@@ -155,7 +155,7 @@ function _append_flux_components!(storage, fluxes::RadiativeFluxes)
     return storage
 end
 
-function _net_flux_at(fluxes::RadiativeFluxes, index)
+function net_flux_at(fluxes::RadiativeFluxes, index)
     return fluxes.longwave_down[index] - fluxes.longwave_up[index] +
            fluxes.shortwave_down[index] - fluxes.shortwave_up[index]
 end
@@ -186,18 +186,18 @@ function radiative_flux_error_metrics(candidate_fluxes::RadiativeFluxes,
 
     candidate_flux = eltype(candidate_heating)[]
     reference_flux = eltype(candidate_heating)[]
-    _append_flux_components!(candidate_flux, candidate_fluxes)
-    _append_flux_components!(reference_flux, reference_fluxes)
+    append_flux_components!(candidate_flux, candidate_fluxes)
+    append_flux_components!(reference_flux, reference_fluxes)
 
     return radiation_error_metrics(
         candidate_flux = candidate_flux,
         reference_flux = reference_flux,
         candidate_heating_rate = candidate_heating,
         reference_heating_rate = reference_heating,
-        candidate_toa_flux = _net_flux_at(candidate_fluxes, firstindex(candidate_fluxes.longwave_up)),
-        reference_toa_flux = _net_flux_at(reference_fluxes, firstindex(reference_fluxes.longwave_up)),
-        candidate_surface_flux = _net_flux_at(candidate_fluxes, lastindex(candidate_fluxes.longwave_up)),
-        reference_surface_flux = _net_flux_at(reference_fluxes, lastindex(reference_fluxes.longwave_up)),
+        candidate_toa_flux = net_flux_at(candidate_fluxes, firstindex(candidate_fluxes.longwave_up)),
+        reference_toa_flux = net_flux_at(reference_fluxes, firstindex(reference_fluxes.longwave_up)),
+        candidate_surface_flux = net_flux_at(candidate_fluxes, lastindex(candidate_fluxes.longwave_up)),
+        reference_surface_flux = net_flux_at(reference_fluxes, lastindex(reference_fluxes.longwave_up)),
     )
 end
 

@@ -597,8 +597,8 @@ end
     accumulate_tabulated_tau(gases, coefficients, GasNames,
                               gas_reference_mole_fractions, ig, k, stencil)
 
-function check_ecckd_optics_shapes(longwave::LongwaveOpticalProperties,
-                                    shortwave::ShortwaveOpticalProperties,
+function check_ecckd_optics_shapes(longwave::LongwaveOptics,
+                                    shortwave::ShortwaveOptics,
                                     model::EcCKDGasOpticsModel,
                                     atmosphere::ColumnAtmosphere)
     nlayers = length(atmosphere.temperature_layers)
@@ -629,8 +629,8 @@ function check_ecckd_optics_shapes(longwave::LongwaveOpticalProperties,
     return nothing
 end
 
-function check_ecckd_optics_shapes(longwave::LongwaveOpticalProperties,
-                                    shortwave::ShortwaveOpticalProperties,
+function check_ecckd_optics_shapes(longwave::LongwaveOptics,
+                                    shortwave::ShortwaveOptics,
                                     model::EcCKDTabulatedGasOpticsModel,
                                     atmosphere::ColumnAtmosphere)
     nlayers = length(atmosphere.temperature_layers)
@@ -672,8 +672,8 @@ Fill caller-owned longwave and shortwave optical-property arrays from an
 already-interpolated ecCKD-style model. This method performs no NetCDF I/O and
 does not allocate output arrays.
 """
-function optical_properties!(longwave::LongwaveOpticalProperties{FT, <:AbstractMatrix},
-                             shortwave::ShortwaveOpticalProperties{FT, <:AbstractMatrix},
+function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
+                             shortwave::ShortwaveOptics{FT, <:AbstractMatrix},
                              model::EcCKDGasOpticsModel{FT},
                              atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
@@ -755,8 +755,8 @@ Fill caller-owned longwave and shortwave optical-property arrays from
 pressure/temperature coefficient tables using bilinear interpolation. This is
 the lightweight runtime LUT path for ecCKD-style gas optics.
 """
-function optical_properties!(longwave::LongwaveOpticalProperties{FT, <:AbstractMatrix},
-                             shortwave::ShortwaveOpticalProperties{FT, <:AbstractMatrix},
+function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
+                             shortwave::ShortwaveOptics{FT, <:AbstractMatrix},
                              model::EcCKDTabulatedGasOpticsModel{FT},
                              atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)

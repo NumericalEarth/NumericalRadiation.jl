@@ -8,8 +8,8 @@
 # a host model can own, reuse, or replace any stage. This tutorial runs the
 # three stages end-to-end on a tiny synthetic tabulated gas-optics model, so
 # the documentation build needs no NetCDF data — but these are exactly the
-# calls used by official ecCKD models loaded with
-# `read_official_ecckd_gas_optics`.
+# calls used by reference ecCKD models loaded with
+# `read_reference_ecckd_gas_optics`.
 
 using CairoMakie
 using NumericalRadiation
@@ -77,7 +77,7 @@ model = EcCKDTabulatedGasOpticsModel(;
 
 # ## Caller-owned work arrays
 
-longwave = LongwaveOpticalProperties(
+longwave = LongwaveOptics(
     zeros(2, N),
     zeros(2, N);
     source_top = zeros(2, N),
@@ -85,7 +85,7 @@ longwave = LongwaveOpticalProperties(
     weights = zeros(2),
 )
 
-shortwave = ShortwaveOpticalProperties(
+shortwave = ShortwaveOptics(
     zeros(2, N);
     rayleigh_optical_depth = zeros(2, N),
     scattering_asymmetry = zeros(2, N),
@@ -175,6 +175,6 @@ save(joinpath(docs_asset_dir(), "staged_ecckd_column.png"), fig)
 #
 # ![Flux and heating diagnostics for the staged ecCKD column example](../assets/staged_ecckd_column.png)
 
-# Official ecCKD files can be used in the same staged calls once available. The
+# Reference ecCKD files can be used in the same staged calls once available. The
 # only replacement is the `model = ...` block above; the atmosphere, work arrays,
 # fluxes, boundary conditions, and heating conversion stay the same.

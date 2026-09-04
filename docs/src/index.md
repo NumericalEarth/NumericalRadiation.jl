@@ -1,7 +1,7 @@
 # NumericalRadiation.jl
 
 NumericalRadiation.jl is a standalone atmospheric radiation and gas-optics
-library compatible with ECMWF's ecRad/ecCKD data. It ingests official ecCKD
+library compatible with ECMWF's ecRad/ecCKD data. It ingests reference ecCKD
 CKD-definition files into typed, `Adapt.jl`-aware look-up tables, evaluates
 g-point optical depths in a streaming gas-optics path that is allocation-free
 once warmed with caller-preallocated outputs, and solves clear-sky and all-sky
@@ -19,7 +19,7 @@ Pkg.add(url = "https://github.com/NumericalEarth/NumericalRadiation.jl")
 
 ## Quickstart
 
-Run a clear-sky longwave column with an official ecCKD model. The
+Run a clear-sky longwave column with an reference ecCKD model. The
 CKD-definition files resolve through lazy artifacts on first use; arrays are
 ordered top-to-bottom (pressure increasing downward), and gas entries are layer
 column amounts in mol m⁻².
@@ -28,7 +28,7 @@ column amounts in mol m⁻².
 using NumericalRadiation
 using NCDatasets   # activates the NetCDF reader extension
 
-gas_optics = read_official_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
 
 g  = 9.80665     # gravitational acceleration, m s⁻²
 mᵈ = 0.0289647   # dry-air molar mass, kg mol⁻¹
@@ -49,11 +49,11 @@ atmosphere = ColumnAtmosphere(;
 
 longwave_gpoints = length(gas_optics.longwave_weights)
 shortwave_gpoints = length(gas_optics.shortwave_weights)
-longwave = LongwaveOpticalProperties(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
+longwave = LongwaveOptics(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
                                      source_top = zeros(longwave_gpoints, N),
                                      source_bottom = zeros(longwave_gpoints, N),
                                      weights = zeros(longwave_gpoints))
-shortwave = ShortwaveOpticalProperties(zeros(shortwave_gpoints, N);
+shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
                                        weights = zeros(shortwave_gpoints))
 fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
                          longwave_down = zeros(N + 1),

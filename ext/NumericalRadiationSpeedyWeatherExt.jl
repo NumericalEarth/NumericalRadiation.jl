@@ -42,7 +42,7 @@ SpeedyWeather.initialize!(::SpeedyAnalyticBandLongwave, ::SpeedyWeather.Primitiv
 # Re-export under the PR's original name for drop-in compatibility.
 const SimpleSpectralLongwave = SpeedyAnalyticBandLongwave
 
-@inline function _speedy_physical_constants(model)
+@inline function speedy_physical_constants(model)
     NF = typeof(model.planet.gravity)
     return PhysicalConstants{NF}(
         gravity          = model.planet.gravity,
@@ -52,7 +52,7 @@ const SimpleSpectralLongwave = SpeedyAnalyticBandLongwave
     )
 end
 
-@inline function _speedy_column_geometry(model)
+@inline function speedy_column_geometry(model)
     geom = model.geometry
     return ColumnGrid(geom.σ_levels_full, geom.σ_levels_half, geom.σ_levels_thick)
 end
@@ -79,13 +79,13 @@ function SpeedyWeather.parameterization!(ij::Integer, vars,
                                  geopotential = Φ, surface_pressure = pₛ, 
                                  CO₂ = CO₂)
                              
-    geometry = _speedy_column_geometry(model)
+    geometry = speedy_column_geometry(model)
     surface  = SurfaceState{NF}(
         sea_surface_temperature  = vars.prognostic.ocean.sea_surface_temperature[ij],
         land_surface_temperature = vars.prognostic.land.soil_temperature[ij, 1],
         land_fraction            = model.land_sea_mask.mask[ij],
     )
-    constants = _speedy_physical_constants(model)
+    constants = speedy_physical_constants(model)
     diag = LongwaveDiagnostics{NF}()
     dTdt = @view vars.tendencies.grid.temperature[ij, :]
 

@@ -5,7 +5,7 @@ Dependency-free summary of an ecCKD CKD-definition file.
 
 This structure stores the schema-level information needed before materializing
 lookup tables into runtime gas-optics models. A NetCDF reader extension can
-populate it from official ecCKD files without making `NCDatasets.jl` a hard
+populate it from reference ecCKD files without making `NCDatasets.jl` a hard
 dependency of the core package.
 
 Fields are
@@ -60,7 +60,7 @@ end
 """
 $(TYPEDEF)
 
-Named pair of official ecCKD longwave and shortwave CKD-definition files.
+Named pair of reference ecCKD longwave and shortwave CKD-definition files.
 
 Fields are
 
@@ -69,15 +69,15 @@ $(TYPEDFIELDS)
 struct EcCKDModelSpec
     "Public model-pair selector, for example `:climate_32x32`."
     name::Symbol
-    "Official longwave CKD-definition key."
+    "Reference longwave CKD-definition key."
     longwave::Symbol
-    "Official shortwave CKD-definition key."
+    "Reference shortwave CKD-definition key."
     shortwave::Symbol
     "Human-readable summary for docs and logging."
     description::String
 end
 
-const _OFFICIAL_ECCKD_MODELS = (
+const _REFERENCE_ECCKD_MODELS = (
     "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     "ecckd-1.0_sw_climate_rgb-32b_ckd-definition.nc",
     "ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
@@ -86,7 +86,7 @@ const _OFFICIAL_ECCKD_MODELS = (
     "ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
 )
 
-const _OFFICIAL_ECCKD_DEFAULTS = (
+const _REFERENCE_ECCKD_DEFAULTS = (
     longwave_32 = "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc",
     shortwave_32 = "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc",
     longwave_64 = "ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc",
@@ -94,7 +94,7 @@ const _OFFICIAL_ECCKD_DEFAULTS = (
     shortwave_96 = "ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc",
 )
 
-const _OFFICIAL_ECCKD_MODEL_SPECS = (
+const _REFERENCE_ECCKD_MODEL_SPECS = (
     climate_32x32 = EcCKDModelSpec(:climate_32x32, :longwave_32, :shortwave_32,
                                    "ecCKD climate model with 32 longwave and 32 shortwave g-points"),
     climate_32x64 = EcCKDModelSpec(:climate_32x64, :longwave_32, :shortwave_64,
@@ -111,23 +111,23 @@ const _OFFICIAL_ECCKD_MODEL_SPECS = (
 
 const _ECRAD_DATA_DIR_CACHE = Ref(Dict{String, String}())
 
-function _package_root()
+function package_root()
     return normpath(joinpath(@__DIR__, "..", ".."))
 end
 
-function _artifact_toml_path()
-    return joinpath(_package_root(), "Artifacts.toml")
+function artifact_toml_path()
+    return joinpath(package_root(), "Artifacts.toml")
 end
 
-function _first_existing_directory(paths)
+function first_existing_directory(paths)
     for path in paths
         path isa AbstractString && isdir(path) && return normpath(path)
     end
     return nothing
 end
 
-function _artifact_root(name::String; require::Bool)
-    toml_path = _artifact_toml_path()
+function artifact_root(name::String; require::Bool)
+    toml_path = artifact_toml_path()
     isfile(toml_path) || return nothing
     if !require
         hash = artifact_hash(name, toml_path)
@@ -138,8 +138,8 @@ function _artifact_root(name::String; require::Bool)
     return nothing
 end
 
-function _ecrad_artifact_root(; require::Bool = false)
-    root = _artifact_root("ecrad_data"; require)
+function ecrad_artifact_root(; require::Bool = false)
+    root = artifact_root("ecrad_data"; require)
     root === nothing || return root
     require || return nothing
     try
@@ -151,8 +151,8 @@ function _ecrad_artifact_root(; require::Bool = false)
     end
 end
 
-function _ecckd_source_artifact_root(; require::Bool = false)
-    root = _artifact_root("ecckd_source"; require)
+function ecckd_source_artifact_root(; require::Bool = false)
+    root = artifact_root("ecckd_source"; require)
     root === nothing || return root
     require || return nothing
     try
@@ -164,7 +164,7 @@ function _ecckd_source_artifact_root(; require::Bool = false)
     end
 end
 
-function _source_root_with_file(root, filename)
+function source_root_with_file(root, filename)
     root === nothing && return nothing
     isdir(root) || return nothing
     isfile(joinpath(root, filename)) && return normpath(root)
@@ -187,10 +187,10 @@ artifacts may contain the data under one top-level child directory; individual
 file resolution handles both `<root>/data` and `<root>/<archive>/data`.
 """
 function ecrad_data_path(; require::Bool = false)
-    root = _first_existing_directory((
+    root = first_existing_directory((
         get(ENV, "RH_ECRAD_DATA_PATH", nothing),
-        _ecrad_artifact_root(; require),
-        joinpath(_package_root(), "validation", "external", "ecrad"),
+        ecrad_artifact_root(; require),
+        joinpath(package_root(), "validation", "external", "ecrad"),
     ))
     if root === nothing && require
         throw(ArgumentError("ecRad data are not available; set RH_ECRAD_DATA_PATH or instantiate the ecrad_data artifact"))
@@ -198,7 +198,7 @@ function ecrad_data_path(; require::Bool = false)
     return root
 end
 
-function _ecrad_data_dir(root::AbstractString)
+function ecrad_data_dir(root::AbstractString)
     normalized_root = normpath(root)
     cache = _ECRAD_DATA_DIR_CACHE[]
     cached = get(cache, normalized_root, nothing)
@@ -227,51 +227,51 @@ end
 """
     ecckd_source_path(; require=false)
 
-Return the root directory containing the official ecCKD source tree. Resolution
+Return the root directory containing the reference ecCKD source tree. Resolution
 order is `RH_ECCKD_SOURCE_PATH`, the lazy `ecckd_source` artifact in
 `Artifacts.toml`, then the local validation checkout at
 `validation/external/ecckd`.
 """
 function ecckd_source_path(; require::Bool = false)
-    root = _source_root_with_file(get(ENV, "RH_ECCKD_SOURCE_PATH", nothing), "README.md")
-    root === nothing && (root = _source_root_with_file(_ecckd_source_artifact_root(; require), "README.md"))
-    root === nothing && (root = _source_root_with_file(
-        joinpath(_package_root(), "validation", "external", "ecckd"), "README.md"))
+    root = source_root_with_file(get(ENV, "RH_ECCKD_SOURCE_PATH", nothing), "README.md")
+    root === nothing && (root = source_root_with_file(ecckd_source_artifact_root(; require), "README.md"))
+    root === nothing && (root = source_root_with_file(
+        joinpath(package_root(), "validation", "external", "ecckd"), "README.md"))
     if root === nothing && require
         throw(ArgumentError("ecCKD source is not available; set RH_ECCKD_SOURCE_PATH or instantiate the ecckd_source artifact"))
     end
     return root
 end
 
-function _ecrad_data_file(filename::AbstractString; require::Bool = true)
+function ecrad_data_file(filename::AbstractString; require::Bool = true)
     root = ecrad_data_path(; require)
     root === nothing && return nothing
-    data_dir = _ecrad_data_dir(root)
+    data_dir = ecrad_data_dir(root)
     candidates = String[joinpath(data_dir, filename), joinpath(root, filename)]
     for path in candidates
         isfile(path) && return normpath(path)
     end
-    require && throw(ArgumentError("official ecCKD file not found in $(root): $(filename)"))
+    require && throw(ArgumentError("reference ecCKD file not found in $(root): $(filename)"))
     return nothing
 end
 
 """
-    official_ecckd_model_inventory()
+    reference_ecckd_model_inventory()
 
-Return the official ecCKD CKD-definition filenames distributed with the pinned
+Return the reference ecCKD CKD-definition filenames distributed with the pinned
 ecRad data artifact.
 """
-official_ecckd_model_inventory() = collect(_OFFICIAL_ECCKD_MODELS)
+reference_ecckd_model_inventory() = collect(_REFERENCE_ECCKD_MODELS)
 
 """
-    official_ecckd_model_specs()
+    reference_ecckd_model_specs()
 
-Return the named official ecCKD model pairs supported by the high-level
+Return the named reference ecCKD model pairs supported by the high-level
 selection interface. Each value is an [`EcCKDModelSpec`](@ref).
 """
-official_ecckd_model_specs() = _OFFICIAL_ECCKD_MODEL_SPECS
+reference_ecckd_model_specs() = _REFERENCE_ECCKD_MODEL_SPECS
 
-function _normalize_ecckd_model_name(name)
+function normalize_ecckd_model_name(name)
     key = lowercase(replace(String(name), '-' => '_'))
     if occursin('x', key) && !isempty(key) && isdigit(first(key))
         key = "climate_" * key
@@ -280,67 +280,67 @@ function _normalize_ecckd_model_name(name)
 end
 
 """
-    official_ecckd_model_spec(name=:climate_64x32)
+    reference_ecckd_model_spec(name=:climate_64x32)
 
-Return an [`EcCKDModelSpec`](@ref) for an official ecCKD model pair. `name` may
+Return an [`EcCKDModelSpec`](@ref) for an reference ecCKD model pair. `name` may
 be a full selector such as `:climate_32x32` or a compact string such as
 `"32x32"`.
 """
-function official_ecckd_model_spec(name = :climate_64x32)
+function reference_ecckd_model_spec(name = :climate_64x32)
     name isa EcCKDModelSpec && return name
-    key = _normalize_ecckd_model_name(name)
-    if !haskey(_OFFICIAL_ECCKD_MODEL_SPECS, key)
-        available = join(keys(_OFFICIAL_ECCKD_MODEL_SPECS), ", ")
-        throw(ArgumentError("unknown official ecCKD model pair: $(name). Available pairs are $(available)"))
+    key = normalize_ecckd_model_name(name)
+    if !haskey(_REFERENCE_ECCKD_MODEL_SPECS, key)
+        available = join(keys(_REFERENCE_ECCKD_MODEL_SPECS), ", ")
+        throw(ArgumentError("unknown reference ecCKD model pair: $(name). Available pairs are $(available)"))
     end
-    return getproperty(_OFFICIAL_ECCKD_MODEL_SPECS, key)
+    return getproperty(_REFERENCE_ECCKD_MODEL_SPECS, key)
 end
 
 """
-    official_ecckd_definition_path(name; require=true)
+    reference_ecckd_definition_path(name; require=true)
 
-Return the path to an official ecCKD CKD-definition file. `name` may be a full
-filename from [`official_ecckd_model_inventory`](@ref) or one of
+Return the path to an reference ecCKD CKD-definition file. `name` may be a full
+filename from [`reference_ecckd_model_inventory`](@ref) or one of
 `:longwave_32`, `:shortwave_32`, `:longwave_64`, `:shortwave_64`, or
 `:shortwave_96`.
 """
-function official_ecckd_definition_path(name; require::Bool = true)
+function reference_ecckd_definition_path(name; require::Bool = true)
     filename = if name isa Symbol
-        haskey(_OFFICIAL_ECCKD_DEFAULTS, name) ||
-            throw(ArgumentError("unknown official ecCKD model key: $(name)"))
-        getproperty(_OFFICIAL_ECCKD_DEFAULTS, name)
+        haskey(_REFERENCE_ECCKD_DEFAULTS, name) ||
+            throw(ArgumentError("unknown reference ecCKD model key: $(name)"))
+        getproperty(_REFERENCE_ECCKD_DEFAULTS, name)
     else
         String(name)
     end
-    return _ecrad_data_file(filename; require)
+    return ecrad_data_file(filename; require)
 end
 
 """
-    official_ecckd_definition_paths(; longwave=:longwave_64, shortwave=:shortwave_32)
+    reference_ecckd_definition_paths(; longwave=:longwave_64, shortwave=:shortwave_32)
 
-Return `(longwave=..., shortwave=...)` paths for the default official ecCKD
+Return `(longwave=..., shortwave=...)` paths for the default reference ecCKD
 runtime pair used by validation and examples.
 """
-function official_ecckd_definition_paths(; longwave = :longwave_64,
+function reference_ecckd_definition_paths(; longwave = :longwave_64,
                                          shortwave = :shortwave_32,
                                          require::Bool = true)
     return (
-        longwave = official_ecckd_definition_path(longwave; require),
-        shortwave = official_ecckd_definition_path(shortwave; require),
+        longwave = reference_ecckd_definition_path(longwave; require),
+        shortwave = reference_ecckd_definition_path(shortwave; require),
     )
 end
 
 """
-    official_ecckd_definition_paths(model; require=true)
+    reference_ecckd_definition_paths(model; require=true)
 
-Return `(longwave=..., shortwave=...)` paths for an official ecCKD model pair.
-`model` accepts the same selectors as [`official_ecckd_model_spec`](@ref).
+Return `(longwave=..., shortwave=...)` paths for an reference ecCKD model pair.
+`model` accepts the same selectors as [`reference_ecckd_model_spec`](@ref).
 With `require=false`, this function returns `nothing` paths instead of
 downloading lazy artifacts or throwing when the data are not already installed.
 """
-function official_ecckd_definition_paths(model; require::Bool = true)
-    spec = official_ecckd_model_spec(model)
-    return official_ecckd_definition_paths(;
+function reference_ecckd_definition_paths(model; require::Bool = true)
+    spec = reference_ecckd_model_spec(model)
+    return reference_ecckd_definition_paths(;
         longwave = spec.longwave,
         shortwave = spec.shortwave,
         require,
@@ -357,7 +357,7 @@ const _ECCKD_DIM_ALIASES = (
     temperature = (:temperature, :temperatures, :t_ref, :temperature_grid, :n_temperature),
 )
 
-@inline function _lookup_named(container, key::Symbol)
+@inline function lookup_named(container, key::Symbol)
     if container isa NamedTuple
         return haskey(container, key) ? getproperty(container, key) : nothing
     elseif container isa AbstractDict
@@ -368,24 +368,24 @@ const _ECCKD_DIM_ALIASES = (
     end
 end
 
-function _lookup_any(container, keys)
+function lookup_any(container, keys)
     for key in keys
-        value = _lookup_named(container, key)
+        value = lookup_named(container, key)
         value === nothing || return value
     end
     return nothing
 end
 
-function _has_named(container, key::Symbol)
-    return _lookup_named(container, key) !== nothing
+function has_named(container, key::Symbol)
+    return lookup_named(container, key) !== nothing
 end
 
-function _radiation_kind(definition::EcCKDDefinition)
-    has_planck = _has_named(definition.variables, :planck_function)
-    has_solar = _has_named(definition.variables, :solar_irradiance) ||
-                _has_named(definition.variables, :solar_spectral_irradiance)
-    has_lw = _variable_dims(definition, (:lw_absorption, :k_lw, :optical_depth_lw)) !== nothing
-    has_sw = _variable_dims(definition, (:sw_absorption, :k_sw, :optical_depth_sw)) !== nothing
+function radiation_kind(definition::EcCKDDefinition)
+    has_planck = has_named(definition.variables, :planck_function)
+    has_solar = has_named(definition.variables, :solar_irradiance) ||
+                has_named(definition.variables, :solar_spectral_irradiance)
+    has_lw = variable_dims(definition, (:lw_absorption, :k_lw, :optical_depth_lw)) !== nothing
+    has_sw = variable_dims(definition, (:sw_absorption, :k_sw, :optical_depth_sw)) !== nothing
 
     if (has_planck || has_lw) && (has_solar || has_sw)
         return :combined
@@ -398,41 +398,41 @@ function _radiation_kind(definition::EcCKDDefinition)
     end
 end
 
-function _dimension(definition::EcCKDDefinition, name::Symbol)
-    value = _lookup_any(definition.dimensions, getproperty(_ECCKD_DIM_ALIASES, name))
+function dimension(definition::EcCKDDefinition, name::Symbol)
+    value = lookup_any(definition.dimensions, getproperty(_ECCKD_DIM_ALIASES, name))
     if value === nothing && name in (:lw_bands, :sw_bands)
-        kind = _radiation_kind(definition)
+        kind = radiation_kind(definition)
         if kind == :combined ||
            (kind == :longwave && name == :lw_bands) ||
            (kind == :shortwave && name == :sw_bands)
-            value = _lookup_named(definition.dimensions, :band)
+            value = lookup_named(definition.dimensions, :band)
         end
     end
     if value === nothing && name in (:lw_gpoints, :sw_gpoints)
-        kind = _radiation_kind(definition)
+        kind = radiation_kind(definition)
         if kind == :combined ||
            (kind == :longwave && name == :lw_gpoints) ||
            (kind == :shortwave && name == :sw_gpoints)
-            value = _lookup_named(definition.dimensions, :g_point)
+            value = lookup_named(definition.dimensions, :g_point)
         end
     end
     if value === nothing && name == :gas
-        value = _attribute(definition, (:n_gases, :gas_count), nothing)
+        value = attribute(definition, (:n_gases, :gas_count), nothing)
     end
     value === nothing && return 0
     return Int(value)
 end
 
-function _variable_dims(definition::EcCKDDefinition, names)
+function variable_dims(definition::EcCKDDefinition, names)
     for name in names
-        dims = _lookup_named(definition.variables, name)
+        dims = lookup_named(definition.variables, name)
         dims === nothing || return Tuple(Symbol.(dims))
     end
     return nothing
 end
 
-function _attribute(definition::EcCKDDefinition, names, default)
-    value = _lookup_any(definition.attributes, names)
+function attribute(definition::EcCKDDefinition, names, default)
+    value = lookup_any(definition.attributes, names)
     value === nothing ? default : value
 end
 
@@ -457,7 +457,7 @@ end
                                     names = (:h2o, :co2),
                                     h2o_mole_fraction = 0.005)
 
-Read official ecCKD CKD-definition files into a lightweight runtime
+Read reference ecCKD CKD-definition files into a lightweight runtime
 [`EcCKDTabulatedGasOpticsModel`](@ref). The core package does not depend on
 NetCDF libraries, so NetCDF-backed loading is provided by the NCDatasets
 extension.
@@ -467,7 +467,7 @@ ingestion path: it materializes coefficient tables for the requested
 `names` only, together with each gas's reference mole fraction for the
 ecCKD relative-linear convention, the shortwave Rayleigh molar scattering
 table, and the longwave Planck source table. When `:h2o` is requested, the
-official H2O mole-fraction table dimension is kept; at runtime
+reference H2O mole-fraction table dimension is kept; at runtime
 [`optical_properties!`](@ref) computes the layer H2O mole fraction from the
 `h2o` and `composite` gas amounts and interpolates the table per layer. The
 `h2o_mole_fraction` keyword is not a gas input on that path — it is accepted
@@ -487,9 +487,9 @@ function read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
 end
 
 """
-    read_official_ecckd_gas_optics(model=:climate_64x32; kwargs...)
+    read_reference_ecckd_gas_optics(model=:climate_64x32; kwargs...)
 
-Load an official ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref).
+Load an reference ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref).
 `model` accepts selectors such as `:climate_32x32`, `:climate_64x32`, or
 `"32x96"`. Keyword arguments are forwarded to
 [`read_ecckd_tabulated_gas_optics`](@ref), for example `names` and
@@ -498,9 +498,9 @@ Load an official ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref)
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.
 """
-function read_official_ecckd_gas_optics(model = :climate_64x32; require::Bool = true,
+function read_reference_ecckd_gas_optics(model = :climate_64x32; require::Bool = true,
                                         kwargs...)
-    paths = official_ecckd_definition_paths(model; require)
+    paths = reference_ecckd_definition_paths(model; require)
     if paths.longwave === nothing || paths.shortwave === nothing
         return nothing
     end
@@ -516,11 +516,11 @@ variables, and attributes from a backing file.
 """
 function read_ecckd_definition(data)
     return EcCKDDefinition(;
-        model_name = String(_lookup_named(data, :model_name)),
-        version = String(_lookup_named(data, :version)),
-        dimensions = _lookup_named(data, :dimensions),
-        variables = _lookup_named(data, :variables),
-        attributes = something(_lookup_named(data, :attributes), (;)),
+        model_name = String(lookup_named(data, :model_name)),
+        version = String(lookup_named(data, :version)),
+        dimensions = lookup_named(data, :dimensions),
+        variables = lookup_named(data, :variables),
+        attributes = something(lookup_named(data, :attributes), (;)),
     )
 end
 
@@ -531,21 +531,21 @@ Return schema-level ecCKD metadata used by examples, validation reports, and
 benchmark metadata.
 """
 function summarize_ecckd_definition(definition::EcCKDDefinition)
-    gas_names = _attribute(definition, (:gas_names, :gases), String[])
+    gas_names = attribute(definition, (:gas_names, :gases), String[])
     gases = String.(collect(gas_names))
-    source_dims = _variable_dims(definition, (:lw_source, :planck_source, :source_lw, :planck_function))
-    rayleigh_dims = _variable_dims(definition, (:rayleigh, :sw_rayleigh, :rayleigh_optical_depth, :rayleigh_molar_scattering_coeff))
+    source_dims = variable_dims(definition, (:lw_source, :planck_source, :source_lw, :planck_function))
+    rayleigh_dims = variable_dims(definition, (:rayleigh, :sw_rayleigh, :rayleigh_optical_depth, :rayleigh_molar_scattering_coeff))
 
     return EcCKDSchemaSummary(
         definition.model_name,
         definition.version,
-        _dimension(definition, :lw_bands),
-        _dimension(definition, :sw_bands),
-        _dimension(definition, :lw_gpoints),
-        _dimension(definition, :sw_gpoints),
+        dimension(definition, :lw_bands),
+        dimension(definition, :sw_bands),
+        dimension(definition, :lw_gpoints),
+        dimension(definition, :sw_gpoints),
         gases,
-        _dimension(definition, :pressure),
-        _dimension(definition, :temperature),
+        dimension(definition, :pressure),
+        dimension(definition, :temperature),
         source_dims !== nothing,
         rayleigh_dims !== nothing,
     )
@@ -567,19 +567,19 @@ function Base.show(io::IO, summary::EcCKDSchemaSummary)
         "rayleigh=$(summary.rayleigh_tables_present))")
 end
 
-function _require_positive!(errors, definition, name::Symbol)
-    _dimension(definition, name) > 0 ||
+function require_positive!(errors, definition, name::Symbol)
+    dimension(definition, name) > 0 ||
         push!(errors, "missing or nonpositive dimension: $(name)")
     return errors
 end
 
-function _require_variable!(errors, definition, names, label)
-    _variable_dims(definition, names) !== nothing ||
+function require_variable!(errors, definition, names, label)
+    variable_dims(definition, names) !== nothing ||
         push!(errors, "missing required variable group: $(label)")
     return errors
 end
 
-function _has_official_molar_absorption(definition::EcCKDDefinition)
+function has_reference_molar_absorption(definition::EcCKDDefinition)
     for name in propertynames(definition.variables)
         startswith(String(name), "molar_") && continue
         endswith(String(name), "_molar_absorption_coeff") && return true
@@ -595,24 +595,24 @@ Validate required ecCKD schema metadata. Returns `true` when valid. When
 """
 function validate_ecckd_definition(definition::EcCKDDefinition; throw_on_error::Bool = true)
     errors = String[]
-    kind = _radiation_kind(definition)
+    kind = radiation_kind(definition)
     require_lw = kind in (:longwave, :combined, :unknown)
     require_sw = kind in (:shortwave, :combined, :unknown)
 
-    require_lw && _require_positive!(errors, definition, :lw_bands)
-    require_sw && _require_positive!(errors, definition, :sw_bands)
-    require_lw && _require_positive!(errors, definition, :lw_gpoints)
-    require_sw && _require_positive!(errors, definition, :sw_gpoints)
-    _require_positive!(errors, definition, :gas)
-    _require_positive!(errors, definition, :pressure)
-    _require_positive!(errors, definition, :temperature)
-    if !_has_official_molar_absorption(definition)
-        require_lw && _require_variable!(errors, definition, (:lw_absorption, :k_lw, :optical_depth_lw), "longwave absorption")
-        require_sw && _require_variable!(errors, definition, (:sw_absorption, :k_sw, :optical_depth_sw), "shortwave absorption")
+    require_lw && require_positive!(errors, definition, :lw_bands)
+    require_sw && require_positive!(errors, definition, :sw_bands)
+    require_lw && require_positive!(errors, definition, :lw_gpoints)
+    require_sw && require_positive!(errors, definition, :sw_gpoints)
+    require_positive!(errors, definition, :gas)
+    require_positive!(errors, definition, :pressure)
+    require_positive!(errors, definition, :temperature)
+    if !has_reference_molar_absorption(definition)
+        require_lw && require_variable!(errors, definition, (:lw_absorption, :k_lw, :optical_depth_lw), "longwave absorption")
+        require_sw && require_variable!(errors, definition, (:sw_absorption, :k_sw, :optical_depth_sw), "shortwave absorption")
     end
 
-    gas_names = _attribute(definition, (:gas_names, :gases), String[])
-    if !isempty(gas_names) && length(gas_names) != _dimension(definition, :gas)
+    gas_names = attribute(definition, (:gas_names, :gases), String[])
+    if !isempty(gas_names) && length(gas_names) != dimension(definition, :gas)
         push!(errors, "gas_names length does not match gas dimension")
     end
 

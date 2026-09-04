@@ -20,7 +20,7 @@ The staged interface also defines [`optical_properties!`](@ref),
 [`cloud_optical_properties!`](@ref), [`aerosol_optical_properties!`](@ref), and
 [`radiative_fluxes!`](@ref) for gas-optics and solver implementations. The
 ecCKD tabulated models ([`EcCKDTabulatedGasOpticsModel`](@ref)) fill
-[`LongwaveOpticalProperties`](@ref) and [`ShortwaveOpticalProperties`](@ref),
+[`LongwaveOptics`](@ref) and [`ShortwaveOptics`](@ref),
 and the staged solvers cover clear-sky ([`CloudlessLongwave`](@ref),
 [`CloudlessShortwave`](@ref)) and cloud-overlap
 ([`CloudOverlapLongwave`](@ref), [`CloudOverlapShortwave`](@ref)) transport,
