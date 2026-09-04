@@ -4,23 +4,23 @@ using NCDatasets   # activates the NetCDF loader for the ecCKD file
 using CairoMakie
 using Printf
 
-Γ  = 6.5e-3                  # critical lapse rate, K m⁻¹ (Manabe-Wetherald)
-μ₀ = cosd(47.9)              # cosine of the solar zenith angle
-S₀ = 509 * μ₀                # horizontal TOA shortwave flux, W m⁻²
-α  = 0.3                     # surface albedo
+Γ  = 6.5e-3      # critical lapse rate, K m⁻¹ (Manabe-Wetherald)
+μ₀ = cosd(47.9)  # cosine of the solar zenith angle
+S₀ = 509 * μ₀    # horizontal TOA shortwave flux, W m⁻²
+α  = 0.3         # surface albedo
 
-surface_relative_humidity = 0.77   # Manabe-Wetherald humidity profile parameter
-water_vapor_floor = 4.8e-6         # stratospheric χH₂O floor, mole fraction
+ℋₛ                = 0.77    # Manabe-Wetherald surface relative humidity
+water_vapor_floor = 4.8e-6  # stratospheric χH₂O floor, mole fraction
 
-χCH₄ = 1.9e-6                # present-day global means for the
-χN₂O = 3.4e-7                # well-mixed trace gases
+χCH₄ = 1.9e-6        # present-day global means for the
+χN₂O = 3.4e-7        # well-mixed trace gases
 
-N  = 60                      # physical layers, uniform in altitude
-zₜ = 60e3                    # m; one isothermal lookup-boundary layer above
-pₛ = 101_325                 # Pa
+N  = 60              # physical layers, uniform in altitude
+zₜ = 60e3            # m; one isothermal lookup-boundary layer above
+pₛ = 101_325         # Pa
 
 g  = 9.80665         # gravitational acceleration, m s⁻²
-cₚ = 1004            # isobaric heat capacity, J kg⁻¹ K⁻¹
+cᵖᵈ = 1004           # isobaric heat capacity, J kg⁻¹ K⁻¹
 σ  = 5.670374419e-8  # Stefan-Boltzmann constant, W m⁻² K⁻⁴
 Rᵈ = 287.05          # dry-air gas constant, J kg⁻¹ K⁻¹
 mᵈ = 0.028964        # dry-air molar mass, kg mol⁻¹
@@ -67,13 +67,13 @@ lines!(axT, Tᶜ₀, zᶜ ./ 1000; color = :steelblue4, linewidth = 2)
 lines!(axp, pᶜ ./ 100, zᶜ ./ 1000; color = :steelblue4, linewidth = 2)
 lines!(axχ, 1e6 .* χO₃, zᶜ ./ 1000; color = :steelblue4, linewidth = 2)
 hideydecorations!(axp, ticks = false, grid = false)
-hideydecorations!(axχ, ticks = false, grid = false)</code></pre><p><img src="../manabe_rce_initial_state.png" alt="Initial atmospheric profiles"/></p><p>The two-segment temperature over an exact hydrostatic pressure, and the log-pressure-Gaussian ozone layer peaking near 30 km; the dashed line marks the tropopause zᵗʳ.</p><h2 id="The-humidity-closure"><a class="docs-heading-anchor" href="#The-humidity-closure">The humidity closure</a><a id="The-humidity-closure-1"></a><a class="docs-heading-anchor-permalink" href="#The-humidity-closure" title="Permalink"></a></h2><p>Fixed relative humidity on cell-center temperatures — Manabe and Wetherald&#39;s profile shape, Magnus saturation vapor pressure, and a stratospheric floor — applied to the full radiation column including the extension layer:</p><pre><code class="language-julia hljs">saturation_vapor_pressure(T) = 610.94 * exp(17.625 * (T - 273.15) / (T - 30.11))
+hideydecorations!(axχ, ticks = false, grid = false)</code></pre><p><img src="../manabe_rce_initial_state.png" alt="Initial atmospheric profiles"/></p><p>The two-segment temperature over an exact hydrostatic pressure, and the log-pressure-Gaussian ozone layer peaking near 30 km; the dashed line marks the tropopause zᵗʳ.</p><h2 id="The-humidity-closure"><a class="docs-heading-anchor" href="#The-humidity-closure">The humidity closure</a><a id="The-humidity-closure-1"></a><a class="docs-heading-anchor-permalink" href="#The-humidity-closure" title="Permalink"></a></h2><p>Fixed relative humidity ℋ on cell-center temperatures — Manabe and Wetherald&#39;s profile shape, Magnus saturation vapor pressure pᵛ⁺, and a stratospheric floor — applied to the full radiation column including the extension layer:</p><pre><code class="language-julia hljs">pᵛ⁺(T) = 610.94 * exp(17.625 * (T - 273.15) / (T - 30.11))
 
 function fixed_relative_humidity!(χH₂O_ext, Tᶜ_ext)
     for k in eachindex(χH₂O_ext)
-        relative_humidity = max(surface_relative_humidity * (pᶜ_ext[k] / pₛ - 0.02) / 0.98, 0)
-        eₛ = saturation_vapor_pressure(Tᶜ_ext[k])
-        χH₂O_ext[k] = max(relative_humidity * eₛ / max(pᶜ_ext[k] - relative_humidity * eₛ, 1), water_vapor_floor)
+        ℋ = max(ℋₛ * (pᶜ_ext[k] / pₛ - 0.02) / 0.98, 0)
+        pᵛ = ℋ * pᵛ⁺(Tᶜ_ext[k])
+        χH₂O_ext[k] = max(pᵛ / max(pᶜ_ext[k] - pᵛ, 1), water_vapor_floor)
     end
     return χH₂O_ext
 end</code></pre><h2 id="Radiation-work-arrays"><a class="docs-heading-anchor" href="#Radiation-work-arrays">Radiation work arrays</a><a id="Radiation-work-arrays-1"></a><a class="docs-heading-anchor-permalink" href="#Radiation-work-arrays" title="Permalink"></a></h2><p>The staged runtime operates on caller-owned arrays: per-g-point optical properties for each band, and broadband fluxes on the faces.</p><pre><code class="language-julia hljs">function radiation_work_arrays(gas_optics, n)
@@ -150,7 +150,7 @@ end</code></pre><h2 id="The-radiative-convective-march"><a class="docs-heading-a
             break
         end
         previous .= Tᶠ
-        heating_rates!(Q, fluxes, atmosphere; gravity = g, heat_capacity = cₚ)
+        heating_rates!(Q, fluxes, atmosphere; gravity = g, heat_capacity = cᵖᵈ)
         # discard the extension tendency Q[1]; physical layer j is Q[j + 1]
         Ṫᶠ[1] = Q[2]
         Ṫᶠ[N+1] = Q[N_ext]
@@ -216,7 +216,7 @@ function rce(χCO₂; ozone = χO₃_ext, fixed_water_vapor = nothing, Tₛ_gues
     Tₛ, state, iterations, expansions =
         bracketed_secant(toa_imbalance, Tₛ_guesses; imbalance_tolerance, max_expansions, max_iterations)
     return (; state..., Tₛ, secant_iterations = iterations, bracket_expansions = expansions)
-end</code></pre><h2 id="The-experiments,-and-the-answer"><a class="docs-heading-anchor" href="#The-experiments,-and-the-answer">The experiments, and the answer</a><a id="The-experiments,-and-the-answer-1"></a><a class="docs-heading-anchor-permalink" href="#The-experiments,-and-the-answer" title="Permalink"></a></h2><p>The main experiment runs 1×, 2×, and 4× CO₂ with the fixed-RH closure, plus the discriminating control: 4× CO₂ with water vapor <em>frozen</em> at the control field. Every equilibration must pass the verification gates at the end of this page, or the page fails to build.</p><pre><code class="language-julia hljs">χCO₂ = 420e-6
+end</code></pre><h2 id="The-experiments,-and-the-answer"><a class="docs-heading-anchor" href="#The-experiments,-and-the-answer">The experiments, and the answer</a><a id="The-experiments,-and-the-answer-1"></a><a class="docs-heading-anchor-permalink" href="#The-experiments,-and-the-answer" title="Permalink"></a></h2><p>The main experiment runs 1×, 2×, and 4× CO₂ with the fixed-ℋ closure, plus the discriminating control: 4× CO₂ with water vapor <em>frozen</em> at the control field. Every equilibration must pass the verification gates at the end of this page, or the page fails to build.</p><pre><code class="language-julia hljs">χCO₂ = 420e-6
 
 control      = rce(χCO₂)
 doubled      = rce(2χCO₂; warm_start = control.Tᶠ)
@@ -224,15 +224,15 @@ quadrupled   = rce(4χCO₂; warm_start = control.Tᶠ)
 frozen_vapor = rce(4χCO₂; warm_start = control.Tᶠ, fixed_water_vapor = control.χH₂O)
 
 for (name, state) in ((&quot;control, 420 ppm CO₂&quot;, control),
-                      (&quot;2× CO₂, fixed RH&quot;, doubled),
-                      (&quot;4× CO₂, fixed RH&quot;, quadrupled),
+                      (&quot;2× CO₂, fixed ℋ&quot;, doubled),
+                      (&quot;4× CO₂, fixed ℋ&quot;, quadrupled),
                       (&quot;4× CO₂, frozen water vapor&quot;, frozen_vapor))
     @printf(&quot;%-28s Tₛ = %7.2f K   ΔTₛ = %+6.2f K\n&quot;, name, state.Tₛ, state.Tₛ - control.Tₛ)
 end</code></pre><pre><code class="nohighlight hljs">control, 420 ppm CO₂         Tₛ =  288.09 K   ΔTₛ =  +0.00 K
-2× CO₂, fixed RH             Tₛ =  290.72 K   ΔTₛ =  +2.63 K
-4× CO₂, fixed RH             Tₛ =  293.85 K   ΔTₛ =  +5.77 K
+2× CO₂, fixed ℋ              Tₛ =  290.72 K   ΔTₛ =  +2.63 K
+4× CO₂, fixed ℋ              Tₛ =  293.85 K   ΔTₛ =  +5.77 K
 4× CO₂, frozen water vapor   Tₛ =  291.11 K   ΔTₛ =  +3.02 K
-</code></pre><p>Comparing the two 4× equilibria isolates the fixed-RH water-vapor amplification in this configuration: the same quadrupled CO₂ warms the surface nearly twice as much when the vapor is allowed to rise with temperature as when it is frozen at the control field.</p><p>The solver marches face temperatures; the figures show the derived cell-center profiles, where gas optical properties and heating rates are evaluated, as the current RRTMGP tutorial does.</p><pre><code class="language-julia hljs">pressure_ticks = ([0.3, 1, 3, 10, 30, 100, 300, 1000],
+</code></pre><p>Comparing the two 4× equilibria isolates the fixed-ℋ water-vapor amplification in this configuration: the same quadrupled CO₂ warms the surface nearly twice as much when the vapor is allowed to rise with temperature as when it is frozen at the control field.</p><p>The solver marches face temperatures; the figures show the derived cell-center profiles, where gas optical properties and heating rates are evaluated, as the current RRTMGP tutorial does.</p><pre><code class="language-julia hljs">pressure_ticks = ([0.3, 1, 3, 10, 30, 100, 300, 1000],
                   [&quot;0.3&quot;, &quot;1&quot;, &quot;3&quot;, &quot;10&quot;, &quot;30&quot;, &quot;100&quot;, &quot;300&quot;, &quot;1000&quot;])
 
 function profile_axis(fig; title)
@@ -243,9 +243,9 @@ end
 fig = Figure(size = (700, 660))
 ax = profile_axis(fig; title = &quot;RCE response to CO₂&quot;)
 for (state, label, color, style) in
-        ((control, &quot;1× CO₂ (420 ppm), fixed RH&quot;, :steelblue4, :solid),
-         (doubled, &quot;2× CO₂, fixed RH&quot;, :darkorange3, :solid),
-         (quadrupled, &quot;4× CO₂, fixed RH&quot;, :firebrick, :solid),
+        ((control, &quot;1× CO₂ (420 ppm), fixed ℋ&quot;, :steelblue4, :solid),
+         (doubled, &quot;2× CO₂, fixed ℋ&quot;, :darkorange3, :solid),
+         (quadrupled, &quot;4× CO₂, fixed ℋ&quot;, :firebrick, :solid),
          (frozen_vapor, &quot;4× CO₂, frozen water vapor&quot;, :firebrick, :dash))
     lines!(ax, state.Tᶜ_ext[2:N_ext], pᶜ ./ 100; color, label, linewidth = 2, linestyle = style)
     scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
@@ -297,4 +297,4 @@ end
 verify_equilibria([(&quot;control&quot;, control), (&quot;2×&quot;, doubled),
                    (&quot;4×&quot;, quadrupled), (&quot;4× frozen vapor&quot;, frozen_vapor),
                    (&quot;no H₂O&quot;, without_H₂O), (&quot;no CO₂&quot;, without_CO₂),
-                   (&quot;no O₃&quot;, without_O₃)])</code></pre><h2 id="Three-ideas-behind-the-calculation"><a class="docs-heading-anchor" href="#Three-ideas-behind-the-calculation">Three ideas behind the calculation</a><a id="Three-ideas-behind-the-calculation-1"></a><a class="docs-heading-anchor-permalink" href="#Three-ideas-behind-the-calculation" title="Permalink"></a></h2><p><strong>Radiative equilibrium</strong> alone would make each level&#39;s temperature settle where its absorption of solar and terrestrial radiation balances its own emission — producing an unstably steep profile in the lower atmosphere. <strong>Convective adjustment</strong> is the instantaneous limit of the convection that such a profile would trigger: any level colder than the critical profile <span>$T_c(p) = Tₛ (p/pₛ)^{Γ R^{\mathrm{d}}/g}$</span> anchored at the surface is clamped onto it, so the troposphere rides the critical lapse rate over a radiatively balanced stratosphere while the surface temperature itself is solved from top-of-atmosphere balance. <strong>The fixed-RH humidity closure</strong> is Manabe and Wetherald&#39;s third ingredient: holding <em>relative</em> humidity fixed means a warmer column holds more vapor — itself a greenhouse gas — so any CO₂-driven warming is amplified, which the frozen-vapor control isolates by turning exactly that closure off.</p><div class="admonition is-info" id="Scope-of-this-configuration-95c6c993380d791a"><header class="admonition-header">Scope of this configuration<a class="admonition-anchor" href="#Scope-of-this-configuration-95c6c993380d791a" title="Permalink"></a></header><div class="admonition-body"><p>This is a Manabe-<em>style</em> calculation, not a reproduction of Manabe and Wetherald or of any modern rerun: it uses ecCKD correlated-k gas optics, a clear sky, an analytic midlatitude-summer initial state and idealized ozone, prescribed insolation over an α = 0.3 surface, 60 altitude-uniform layers to 60 km, and one isothermal lookup-boundary layer above that supplies the downwelling flux a truncated column would miss. Manabe and Wetherald reported roughly 2–3 K per doubling depending on cloud treatment, and a modern <a href="https://clima.caltech.edu/2026/08/19/a-nobel-winning-calculation-runnable-in-minutes-rrtmgp-jl/">RRTMGP.jl calculation</a> — whose formulation this page follows — reports 2.9 K; the numbers above are outcomes of <em>this</em> configuration. Build-time gates assert inner convergence at every trial surface temperature, final top-of-atmosphere closure, cell/face consistency, the isothermal top, a tropospheric inversion limit, and surface-emission consistency.</p></div></div><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rrtmgp_comparison/">« Correlated-k model spread</a><a class="docs-footer-nextpage" href="../all_sky_cre/">All-sky cloud radiative effect »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Friday 4 September 2026 21:29">Friday 4 September 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+                   (&quot;no O₃&quot;, without_O₃)])</code></pre><h2 id="Three-ideas-behind-the-calculation"><a class="docs-heading-anchor" href="#Three-ideas-behind-the-calculation">Three ideas behind the calculation</a><a id="Three-ideas-behind-the-calculation-1"></a><a class="docs-heading-anchor-permalink" href="#Three-ideas-behind-the-calculation" title="Permalink"></a></h2><p><strong>Radiative equilibrium</strong> alone would make each level&#39;s temperature settle where its absorption of solar and terrestrial radiation balances its own emission — producing an unstably steep profile in the lower atmosphere. <strong>Convective adjustment</strong> is the instantaneous limit of the convection that such a profile would trigger: any level colder than the critical profile <span>$T_c(p) = Tₛ (p/pₛ)^{Γ R^{\mathrm{d}}/g}$</span> anchored at the surface is clamped onto it, so the troposphere rides the critical lapse rate over a radiatively balanced stratosphere while the surface temperature itself is solved from top-of-atmosphere balance. <strong>The fixed-ℋ humidity closure</strong> is Manabe and Wetherald&#39;s third ingredient: holding <em>relative</em> humidity fixed means a warmer column holds more vapor — itself a greenhouse gas — so any CO₂-driven warming is amplified, which the frozen-vapor control isolates by turning exactly that closure off.</p><div class="admonition is-info" id="Scope-of-this-configuration-95c6c993380d791a"><header class="admonition-header">Scope of this configuration<a class="admonition-anchor" href="#Scope-of-this-configuration-95c6c993380d791a" title="Permalink"></a></header><div class="admonition-body"><p>This is a Manabe-<em>style</em> calculation, not a reproduction of Manabe and Wetherald or of any modern rerun: it uses ecCKD correlated-k gas optics, a clear sky, an analytic midlatitude-summer initial state and idealized ozone, prescribed insolation over an α = 0.3 surface, 60 altitude-uniform layers to 60 km, and one isothermal lookup-boundary layer above that supplies the downwelling flux a truncated column would miss. Manabe and Wetherald reported roughly 2–3 K per doubling depending on cloud treatment, and a modern <a href="https://clima.caltech.edu/2026/08/19/a-nobel-winning-calculation-runnable-in-minutes-rrtmgp-jl/">RRTMGP.jl calculation</a> — whose formulation this page follows — reports 2.9 K; the numbers above are outcomes of <em>this</em> configuration. Build-time gates assert inner convergence at every trial surface temperature, final top-of-atmosphere closure, cell/face consistency, the isothermal top, a tropospheric inversion limit, and surface-emission consistency.</p></div></div><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rrtmgp_comparison/">« Correlated-k model spread</a><a class="docs-footer-nextpage" href="../all_sky_cre/">All-sky cloud radiative effect »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Friday 4 September 2026 23:09">Friday 4 September 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
