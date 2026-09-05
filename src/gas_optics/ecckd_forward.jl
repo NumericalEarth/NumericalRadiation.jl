@@ -842,3 +842,47 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
     shortwave.weights .= model.shortwave_weights
     return longwave, shortwave
 end
+
+const AnyEcCKDGasOpticsModel = Union{EcCKDGasOpticsModel, EcCKDTabulatedGasOpticsModel}
+
+"""
+    LongwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere;
+                   interface_sources = true)
+
+Allocate a caller-owned [`LongwaveOptics`](@ref) sized for `model` and
+`atmosphere`. Every array is built via `similar` on `atmosphere.temperature_layers`,
+so the allocation matches that array's backend; `optical_properties!` overwrites
+every field's contents, including `weights`, on first use, so initial values are
+never read. `interface_sources = false` omits `source_top`/`source_bottom`.
+"""
+function LongwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere;
+                        interface_sources = true)
+    ng = size(model.longwave_absorption, 1)
+    nlayers = length(atmosphere.temperature_layers)
+    prototype = atmosphere.temperature_layers
+    FT = eltype(prototype)
+    optics_array() = similar(prototype, FT, ng, nlayers)
+    return LongwaveOptics(optics_array(), optics_array();
+                         source_top = interface_sources ? optics_array() : nothing,
+                         source_bottom = interface_sources ? optics_array() : nothing,
+                         weights = similar(prototype, FT, ng))
+end
+
+"""
+    ShortwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere)
+
+Allocate a caller-owned [`ShortwaveOptics`](@ref) sized for `model` and
+`atmosphere`. Every array is built via `similar` on `atmosphere.temperature_layers`;
+see [`LongwaveOptics(::AnyEcCKDGasOpticsModel, ::ColumnAtmosphere)`](@ref) for why
+initial contents do not matter.
+"""
+function ShortwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere)
+    ng = size(model.shortwave_absorption, 1)
+    nlayers = length(atmosphere.temperature_layers)
+    prototype = atmosphere.temperature_layers
+    FT = eltype(prototype)
+    optics_array() = similar(prototype, FT, ng, nlayers)
+    return ShortwaveOptics(optics_array(); rayleigh_optical_depth = optics_array(),
+                          scattering_asymmetry = optics_array(),
+                          weights = similar(prototype, FT, ng))
+end

@@ -85,6 +85,21 @@ end
 Base.eltype(::RadiativeFluxes{FT}) where FT = FT
 
 """
+    RadiativeFluxes(atmosphere::ColumnAtmosphere)
+
+Allocate a caller-owned [`RadiativeFluxes`](@ref) sized for `atmosphere`. Every
+field is built via `similar` on `atmosphere.pressure_interfaces`, which already
+has the required `nlayers + 1` length, so the allocation matches that array's
+backend without a model or gas-optics dependency.
+"""
+function RadiativeFluxes(atmosphere::ColumnAtmosphere)
+    prototype = atmosphere.pressure_interfaces
+    flux_array() = similar(prototype)
+    return RadiativeFluxes(longwave_up = flux_array(), longwave_down = flux_array(),
+                           shortwave_up = flux_array(), shortwave_down = flux_array())
+end
+
+"""
     optical_properties!(optics, gas_model, atmosphere[, workspace])
 
 Materialize gas optical properties. Concrete gas-optics models should overload
