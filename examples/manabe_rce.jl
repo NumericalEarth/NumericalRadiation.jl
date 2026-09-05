@@ -136,28 +136,6 @@ function fixed_relative_humidity!(χH₂O_ext, Tᶜ_ext)
 end
 nothing #hide
 
-# ## Radiation work arrays
-#
-# The staged runtime operates on caller-owned arrays: per-g-point optical properties for each band, and
-# broadband fluxes on the faces.
-
-function radiation_work_arrays(gas_optics, n)
-    longwave_gpoints = length(gas_optics.longwave_weights)
-    shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, n), zeros(longwave_gpoints, n);
-                              source_top = zeros(longwave_gpoints, n),
-                              source_bottom = zeros(longwave_gpoints, n),
-                              weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, n);
-                                rayleigh_optical_depth = zeros(shortwave_gpoints, n),
-                                scattering_asymmetry = zeros(shortwave_gpoints, n),
-                                weights = zeros(shortwave_gpoints))
-    fluxes = RadiativeFluxes(longwave_up = zeros(n + 1), longwave_down = zeros(n + 1),
-                             shortwave_up = zeros(n + 1), shortwave_down = zeros(n + 1))
-    return longwave, shortwave, fluxes
-end
-nothing #hide
-
 # ## The radiative-convective march
 #
 # `equilibrate!` marches the column at a *fixed* trial surface temperature, in the RRTMGP tutorial's exact order
@@ -178,7 +156,9 @@ function equilibrate!(Tᶠ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
     atmosphere = ColumnAtmosphere(; pressure_layers = pᶜ_ext, pressure_interfaces = pᶠ_ext,
                                   temperature_layers = Tᶜ_ext, temperature_interfaces = Tᶠ_ext,
                                   gases, surface = nothing, geometry = (cos_zenith = μ₀,))
-    longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, N_ext)
+    longwave = LongwaveOptics(gas_optics, atmosphere)   # caller-owned per-g-point optical properties
+    shortwave = ShortwaveOptics(gas_optics, atmosphere)
+    fluxes = RadiativeFluxes(atmosphere)                # caller-owned broadband fluxes on the faces
     shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = S₀, surface_albedo = α)
     surface_emission = surface_longwave_emission(gas_optics, Tₛ)
     longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_emission)
