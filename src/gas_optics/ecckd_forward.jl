@@ -846,25 +846,27 @@ end
 const AnyEcCKDGasOpticsModel = Union{EcCKDGasOpticsModel, EcCKDTabulatedGasOpticsModel}
 
 """
-    LongwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere;
-                   interface_sources = true)
+    LongwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere)
 
 Allocate a caller-owned [`LongwaveOptics`](@ref) sized for `model` and
-`atmosphere`. Every array is built via `similar` on `atmosphere.temperature_layers`,
-so the allocation matches that array's backend; `optical_properties!` overwrites
-every field's contents, including `weights`, on first use, so initial values are
-never read. `interface_sources = false` omits `source_top`/`source_bottom`.
+`atmosphere`, always including `source_top`/`source_bottom` (a concrete,
+`@inferred`-stable return type). Every array is built via `similar` on
+`atmosphere.temperature_layers` — so allocation matches that array's backend —
+at element type `eltype(model)`, since `optical_properties!` requires the
+optics and model element types to agree and only the model's element type is
+guaranteed to match what it will write. `optical_properties!` overwrites every
+field's contents, including `weights`, on first use, so initial values are
+never read. For a no-interface-source `LongwaveOptics`, construct explicitly
+with `source_top = nothing, source_bottom = nothing` instead of this method.
 """
-function LongwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere;
-                        interface_sources = true)
+function LongwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere)
     ng = size(model.longwave_absorption, 1)
     nlayers = length(atmosphere.temperature_layers)
     prototype = atmosphere.temperature_layers
-    FT = eltype(prototype)
+    FT = eltype(model)
     optics_array() = similar(prototype, FT, ng, nlayers)
     return LongwaveOptics(optics_array(), optics_array();
-                         source_top = interface_sources ? optics_array() : nothing,
-                         source_bottom = interface_sources ? optics_array() : nothing,
+                         source_top = optics_array(), source_bottom = optics_array(),
                          weights = similar(prototype, FT, ng))
 end
 
@@ -872,15 +874,16 @@ end
     ShortwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere)
 
 Allocate a caller-owned [`ShortwaveOptics`](@ref) sized for `model` and
-`atmosphere`. Every array is built via `similar` on `atmosphere.temperature_layers`;
-see [`LongwaveOptics(::AnyEcCKDGasOpticsModel, ::ColumnAtmosphere)`](@ref) for why
-initial contents do not matter.
+`atmosphere`. Every array is built via `similar` on `atmosphere.temperature_layers`
+at element type `eltype(model)`; see
+[`LongwaveOptics(::AnyEcCKDGasOpticsModel, ::ColumnAtmosphere)`](@ref) for why
+the element type comes from the model and why initial contents do not matter.
 """
 function ShortwaveOptics(model::AnyEcCKDGasOpticsModel, atmosphere::ColumnAtmosphere)
     ng = size(model.shortwave_absorption, 1)
     nlayers = length(atmosphere.temperature_layers)
     prototype = atmosphere.temperature_layers
-    FT = eltype(prototype)
+    FT = eltype(model)
     optics_array() = similar(prototype, FT, ng, nlayers)
     return ShortwaveOptics(optics_array(); rayleigh_optical_depth = optics_array(),
                           scattering_asymmetry = optics_array(),

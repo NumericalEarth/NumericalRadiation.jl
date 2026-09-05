@@ -87,14 +87,18 @@ Base.eltype(::RadiativeFluxes{FT}) where FT = FT
 """
     RadiativeFluxes(atmosphere::ColumnAtmosphere)
 
-Allocate a caller-owned [`RadiativeFluxes`](@ref) sized for `atmosphere`. Every
-field is built via `similar` on `atmosphere.pressure_interfaces`, which already
-has the required `nlayers + 1` length, so the allocation matches that array's
-backend without a model or gas-optics dependency.
+Allocate a caller-owned, zero-initialized [`RadiativeFluxes`](@ref) sized for
+`atmosphere`. Every field is built via `similar` on `atmosphere.pressure_interfaces`,
+which already has the required `nlayers + 1` length, so the allocation matches
+that array's backend without a model or gas-optics dependency. Zero
+initialization matters because each band solver only overwrites its own pair of
+fields (longwave or shortwave); a longwave-only or shortwave-only caller must
+not see uninitialized memory in the untouched pair when [`heating_rates!`](@ref)
+reads all four.
 """
 function RadiativeFluxes(atmosphere::ColumnAtmosphere)
     prototype = atmosphere.pressure_interfaces
-    flux_array() = similar(prototype)
+    flux_array() = fill!(similar(prototype), zero(eltype(prototype)))
     return RadiativeFluxes(longwave_up = flux_array(), longwave_down = flux_array(),
                            shortwave_up = flux_array(), shortwave_down = flux_array())
 end
