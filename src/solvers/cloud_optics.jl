@@ -587,14 +587,23 @@ end
 
 Add g-point mapped liquid and ice cloud scattering to shortwave optical
 properties. The input `liquid_properties` and `ice_properties` are per-g-point
-scattering tables, while the water paths and cloud fraction are layer fields.
-The function adds absorptive optical depth to `shortwave.optical_depth` and
-mixes scattering optical depth/asymmetry into `shortwave.rayleigh_optical_depth`
-and `shortwave.scattering_asymmetry`.
+scattering tables (anything with `mass_extinction_coefficient`,
+`single_scattering_albedo`, and `asymmetry_factor` indexable by g point, such
+as the output of [`cloud_scattering_gpoint_properties`](@ref)), while the
+water paths and cloud fraction are layer fields. The function adds absorptive
+optical depth to `shortwave.optical_depth` and mixes scattering optical
+depth/asymmetry into `shortwave.rayleigh_optical_depth` and
+`shortwave.scattering_asymmetry`.
 
-Keyword scale factors can adjust liquid extinction, ice extinction, scattering,
-cloud-fraction weighting, and optional delta-Eddington forward-scattering
-scaling.
+Each layer and g point is two calls of [`add_scattering_layer`](@ref), one per
+phase, so a host kernel looping over that function reproduces this array
+method. The keyword scale factors enter that loop as follows: the extinction
+scales multiply each phase's mass-extinction coefficient; the cloud-fraction
+weight `cloud_fraction^cloud_fraction_exponent` multiplies both water paths;
+`shortwave_scattering_scale` multiplies each phase's single-scattering albedo
+(clamped to `[0, 1]`); and `delta_eddington_scale` removes the
+forward-scattering peak of each phase with `delta_eddington` before it is
+added.
 """
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:AbstractMatrix},
                                       liquid_properties,
@@ -626,50 +635,46 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
     scattering_scale = max(FT(shortwave_scattering_scale), zero(FT))
     for k in 1:nlayers
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
-        lwp = max(FT(liquid_water_path[k]), zero(FT))
-        iwp = max(FT(ice_water_path[k]), zero(FT))
+        lwp = fraction_scale * max(FT(liquid_water_path[k]), zero(FT))
+        iwp = fraction_scale * max(FT(ice_water_path[k]), zero(FT))
         for ig in 1:ng
-            liquid_ext = liquid_scale * FT(liquid_properties.mass_extinction_coefficient[ig]) * lwp
-            ice_ext = ice_scale * FT(ice_properties.mass_extinction_coefficient[ig]) * iwp
-            liquid_ssa = clamp(FT(liquid_properties.single_scattering_albedo[ig]),
-                               zero(FT), one(FT))
-            ice_ssa = clamp(FT(ice_properties.single_scattering_albedo[ig]),
-                            zero(FT), one(FT))
-            liquid_scat = liquid_ssa * liquid_ext
-            ice_scat = ice_ssa * ice_ext
-            scattering_sum = liquid_scat + ice_scat
-            incoming_asymmetry = scattering_sum == zero(FT) ?
-                zero(FT) :
-                (clamp(FT(liquid_properties.asymmetry_factor[ig]), -one(FT), one(FT)) *
-                 liquid_scat +
-                 clamp(FT(ice_properties.asymmetry_factor[ig]), -one(FT), one(FT)) *
-                 ice_scat) / scattering_sum
-            total_extinction = liquid_ext + ice_ext
-            if delta_eddington_scale && scattering_sum > zero(FT)
-                forward_fraction = incoming_asymmetry^2
-                total_extinction -= scattering_sum * forward_fraction
-                scattering_sum *= one(FT) - forward_fraction
-                incoming_asymmetry /= one(FT) + incoming_asymmetry
-            end
-            if scattering_scale != one(FT)
-                scattering_sum = min(scattering_sum * scattering_scale,
-                                     max(total_extinction, zero(FT)))
-            end
-            absorption_tau = fraction_scale *
-                max(total_extinction - scattering_sum, zero(FT))
-            scattering_tau = fraction_scale * scattering_sum
+            τ_absorption = shortwave.optical_depth[ig, k]
+            τ_scattering = shortwave.rayleigh_optical_depth[ig, k]
+            asymmetry = shortwave.scattering_asymmetry[ig, k]
 
-            shortwave.optical_depth[ig, k] += absorption_tau
-            existing_scattering = shortwave.rayleigh_optical_depth[ig, k]
-            total_scattering = existing_scattering + scattering_tau
-            shortwave.scattering_asymmetry[ig, k] = total_scattering == zero(FT) ?
-                zero(FT) :
-                (shortwave.scattering_asymmetry[ig, k] * existing_scattering +
-                 incoming_asymmetry * scattering_tau) / total_scattering
-            shortwave.rayleigh_optical_depth[ig, k] = total_scattering
+            κ, ω, g = scaled_phase_optics(liquid_properties, ig, liquid_scale, scattering_scale,
+                                          delta_eddington_scale, FT)
+            τ_absorption, τ_scattering, asymmetry =
+                add_scattering_layer(τ_absorption, τ_scattering, asymmetry, κ, ω, g, lwp)
+
+            κ, ω, g = scaled_phase_optics(ice_properties, ig, ice_scale, scattering_scale,
+                                          delta_eddington_scale, FT)
+            τ_absorption, τ_scattering, asymmetry =
+                add_scattering_layer(τ_absorption, τ_scattering, asymmetry, κ, ω, g, iwp)
+
+            shortwave.optical_depth[ig, k] = τ_absorption
+            shortwave.rayleigh_optical_depth[ig, k] = τ_scattering
+            shortwave.scattering_asymmetry[ig, k] = asymmetry
         end
     end
     return shortwave
+end
+
+# Clamped and scaled (κ, ω, g) of one phase at g point `ig` for the mapped
+# scattering loop: κ scaled by the phase's extinction scale, ω and g clamped to
+# their physical ranges, the optional delta-Eddington forward-peak removal, and
+# then the scattering scale on ω (clamped so scattering never exceeds
+# extinction).
+@inline function scaled_phase_optics(properties, ig, extinction_scale, scattering_scale,
+                                     delta_eddington_scale::Bool, ::Type{FT}) where FT
+    κ = extinction_scale * FT(properties.mass_extinction_coefficient[ig])
+    ω = clamp(FT(properties.single_scattering_albedo[ig]), zero(FT), one(FT))
+    g = clamp(FT(properties.asymmetry_factor[ig]), -one(FT), one(FT))
+    if delta_eddington_scale
+        κ, ω, g = delta_eddington(κ, ω, g)
+    end
+    ω = clamp(ω * scattering_scale, zero(FT), one(FT))
+    return κ, ω, g
 end
 
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:AbstractVector},

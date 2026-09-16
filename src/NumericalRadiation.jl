@@ -20,6 +20,8 @@ export ShortwaveCloudOverlapOptics, CloudOverlapShortwave
 export CloudOptics, CloudyRegionCloudOptics
 export LayerCloudOpticsModel, LayerLiquidIceCloudOpticsModel
 export add_cloud_optical_depths!, add_mapped_cloud_scattering!
+export SpectralCloudOptics, effective_radius_bracket, cloud_layer_optics
+export add_scattering_layer, cloud_absorption_optical_depth
 export AerosolOptics, LayerAerosolOpticsModel, add_aerosol_optical_depths!
 export EcCKDGasOpticsModel, EcCKDTabulatedGasOpticsModel
 export EcCKDDefinition, EcCKDSchemaSummary, EcCKDModelSpec
@@ -79,6 +81,7 @@ include("io/cloud_scattering.jl")
 include("solvers/cloudless_longwave.jl")
 include("solvers/cloudless_shortwave.jl")
 include("solvers/cloud_optics.jl")
+include("solvers/spectral_cloud_optics.jl")
 include("solvers/cloud_overlap_shortwave.jl")
 include("solvers/cloud_overlap_longwave.jl")
 include("gas_optics/ecckd_forward.jl")

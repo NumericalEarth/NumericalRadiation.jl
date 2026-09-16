@@ -57,6 +57,11 @@ const REQUIRED_EXPORTS = (
     :rayleigh_optical_depth,
     :longwave_source,
     :source_table_bracket,
+    :SpectralCloudOptics,
+    :effective_radius_bracket,
+    :cloud_layer_optics,
+    :add_scattering_layer,
+    :cloud_absorption_optical_depth,
 )
 
 function exported_symbol_status(name)
