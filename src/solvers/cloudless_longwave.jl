@@ -253,6 +253,28 @@ end
     boundary_conditions.surface_albedo :
     FT(boundary_conditions.surface_albedo[ig])
 
+# Adapters that present one g point of precomputed array optics and boundary
+# conditions in the functor form of `streaming_longwave_fluxes!`: the streamed
+# g index is always 1, so both ignore it and read the g point they were built
+# for.
+struct ArrayLayerOptics{O}
+    optics :: O
+    ig :: Int
+end
+
+@inline (layer::ArrayLayerOptics)(_, k) =
+    (tau_at(layer.optics, layer.ig, k),
+     source_top_at(layer.optics, layer.ig, k),
+     source_bottom_at(layer.optics, layer.ig, k))
+
+struct BoundarySurfaceEmission{B}
+    boundary_conditions :: B
+    ig :: Int
+end
+
+@inline Base.getindex(emission::BoundarySurfaceEmission, _) =
+    surface_longwave_up_at(emission.boundary_conditions, emission.ig)
+
 """
     radiative_fluxes!(fluxes, CloudlessLongwave(), optics, atmosphere, boundary_conditions)
 
@@ -325,39 +347,52 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         return fluxes
     end
 
+    # No scattering: sweep down from the top of the atmosphere, then up from
+    # the surface, where the upwelling flux is the surface emission plus the
+    # reflected downwelling flux, `up = ε B(Tₛ) + α down`. The interface-source
+    # (ecRad half-level Planck) layers run through `streaming_longwave_fluxes!`
+    # one g point at a time, so a host kernel streaming that function directly
+    # reproduces this solver bit for bit.
+    if has_interface_sources(optics)
+        up_g = zeros(FT, nlayers + 1)
+        down_g = zeros(FT, nlayers + 1)
+        transmittance = zeros(FT, nlayers)
+        source_up = zeros(FT, nlayers)
+        for ig in 1:number_of_g_points(optics)
+            w = FT(optics.weights[ig])
+            streaming_longwave_fluxes!(up_g, down_g,
+                                       ArrayLayerOptics(optics, ig),
+                                       BoundarySurfaceEmission(boundary_conditions, ig),
+                                       surface_longwave_albedo(boundary_conditions, ig),
+                                       boundary_conditions.toa_longwave_down,
+                                       (w,), 1, nlayers, transmittance, source_up)
+            fluxes.longwave_up .+= up_g
+            fluxes.longwave_down .+= down_g
+        end
+
+        return fluxes
+    end
+
     for ig in 1:number_of_g_points(optics)
         w = FT(optics.weights[ig])
-
-        up = surface_longwave_up_at(boundary_conditions, ig)
-        fluxes.longwave_up[nlayers + 1] += w * up
-        for k in nlayers:-1:1
-            tau = tau_at(optics, ig, k)
-            if has_interface_sources(optics)
-                tr, source_up, _ = no_scattering_lw_sources(
-                    FT, tau, source_top_at(optics, ig, k), source_bottom_at(optics, ig, k))
-                up = up * tr + source_up
-            else
-                tr = exp(-tau)
-                src = source_at(optics, ig, k)
-                up = up * tr + src * (one(FT) - tr)
-            end
-            fluxes.longwave_up[k] += w * up
-        end
 
         down = boundary_conditions.toa_longwave_down
         fluxes.longwave_down[1] += w * down
         for k in 1:nlayers
-            tau = tau_at(optics, ig, k)
-            if has_interface_sources(optics)
-                tr, _, source_down = no_scattering_lw_sources(
-                    FT, tau, source_top_at(optics, ig, k), source_bottom_at(optics, ig, k))
-                down = down * tr + source_down
-            else
-                tr = exp(-tau)
-                src = source_at(optics, ig, k)
-                down = down * tr + src * (one(FT) - tr)
-            end
+            tr = exp(-tau_at(optics, ig, k))
+            src = source_at(optics, ig, k)
+            down = down * tr + src * (one(FT) - tr)
             fluxes.longwave_down[k + 1] += w * down
+        end
+
+        up = surface_longwave_up_at(boundary_conditions, ig) +
+             surface_longwave_albedo(boundary_conditions, ig) * down
+        fluxes.longwave_up[nlayers + 1] += w * up
+        for k in nlayers:-1:1
+            tr = exp(-tau_at(optics, ig, k))
+            src = source_at(optics, ig, k)
+            up = up * tr + src * (one(FT) - tr)
+            fluxes.longwave_up[k] += w * up
         end
     end
 
