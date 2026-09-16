@@ -57,6 +57,8 @@ const REQUIRED_EXPORTS = (
     :rayleigh_optical_depth,
     :longwave_source,
     :source_table_bracket,
+    :TabulatedSurfaceEmission,
+    :streaming_longwave_fluxes!,
 )
 
 function exported_symbol_status(name)

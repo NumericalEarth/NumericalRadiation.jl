@@ -506,4 +506,369 @@ array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray,
     end
 end
 
+#####
+##### Streaming longwave solver and surface reflection
+#####
+
+# The no-scattering longwave branch of `radiative_fluxes!(…, CloudlessLongwave(), …)`
+# as it stood before `streaming_longwave_fluxes!` (up first, then down, no
+# surface reflection), copied verbatim so the reordered solver can be pinned
+# bit for bit for the default albedo of zero.
+function legacy_no_scattering_fluxes!(fluxes, optics::LongwaveOptics{FT}, boundary_conditions) where FT
+    nlayers = NumericalRadiation.number_of_layers(optics)
+    fluxes.longwave_up .= zero(FT)
+    fluxes.longwave_down .= zero(FT)
+    for ig in 1:NumericalRadiation.number_of_g_points(optics)
+        w = FT(optics.weights[ig])
+
+        up = NumericalRadiation.surface_longwave_up_at(boundary_conditions, ig)
+        fluxes.longwave_up[nlayers + 1] += w * up
+        for k in nlayers:-1:1
+            tau = NumericalRadiation.tau_at(optics, ig, k)
+            if NumericalRadiation.has_interface_sources(optics)
+                tr, source_up, _ = NumericalRadiation.no_scattering_lw_sources(
+                    FT, tau, NumericalRadiation.source_top_at(optics, ig, k),
+                    NumericalRadiation.source_bottom_at(optics, ig, k))
+                up = up * tr + source_up
+            else
+                tr = exp(-tau)
+                src = NumericalRadiation.source_at(optics, ig, k)
+                up = up * tr + src * (one(FT) - tr)
+            end
+            fluxes.longwave_up[k] += w * up
+        end
+
+        down = boundary_conditions.toa_longwave_down
+        fluxes.longwave_down[1] += w * down
+        for k in 1:nlayers
+            tau = NumericalRadiation.tau_at(optics, ig, k)
+            if NumericalRadiation.has_interface_sources(optics)
+                tr, _, source_down = NumericalRadiation.no_scattering_lw_sources(
+                    FT, tau, NumericalRadiation.source_top_at(optics, ig, k),
+                    NumericalRadiation.source_bottom_at(optics, ig, k))
+                down = down * tr + source_down
+            else
+                tr = exp(-tau)
+                src = NumericalRadiation.source_at(optics, ig, k)
+                down = down * tr + src * (one(FT) - tr)
+            end
+            fluxes.longwave_down[k + 1] += w * down
+        end
+    end
+    return fluxes
+end
+
+longwave_fluxes(FT, nlayers) = RadiativeFluxes(longwave_up = zeros(FT, nlayers + 1),
+                                               longwave_down = zeros(FT, nlayers + 1),
+                                               shortwave_up = zeros(FT, nlayers + 1),
+                                               shortwave_down = zeros(FT, nlayers + 1))
+
+# The functor form of precomputed `(ng, nlayers)` interface-source optics.
+struct MatrixLayerOptics{L}
+    longwave :: L
+end
+(layer::MatrixLayerOptics)(ig, k) = (layer.longwave.optical_depth[ig, k],
+                                     layer.longwave.source_top[ig, k],
+                                     layer.longwave.source_bottom[ig, k])
+
+# A layer functor for an isothermal gray column: every layer has the same
+# optical depth and Planck source.
+struct UniformLayerOptics{FT}
+    τ :: FT
+    B :: FT
+end
+(layer::UniformLayerOptics)(ig, k) = (layer.τ, layer.B, layer.B)
+
+# Stream a column's longwave fluxes with the full g loop, returning
+# `(up, down)` as fresh vectors.
+function stream_longwave(FT, layer_optics, surface_emission, surface_albedo, toa_down, weights, ng, nlayers)
+    up = zeros(FT, nlayers + 1)
+    down = zeros(FT, nlayers + 1)
+    streaming_longwave_fluxes!(up, down, layer_optics, surface_emission, surface_albedo, toa_down,
+                               weights, ng, nlayers, zeros(FT, nlayers), zeros(FT, nlayers))
+    return up, down
+end
+
+# Stream the same column through the array solver with the same boundary.
+function solve_longwave_array(FT, model, longwave; surface_temperature, emissivity, surface_albedo, toa_down)
+    nlayers = size(longwave.optical_depth, 2)
+    fluxes = longwave_fluxes(FT, nlayers)
+    surface_up = surface_longwave_emission(model, surface_temperature; emissivity)
+    boundary = LongwaveBoundaryConditions(; surface_longwave_up = surface_up,
+                                          toa_longwave_down = toa_down,
+                                          surface_albedo)
+    radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, nothing, boundary)
+    return fluxes
+end
+
+function assert_streaming_matches_array(model, atmosphere; surface_temperature, emissivity, surface_albedo, toa_down)
+    FT = eltype(model)
+    nlayers = length(atmosphere.temperature_layers)
+    ng_lw, ng_sw = length(model.longwave_weights), length(model.shortwave_weights)
+    longwave, shortwave = optics_arrays(FT, ng_lw, ng_sw, nlayers; interface_sources = true)
+    optical_properties!(longwave, shortwave, model, atmosphere)
+
+    fluxes = solve_longwave_array(FT, model, longwave; surface_temperature, emissivity, surface_albedo, toa_down)
+    surface = TabulatedSurfaceEmission(model, surface_temperature; emissivity)
+    up, down = stream_longwave(FT, MatrixLayerOptics(longwave), surface, FT(surface_albedo), FT(toa_down),
+                               model.longwave_weights, ng_lw, nlayers)
+
+    @test all(isfinite, up) && all(isfinite, down)
+    @test up[1] > 0 && down[end] > 0
+    @test up ≈ fluxes.longwave_up rtol = 1e-12
+    @test down ≈ fluxes.longwave_down rtol = 1e-12
+    # The array solver streams one g point at a time through the same
+    # function, so the two are in fact bitwise equal.
+    @test up == fluxes.longwave_up
+    @test down == fluxes.longwave_down
+    # Reflection is visible: with the same emission but no albedo the surface
+    # upwelling flux is smaller by exactly the reflected downwelling flux.
+    up0, down0 = stream_longwave(FT, MatrixLayerOptics(longwave), surface, zero(FT), FT(toa_down),
+                                 model.longwave_weights, ng_lw, nlayers)
+    @test down0 == down
+    @test up[end] - up0[end] ≈ FT(surface_albedo) * down[end] rtol = (FT === Float64 ? 1e-10 : 1e-4)
+
+    # A lazy `TabulatedSurfaceEmission` works as the boundary of the array
+    # solver directly, in place of its `collect`.
+    lazy_fluxes = longwave_fluxes(FT, nlayers)
+    boundary = LongwaveBoundaryConditions(surface_longwave_up = surface,
+                                          toa_longwave_down = toa_down,
+                                          surface_albedo = surface_albedo)
+    radiative_fluxes!(lazy_fluxes, CloudlessLongwave(), longwave, nothing, boundary)
+    @test lazy_fluxes.longwave_up == fluxes.longwave_up
+    @test lazy_fluxes.longwave_down == fluxes.longwave_down
+    return nothing
+end
+
+@testset "TabulatedSurfaceEmission" begin
+    @testset "matches surface_longwave_emission" begin
+        gray, _ = smoke_fixture()
+        for (model, T) in ((gray, 300), (gray, 287.5), (tabulated_fixture(Float64)[1], 300),
+                           (tabulated_fixture(Float32)[1], 300))
+            FT = eltype(model)
+            emission = TabulatedSurfaceEmission(model, T)
+            @test emission isa TabulatedSurfaceEmission{FT}
+            @test emission isa AbstractVector{FT}
+            @test eltype(emission) === FT
+            @test length(emission) == length(model.longwave_weights)
+            @test collect(emission) == surface_longwave_emission(model, T)
+            @test collect(emission) isa Vector{FT}
+            scaled = TabulatedSurfaceEmission(model, T; emissivity = 0.9)
+            @test scaled.emissivity === FT(0.9)
+            @test collect(scaled) == surface_longwave_emission(model, T; emissivity = 0.9)
+            @test collect(scaled) ≈ 0.9 .* collect(emission) rtol = 4eps(FT)
+            @test emission[end] == emission[length(emission)]
+        end
+        # Gray path: scale × σT⁴, emissivity folded in.
+        @test TabulatedSurfaceEmission(gray, 300.0; emissivity = 0.5)[2] == 0.5 * (1.05 * (σ_SB * 300.0^4))
+    end
+
+    @testset "reference climate_32x32 tables" begin
+        names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        if paths.longwave === nothing || paths.shortwave === nothing
+            @test_skip "ecrad_data artifact not installed"
+        else
+            model = read_reference_ecckd_gas_optics("32x32"; names)
+            emission = TabulatedSurfaceEmission(model, 300)
+            @test emission.bracket !== nothing
+            @test collect(emission) == surface_longwave_emission(model, 300)
+            @test collect(TabulatedSurfaceEmission(model, 300; emissivity = 0.98)) ==
+                  surface_longwave_emission(model, 300; emissivity = 0.98)
+            @test sum(model.longwave_weights .* collect(emission)) ≈ σ_SB * 300.0^4 atol = 0.2
+        end
+    end
+end
+
+@testset "streaming longwave reproduces CloudlessLongwave" begin
+    settings = (surface_temperature = 295.0, emissivity = 0.98, surface_albedo = 0.02, toa_down = 0.0)
+
+    @testset "2-layer fixed-coefficient model" begin
+        model, atmosphere = smoke_fixture()
+        assert_streaming_matches_array(model, atmosphere; settings...)
+        assert_streaming_matches_array(model, atmosphere; settings..., toa_down = 12.5)
+    end
+
+    @testset "synthetic tabulated model, $FT" for FT in (Float64, Float32)
+        model, atmosphere = tabulated_fixture(FT)
+        assert_streaming_matches_array(model, atmosphere; settings...)
+    end
+
+    @testset "reference climate_32x32 tables" begin
+        names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        if paths.longwave === nothing || paths.shortwave === nothing
+            @test_skip "ecrad_data artifact not installed"
+        else
+            model = read_reference_ecckd_gas_optics("32x32"; names)
+            atmosphere, _, _ = reference_column(40)
+            assert_streaming_matches_array(model, atmosphere; settings...,
+                                           surface_temperature = atmosphere.temperature_interfaces[end])
+        end
+    end
+
+    @testset "per-g surface albedo" begin
+        model, atmosphere = tabulated_fixture(Float64)
+        nlayers = length(atmosphere.temperature_layers)
+        ng = length(model.longwave_weights)
+        longwave, shortwave = optics_arrays(Float64, ng, length(model.shortwave_weights), nlayers; interface_sources = true)
+        optical_properties!(longwave, shortwave, model, atmosphere)
+        albedo = [0.01, 0.05, 0.1]
+        fluxes = solve_longwave_array(Float64, model, longwave; surface_temperature = 290.0, emissivity = 0.95,
+                                      surface_albedo = albedo, toa_down = 0.0)
+        # The array solver applies each g point's albedo; streaming one g point
+        # at a time with its own albedo and summing reproduces it.
+        up = zeros(nlayers + 1)
+        down = zeros(nlayers + 1)
+        for ig in 1:ng
+            # Only g point `ig` of the streamed result carries albedo[ig]; pick
+            # it out by streaming with a one-hot weight vector.
+            onehot = [j == ig ? model.longwave_weights[j] : 0.0 for j in 1:ng]
+            up_g, down_g = stream_longwave(Float64, MatrixLayerOptics(longwave),
+                                           TabulatedSurfaceEmission(model, 290.0; emissivity = 0.95),
+                                           albedo[ig], 0.0, onehot, ng, nlayers)
+            up .+= up_g
+            down .+= down_g
+        end
+        @test up ≈ fluxes.longwave_up rtol = 1e-12
+        @test down ≈ fluxes.longwave_down rtol = 1e-12
+    end
+end
+
+# A fixed shuffle, so the optical depths below mix thin and thick layers
+# across g points without a Random dependency.
+shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
+
+@testset "reordered CloudlessLongwave is bitwise unchanged for zero albedo" begin
+    for FT in (Float64, Float32)
+        nlayers = 7
+        ng = 3
+        τ = FT.(10 .^ range(-4, 1, length = ng * nlayers))
+        τ = reshape(shuffle_like(τ), ng, nlayers)
+        source = FT.(100 .+ 150 .* rand(ng, nlayers))
+        source_top = FT.(100 .+ 150 .* rand(ng, nlayers))
+        source_bottom = FT.(100 .+ 150 .* rand(ng, nlayers))
+        weights = FT[0.2, 0.3, 0.5]
+        surface_up = FT[310, 330, 350]
+        for (optics, boundary) in (
+                (LongwaveOptics(τ, source; weights),
+                 LongwaveBoundaryConditions(surface_longwave_up = surface_up)),
+                (LongwaveOptics(τ, source; source_top, source_bottom, weights),
+                 LongwaveBoundaryConditions(surface_longwave_up = surface_up)),
+                (LongwaveOptics(τ, source; source_top, source_bottom, weights),
+                 LongwaveBoundaryConditions(surface_longwave_up = FT(300), toa_longwave_down = FT(7))),
+                (LongwaveOptics(vec(τ[1, :]), vec(source[1, :])),
+                 LongwaveBoundaryConditions(surface_longwave_up = FT(300))),
+                (LongwaveOptics(vec(τ[1, :]), vec(source[1, :]);
+                                source_top = vec(source_top[1, :]), source_bottom = vec(source_bottom[1, :])),
+                 LongwaveBoundaryConditions(surface_longwave_up = FT(300), toa_longwave_down = FT(3))))
+            new = longwave_fluxes(FT, nlayers)
+            legacy = longwave_fluxes(FT, nlayers)
+            radiative_fluxes!(new, CloudlessLongwave(), optics, nothing, boundary)
+            legacy_no_scattering_fluxes!(legacy, optics, boundary)
+            @test new.longwave_up == legacy.longwave_up
+            @test new.longwave_down == legacy.longwave_down
+            @test !all(iszero, new.longwave_down)
+        end
+    end
+
+    # The component-smoke fixture through the array solver, with and without
+    # interface sources.
+    model, atmosphere = smoke_fixture()
+    nlayers = length(atmosphere.temperature_layers)
+    for interface_sources in (false, true)
+        longwave, shortwave = optics_arrays(Float64, 2, 1, nlayers; interface_sources)
+        optical_properties!(longwave, shortwave, model, atmosphere)
+        boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_longwave_emission(model, 295.0))
+        new = longwave_fluxes(Float64, nlayers)
+        legacy = longwave_fluxes(Float64, nlayers)
+        radiative_fluxes!(new, CloudlessLongwave(), longwave, atmosphere, boundary)
+        legacy_no_scattering_fluxes!(legacy, longwave, boundary)
+        @test new.longwave_up == legacy.longwave_up
+        @test new.longwave_down == legacy.longwave_down
+    end
+end
+
+@testset "surface reflection closes an opaque isothermal column" begin
+    # Thick isothermal gray column: the downwelling flux at the surface is
+    # the full Planck flux, so with `ε = 0.9` and `α = 0.1` the surface
+    # upwelling flux `ε σT⁴ + α σT⁴` closes to `σT⁴`, as does every interior
+    # interface in radiative equilibrium with the isothermal gas.
+    gray = EcCKDGasOpticsModel(names = (:composite,),
+                               longwave_absorption = [1.0;;],
+                               shortwave_absorption = [0.5;;])
+    for FT in (Float64, Float32)
+        T = FT(280)
+        B = FT(σ_SB) * T^4
+        nlayers = 6
+        layer = UniformLayerOptics(FT(50), B)
+        model = NumericalRadiation.Adapt.adapt(Array{FT}, gray)
+        surface = TabulatedSurfaceEmission(model, T; emissivity = 0.9)
+        @test surface[1] ≈ FT(0.9) * B rtol = 4eps(FT)
+        up, down = stream_longwave(FT, layer, surface, FT(0.1), zero(FT), model.longwave_weights, 1, nlayers)
+        rtol = FT === Float64 ? 1e-12 : 200eps(Float32)
+        @test up[end] ≈ B rtol = rtol
+        @test down[end] ≈ B rtol = rtol
+        @test down[1] == 0
+        @test all(k -> isapprox(up[k], B; rtol), 1:nlayers + 1)
+        @test all(k -> isapprox(down[k], B; rtol), 2:nlayers + 1)
+        # Emission alone: without reflection the surface flux is only εσT⁴.
+        up0, _ = stream_longwave(FT, layer, surface, zero(FT), zero(FT), model.longwave_weights, 1, nlayers)
+        @test up0[end] ≈ FT(0.9) * B rtol = rtol
+    end
+end
+
+Base.@noinline measure_streaming_longwave(up, down, layer, surface, albedo, toa, weights, ng, nlayers, tr, src) =
+    @allocated streaming_longwave_fluxes!(up, down, layer, surface, albedo, toa, weights, ng, nlayers, tr, src)
+Base.@noinline measure_surface_emission(model, T, ε) =
+    @allocated TabulatedSurfaceEmission(model, T; emissivity = ε)
+Base.@noinline measure_surface_index(surface, ig) = @allocated surface[ig]
+
+@testset "streaming longwave is inferrable and allocation-free" begin
+    for FT in (Float64, Float32)
+        model, atmosphere = tabulated_fixture(FT)
+        nlayers = length(atmosphere.temperature_layers)
+        ng = length(model.longwave_weights)
+        longwave, shortwave = optics_arrays(FT, ng, 2, nlayers; interface_sources = true)
+        optical_properties!(longwave, shortwave, model, atmosphere)
+        layer = MatrixLayerOptics(longwave)
+
+        surface = @inferred TabulatedSurfaceEmission(model, FT(290); emissivity = FT(0.98))
+        @test typeof(@inferred surface[1]) === FT
+
+        # Column rows of `(Nc, N + 1)` and `(Nc, N)` workspaces, as a host
+        # model stores them.
+        Nc = 3
+        up = zeros(FT, Nc, nlayers + 1)
+        down = zeros(FT, Nc, nlayers + 1)
+        transmittance = zeros(FT, Nc, nlayers)
+        source_up = zeros(FT, Nc, nlayers)
+        c = 2
+        args = (view(up, c, :), view(down, c, :), layer, surface, FT(0.02), zero(FT),
+                model.longwave_weights, ng, nlayers, view(transmittance, c, :), view(source_up, c, :))
+        @inferred streaming_longwave_fluxes!(args...)
+        for _ in 1:2   # compile, then measure
+            @test measure_streaming_longwave(args...) == 0
+            @test measure_surface_emission(model, FT(290), FT(0.98)) == 0
+            @test measure_surface_index(surface, 2) == 0
+        end
+        # Only row `c` was written.
+        @test all(iszero, up[[1, 3], :]) && all(iszero, down[[1, 3], :])
+        @test !all(iszero, up[c, :]) && !all(iszero, down[c, 2:end])
+        fluxes = solve_longwave_array(FT, model, longwave; surface_temperature = FT(290), emissivity = FT(0.98),
+                                      surface_albedo = FT(0.02), toa_down = zero(FT))
+        @test up[c, :] == fluxes.longwave_up
+        @test down[c, :] == fluxes.longwave_down
+
+        gray, _ = smoke_fixture()
+        gray_surface = @inferred TabulatedSurfaceEmission(gray, 290.0)
+        @test gray_surface.bracket === nothing
+        @test typeof(@inferred gray_surface[1]) === Float64
+        for _ in 1:2
+            @test measure_surface_emission(gray, 290.0, 1.0) == 0
+            @test measure_surface_index(gray_surface, 1) == 0
+        end
+    end
+end
+
 end # module TestStreaming

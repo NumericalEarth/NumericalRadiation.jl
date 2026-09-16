@@ -529,31 +529,6 @@ end
     return interp_source_table(model.longwave_source_table, ig, source_bracket)
 end
 
-"""
-$(TYPEDSIGNATURES)
-
-Per-g-point surface longwave emission of `model` at the surface `temperature`,
-scaled by `emissivity`, in the same per-unit-weight flux convention as the
-model's Planck source tables. Pass the result as `surface_longwave_up` in
-`LongwaveBoundaryConditions`.
-
-For multi-g spectral models a scalar ``σT⁴`` boundary is a gray
-approximation: it does not reproduce the model's tabulated Planck spectrum
-across g points and may bias outgoing longwave fluxes.
-
-This is a host-side setup utility: it returns a host `Vector` and indexes
-the model's source table on the host. For device workflows, build the
-boundary before adapting arrays to the device.
-"""
-function surface_longwave_emission(model::EcCKDTabulatedGasOpticsModel{FT},
-                                   temperature;
-                                   emissivity = one(FT)) where FT
-    ng = length(model.longwave_weights)
-    source_bracket = source_table_bracket(model, temperature)
-    return FT[emissivity * longwave_source(model, ig, temperature, source_bracket)
-              for ig in 1:ng]
-end
-
 @generated function accumulate_tau(gases::NamedTuple,
                                     coefficients::AbstractMatrix{FT},
                                     ::Val{GasNames},
