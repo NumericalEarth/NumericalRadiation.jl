@@ -397,6 +397,11 @@ end
 # diffuse flux is attenuated by e^{-2(τₛ - τ_k)} on its way up:
 #   up[k] = α S₀ μ₀ e^{-τₛ/μ₀} e^{-2(τₛ - τ_k)}.
 #
+# Conservative scattering (ω = 1, black surface). Nothing is absorbed, so
+# the net downward flux down[k] - up[k] is the same at every interface and
+# equals the flux absorbed by the black surface, down[end]; at the top the
+# net flux is S₀μ₀ - up[1]. Hence up[1] + down[end] = S₀μ₀.
+#
 # Reciprocity. Every homogeneous two-stream layer has the same diffuse
 # transmittance T_k from either side, and the adding formula for two slabs,
 # T₁₂ = T₁ T₂ / (1 - R₁ᵇ R₂ᵗ) (R₁ᵇ the lower slab albedo of the upper slab, R₂ᵗ
@@ -433,6 +438,23 @@ end
             @test down[1] == FT(S₀ * μ0)
             @test all(k -> within(down[k], down_exact[k], tol), 1:nlayers + 1)
             @test all(k -> within(up[k], up_exact[k], tol), 1:nlayers + 1)
+        end
+
+        @testset "conservative scattering ($FT)" begin
+            nlayers = 4
+            μ0, S₀ = 0.5, 1361.0
+            scattering = FT[0.3, 1.0, 0.5, 2.0]
+            absorption = zeros(FT, nlayers)
+            tol = tolerances(FT, 1e-10, S₀ * μ0)
+            for g in (-0.5, 0.0, 0.5, 0.85, 0.95)
+                asymmetry = fill(FT(g), nlayers)
+                optics = ScatteringLayerOptics(absorption, scattering, asymmetry)
+                up, down = shortwave_fluxes(FT, optics, μ0, S₀ * μ0, 0, 0, nlayers)
+                net = down .- up
+                @test within(up[1] + down[end], S₀ * μ0, tol)
+                @test all(k -> within(net[k], net[end], tol), 1:nlayers + 1)
+                @test down[1] == FT(S₀ * μ0)
+            end
         end
 
         @testset "reciprocity of the stack diffuse transmittance ($FT)" begin

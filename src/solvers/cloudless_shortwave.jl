@@ -239,25 +239,47 @@ end
     exponential = exp(-k_exponent * od)
     exponential2 = exponential * exponential
     k_2_exponential = FT(2) * k_exponent * exponential
-    reftrans_factor = inv(k_exponent + gamma1 + (k_exponent - gamma1) * exponential2)
 
-    reflectance = gamma2 * (one(FT) - exponential2) * reftrans_factor
+    # In the conservative limit ω → 1 the two-stream coefficients satisfy
+    # γ₁ → γ₂, so k → 0 (held at √1e-12 above) and every reflectance and
+    # transmittance below is an O(k) result. Written as ecRad does, with
+    # `1 - e^{-2kτ}` and `k + γ₁ + (k - γ₁) e^{-2kτ}`, each is the difference
+    # of O(1) terms, and the relative rounding error `eps / (2kτ)` reaches 1e-10
+    # in Float64 and a few percent in Float32, breaking energy conservation of
+    # non-absorbing layers. The same expressions rearranged so that only the
+    # accurately computable small differences
+    #     m₁ = 1 - e^{-kτ},   m₂ = 1 - e^{-2kτ},   d = 1 - e^{-τ/μ₀}
+    # (from `expm1`) and sums of like-signed terms appear are the same algebra:
+    #     k + γ₁ + (k - γ₁) e²      = k (1 + e²) + γ₁ m₂,
+    #     (1 - kμ₀)(α₂ + kγ₃) - (1 + kμ₀)(α₂ - kγ₃) e² - 2ke(γ₃ - α₂μ₀) D
+    #                               = (α₂ - k²μ₀γ₃) m₂ + k(γ₃ - μ₀α₂)(m₁² + 2e d),
+    #     2ke(γ₄ + α₁μ₀) - D[(1 + kμ₀)(α₁ + kγ₄) - (1 - kμ₀)(α₁ - kγ₄) e²]
+    #                               = k(γ₄ + μ₀α₁)(d (1 + e²) - m₁²) - D(α₁ + k²μ₀γ₄) m₂,
+    # with e = e^{-kτ} and D = e^{-τ/μ₀}, using 1 + e² - 2eD = m₁² + 2e d and
+    # 2e - D(1 + e²) = d(1 + e²) - m₁².
+    one_minus_exponential = -expm1(-k_exponent * od)
+    one_minus_exponential2 = -expm1(-FT(2) * k_exponent * od)
+    one_minus_direct = -expm1(-od_over_μ0)
+    one_plus_exponential2 = one(FT) + exponential2
+    reftrans_factor = inv(k_exponent * one_plus_exponential2 + gamma1 * one_minus_exponential2)
+
+    reflectance = gamma2 * one_minus_exponential2 * reftrans_factor
     transmittance = k_2_exponential * reftrans_factor
 
     k_μ0 = k_exponent * μ0_local
-    k_gamma3 = k_exponent * gamma3
-    k_gamma4 = k_exponent * gamma4
     direct_factor = μ0_local * FT(single_scattering_albedo) * reftrans_factor /
         (one(FT) - k_μ0 * k_μ0)
 
     ref_dir = direct_factor *
-        ((one(FT) - k_μ0) * (alpha2 + k_gamma3) -
-         (one(FT) + k_μ0) * (alpha2 - k_gamma3) * exponential2 -
-         k_2_exponential * (gamma3 - alpha2 * μ0_local) * direct)
+        ((alpha2 - k_μ0 * k_exponent * gamma3) * one_minus_exponential2 +
+         k_exponent * (gamma3 - μ0_local * alpha2) *
+         (one_minus_exponential * one_minus_exponential +
+          FT(2) * exponential * one_minus_direct))
     trans_dir_diff = direct_factor *
-        (k_2_exponential * (gamma4 + alpha1 * μ0_local) -
-         direct * ((one(FT) + k_μ0) * (alpha1 + k_gamma4) -
-                   (one(FT) - k_μ0) * (alpha1 - k_gamma4) * exponential2))
+        (k_exponent * (gamma4 + μ0_local * alpha1) *
+         (one_minus_direct * one_plus_exponential2 -
+          one_minus_exponential * one_minus_exponential) -
+         direct * (alpha1 + k_μ0 * k_exponent * gamma4) * one_minus_exponential2)
 
     direct_scattering_limit = direct_source_limit isa Val{:horizontal} ?
         μ0_local * (one(FT) - direct) : one(FT)
