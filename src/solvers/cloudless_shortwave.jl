@@ -267,6 +267,42 @@ end
     return reflectance, transmittance, ref_dir, trans_dir_diff, direct
 end
 
+"""
+$(TYPEDEF)
+
+Layer-optics functor over precomputed [`ShortwaveOptics`](@ref) arrays for
+[`streaming_shortwave_fluxes!`](@ref): `(ig, k)` returns the tuple
+`(τ_absorption, τ_scattering, asymmetry)` of layer `k`. With `gpoint::Int` the
+functor ignores the g index it is called with and always reads that g point,
+so a single g point can be streamed with `ng = 1`.
+"""
+struct PrecomputedShortwaveLayerOptics{O, G}
+    optics::O
+    gpoint::G
+end
+
+PrecomputedShortwaveLayerOptics(optics::ShortwaveOptics) =
+    PrecomputedShortwaveLayerOptics(optics, nothing)
+
+@inline (layer_optics::PrecomputedShortwaveLayerOptics{<:Any, Nothing})(ig, k) =
+    precomputed_shortwave_layer(layer_optics.optics, ig, k)
+
+@inline (layer_optics::PrecomputedShortwaveLayerOptics{<:Any, <:Integer})(ig, k) =
+    precomputed_shortwave_layer(layer_optics.optics, layer_optics.gpoint, k)
+
+@inline precomputed_shortwave_layer(optics::ShortwaveOptics, ig, k) =
+    (sw_tau(optics, ig, k), sw_rayleigh_tau(optics, ig, k), sw_scattering_asymmetry(optics, ig, k))
+
+"""
+$(TYPEDSIGNATURES)
+
+Two-stream adding fluxes of g point `ig` of `optics` for cosine zenith `μ0`,
+written into `up` and `down` (length `nlayers + 1`, top down, zeroed here).
+`incoming_horizontal` is the downwelling flux through a horizontal surface at
+the top of the atmosphere. A wrapper over
+[`streaming_shortwave_fluxes!`](@ref) with `ng = 1` that allocates its own
+[`ShortwaveColumnScratch`](@ref).
+"""
 function ecrad_shortwave_column!(up::AbstractVector{FT},
                                   down::AbstractVector{FT},
                                   optics::ShortwaveOptics,
@@ -276,61 +312,10 @@ function ecrad_shortwave_column!(up::AbstractVector{FT},
                                   surface_albedo,
                                   surface_albedo_direct = surface_albedo) where FT
     nlayers = sw_nlayers(optics)
-    incoming_normal = incoming_horizontal / μ0
-
-    reflectance = Vector{FT}(undef, nlayers)
-    transmittance = Vector{FT}(undef, nlayers)
-    ref_dir = Vector{FT}(undef, nlayers)
-    trans_dir_diff = Vector{FT}(undef, nlayers)
-    trans_dir_dir = Vector{FT}(undef, nlayers)
-
-    for k in 1:nlayers
-        absorption_tau = max(FT(sw_tau(optics, ig, k)), zero(FT))
-        rayleigh_tau = max(FT(sw_rayleigh_tau(optics, ig, k)), zero(FT))
-        total_tau = absorption_tau + rayleigh_tau
-        ssa = total_tau == zero(FT) ? zero(FT) : rayleigh_tau / total_tau
-        asymmetry = clamp(FT(sw_scattering_asymmetry(optics, ig, k)), -one(FT), one(FT))
-        reflectance[k], transmittance[k], ref_dir[k], trans_dir_diff[k],
-            trans_dir_dir[k] = sw_two_stream_layer(FT, μ0, total_tau, ssa, asymmetry)
-    end
-
-    flux_direct = Vector{FT}(undef, nlayers + 1)
-    flux_diffuse = Vector{FT}(undef, nlayers + 1)
-    source = Vector{FT}(undef, nlayers + 1)
-    stack_albedo = Vector{FT}(undef, nlayers + 1)
-    inv_denominator = Vector{FT}(undef, nlayers)
-
-    flux_direct[1] = incoming_normal
-    for k in 1:nlayers
-        flux_direct[k + 1] = flux_direct[k] * trans_dir_dir[k]
-    end
-
-    stack_albedo[nlayers + 1] = surface_albedo
-    source[nlayers + 1] = surface_albedo_direct * flux_direct[nlayers + 1] * μ0
-
-    for k in nlayers:-1:1
-        below = stack_albedo[k + 1]
-        inv_denominator[k] = inv(one(FT) - below * reflectance[k])
-        stack_albedo[k] = reflectance[k] +
-            transmittance[k] * transmittance[k] * below * inv_denominator[k]
-        source[k] = ref_dir[k] * flux_direct[k] +
-            transmittance[k] *
-            (source[k + 1] + below * trans_dir_diff[k] * flux_direct[k]) *
-            inv_denominator[k]
-    end
-
-    flux_diffuse[1] = zero(FT)
-    up[1] += source[1]
-    down[1] += flux_direct[1] * μ0
-    for k in 1:nlayers
-        flux_diffuse[k + 1] =
-            (transmittance[k] * flux_diffuse[k] +
-             reflectance[k] * source[k + 1] +
-             trans_dir_diff[k] * flux_direct[k]) * inv_denominator[k]
-        up[k + 1] += stack_albedo[k + 1] * flux_diffuse[k + 1] + source[k + 1]
-        down[k + 1] += flux_diffuse[k + 1] + flux_direct[k + 1] * μ0
-    end
-
+    scratch = ShortwaveColumnScratch(FT, nlayers)
+    layer_optics = PrecomputedShortwaveLayerOptics(optics, ig)
+    streaming_shortwave_fluxes!(up, down, layer_optics, μ0, incoming_horizontal,
+                                surface_albedo_direct, surface_albedo, (one(FT),), 1, nlayers, scratch)
     return nothing
 end
 
@@ -365,6 +350,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     fluxes.shortwave_up .= zero(FT)
     fluxes.shortwave_down .= zero(FT)
 
+    # One scratch for every scattering g point; the adding method accumulates
+    # its weighted fluxes in place.
+    scratch = ShortwaveColumnScratch(FT, nlayers)
+    layer_optics = PrecomputedShortwaveLayerOptics(optics)
+
     for ig in 1:sw_ng(optics)
         w = FT(optics.weights[ig])
         path_factor = sw_path_factor(FT, atmosphere)
@@ -373,23 +363,16 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         surface_albedo_direct = surface_albedo_direct_at(boundary_conditions, ig)
 
         if has_rayleigh_scattering(optics, ig)
-            scratch_up = zeros(FT, nlayers + 1)
-            scratch_down = zeros(FT, nlayers + 1)
-            ecrad_shortwave_column!(
-                scratch_up,
-                scratch_down,
-                optics,
-                ig,
-                μ0,
-                boundary_conditions.toa_shortwave_down,
-                surface_albedo,
-                surface_albedo_direct,
-            )
-            fluxes.shortwave_up .+= w .* scratch_up
-            fluxes.shortwave_down .+= w .* scratch_down
+            add_shortwave_gpoint_fluxes!(fluxes.shortwave_up, fluxes.shortwave_down, layer_optics,
+                                         ig, w, μ0, boundary_conditions.toa_shortwave_down,
+                                         surface_albedo_direct, surface_albedo, nlayers, scratch)
             continue
         end
 
+        # Without scattering the direct beam is the whole solution: Beer-Lambert
+        # down the slant path, one Lambertian reflection, and Beer-Lambert back
+        # up. Kept separate from the adding method so that this closed form is
+        # reproduced exactly.
         down = boundary_conditions.toa_shortwave_down
         fluxes.shortwave_down[1] += w * down
         for k in 1:nlayers
