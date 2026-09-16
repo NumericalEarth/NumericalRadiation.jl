@@ -381,4 +381,129 @@ end
     end
 end
 
+# A copy of a column with every array in `FT`, for precision comparisons.
+function convert_column(FT, atmosphere)
+    return ColumnAtmosphere(
+        pressure_layers = FT.(atmosphere.pressure_layers),
+        pressure_interfaces = FT.(atmosphere.pressure_interfaces),
+        temperature_layers = FT.(atmosphere.temperature_layers),
+        temperature_interfaces = FT.(atmosphere.temperature_interfaces),
+        gases = map(gas -> gas isa Number ? FT(gas) : FT.(gas), atmosphere.gases),
+        surface = atmosphere.surface,
+        geometry = atmosphere.geometry,
+    )
+end
+
+# Clear-sky broadband fluxes of one column through the array path, in the
+# model's element type.
+function broadband_fluxes(model, atmosphere; surface_temperature, cos_zenith, surface_albedo)
+    FT = eltype(model)
+    nlayers = length(atmosphere.temperature_layers)
+    ng_lw, ng_sw = length(model.longwave_weights), length(model.shortwave_weights)
+    longwave, shortwave = optics_arrays(FT, ng_lw, ng_sw, nlayers; interface_sources = true)
+    optical_properties!(longwave, shortwave, model, atmosphere)
+    fluxes = RadiativeFluxes(longwave_up = zeros(FT, nlayers + 1),
+                             longwave_down = zeros(FT, nlayers + 1),
+                             shortwave_up = zeros(FT, nlayers + 1),
+                             shortwave_down = zeros(FT, nlayers + 1))
+    surface_up = surface_longwave_emission(model, FT(surface_temperature))
+    radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
+                      LongwaveBoundaryConditions(surface_longwave_up = surface_up))
+    radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
+                      ShortwaveBoundaryConditions(toa_shortwave_down = FT(1361) * FT(cos_zenith),
+                                                  surface_albedo = FT(surface_albedo)))
+    return longwave, shortwave, fluxes
+end
+
+array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray,
+                             fieldnames(typeof(model)))
+
+@testset "Float32 models" begin
+    @testset "adapt derives the element type from the adapted arrays" begin
+        gray, _ = smoke_fixture()
+        @test NumericalRadiation.Adapt.adapt(Array{Float32}, gray) isa EcCKDGasOpticsModel{Float32}
+        @test NumericalRadiation.Adapt.adapt(Array, gray) isa EcCKDGasOpticsModel{Float64}
+        for FT in (Float64, Float32), other in (Float64, Float32)
+            model, _ = tabulated_fixture(FT)
+            adapted = NumericalRadiation.Adapt.adapt(Array{other}, model)
+            @test adapted isa EcCKDTabulatedGasOpticsModel{other}
+            @test NumericalRadiation.gas_names(adapted) === NumericalRadiation.gas_names(model)
+            @test all(name -> eltype(getfield(adapted, name)) === other, array_fields(adapted))
+        end
+    end
+
+    @testset "EcCKDTabulatedGasOpticsModel{FT} conversion runs Float32 optics" begin
+        model, atmosphere = tabulated_fixture(Float64)
+        model32 = EcCKDTabulatedGasOpticsModel{Float32}(model)
+        @test model32 isa EcCKDTabulatedGasOpticsModel{Float32}
+        @test eltype(model32) === Float32
+        @test all(name -> eltype(getfield(model32, name)) === Float32, array_fields(model32))
+        for name in array_fields(model32)
+            @test getfield(model32, name) == Float32.(getfield(model, name))
+        end
+        # A same-type conversion shares storage instead of copying.
+        @test all(name -> getfield(EcCKDTabulatedGasOpticsModel{Float64}(model), name) ===
+                          getfield(model, name), array_fields(model))
+
+        atmosphere32 = convert_column(Float32, atmosphere)
+        nlayers = length(atmosphere.temperature_layers)
+        ng_lw, ng_sw = length(model.longwave_weights), length(model.shortwave_weights)
+        longwave32, shortwave32 = optics_arrays(Float32, ng_lw, ng_sw, nlayers; interface_sources = true)
+        longwave64, shortwave64 = optics_arrays(Float64, ng_lw, ng_sw, nlayers; interface_sources = true)
+        @test (@inferred optical_properties!(longwave32, shortwave32, model32, atmosphere32)) isa Tuple
+        optical_properties!(longwave64, shortwave64, model, atmosphere)
+        @test eltype(longwave32.optical_depth) === Float32
+        @test all(isfinite, longwave32.optical_depth)
+        @test longwave32.optical_depth ≈ longwave64.optical_depth rtol = 1e-4
+        @test longwave32.source_top ≈ longwave64.source_top rtol = 1e-4
+        @test shortwave32.optical_depth ≈ shortwave64.optical_depth rtol = 1e-4
+        @test shortwave32.rayleigh_optical_depth ≈ shortwave64.rayleigh_optical_depth rtol = 1e-4
+        @test all(isfinite, surface_longwave_emission(model32, 290f0))
+        @test eltype(surface_longwave_emission(model32, 290f0)) === Float32
+    end
+
+    @testset "Float32 vs Float64 broadband fluxes on the reference column" begin
+        names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        if paths.longwave === nothing || paths.shortwave === nothing
+            @test_skip "ecrad_data artifact not installed"
+        else
+            model64 = read_reference_ecckd_gas_optics("32x32"; names)
+            model32 = read_reference_ecckd_gas_optics("32x32"; names, float_type = Float32)
+            @test model32 isa EcCKDTabulatedGasOpticsModel{Float32}
+            @test eltype(model32.longwave_absorption) === Float32
+            @test eltype(model32.longwave_h2o_absorption) === Float32
+            @test eltype(model32.longwave_source_table) === Float32
+            @test eltype(model32.pressure_grid) === Float32
+            @test eltype(model32.temperature_grid) === Float32
+            # The reader converts the Float64 model it validates, so the two loads agree exactly.
+            converted = EcCKDTabulatedGasOpticsModel{Float32}(model64)
+            for name in array_fields(model32)
+                @test getfield(model32, name) == getfield(converted, name)
+            end
+
+            atmosphere64, _, _ = reference_column(40)
+            atmosphere32 = convert_column(Float32, atmosphere64)
+            settings = (surface_temperature = atmosphere64.temperature_interfaces[end],
+                        cos_zenith = 0.5, surface_albedo = 0.1)
+            longwave64, shortwave64, fluxes64 = broadband_fluxes(model64, atmosphere64; settings...)
+            longwave32, shortwave32, fluxes32 = broadband_fluxes(model32, atmosphere32; settings...)
+            @test eltype(longwave32.optical_depth) === Float32
+            @test eltype(fluxes32) === Float32
+            # Observed on this 40-layer column: relative norm errors of 2e-7
+            # (LW) to 2e-6 (SW), at most 6e-4 W m⁻² pointwise, so the 2e-3
+            # gate leaves two orders of magnitude of headroom.
+            for name in fieldnames(typeof(fluxes64))
+                flux64, flux32 = getfield(fluxes64, name), getfield(fluxes32, name)
+                @test all(isfinite, flux32)
+                @test flux32 ≈ flux64 rtol = 2e-3
+            end
+            # Sanity: the column is opaque enough that the fluxes are not trivially zero.
+            @test fluxes64.longwave_up[1] > 100
+            @test fluxes64.longwave_down[end] > 100
+            @test fluxes64.shortwave_down[end] > 100
+        end
+    end
+end
+
 end # module TestStreaming

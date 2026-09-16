@@ -21,7 +21,10 @@ struct EcCKDGasOpticsModel{FT, GasNames, LWA, SWA, LWS, LWW, SWW} <: AbstractGas
     shortwave_weights::SWW   # Shortwave spectral weights.
 end
 
-function Adapt.adapt_structure(to, model::EcCKDGasOpticsModel{FT, GasNames}) where {FT, GasNames}
+# The element type of an adapted model follows its adapted tables, so
+# `adapt(Array{Float32}, model)` (or a device adaptor that changes precision)
+# yields a `Float32` model whose scalar layer optics compute in `Float32`.
+function Adapt.adapt_structure(to, model::EcCKDGasOpticsModel{<:Any, GasNames}) where GasNames
     longwave_absorption = Adapt.adapt(to, model.longwave_absorption)
     shortwave_absorption = Adapt.adapt(to, model.shortwave_absorption)
     longwave_source_scale = Adapt.adapt(to, model.longwave_source_scale)
@@ -29,6 +32,7 @@ function Adapt.adapt_structure(to, model::EcCKDGasOpticsModel{FT, GasNames}) whe
     shortwave_weights = Adapt.adapt(to, model.shortwave_weights)
     fields = (longwave_absorption, shortwave_absorption, longwave_source_scale,
               longwave_weights, shortwave_weights)
+    FT = eltype(longwave_absorption)
     return EcCKDGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...)
 end
 
@@ -111,7 +115,10 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     shortwave_weights::SWW   # Shortwave spectral weights.
 end
 
-function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{FT, GasNames}) where {FT, GasNames}
+# As for `EcCKDGasOpticsModel`, the adapted model's element type follows its
+# adapted tables (the pressure grid stands for all of them: the constructor and
+# `EcCKDTabulatedGasOpticsModel{FT}` keep every table in one element type).
+function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, GasNames}) where GasNames
     pressure_grid = Adapt.adapt(to, model.pressure_grid)
     temperature_grid = Adapt.adapt(to, model.temperature_grid)
     h2o_mole_fraction_grid = Adapt.adapt(to, model.h2o_mole_fraction_grid)
@@ -132,7 +139,33 @@ function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{FT, GasNa
               shortwave_h2o_absorption, shortwave_rayleigh_molar_scattering,
               longwave_source_scale, longwave_source_temperature_grid,
               longwave_source_table, longwave_weights, shortwave_weights)
+    FT = eltype(pressure_grid)
     return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...)
+end
+
+# Adaptor that converts the element type of every array in a model while
+# leaving its storage (host or device) where it is. Arrays already in `FT`
+# are passed through unchanged, so a same-type conversion shares storage.
+struct FloatTypeConverter{FT} end
+
+Adapt.adapt_storage(::FloatTypeConverter{FT}, x::AbstractArray{FT}) where FT = x
+Adapt.adapt_storage(::FloatTypeConverter{FT}, x::AbstractArray) where FT = FT.(x)
+
+"""
+$(TYPEDSIGNATURES)
+
+Convert every table, grid and weight vector of a tabulated ecCKD gas-optics
+model to element type `FT`, returning an `EcCKDTabulatedGasOpticsModel{FT}`.
+Optional tables that are absent (`nothing`) stay absent and arrays already in
+`FT` are shared rather than copied. The conversion runs where the arrays live,
+so a device model is converted on the device.
+
+The reference ecCKD coefficient tables are stored in single precision, so a
+`Float32` model reproduces them exactly; only the derived Planck source table
+and the spectral weights are rounded.
+"""
+function (::Type{EcCKDTabulatedGasOpticsModel{FT}})(model::EcCKDTabulatedGasOpticsModel) where FT
+    return Adapt.adapt(FloatTypeConverter{FT}(), model)
 end
 
 function EcCKDTabulatedGasOpticsModel(; names,

@@ -1059,6 +1059,25 @@ end
                 @test getfield(adapted, name) == getfield(model, name)
             end
 
+            # The adapted model's element type follows the adapted arrays, and
+            # the host conversion produces the same tables in place.
+            other = FT === Float64 ? Float32 : Float64
+            retyped = NumericalRadiation.Adapt.adapt(Array{other}, model)
+            @test retyped isa EcCKDTabulatedGasOpticsModel{other}
+            @test eltype(retyped) === other
+            converted = EcCKDTabulatedGasOpticsModel{other}(model)
+            @test converted isa EcCKDTabulatedGasOpticsModel{other}
+            for name in fieldnames(typeof(model))
+                @test getfield(converted, name) == getfield(retyped, name)
+                field = getfield(converted, name)
+                field isa AbstractArray && @test eltype(field) === other
+            end
+            same = EcCKDTabulatedGasOpticsModel{FT}(model)
+            @test same isa EcCKDTabulatedGasOpticsModel{FT}
+            for name in fieldnames(typeof(model))
+                @test getfield(same, name) === getfield(model, name)
+            end
+
             adapted_longwave =
                 LongwaveOptics(zero(longwave.optical_depth),
                                           zero(longwave.source);
