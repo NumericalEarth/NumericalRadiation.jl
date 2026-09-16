@@ -61,6 +61,11 @@ const REQUIRED_EXPORTS = (
     :streaming_longwave_fluxes!,
     :ShortwaveColumnScratch,
     :streaming_shortwave_fluxes!,
+    :SpectralCloudOptics,
+    :effective_radius_bracket,
+    :cloud_layer_optics,
+    :add_scattering_layer,
+    :cloud_absorption_optical_depth,
 )
 
 function exported_symbol_status(name)
