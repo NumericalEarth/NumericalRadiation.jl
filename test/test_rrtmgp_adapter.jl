@@ -120,7 +120,7 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
         cstate.t_sfc[1] = 300.0
         cvmr = cstate.vmr.vmr
         fill!(cvmr, 0.0)
-        gas_indices = canonical.solver.lookups.lookups.idx_gases_sw
+        gas_indices = canonical.solver.lookups.idx_gases_sw
         haskey(gas_indices, "co2") && (cvmr[gas_indices["co2"]] = 400e-6)
         haskey(gas_indices, "ch4") && (cvmr[gas_indices["ch4"]] = 1.8e-6)
         haskey(gas_indices, "n2o") && (cvmr[gas_indices["n2o"]] = 330e-9)
@@ -132,19 +132,19 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
         canonical.solver.sws.bcs.toa_flux .= 1361.0
         canonical.solver.sws.bcs.sfc_alb_direct .= 0.1
         canonical.solver.sws.bcs.sfc_alb_diffuse .= 0.1
-        Base.invokelatest(RRTMGP.update_lw_fluxes!, canonical.solver)
-        Base.invokelatest(RRTMGP.update_sw_fluxes!, canonical.solver)
+        RRTMGP.update_lw_fluxes!(canonical.solver)
+        RRTMGP.update_sw_fluxes!(canonical.solver)
+        canonical_lw_up = RRTMGP.lw_flux_up(canonical.solver)
+        canonical_lw_dn = RRTMGP.lw_flux_dn(canonical.solver)
+        canonical_sw_up = RRTMGP.sw_flux_up(canonical.solver)
+        canonical_sw_dn = RRTMGP.sw_flux_dn(canonical.solver)
 
         for k in 1:(nlayers + 1)
             kr = nlayers + 2 - k
-            @test adapter_fluxes.longwave_up[k] ≈
-                  canonical.solver.lws.flux.flux_up[kr, 1] rtol = 1e-10
-            @test adapter_fluxes.longwave_down[k] ≈
-                  canonical.solver.lws.flux.flux_dn[kr, 1] rtol = 1e-10
-            @test adapter_fluxes.shortwave_up[k] ≈
-                  canonical.solver.sws.flux.flux_up[kr, 1] rtol = 1e-10
-            @test adapter_fluxes.shortwave_down[k] ≈
-                  canonical.solver.sws.flux.flux_dn[kr, 1] rtol = 1e-10
+            @test adapter_fluxes.longwave_up[k] ≈ canonical_lw_up[kr, 1] rtol = 1e-10
+            @test adapter_fluxes.longwave_down[k] ≈ canonical_lw_dn[kr, 1] rtol = 1e-10
+            @test adapter_fluxes.shortwave_up[k] ≈ canonical_sw_up[kr, 1] rtol = 1e-10
+            @test adapter_fluxes.shortwave_down[k] ≈ canonical_sw_dn[kr, 1] rtol = 1e-10
         end
     end
 

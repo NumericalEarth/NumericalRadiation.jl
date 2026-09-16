@@ -5,11 +5,11 @@ using ClimaComms
 using NCDatasets
 using RRTMGP
 
-using RRTMGP: ClearSkyRadiation, RRTMGPGridParams, RRTMGPSolver
+using RRTMGP: ClearSkyRadiation, RRTMGPGridParams, RRTMGPSolver, lookup_tables
 using RRTMGP.AtmosphericStates: AtmosphericState
 using RRTMGP.BCs: LwBCs, SwBCs
 using RRTMGP.Parameters: RRTMGPParameters
-using RRTMGP.Vmrs: init_vmr
+using RRTMGP.VolumeMixingRatios: VmrGM
 
 struct RRTMGPClearSkyModel{FT, C}
     context::C
@@ -68,19 +68,32 @@ struct RRTMGPWorkspace{S, AS, SOL}
     solver::SOL
 end
 
+# Zero-initialized global-mean volume mixing ratios: H₂O and O₃ vary per
+# layer, every other gas is a well-mixed scalar (RRTMGP's `VmrGM` layout).
+function initialize_global_mean_vmr(ngas, nlayers, ncol, FT, array_type)
+    vmr_h2o = array_type{FT}(undef, nlayers, ncol)
+    vmr_o3 = array_type{FT}(undef, nlayers, ncol)
+    vmr = array_type{FT}(undef, ngas)
+    fill!(vmr_h2o, zero(FT))
+    fill!(vmr_o3, zero(FT))
+    fill!(vmr, zero(FT))
+    return VmrGM(vmr_h2o, vmr_o3, vmr)
+end
+
 function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
                                                    atmosphere::ColumnAtmosphere;
                                                    backend = nothing) where FT
     nlayers = length(atmosphere.temperature_layers)
     ncol = 1
-    grid_params = RRTMGPGridParams(FT; context = model.context, nlay = nlayers, ncol)
+    grid_params = RRTMGPGridParams(FT; context = model.context, domain_nlay = nlayers, ncol)
     array_type = ClimaComms.array_type(ClimaComms.device(model.context))
 
+    # Read the NetCDF lookup tables once and hand the bundle to the solver.
     radiation_method = ClearSkyRadiation(false)
-    lookup_probe = RRTMGP.lookup_tables(grid_params, radiation_method)
-    ngas = lookup_probe.lu_kwargs.ngas_sw
-    nbnd_lw = lookup_probe.lu_kwargs.nbnd_lw
-    nbnd_sw = lookup_probe.lu_kwargs.nbnd_sw
+    lookups = lookup_tables(grid_params, radiation_method)
+    ngas = lookups.ngas_sw
+    nbnd_lw = lookups.nbnd_lw
+    nbnd_sw = lookups.nbnd_sw
 
     longitude = array_type{FT}(zeros(ncol))
     latitude = array_type{FT}(zeros(ncol))
@@ -88,7 +101,7 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
     pressure_interfaces = array_type{FT}(undef, nlayers + 1, ncol)
     temperature_interfaces = array_type{FT}(undef, nlayers + 1, ncol)
     surface_temperature = array_type{FT}(undef, ncol)
-    vmr = init_vmr(ngas, nlayers, ncol, FT, array_type; gm = true)
+    vmr = initialize_global_mean_vmr(ngas, nlayers, ncol, FT, array_type)
     atmospheric_state = AtmosphericState(longitude,
                                          latitude,
                                          layerdata,
@@ -110,7 +123,8 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
                           model.parameters,
                           lw_bcs,
                           sw_bcs,
-                          atmospheric_state)
+                          atmospheric_state;
+                          lookups)
     return RRTMGPWorkspace(grid_params, atmospheric_state, solver)
 end
 
@@ -168,7 +182,7 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
 
     vmr = state.vmr.vmr
     fill!(vmr, zero(FT))
-    gas_indices = workspace.solver.lookups.lookups.idx_gases_sw
+    gas_indices = workspace.solver.lookups.idx_gases_sw
     haskey(gas_indices, "co2") && (vmr[gas_indices["co2"]] = co2)
     haskey(gas_indices, "ch4") && (vmr[gas_indices["ch4"]] = ch4)
     haskey(gas_indices, "n2o") && (vmr[gas_indices["n2o"]] = n2o)
@@ -202,16 +216,21 @@ function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
 
     fill_atmospheric_state!(workspace, model, atmosphere, boundary)
     solver = workspace.solver
-    Base.invokelatest(RRTMGP.update_lw_fluxes!, solver)
-    Base.invokelatest(RRTMGP.update_sw_fluxes!, solver)
+    RRTMGP.update_lw_fluxes!(solver)
+    RRTMGP.update_sw_fluxes!(solver)
     # RRTMGP level fluxes are bottom-at-index-1; reverse back to the
-    # package's top-down convention.
+    # package's top-down convention. The `(nlayers + 1, ncol)` views are
+    # RRTMGP's public flux accessors, refreshed by the update calls above.
+    lw_up = RRTMGP.lw_flux_up(solver)
+    lw_dn = RRTMGP.lw_flux_dn(solver)
+    sw_up = RRTMGP.sw_flux_up(solver)
+    sw_dn = RRTMGP.sw_flux_dn(solver)
     for k in 1:(nlayers + 1)
         kr = nlayers + 2 - k
-        fluxes.longwave_up[k] = solver.lws.flux.flux_up[kr, 1]
-        fluxes.longwave_down[k] = solver.lws.flux.flux_dn[kr, 1]
-        fluxes.shortwave_up[k] = solver.sws.flux.flux_up[kr, 1]
-        fluxes.shortwave_down[k] = solver.sws.flux.flux_dn[kr, 1]
+        fluxes.longwave_up[k] = lw_up[kr, 1]
+        fluxes.longwave_down[k] = lw_dn[kr, 1]
+        fluxes.shortwave_up[k] = sw_up[kr, 1]
+        fluxes.shortwave_down[k] = sw_dn[kr, 1]
     end
     return fluxes
 end
