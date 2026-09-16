@@ -29,6 +29,7 @@ export surface_longwave_emission, TabulatedSurfaceEmission, streaming_longwave_f
 export GasOpticsStencil, gas_optics_stencil, layer_gases, gas_names
 export longwave_optical_depth, shortwave_optical_depth, h2o_table_optical_depth
 export rayleigh_optical_depth, longwave_source, source_table_bracket
+export ShortwaveColumnScratch, streaming_shortwave_fluxes!
 export reference_ecckd_model_inventory, reference_ecckd_definition_path,
        reference_ecckd_definition_paths, reference_ecckd_model_specs,
        reference_ecckd_model_spec, ecrad_data_path, ecckd_source_path
@@ -78,6 +79,7 @@ include("io/ecckd_definition.jl")
 include("io/cloud_scattering.jl")
 include("solvers/cloudless_longwave.jl")
 include("solvers/cloudless_shortwave.jl")
+include("solvers/streaming_shortwave.jl")
 include("solvers/cloud_optics.jl")
 include("solvers/cloud_overlap_shortwave.jl")
 include("solvers/cloud_overlap_longwave.jl")

@@ -59,6 +59,8 @@ const REQUIRED_EXPORTS = (
     :source_table_bracket,
     :TabulatedSurfaceEmission,
     :streaming_longwave_fluxes!,
+    :ShortwaveColumnScratch,
+    :streaming_shortwave_fluxes!,
 )
 
 function exported_symbol_status(name)

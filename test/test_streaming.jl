@@ -871,4 +871,274 @@ Base.@noinline measure_surface_index(surface, ig) = @allocated surface[ig]
     end
 end
 
+# ---------------------------------------------------------------------------
+# Streaming shortwave solver
+#
+# `streaming_shortwave_fluxes!` is the kernel-facing form of the ecRad
+# two-stream adding method that `ecrad_shortwave_column!` runs on the arrays of
+# a `ShortwaveOptics`: g points stream through one `ShortwaveColumnScratch`,
+# the weighted fluxes accumulate in place, and nothing is allocated. These
+# tests pin it against (1) the per-g-point wrapper and the array solver
+# `radiative_fluxes!(…, CloudlessShortwave(), …)`, (2) the adding algorithm as
+# it stood before the scratch refactor, copied below, (3) exact zeros at night
+# and (4) zero allocation.
+
+# Layer-optics functor over plain matrices, the way a host kernel supplies
+# optics: `(ig, k) -> (τ_absorption, τ_scattering, asymmetry)`.
+struct MatrixLayerOptics{M}
+    absorption::M
+    scattering::M
+    asymmetry::M
+end
+
+@inline (optics::MatrixLayerOptics)(ig, k) =
+    (optics.absorption[ig, k], optics.scattering[ig, k], optics.asymmetry[ig, k])
+
+# A 3-g-point, 6-layer column with Rayleigh scattering in every layer, a mix
+# of forward- and back-scattering asymmetries and per-g-point albedos.
+function shortwave_fixture(FT)
+    ng, nlayers = 3, 6
+    absorption = FT[0.02 * ig * (1 + 0.3 * k) for ig in 1:ng, k in 1:nlayers]
+    scattering = FT[0.05 * (4 - ig) * (1 + 0.1 * k) for ig in 1:ng, k in 1:nlayers]
+    asymmetry = FT[clamp(0.3 * (k - 2) - 0.1 * ig, -1, 1) for ig in 1:ng, k in 1:nlayers]
+    weights = FT[0.2, 0.3, 0.5]
+    direct_albedo = FT[0.05, 0.15, 0.25]
+    diffuse_albedo = FT[0.1, 0.2, 0.3]
+    optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering,
+                             scattering_asymmetry = asymmetry, weights)
+    layer_optics = MatrixLayerOptics(absorption, scattering, asymmetry)
+    return (; ng, nlayers, optics, layer_optics, weights, direct_albedo, diffuse_albedo)
+end
+
+# The adding algorithm of `ecrad_shortwave_column!` before it became a wrapper
+# over the streaming solver (per-layer temporaries, `inv_denominator` stored),
+# kept as the reference the refactor must reproduce bitwise.
+function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{FT}, layer_optics, ig,
+                                  μ0, incoming_horizontal, surface_albedo, surface_albedo_direct,
+                                  nlayers) where FT
+    incoming_normal = incoming_horizontal / μ0
+    reflectance = Vector{FT}(undef, nlayers)
+    transmittance = Vector{FT}(undef, nlayers)
+    ref_dir = Vector{FT}(undef, nlayers)
+    trans_dir_diff = Vector{FT}(undef, nlayers)
+    trans_dir_dir = Vector{FT}(undef, nlayers)
+    for k in 1:nlayers
+        τ_absorption, τ_scattering, asymmetry = layer_optics(ig, k)
+        absorption_tau = max(FT(τ_absorption), zero(FT))
+        rayleigh_tau = max(FT(τ_scattering), zero(FT))
+        total_tau = absorption_tau + rayleigh_tau
+        ssa = total_tau == zero(FT) ? zero(FT) : rayleigh_tau / total_tau
+        g = clamp(FT(asymmetry), -one(FT), one(FT))
+        reflectance[k], transmittance[k], ref_dir[k], trans_dir_diff[k], trans_dir_dir[k] =
+            NumericalRadiation.sw_two_stream_layer(FT, μ0, total_tau, ssa, g)
+    end
+    flux_direct = Vector{FT}(undef, nlayers + 1)
+    flux_diffuse = Vector{FT}(undef, nlayers + 1)
+    source = Vector{FT}(undef, nlayers + 1)
+    stack_albedo = Vector{FT}(undef, nlayers + 1)
+    inv_denominator = Vector{FT}(undef, nlayers)
+    flux_direct[1] = incoming_normal
+    for k in 1:nlayers
+        flux_direct[k + 1] = flux_direct[k] * trans_dir_dir[k]
+    end
+    stack_albedo[nlayers + 1] = surface_albedo
+    source[nlayers + 1] = surface_albedo_direct * flux_direct[nlayers + 1] * μ0
+    for k in nlayers:-1:1
+        below = stack_albedo[k + 1]
+        inv_denominator[k] = inv(one(FT) - below * reflectance[k])
+        stack_albedo[k] = reflectance[k] +
+            transmittance[k] * transmittance[k] * below * inv_denominator[k]
+        source[k] = ref_dir[k] * flux_direct[k] +
+            transmittance[k] *
+            (source[k + 1] + below * trans_dir_diff[k] * flux_direct[k]) *
+            inv_denominator[k]
+    end
+    flux_diffuse[1] = zero(FT)
+    up[1] += source[1]
+    down[1] += flux_direct[1] * μ0
+    for k in 1:nlayers
+        flux_diffuse[k + 1] =
+            (transmittance[k] * flux_diffuse[k] +
+             reflectance[k] * source[k + 1] +
+             trans_dir_diff[k] * flux_direct[k]) * inv_denominator[k]
+        up[k + 1] += stack_albedo[k + 1] * flux_diffuse[k + 1] + source[k + 1]
+        down[k + 1] += flux_diffuse[k + 1] + flux_direct[k + 1] * μ0
+    end
+    return nothing
+end
+
+function streamed_shortwave(fixture, FT, μ0, toa_irradiance)
+    (; ng, nlayers, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+    up = fill(FT(NaN), nlayers + 1)   # the solver must zero its outputs
+    down = fill(FT(NaN), nlayers + 1)
+    scratch = ShortwaveColumnScratch(FT, nlayers)
+    streaming_shortwave_fluxes!(up, down, layer_optics, μ0, toa_irradiance,
+                                direct_albedo, diffuse_albedo, weights, ng, nlayers, scratch)
+    return up, down
+end
+
+@testset "ShortwaveColumnScratch" begin
+    for FT in (Float64, Float32)
+        scratch = ShortwaveColumnScratch(FT, 5)
+        @test scratch isa ShortwaveColumnScratch{Vector{FT}}
+        @test eltype(scratch) === FT
+        for name in (:reflectance, :transmittance, :direct_reflectance,
+                     :direct_diffuse_transmittance, :direct_transmittance)
+            @test length(getfield(scratch, name)) == 5
+        end
+        @test length(scratch.stack_albedo) == 6
+        @test length(scratch.source) == 6
+    end
+    # Views of a host's own row-major column arrays are accepted as scratch.
+    layers, interfaces = zeros(2, 5), zeros(2, 6)
+    scratch = ShortwaveColumnScratch(view(layers, 1, :), view(layers, 2, :), view(layers, 1, :),
+                                     view(layers, 2, :), view(layers, 1, :),
+                                     view(interfaces, 1, :), view(interfaces, 2, :))
+    @test eltype(scratch) === Float64
+end
+
+@testset "streaming shortwave reproduces the adding solver, $FT" for FT in (Float64, Float32)
+    fixture = shortwave_fixture(FT)
+    (; ng, nlayers, optics, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+    S0 = FT(1361)
+    tolerance = FT === Float64 ? 1e-12 : 20 * eps(Float32)
+    for μ0 in FT[1, 0.5, 0.1]
+        toa_irradiance = S0 * μ0
+        up, down = streamed_shortwave(fixture, FT, μ0, toa_irradiance)
+        @test all(isfinite, up) && all(isfinite, down)
+        @test down[1] == toa_irradiance
+        @test up[1] > 0 && down[end] > 0
+
+        # Weighted sum of the per-g-point wrapper, and the pre-refactor
+        # reference algorithm: the same arithmetic in the same order.
+        wrapped_up, wrapped_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+        reference_up, reference_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+        for ig in 1:ng
+            scratch_up, scratch_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+            NumericalRadiation.ecrad_shortwave_column!(scratch_up, scratch_down, optics, ig, μ0,
+                                                       toa_irradiance, diffuse_albedo[ig],
+                                                       direct_albedo[ig])
+            wrapped_up .+= weights[ig] .* scratch_up
+            wrapped_down .+= weights[ig] .* scratch_down
+            scratch_up, scratch_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+            reference_adding_column!(scratch_up, scratch_down, layer_optics, ig, μ0, toa_irradiance,
+                                     diffuse_albedo[ig], direct_albedo[ig], nlayers)
+            reference_up .+= weights[ig] .* scratch_up
+            reference_down .+= weights[ig] .* scratch_down
+        end
+        @test up ≈ wrapped_up rtol = tolerance
+        @test down ≈ wrapped_down rtol = tolerance
+        @test up == reference_up
+        @test down == reference_down
+
+        # The array solver with solar geometry and per-g-point albedos.
+        fluxes = RadiativeFluxes(longwave_up = zeros(FT, nlayers + 1),
+                                 longwave_down = zeros(FT, nlayers + 1),
+                                 shortwave_up = zeros(FT, nlayers + 1),
+                                 shortwave_down = zeros(FT, nlayers + 1))
+        radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ0)),
+                          ShortwaveBoundaryConditions(toa_shortwave_down = toa_irradiance,
+                                                      surface_albedo = diffuse_albedo,
+                                                      surface_albedo_direct = direct_albedo))
+        @test fluxes.shortwave_up ≈ up rtol = tolerance
+        @test fluxes.shortwave_down ≈ down rtol = tolerance
+    end
+
+    # Broadband albedos are accepted in place of per-g-point vectors.
+    μ0 = FT(0.5)
+    up, down = streamed_shortwave(fixture, FT, μ0, S0 * μ0)
+    scalar_up, scalar_down = fill(FT(NaN), nlayers + 1), fill(FT(NaN), nlayers + 1)
+    streaming_shortwave_fluxes!(scalar_up, scalar_down, layer_optics, μ0, S0 * μ0, FT(0.15), FT(0.2),
+                                weights, ng, nlayers, ShortwaveColumnScratch(FT, nlayers))
+    @test all(isfinite, scalar_up) && all(isfinite, scalar_down)
+    @test scalar_down[1] == down[1]
+    @test scalar_up != up
+end
+
+@testset "streaming shortwave mixes Beer-Lambert and adding g points" begin
+    # A g point without scattering takes the closed-form Beer-Lambert branch of
+    # `radiative_fluxes!`; the others take the adding method. The broadband
+    # result is the weighted sum of both.
+    nlayers = 3
+    absorption = [0.1 0.2 0.3; 0.05 0.1 0.15]
+    scattering = [0.0 0.0 0.0; 0.02 0.03 0.04]
+    weights = [0.4, 0.6]
+    optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering, weights)
+    μ0, S0, albedo = 0.5, 1361.0, 0.2
+    fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1), longwave_down = zeros(nlayers + 1),
+                             shortwave_up = zeros(nlayers + 1), shortwave_down = zeros(nlayers + 1))
+    radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ0)),
+                      ShortwaveBoundaryConditions(toa_shortwave_down = S0 * μ0, surface_albedo = albedo))
+
+    τ_cumulative = [0.0; cumsum(absorption[1, :])]
+    beer_down = S0 * μ0 .* exp.(-τ_cumulative ./ μ0)
+    beer_up = albedo * beer_down[end] .* exp.(-(τ_cumulative[end] .- τ_cumulative) ./ μ0)
+    # Streamed through the adding method, the scattering-free g point is
+    # Beer-Lambert too, up to rounding.
+    up, down = zeros(nlayers + 1), zeros(nlayers + 1)
+    streaming_shortwave_fluxes!(up, down, MatrixLayerOptics(absorption, scattering, zero(absorption)),
+                                μ0, S0 * μ0, albedo, albedo, (1.0,), 1, nlayers,
+                                ShortwaveColumnScratch(Float64, nlayers))
+    @test down ≈ beer_down rtol = 1e-10
+    @test up ≈ beer_up rtol = 1e-10
+    scratch_up, scratch_down = zeros(nlayers + 1), zeros(nlayers + 1)
+    NumericalRadiation.ecrad_shortwave_column!(scratch_up, scratch_down, optics, 2, μ0, S0 * μ0, albedo)
+    @test fluxes.shortwave_down ≈ weights[1] .* beer_down .+ weights[2] .* scratch_down rtol = 1e-12
+    @test fluxes.shortwave_up ≈ weights[1] .* beer_up .+ weights[2] .* scratch_up rtol = 1e-12
+end
+
+@testset "streaming shortwave is exactly zero at night, $FT" for FT in (Float64, Float32)
+    fixture = shortwave_fixture(FT)
+    S0 = FT(1361)
+    # The host convention `toa_irradiance = S0 max(μ0, 0)`: the sun below or
+    # on the horizon gives identically zero fluxes without a branch.
+    for μ0 in FT[0, -0.3, -1]
+        up, down = streamed_shortwave(fixture, FT, μ0, S0 * max(μ0, zero(FT)))
+        @test all(iszero, up)
+        @test all(iszero, down)
+        @test !any(signbit, up) && !any(signbit, down)
+    end
+    # A nonzero irradiance at μ0 = 0 is treated as grazing incidence, like
+    # `sw_path_factor`: finite, with the given horizontal flux at the top.
+    up, down = streamed_shortwave(fixture, FT, zero(FT), S0)
+    @test all(isfinite, up) && all(isfinite, down)
+    @test down[1] ≈ S0 rtol = 1e-6
+    @test down[end] < S0
+end
+
+Base.@noinline measure_streaming_shortwave(up, down, layer_optics, μ0, toa, α_dir, α_dif, weights,
+                                           ng, nlayers, scratch) =
+    @allocated streaming_shortwave_fluxes!(up, down, layer_optics, μ0, toa, α_dir, α_dif, weights,
+                                           ng, nlayers, scratch)
+
+@testset "streaming shortwave is inferrable and allocation-free, $FT" for FT in (Float64, Float32)
+    fixture = shortwave_fixture(FT)
+    (; ng, nlayers, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+    up, down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+    scratch = ShortwaveColumnScratch(FT, nlayers)
+    μ0, toa = FT(0.5), FT(1361) * FT(0.5)
+    @test (@inferred streaming_shortwave_fluxes!(up, down, layer_optics, μ0, toa, direct_albedo,
+                                                 diffuse_albedo, weights, ng, nlayers, scratch)) === nothing
+    for _ in 1:2   # compile on the first pass, measure on the second
+        @test measure_streaming_shortwave(up, down, layer_optics, μ0, toa, direct_albedo, diffuse_albedo,
+                                          weights, ng, nlayers, scratch) == 0
+        # Scalar albedos and a tuple of weights, as a host with one g point passes.
+        @test measure_streaming_shortwave(up, down, layer_optics, μ0, toa, FT(0.1), FT(0.2),
+                                          (one(FT),), 1, nlayers, scratch) == 0
+    end
+    # Views of host matrices as scratch and flux storage allocate nothing either.
+    layers, interfaces = zeros(FT, 5, nlayers), zeros(FT, 4, nlayers + 1)
+    view_scratch = ShortwaveColumnScratch(view(layers, 1, :), view(layers, 2, :), view(layers, 3, :),
+                                          view(layers, 4, :), view(layers, 5, :),
+                                          view(interfaces, 1, :), view(interfaces, 2, :))
+    view_up, view_down = view(interfaces, 3, :), view(interfaces, 4, :)
+    for _ in 1:2
+        @test measure_streaming_shortwave(view_up, view_down, layer_optics, μ0, toa, direct_albedo,
+                                          diffuse_albedo, weights, ng, nlayers, view_scratch) == 0
+    end
+    streaming_shortwave_fluxes!(up, down, layer_optics, μ0, toa, direct_albedo, diffuse_albedo,
+                                weights, ng, nlayers, scratch)
+    @test view_up == up && view_down == down
+end
+
 end # module TestStreaming
