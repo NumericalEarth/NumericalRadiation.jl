@@ -26,6 +26,9 @@ export EcCKDDefinition, EcCKDSchemaSummary, EcCKDModelSpec
 export read_ecckd_definition, summarize_ecckd_definition, validate_ecckd_definition
 export read_ecckd_tabulated_gas_optics, read_reference_ecckd_gas_optics
 export surface_longwave_emission
+export GasOpticsStencil, gas_optics_stencil, layer_gases, gas_names
+export longwave_optical_depth, shortwave_optical_depth, h2o_table_optical_depth
+export rayleigh_optical_depth, longwave_source, source_table_bracket
 export reference_ecckd_model_inventory, reference_ecckd_definition_path,
        reference_ecckd_definition_paths, reference_ecckd_model_specs,
        reference_ecckd_model_spec, ecrad_data_path, ecckd_source_path
@@ -79,6 +82,7 @@ include("solvers/cloud_optics.jl")
 include("solvers/cloud_overlap_shortwave.jl")
 include("solvers/cloud_overlap_longwave.jl")
 include("gas_optics/ecckd_forward.jl")
+include("gas_optics/ecckd_layer.jl")
 include("metrics.jl")
 
 end # module

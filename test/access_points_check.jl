@@ -47,6 +47,16 @@ const REQUIRED_EXPORTS = (
     :radiative_heating!,
     :radiation_workspace,
     :add_mapped_cloud_scattering!,
+    :GasOpticsStencil,
+    :gas_optics_stencil,
+    :layer_gases,
+    :gas_names,
+    :longwave_optical_depth,
+    :shortwave_optical_depth,
+    :h2o_table_optical_depth,
+    :rayleigh_optical_depth,
+    :longwave_source,
+    :source_table_bracket,
 )
 
 function exported_symbol_status(name)

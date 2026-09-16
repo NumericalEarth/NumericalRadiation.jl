@@ -31,6 +31,16 @@ AerosolOptics
 LayerAerosolOpticsModel
 add_aerosol_optical_depths!
 optical_properties!
+GasOpticsStencil
+gas_optics_stencil
+layer_gases
+gas_names
+longwave_optical_depth
+shortwave_optical_depth
+h2o_table_optical_depth
+rayleigh_optical_depth
+longwave_source
+source_table_bracket
 cloud_optical_properties!
 cloudy_region_optical_properties!
 aerosol_optical_properties!
@@ -41,4 +51,3 @@ read_cloud_scattering_table
 cloud_scattering_properties
 cloud_scattering_gpoint_properties
 ```
-

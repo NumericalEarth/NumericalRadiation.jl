@@ -67,7 +67,15 @@ function EcCKDGasOpticsModel(; names,
 end
 
 Base.eltype(::EcCKDGasOpticsModel{FT}) where FT = FT
-gas_names(::EcCKDGasOpticsModel{<:Any, GasNames}) where GasNames = GasNames
+
+"""
+$(TYPEDSIGNATURES)
+
+Gas names of an ecCKD gas-optics model as a `Tuple` of `Symbol`s, in the gas
+order of its absorption tables. Layer gas containers passed to the layer
+optical-depth functions are keyed by these names.
+"""
+@inline gas_names(::EcCKDGasOpticsModel{<:Any, GasNames}) where GasNames = GasNames
 
 """
 $(TYPEDEF)
@@ -229,7 +237,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
 end
 
 Base.eltype(::EcCKDTabulatedGasOpticsModel{FT}) where FT = FT
-gas_names(::EcCKDTabulatedGasOpticsModel{<:Any, GasNames}) where GasNames = GasNames
+@inline gas_names(::EcCKDTabulatedGasOpticsModel{<:Any, GasNames}) where GasNames = GasNames
 
 @inline function gas_value(gases::NamedTuple, name::Symbol, k)
     value = getproperty(gases, name)
@@ -397,8 +405,8 @@ end
 end
 
 # `log_bracket` needs two grid points. Models without a dynamic H2O table carry
-# an empty grid, and `dynamic_h2o_tau` short-circuits before the bracket is ever
-# indexed, so return a same-typed placeholder in that case.
+# an empty grid, and `h2o_table_optical_depth` short-circuits before the bracket
+# is ever indexed, so return a same-typed placeholder in that case.
 @inline function h2o_axis_bracket(h2o_grid, h2o_mole_fraction)
     length(h2o_grid) < 2 &&
         return firstindex(h2o_grid), firstindex(h2o_grid), zero(eltype(h2o_grid))
@@ -681,25 +689,33 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
     nlayers = length(atmosphere.temperature_layers)
     names = gas_names(model)
 
+    # Each layer is one call into the scalar layer API of `ecckd_layer.jl`
+    # with its gas amounts picked out as scalars, so a host kernel that calls
+    # those functions directly reproduces this loop bit for bit.
     for k in 1:nlayers
-        source = FT(5.670374419e-8) * source_temperature(atmosphere, k)^4
+        temperature = source_temperature(atmosphere, k)
+        gases = layer_gases(atmosphere.gases, Val(names), k)
+        # Fixed coefficients: the stencil and source bracket are `nothing`, and
+        # the pressure and H2O arguments they would have consumed are unused.
+        stencil = gas_optics_stencil(model, nothing, temperature, nothing)
+        source_bracket = source_table_bracket(model, temperature)
 
         for ig in axes(model.longwave_absorption, 1)
-            longwave.optical_depth[ig, k] =
-                accumulate_tau(atmosphere.gases, model.longwave_absorption, Val(names), ig, k)
-            longwave.source[ig, k] = model.longwave_source_scale[ig] * source
+            longwave.optical_depth[ig, k] = longwave_optical_depth(model, ig, gases, stencil)
+            longwave.source[ig, k] = longwave_source(model, ig, temperature, source_bracket)
             if longwave.source_top !== nothing && longwave.source_bottom !== nothing
-                source_top = FT(5.670374419e-8) * atmosphere.temperature_interfaces[k]^4
-                source_bottom = FT(5.670374419e-8) * atmosphere.temperature_interfaces[k + 1]^4
-                longwave.source_top[ig, k] = model.longwave_source_scale[ig] * source_top
-                longwave.source_bottom[ig, k] = model.longwave_source_scale[ig] * source_bottom
+                temperature_top = atmosphere.temperature_interfaces[k]
+                temperature_bottom = atmosphere.temperature_interfaces[k + 1]
+                longwave.source_top[ig, k] =
+                    longwave_source(model, ig, temperature_top, source_bracket)
+                longwave.source_bottom[ig, k] =
+                    longwave_source(model, ig, temperature_bottom, source_bracket)
             end
         end
 
         for ig in axes(model.shortwave_absorption, 1)
-            shortwave.optical_depth[ig, k] =
-                accumulate_tau(atmosphere.gases, model.shortwave_absorption, Val(names), ig, k)
-            shortwave.rayleigh_optical_depth[ig, k] = zero(FT)
+            shortwave.optical_depth[ig, k] = shortwave_optical_depth(model, ig, gases, stencil)
+            shortwave.rayleigh_optical_depth[ig, k] = rayleigh_optical_depth(model, ig, nothing)
             shortwave.scattering_asymmetry[ig, k] = zero(FT)
         end
     end
@@ -709,43 +725,23 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
     return longwave, shortwave
 end
 
-@inline function rayleigh_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
-                                         atmosphere::ColumnAtmosphere,
-                                         ig,
-                                         k) where FT
-    length(model.shortwave_rayleigh_molar_scattering) == 0 && return zero(FT)
-    Δp = atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]
-    air_molar_mass = FT(28.9647)
-    gravity = FT(9.80665)
-    return FT(model.shortwave_rayleigh_molar_scattering[ig]) * FT(Δp) /
-           (gravity * FT(0.001) * air_molar_mass)
-end
-
 @inline has_dynamic_h2o(model::EcCKDTabulatedGasOpticsModel) =
     length(model.h2o_mole_fraction_grid) > 0
 
+@inline layer_pressure_thickness(atmosphere::ColumnAtmosphere, k) =
+    atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]
+
+# Layer H2O mole fraction relative to dry air for the H2O-axis bracket: the
+# `composite` amount when the column carries one, else the hydrostatic molar
+# amount of the layer, `Δp / (g mᵈ)`.
 @inline function layer_h2o_mole_fraction(::Type{FT},
                                     atmosphere::ColumnAtmosphere,
                                     k) where FT
     h2o_moles = max(FT(gas_value(atmosphere.gases, :h2o, k)), zero(FT))
     dry_air_moles = has_gas(atmosphere.gases, :composite) ?
         max(FT(gas_value(atmosphere.gases, :composite, k)), sqrt(eps(FT))) :
-        max(FT(atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]) /
-            (FT(9.80665) * FT(0.0289647)), sqrt(eps(FT)))
+        max(hydrostatic_air_moles(FT, layer_pressure_thickness(atmosphere, k)), sqrt(eps(FT)))
     return h2o_moles / dry_air_moles
-end
-
-@inline function dynamic_h2o_tau(model::EcCKDTabulatedGasOpticsModel{FT},
-                                  table,
-                                  atmosphere::ColumnAtmosphere,
-                                  ig,
-                                  k,
-                                  stencil,
-                                  h2o_bracket) where FT
-    length(model.h2o_mole_fraction_grid) == 0 && return zero(FT)
-    length(table) == 0 && return zero(FT)
-    coefficient = interp_h2o_table(table, ig, stencil, h2o_bracket)
-    return coefficient * FT(gas_value(atmosphere.gases, :h2o, k))
 end
 
 """
@@ -781,37 +777,21 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         temperature_bottom = interface_sources ?
             atmosphere.temperature_interfaces[k + 1] : temperature
 
-        # Every interpolation bracket below depends only on the layer, so build
-        # them once here instead of once per g point and gas. The absorption
-        # tables are stored as supplied and may differ in element type, hence one
-        # stencil each; the constructor converts both H2O tables to `FT`.
-        longwave_stencil = table_stencil(eltype(model.longwave_absorption),
-                                          model.pressure_grid, model.temperature_grid,
-                                          pressure, temperature)
-        shortwave_stencil = table_stencil(eltype(model.shortwave_absorption),
-                                           model.pressure_grid, model.temperature_grid,
-                                           pressure, temperature)
-        h2o_stencil = table_stencil(FT, model.pressure_grid, model.temperature_grid,
-                                     pressure, temperature)
-        h2o_bracket = h2o_axis_bracket(model.h2o_mole_fraction_grid, h2o_mole_fraction)
+        # Every interpolation bracket depends only on the layer, so build the
+        # stencil once here instead of once per g point and gas. From here on
+        # the layer is scalar: its gas amounts are picked out of the column
+        # container, and each g point is one call into the layer API of
+        # `ecckd_layer.jl`, so a host kernel calling those functions directly
+        # reproduces this loop bit for bit.
+        stencil = gas_optics_stencil(model, pressure, temperature, h2o_mole_fraction)
         source_bracket = source_table_bracket(model, temperature)
         source_top_bracket = source_table_bracket(model, temperature_top)
         source_bottom_bracket = source_table_bracket(model, temperature_bottom)
+        gases = layer_gases(atmosphere.gases, Val(names), k)
+        air_moles = hydrostatic_air_moles(FT, layer_pressure_thickness(atmosphere, k))
 
         for ig in axes(model.longwave_absorption, 1)
-            longwave.optical_depth[ig, k] =
-                accumulate_tabulated_tau(atmosphere.gases, model.longwave_absorption,
-                                          model.gas_reference_mole_fractions,
-                                          Val(names),
-                                          ig, k, longwave_stencil)
-            longwave.optical_depth[ig, k] +=
-                dynamic_h2o_tau(model, model.longwave_h2o_absorption,
-                                 atmosphere, ig, k, h2o_stencil, h2o_bracket)
-            # Relative-linear gases legitimately contribute negative optical
-            # depth below their reference mole fraction; only the summed total
-            # is clamped, matching upstream run_ckd.
-            longwave.optical_depth[ig, k] =
-                max(longwave.optical_depth[ig, k], zero(FT))
+            longwave.optical_depth[ig, k] = longwave_optical_depth(model, ig, gases, stencil)
             longwave.source[ig, k] = longwave_source(model, ig, temperature, source_bracket)
             if interface_sources
                 longwave.source_top[ig, k] =
@@ -822,18 +802,8 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         end
 
         for ig in axes(model.shortwave_absorption, 1)
-            shortwave.optical_depth[ig, k] =
-                accumulate_tabulated_tau(atmosphere.gases, model.shortwave_absorption,
-                                          model.gas_reference_mole_fractions,
-                                          Val(names),
-                                          ig, k, shortwave_stencil)
-            shortwave.optical_depth[ig, k] +=
-                dynamic_h2o_tau(model, model.shortwave_h2o_absorption,
-                                 atmosphere, ig, k, h2o_stencil, h2o_bracket)
-            shortwave.optical_depth[ig, k] =
-                max(shortwave.optical_depth[ig, k], zero(FT))
-            shortwave.rayleigh_optical_depth[ig, k] =
-                rayleigh_optical_depth(model, atmosphere, ig, k)
+            shortwave.optical_depth[ig, k] = shortwave_optical_depth(model, ig, gases, stencil)
+            shortwave.rayleigh_optical_depth[ig, k] = rayleigh_optical_depth(model, ig, air_moles)
             shortwave.scattering_asymmetry[ig, k] = zero(FT)
         end
     end
