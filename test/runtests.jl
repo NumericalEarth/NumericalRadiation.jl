@@ -12,6 +12,7 @@ include_test(filename::AbstractString) = include(joinpath(@__DIR__, filename))
     include_test("test_ecckd_surface_emission_and_clamp.jl")
     include_test("test_streaming.jl")
     include_test("test_spectral_cloud_optics.jl")
+    include_test("test_exact_solutions.jl")
 end
 
 @testset "SpeedyWeather Extension" begin
