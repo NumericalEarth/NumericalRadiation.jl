@@ -3,7 +3,7 @@
 #####
 #
 # Everything in this file is the per-layer, per-g-point core of the ecCKD
-# forward models, written so that a host kernel can call i₀ᵀ with scalar layer
+# forward models, written so that a host kernel can call it with scalar layer
 # state: an interpolation stencil built once per layer, then one optical depth
 # per g point from a `NamedTuple` of scalar layer gas amounts (mol m⁻²). The
 # array methods of `optical_properties!` in `ecckd_forward.jl` are loops over
@@ -20,11 +20,11 @@ Per-layer interpolation stencil for the coefficient tables of an
 [`EcCKDTabulatedGasOpticsModel`](@ref): the `(i₀, i₁, w)` brackets on the
 log-pressure axis, the temperature axis (vector or pressure-dependent matrix
 grid) and the optional H₂O mole-fraction axis. The stencil depends only on the
-layer state, so a host builds i₀ᵀ once per layer with
-[`gas_optics_stencil`](@ref) and reuses i₀ᵀ across every g point and gas.
+layer state, so a host builds it once per layer with
+[`gas_optics_stencil`](@ref) and reuses it across every g point and gas.
 
 `FT` is the model's element type; the struct is `isbits`, and the six stored
-scalars `(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)` rebuild i₀ᵀ through
+scalars `(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)` rebuild it through
 `GasOpticsStencil(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)`. Without an H₂O table the H₂O
 bracket is a placeholder that is never indexed.
 """
@@ -63,7 +63,7 @@ Interpolation stencil of `model` for one layer at `pressure` (Pa),
 `temperature` (K) and H₂O mole fraction `water_vapor_mole_fraction` (mol mol⁻¹,
 relative to dry air; ignored by models without an H₂O table). Off-table inputs
 clamp to the table edges. The stencil is built in the model's element type,
-so the coefficient tables are expected to share i₀ᵀ.
+so the coefficient tables are expected to share it.
 
 Returns `nothing` for an [`EcCKDGasOpticsModel`](@ref), whose coefficients
 are not interpolated.
@@ -208,9 +208,9 @@ Bracket of `temperature` on the model's Planck source-table temperature grid,
 to pass to [`longwave_source`](@ref); `nothing` when the model has no source
 table (an [`EcCKDGasOpticsModel`](@ref), or a tabulated model without one),
 in which case the source is the scaled gray `σT⁴`. Off the table the source
-follows ecRad: above the last node (350 K in the reference tables) i₀ᵀ is
+follows ecRad: above the last node (350 K in the reference tables) it is
 extrapolated linearly from the last interval, below the first node (120 K)
-i₀ᵀ is scaled linearly to zero.
+it is scaled linearly to zero.
 """
 @inline source_table_bracket(::EcCKDGasOpticsModel, temperature) = nothing
 
@@ -238,7 +238,7 @@ Scalar gas amounts of layer `k` as a `NamedTuple` keyed by `Names` (the
 model's gas names), picked from a column gas container whose entries are
 per-layer vectors or column-wide scalars. A `composite` (dry air) entry the
 container carries outside `Names` is kept, since the relative-linear
-convention reads i₀ᵀ. This is how the array `optical_properties!` methods feed
+convention reads it. This is how the array `optical_properties!` methods feed
 [`longwave_optical_depth`](@ref) and [`shortwave_optical_depth`](@ref).
 """
 @generated function layer_gases(gases::NamedTuple{Keys}, ::Val{Names}, k) where {Keys, Names}
