@@ -139,7 +139,7 @@ end
                                          gpoint,
                                          gases::NamedTuple,
                                          s::GasOpticsStencil) where FT
-    τ = accumulate_tabulated_tau(gases, table, model.gas_reference_mole_fractions,
+    τ = accumulate_tabulated_optical_depth(gases, table, model.gas_reference_mole_fractions,
                                  Val(gas_names(model)), gpoint, 1, table_brackets(s))
     water_vapor_moles = water_vapor_layer_amount(FT, gases)
     τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, gpoint, s)
@@ -179,13 +179,13 @@ arguments as the longwave method.
                                gpoint,
                                gases::NamedTuple,
                                ::Nothing) where FT =
-    accumulate_tau(gases, model.longwave_absorption, Val(gas_names(model)), gpoint, 1)
+    accumulate_optical_depth(gases, model.longwave_absorption, Val(gas_names(model)), gpoint, 1)
 
 @inline shortwave_optical_depth(model::EcCKDGasOpticsModel{FT},
                                 gpoint,
                                 gases::NamedTuple,
                                 ::Nothing) where FT =
-    accumulate_tau(gases, model.shortwave_absorption, Val(gas_names(model)), gpoint, 1)
+    accumulate_optical_depth(gases, model.shortwave_absorption, Val(gas_names(model)), gpoint, 1)
 
 """
 $(TYPEDSIGNATURES)

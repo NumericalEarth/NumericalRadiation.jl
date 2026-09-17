@@ -204,12 +204,12 @@ scattering optical depth `τ_scattering`, and scattering-weighted asymmetry
 factor `asymmetry`, returning the updated triple:
 
 ```text
-τₐ′ = τₐ + κ (1 - ω) wp
-τₛ′ = τₛ + κ ω wp
-g′  = (g τₛ + g_cloud κ ω wp) / τₛ′,    or 0 when τₛ′ = 0
+τₐ′ = τₐ + κ (1 - ω) water_path
+τₛ′ = τₛ + κ ω water_path
+g′  = (g τₛ + g_cloud κ ω water_path) / τₛ′,    or 0 when τₛ′ = 0
 ```
 
-The asymmetry update is evaluated as `g + (g_cloud - g) κ ω wp / τₛ′`, which
+The asymmetry update is evaluated as `g + (g_cloud - g) κ ω water_path / τₛ′`, which
 is the same number and leaves the layer bit-for-bit unchanged when
 `water_path = 0`. [`add_mapped_cloud_scattering!`](@ref) applies this per phase
 and per g point.
@@ -247,7 +247,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Longwave cloud absorption optical depth `κ (1 - ω) wp` of `cloud` at g point
+Longwave cloud absorption optical depth `κ (1 - ω) water_path` of `cloud` at g point
 `gpoint` for mass path `water_path` (kg m⁻²) on the effective-radius bracket from
 [`effective_radius_bracket`](@ref); longwave cloud scattering is neglected.
 Zero for a `Nothing` phase.

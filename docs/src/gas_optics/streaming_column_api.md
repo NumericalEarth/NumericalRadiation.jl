@@ -69,7 +69,7 @@ per g point:      longwave_optical_depth(model, gpoint, gases, s)      # LW  τ
                   longwave_source(model, gpoint, T_interface, b)       # LW  B at each interface
                   shortwave_optical_depth(model, gpoint, gases, s)     # SW  τ_absorption
                   rayleigh_optical_depth(model, gpoint, air_moles)     # SW  τ_scattering
-                  add_cloud_scattering_layer(…, cloud, gpoint, b, wp)  # clouds, per phase
+                  add_cloud_scattering_layer(…, cloud, gpoint, b, water_path)  # clouds, per phase
 
 per column:       streaming_longwave_fluxes!(…)
                   streaming_shortwave_fluxes!(…)
@@ -246,12 +246,12 @@ julia> function (layers::ShortwaveLayers)(gpoint, k)
            return τ, rayleigh_optical_depth(model, gpoint, air_moles), 0.0
        end;
 
-julia> μ0, S0, albedo = 0.5, column.constants.solar_constant, 0.1;
+julia> μ₀, S₀, albedo = 0.5, column.constants.solar_constant, 0.1;
 
 julia> shortwave_up, shortwave_down = zeros(nlayers + 1), zeros(nlayers + 1);
 
 julia> streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveLayers(model, column),
-                                   μ0, S0 * max(μ0, 0), albedo, albedo, model.shortwave_weights,
+                                   μ₀, S₀ * max(μ₀, 0), albedo, albedo, model.shortwave_weights,
                                    1, nlayers, ShortwaveColumnScratch(Float64, nlayers));
 
 julia> round.(shortwave_down; digits = 2)
@@ -264,11 +264,11 @@ julia> round.(shortwave_down; digits = 2)
 The same column through the array path — `optical_properties!` into
 `(ng, nlayers)` work arrays with interface Planck sources, then
 `radiative_fluxes!` — gives the same longwave fluxes bit for bit, and at this
-`μ0 = 0.5` the same shortwave fluxes to rounding (this toy model has no
+`μ₀ = 0.5` the same shortwave fluxes to rounding (this toy model has no
 Rayleigh table, so its single shortwave g point takes the Beer–Lambert branch
-of the array solver, which agrees with the adding method only at `μ0 = 1/2`,
+of the array solver, which agrees with the adding method only at `μ₀ = 1/2`,
 see [above](#Agreement-with-the-array-path); with scattering the two would be
-bitwise equal at any `μ0`):
+bitwise equal at any `μ₀`):
 
 ```jldoctest streaming
 julia> atmosphere = ColumnAtmosphere(pressure_layers = column.pressure,
@@ -277,7 +277,7 @@ julia> atmosphere = ColumnAtmosphere(pressure_layers = column.pressure,
                                      temperature_interfaces = column.temperature_interfaces,
                                      gases = (; h2o = column.h2o, co2 = column.co2),
                                      surface = (; temperature = 295.0),
-                                     geometry = (; cos_zenith = μ0));
+                                     geometry = (; cos_zenith = μ₀));
 
 julia> longwave = LongwaveOptics(zeros(2, nlayers), zeros(2, nlayers);
                                  source_top = zeros(2, nlayers),
@@ -298,7 +298,7 @@ julia> radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
                                                     surface_albedo = 0.02));
 
 julia> radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
-                         ShortwaveBoundaryConditions(toa_shortwave_down = S0 * μ0,
+                         ShortwaveBoundaryConditions(toa_shortwave_down = S₀ * μ₀,
                                                      surface_albedo = albedo));
 
 julia> fluxes.longwave_up == longwave_up && fluxes.longwave_down == longwave_down

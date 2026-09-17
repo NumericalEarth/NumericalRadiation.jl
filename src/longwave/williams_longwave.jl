@@ -178,9 +178,9 @@ function solve_longwave!(dTdt::AbstractVector,
 
         for k in nlayers:-1:1
             Δτ_k  = williams_delta_tau(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
-            tr_k  = exp(-Δτ_k)
+            transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
-            U_new::NF = U * tr_k + dν̃ * NF(π) * B_k * (1 - tr_k)
+            U_new::NF = U * transmittance_k + dν̃ * NF(π) * B_k * (1 - transmittance_k)
 
             if k > 1
                 # U_new leaves layer k at the top and enters layer k-1 at the bottom.
@@ -200,9 +200,9 @@ function solve_longwave!(dTdt::AbstractVector,
 
         for k in 1:(nlayers - 1)
             Δτ_k  = williams_delta_tau(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
-            tr_k  = exp(-Δτ_k)
+            transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
-            D_new::NF = D * tr_k + dν̃ * NF(π) * B_k * (1 - tr_k)
+            D_new::NF = D * transmittance_k + dν̃ * NF(π) * B_k * (1 - transmittance_k)
 
             dTdt[k]     -= flux_to_tendency(D_new / cₚ, profile, geometry, constants, k)
             dTdt[k + 1] += flux_to_tendency(D_new / cₚ, profile, geometry, constants, k + 1)
@@ -210,10 +210,10 @@ function solve_longwave!(dTdt::AbstractVector,
         end
 
         # Surface-adjacent layer: the downward flux that reaches the surface.
-        Δτ_nl = williams_delta_tau(nlayers, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
-        tr_nl = exp(-Δτ_nl)
-        B_nl  = planck_wavenumber(T[nlayers], ν̃)
-        D_surf::NF = D * tr_nl + dν̃ * NF(π) * B_nl * (1 - tr_nl)
+        Δτ_bottom = williams_delta_tau(nlayers, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
+        transmittance_bottom = exp(-Δτ_bottom)
+        B_bottom  = planck_wavenumber(T[nlayers], ν̃)
+        D_surf::NF = D * transmittance_bottom + dν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
 
         dTdt[nlayers] -= surface_flux_to_tendency(D_surf / cₚ, profile, geometry, constants)
         D_surf_sum    += D_surf

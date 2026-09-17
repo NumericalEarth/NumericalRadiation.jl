@@ -184,53 +184,53 @@ end
 @inline scattering_asymmetry_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
     optics.scattering_asymmetry[gpoint, k]
 
-@inline function no_scattering_longwave_sources(::Type{FT}, tau, source_top, source_bottom) where FT
+@inline function no_scattering_longwave_sources(::Type{FT}, τ, source_top, source_bottom) where FT
     diffusivity = FT(1.66)
-    coeff = diffusivity * FT(tau)
-    transmittance = exp(-coeff)
-    if tau > FT(1.0e-3)
-        gradient = (FT(source_bottom) - FT(source_top)) / coeff
+    Dτ = diffusivity * FT(τ)
+    transmittance = exp(-Dτ)
+    if τ > FT(1.0e-3)
+        gradient = (FT(source_bottom) - FT(source_top)) / Dτ
         source_up = gradient + FT(source_top) -
             transmittance * (gradient + FT(source_bottom))
         source_down = -gradient + FT(source_bottom) -
             transmittance * (-gradient + FT(source_top))
         return transmittance, source_up, source_down
     end
-    source = coeff * FT(0.5) * (FT(source_top) + FT(source_bottom))
+    source = Dτ * FT(0.5) * (FT(source_top) + FT(source_bottom))
     return transmittance, source, source
 end
 
-@inline function longwave_reflectance_transmittance_sources(::Type{FT}, tau, ssa, asymmetry,
+@inline function longwave_reflectance_transmittance_sources(::Type{FT}, τ, ω, asymmetry,
                                        source_top, source_bottom) where FT
     diffusivity = FT(1.66)
-    scattering = clamp(FT(ssa), zero(FT), one(FT))
+    scattering = clamp(FT(ω), zero(FT), one(FT))
     g = clamp(FT(asymmetry), -one(FT), one(FT))
     factor = (diffusivity * FT(0.5)) * scattering
-    gamma1 = diffusivity - factor * (one(FT) + g)
-    gamma2 = factor * (one(FT) - g)
-    k_exponent = sqrt(max((gamma1 - gamma2) * (gamma1 + gamma2), FT(1.0e-12)))
-    od = max(FT(tau), zero(FT))
-    if od > FT(1.0e-3)
-        exponential = exp(-k_exponent * od)
+    γ₁ = diffusivity - factor * (one(FT) + g)
+    γ₂ = factor * (one(FT) - g)
+    k_exponent = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+    τ = max(FT(τ), zero(FT))
+    if τ > FT(1.0e-3)
+        exponential = exp(-k_exponent * τ)
         exponential2 = exponential * exponential
-        reftrans_factor =
-            inv(k_exponent + gamma1 + (k_exponent - gamma1) * exponential2)
-        reflectance = gamma2 * (one(FT) - exponential2) * reftrans_factor
-        transmittance = FT(2) * k_exponent * exponential * reftrans_factor
-        coeff = (FT(source_bottom) - FT(source_top)) / (od * (gamma1 + gamma2))
-        coeff_up_top = coeff + FT(source_top)
-        coeff_up_bot = coeff + FT(source_bottom)
-        coeff_dn_top = -coeff + FT(source_top)
-        coeff_dn_bot = -coeff + FT(source_bottom)
+        inverse_denominator =
+            inv(k_exponent + γ₁ + (k_exponent - γ₁) * exponential2)
+        reflectance = γ₂ * (one(FT) - exponential2) * inverse_denominator
+        transmittance = FT(2) * k_exponent * exponential * inverse_denominator
+        gradient = (FT(source_bottom) - FT(source_top)) / (τ * (γ₁ + γ₂))
+        source_up_top = gradient + FT(source_top)
+        source_up_bottom = gradient + FT(source_bottom)
+        source_down_top = -gradient + FT(source_top)
+        source_down_bottom = -gradient + FT(source_bottom)
         source_up =
-            coeff_up_top - reflectance * coeff_dn_top - transmittance * coeff_up_bot
+            source_up_top - reflectance * source_down_top - transmittance * source_up_bottom
         source_down =
-            coeff_dn_bot - reflectance * coeff_up_bot - transmittance * coeff_dn_top
+            source_down_bottom - reflectance * source_up_bottom - transmittance * source_down_top
         return reflectance, transmittance, source_up, source_down
     end
-    reflectance = gamma2 * od
-    transmittance = (one(FT) - k_exponent * od) /
-        (one(FT) + od * (gamma1 - k_exponent))
+    reflectance = γ₂ * τ
+    transmittance = (one(FT) - k_exponent * τ) /
+        (one(FT) + τ * (γ₁ - k_exponent))
     source = (one(FT) - reflectance - transmittance) *
         FT(0.5) * (FT(source_top) + FT(source_bottom))
     return reflectance, transmittance, source, source

@@ -63,14 +63,14 @@ Add the `weight`-scaled fluxes of g point `gpoint` to `flux_up` and `flux_down`
 (length `nlayers + 1`, top down), by the two-stream adding method of
 [`streaming_shortwave_fluxes!`](@ref) with scalar `direct_albedo` and
 `diffuse_albedo`. This is the single g-point body that every clear-sky
-shortwave path shares; `μ0` is clamped to `√eps(FT)` here.
+shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
 """
 @inline function add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, gpoint, weight,
-                                              μ0, toa_irradiance, direct_albedo, diffuse_albedo,
+                                              μ₀, toa_irradiance, direct_albedo, diffuse_albedo,
                                               nlayers, scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
-    μ0 = max(FT(μ0), sqrt(eps(FT)))
-    incoming_normal = FT(toa_irradiance) / μ0
+    μ₀ = max(FT(μ₀), sqrt(eps(FT)))
+    incoming_normal = FT(toa_irradiance) / μ₀
     w = FT(weight)
 
     reflectance = scratch.reflectance
@@ -86,13 +86,13 @@ shortwave path shares; `μ0` is clamped to `√eps(FT)` here.
     direct_above = incoming_normal
     @inbounds for k in 1:nlayers
         τ_absorption, τ_scattering, asymmetry = layer_optics(gpoint, k)
-        absorption_tau = max(FT(τ_absorption), zero(FT))
-        scattering_tau = max(FT(τ_scattering), zero(FT))
-        total_tau = absorption_tau + scattering_tau
-        ssa = ifelse(total_tau == zero(FT), zero(FT), scattering_tau / total_tau)
+        τ_absorption = max(FT(τ_absorption), zero(FT))
+        τ_scattering = max(FT(τ_scattering), zero(FT))
+        τ_total = τ_absorption + τ_scattering
+        ω = ifelse(τ_total == zero(FT), zero(FT), τ_scattering / τ_total)
         g = clamp(FT(asymmetry), -one(FT), one(FT))
         reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k],
-            direct_transmittance = shortwave_two_stream_layer(FT, μ0, total_tau, ssa, g)
+            direct_transmittance = shortwave_two_stream_layer(FT, μ₀, τ_total, ω, g)
         direct_above *= direct_transmittance
         direct_flux[k] = direct_above
     end
@@ -101,7 +101,7 @@ shortwave path shares; `μ0` is clamped to `√eps(FT)` here.
     # Bottom up (adding): diffuse albedo and upward diffuse source of the
     # stack below each interface, starting from the surface.
     @inbounds stack_albedo[nlayers + 1] = FT(diffuse_albedo)
-    @inbounds source[nlayers + 1] = FT(direct_albedo) * direct_surface * μ0
+    @inbounds source[nlayers + 1] = FT(direct_albedo) * direct_surface * μ₀
     @inbounds for k in nlayers:-1:1
         below = stack_albedo[k + 1]
         inv_denominator = inv(one(FT) - below * reflectance[k])
@@ -118,7 +118,7 @@ shortwave path shares; `μ0` is clamped to `√eps(FT)` here.
     # fluxes. The denominator is recomputed rather than stored.
     flux_diffuse = zero(FT)
     @inbounds flux_up[1] += w * source[1]
-    @inbounds flux_down[1] += w * (incoming_normal * μ0)
+    @inbounds flux_down[1] += w * (incoming_normal * μ₀)
     direct_above = incoming_normal
     @inbounds for k in 1:nlayers
         below = stack_albedo[k + 1]
@@ -129,7 +129,7 @@ shortwave path shares; `μ0` is clamped to `√eps(FT)` here.
              reflectance[k] * source[k + 1] +
              direct_diffuse_transmittance[k] * direct_above) * inv_denominator
         flux_up[k + 1] += w * (below * flux_diffuse + source[k + 1])
-        flux_down[k + 1] += w * (flux_diffuse + direct_below * μ0)
+        flux_down[k + 1] += w * (flux_diffuse + direct_below * μ₀)
         direct_above = direct_below
     end
 
@@ -163,7 +163,7 @@ night (`μ₀ ≤ 0`).
 
 Allocation-free; `scratch` may hold views into a host's own arrays.
 """
-@inline function streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, μ0, toa_irradiance,
+@inline function streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, μ₀, toa_irradiance,
                                              direct_albedo, diffuse_albedo, weights, ng, nlayers,
                                              scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
@@ -173,7 +173,7 @@ Allocation-free; `scratch` may hold views into a host's own arrays.
     end
     for gpoint in 1:ng
         add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, gpoint,
-                                     @inbounds(weights[gpoint]), μ0, toa_irradiance,
+                                     @inbounds(weights[gpoint]), μ₀, toa_irradiance,
                                      gpoint_albedo(direct_albedo, gpoint),
                                      gpoint_albedo(diffuse_albedo, gpoint),
                                      nlayers, scratch)

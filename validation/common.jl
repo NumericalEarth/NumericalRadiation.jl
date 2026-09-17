@@ -167,10 +167,10 @@ function column_fluxes!(workspace::ColumnWorkspace, model, atmosphere;
 
     shortwave_up = zeros(FT, nlayers + 1, length(cos_zeniths))
     shortwave_down = zeros(FT, nlayers + 1, length(cos_zeniths))
-    for (j, μ0) in enumerate(cos_zeniths)
+    for (j, μ₀) in enumerate(cos_zeniths)
         streaming_shortwave_fluxes!(view(shortwave_up, :, j), view(shortwave_down, :, j),
-                                    ShortwaveLayerOptics(workspace.shortwave), FT(μ0),
-                                    FT(solar_constant) * max(FT(μ0), zero(FT)), FT(albedo), FT(albedo),
+                                    ShortwaveLayerOptics(workspace.shortwave), FT(μ₀),
+                                    FT(solar_constant) * max(FT(μ₀), zero(FT)), FT(albedo), FT(albedo),
                                     model.shortwave_weights, length(model.shortwave_weights), nlayers,
                                     workspace.scratch)
     end

@@ -118,7 +118,7 @@ function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
 
     surface_temperature, emissivity, longwave_albedo = 295.0, 0.98, 0.02
-    μ0, toa_irradiance, shortwave_albedo = 0.5, 680.5, 0.1
+    μ₀, toa_irradiance, shortwave_albedo = 0.5, 680.5, 0.1
     surface_emission = TabulatedSurfaceEmission(gas_model, surface_temperature; emissivity)
 
     fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
@@ -138,7 +138,7 @@ function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
                                longwave.weights, ng_lw, nlayers, zeros(nlayers), zeros(nlayers))
     shortwave_up, shortwave_down = zeros(nlayers + 1), zeros(nlayers + 1)
     streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveMatrixOptics(shortwave),
-                                μ0, toa_irradiance, shortwave_albedo, shortwave_albedo,
+                                μ₀, toa_irradiance, shortwave_albedo, shortwave_albedo,
                                 shortwave.weights, ng_sw, nlayers, ShortwaveColumnScratch(Float64, nlayers))
 
     return (

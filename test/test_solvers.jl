@@ -581,7 +581,7 @@ using Dates
     end
 
     @testset "single-layer absorber" begin
-        tau = [log(2.0)]
+        τ = [log(2.0)]
         source = [100.0]
         one_layer_fluxes = RadiativeFluxes(
             longwave_up = zeros(2),
@@ -589,7 +589,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = LongwaveOptics(tau, source)
+        optics = LongwaveOptics(τ, source)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(one_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -601,7 +601,7 @@ using Dates
     end
 
     @testset "two-layer pure absorber closed-form Schwarzschild solution" begin
-        tau = [0.3, 1.1]
+        τ = [0.3, 1.1]
         source = [180.0, 260.0]
         surface_up = 340.0
         toa_down = 25.0
@@ -611,14 +611,14 @@ using Dates
             shortwave_up = zeros(3),
             shortwave_down = zeros(3),
         )
-        optics = LongwaveOptics(tau, source)
+        optics = LongwaveOptics(τ, source)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_up,
                                               toa_longwave_down = toa_down)
 
         radiative_fluxes!(two_layer_fluxes, CloudlessLongwave(), optics,
                           atmosphere, boundary)
 
-        transmittance = exp.(-tau)
+        transmittance = exp.(-τ)
         expected_up = zeros(3)
         expected_down = zeros(3)
         expected_up[3] = surface_up
@@ -637,7 +637,7 @@ using Dates
     end
 
     @testset "weighted spectral accumulation" begin
-        tau = [0.0 0.0;
+        τ = [0.0 0.0;
                log(2.0) log(2.0)]
         source = [0.0 0.0;
                   100.0 100.0]
@@ -648,7 +648,7 @@ using Dates
             shortwave_up = zeros(3),
             shortwave_down = zeros(3),
         )
-        optics = LongwaveOptics(tau, source; weights)
+        optics = LongwaveOptics(τ, source; weights)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(two_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -660,7 +660,7 @@ using Dates
     end
 
     @testset "spectral surface boundary" begin
-        tau = [0.0;
+        τ = [0.0;
                log(2.0)][:, :]
         source = zeros(2, 1)
         weights = [0.25, 0.75]
@@ -670,7 +670,7 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = LongwaveOptics(tau, source; weights)
+        optics = LongwaveOptics(τ, source; weights)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = [100.0, 500.0])
 
         radiative_fluxes!(one_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
@@ -681,7 +681,7 @@ using Dates
     end
 
     @testset "ecRad no-scattering interface sources" begin
-        tau = [0.5]
+        τ = [0.5]
         source = [125.0]
         source_top = [100.0]
         source_bottom = [200.0]
@@ -691,14 +691,14 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = LongwaveOptics(tau, source; source_top, source_bottom)
+        optics = LongwaveOptics(τ, source; source_top, source_bottom)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(one_layer_fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
 
-        coeff = 1.66 * tau[1]
-        transmittance = exp(-coeff)
-        gradient = (source_bottom[1] - source_top[1]) / coeff
+        Dτ = 1.66 * τ[1]
+        transmittance = exp(-Dτ)
+        gradient = (source_bottom[1] - source_top[1]) / Dτ
         expected_source_up = gradient + source_top[1] -
             transmittance * (gradient + source_bottom[1])
         expected_source_down = -gradient + source_bottom[1] -
@@ -710,8 +710,8 @@ using Dates
         @test one_layer_fluxes.longwave_down[2] ≈ expected_source_down
     end
 
-    @testset "longwave scattering reduces to no scattering for zero ssa" begin
-        tau = [0.5 0.2]
+    @testset "longwave scattering reduces to no scattering for zero ω" begin
+        τ = [0.5 0.2]
         source = [125.0 175.0]
         source_top = [100.0 150.0]
         source_bottom = [200.0 250.0]
@@ -728,9 +728,9 @@ using Dates
             shortwave_down = zeros(3),
         )
         no_scattering = LongwaveOptics(
-            tau, source; source_top, source_bottom)
+            τ, source; source_top, source_bottom)
         scattering = LongwaveOptics(
-            tau, source;
+            τ, source;
             source_top,
             source_bottom,
             single_scattering_albedo = zeros(1, 2),
@@ -911,9 +911,9 @@ using Dates
             shortwave_up = zeros(nlayers + 1),
             shortwave_down = zeros(nlayers + 1),
         )
-        tau = [0.0 0.0;
+        τ = [0.0 0.0;
                log(2.0) log(2.0)]
-        optics = ShortwaveOptics(tau; weights = [0.25, 0.75])
+        optics = ShortwaveOptics(τ; weights = [0.25, 0.75])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.25)
 
@@ -932,8 +932,8 @@ using Dates
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        tau = reshape([0.0, 0.0], 2, 1)
-        optics = ShortwaveOptics(tau; weights = [0.25, 0.75])
+        τ = reshape([0.0, 0.0], 2, 1)
+        optics = ShortwaveOptics(τ; weights = [0.25, 0.75])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = [0.2, 0.4])
 
@@ -1002,7 +1002,7 @@ using Dates
         @test fluxes.shortwave_down[2] + fluxes.shortwave_up[1] ≈ 400.0
     end
 
-    @testset "single-layer conservative scattering closes energy at mu0 one" begin
+    @testset "single-layer conservative scattering closes energy at μ₀ one" begin
         fluxes = RadiativeFluxes(
             longwave_up = zeros(2),
             longwave_down = zeros(2),
@@ -1657,14 +1657,14 @@ end
         radius = defVar(ds, "effective_radius", Float64, ("effective_radius",))
         mass_ext = defVar(ds, "mass_extinction_coefficient", Float64,
                           ("wavenumber", "effective_radius"))
-        ssa = defVar(ds, "single_scattering_albedo", Float64,
+        ω = defVar(ds, "single_scattering_albedo", Float64,
                      ("wavenumber", "effective_radius"))
         asymmetry = defVar(ds, "asymmetry_factor", Float64,
                            ("wavenumber", "effective_radius"))
         wavenumber[:] = [100.0, 200.0]
         radius[:] = [1.0e-6, 2.0e-6, 3.0e-6]
         mass_ext[:, :] = [10.0 20.0 30.0; 40.0 50.0 60.0]
-        ssa[:, :] = fill(0.9, 2, 3)
+        ω[:, :] = fill(0.9, 2, 3)
         asymmetry[:, :] = fill(0.7, 2, 3)
     end
 

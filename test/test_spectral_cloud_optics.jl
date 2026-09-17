@@ -62,25 +62,25 @@ function legacy_add_mapped_cloud_scattering!(shortwave,
     scattering_scale = max(FT(shortwave_scattering_scale), zero(FT))
     for k in 1:nlayers
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
-        lwp = max(FT(liquid_water_path[k]), zero(FT))
-        iwp = max(FT(ice_water_path[k]), zero(FT))
+        liquid_path = max(FT(liquid_water_path[k]), zero(FT))
+        ice_path = max(FT(ice_water_path[k]), zero(FT))
         for gpoint in 1:ng
-            liquid_ext = liquid_scale * FT(liquid_properties.mass_extinction_coefficient[gpoint]) * lwp
-            ice_ext = ice_scale * FT(ice_properties.mass_extinction_coefficient[gpoint]) * iwp
-            liquid_ssa = clamp(FT(liquid_properties.single_scattering_albedo[gpoint]),
+            τˡ_extinction = liquid_scale * FT(liquid_properties.mass_extinction_coefficient[gpoint]) * liquid_path
+            τⁱ_extinction = ice_scale * FT(ice_properties.mass_extinction_coefficient[gpoint]) * ice_path
+            ωˡ = clamp(FT(liquid_properties.single_scattering_albedo[gpoint]),
                                zero(FT), one(FT))
-            ice_ssa = clamp(FT(ice_properties.single_scattering_albedo[gpoint]),
+            ωⁱ = clamp(FT(ice_properties.single_scattering_albedo[gpoint]),
                             zero(FT), one(FT))
-            liquid_scat = liquid_ssa * liquid_ext
-            ice_scat = ice_ssa * ice_ext
-            scattering_sum = liquid_scat + ice_scat
+            τˡ_scattering = ωˡ * τˡ_extinction
+            τⁱ_scattering = ωⁱ * τⁱ_extinction
+            scattering_sum = τˡ_scattering + τⁱ_scattering
             incoming_asymmetry = scattering_sum == zero(FT) ?
                 zero(FT) :
                 (clamp(FT(liquid_properties.asymmetry_factor[gpoint]), -one(FT), one(FT)) *
-                 liquid_scat +
+                 τˡ_scattering +
                  clamp(FT(ice_properties.asymmetry_factor[gpoint]), -one(FT), one(FT)) *
-                 ice_scat) / scattering_sum
-            total_extinction = liquid_ext + ice_ext
+                 τⁱ_scattering) / scattering_sum
+            total_extinction = τˡ_extinction + τⁱ_extinction
             if delta_eddington_scale && scattering_sum > zero(FT)
                 forward_fraction = incoming_asymmetry^2
                 total_extinction -= scattering_sum * forward_fraction
@@ -91,17 +91,17 @@ function legacy_add_mapped_cloud_scattering!(shortwave,
                 scattering_sum = min(scattering_sum * scattering_scale,
                                      max(total_extinction, zero(FT)))
             end
-            absorption_tau = fraction_scale *
+            τ_absorption = fraction_scale *
                 max(total_extinction - scattering_sum, zero(FT))
-            scattering_tau = fraction_scale * scattering_sum
+            τ_scattering = fraction_scale * scattering_sum
 
-            shortwave.optical_depth[gpoint, k] += absorption_tau
+            shortwave.optical_depth[gpoint, k] += τ_absorption
             existing_scattering = shortwave.rayleigh_optical_depth[gpoint, k]
-            total_scattering = existing_scattering + scattering_tau
+            total_scattering = existing_scattering + τ_scattering
             shortwave.scattering_asymmetry[gpoint, k] = total_scattering == zero(FT) ?
                 zero(FT) :
                 (shortwave.scattering_asymmetry[gpoint, k] * existing_scattering +
-                 incoming_asymmetry * scattering_tau) / total_scattering
+                 incoming_asymmetry * τ_scattering) / total_scattering
             shortwave.rayleigh_optical_depth[gpoint, k] = total_scattering
         end
     end
@@ -147,12 +147,12 @@ const CLOUD_FRACTION = [1.0, 0.5, 0.25, 0.0]
 # itself and not its inlining into the test body.
 Base.@noinline measure_bracket(cloud, radius) = @allocated effective_radius_bracket(cloud, radius)
 Base.@noinline measure_layer_optics(cloud, b) = @allocated cloud_layer_optics(cloud, 1, b)
-Base.@noinline measure_absorption(cloud, b, wp) =
-    @allocated cloud_absorption_optical_depth(cloud, 1, b, wp)
-Base.@noinline measure_add_scattering(κ, ω, g, wp) =
-    @allocated add_scattering_layer(wp, wp, wp, κ, ω, g, wp)
-Base.@noinline measure_add_cloud(cloud, b, wp) =
-    @allocated add_cloud_scattering_layer(wp, wp, wp, cloud, 1, b, wp)
+Base.@noinline measure_absorption(cloud, b, water_path) =
+    @allocated cloud_absorption_optical_depth(cloud, 1, b, water_path)
+Base.@noinline measure_add_scattering(κ, ω, g, water_path) =
+    @allocated add_scattering_layer(water_path, water_path, water_path, κ, ω, g, water_path)
+Base.@noinline measure_add_cloud(cloud, b, water_path) =
+    @allocated add_cloud_scattering_layer(water_path, water_path, water_path, cloud, 1, b, water_path)
 
 @testset "Spectral cloud optics" begin
     table = synthetic_table()
@@ -252,8 +252,8 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
             @test κ == one_node.mass_extinction_coefficient[gpoint, 1]
             @test ω == one_node.single_scattering_albedo[gpoint, 1]
             @test g == one_node.asymmetry_factor[gpoint, 1]
-            wp = 0.3
-            @test cloud_absorption_optical_depth(one_node, gpoint, bracket, wp) == κ * (1 - ω) * wp
+            water_path = 0.3
+            @test cloud_absorption_optical_depth(one_node, gpoint, bracket, water_path) == κ * (1 - ω) * water_path
         end
         @test cloud_absorption_optical_depth(nothing, 1, effective_radius_bracket(nothing, 1.0e-6), 0.3) === 0.0
         @test cloud_absorption_optical_depth(nothing, 1, (1, 1, 0), 0.3f0) === 0.0f0
@@ -264,9 +264,9 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
         @test add_scattering_layer(layer..., cloud_layer_optics(nothing, 1, (1, 1, 0))..., 0.3) === layer
         @test add_cloud_scattering_layer(layer..., nothing, 1, (1, 1, 0), 0.3) === layer
         @test add_cloud_scattering_layer(layer..., nothing, 1, (1, 1, 0), 0.0f0) === layer
-        for gpoint in 1:2, wp in (0.0, 0.1)
-            @test add_cloud_scattering_layer(layer..., one_node, gpoint, bracket, wp) ===
-                  add_scattering_layer(layer..., cloud_layer_optics(one_node, gpoint, bracket)..., wp)
+        for gpoint in 1:2, water_path in (0.0, 0.1)
+            @test add_cloud_scattering_layer(layer..., one_node, gpoint, bracket, water_path) ===
+                  add_scattering_layer(layer..., cloud_layer_optics(one_node, gpoint, bracket)..., water_path)
         end
 
         radius = [1.0e-6, 5.0e-6, 20.0e-6]
@@ -331,13 +331,13 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
             # Delta-Eddington scaling removes the forward peak of the liquid+ice
             # mixture once, as the old method (and ecRad) did: with both phases
             # present, and with either alone.
-            for (lwp, iwp) in ((LIQUID_PATH, ICE_PATH), (LIQUID_PATH, zero(ICE_PATH)), (zero(LIQUID_PATH), ICE_PATH))
+            for (liquid_path, ice_path) in ((LIQUID_PATH, ICE_PATH), (LIQUID_PATH, zero(ICE_PATH)), (zero(LIQUID_PATH), ICE_PATH))
                 new = copy_shortwave(base)
                 old = copy_shortwave(base)
                 add_mapped_cloud_scattering!(new, LIQUID_PROPERTIES, ICE_PROPERTIES,
-                                             lwp, iwp, CLOUD_FRACTION; delta_eddington_scale = true)
+                                             liquid_path, ice_path, CLOUD_FRACTION; delta_eddington_scale = true)
                 legacy_add_mapped_cloud_scattering!(old, LIQUID_PROPERTIES, ICE_PROPERTIES,
-                                                    lwp, iwp, CLOUD_FRACTION; delta_eddington_scale = true)
+                                                    liquid_path, ice_path, CLOUD_FRACTION; delta_eddington_scale = true)
                 assert_shortwave_close(new, old; rtol)
             end
         end
@@ -375,15 +375,15 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
                                                        mapping_method = :ecrad,
                                                        delta_eddington_average = true)
         ng, nlayers = 2, 4
-        lwp = [0.1, 0.0, 0.05, 0.2]
-        iwp = [0.0, 0.2, 0.03, 0.1]
+        liquid_path = [0.1, 0.0, 0.05, 0.2]
+        ice_path = [0.0, 0.2, 0.03, 0.1]
         fraction = [1.0, 0.5, 0.25, 0.0]
         exponent = 0.5
 
         for FT in (Float64, Float32)
             base = background_shortwave(FT, ng, nlayers)
             array = copy_shortwave(base)
-            add_mapped_cloud_scattering!(array, liquid_nodes, ice_nodes, lwp, iwp, fraction;
+            add_mapped_cloud_scattering!(array, liquid_nodes, ice_nodes, liquid_path, ice_path, fraction;
                                          cloud_fraction_exponent = exponent)
 
             kernel = copy_shortwave(base)
@@ -391,16 +391,16 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
             ice_bracket = effective_radius_bracket(ice, ice_radius)
             for k in 1:nlayers
                 weight = clamp(FT(fraction[k]), 0, 1)^FT(exponent)
-                lwpₖ = weight * FT(lwp[k])
-                iwpₖ = weight * FT(iwp[k])
+                liquid_pathₖ = weight * FT(liquid_path[k])
+                ice_pathₖ = weight * FT(ice_path[k])
                 for gpoint in 1:ng
                     τa = kernel.optical_depth[gpoint, k]
                     τs = kernel.rayleigh_optical_depth[gpoint, k]
                     g = kernel.scattering_asymmetry[gpoint, k]
                     κ, ω, gᶜ = cloud_layer_optics(liquid, gpoint, liquid_bracket)
-                    τa, τs, g = add_scattering_layer(τa, τs, g, κ, ω, gᶜ, lwpₖ)
+                    τa, τs, g = add_scattering_layer(τa, τs, g, κ, ω, gᶜ, liquid_pathₖ)
                     κ, ω, gᶜ = cloud_layer_optics(ice, gpoint, ice_bracket)
-                    τa, τs, g = add_scattering_layer(τa, τs, g, κ, ω, gᶜ, iwpₖ)
+                    τa, τs, g = add_scattering_layer(τa, τs, g, κ, ω, gᶜ, ice_pathₖ)
                     kernel.optical_depth[gpoint, k] = τa
                     kernel.rayleigh_optical_depth[gpoint, k] = τs
                     kernel.scattering_asymmetry[gpoint, k] = g
@@ -413,7 +413,7 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
             @test kernel.scattering_asymmetry[:, 4] == base.scattering_asymmetry[:, 4]
         end
 
-        # The longwave absorption of a layer is the same κ(1 - ω) wp the shortwave
+        # The longwave absorption of a layer is the same κ(1 - ω) water_path the shortwave
         # absorption update adds.
         bracket = effective_radius_bracket(liquid, liquid_radius)
         for gpoint in 1:ng
@@ -429,31 +429,31 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
             three = SpectralCloudOptics(FT, [1.0e-6, 5.0e-6, 20.0e-6],
                                         rand(2, 3), rand(2, 3), rand(2, 3))
             radius = 3.0e-6
-            wp = FT(0.1)
+            water_path = FT(0.1)
             for cloud in (one_node, three)
                 b = @inferred effective_radius_bracket(cloud, radius)
                 @test b isa Tuple{Int, Int, FT}
                 props = @inferred cloud_layer_optics(cloud, 1, b)
                 @test props isa Tuple{FT, FT, FT}
-                τ = @inferred cloud_absorption_optical_depth(cloud, 1, b, wp)
+                τ = @inferred cloud_absorption_optical_depth(cloud, 1, b, water_path)
                 @test τ isa FT
                 κ, ω, g = props
-                updated = @inferred add_scattering_layer(wp, wp, wp, κ, ω, g, wp)
+                updated = @inferred add_scattering_layer(water_path, water_path, water_path, κ, ω, g, water_path)
                 @test updated isa Tuple{FT, FT, FT}
                 @test measure_bracket(cloud, radius) == 0
                 @test measure_layer_optics(cloud, b) == 0
-                @test measure_absorption(cloud, b, wp) == 0
-                @test measure_add_scattering(κ, ω, g, wp) == 0
+                @test measure_absorption(cloud, b, water_path) == 0
+                @test measure_add_scattering(κ, ω, g, water_path) == 0
             end
             @test (@inferred effective_radius_bracket(nothing, radius)) === (1, 1, 0)
-            @test (@inferred cloud_absorption_optical_depth(nothing, 1, (1, 1, 0), wp)) === zero(FT)
+            @test (@inferred cloud_absorption_optical_depth(nothing, 1, (1, 1, 0), water_path)) === zero(FT)
             @test (@inferred cloud_layer_optics(nothing, 1, (1, 1, 0))) === (0, 0, 0)
-            @test (@inferred add_cloud_scattering_layer(wp, wp, wp, nothing, 1, (1, 1, 0), wp)) === (wp, wp, wp)
-            @test (@inferred add_cloud_scattering_layer(wp, wp, wp, one_node, 1, (1, 1, zero(FT)), wp)) isa Tuple{FT, FT, FT}
+            @test (@inferred add_cloud_scattering_layer(water_path, water_path, water_path, nothing, 1, (1, 1, 0), water_path)) === (water_path, water_path, water_path)
+            @test (@inferred add_cloud_scattering_layer(water_path, water_path, water_path, one_node, 1, (1, 1, zero(FT)), water_path)) isa Tuple{FT, FT, FT}
             @test measure_bracket(nothing, radius) == 0
-            @test measure_absorption(nothing, (1, 1, 0), wp) == 0
-            @test measure_add_cloud(nothing, (1, 1, 0), wp) == 0
-            @test measure_add_cloud(one_node, (1, 1, zero(FT)), wp) == 0
+            @test measure_absorption(nothing, (1, 1, 0), water_path) == 0
+            @test measure_add_cloud(nothing, (1, 1, 0), water_path) == 0
+            @test measure_add_cloud(one_node, (1, 1, zero(FT)), water_path) == 0
         end
     end
 

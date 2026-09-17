@@ -574,7 +574,7 @@ end
     return source * min(FT(temperature) / T₁, one(FT))
 end
 
-@generated function accumulate_tau(gases::NamedTuple,
+@generated function accumulate_optical_depth(gases::NamedTuple,
                                     coefficients::AbstractMatrix{FT},
                                     ::Val{GasNames},
                                     gpoint,
@@ -587,26 +587,26 @@ end
     return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
 end
 
-@inline function accumulate_tau(gases,
+@inline function accumulate_optical_depth(gases,
                                  coefficients::AbstractMatrix{FT},
                                  gas_names::Tuple,
                                  gpoint,
                                  k) where FT
-    tau = zero(FT)
+    τ = zero(FT)
     for j in eachindex(gas_names)
-        tau += coefficients[gpoint, j] * FT(gas_value(gases, gas_names[j], k))
+        τ += coefficients[gpoint, j] * FT(gas_value(gases, gas_names[j], k))
     end
-    return tau
+    return τ
 end
 
-@inline accumulate_tau(gases,
+@inline accumulate_optical_depth(gases,
                         coefficients::AbstractMatrix{FT},
                         ::Val{GasNames},
                         gpoint,
                         k) where {FT, GasNames} =
-    accumulate_tau(gases, coefficients, GasNames, gpoint, k)
+    accumulate_optical_depth(gases, coefficients, GasNames, gpoint, k)
 
-@generated function accumulate_tabulated_tau(gases::NamedTuple,
+@generated function accumulate_tabulated_optical_depth(gases::NamedTuple,
                                               coefficients::AbstractArray{FT, 4},
                                               gas_reference_mole_fractions,
                                               ::Val{GasNames},
@@ -629,33 +629,33 @@ end
     return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
 end
 
-@inline function accumulate_tabulated_tau(gases,
+@inline function accumulate_tabulated_optical_depth(gases,
                                            coefficients::AbstractArray{FT, 4},
                                            gas_names::Tuple,
                                            gas_reference_mole_fractions,
                                            gpoint,
                                            k,
                                            stencil) where FT
-    tau = zero(FT)
+    τ = zero(FT)
     for j in eachindex(gas_names)
         amount = FT(gas_value(gases, gas_names[j], k))
         reference = FT(gas_reference_mole_fractions[j])
         if reference != zero(FT) && has_gas(gases, :composite)
             amount -= reference * FT(gas_value(gases, :composite, k))
         end
-        tau += interp_table(coefficients, gpoint, j, stencil) * amount
+        τ += interp_table(coefficients, gpoint, j, stencil) * amount
     end
-    return tau
+    return τ
 end
 
-@inline accumulate_tabulated_tau(gases,
+@inline accumulate_tabulated_optical_depth(gases,
                                   coefficients::AbstractArray{FT, 4},
                                   gas_reference_mole_fractions,
                                   ::Val{GasNames},
                                   gpoint,
                                   k,
                                   stencil) where {FT, GasNames} =
-    accumulate_tabulated_tau(gases, coefficients, GasNames,
+    accumulate_tabulated_optical_depth(gases, coefficients, GasNames,
                               gas_reference_mole_fractions, gpoint, k, stencil)
 
 function check_ecckd_optics_shapes(longwave::LongwaveOptics,

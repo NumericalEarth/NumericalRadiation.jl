@@ -135,22 +135,22 @@ function load_ckdmip(paths)
         # The zenith dimension is read, not assumed: `mu0` is a coordinate of
         # the flux arrays `(half_level, mu0, column)`.
         haskey(ds, "mu0") || throw(ArgumentError("shortwave reference file has no mu0 coordinate"))
-        mu0 = round.(dense(ds["mu0"][:]); digits = 6)   # stored in single precision
+        μ₀ = round.(dense(ds["mu0"][:]); digits = 6)   # stored in single precision
         up = dense(ds["flux_up_sw"][:, :, :])
         down = dense(ds["flux_dn_sw"][:, :, :])
         dimnames(ds["flux_up_sw"]) == ("half_level", "mu0", "column") ||
             throw(ArgumentError("unexpected shortwave flux dimensions $(dimnames(ds["flux_up_sw"]))"))
-        (; mu0, up, down)
+        (; μ₀, up, down)
     end
 
     nprofiles = size(data.pressure_hl, 2)
     size(longwave.up) == size(data.pressure_hl) || throw(DimensionMismatch("longwave reference shape"))
-    size(shortwave.up) == (size(data.pressure_hl, 1), length(shortwave.mu0), nprofiles) ||
+    size(shortwave.up) == (size(data.pressure_hl, 1), length(shortwave.μ₀), nprofiles) ||
         throw(DimensionMismatch("shortwave reference shape"))
 
     # Solar constant and albedo of the reference calculation, from the fluxes
     # themselves: `S₀ = down_TOA / μ₀` and `α = up_surface / down_surface`.
-    solar_constants = [shortwave.down[1, j, i] / shortwave.mu0[j] for j in eachindex(shortwave.mu0), i in 1:nprofiles]
+    solar_constants = [shortwave.down[1, j, i] / shortwave.μ₀[j] for j in eachindex(shortwave.μ₀), i in 1:nprofiles]
     solar_constant = round(mean(solar_constants); digits = 1)
     maximum(abs, solar_constants .- solar_constant) < 0.05 ||
         throw(ArgumentError("reference TOA irradiance is not a single solar constant"))
@@ -166,9 +166,9 @@ end
 # statistics of the CKDMIP evaluation.
 function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     (; pressure_hl, temperature_hl, mole_fractions, longwave, shortwave, nprofiles, solar_constant, albedo) = benchmark
-    mu0 = shortwave.mu0
+    μ₀ = shortwave.μ₀
     nlayers = size(pressure_hl, 1) - 1
-    nzenith = length(mu0)
+    nzenith = length(μ₀)
 
     model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, nlayers)
@@ -188,14 +188,14 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
 
     # One untimed column first, so that the timing below excludes compilation.
     column_fluxes!(workspace, model, profile_column(1); surface_temperature = temperature_hl[end, 1],
-                   emissivity = 1.0, albedo, cos_zeniths = mu0, solar_constant)
+                   emissivity = 1.0, albedo, cos_zeniths = μ₀, solar_constant)
 
     elapsed = 0.0   # optics and solves only
     for i in 1:nprofiles
         surface_temperature = temperature_hl[end, i]
         atmosphere = profile_column(i)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity = 1.0,
-                                                   albedo, cos_zeniths = mu0, solar_constant)
+                                                   albedo, cos_zeniths = μ₀, solar_constant)
         lw_up[:, i] = fluxes.longwave_up
         lw_down[:, i] = fluxes.longwave_down
         sw_up[:, :, i] = fluxes.shortwave_up
@@ -213,7 +213,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     # RMSE. The surface-downwelling gate excludes μ₀ < 0.3.
     pressure_sw = repeat(pressure_hl, inner = (1, nzenith))
     flat(x) = reshape(x, size(x, 1), :)
-    high_sun = findall(>=(0.3), mu0)
+    high_sun = findall(>=(0.3), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
 
     statistics = (;
@@ -227,7 +227,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
                            rmse_all_zenith_angles = rmse(sw_down[end, :, :], shortwave.down[end, :, :])),
         sw_profile_rmse = (up = rmse(sw_up, shortwave.up), down = rmse(sw_down, shortwave.down)),
         sw_heating_rate = heating_ranges(pressure_sw, flat(sw_heating), flat(sw_heating_reference)),
-        sw_by_zenith_angle = [(; mu0 = mu0[j],
+        sw_by_zenith_angle = [(; mu0 = μ₀[j],
                                  toa_up_rmse = rmse(sw_up[1, j, :], shortwave.up[1, j, :]),
                                  surface_down_rmse = rmse(sw_down[end, j, :], shortwave.down[end, j, :]),
                                  heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
@@ -259,7 +259,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     return (; model_name = String(model_name),
               longwave_gpoints = length(model.longwave_weights),
               shortwave_gpoints = length(model.shortwave_weights),
-              nprofiles, nlayers, mu0, solar_constant, albedo, column_amount_convention,
+              nprofiles, nlayers, mu0 = μ₀, solar_constant, albedo, column_amount_convention,
               elapsed_seconds = elapsed,
               microseconds_per_column = 1e6 * elapsed / nprofiles,
               statistics, gates)
@@ -274,7 +274,7 @@ function ckdmip_markdown(results, benchmark, paths)
     push!(lines, "$(benchmark.nprofiles) present-day clear-sky profiles, $(size(benchmark.pressure_hl, 1) - 1) layers " *
                  "from $(benchmark.pressure_hl[1, 1]) Pa; longwave with `ε = 1` and `Tₛ = temperature_hl[end]`; " *
                  "shortwave with `S₀ = $(benchmark.solar_constant)` W m⁻², albedo $(benchmark.albedo), " *
-                 "μ₀ ∈ $(benchmark.shortwave.mu0). Reference: line-by-line fluxes of CKDMIP " *
+                 "μ₀ ∈ $(benchmark.shortwave.μ₀). Reference: line-by-line fluxes of CKDMIP " *
                  "(`$(basename(paths[2]))`, `$(basename(paths[3]))`).")
     push!(lines, "")
     push!(lines, "Heating-rate RMSEs are weighted by the cube root of pressure within the range " *
@@ -335,7 +335,7 @@ function run_ckdmip_evaluation1(; models = (:climate_32x32, :climate_64x64))
         end
         benchmark = load_ckdmip(paths)
         println("CKDMIP Evaluation-1: $(benchmark.nprofiles) profiles, S₀ = $(benchmark.solar_constant) W m⁻², " *
-                "albedo $(benchmark.albedo), μ₀ = $(benchmark.shortwave.mu0)")
+                "albedo $(benchmark.albedo), μ₀ = $(benchmark.shortwave.μ₀)")
         for model_name in models
             result = evaluate_ckdmip(model_name, benchmark)
             # The contract's moist-molar-mass column amounts, reported but not gated.

@@ -155,8 +155,8 @@ applies the same clamp to the `μ₀` it is handed directly.
     if atmosphere !== nothing && hasproperty(atmosphere, :geometry)
         geometry = getproperty(atmosphere, :geometry)
         if hasproperty(geometry, :cos_zenith)
-            μ0 = max(FT(getproperty(geometry, :cos_zenith)), sqrt(eps(FT)))
-            return inv(μ0)
+            μ₀ = max(FT(getproperty(geometry, :cos_zenith)), sqrt(eps(FT)))
+            return inv(μ₀)
         end
     end
     return one(FT)
@@ -205,49 +205,49 @@ transmittance. This is the single entry point every shortwave two-stream path
 uses, so the scaling cannot be skipped by one caller and applied by another.
 """
 @inline function shortwave_two_stream_layer(::Type{FT},
-                                      μ0,
+                                      μ₀,
                                       optical_depth,
                                       single_scattering_albedo,
                                       asymmetry,
                                       direct_source_limit = Val(:unit)) where FT
     τ, ω, g = shortwave_delta_eddington(FT, optical_depth, single_scattering_albedo, asymmetry)
-    gamma1, gamma2, gamma3 = shortwave_two_stream_coefficients(FT, μ0, ω, g)
-    return shortwave_reflectance_transmittance(FT, μ0, τ, ω,
-                                         gamma1, gamma2, gamma3,
+    γ₁, γ₂, γ₃ = shortwave_two_stream_coefficients(FT, μ₀, ω, g)
+    return shortwave_reflectance_transmittance(FT, μ₀, τ, ω,
+                                         γ₁, γ₂, γ₃,
                                          direct_source_limit)
 end
 
-@inline function shortwave_two_stream_coefficients(::Type{FT}, μ0, single_scattering_albedo, asymmetry) where FT
+@inline function shortwave_two_stream_coefficients(::Type{FT}, μ₀, single_scattering_albedo, asymmetry) where FT
     factor = FT(0.75) * FT(asymmetry)
-    gamma1 = FT(2) - FT(single_scattering_albedo) * (FT(1.25) + factor)
-    gamma2 = FT(single_scattering_albedo) * (FT(0.75) - factor)
-    gamma3 = FT(0.5) - FT(μ0) * factor
-    return gamma1, gamma2, gamma3
+    γ₁ = FT(2) - FT(single_scattering_albedo) * (FT(1.25) + factor)
+    γ₂ = FT(single_scattering_albedo) * (FT(0.75) - factor)
+    γ₃ = FT(0.5) - FT(μ₀) * factor
+    return γ₁, γ₂, γ₃
 end
 
 @inline function shortwave_reflectance_transmittance(::Type{FT},
-                                               μ0,
+                                               μ₀,
                                                optical_depth,
                                                single_scattering_albedo,
-                                               gamma1,
-                                               gamma2,
-                                               gamma3,
+                                               γ₁,
+                                               γ₂,
+                                               γ₃,
                                                direct_source_limit = Val(:unit)) where FT
-    gamma4 = one(FT) - gamma3
-    alpha1 = gamma1 * gamma4 + gamma2 * gamma3
-    alpha2 = gamma1 * gamma3 + gamma2 * gamma4
-    k_exponent = sqrt(max((gamma1 - gamma2) * (gamma1 + gamma2), FT(1.0e-12)))
-    μ0_local = FT(μ0)
-    if abs(one(FT) - k_exponent * μ0_local) < FT(1000) * eps(FT)
-        μ0_local *= one(FT) - FT(10) * eps(FT)
+    γ₄ = one(FT) - γ₃
+    α₁ = γ₁ * γ₄ + γ₂ * γ₃
+    α₂ = γ₁ * γ₃ + γ₂ * γ₄
+    k_exponent = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+    μ₀_local = FT(μ₀)
+    if abs(one(FT) - k_exponent * μ₀_local) < FT(1000) * eps(FT)
+        μ₀_local *= one(FT) - FT(10) * eps(FT)
     end
 
-    od = max(FT(optical_depth), zero(FT))
-    od_over_μ0 = max(od / μ0_local, zero(FT))
-    direct = exp(-od_over_μ0)
-    exponential = exp(-k_exponent * od)
+    τ = max(FT(optical_depth), zero(FT))
+    τ_over_μ₀ = max(τ / μ₀_local, zero(FT))
+    direct = exp(-τ_over_μ₀)
+    exponential = exp(-k_exponent * τ)
     exponential2 = exponential * exponential
-    k_2_exponential = FT(2) * k_exponent * exponential
+    two_k_exponential = FT(2) * k_exponent * exponential
 
     # In the conservative limit ω → 1 the two-stream coefficients satisfy
     # γ₁ → γ₂, so k → 0 (held at √1e-12 above) and every reflectance and
@@ -266,36 +266,36 @@ end
     #                               = k(γ₄ + μ₀α₁)(d (1 + e²) - m₁²) - D(α₁ + k²μ₀γ₄) m₂,
     # with e = e^{-kτ} and D = e^{-τ/μ₀}, using 1 + e² - 2eD = m₁² + 2e d and
     # 2e - D(1 + e²) = d(1 + e²) - m₁².
-    one_minus_exponential = -expm1(-k_exponent * od)
-    one_minus_exponential2 = -expm1(-FT(2) * k_exponent * od)
-    one_minus_direct = -expm1(-od_over_μ0)
+    one_minus_exponential = -expm1(-k_exponent * τ)
+    one_minus_exponential2 = -expm1(-FT(2) * k_exponent * τ)
+    one_minus_direct = -expm1(-τ_over_μ₀)
     one_plus_exponential2 = one(FT) + exponential2
-    reftrans_factor = inv(k_exponent * one_plus_exponential2 + gamma1 * one_minus_exponential2)
+    inverse_denominator = inv(k_exponent * one_plus_exponential2 + γ₁ * one_minus_exponential2)
 
-    reflectance = gamma2 * one_minus_exponential2 * reftrans_factor
-    transmittance = k_2_exponential * reftrans_factor
+    reflectance = γ₂ * one_minus_exponential2 * inverse_denominator
+    transmittance = two_k_exponential * inverse_denominator
 
-    k_μ0 = k_exponent * μ0_local
-    direct_factor = μ0_local * FT(single_scattering_albedo) * reftrans_factor /
-        (one(FT) - k_μ0 * k_μ0)
+    kμ₀ = k_exponent * μ₀_local
+    direct_factor = μ₀_local * FT(single_scattering_albedo) * inverse_denominator /
+        (one(FT) - kμ₀ * kμ₀)
 
-    ref_dir = direct_factor *
-        ((alpha2 - k_μ0 * k_exponent * gamma3) * one_minus_exponential2 +
-         k_exponent * (gamma3 - μ0_local * alpha2) *
+    direct_reflectance = direct_factor *
+        ((α₂ - kμ₀ * k_exponent * γ₃) * one_minus_exponential2 +
+         k_exponent * (γ₃ - μ₀_local * α₂) *
          (one_minus_exponential * one_minus_exponential +
           FT(2) * exponential * one_minus_direct))
-    trans_dir_diff = direct_factor *
-        (k_exponent * (gamma4 + μ0_local * alpha1) *
+    direct_diffuse_transmittance = direct_factor *
+        (k_exponent * (γ₄ + μ₀_local * α₁) *
          (one_minus_direct * one_plus_exponential2 -
           one_minus_exponential * one_minus_exponential) -
-         direct * (alpha1 + k_μ0 * k_exponent * gamma4) * one_minus_exponential2)
+         direct * (α₁ + kμ₀ * k_exponent * γ₄) * one_minus_exponential2)
 
     direct_scattering_limit = direct_source_limit isa Val{:horizontal} ?
-        μ0_local * (one(FT) - direct) : one(FT)
-    ref_dir = clamp(ref_dir, zero(FT), direct_scattering_limit)
-    trans_dir_diff =
-        clamp(trans_dir_diff, zero(FT), direct_scattering_limit - ref_dir)
-    return reflectance, transmittance, ref_dir, trans_dir_diff, direct
+        μ₀_local * (one(FT) - direct) : one(FT)
+    direct_reflectance = clamp(direct_reflectance, zero(FT), direct_scattering_limit)
+    direct_diffuse_transmittance =
+        clamp(direct_diffuse_transmittance, zero(FT), direct_scattering_limit - direct_reflectance)
+    return reflectance, transmittance, direct_reflectance, direct_diffuse_transmittance, direct
 end
 
 """
@@ -327,7 +327,7 @@ PrecomputedShortwaveLayerOptics(optics::ShortwaveOptics) =
 """
 $(TYPEDSIGNATURES)
 
-Two-stream adding fluxes of g point `gpoint` of `optics` for cosine zenith `μ0`,
+Two-stream adding fluxes of g point `gpoint` of `optics` for cosine zenith `μ₀`,
 written into `up` and `down` (length `nlayers + 1`, top down, zeroed here).
 `incoming_horizontal` is the downwelling flux through a horizontal surface at
 the top of the atmosphere. A wrapper over
@@ -338,14 +338,14 @@ function ecrad_shortwave_column!(up::AbstractVector{FT},
                                   down::AbstractVector{FT},
                                   optics::ShortwaveOptics,
                                   gpoint,
-                                  μ0,
+                                  μ₀,
                                   incoming_horizontal,
                                   surface_albedo,
                                   surface_albedo_direct = surface_albedo) where FT
     nlayers = number_of_layers(optics)
     scratch = ShortwaveColumnScratch(FT, nlayers)
     layer_optics = PrecomputedShortwaveLayerOptics(optics, gpoint)
-    streaming_shortwave_fluxes!(up, down, layer_optics, μ0, incoming_horizontal,
+    streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, incoming_horizontal,
                                 surface_albedo_direct, surface_albedo, (one(FT),), 1, nlayers, scratch)
     return nothing
 end
@@ -400,13 +400,13 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     for gpoint in 1:number_of_gpoints(optics)
         w = FT(optics.weights[gpoint])
         path_factor = shortwave_path_factor(FT, atmosphere)
-        μ0 = inv(path_factor)
+        μ₀ = inv(path_factor)
         surface_albedo = surface_albedo_at(boundary_conditions, gpoint)
         surface_albedo_direct = surface_albedo_direct_at(boundary_conditions, gpoint)
 
         if has_rayleigh_scattering(optics, gpoint)
             add_shortwave_gpoint_fluxes!(fluxes.shortwave_up, fluxes.shortwave_down, layer_optics,
-                                         gpoint, w, μ0, boundary_conditions.toa_shortwave_down,
+                                         gpoint, w, μ₀, boundary_conditions.toa_shortwave_down,
                                          surface_albedo_direct, surface_albedo, nlayers, scratch)
             continue
         end

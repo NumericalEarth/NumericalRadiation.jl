@@ -139,12 +139,12 @@ function longwave_fluxes(::Type{FT}, layer_optics, surface_emission, surface_alb
     return flux_up, flux_down
 end
 
-function shortwave_fluxes(::Type{FT}, layer_optics, μ0, toa_irradiance, direct_albedo, diffuse_albedo,
+function shortwave_fluxes(::Type{FT}, layer_optics, μ₀, toa_irradiance, direct_albedo, diffuse_albedo,
                           nlayers; weights = [one(FT)]) where FT
     flux_up = zeros(FT, nlayers + 1)
     flux_down = zeros(FT, nlayers + 1)
     scratch = ShortwaveColumnScratch(FT, nlayers)
-    streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, FT(μ0), FT(toa_irradiance),
+    streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, FT(μ₀), FT(toa_irradiance),
                                 FT(direct_albedo), FT(diffuse_albedo), weights, length(weights),
                                 nlayers, scratch)
     return flux_up, flux_down
@@ -423,45 +423,45 @@ end
         @testset "Beer–Lambert on the adding path ($FT)" begin
             rng = LinearCongruentialDraws(0x5eed5eed5eed5eed)
             nlayers = 6
-            μ0, S₀, α = 0.6, SOLAR_CONSTANT, 0.3
+            μ₀, S₀, α = 0.6, SOLAR_CONSTANT, 0.3
             amounts = FT[draw!(rng, 0.01, 1.0) for _ in 1:nlayers]
             model = gray_model(FT, [1.0], [1.0])
             optics = GrayShortwaveLayerOptics(model, amounts)
-            up, down = shortwave_fluxes(FT, optics, μ0, S₀ * μ0, α, α, nlayers;
+            up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, α, α, nlayers;
                                         weights = model.shortwave_weights)
 
             _, τ_cum = layer_optical_depths(optics, nlayers)
             τₛ = τ_cum[end]
-            down_exact = [S₀ * μ0 * exp(-τ_cum[k] / μ0) for k in 1:nlayers + 1]
-            up_exact = [α * S₀ * μ0 * exp(-τₛ / μ0) * exp(-2 * (τₛ - τ_cum[k])) for k in 1:nlayers + 1]
+            down_exact = [S₀ * μ₀ * exp(-τ_cum[k] / μ₀) for k in 1:nlayers + 1]
+            up_exact = [α * S₀ * μ₀ * exp(-τₛ / μ₀) * exp(-2 * (τₛ - τ_cum[k])) for k in 1:nlayers + 1]
 
-            tol = tolerances(FT, 1e-10, S₀ * μ0)
-            @test down[1] == FT(S₀ * μ0)
+            tol = tolerances(FT, 1e-10, S₀ * μ₀)
+            @test down[1] == FT(S₀ * μ₀)
             @test all(k -> within(down[k], down_exact[k], tol), 1:nlayers + 1)
             @test all(k -> within(up[k], up_exact[k], tol), 1:nlayers + 1)
         end
 
         @testset "conservative scattering ($FT)" begin
             nlayers = 4
-            μ0, S₀ = 0.5, SOLAR_CONSTANT
+            μ₀, S₀ = 0.5, SOLAR_CONSTANT
             scattering = FT[0.3, 1.0, 0.5, 2.0]
             absorption = zeros(FT, nlayers)
-            tol = tolerances(FT, 1e-10, S₀ * μ0)
+            tol = tolerances(FT, 1e-10, S₀ * μ₀)
             for g in (-0.5, 0.0, 0.5, 0.85, 0.95)
                 asymmetry = fill(FT(g), nlayers)
                 optics = ScatteringLayerOptics(absorption, scattering, asymmetry)
-                up, down = shortwave_fluxes(FT, optics, μ0, S₀ * μ0, 0, 0, nlayers)
+                up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, nlayers)
                 net = down .- up
-                @test within(up[1] + down[end], S₀ * μ0, tol)
+                @test within(up[1] + down[end], S₀ * μ₀, tol)
                 @test all(k -> within(net[k], net[end], tol), 1:nlayers + 1)
-                @test down[1] == FT(S₀ * μ0)
+                @test down[1] == FT(S₀ * μ₀)
             end
         end
 
         @testset "reciprocity of the stack diffuse transmittance ($FT)" begin
             rng = LinearCongruentialDraws(0x9e3779b97f4a7c15)
             nlayers = 5
-            μ0, S₀ = 0.7, 1000.0
+            μ₀, S₀ = 0.7, 1000.0
             τ = [draw!(rng, 0.05, 1.0) for _ in 1:nlayers]
             ω = [draw!(rng, 0.3, 0.95) for _ in 1:nlayers]
             g = [draw!(rng, -0.3, 0.85) for _ in 1:nlayers]
@@ -471,14 +471,14 @@ end
 
             function transmittance_from_below(order)
                 optics = ScatteringLayerOptics(absorption[order], scattering[order], asymmetry[order])
-                up_black, _ = shortwave_fluxes(FT, optics, μ0, S₀ * μ0, 0, 0, nlayers)
-                up_source, _ = shortwave_fluxes(FT, optics, μ0, S₀ * μ0, 1, 0, nlayers)
+                up_black, _ = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, nlayers)
+                up_source, _ = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 1, 0, nlayers)
                 return up_source[1] - up_black[1]     # T_below · J
             end
 
             T_below = transmittance_from_below(1:nlayers)
             T_above = transmittance_from_below(nlayers:-1:1)
-            tol = tolerances(FT, 1e-12, S₀ * μ0)
+            tol = tolerances(FT, 1e-12, S₀ * μ₀)
             @test T_below > 0
             @test within(T_below, T_above, tol)
         end

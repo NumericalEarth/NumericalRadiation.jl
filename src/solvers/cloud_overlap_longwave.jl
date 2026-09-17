@@ -116,55 +116,55 @@ function u_overlap_matrix_tripleclouds_alpha!(u::AbstractMatrix{FT},
 end
 
 @inline function longwave_layer_terms(::Type{FT}, optics, gpoint, k) where FT
-    tau = optical_depth_at(optics, gpoint, k)
+    τ = optical_depth_at(optics, gpoint, k)
     top, bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
     if has_longwave_scattering(optics)
         return longwave_reflectance_transmittance_sources(
-            FT, tau, single_scattering_albedo_at(optics, gpoint, k), scattering_asymmetry_at(optics, gpoint, k),
+            FT, τ, single_scattering_albedo_at(optics, gpoint, k), scattering_asymmetry_at(optics, gpoint, k),
             top, bottom)
     elseif has_interface_sources(optics)
         transmittance, source_up, source_down =
-            no_scattering_longwave_sources(FT, tau, top, bottom)
+            no_scattering_longwave_sources(FT, τ, top, bottom)
         return zero(FT), transmittance, source_up, source_down
     end
-    transmittance = exp(-FT(tau))
+    transmittance = exp(-FT(τ))
     source = FT(source_at(optics, gpoint, k)) * (one(FT) - transmittance)
     return zero(FT), transmittance, source, source
 end
 
 @inline function longwave_layer_terms_scaled(::Type{FT}, clear, cloudy, scale, gpoint, k) where FT
-    clear_tau = max(FT(optical_depth_at(clear, gpoint, k)), zero(FT))
-    cloudy_tau = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
-    tau = max(clear_tau + max(FT(scale), zero(FT)) * (cloudy_tau - clear_tau),
+    τ_clear = max(FT(optical_depth_at(clear, gpoint, k)), zero(FT))
+    τ_cloudy = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
+    τ = max(τ_clear + max(FT(scale), zero(FT)) * (τ_cloudy - τ_clear),
               zero(FT))
     top, bottom = longwave_fallback_planck_sources(FT, clear, gpoint, k)
 
     if has_longwave_scattering(clear) || has_longwave_scattering(cloudy)
-        clear_ssa = has_longwave_scattering(clear) ?
+        ω_clear = has_longwave_scattering(clear) ?
             clamp(FT(single_scattering_albedo_at(clear, gpoint, k)), zero(FT), one(FT)) : zero(FT)
-        cloudy_ssa = has_longwave_scattering(cloudy) ?
+        ω_cloudy = has_longwave_scattering(cloudy) ?
             clamp(FT(single_scattering_albedo_at(cloudy, gpoint, k)), zero(FT), one(FT)) : zero(FT)
-        clear_g = has_longwave_scattering(clear) ?
+        g_clear = has_longwave_scattering(clear) ?
             clamp(FT(scattering_asymmetry_at(clear, gpoint, k)), -one(FT), one(FT)) : zero(FT)
-        cloudy_g = has_longwave_scattering(cloudy) ?
+        g_cloudy = has_longwave_scattering(cloudy) ?
             clamp(FT(scattering_asymmetry_at(cloudy, gpoint, k)), -one(FT), one(FT)) : zero(FT)
         scattering =
-            clear_tau * clear_ssa +
-            max(FT(scale), zero(FT)) * (cloudy_tau * cloudy_ssa - clear_tau * clear_ssa)
+            τ_clear * ω_clear +
+            max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy - τ_clear * ω_clear)
         moment =
-            clear_tau * clear_ssa * clear_g +
+            τ_clear * ω_clear * g_clear +
             max(FT(scale), zero(FT)) *
-            (cloudy_tau * cloudy_ssa * cloudy_g - clear_tau * clear_ssa * clear_g)
-        ssa = tau <= 0 ? zero(FT) : clamp(scattering / tau, zero(FT), one(FT))
+            (τ_cloudy * ω_cloudy * g_cloudy - τ_clear * ω_clear * g_clear)
+        ω = τ <= 0 ? zero(FT) : clamp(scattering / τ, zero(FT), one(FT))
         asymmetry = scattering <= 0 ? zero(FT) :
             clamp(moment / scattering, -one(FT), one(FT))
-        return longwave_reflectance_transmittance_sources(FT, tau, ssa, asymmetry, top, bottom)
+        return longwave_reflectance_transmittance_sources(FT, τ, ω, asymmetry, top, bottom)
     elseif has_interface_sources(clear)
         transmittance, source_up, source_down =
-            no_scattering_longwave_sources(FT, tau, top, bottom)
+            no_scattering_longwave_sources(FT, τ, top, bottom)
         return zero(FT), transmittance, source_up, source_down
     end
-    transmittance = exp(-tau)
+    transmittance = exp(-τ)
     source = FT(source_at(clear, gpoint, k)) * (one(FT) - transmittance)
     return zero(FT), transmittance, source, source
 end
@@ -185,14 +185,14 @@ function adding_longwave_column!(up::AbstractVector{FT},
     source_down = Vector{FT}(undef, nlayers)
 
     for k in 1:nlayers
-        clear_r, clear_t, clear_up, clear_down =
+        clear_reflectance, clear_transmittance, clear_up, clear_down =
             longwave_layer_terms(FT, optics.clear, gpoint, k)
-        cloudy_r, cloudy_t, cloudy_up, cloudy_down =
+        cloudy_reflectance, cloudy_transmittance, cloudy_up, cloudy_down =
             longwave_layer_terms(FT, optics.cloudy, gpoint, k)
         cloud_weight = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
         clear_weight = one(FT) - cloud_weight
-        reflectance[k] = clear_weight * clear_r + cloud_weight * cloudy_r
-        transmittance[k] = clear_weight * clear_t + cloud_weight * cloudy_t
+        reflectance[k] = clear_weight * clear_reflectance + cloud_weight * cloudy_reflectance
+        transmittance[k] = clear_weight * clear_transmittance + cloud_weight * cloudy_transmittance
         source_up[k] = clear_weight * clear_up + cloud_weight * cloudy_up
         source_down[k] = clear_weight * clear_down + cloud_weight * cloudy_down
     end
@@ -281,16 +281,16 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
 
     for k in nlayers:-1:1
         for region in 1:3
-            denom = inv(one(FT) - total_albedo[region, k + 1] *
+            inverse_denominator = inv(one(FT) - total_albedo[region, k + 1] *
                         reflectance[region, k])
             below_albedo[region] = reflectance[region, k] +
                 transmittance[region, k]^2 * total_albedo[region, k + 1] *
-                denom
+                inverse_denominator
             below_source[region] = source_up[region, k] +
                 transmittance[region, k] *
                 (total_source[region, k + 1] +
                  total_albedo[region, k + 1] * source_down[region, k]) *
-                denom
+                inverse_denominator
         end
 
         upper = k == 1 ? FT[one(FT), zero(FT), zero(FT)] : region_frac[:, k - 1]
@@ -325,12 +325,12 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
     next_flux_down = zeros(FT, 3)
     for k in 1:nlayers
         for region in 1:3
-            denom = inv(one(FT) - reflectance[region, k] *
+            inverse_denominator = inv(one(FT) - reflectance[region, k] *
                         total_albedo[region, k + 1])
             flux_down[region] =
                 (transmittance[region, k] * flux_down[region] +
                  reflectance[region, k] * total_source[region, k + 1] +
-                 source_down[region, k]) * denom
+                 source_down[region, k]) * inverse_denominator
             flux_up[region] =
                 total_albedo[region, k + 1] * flux_down[region] +
                 total_source[region, k + 1]
