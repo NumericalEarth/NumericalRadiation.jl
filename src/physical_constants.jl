@@ -109,7 +109,6 @@ ThermodynamicConstants(; kwargs...) = ThermodynamicConstants{Float64}(; kwargs..
 Sensible Earth defaults for the full set of physical constants needed by the
 shortwave solver (constants + thermodynamic constants).
 """
-default_earth_constants(::Type{NF}) where NF =
-    (physical = PhysicalConstants{NF}(), thermodynamic = ThermodynamicConstants{NF}())
+default_earth_constants(::Type{NF}) where NF = (physical = PhysicalConstants{NF}(), thermodynamic = ThermodynamicConstants{NF}())
 
 default_earth_constants() = default_earth_constants(Float64)

@@ -239,8 +239,8 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         emissivity = benchmark.surface_emissivity[i]
         atmosphere = site_column(i)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity,
-                                                   albedo = benchmark.surface_albedo[i], cos_zeniths = (cos_zenith[i],),
-                                                   solar_constant = benchmark.total_solar_irradiance[i])
+                                                    albedo = benchmark.surface_albedo[i], cos_zeniths = (cos_zenith[i],),
+                                                    solar_constant = benchmark.total_solar_irradiance[i])
         longwave_up[:, i] = fluxes.longwave_up
         longwave_down[:, i] = fluxes.longwave_down
         shortwave_up[:, i] = fluxes.shortwave_up[:, 1]
@@ -275,10 +275,10 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
             weighted_heating_rate_rmse(p_hl, heating.longwave, heating.longwave_reference, HEATING_RATE_RANGES.troposphere;
                                        exclude_lowest = 2),
         longwave_quadrature = (toa_up = (bias = bias(longwave_up_quadrature[1, :], reference.rlu[1, :]),
-                                   rmse = rmse(longwave_up_quadrature[1, :], reference.rlu[1, :])),
-                         surface_down = (bias = bias(longwave_down_quadrature[end, :], reference.rld[end, :]),
-                                         rmse = rmse(longwave_down_quadrature[end, :], reference.rld[end, :])),
-                         heating_rate = heating_ranges(p_hl, heating.longwave_quadrature, heating.longwave_reference)),
+                                         rmse = rmse(longwave_up_quadrature[1, :], reference.rlu[1, :])),
+                               surface_down = (bias = bias(longwave_down_quadrature[end, :], reference.rld[end, :]),
+                                               rmse = rmse(longwave_down_quadrature[end, :], reference.rld[end, :])),
+                               heating_rate = heating_ranges(p_hl, heating.longwave_quadrature, heating.longwave_reference)),
     )
 
     gates_for = getproperty(RFMIP_GATES, Symbol(model_name))

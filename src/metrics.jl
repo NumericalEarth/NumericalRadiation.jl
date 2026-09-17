@@ -59,13 +59,13 @@ struct RadiationThresholds{FT}
 end
 
 function RadiationThresholds(; flux_rmse = Inf,
-                             flux_maximum_absolute_error = Inf,
-                             flux_absolute_bias = Inf,
-                             heating_rate_rmse = Inf,
-                             heating_rate_maximum_absolute_error = Inf,
-                             heating_rate_absolute_bias = Inf,
-                             toa_forcing_absolute_error = Inf,
-                             surface_forcing_absolute_error = Inf)
+                               flux_maximum_absolute_error = Inf,
+                               flux_absolute_bias = Inf,
+                               heating_rate_rmse = Inf,
+                               heating_rate_maximum_absolute_error = Inf,
+                               heating_rate_absolute_bias = Inf,
+                               toa_forcing_absolute_error = Inf,
+                               surface_forcing_absolute_error = Inf)
     FT = promote_type(typeof(flux_rmse), typeof(flux_maximum_absolute_error), typeof(flux_absolute_bias),
                       typeof(heating_rate_rmse), typeof(heating_rate_maximum_absolute_error),
                       typeof(heating_rate_absolute_bias), typeof(toa_forcing_absolute_error),
@@ -129,13 +129,13 @@ matching linear indexing. Forcing errors are candidate-minus-reference at TOA
 and surface.
 """
 function radiation_error_metrics(; candidate_flux,
-                                 reference_flux,
-                                 candidate_heating_rate,
-                                 reference_heating_rate,
-                                 candidate_toa_flux,
-                                 reference_toa_flux,
-                                 candidate_surface_flux,
-                                 reference_surface_flux)
+                                   reference_flux,
+                                   candidate_heating_rate,
+                                   reference_heating_rate,
+                                   candidate_toa_flux,
+                                   reference_toa_flux,
+                                   candidate_surface_flux,
+                                   reference_surface_flux)
     FT = promote_type(eltype(candidate_flux), eltype(reference_flux),
                       eltype(candidate_heating_rate), eltype(reference_heating_rate),
                       typeof(candidate_toa_flux), typeof(reference_toa_flux),

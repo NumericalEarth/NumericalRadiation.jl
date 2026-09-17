@@ -102,8 +102,7 @@ Construct an [`AnalyticBandLongwave`](@ref). Floating-point type defaults to
 `Float64`; pass as a positional argument (e.g. `AnalyticBandLongwave(Float32)`)
 for a different precision.
 """
-AnalyticBandLongwave(::Type{NF}; kwargs...) where NF =
-    AnalyticBandLongwave{NF}(; kwargs...)
+AnalyticBandLongwave(::Type{NF}; kwargs...) where NF = AnalyticBandLongwave{NF}(; kwargs...)
 
 AnalyticBandLongwave(; kwargs...) = AnalyticBandLongwave{Float64}(; kwargs...)
 

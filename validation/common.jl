@@ -86,13 +86,13 @@ function benchmark_column(pressure_interfaces, temperature_interfaces, mole_frac
         throw(ArgumentError("column_amount_convention must be :dry or :moist"))
     end
     gases = (; composite = dry_air,
-             (name => Float64.(getproperty(mole_fractions, name)) .* dry_air
-              for name in keys(mole_fractions))...)
+               (name => Float64.(getproperty(mole_fractions, name)) .* dry_air
+                for name in keys(mole_fractions))...)
     return ColumnAtmosphere(; pressure_layers = p_fl,
-                            pressure_interfaces = p_hl,
-                            temperature_layers = T_fl,
-                            temperature_interfaces = T_hl,
-                            gases, surface, geometry, constants = CONSTANTS)
+                              pressure_interfaces = p_hl,
+                              temperature_layers = T_fl,
+                              temperature_interfaces = T_hl,
+                              gases, surface, geometry, constants = CONSTANTS)
 end
 
 #####
@@ -105,15 +105,15 @@ struct LongwaveLayerOptics{L}
     longwave :: L
 end
 @inline (o::LongwaveLayerOptics)(gpoint, k) = (o.longwave.optical_depth[gpoint, k],
-                                           o.longwave.source_top[gpoint, k],
-                                           o.longwave.source_bottom[gpoint, k])
+                                               o.longwave.source_top[gpoint, k],
+                                               o.longwave.source_bottom[gpoint, k])
 
 struct ShortwaveLayerOptics{S}
     shortwave :: S
 end
 @inline (o::ShortwaveLayerOptics)(gpoint, k) = (o.shortwave.optical_depth[gpoint, k],
-                                            o.shortwave.rayleigh_optical_depth[gpoint, k],
-                                            o.shortwave.scattering_asymmetry[gpoint, k])
+                                                o.shortwave.rayleigh_optical_depth[gpoint, k],
+                                                o.shortwave.scattering_asymmetry[gpoint, k])
 
 # Optics arrays and solver scratch for a model and layer count, allocated once
 # and reused for every profile of a benchmark.

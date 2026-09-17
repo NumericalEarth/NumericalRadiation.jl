@@ -113,7 +113,7 @@ function _test_column(::Type{NF}, Nz; T_surface = 295, T_top = 220, q = 0.005) w
     q      = fill(NF(q), Nz)
     Φ      = zeros(NF, Nz)
     profile = AtmosphereProfile(temperature = T, humidity = q, geopotential = Φ,
-                            surface_pressure = NF(100_000))
+                                surface_pressure = NF(100_000))
     return profile, geometry
 end
 
@@ -123,8 +123,8 @@ end
     longwave = AnalyticBandLongwave(NF)
     profile, geometry = _test_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                land_surface_temperature = NF(285),
-                                land_fraction = NF(0.3))
+                               land_surface_temperature = NF(285),
+                               land_fraction = NF(0.3))
     constants = PhysicalConstants{NF}()
     temperature_tendency = zeros(NF, Nz)
     diagnostics = LongwaveDiagnostics{NF}()
@@ -140,8 +140,8 @@ end
     longwave = AnalyticBandLongwave(NF)
     profile, geometry = _test_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                land_surface_temperature = NF(285),
-                                land_fraction = NF(0.3))
+                               land_surface_temperature = NF(285),
+                               land_fraction = NF(0.3))
     constants = PhysicalConstants{NF}()
     temperature_tendency = zeros(NF, Nz)
     diagnostics = LongwaveDiagnostics{NF}()
@@ -166,8 +166,8 @@ end
                                     surface_pressure = profile.surface_pressure,
                                     CO₂ = NF(CO₂))
         surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                    land_surface_temperature = NF(285),
-                                    land_fraction = NF(0.3))
+                                   land_surface_temperature = NF(285),
+                                   land_fraction = NF(0.3))
         constants = PhysicalConstants{NF}()
         temperature_tendency = zeros(NF, Nz)
         diagnostics = LongwaveDiagnostics{NF}()
@@ -187,8 +187,8 @@ end
         longwave = AnalyticBandLongwave(NF)
         profile, geometry = _test_column(NF, Nz)
         surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                    land_surface_temperature = NF(285),
-                                    land_fraction = NF(0.3))
+                                   land_surface_temperature = NF(285),
+                                   land_fraction = NF(0.3))
         constants = PhysicalConstants{NF}()
         temperature_tendency = zeros(NF, Nz)
         diagnostics = LongwaveDiagnostics{NF}()
@@ -213,7 +213,7 @@ function _test_sw_column(::Type{NF}, Nz; q = 0.005) where NF
     qv     = fill(NF(q), Nz)
     Φ      = zeros(NF, Nz)
     profile = AtmosphereProfile(temperature = T, humidity = qv, geopotential = Φ,
-                            surface_pressure = NF(100_000))
+                                surface_pressure = NF(100_000))
     return profile, geometry
 end
 
@@ -222,11 +222,11 @@ end
     Nz = 4
     profile, geometry = _test_sw_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                land_surface_temperature = NF(NaN),
-                                land_fraction = NF(0),
-                                ocean_albedo = NF(0.2),
-                                land_albedo = NF(0.15),
-                                cos_zenith = NF(0.5))
+                               land_surface_temperature = NF(NaN),
+                               land_fraction = NF(0),
+                               ocean_albedo = NF(0.2),
+                               land_albedo = NF(0.15),
+                               cos_zenith = NF(0.5))
     constants = PhysicalConstants{NF}()
     thermo = ThermodynamicConstants{NF}()
     temperature_tendency = zeros(NF, Nz)
@@ -243,11 +243,11 @@ end
     Nz = 8
     profile, geometry = _test_sw_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                land_surface_temperature = NF(NaN),
-                                land_fraction = NF(0),
-                                ocean_albedo = NF(0.1),
-                                land_albedo = NF(0.1),
-                                cos_zenith = NF(0.5))
+                               land_surface_temperature = NF(NaN),
+                               land_fraction = NF(0),
+                               ocean_albedo = NF(0.1),
+                               land_albedo = NF(0.1),
+                               cos_zenith = NF(0.5))
     constants = PhysicalConstants{NF}()
     thermo = ThermodynamicConstants{NF}()
     temperature_tendency = zeros(NF, Nz)
@@ -269,16 +269,16 @@ end
     Nz = 8
     profile, geometry = _test_sw_column(NF, Nz; q = 0.01)
     profile = AtmosphereProfile(temperature = profile.temperature,
-                            humidity = profile.humidity,
-                            geopotential = profile.geopotential,
-                            surface_pressure = profile.surface_pressure,
-                            rain_rate = NF(1e-6))                 # ~0.09 mm/day
+                                humidity = profile.humidity,
+                                geopotential = profile.geopotential,
+                                surface_pressure = profile.surface_pressure,
+                                rain_rate = NF(1e-6))                 # ~0.09 mm/day
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
-                                land_surface_temperature = NF(285),
-                                land_fraction = NF(0.3),
-                                ocean_albedo = NF(0.07),
-                                land_albedo = NF(0.25),
-                                cos_zenith = NF(0.6))
+                               land_surface_temperature = NF(285),
+                               land_fraction = NF(0.3),
+                               ocean_albedo = NF(0.07),
+                               land_albedo = NF(0.25),
+                               cos_zenith = NF(0.6))
     constants = PhysicalConstants{NF}()
     thermo = ThermodynamicConstants{NF}()
     temperature_tendency = zeros(NF, Nz)
@@ -384,10 +384,10 @@ end
         land_fraction            = NF(0.3),
     )
     column = RadiativeTransferColumn(; grid, profile, surface,
-        longwave_scheme = AnalyticBandLongwave(NF),
-        shortwave_scheme = NumericalRadiation.OneBandShortwave(NF),
-        physical_constants = PhysicalConstants{NF}(),
-        thermodynamic_constants = ThermodynamicConstants{NF}())
+                                       longwave_scheme = AnalyticBandLongwave(NF),
+                                       shortwave_scheme = NumericalRadiation.OneBandShortwave(NF),
+                                       physical_constants = PhysicalConstants{NF}(),
+                                       thermodynamic_constants = ThermodynamicConstants{NF}())
     solve_longwave!(column)
     @test eltype(column.temperature_tendency) === NF
     @test isa(column.longwave_diagnostics.outgoing_longwave, NF)
@@ -637,7 +637,7 @@ using Dates
 
     @testset "weighted spectral accumulation" begin
         τ = [0.0 0.0;
-               log(2.0) log(2.0)]
+             log(2.0) log(2.0)]
         source = [0.0 0.0;
                   100.0 100.0]
         weights = [0.25, 0.75]
@@ -660,7 +660,7 @@ using Dates
 
     @testset "spectral surface boundary" begin
         τ = [0.0;
-               log(2.0)][:, :]
+             log(2.0)][:, :]
         source = zeros(2, 1)
         weights = [0.25, 0.75]
         one_layer_fluxes = RadiativeFluxes(
@@ -790,8 +790,7 @@ end
     @test overlap_fluxes.longwave_up ≈ clear_fluxes.longwave_up
     @test overlap_fluxes.longwave_down ≈ clear_fluxes.longwave_down
 
-    full_cloud_overlap =
-        LongwaveCloudOverlapOptics(clear, cloudy, [1.0, 1.0])
+    full_cloud_overlap = LongwaveCloudOverlapOptics(clear, cloudy, [1.0, 1.0])
     radiative_fluxes!(overlap_fluxes, CloudOverlapLongwave(), full_cloud_overlap,
                       atmosphere, boundary)
     @test overlap_fluxes.longwave_up ≈ cloudy_fluxes.longwave_up
@@ -818,8 +817,7 @@ end
     @test all(isfinite, overlap_fluxes.longwave_up)
     @test all(isfinite, overlap_fluxes.longwave_down)
 
-    clear_tripleclouds =
-        LongwaveCloudOverlapOptics(clear, cloudy, [0.0, 0.0])
+    clear_tripleclouds = LongwaveCloudOverlapOptics(clear, cloudy, [0.0, 0.0])
     radiative_fluxes!(
         overlap_fluxes,
         CloudOverlapLongwave(overlap = :tripleclouds_alpha),
@@ -911,7 +909,7 @@ using Dates
             shortwave_down = zeros(Nz + 1),
         )
         τ = [0.0 0.0;
-               log(2.0) log(2.0)]
+             log(2.0) log(2.0)]
         optics = ShortwaveOptics(τ; weights = [0.25, 0.75])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.25)
@@ -988,7 +986,7 @@ using Dates
             shortwave_down = zeros(2),
         )
         optics = ShortwaveOptics([0.0];
-                                            rayleigh_optical_depth = [log(2.0)])
+                                 rayleigh_optical_depth = [log(2.0)])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
 
@@ -1009,8 +1007,8 @@ using Dates
             shortwave_down = zeros(2),
         )
         optics = ShortwaveOptics([0.0];
-                                            scattering_optical_depth = [0.7],
-                                            scattering_asymmetry = [0.0])
+                                 scattering_optical_depth = [0.7],
+                                 scattering_asymmetry = [0.0])
         atmosphere = (; geometry = (; cos_zenith = 1.0))
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
@@ -1033,7 +1031,7 @@ using Dates
             shortwave_down = zeros(2),
         )
         optics = ShortwaveOptics([0.0];
-                                            rayleigh_optical_depth = [log(2.0)])
+                                 rayleigh_optical_depth = [log(2.0)])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
 
@@ -1051,8 +1049,8 @@ using Dates
             shortwave_down = zeros(2),
         )
         optics = ShortwaveOptics([0.0];
-                                            scattering_optical_depth = [log(2.0)],
-                                            scattering_asymmetry = [0.8])
+                                 scattering_optical_depth = [log(2.0)],
+                                 scattering_asymmetry = [0.8])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
 
@@ -1084,8 +1082,8 @@ end
             shortwave_down = zeros(2),
         )
         optics = ShortwaveOptics([0.0];
-                                            scattering_optical_depth = [τ],
-                                            scattering_asymmetry = [g])
+                                 scattering_optical_depth = [τ],
+                                 scattering_asymmetry = [g])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
         radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
@@ -1256,8 +1254,8 @@ using Dates
         longwave = LongwaveOptics([0.1, 0.2], [50.0, 60.0])
         shortwave = ShortwaveOptics([0.01, 0.02])
         cloud = CloudOptics([0.3, 0.4], [0.5, 0.6];
-                                       shortwave_scattering_optical_depth = [0.05, 0.06],
-                                       shortwave_scattering_asymmetry = [0.7, 0.8])
+                            shortwave_scattering_optical_depth = [0.05, 0.06],
+                            shortwave_scattering_asymmetry = [0.7, 0.8])
 
         add_cloud_optical_depths!(longwave, shortwave, cloud)
 
@@ -1270,11 +1268,11 @@ using Dates
     @testset "cloud scattering asymmetry is optical-depth weighted" begin
         longwave = LongwaveOptics([0.1], [50.0])
         shortwave = ShortwaveOptics([0.01];
-                                               scattering_optical_depth = [0.2],
-                                               scattering_asymmetry = [0.1])
+                                    scattering_optical_depth = [0.2],
+                                    scattering_asymmetry = [0.1])
         cloud = CloudOptics([0.0], [0.0];
-                                       shortwave_scattering_optical_depth = [0.3],
-                                       shortwave_scattering_asymmetry = [0.6])
+                            shortwave_scattering_optical_depth = [0.3],
+                            shortwave_scattering_asymmetry = [0.6])
 
         add_cloud_optical_depths!(longwave, shortwave, cloud)
 
@@ -1439,8 +1437,8 @@ using Dates
 
     @testset "mapped cloud scattering composition" begin
         shortwave = ShortwaveOptics(zeros(2, 2);
-                                               scattering_optical_depth = zeros(2, 2),
-                                               scattering_asymmetry = zeros(2, 2))
+                                    scattering_optical_depth = zeros(2, 2),
+                                    scattering_asymmetry = zeros(2, 2))
         liquid = (
             mass_extinction_coefficient = [10.0, 20.0],
             single_scattering_albedo = [0.8, 0.5],
@@ -1463,8 +1461,8 @@ using Dates
         @test shortwave.scattering_asymmetry[:, 2] ≈ [0.5, 0.4]
 
         scaled = ShortwaveOptics(zeros(2, 1);
-                                            scattering_optical_depth = zeros(2, 1),
-                                            scattering_asymmetry = zeros(2, 1))
+                                 scattering_optical_depth = zeros(2, 1),
+                                 scattering_asymmetry = zeros(2, 1))
         add_mapped_cloud_scattering!(scaled, liquid, ice,
                                      [0.1], [0.0], [1.0];
                                      liquid_extinction_scale = 2.0)
@@ -1472,8 +1470,8 @@ using Dates
         @test scaled.rayleigh_optical_depth[:, 1] ≈ [1.6, 2.0]
 
         delta_scaled = ShortwaveOptics(zeros(1, 1);
-                                                  scattering_optical_depth = zeros(1, 1),
-                                                  scattering_asymmetry = zeros(1, 1))
+                                       scattering_optical_depth = zeros(1, 1),
+                                       scattering_asymmetry = zeros(1, 1))
         add_mapped_cloud_scattering!(
             delta_scaled,
             (mass_extinction_coefficient = [10.0],
@@ -1528,8 +1526,8 @@ end
         longwave = LongwaveOptics([0.1, 0.2], [50.0, 60.0])
         shortwave = ShortwaveOptics([0.01, 0.02])
         aerosol = AerosolOptics([0.03, 0.04], [0.05, 0.06];
-                                           shortwave_scattering_optical_depth = [0.01, 0.02],
-                                           shortwave_scattering_asymmetry = [0.3, 0.4])
+                                shortwave_scattering_optical_depth = [0.01, 0.02],
+                                shortwave_scattering_asymmetry = [0.3, 0.4])
 
         add_aerosol_optical_depths!(longwave, shortwave, aerosol)
 
@@ -1657,7 +1655,7 @@ end
         mass_ext = defVar(dataset, "mass_extinction_coefficient", Float64,
                           ("wavenumber", "effective_radius"))
         ω = defVar(dataset, "single_scattering_albedo", Float64,
-                     ("wavenumber", "effective_radius"))
+                   ("wavenumber", "effective_radius"))
         asymmetry = defVar(dataset, "asymmetry_factor", Float64,
                            ("wavenumber", "effective_radius"))
         wavenumber[:] = [100.0, 200.0]
@@ -1701,7 +1699,7 @@ end
     # Resolve through the package's reference-data path (RH_ECRAD_DATA_PATH,
     # the lazy ecrad_data artifact, or a local checkout).
     liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc";
-                                                      require = false)
+                                                     require = false)
     ice_path = NumericalRadiation.ecrad_data_file(
         "baum-general-habit-mixture_ice_scattering.nc"; require = false)
 

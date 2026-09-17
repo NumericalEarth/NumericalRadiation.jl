@@ -44,20 +44,20 @@ struct RRTMGPBoundaryConditions{FT}
 end
 
 function RRTMGPBoundaryConditions(; surface_temperature,
-                                  surface_emissivity = 1,
-                                  surface_albedo = 0,
-                                  toa_shortwave_down = 0,
-                                  cos_zenith = 1)
+                                    surface_emissivity = 1,
+                                    surface_albedo = 0,
+                                    toa_shortwave_down = 0,
+                                    cos_zenith = 1)
     FT = promote_type(typeof(surface_temperature),
                       typeof(surface_emissivity),
                       typeof(surface_albedo),
                       typeof(toa_shortwave_down),
                       typeof(cos_zenith))
     return RRTMGPBoundaryConditions{FT}(FT(surface_temperature),
-                                       FT(surface_emissivity),
-                                       FT(surface_albedo),
-                                       FT(toa_shortwave_down),
-                                       FT(cos_zenith))
+                                        FT(surface_emissivity),
+                                        FT(surface_albedo),
+                                        FT(toa_shortwave_down),
+                                        FT(cos_zenith))
 end
 
 struct RRTMGPWorkspace{S, AS, SOL}
@@ -80,8 +80,8 @@ function initialize_global_mean_mole_fractions(Ngases, Nz, Ncolumns, FT, array_t
 end
 
 function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
-                                                   atmosphere::ColumnAtmosphere;
-                                                   backend = nothing) where FT
+                                                atmosphere::ColumnAtmosphere;
+                                                backend = nothing) where FT
     Nz = length(atmosphere.temperature_layers)
     Ncolumns = 1
     grid_params = RRTMGPGridParams(FT; context = model.context, domain_nlay = Nz, ncol = Ncolumns)
@@ -113,10 +113,10 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
 
     longwave_boundary_conditions = LwBCs(array_type{FT}(undef, Nlongwave_bands, Ncolumns), nothing)
     shortwave_boundary_conditions = SwBCs(array_type{FT}(undef, Ncolumns),
-                   array_type{FT}(undef, Ncolumns),
-                   array_type{FT}(undef, Nshortwave_bands, Ncolumns),
-                   nothing,
-                   array_type{FT}(undef, Nshortwave_bands, Ncolumns))
+                                          array_type{FT}(undef, Ncolumns),
+                                          array_type{FT}(undef, Nshortwave_bands, Ncolumns),
+                                          nothing,
+                                          array_type{FT}(undef, Nshortwave_bands, Ncolumns))
     solver = RRTMGPSolver(grid_params,
                           radiation_method,
                           model.parameters,
@@ -127,8 +127,7 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
     return RRTMGPWorkspace(grid_params, atmospheric_state, solver)
 end
 
-gas_value(gases, name::Symbol, default) =
-    hasproperty(gases, name) ? getproperty(gases, name) : default
+gas_value(gases, name::Symbol, default) = hasproperty(gases, name) ? getproperty(gases, name) : default
 
 layer_value(x::Number, k) = x
 layer_value(x, k) = x[k]
@@ -202,11 +201,10 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
 end
 
 function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
-                                                 model::RRTMGPClearSkyModel,
-                                                 atmosphere::ColumnAtmosphere,
-                                                 boundary::RRTMGPBoundaryConditions,
-                                                 workspace::RRTMGPWorkspace =
-                                                     radiation_workspace(model, atmosphere))
+                                              model::RRTMGPClearSkyModel,
+                                              atmosphere::ColumnAtmosphere,
+                                              boundary::RRTMGPBoundaryConditions,
+                                              workspace::RRTMGPWorkspace = radiation_workspace(model, atmosphere))
     Nz = length(atmosphere.temperature_layers)
     for (name, v) in ((:longwave_up, fluxes.longwave_up),
                       (:longwave_down, fluxes.longwave_down),

@@ -37,7 +37,7 @@ const σ_SB = PhysicalConstants().stefan_boltzmann
 
     @testset "tabulated source path (reference 32x32)" begin
         model = read_reference_ecckd_gas_optics("32x32";
-            names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+                                                names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
         emission = surface_longwave_emission(model, 300.0)
         @test length(emission) == length(model.longwave_weights)
         @test all(>(0), emission)
@@ -87,11 +87,11 @@ end
         geometry = (;),
     )
     longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz);
-                                         weights = zeros(1))
+                              weights = zeros(1))
     shortwave = ShortwaveOptics(zeros(1, Nz);
-                                           rayleigh_optical_depth = zeros(1, Nz),
-                                           scattering_asymmetry = zeros(1, Nz),
-                                           weights = zeros(1))
+                                rayleigh_optical_depth = zeros(1, Nz),
+                                scattering_asymmetry = zeros(1, Nz),
+                                weights = zeros(1))
 
     # Zero CH₄ amount: total = composite - reference * composite * k_CH₄ < 0
     # before the clamp; the stored value must be exactly zero.

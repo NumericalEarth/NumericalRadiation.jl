@@ -195,7 +195,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
         surface_temperature = temperature_hl[end, i]
         atmosphere = profile_column(i)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity = 1.0,
-                                                   albedo, cos_zeniths = μ₀, solar_constant)
+                                                    albedo, cos_zeniths = μ₀, solar_constant)
         longwave_up[:, i] = fluxes.longwave_up
         longwave_down[:, i] = fluxes.longwave_down
         shortwave_up[:, :, i] = fluxes.shortwave_up

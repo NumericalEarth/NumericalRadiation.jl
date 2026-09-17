@@ -88,16 +88,16 @@ struct LongwaveMatrixOptics{L}
 end
 
 (layer::LongwaveMatrixOptics)(gpoint, k) = (layer.optics.optical_depth[gpoint, k],
-                                        layer.optics.source_top[gpoint, k],
-                                        layer.optics.source_bottom[gpoint, k])
+                                            layer.optics.source_top[gpoint, k],
+                                            layer.optics.source_bottom[gpoint, k])
 
 struct ShortwaveMatrixOptics{S}
     optics :: S
 end
 
 (layer::ShortwaveMatrixOptics)(gpoint, k) = (layer.optics.optical_depth[gpoint, k],
-                                         layer.optics.rayleigh_optical_depth[gpoint, k],
-                                         layer.optics.scattering_asymmetry[gpoint, k])
+                                             layer.optics.rayleigh_optical_depth[gpoint, k],
+                                             layer.optics.scattering_asymmetry[gpoint, k])
 
 # The streaming (kernel-facing) solvers against the array solvers on the same
 # optics. The array longwave solver streams each g point through
@@ -193,7 +193,7 @@ function component_smoke()
     shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
     cloud = CloudOptics(zeros(2), zeros(2))
     cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1),
-                                                             zeros(2), zeros(2))
+                                                  zeros(2), zeros(2))
     aerosol = AerosolOptics(zeros(2), zeros(2))
     fluxes = RadiativeFluxes(
         longwave_up = zeros(3),
@@ -224,11 +224,10 @@ function component_smoke()
                                 all(isfinite, cloud.shortwave_optical_depth) &&
                                 all(isfinite, cloud.shortwave_scattering_optical_depth) &&
                                 all(isfinite, cloud.shortwave_scattering_asymmetry),
-        cloudy_region_cloud_optics_callable =
-            all(isfinite, cloudy_region_cloud.cloud_fraction) &&
-            all(isfinite, cloudy_region_cloud.overlap_parameter) &&
-            all(isfinite, cloudy_region_cloud.longwave_optical_depth) &&
-            !all(iszero, cloudy_region_cloud.longwave_optical_depth),
+        cloudy_region_cloud_optics_callable = all(isfinite, cloudy_region_cloud.cloud_fraction) &&
+                                              all(isfinite, cloudy_region_cloud.overlap_parameter) &&
+                                              all(isfinite, cloudy_region_cloud.longwave_optical_depth) &&
+                                              !all(iszero, cloudy_region_cloud.longwave_optical_depth),
         aerosol_optics_callable = all(isfinite, aerosol.longwave_optical_depth) &&
                                   all(isfinite, aerosol.shortwave_optical_depth) &&
                                   all(isfinite, aerosol.shortwave_scattering_optical_depth) &&

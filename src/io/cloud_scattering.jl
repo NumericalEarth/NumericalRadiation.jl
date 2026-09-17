@@ -57,10 +57,9 @@ end
 Base.eltype(::EcCKDSpectralMapping{FT}) where FT = FT
 
 function EcCKDSpectralMapping(; wavenumber1::AbstractVector{FT},
-                              wavenumber2::AbstractVector{FT},
-                              gpoint_fraction::AbstractMatrix{FT},
-                              interval_weight::Union{Nothing, AbstractVector{FT}} =
-                                  nothing) where FT
+                                wavenumber2::AbstractVector{FT},
+                                gpoint_fraction::AbstractMatrix{FT},
+                                interval_weight::Union{Nothing, AbstractVector{FT}} = nothing) where FT
     length(wavenumber1) == length(wavenumber2) ||
         throw(DimensionMismatch("wavenumber1 and wavenumber2 must have the same length"))
     size(gpoint_fraction, 1) == length(wavenumber1) ||
@@ -79,12 +78,12 @@ function EcCKDSpectralMapping(; wavenumber1::AbstractVector{FT},
 end
 
 function CloudScatteringTable(; medium::AbstractString = "",
-                              particle_type::AbstractString = "",
-                              wavenumber::AbstractVector{FT},
-                              effective_radius::AbstractVector{FT},
-                              mass_extinction_coefficient::AbstractMatrix{FT},
-                              single_scattering_albedo::AbstractMatrix{FT},
-                              asymmetry_factor::AbstractMatrix{FT}) where FT
+                                particle_type::AbstractString = "",
+                                wavenumber::AbstractVector{FT},
+                                effective_radius::AbstractVector{FT},
+                                mass_extinction_coefficient::AbstractMatrix{FT},
+                                single_scattering_albedo::AbstractMatrix{FT},
+                                asymmetry_factor::AbstractMatrix{FT}) where FT
     expected_size = (length(wavenumber), length(effective_radius))
     size(mass_extinction_coefficient) == expected_size ||
         throw(DimensionMismatch("mass_extinction_coefficient must have shape (wavenumber, effective_radius)"))
@@ -255,7 +254,7 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
         end
         if scattering_extinction[gpoint] > 0
             asymmetry[gpoint] = clamp(asymmetry_numerator[gpoint] / (scattering_extinction[gpoint] * weight_sum[gpoint]),
-                                  -one(FT), one(FT))
+                                      -one(FT), one(FT))
         end
         if delta_eddington_average
             mass_extinction[gpoint], single_scattering_albedo[gpoint], asymmetry[gpoint] =
@@ -279,7 +278,7 @@ end
 end
 
 function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
-                                     mapping::EcCKDSpectralMapping)
+                                    mapping::EcCKDSpectralMapping)
     FT = promote_type(eltype(table), eltype(mapping))
     Nwavenumbers = length(table.wavenumber)
     Nintervals = length(mapping.wavenumber1)
@@ -321,9 +320,8 @@ function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
             end
         else
             interval₁ > 1 && (interval_weight[1:(interval₁ - 1)] .= one(FT))
-            interval_weight[interval₁] =
-                (ν̃₁ - FT(mapping.wavenumber1[interval₁])) /
-                (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
+            interval_weight[interval₁] = (ν̃₁ - FT(mapping.wavenumber1[interval₁])) /
+                                         (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
         end
 
         if wavenumber_index < Nwavenumbers
@@ -354,9 +352,8 @@ function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
             end
         else
             interval₁ < Nintervals && (interval_weight[(interval₁ + 1):Nintervals] .= one(FT))
-            interval_weight[interval₁] =
-                (FT(mapping.wavenumber2[interval₁]) - ν̃₁) /
-                (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
+            interval_weight[interval₁] = (FT(mapping.wavenumber2[interval₁]) - ν̃₁) /
+                                         (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
         end
 
         interval_weight .*= FT.(mapping.interval_weight)
@@ -391,10 +388,10 @@ end
 end
 
 function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
-                                                   mapping::EcCKDSpectralMapping,
-                                                   effective_radius;
-                                                   delta_eddington_average::Bool,
-                                                   thick_averaging::Bool)
+                                                  mapping::EcCKDSpectralMapping,
+                                                  effective_radius;
+                                                  delta_eddington_average::Bool,
+                                                  thick_averaging::Bool)
     FT = promote_type(eltype(table), eltype(mapping), typeof(float(effective_radius)))
     weights = ecrad_cloud_mapping_matrix(table, mapping)
     Ngpoints = size(weights, 1)
@@ -435,7 +432,7 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
             (single_scattering_albedo[gpoint] = clamp(scattering_extinction[gpoint] / mass_extinction[gpoint], zero(FT), one(FT)))
         scattering_extinction[gpoint] > 0 &&
             (asymmetry[gpoint] = clamp(asymmetry_numerator[gpoint] / scattering_extinction[gpoint],
-                                   -one(FT), one(FT)))
+                                       -one(FT), one(FT)))
         if thick_averaging
             reflectance = clamp(thick_reflectance[gpoint], zero(FT), one(FT))
             denominator = (one(FT) + reflectance)^2 -

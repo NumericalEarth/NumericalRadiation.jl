@@ -68,9 +68,9 @@ function legacy_add_mapped_cloud_scattering!(shortwave,
             τˡ_extinction = liquid_scale * FT(liquid_properties.mass_extinction_coefficient[gpoint]) * liquid_path
             τⁱ_extinction = ice_scale * FT(ice_properties.mass_extinction_coefficient[gpoint]) * ice_path
             ωˡ = clamp(FT(liquid_properties.single_scattering_albedo[gpoint]),
-                               zero(FT), one(FT))
+                       zero(FT), one(FT))
             ωⁱ = clamp(FT(ice_properties.single_scattering_albedo[gpoint]),
-                            zero(FT), one(FT))
+                       zero(FT), one(FT))
             τˡ_scattering = ωˡ * τˡ_extinction
             τⁱ_scattering = ωⁱ * τⁱ_extinction
             scattering_sum = τˡ_scattering + τⁱ_scattering
@@ -120,8 +120,8 @@ function background_shortwave(FT, Ngpoints, Nz)
 end
 
 copy_shortwave(shortwave) = ShortwaveOptics(copy(shortwave.optical_depth);
-                                     scattering_optical_depth = copy(shortwave.rayleigh_optical_depth),
-                                     scattering_asymmetry = copy(shortwave.scattering_asymmetry))
+                                            scattering_optical_depth = copy(shortwave.rayleigh_optical_depth),
+                                            scattering_asymmetry = copy(shortwave.scattering_asymmetry))
 
 function assert_shortwave_close(a, b; rtol)
     @test isapprox(a.optical_depth, b.optical_depth; rtol)
@@ -147,8 +147,7 @@ const CLOUD_FRACTION = [1.0, 0.5, 0.25, 0.0]
 # itself and not its inlining into the test body.
 Base.@noinline measure_bracket(cloud, radius) = @allocated effective_radius_bracket(cloud, radius)
 Base.@noinline measure_layer_optics(cloud, b) = @allocated cloud_layer_optics(cloud, 1, b)
-Base.@noinline measure_absorption(cloud, b, water_path) =
-    @allocated cloud_absorption_optical_depth(cloud, 1, b, water_path)
+Base.@noinline measure_absorption(cloud, b, water_path) = @allocated cloud_absorption_optical_depth(cloud, 1, b, water_path)
 Base.@noinline measure_add_scattering(κ, ω, g, water_path) =
     @allocated add_scattering_layer(water_path, water_path, water_path, κ, ω, g, water_path)
 Base.@noinline measure_add_cloud(cloud, b, water_path) =
@@ -473,7 +472,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
 
     @testset "reference ecRad tables map onto climate_32x32" begin
         liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc";
-                                                          require = false)
+                                                         require = false)
         ice_path = NumericalRadiation.ecrad_data_file(
             "baum-general-habit-mixture_ice_scattering.nc"; require = false)
         longwave_path = reference_ecckd_definition_path(:longwave_32; require = false)

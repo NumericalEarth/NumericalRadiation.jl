@@ -18,8 +18,8 @@ println("  LW: ", basename(paths.longwave))
 println("  SW: ", basename(paths.shortwave))
 
 gas_optics = read_reference_ecckd_gas_optics(spec;
-    names = (:composite, :h2o, :co2),
-    water_vapor_mole_fraction = 0.005,
+                                             names = (:composite, :h2o, :co2),
+                                             water_vapor_mole_fraction = 0.005,
 )
 
 Nz = 24

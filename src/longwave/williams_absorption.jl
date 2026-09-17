@@ -75,10 +75,10 @@ and of the CO₂ mass mixing ratio are the scheme's
 `water_vapor_molar_mass_ratio` and `carbon_dioxide_molar_mass_ratio`.
 """
 @inline function williams_optical_depth_increment(k::Integer, ν̃::NF, CO₂::NF,
-                                     temperature::AbstractVector, humidity::AbstractVector,
-                                     surface_pressure::Real,
-                                     geometry::ColumnGrid,
-                                     scheme, gravity::Real) where NF
+                                                  temperature::AbstractVector, humidity::AbstractVector,
+                                                  surface_pressure::Real,
+                                                  geometry::ColumnGrid,
+                                                  scheme, gravity::Real) where NF
     σ_full  = geometry.σ_full
     σ_half  = geometry.σ_half
     σ_thick = geometry.σ_thick

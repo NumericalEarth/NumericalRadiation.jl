@@ -9,16 +9,10 @@
 # `src/parameterizations/tendencies.jl` — reproduced here so the package has
 # no dependency on SpeedyWeather.
 
-@inline flux_to_tendency(flux, surface_pressure, gravity, σ_thick_k) =
-    gravity / (surface_pressure * σ_thick_k) * flux
+@inline flux_to_tendency(flux, surface_pressure, gravity, σ_thick_k) = gravity / (surface_pressure * σ_thick_k) * flux
 
-@inline flux_to_tendency(flux, profile::AtmosphereProfile, geometry::ColumnGrid,
-                         constants, k::Integer) =
-    flux_to_tendency(flux, profile.surface_pressure, constants.gravity,
-                     geometry.σ_thick[k])
+@inline flux_to_tendency(flux, profile::AtmosphereProfile, geometry::ColumnGrid, constants, k::Integer) =
+    flux_to_tendency(flux, profile.surface_pressure, constants.gravity, geometry.σ_thick[k])
 
-@inline surface_flux_to_tendency(flux, profile::AtmosphereProfile,
-                                 geometry::ColumnGrid,
-                                 constants) =
-    flux_to_tendency(flux, profile.surface_pressure, constants.gravity,
-                     geometry.σ_thick[end])
+@inline surface_flux_to_tendency(flux, profile::AtmosphereProfile, geometry::ColumnGrid, constants) =
+    flux_to_tendency(flux, profile.surface_pressure, constants.gravity, geometry.σ_thick[end])

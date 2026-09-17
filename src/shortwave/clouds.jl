@@ -66,11 +66,11 @@ For `NoClouds`, `cloud_top = Nz + 1` (below the surface) so downstream
 shortwave code skips the cloud-reflection branch.
 """
 @inline function diagnose_clouds(::NoClouds, profile::AtmosphereProfile,
-                                  geometry::ColumnGrid,
-                                  surface::SurfaceState,
-                                  constants::PhysicalConstants,
-                                  thermodynamic::ThermodynamicConstants,
-                                  cloud_top_convective::Integer)
+                                 geometry::ColumnGrid,
+                                 surface::SurfaceState,
+                                 constants::PhysicalConstants,
+                                 thermodynamic::ThermodynamicConstants,
+                                 cloud_top_convective::Integer)
     NF = eltype(profile.temperature)
     Nz = length(profile.temperature)
     return (
@@ -83,12 +83,12 @@ shortwave code skips the cloud-reflection branch.
 end
 
 @inline function diagnose_clouds(clouds::DiagnosticClouds{NF},
-                                  profile::AtmosphereProfile,
-                                  geometry::ColumnGrid,
-                                  surface::SurfaceState,
-                                  constants::PhysicalConstants,
-                                  thermodynamic::ThermodynamicConstants,
-                                  cloud_top_convective::Integer) where NF
+                                 profile::AtmosphereProfile,
+                                 geometry::ColumnGrid,
+                                 surface::SurfaceState,
+                                 constants::PhysicalConstants,
+                                 thermodynamic::ThermodynamicConstants,
+                                 cloud_top_convective::Integer) where NF
 
     T = profile.temperature
     q = profile.humidity

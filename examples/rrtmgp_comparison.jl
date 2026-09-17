@@ -55,8 +55,7 @@ g  = constants.gravity               # m s⁻²
 mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
 mᵛ = constants.water_molar_mass      # kg mol⁻¹
 
-dry_air_amounts(χH₂O, pᵢ) =
-    [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
+dry_air_amounts(χH₂O, pᵢ) = [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
 
 nᵈ = dry_air_amounts(χH₂O, pᵢ)                # mol m⁻²
 nothing #hide
@@ -118,12 +117,12 @@ function ecckd_member(selector)
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
     longwave = LongwaveOptics(zeros(longwave_gpoints, Nz),
-                                         zeros(longwave_gpoints, Nz);
-                                         source_top = zeros(longwave_gpoints, Nz),
-                                         source_bottom = zeros(longwave_gpoints, Nz),
-                                         weights = zeros(longwave_gpoints))
+                              zeros(longwave_gpoints, Nz);
+                              source_top = zeros(longwave_gpoints, Nz),
+                              source_bottom = zeros(longwave_gpoints, Nz),
+                              weights = zeros(longwave_gpoints))
     shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
-                                           weights = zeros(shortwave_gpoints))
+                                weights = zeros(shortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),

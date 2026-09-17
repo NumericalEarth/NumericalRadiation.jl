@@ -385,9 +385,9 @@ end
             geometry = (;),
         )
         longwave = LongwaveOptics(zeros(64, 2), zeros(64, 2);
-                                             weights = zeros(64))
+                                  weights = zeros(64))
         shortwave = ShortwaveOptics(zeros(32, 2);
-                                               weights = zeros(32))
+                                    weights = zeros(32))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test all(isfinite, longwave.optical_depth)
@@ -590,7 +590,7 @@ end
     )
 
     longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
-                                         weights = zeros(2))
+                              weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
 
     returned = optical_properties!(longwave, shortwave, model, atmosphere)
@@ -611,7 +611,7 @@ end
     @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
     bad_longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz);
-                                             weights = zeros(1))
+                                  weights = zeros(1))
     @test_throws DimensionMismatch optical_properties!(bad_longwave, shortwave, model, atmosphere)
 
     @test_throws DimensionMismatch EcCKDGasOpticsModel(
@@ -644,7 +644,7 @@ end
         shortwave_weights = [1.0],
     )
     longwave = LongwaveOptics(zeros(2, 1), zeros(2, 1);
-                                         weights = zeros(2))
+                              weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, 1); weights = zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
@@ -673,7 +673,7 @@ end
         shortwave_weights = [0.5, 0.5],
     )
     longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1);
-                                         weights = zeros(1))
+                              weights = zeros(1))
     shortwave = ShortwaveOptics(zeros(2, 1); weights = zeros(2))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
@@ -691,13 +691,11 @@ end
     shortwave_table = zeros(1, 2, 2, 2)
     for gpoint in axes(longwave_table, 1), j in axes(longwave_table, 2),
         iᵖ in axes(longwave_table, 3), iᵀ in axes(longwave_table, 4)
-        longwave_table[gpoint, j, iᵖ, iᵀ] =
-            100gpoint + 10j + 0.001pressure_grid[iᵖ] + 0.01temperature_grid[iᵀ]
+        longwave_table[gpoint, j, iᵖ, iᵀ] = 100gpoint + 10j + 0.001pressure_grid[iᵖ] + 0.01temperature_grid[iᵀ]
     end
     for gpoint in axes(shortwave_table, 1), j in axes(shortwave_table, 2),
         iᵖ in axes(shortwave_table, 3), iᵀ in axes(shortwave_table, 4)
-        shortwave_table[gpoint, j, iᵖ, iᵀ] =
-            10gpoint + j + 0.0001pressure_grid[iᵖ] + 0.001temperature_grid[iᵀ]
+        shortwave_table[gpoint, j, iᵖ, iᵀ] = 10gpoint + j + 0.0001pressure_grid[iᵖ] + 0.001temperature_grid[iᵀ]
     end
 
     atmosphere = ColumnAtmosphere(
@@ -725,15 +723,14 @@ end
     )
 
     longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
-                                         weights = zeros(2))
+                              weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
     lw_coeff(gpoint, j, p, t) = 100gpoint + 10j + 0.001p + 0.01t
     sw_coeff(gpoint, j, p, t) = 10gpoint + j + 0.0001p + 0.001t
-    interpolated_pressure(p) = let (i₀ᵖ, i₁ᵖ, weight) =
-            NumericalRadiation.pressure_axis_bracket(pressure_grid, p)
+    interpolated_pressure(p) = let (i₀ᵖ, i₁ᵖ, weight) = NumericalRadiation.pressure_axis_bracket(pressure_grid, p)
         pressure_grid[i₀ᵖ] + weight * (pressure_grid[i₁ᵖ] - pressure_grid[i₀ᵖ])
     end
     @test longwave.optical_depth[1, 1] ≈
@@ -773,8 +770,8 @@ end
         sqrt(100.0 * 1_000.0), 250.0)[1][3] ≈ 0.5
 
     function contract_model(; pressure_grid = [100.0, 1_000.0],
-                            temperature_grid = [200.0, 300.0],
-                            water_vapor_grid = Float64[])
+                              temperature_grid = [200.0, 300.0],
+                              water_vapor_grid = Float64[])
         Npressures = length(pressure_grid)
         Ntemperatures = NumericalRadiation.temperature_grid_length(temperature_grid)
         Nwater_vapor = length(water_vapor_grid)
@@ -806,12 +803,12 @@ end
 
     model = contract_model()
     longwave = LongwaveOptics(zeros(1, 2), zeros(1, 2);
-                                         weights = zeros(1))
+                              weights = zeros(1))
     shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
     atmosphere(; pressure_layers = [200.0, 800.0],
-               pressure_interfaces = [100.0, 500.0, 1_000.0],
-               temperature_interfaces = Float64[],
-               gases = (h2o = [1.0, 2.0],)) = ColumnAtmosphere(
+                 pressure_interfaces = [100.0, 500.0, 1_000.0],
+                 temperature_interfaces = Float64[],
+                 gases = (h2o = [1.0, 2.0],)) = ColumnAtmosphere(
         pressure_layers = pressure_layers,
         pressure_interfaces = pressure_interfaces,
         temperature_layers = [250.0, 260.0],
@@ -880,7 +877,7 @@ end
             geometry = (;),
         )
         longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1);
-                                             weights = zeros(1))
+                                  weights = zeros(1))
         shortwave = ShortwaveOptics(zeros(1, 1); weights = zeros(1))
         optical_properties!(longwave, shortwave, model, atmosphere)
         return longwave.optical_depth, shortwave.optical_depth
@@ -935,7 +932,7 @@ end
         )
         atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3))
         longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
-                                             weights = zeros(Nlongwave_gpoints))
+                                  weights = zeros(Nlongwave_gpoints))
         shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights = zeros(Nshortwave_gpoints))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
@@ -977,11 +974,13 @@ end
             shortwave_absorption = [shortwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
                                     for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             longwave_water_vapor_absorption = [1e-3 * gpoint * (1 + 1e-5 * pressure_grid[iᵖ]) *
-                                       (1 + 1e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 10iᴴ)
-                                       for gpoint in 1:Nlongwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
+                                               (1 + 1e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 10iᴴ)
+                                               for gpoint in 1:Nlongwave_gpoints, iᵖ in 1:Npressures,
+                                               iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_water_vapor_absorption = [1e-4 * gpoint * (1 + 2e-5 * pressure_grid[iᵖ]) *
-                                        (1 + 2e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 5iᴴ)
-                                        for gpoint in 1:Nshortwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
+                                                (1 + 2e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 5iᴴ)
+                                                for gpoint in 1:Nshortwave_gpoints, iᵖ in 1:Npressures,
+                                                iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
             longwave_source_table = [1.0 * (gpoint + 2) * st^2
@@ -992,9 +991,9 @@ end
         atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3,
                                       composite = [4.2e2, 1.1e3, 2.6e3]))
         longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
-                                             source_top = zeros(Nlongwave_gpoints, 3),
-                                             source_bottom = zeros(Nlongwave_gpoints, 3),
-                                             weights = zeros(Nlongwave_gpoints))
+                                  source_top = zeros(Nlongwave_gpoints, 3),
+                                  source_bottom = zeros(Nlongwave_gpoints, 3),
+                                  weights = zeros(Nlongwave_gpoints))
         shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights = zeros(Nshortwave_gpoints))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
@@ -1082,19 +1081,18 @@ end
             geometry = (;),
         )
         longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, Nz),
-                                             zeros(FT, Nlongwave_gpoints, Nz);
-                                             source_top = zeros(FT, Nlongwave_gpoints, Nz),
-                                             source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
-                                             weights = zeros(FT, Nlongwave_gpoints))
+                                  zeros(FT, Nlongwave_gpoints, Nz);
+                                  source_top = zeros(FT, Nlongwave_gpoints, Nz),
+                                  source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
+                                  weights = zeros(FT, Nlongwave_gpoints))
         shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz);
-                                               weights = zeros(FT, Nshortwave_gpoints))
+                                    weights = zeros(FT, Nshortwave_gpoints))
         return model, atmosphere, longwave, shortwave
     end
 
     for FT in (Float64, Float32), matrix_temperature_grid in (false, true)
         @testset "$FT, matrix temperature grid = $matrix_temperature_grid" begin
-            model, atmosphere, longwave, shortwave =
-                tabulated_fixture(FT, matrix_temperature_grid)
+            model, atmosphere, longwave, shortwave = tabulated_fixture(FT, matrix_temperature_grid)
 
             @test eltype(model) === FT
             @test (@inferred optical_properties!(longwave, shortwave, model,
@@ -1133,15 +1131,13 @@ end
                 @test getfield(same, name) === getfield(model, name)
             end
 
-            adapted_longwave =
-                LongwaveOptics(zero(longwave.optical_depth),
-                                          zero(longwave.source);
-                                          source_top = zero(longwave.source_top),
-                                          source_bottom = zero(longwave.source_bottom),
-                                          weights = zero(longwave.weights))
-            adapted_shortwave =
-                ShortwaveOptics(zero(shortwave.optical_depth);
-                                           weights = zero(shortwave.weights))
+            adapted_longwave = LongwaveOptics(zero(longwave.optical_depth),
+                                              zero(longwave.source);
+                                              source_top = zero(longwave.source_top),
+                                              source_bottom = zero(longwave.source_bottom),
+                                              weights = zero(longwave.weights))
+            adapted_shortwave = ShortwaveOptics(zero(shortwave.optical_depth);
+                                                weights = zero(shortwave.weights))
             optical_properties!(adapted_longwave, adapted_shortwave, adapted, atmosphere)
             @test adapted_longwave.optical_depth == longwave.optical_depth
             @test adapted_shortwave.optical_depth == shortwave.optical_depth

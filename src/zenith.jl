@@ -27,8 +27,8 @@ end
 Fractional year angle `γ = 2π (day − 1) / days_per_year` for a `DateTime`.
 """
 @inline function fractional_year_angle(time::DateTime,
-                                        equinox::DateTime = DateTime(year(time), 3, 20, 12, 0, 0),
-                                        days_per_year::Real = 365.25)
+                                       equinox::DateTime = DateTime(year(time), 3, 20, 12, 0, 0),
+                                       days_per_year::Real = 365.25)
     day_of_year_mid = (time - DateTime(year(time), 1, 1)).value / 1000 / 86400
     return 2π * day_of_year_mid / days_per_year
 end
@@ -41,10 +41,10 @@ For seasonal-only (daily-average) insolation the caller should average over
 a day or set `time` to noon and absorb the daily mean separately.
 """
 @inline function cosine_solar_zenith(longitude, latitude, time::DateTime;
-                                      axial_tilt::Real = 23.44 * π / 180,
-                                      equinox::DateTime = DateTime(year(time), 3, 20, 12, 0, 0),
-                                      days_per_year::Real = 365.25,
-                                      seconds_per_day::Real = 86400)
+                                     axial_tilt::Real = 23.44 * π / 180,
+                                     equinox::DateTime = DateTime(year(time), 3, 20, 12, 0, 0),
+                                     days_per_year::Real = 365.25,
+                                     seconds_per_day::Real = 86400)
     NF = float(promote_type(typeof(longitude), typeof(latitude)))
     longitude = NF(longitude); latitude = NF(latitude)
     γ = NF(fractional_year_angle(time, equinox, days_per_year))

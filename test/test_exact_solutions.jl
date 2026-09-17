@@ -96,8 +96,7 @@ struct PlanckProfileLayerOptics{V}
     source_bottom :: V
 end
 
-@inline (optics::PlanckProfileLayerOptics)(gpoint, k) =
-    (optics.optical_depth[k], optics.source_top[k], optics.source_bottom[k])
+@inline (optics::PlanckProfileLayerOptics)(gpoint, k) = (optics.optical_depth[k], optics.source_top[k], optics.source_bottom[k])
 
 # `(gpoint, k) -> (τ_absorption, τ_scattering, asymmetry)` from the gray model:
 # pure absorption `τ = κₛ n[k]`, no Rayleigh scattering, `g = 0`.
@@ -120,8 +119,7 @@ struct ScatteringLayerOptics{V}
     asymmetry :: V
 end
 
-@inline (optics::ScatteringLayerOptics)(gpoint, k) =
-    (optics.absorption[k], optics.scattering[k], optics.asymmetry[k])
+@inline (optics::ScatteringLayerOptics)(gpoint, k) = (optics.absorption[k], optics.scattering[k], optics.asymmetry[k])
 
 #####
 ##### Solver drivers

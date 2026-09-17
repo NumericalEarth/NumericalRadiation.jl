@@ -24,10 +24,10 @@ struct EcCKDDefinition{D, V, A}
 end
 
 function EcCKDDefinition(; model_name::AbstractString,
-                         version::AbstractString = "unknown",
-                         dimensions,
-                         variables,
-                         attributes = (;))
+                           version::AbstractString = "unknown",
+                           dimensions,
+                           variables,
+                           attributes = (;))
     return EcCKDDefinition(String(model_name), String(version),
                            dimensions, variables, attributes)
 end
@@ -357,8 +357,8 @@ Return `(longwave=..., shortwave=...)` paths for the default reference ecCKD
 runtime pair used by validation and examples.
 """
 function reference_ecckd_definition_paths(; longwave = :longwave_64,
-                                         shortwave = :shortwave_32,
-                                         require::Bool = true)
+                                            shortwave = :shortwave_32,
+                                            require::Bool = true)
     return (
         longwave = reference_ecckd_definition_path(longwave; require),
         shortwave = reference_ecckd_definition_path(shortwave; require),
@@ -547,7 +547,7 @@ This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.
 """
 function read_reference_ecckd_gas_optics(FT::DataType, model = :climate_64x32;
-                                        require::Bool = true, kwargs...)
+                                         require::Bool = true, kwargs...)
     paths = reference_ecckd_definition_paths(model; require)
     if paths.longwave === nothing || paths.shortwave === nothing
         return nothing
@@ -559,8 +559,7 @@ end
 # forms `read_reference_ecckd_gas_optics(Float32)` and
 # `read_reference_ecckd_gas_optics("32x32")` unambiguous.
 read_reference_ecckd_gas_optics(model::Union{Symbol, AbstractString, EcCKDModelSpec} = :climate_64x32;
-                                kwargs...) =
-    read_reference_ecckd_gas_optics(Float64, model; kwargs...)
+                                kwargs...) = read_reference_ecckd_gas_optics(Float64, model; kwargs...)
 
 """
     read_ecckd_definition(data)
@@ -608,18 +607,18 @@ end
 
 function Base.show(io::IO, summary::EcCKDSchemaSummary)
     print(io,
-        "EcCKDSchemaSummary(",
-        "model_name=$(summary.model_name), ",
-        "version=$(summary.version), ",
-        "LW bands=$(summary.longwave_bands), ",
-        "SW bands=$(summary.shortwave_bands), ",
-        "LW g-points=$(summary.longwave_gpoints), ",
-        "SW g-points=$(summary.shortwave_gpoints), ",
-        "gases=$(summary.gases), ",
-        "pressure=$(summary.pressure_grid_size), ",
-        "temperature=$(summary.temperature_grid_size), ",
-        "sources=$(summary.source_tables_present), ",
-        "rayleigh=$(summary.rayleigh_tables_present))")
+          "EcCKDSchemaSummary(",
+          "model_name=$(summary.model_name), ",
+          "version=$(summary.version), ",
+          "LW bands=$(summary.longwave_bands), ",
+          "SW bands=$(summary.shortwave_bands), ",
+          "LW g-points=$(summary.longwave_gpoints), ",
+          "SW g-points=$(summary.shortwave_gpoints), ",
+          "gases=$(summary.gases), ",
+          "pressure=$(summary.pressure_grid_size), ",
+          "temperature=$(summary.temperature_grid_size), ",
+          "sources=$(summary.source_tables_present), ",
+          "rayleigh=$(summary.rayleigh_tables_present))")
 end
 
 function require_positive!(errors, definition, name::Symbol)

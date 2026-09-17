@@ -240,8 +240,7 @@ unchanged, so one shortwave layer functor serves clear and cloudy skies.
 end
 
 @inline add_cloud_scattering_layer(τ_absorption, τ_scattering, asymmetry,
-                                   ::Nothing, gpoint, radius_bracket, water_path) =
-    (τ_absorption, τ_scattering, asymmetry)
+                                   ::Nothing, gpoint, radius_bracket, water_path) = (τ_absorption, τ_scattering, asymmetry)
 
 """
 $(TYPEDSIGNATURES)

@@ -2,7 +2,7 @@ using SpeedyWeather, Statistics
 const SpeedyExt = Base.get_extension(NumericalRadiation,
                                      :NumericalRadiationSpeedyWeatherExt)
 
-default_spectral_grid() = SpectralGrid(trunc=15, nlayers=8)
+default_spectral_grid() = SpectralGrid(trunc = 15, nlayers = 8)
 
 @testset "Model initializes and runs with SpeedyWeather" begin
     # Basic smoke test: construct, initialize, run one step in low resolution
@@ -11,7 +11,7 @@ default_spectral_grid() = SpectralGrid(trunc=15, nlayers=8)
     rad = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
 
     # use only longwave radiation as the only parameterization
-    model = PrimitiveWetModel(spectral_grid; longwave_radiation=rad, parameterizations=(:longwave_radiation,))
+    model = PrimitiveWetModel(spectral_grid; longwave_radiation = rad, parameterizations = (:longwave_radiation,))
 
     initialize!(model.longwave_radiation, model)
     vars = Variables(model)
@@ -43,8 +43,8 @@ end
 
     co2 = CO2(spectral_grid, 280)
 
-    model = PrimitiveWetModel(spectral_grid; longwave_radiation=rad, parameterizations=(:longwave_radiation,),
-            greenhouse_gases = (; co2 = co2))
+    model = PrimitiveWetModel(spectral_grid; longwave_radiation = rad, parameterizations = (:longwave_radiation,),
+                              greenhouse_gases = (; co2 = co2))
 
     initialize!(model.longwave_radiation, model)
     vars = Variables(model)

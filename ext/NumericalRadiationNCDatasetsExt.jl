@@ -83,10 +83,8 @@ function read_cloud_scattering_table(path::String)
             particle_type = string_attribute(dataset, "particle_type"),
             wavenumber = Float64.(Array(dataset["wavenumber"])),
             effective_radius = Float64.(Array(dataset["effective_radius"])),
-            mass_extinction_coefficient =
-                Float64.(Array(dataset["mass_extinction_coefficient"])),
-            single_scattering_albedo =
-                Float64.(Array(dataset["single_scattering_albedo"])),
+            mass_extinction_coefficient = Float64.(Array(dataset["mass_extinction_coefficient"])),
+            single_scattering_albedo = Float64.(Array(dataset["single_scattering_albedo"])),
             asymmetry_factor = Float64.(Array(dataset["asymmetry_factor"])),
         )
     end
@@ -107,9 +105,7 @@ function read_ecckd_spectral_mapping(path::String;
         interval_weight = if haskey(dataset, "solar_spectral_irradiance")
             Float64.(Array(dataset["solar_spectral_irradiance"]))
         elseif haskey(dataset, "temperature_planck")
-            wavenumber_midpoint =
-                0.5 .* (Float64.(Array(dataset["wavenumber1"])) .+
-                        Float64.(Array(dataset["wavenumber2"])))
+            wavenumber_midpoint = 0.5 .* (Float64.(Array(dataset["wavenumber1"])) .+ Float64.(Array(dataset["wavenumber2"])))
             planck_wavenumber_weight.(wavenumber_midpoint, planck_weight_temperature)
         else
             ones(Float64, length(dataset["wavenumber1"]))
@@ -144,7 +140,7 @@ function read_temperature_grid(dataset)
 end
 
 function coefficient_table(dataset, gas::Symbol; water_vapor_mole_fraction, dynamic_water_vapor = false,
-                            allow_missing = false)
+                           allow_missing = false)
     name = String(gas) * "_molar_absorption_coeff"
     if !haskey(dataset, name)
         allow_missing && return nothing
@@ -166,13 +162,13 @@ function coefficient_table(dataset, gas::Symbol; water_vapor_mole_fraction, dyna
 end
 
 function stack_coefficients(dataset, gas_names; water_vapor_mole_fraction, dynamic_water_vapor = false,
-                             allow_missing = false)
+                            allow_missing = false)
     first_table = nothing
     for gas in gas_names
         first_table = coefficient_table(dataset, gas;
-                                         water_vapor_mole_fraction = water_vapor_mole_fraction,
-                                         dynamic_water_vapor = dynamic_water_vapor,
-                                         allow_missing = allow_missing)
+                                        water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                        dynamic_water_vapor = dynamic_water_vapor,
+                                        allow_missing = allow_missing)
         first_table === nothing || break
     end
     first_table === nothing &&
@@ -181,9 +177,9 @@ function stack_coefficients(dataset, gas_names; water_vapor_mole_fraction, dynam
                    size(first_table, 2), size(first_table, 3))
     for (gas_index, gas) in enumerate(gas_names)
         table = coefficient_table(dataset, gas;
-                                   water_vapor_mole_fraction = water_vapor_mole_fraction,
-                                   dynamic_water_vapor = dynamic_water_vapor,
-                                   allow_missing = allow_missing)
+                                  water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                  dynamic_water_vapor = dynamic_water_vapor,
+                                  allow_missing = allow_missing)
         table === nothing && continue
         output[:, gas_index, :, :] .= table
     end
@@ -278,9 +274,9 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
                        Float64.(Array(dataset["h2o_mole_fraction"])) :
                        Float64[],
             absorption = stack_coefficients(dataset, gas_name_tuple;
-                                             water_vapor_mole_fraction = water_vapor_mole_fraction,
-                                             dynamic_water_vapor = :h2o in gas_name_tuple,
-                                             allow_missing = false),
+                                            water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                            dynamic_water_vapor = :h2o in gas_name_tuple,
+                                            allow_missing = false),
             water_vapor_absorption = water_vapor_absorption_table(dataset, gas_name_tuple),
             gas_reference_mole_fractions = reference_mole_fractions(dataset, gas_name_tuple),
             weights = fill(inv(Float64(size(dataset["band_number"], 1))),
@@ -298,9 +294,9 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         (
             temperature_grid = read_temperature_grid(dataset),
             absorption = stack_coefficients(dataset, gas_name_tuple;
-                                             water_vapor_mole_fraction = water_vapor_mole_fraction,
-                                             dynamic_water_vapor = :h2o in gas_name_tuple,
-                                             allow_missing = true),
+                                            water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                            dynamic_water_vapor = :h2o in gas_name_tuple,
+                                            allow_missing = true),
             water_vapor_absorption = water_vapor_absorption_table(dataset, gas_name_tuple),
             water_vapor_grid = haskey(dataset, "h2o_mole_fraction") ?
                        Float64.(Array(dataset["h2o_mole_fraction"])) :

@@ -52,10 +52,8 @@ function scalar_optical_properties!(longwave, shortwave, model, atmosphere)
             if interface_sources
                 T_top = atmosphere.temperature_interfaces[k]
                 T_bottom = atmosphere.temperature_interfaces[k + 1]
-                longwave.source_top[gpoint, k] =
-                    longwave_source(model, gpoint, T_top, source_table_bracket(model, T_top))
-                longwave.source_bottom[gpoint, k] =
-                    longwave_source(model, gpoint, T_bottom, source_table_bracket(model, T_bottom))
+                longwave.source_top[gpoint, k] = longwave_source(model, gpoint, T_top, source_table_bracket(model, T_top))
+                longwave.source_bottom[gpoint, k] = longwave_source(model, gpoint, T_bottom, source_table_bracket(model, T_bottom))
             end
         end
         for gpoint in eachindex(model.shortwave_weights)
@@ -191,8 +189,8 @@ function reference_column(Nz)
              cfc11 = 2.2e-10 .* dry_air,
              cfc12 = 5.0e-10 .* dry_air)
     atmosphere = ColumnAtmosphere(; pressure_layers, pressure_interfaces,
-                                  temperature_layers, temperature_interfaces,
-                                  gases, surface = (;), geometry = (;))
+                                    temperature_layers, temperature_interfaces,
+                                    gases, surface = (;), geometry = (;))
     return atmosphere, Δp, χ_H₂O
 end
 
@@ -221,12 +219,12 @@ end
         # Rayleigh optical depth (the only term built from the hydrostatic
         # amount when `composite` is supplied) halves exactly.
         heavy = ColumnAtmosphere(; pressure_layers = atmosphere.pressure_layers,
-                                 pressure_interfaces = atmosphere.pressure_interfaces,
-                                 temperature_layers = atmosphere.temperature_layers,
-                                 temperature_interfaces = atmosphere.temperature_interfaces,
-                                 gases = atmosphere.gases, surface = atmosphere.surface,
-                                 geometry = atmosphere.geometry,
-                                 constants = PhysicalConstants(FT; gravity = 2 * FT(GRAVITY)))
+                                   pressure_interfaces = atmosphere.pressure_interfaces,
+                                   temperature_layers = atmosphere.temperature_layers,
+                                   temperature_interfaces = atmosphere.temperature_interfaces,
+                                   gases = atmosphere.gases, surface = atmosphere.surface,
+                                   geometry = atmosphere.geometry,
+                                   constants = PhysicalConstants(FT; gravity = 2 * FT(GRAVITY)))
         Nz = length(atmosphere.temperature_layers)
         Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
         longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = false)
@@ -467,24 +465,16 @@ end
 # Julia specializes the allocation measurement separately, so each scalar
 # function is called through a `@noinline` wrapper, once to compile and once
 # to measure.
-Base.@noinline measure_stencil(model, p, T, χ) =
-    @allocated gas_optics_stencil(model, p, T, χ)
-Base.@noinline measure_longwave(model, gpoint, gases, s) =
-    @allocated longwave_optical_depth(model, gpoint, gases, s)
-Base.@noinline measure_shortwave(model, gpoint, gases, s) =
-    @allocated shortwave_optical_depth(model, gpoint, gases, s)
+Base.@noinline measure_stencil(model, p, T, χ) = @allocated gas_optics_stencil(model, p, T, χ)
+Base.@noinline measure_longwave(model, gpoint, gases, s) = @allocated longwave_optical_depth(model, gpoint, gases, s)
+Base.@noinline measure_shortwave(model, gpoint, gases, s) = @allocated shortwave_optical_depth(model, gpoint, gases, s)
 Base.@noinline measure_water_vapor(model, table, water_vapor_moles, gpoint, s) =
     @allocated water_vapor_table_optical_depth(model, table, water_vapor_moles, gpoint, s)
-Base.@noinline measure_rayleigh(model, gpoint, air) =
-    @allocated rayleigh_optical_depth(model, gpoint, air)
-Base.@noinline measure_source_bracket(model, T) =
-    @allocated source_table_bracket(model, T)
-Base.@noinline measure_source(model, gpoint, T, b) =
-    @allocated longwave_source(model, gpoint, T, b)
-Base.@noinline measure_layer_gases(gases, names, k) =
-    @allocated layer_gases(gases, names, k)
-Base.@noinline measure_rebuild(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ) =
-    @allocated GasOpticsStencil(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)
+Base.@noinline measure_rayleigh(model, gpoint, air) = @allocated rayleigh_optical_depth(model, gpoint, air)
+Base.@noinline measure_source_bracket(model, T) = @allocated source_table_bracket(model, T)
+Base.@noinline measure_source(model, gpoint, T, b) = @allocated longwave_source(model, gpoint, T, b)
+Base.@noinline measure_layer_gases(gases, names, k) = @allocated layer_gases(gases, names, k)
+Base.@noinline measure_rebuild(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ) = @allocated GasOpticsStencil(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)
 
 function assert_inferred_and_allocation_free(model, atmosphere)
     FT = eltype(model)
@@ -738,17 +728,17 @@ function legacy_no_scattering_fluxes!(fluxes, optics::LongwaveOptics{FT}, bounda
 end
 
 longwave_fluxes(FT, Nz) = RadiativeFluxes(longwave_up = zeros(FT, Nz + 1),
-                                               longwave_down = zeros(FT, Nz + 1),
-                                               shortwave_up = zeros(FT, Nz + 1),
-                                               shortwave_down = zeros(FT, Nz + 1))
+                                          longwave_down = zeros(FT, Nz + 1),
+                                          shortwave_up = zeros(FT, Nz + 1),
+                                          shortwave_down = zeros(FT, Nz + 1))
 
 # The functor form of precomputed `(Ngpoints, Nz)` interface-source optics.
 struct MatrixLayerOptics{L}
     longwave :: L
 end
 (layer::MatrixLayerOptics)(gpoint, k) = (layer.longwave.optical_depth[gpoint, k],
-                                     layer.longwave.source_top[gpoint, k],
-                                     layer.longwave.source_bottom[gpoint, k])
+                                         layer.longwave.source_top[gpoint, k],
+                                         layer.longwave.source_bottom[gpoint, k])
 
 # A layer functor for an isothermal gray column: every layer has the same
 # optical depth and Planck source.
@@ -774,8 +764,8 @@ function solve_longwave_array(FT, model, longwave; surface_temperature, emissivi
     fluxes = longwave_fluxes(FT, Nz)
     surface_up = surface_longwave_emission(model, surface_temperature; emissivity)
     boundary = LongwaveBoundaryConditions(; surface_longwave_up = surface_up,
-                                          toa_longwave_down = toa_down,
-                                          surface_albedo)
+                                            toa_longwave_down = toa_down,
+                                            surface_albedo)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, nothing, boundary)
     return fluxes
 end
@@ -904,8 +894,8 @@ end
             # it out by streaming with a one-hot weight vector.
             onehot = [j == gpoint ? model.longwave_weights[j] : 0.0 for j in 1:Ngpoints]
             gpoint_up, gpoint_down = stream_longwave(Float64, MatrixLayerOptics(longwave),
-                                           TabulatedSurfaceEmission(model, 290.0; emissivity = 0.95),
-                                           albedo[gpoint], 0.0, onehot, Ngpoints, Nz)
+                                                     TabulatedSurfaceEmission(model, 290.0; emissivity = 0.95),
+                                                     albedo[gpoint], 0.0, onehot, Ngpoints, Nz)
             up .+= gpoint_up
             down .+= gpoint_down
         end
@@ -999,8 +989,7 @@ end
 
 Base.@noinline measure_streaming_longwave(up, down, layer, surface, albedo, toa, weights, Ngpoints, Nz, transmittance, source_up) =
     @allocated streaming_longwave_fluxes!(up, down, layer, surface, albedo, toa, weights, Ngpoints, Nz, transmittance, source_up)
-Base.@noinline measure_surface_emission(model, T, ε) =
-    @allocated TabulatedSurfaceEmission(model, T; emissivity = ε)
+Base.@noinline measure_surface_emission(model, T, ε) = @allocated TabulatedSurfaceEmission(model, T; emissivity = ε)
 Base.@noinline measure_surface_index(surface, gpoint) = @allocated surface[gpoint]
 
 @testset "streaming longwave is inferrable and allocation-free" begin
@@ -1138,10 +1127,9 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     up[1] += source[1]
     down[1] += flux_direct[1] * μ₀
     for k in 1:Nz
-        flux_diffuse[k + 1] =
-            (transmittance[k] * flux_diffuse[k] +
-             reflectance[k] * source[k + 1] +
-             direct_diffuse_transmittance[k] * flux_direct[k]) * inv_denominator[k]
+        flux_diffuse[k + 1] = (transmittance[k] * flux_diffuse[k] +
+                               reflectance[k] * source[k + 1] +
+                               direct_diffuse_transmittance[k] * flux_direct[k]) * inv_denominator[k]
         up[k + 1] += stack_albedo[k + 1] * flux_diffuse[k + 1] + source[k + 1]
         down[k + 1] += flux_diffuse[k + 1] + flux_direct[k + 1] * μ₀
     end

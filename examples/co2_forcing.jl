@@ -18,7 +18,7 @@ using NCDatasets
 using Printf
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
-    names = (:composite, :h2o, :co2))
+                                             names = (:composite, :h2o, :co2))
 nothing #hide
 
 # The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
@@ -58,11 +58,11 @@ function solve_column(χCO₂)
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
     longwave = LongwaveOptics(zeros(longwave_gpoints, Nz), zeros(longwave_gpoints, Nz);
-                                         source_top = zeros(longwave_gpoints, Nz),
-                                         source_bottom = zeros(longwave_gpoints, Nz),
-                                         weights = zeros(longwave_gpoints))
+                              source_top = zeros(longwave_gpoints, Nz),
+                              source_bottom = zeros(longwave_gpoints, Nz),
+                              weights = zeros(longwave_gpoints))
     shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
-                                           weights = zeros(shortwave_gpoints))
+                                weights = zeros(shortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),

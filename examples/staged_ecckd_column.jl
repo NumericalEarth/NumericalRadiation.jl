@@ -61,9 +61,7 @@ function synthetic_absorption(Ngpoints, Ngases, pressure_grid, temperature_grid;
     for gpoint in 1:Ngpoints, j in 1:Ngases, iᵖ in eachindex(pressure_grid), iᵀ in eachindex(temperature_grid)
         pressure_factor = pressure_grid[iᵖ] / maximum(pressure_grid)
         temperature_factor = temperature_grid[iᵀ] / maximum(temperature_grid)
-        table[gpoint, j, iᵖ, iᵀ] =
-            scale * gpoint * (0.7 + 0.5 * j) * (0.4 + pressure_factor) *
-            (0.8 + 0.3 * temperature_factor)
+        table[gpoint, j, iᵖ, iᵀ] = scale * gpoint * (0.7 + 0.5 * j) * (0.4 + pressure_factor) * (0.8 + 0.3 * temperature_factor)
     end
     return table
 end
@@ -112,7 +110,7 @@ radiative_fluxes!(
     atmosphere,
     LongwaveBoundaryConditions(
         surface_longwave_up = surface_longwave_emission(model,
-                                  atmosphere.surface.temperature),
+                                                        atmosphere.surface.temperature),
         surface_albedo = 0,
     ),
 )
@@ -146,17 +144,17 @@ println("Heating range:    ",
 fig = Figure(size = (900, 420))
 
 ax_flux = Axis(fig[1, 1],
-    xlabel = "Net downward flux (W m⁻²)",
-    ylabel = "Pressure (hPa)",
-    title = "Interface flux")
+               xlabel = "Net downward flux (W m⁻²)",
+               ylabel = "Pressure (hPa)",
+               title = "Interface flux")
 lines!(ax_flux, net_flux, pᵢ ./ 100; linewidth = 2)
 scatter!(ax_flux, net_flux, pᵢ ./ 100; markersize = 5)
 ax_flux.yreversed = true
 
 ax_heat = Axis(fig[1, 2],
-    xlabel = "Heating rate (K day⁻¹)",
-    ylabel = "Pressure (hPa)",
-    title = "Layer heating")
+               xlabel = "Heating rate (K day⁻¹)",
+               ylabel = "Pressure (hPa)",
+               title = "Layer heating")
 lines!(ax_heat, daily_heating_rate, p ./ 100; linewidth = 2)
 scatter!(ax_heat, daily_heating_rate, p ./ 100; markersize = 5)
 vlines!(ax_heat, [0]; color = (:gray50, 0.5), linestyle = :dash)

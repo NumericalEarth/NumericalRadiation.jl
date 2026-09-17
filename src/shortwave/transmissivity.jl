@@ -14,18 +14,17 @@ end
 
 Adapt.@adapt_structure ConstantShortwaveTransmissivity
 
-ConstantShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
-    ConstantShortwaveTransmissivity{NF}(; kwargs...)
+ConstantShortwaveTransmissivity(::Type{NF}; kwargs...) where NF = ConstantShortwaveTransmissivity{NF}(; kwargs...)
 
 """$(TYPEDSIGNATURES)
 Layer transmissivities under the constant-transmissivity model. Writes into
 `t` (length `Nz`) and returns it.
 """
 @inline function compute_transmissivity!(t::AbstractVector,
-                                          transmissivity::ConstantShortwaveTransmissivity,
-                                          clouds, profile::AtmosphereProfile,
-                                          geometry::ColumnGrid,
-                                          surface::SurfaceState)
+                                         transmissivity::ConstantShortwaveTransmissivity,
+                                         clouds, profile::AtmosphereProfile,
+                                         geometry::ColumnGrid,
+                                         surface::SurfaceState)
     NF = eltype(t)
     Nz = length(t)
     τ = -log(NF(transmissivity.transmissivity))
@@ -71,14 +70,13 @@ end
 
 Adapt.@adapt_structure BackgroundShortwaveTransmissivity
 
-BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
-    BackgroundShortwaveTransmissivity{NF}(; kwargs...)
+BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF = BackgroundShortwaveTransmissivity{NF}(; kwargs...)
 
 @inline function compute_transmissivity!(t::AbstractVector,
-                                          transmissivity::BackgroundShortwaveTransmissivity,
-                                          clouds, profile::AtmosphereProfile,
-                                          geometry::ColumnGrid,
-                                          surface::SurfaceState)
+                                         transmissivity::BackgroundShortwaveTransmissivity,
+                                         clouds, profile::AtmosphereProfile,
+                                         geometry::ColumnGrid,
+                                         surface::SurfaceState)
     NF = eltype(t)
     Nz = length(t)
 

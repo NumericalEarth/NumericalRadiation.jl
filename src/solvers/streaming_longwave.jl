@@ -120,8 +120,7 @@ downward sweep to the upward one. Allocation-free.
         flux_down[1] += w * down
         for k in 1:Nz
             τ, B_top, B_bottom = layer_optics(gpoint, k)
-            transmittance[k], source_up[k], source_down =
-                no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
+            transmittance[k], source_up[k], source_down = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
             down = down * transmittance[k] + source_down
             flux_down[k + 1] += w * down
         end

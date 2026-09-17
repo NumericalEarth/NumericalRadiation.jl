@@ -33,13 +33,13 @@ struct ColumnAtmosphere{FT, A, G, S, Geo, C} <: AbstractAtmosphericState
 end
 
 function ColumnAtmosphere(; pressure_layers::A,
-                          pressure_interfaces::A,
-                          temperature_layers::A,
-                          temperature_interfaces::A,
-                          gases::G,
-                          surface::S,
-                          geometry::Geo,
-                          constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {A, G, S, Geo, C}
+                            pressure_interfaces::A,
+                            temperature_layers::A,
+                            temperature_interfaces::A,
+                            gases::G,
+                            surface::S,
+                            geometry::Geo,
+                            constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {A, G, S, Geo, C}
     FT = eltype(temperature_layers)
     return ColumnAtmosphere{FT, A, G, S, Geo, C}(
         pressure_layers,
@@ -78,9 +78,9 @@ struct RadiativeFluxes{FT, A}
 end
 
 function RadiativeFluxes(; longwave_up::A,
-                         longwave_down::A,
-                         shortwave_up::A,
-                         shortwave_down::A) where A
+                           longwave_down::A,
+                           shortwave_up::A,
+                           shortwave_down::A) where A
     FT = eltype(longwave_up)
     return RadiativeFluxes{FT, A}(longwave_up, longwave_down, shortwave_up, shortwave_down)
 end

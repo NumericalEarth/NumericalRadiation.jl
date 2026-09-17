@@ -100,20 +100,20 @@ nothing #hide
 # is gate-verified below, not assumed.
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
-    names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+                                             names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
 
 function gas_optics_containers()
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
     longwave = LongwaveOptics(zeros(longwave_gpoints, Nz),
-                                         zeros(longwave_gpoints, Nz);
-                                         source_top = zeros(longwave_gpoints, Nz),
-                                         source_bottom = zeros(longwave_gpoints, Nz),
-                                         weights = zeros(longwave_gpoints))
+                              zeros(longwave_gpoints, Nz);
+                              source_top = zeros(longwave_gpoints, Nz),
+                              source_bottom = zeros(longwave_gpoints, Nz),
+                              weights = zeros(longwave_gpoints))
     shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
-                                           rayleigh_optical_depth = zeros(shortwave_gpoints, Nz),
-                                           scattering_asymmetry = zeros(shortwave_gpoints, Nz),
-                                           weights = zeros(shortwave_gpoints))
+                                rayleigh_optical_depth = zeros(shortwave_gpoints, Nz),
+                                scattering_asymmetry = zeros(shortwave_gpoints, Nz),
+                                weights = zeros(shortwave_gpoints))
     return longwave, shortwave
 end
 
@@ -122,11 +122,10 @@ cloudy_longwave, cloudy_shortwave = gas_optics_containers()
 optical_properties!(clear_longwave, clear_shortwave, gas_optics, atmosphere)
 optical_properties!(cloudy_longwave, cloudy_shortwave, gas_optics, atmosphere)
 
-optics_state(longwave, shortwave) =
-    (longwave.optical_depth, longwave.source, longwave.source_top,
-     longwave.source_bottom, longwave.weights,
-     shortwave.optical_depth, shortwave.rayleigh_optical_depth,
-     shortwave.scattering_asymmetry, shortwave.weights)
+optics_state(longwave, shortwave) = (longwave.optical_depth, longwave.source, longwave.source_top,
+                                     longwave.source_bottom, longwave.weights,
+                                     shortwave.optical_depth, shortwave.rayleigh_optical_depth,
+                                     shortwave.scattering_asymmetry, shortwave.weights)
 
 clear_snapshot = deepcopy(optics_state(clear_longwave, clear_shortwave))
 nothing #hide
@@ -143,17 +142,15 @@ nothing #hide
 # containers only:
 
 cloud = CloudyRegionCloudOptics(zeros(Nz), zeros(Nz - 1),
-                                           zeros(Nz), zeros(Nz);
-                                           shortwave_scattering_optical_depth = zeros(Nz),
-                                           shortwave_scattering_asymmetry = zeros(Nz))
+                                zeros(Nz), zeros(Nz);
+                                shortwave_scattering_optical_depth = zeros(Nz),
+                                shortwave_scattering_asymmetry = zeros(Nz))
 cloudy_region_optical_properties!(cloud, cloud_model, atmosphere)
 add_cloud_optical_depths!(cloudy_longwave, cloudy_shortwave,
                           CloudOptics(cloud.longwave_optical_depth,
-                                                 cloud.shortwave_optical_depth;
-                                                 shortwave_scattering_optical_depth =
-                                                     cloud.shortwave_scattering_optical_depth,
-                                                 shortwave_scattering_asymmetry =
-                                                     cloud.shortwave_scattering_asymmetry))
+                                      cloud.shortwave_optical_depth;
+                                      shortwave_scattering_optical_depth = cloud.shortwave_scattering_optical_depth,
+                                      shortwave_scattering_asymmetry = cloud.shortwave_scattering_asymmetry))
 nothing #hide
 
 # ## Two solves per stream
@@ -182,13 +179,13 @@ radiative_fluxes!(clear_fluxes, CloudlessShortwave(), clear_shortwave,
 allsky_fluxes = flux_containers()
 radiative_fluxes!(allsky_fluxes, CloudOverlapLongwave(overlap = :adding),
                   LongwaveCloudOverlapOptics(clear_longwave,
-                                                        cloudy_longwave,
-                                                        cloud.cloud_fraction),
+                                             cloudy_longwave,
+                                             cloud.cloud_fraction),
                   atmosphere, longwave_boundary)
 radiative_fluxes!(allsky_fluxes, CloudOverlapShortwave(overlap = :adding),
                   ShortwaveCloudOverlapOptics(clear_shortwave,
-                                                         cloudy_shortwave,
-                                                         cloud.cloud_fraction),
+                                              cloudy_shortwave,
+                                              cloud.cloud_fraction),
                   atmosphere, shortwave_boundary)
 
 clear_Ṫ = zeros(Nz)

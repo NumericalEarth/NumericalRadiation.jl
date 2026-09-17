@@ -39,7 +39,7 @@ struct AtmosphereProfile{NF, V<:AbstractVector{NF}}
 end
 
 AtmosphereProfile(; temperature, humidity, geopotential = similar(temperature, 0),
-              surface_pressure, rain_rate = zero(eltype(temperature)), CO₂ = eltype(temperature)(280)) =
+                    surface_pressure, rain_rate = zero(eltype(temperature)), CO₂ = eltype(temperature)(280)) =
     AtmosphereProfile{eltype(temperature), typeof(temperature)}(
         temperature, humidity, geopotential, surface_pressure, rain_rate, CO₂)
 
@@ -85,7 +85,7 @@ Construct a [`SurfaceState`](@ref). Floating-point type defaults to `Float64`.
 SurfaceState(::Type{NF}; kwargs...) where NF = SurfaceState{NF}(; kwargs...)
 
 function SurfaceState(; sea_surface_temperature, land_surface_temperature,
-                       land_fraction, kwargs...)
+                        land_fraction, kwargs...)
     NF = Float64
     return SurfaceState{NF}(;
         sea_surface_temperature  = convert(NF, sea_surface_temperature),
@@ -149,8 +149,7 @@ mutable struct ShortwaveDiagnostics{NF}
     stratocumulus_cover::NF
 end
 
-ShortwaveDiagnostics(::Type{NF}, Nz::Integer = 1) where NF =
-    ShortwaveDiagnostics{NF}(Nz)
+ShortwaveDiagnostics(::Type{NF}, Nz::Integer = 1) where NF = ShortwaveDiagnostics{NF}(Nz)
 
 ShortwaveDiagnostics{NF}(Nz::Integer = 1) where NF = ShortwaveDiagnostics{NF}(
     zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF),

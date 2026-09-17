@@ -23,7 +23,7 @@ of either:
 
 | Quantity | Math | English | Never |
 |:---------|:-----|:--------|:------|
-| Optical depth (layer; absorption; scattering) | `τ`, `τ_absorption`, `τ_scattering`, `Δτ` | `optical_depth`, `scattering_optical_depth` | `tau`, `od` |
+| Optical depth (layer; absorption; scattering) | `τ`, `τ_absorption`, `τ_scattering`, `τᵃ`, `τˢ`, `τᶜ`, `Δτ` | `optical_depth`, `scattering_optical_depth` | `tau`, `od` |
 | Single-scattering albedo | `ω` | `single_scattering_albedo` | `ssa` |
 | Asymmetry factor | `g`, `g_cloud`, `gˡ`, `gⁱ` | `scattering_asymmetry`, `asymmetry_factor` | `asym` |
 | Mass-extinction coefficient | `κ`, `κˡ`, `κⁱ` | `mass_extinction_coefficient` | `ext`, `mass_ext`, `kappa` |

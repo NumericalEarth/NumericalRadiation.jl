@@ -45,14 +45,13 @@ $(TYPEDSIGNATURES)
 Allocate host scratch storage of element type `FT` for a column of `Nz`
 layers.
 """
-ShortwaveColumnScratch(::Type{FT}, Nz) where FT =
-    ShortwaveColumnScratch(Vector{FT}(undef, Nz),
-                           Vector{FT}(undef, Nz),
-                           Vector{FT}(undef, Nz),
-                           Vector{FT}(undef, Nz),
-                           Vector{FT}(undef, Nz),
-                           Vector{FT}(undef, Nz + 1),
-                           Vector{FT}(undef, Nz + 1))
+ShortwaveColumnScratch(::Type{FT}, Nz) where FT = ShortwaveColumnScratch(Vector{FT}(undef, Nz),
+                                                                         Vector{FT}(undef, Nz),
+                                                                         Vector{FT}(undef, Nz),
+                                                                         Vector{FT}(undef, Nz),
+                                                                         Vector{FT}(undef, Nz),
+                                                                         Vector{FT}(undef, Nz + 1),
+                                                                         Vector{FT}(undef, Nz + 1))
 
 Base.eltype(::ShortwaveColumnScratch{V}) where V = eltype(V)
 
@@ -127,10 +126,9 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
         below = stack_albedo[k + 1]
         inv_denominator = inv(one(FT) - below * reflectance[k])
         direct_below = direct_flux[k]
-        flux_diffuse =
-            (transmittance[k] * flux_diffuse +
-             reflectance[k] * source[k + 1] +
-             direct_diffuse_transmittance[k] * direct_above) * inv_denominator
+        flux_diffuse = (transmittance[k] * flux_diffuse +
+                        reflectance[k] * source[k + 1] +
+                        direct_diffuse_transmittance[k] * direct_above) * inv_denominator
         flux_up[k + 1] += w * (below * flux_diffuse + source[k + 1])
         flux_down[k + 1] += w * (flux_diffuse + direct_below * μ₀)
         direct_above = direct_below

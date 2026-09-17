@@ -83,7 +83,7 @@ nothing #hide
 # `_ext`; index 1 is the extension layer and physical layer j sits at j + 1.
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
-    names = (:composite, :h2o, :o3, :co2, :ch4, :n2o))
+                                             names = (:composite, :h2o, :o3, :co2, :ch4, :n2o))
 
 zᵢ = collect(range(0, zₜ; length = Nz + 1))
 z = 0.5 .* (zᵢ[1:Nz] .+ zᵢ[2:Nz+1])
@@ -167,12 +167,12 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
     gases = (composite = zeros(Nz_ext), h2o = zeros(Nz_ext), o3 = zeros(Nz_ext),
              co2 = zeros(Nz_ext), ch4 = zeros(Nz_ext), n2o = zeros(Nz_ext))
     atmosphere = ColumnAtmosphere(; pressure_layers = p_ext,
-                                  pressure_interfaces = pᵢ_ext,
-                                  temperature_layers = T_ext,
-                                  temperature_interfaces = Tᵢ_ext,
-                                  gases, surface = nothing,
-                                  geometry = (cos_zenith = μ₀,),
-                                  constants)
+                                    pressure_interfaces = pᵢ_ext,
+                                    temperature_layers = T_ext,
+                                    temperature_interfaces = Tᵢ_ext,
+                                    gases, surface = nothing,
+                                    geometry = (cos_zenith = μ₀,),
+                                    constants)
     longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, Nz_ext)
     shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = S₀,
                                                      surface_albedo = α)
@@ -233,12 +233,12 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
         @. Tᵢ += clamp(Δt * Ṫᵢ, -2, 2)
     end
     return (; Tᵢ = copy(Tᵢ), Tₛ, converged, final_difference, steps,
-            days = steps * Δt / day,
-            χH₂O = copy(χH₂O_ext),
-            T_ext = copy(T_ext),
-            extension_temperature = T_ext[1],
-            olr = fluxes.longwave_up[1],
-            asr = fluxes.shortwave_down[1] - fluxes.shortwave_up[1])
+              days = steps * Δt / day,
+              χH₂O = copy(χH₂O_ext),
+              T_ext = copy(T_ext),
+              extension_temperature = T_ext[1],
+              olr = fluxes.longwave_up[1],
+              asr = fluxes.shortwave_down[1] - fluxes.shortwave_up[1])
 end
 nothing #hide
 
@@ -302,11 +302,10 @@ function rce(χCO₂; ozone = χO₃_ext, fixed_water_vapor = nothing,
         isfinite(ΔF) || error("nonfinite TOA residual at trial Tₛ = $Tₛ")
         (ΔF, state)
     end
-    Tₛ, state, iterations, expansions =
-        bracketed_secant(toa_imbalance, Tₛ_guesses; imbalance_tolerance,
-                         max_expansions, max_iterations)
+    Tₛ, state, iterations, expansions = bracketed_secant(toa_imbalance, Tₛ_guesses; imbalance_tolerance,
+                                                         max_expansions, max_iterations)
     return (; state..., Tₛ, secant_iterations = iterations,
-            bracket_expansions = expansions)
+              bracket_expansions = expansions)
 end
 nothing #hide
 

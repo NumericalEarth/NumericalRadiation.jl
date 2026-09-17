@@ -72,8 +72,7 @@ are not interpolated.
                                     pressure,
                                     temperature,
                                     water_vapor_mole_fraction) where FT
-    pressure_bracket, temperature_bracket =
-        table_stencil(FT, model.pressure_grid, model.temperature_grid, pressure, temperature)
+    pressure_bracket, temperature_bracket = table_stencil(FT, model.pressure_grid, model.temperature_grid, pressure, temperature)
     water_vapor_bracket = water_vapor_axis_bracket(model.water_vapor_mole_fraction_grid,
                                                    water_vapor_mole_fraction)
     return GasOpticsStencil{FT}(pressure_bracket, temperature_bracket, water_vapor_bracket)
@@ -98,8 +97,7 @@ scattering optical depth and the dry-air fallback of the layer H₂O mole
 fraction. The result takes the promoted type of the arguments, so pass them
 in the model's element type.
 """
-@inline hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass) =
-    Δp / (gravity * dry_air_molar_mass)
+@inline hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass) = Δp / (gravity * dry_air_molar_mass)
 
 # Scalar H₂O amount of a layer for the H₂O tables, `0` when the gas container
 # carries no `h2o` key (only legal for models without an H₂O table, which never
@@ -140,7 +138,7 @@ end
                                          gases::NamedTuple,
                                          s::GasOpticsStencil) where FT
     τ = accumulate_tabulated_optical_depth(gases, table, model.gas_reference_mole_fractions,
-                                 Val(gas_names(model)), gpoint, 1, table_brackets(s))
+                                           Val(gas_names(model)), gpoint, 1, table_brackets(s))
     water_vapor_moles = water_vapor_layer_amount(FT, gases)
     τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, gpoint, s)
     return max(τ, 0)
@@ -159,8 +157,7 @@ clamped at zero.
                                gpoint,
                                gases::NamedTuple,
                                s::GasOpticsStencil) where FT =
-    tabulated_optical_depth(model, model.longwave_absorption,
-                            model.longwave_water_vapor_absorption, gpoint, gases, s)
+    tabulated_optical_depth(model, model.longwave_absorption, model.longwave_water_vapor_absorption, gpoint, gases, s)
 
 """
 $(TYPEDSIGNATURES)
@@ -172,8 +169,7 @@ arguments as the longwave method.
                                 gpoint,
                                 gases::NamedTuple,
                                 s::GasOpticsStencil) where FT =
-    tabulated_optical_depth(model, model.shortwave_absorption,
-                            model.shortwave_water_vapor_absorption, gpoint, gases, s)
+    tabulated_optical_depth(model, model.shortwave_absorption, model.shortwave_water_vapor_absorption, gpoint, gases, s)
 
 @inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT},
                                gpoint,

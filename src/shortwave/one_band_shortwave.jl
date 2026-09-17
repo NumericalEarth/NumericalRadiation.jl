@@ -41,7 +41,7 @@ Fields:
   [`OneBandShortwaveRadiativeTransfer`](@ref)
 """
 struct OneBandShortwave{C<:AbstractShortwaveClouds, T<:AbstractShortwaveTransmissivity,
-                       R<:OneBandShortwaveRadiativeTransfer} <: AbstractShortwaveScheme
+                        R<:OneBandShortwaveRadiativeTransfer} <: AbstractShortwaveScheme
     clouds::C
     transmissivity::T
     radiative_transfer::R
@@ -92,7 +92,7 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
     # `constants` and `thermodynamic` are duck-typed; see `solve_longwave!`.
 
     clouds = diagnose_clouds(scheme.clouds, profile, geometry, surface,
-                              constants, thermodynamic, cloud_top_convective)
+                             constants, thermodynamic, cloud_top_convective)
 
     t = transmissivity_scratch
     length(t) == length(profile.temperature) ||
