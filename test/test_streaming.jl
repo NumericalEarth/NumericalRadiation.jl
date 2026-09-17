@@ -1148,7 +1148,7 @@ end
         @test scratch isa ShortwaveColumnScratch{Vector{FT}}
         @test eltype(scratch) === FT
         for name in (:reflectance, :transmittance, :direct_reflectance,
-                     :direct_diffuse_transmittance, :direct_transmittance)
+                     :direct_diffuse_transmittance, :direct_flux)
             @test length(getfield(scratch, name)) == 5
         end
         @test length(scratch.stack_albedo) == 6

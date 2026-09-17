@@ -2,39 +2,26 @@
 $(TYPEDEF)
 
 Per-column scratch storage for [`streaming_shortwave_fluxes!`](@ref): five
-layer vectors of length `Nz` and two interface vectors of length
-`Nz + 1`. On the host `V` is a `Vector{FT}`; a host kernel hands in views
-of one row of its own device matrices instead, so the solver never allocates.
-
-The five layer vectors hold the delta-Eddington two-stream properties of each
-layer, except that `direct_transmittance[k]` stores the normal-incidence
-direct-beam flux at the *bottom* of layer `k` (the incoming normal flux times
-the direct transmittance of layers `1:k`) rather than the layer's own direct
-transmittance: the adding sweeps need that running product, not the factor.
-`stack_albedo[k]` and `source[k]` are the diffuse albedo and upward diffuse
-source of everything below interface `k`.
-
-Every element is written before it is read, so the storage need not be
-initialized.
+layer vectors of length `Nz` and two interface vectors of length `Nz + 1`.
+On the host `V` is a `Vector{FT}`; a host kernel hands in views of one row of
+its own device matrices instead, so the solver never allocates. Every element
+is written before it is read, so the storage need not be initialized.
 
 Fields:
 - `reflectance`: Layer diffuse reflectance, length `Nz`
 - `transmittance`: Layer diffuse transmittance, length `Nz`
-- `direct_reflectance`: Layer reflectance of the direct beam into the diffuse upward stream,
-  length `Nz`
-- `direct_diffuse_transmittance`: Layer transmittance of the direct beam into the diffuse
-  downward stream, length `Nz`
-- `direct_transmittance`: Normal-incidence direct-beam flux at the bottom of each layer,
-  length `Nz`
+- `direct_reflectance`: Layer reflectance of the direct beam into the diffuse upward stream, length `Nz`
+- `direct_diffuse_transmittance`: Layer transmittance of the direct beam into the diffuse downward stream, length `Nz`
+- `direct_flux`: Normal-incidence direct-beam flux (W m⁻²) at the bottom of each layer, length `Nz`
 - `stack_albedo`: Diffuse albedo of the stack below each interface, length `Nz + 1`
-- `source`: Upward diffuse source of the stack below each interface, length `Nz + 1`
+- `source`: Upward diffuse source (W m⁻²) of the stack below each interface, length `Nz + 1`
 """
 struct ShortwaveColumnScratch{V}
     reflectance::V
     transmittance::V
     direct_reflectance::V
     direct_diffuse_transmittance::V
-    direct_transmittance::V
+    direct_flux::V
     stack_albedo::V
     source::V
 end
@@ -86,7 +73,7 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     transmittance = scratch.transmittance
     direct_reflectance = scratch.direct_reflectance
     direct_diffuse_transmittance = scratch.direct_diffuse_transmittance
-    direct_flux = scratch.direct_transmittance
+    direct_flux = scratch.direct_flux
     stack_albedo = scratch.stack_albedo
     source = scratch.source
 
@@ -100,9 +87,9 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
         τ = τₐ + τₛ
         ω = ifelse(τ == zero(FT), zero(FT), τₛ / τ)
         𝒢 = clamp(FT(𝒢), -one(FT), one(FT))
-        reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k],
-            direct_transmittance = shortwave_two_stream_layer(FT, μ₀, τ, ω, 𝒢)
-        direct_above *= direct_transmittance
+        reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k], 𝒟 =
+            shortwave_two_stream_layer(FT, μ₀, τ, ω, 𝒢)
+        direct_above *= 𝒟
         direct_flux[k] = direct_above
     end
     direct_surface = direct_above

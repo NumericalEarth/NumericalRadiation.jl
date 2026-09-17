@@ -137,7 +137,7 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``\lambda`` | `λ`, `λμ₀` | | Two-stream eigenvalue `√((γ₁ - γ₂)(γ₁ + γ₂))` (`k` is the layer index) |
 | ``\mathcal{R}``, ``\mathcal{T}`` | `ℛ`, `𝒯`, `𝒯_k`, `𝒯[k]` | `reflectance`, `transmittance`, `transmissivity_scratch` | Diffuse reflectance and transmittance of a layer |
 | ``\mathcal{R}^0``, ``\mathcal{T}^0`` | `ℛ⁰`, `𝒯⁰` | `direct_reflectance`, `direct_diffuse_transmittance` | Direct-beam reflectance and direct-to-diffuse transmittance |
-| ``\mathcal{D}`` | `𝒟` | `direct_transmittance` | Direct transmittance `e^{-τ/μ₀}` |
+| ``\mathcal{D}`` | `𝒟` | | Direct transmittance `e^{-τ/μ₀}` of a layer; `ShortwaveColumnScratch.direct_flux` holds its running product times the incoming normal flux |
 | ``S^\uparrow``, ``S^\downarrow`` | `Sꜛ`, `Sꜜ`, `Sꜛₖ`, `Sꜜₖ₊₁`, `S` | `source_up`, `source_down`, `source` | Upward and downward layer emission (longwave); `S` when both directions coincide |
 | ``e, e^2, m_1, m_2, d`` | `e`, `e₂`, `m₁`, `m₂`, `d` | | `e^{-λτ}`, `e^{-2λτ}`, `1 - e^{-λτ}`, `1 - e^{-2λτ}`, `1 - e^{-τ/μ₀}` (the conservative-limit rearrangement of the shortwave layer solution) |
 | ``\alpha`` | `α` | `overlap_parameter` | ecRad/Hogan–Illingworth cloud-overlap parameter between adjacent layers (also the surface albedo, below; the two never meet in one function) |
