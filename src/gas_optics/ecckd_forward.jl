@@ -532,9 +532,22 @@ end
 # The temperature is converted to the model precision before bracketing, as
 # `gas_optics_stencil` does, so the bracket and the sources built on it are
 # in `FT` whatever the caller's temperature type.
-@inline source_table_bracket(model::EcCKDTabulatedGasOpticsModel{FT}, temperature) where FT =
-    model.longwave_source_table === nothing ?
-        nothing : bracket(model.longwave_source_temperature_grid, FT(temperature))
+#
+# Off the table the source follows ecRad's `calc_planck_function`: above the
+# last node it is extrapolated linearly from the last interval, which the
+# bracket expresses as a weight above one (the reference tables end at
+# 350 K, which a hot land surface can exceed; holding B(350 K) there would
+# under-emit by ≈ 4σT³ ≈ 10 W m⁻² per kelvin). Below the first node
+# `longwave_source` scales B(T₁) linearly to zero.
+@inline function source_table_bracket(model::EcCKDTabulatedGasOpticsModel{FT}, temperature) where FT
+    model.longwave_source_table === nothing && return nothing
+    grid = model.longwave_source_temperature_grid
+    T = FT(temperature)
+    i₀, i₁, w = bracket(grid, T)
+    last = lastindex(grid)
+    w_above = (T - grid[last - 1]) / (grid[last] - grid[last - 1])
+    return i₀, i₁, ifelse(T > grid[last], w_above, w)
+end
 
 @inline function longwave_source(model::EcCKDTabulatedGasOpticsModel{FT},
                                   ig,
@@ -542,7 +555,11 @@ end
                                   source_bracket) where FT
     source_bracket === nothing &&
         return model.longwave_source_scale[ig] * FT(5.670374419e-8) * FT(temperature)^4
-    return interp_source_table(model.longwave_source_table, ig, source_bracket)
+    source = interp_source_table(model.longwave_source_table, ig, source_bracket)
+    # Linear to zero below the first node, as in ecRad; the factor is exactly
+    # one on and above the table, so in-range sources are untouched.
+    T₁ = model.longwave_source_temperature_grid[begin]
+    return source * min(FT(temperature) / T₁, one(FT))
 end
 
 @generated function accumulate_tau(gases::NamedTuple,

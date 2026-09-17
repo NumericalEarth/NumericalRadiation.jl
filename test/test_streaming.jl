@@ -348,6 +348,46 @@ end
     @test isnan(longwave_optical_depth(model, 1, (h2o = 2.0, co2 = 3.0), s))
 end
 
+@testset "Planck source off the table follows ecRad, $FT" for FT in (Float64, Float32)
+    # The reference source tables end at 350 K, which a hot land surface can
+    # exceed. ecRad's `calc_planck_function` extrapolates linearly from the
+    # last interval above the table and scales B(T₁) linearly to zero below
+    # it; holding the edge value instead would under-emit by ≈ 4σT³ per kelvin.
+    model, _ = tabulated_fixture(FT)
+    grid = model.longwave_source_temperature_grid    # [180, 240, 300]
+    table = model.longwave_source_table              # (ig + 2) T²
+    n = length(grid)
+    for ig in 1:length(model.longwave_weights)
+        # Above the table: the bracket is the last interval with a weight > 1.
+        T = FT(330)
+        b = @inferred source_table_bracket(model, T)
+        @test b[1:2] == (n - 1, n)
+        @test b[3] ≈ FT(1.5) rtol = 4eps(FT)
+        slope = (table[ig, n] - table[ig, n - 1]) / (grid[n] - grid[n - 1])
+        @test longwave_source(model, ig, T, b) ≈ table[ig, n] + slope * (T - grid[n]) rtol = 8eps(FT)
+        @test longwave_source(model, ig, T, b) > table[ig, n]
+        # On the last node nothing changes.
+        b = source_table_bracket(model, grid[n])
+        @test longwave_source(model, ig, grid[n], b) == table[ig, n]
+        # Below the table: linear in T down to zero.
+        T = FT(90)
+        b = source_table_bracket(model, T)
+        @test b[1:2] == (1, 2) && b[3] == 0
+        @test longwave_source(model, ig, T, b) ≈ table[ig, 1] * (T / grid[1]) rtol = 8eps(FT)
+        @test longwave_source(model, ig, zero(FT), source_table_bracket(model, zero(FT))) == 0
+        # In range the source is the plain table interpolation.
+        T = FT(270)
+        b = source_table_bracket(model, T)
+        @test longwave_source(model, ig, T, b) ≈ table[ig, 2] + (table[ig, 3] - table[ig, 2]) / 2 rtol = 8eps(FT)
+    end
+    # The surface emission and its eager `collect` follow the same rule.
+    hot = TabulatedSurfaceEmission(model, FT(330))
+    @test eltype(hot) === FT
+    @test collect(hot) == surface_longwave_emission(model, FT(330))
+    @test all(collect(hot) .> collect(TabulatedSurfaceEmission(model, grid[n])))
+    @test all(iszero, TabulatedSurfaceEmission(model, zero(FT)))
+end
+
 # Julia specializes the allocation measurement separately, so each scalar
 # function is called through a `@noinline` wrapper, once to compile and once
 # to measure.

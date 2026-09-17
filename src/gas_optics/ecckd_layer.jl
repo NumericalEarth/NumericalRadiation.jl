@@ -200,7 +200,10 @@ $(TYPEDSIGNATURES)
 Bracket of `temperature` on the model's Planck source-table temperature grid,
 to pass to [`longwave_source`](@ref); `nothing` when the model has no source
 table (an [`EcCKDGasOpticsModel`](@ref), or a tabulated model without one),
-in which case the source is the scaled gray `σT⁴`.
+in which case the source is the scaled gray `σT⁴`. Off the table the source
+follows ecRad: above the last node (350 K in the reference tables) it is
+extrapolated linearly from the last interval, below the first node (120 K)
+it is scaled linearly to zero.
 """
 @inline source_table_bracket(::EcCKDGasOpticsModel, temperature) = nothing
 
