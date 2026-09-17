@@ -449,7 +449,7 @@ end
 end
 
 # Pressure/temperature interpolation stencil for a coefficient table: a pair of
-# `(i0, i1, weight)` brackets. Brackets depend only on the layer state, so the
+# `(i₀, i₁, w)` brackets. Brackets depend only on the layer state, so the
 # runtime builds one per layer and reuses it across every g point and gas.
 #
 # `FT` is the *table's* element type, threaded explicitly rather than taken from

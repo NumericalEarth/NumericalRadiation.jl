@@ -126,21 +126,21 @@ function v_overlap_matrix_alpha!(v::AbstractMatrix{FT}, α, upper_clear, upper_c
     pair_cloud_cover = overlap * max(upper_cloud, lower_cloud) +
         (one(FT) - overlap) *
         (upper_cloud + lower_cloud - upper_cloud * lower_cloud)
-    overlap11 = one(FT) - pair_cloud_cover
-    overlap12 = pair_cloud_cover - upper_cloud
-    overlap21 = pair_cloud_cover - lower_cloud
-    overlap22 = upper_cloud + lower_cloud - pair_cloud_cover
+    overlap₁₁ = one(FT) - pair_cloud_cover
+    overlap₁₂ = pair_cloud_cover - upper_cloud
+    overlap₂₁ = pair_cloud_cover - lower_cloud
+    overlap₂₂ = upper_cloud + lower_cloud - pair_cloud_cover
 
     if upper_clear > sqrt(eps(FT))
-        v[1, 1] = overlap11 / upper_clear
-        v[2, 1] = overlap12 / upper_clear
+        v[1, 1] = overlap₁₁ / upper_clear
+        v[2, 1] = overlap₁₂ / upper_clear
     else
         v[1, 1] = zero(FT)
         v[2, 1] = zero(FT)
     end
     if upper_cloud > sqrt(eps(FT))
-        v[1, 2] = overlap21 / upper_cloud
-        v[2, 2] = overlap22 / upper_cloud
+        v[1, 2] = overlap₂₁ / upper_cloud
+        v[2, 2] = overlap₂₂ / upper_cloud
     else
         v[1, 2] = zero(FT)
         v[2, 2] = zero(FT)
@@ -233,31 +233,31 @@ function v_overlap_matrix_tripleclouds_alpha!(v::AbstractMatrix{FT},
     pair_cloud_cover = overlap * max(upper_cloud, lower_cloud) +
         (one(FT) - overlap) *
         (upper_cloud + lower_cloud - upper_cloud * lower_cloud)
-    overlap11 = one(FT) - pair_cloud_cover
-    overlap12 = pair_cloud_cover - upper_cloud
-    overlap21 = pair_cloud_cover - lower_cloud
-    overlap22 = upper_cloud + lower_cloud - pair_cloud_cover
+    overlap₁₁ = one(FT) - pair_cloud_cover
+    overlap₁₂ = pair_cloud_cover - upper_cloud
+    overlap₂₁ = pair_cloud_cover - lower_cloud
+    overlap₂₂ = upper_cloud + lower_cloud - pair_cloud_cover
 
     if upper_clear > sqrt(eps(FT))
-        v[1, 1] = overlap11 / upper_clear
+        v[1, 1] = overlap₁₁ / upper_clear
         if lower_cloud > sqrt(eps(FT))
-            cloudy_from_clear = overlap12 / upper_clear
+            cloudy_from_clear = overlap₁₂ / upper_clear
             v[2, 1] = cloudy_from_clear * lower_fraction[2] / lower_cloud
             v[3, 1] = cloudy_from_clear * lower_fraction[3] / lower_cloud
         end
     end
 
-    inhom_alpha = overlap^max(FT(inhomogeneity_exponent), zero(FT))
+    inhomogeneity_overlap = overlap^max(FT(inhomogeneity_exponent), zero(FT))
     upper_thin = upper_cloud > sqrt(eps(FT)) ? upper_fraction[2] / upper_cloud : zero(FT)
     upper_thick = upper_cloud > sqrt(eps(FT)) ? upper_fraction[3] / upper_cloud : zero(FT)
     lower_thin = lower_cloud > sqrt(eps(FT)) ? lower_fraction[2] / lower_cloud : zero(FT)
     lower_thick = lower_cloud > sqrt(eps(FT)) ? lower_fraction[3] / lower_cloud : zero(FT)
-    v_overlap_matrix_alpha!(cloud_v, inhom_alpha, upper_thin, upper_thick, lower_thin, lower_thick)
+    v_overlap_matrix_alpha!(cloud_v, inhomogeneity_overlap, upper_thin, upper_thick, lower_thin, lower_thick)
     for upper in 2:3
         upper_mass = upper == 2 ? upper_fraction[2] : upper_fraction[3]
         upper_mass <= sqrt(eps(FT)) && continue
-        v[1, upper] = overlap21 / upper_cloud
-        cloudy_weight = overlap22 / upper_cloud
+        v[1, upper] = overlap₂₁ / upper_cloud
+        cloudy_weight = overlap₂₂ / upper_cloud
         for lower in 2:3
             v[lower, upper] = cloudy_weight * cloud_v[lower - 1, upper - 1]
         end
