@@ -74,7 +74,7 @@ scattering **asymmetry factor is therefore `𝒢`** (U+1D4A2, `\mathcal{G}`):
 `g` is taken, and `γ` is the two-stream coefficient family `γ₁ … γ₄`. Bare
 **`σ` is the Stefan–Boltzmann constant** while the sigma coordinate is never
 bound to bare `σ` (it lives in the `ColumnGrid.σ_full`, `σ_half`, `σ_thick`
-fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
+fields inherited from SpeedyWeather and in `Δσ_k`).
 
 | LaTeX math | Unicode code form | Accessor or field | Description |
 |:-----------|:------------------|:------------------|:------------|
@@ -106,12 +106,12 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``p^{v}`` | `pᵛ_k` | | Vapor partial pressure, Pa (Breeze) |
 | ``p^{v+}`` | `pᵛ⁺` | `saturation_vapor_pressure` | Saturation vapor pressure, Pa (Breeze) |
 | ``\Phi`` | `Φ` | `AtmosphereProfile.geopotential` | Geopotential, m² s⁻² |
-| ``\sigma_k``, ``\sigma_{k+\frac12}``, ``\Delta\sigma_k`` | `σ_full`, `σ_half`, `σ_thick`, `Δσ_k`, `σ_level` | `ColumnGrid.σ_full`, `.σ_half`, `.σ_thick` | Sigma coordinate `p / pˢ` at layer midpoints (length `Nz`), interfaces (length `Nz + 1`, 0 at the top, 1 at the surface) and the layer thickness `diff(σ_half)`; a generic level is `σ_level` |
+| ``\sigma_k``, ``\sigma_{k+\frac12}``, ``\Delta\sigma_k`` | `σ_full`, `σ_half`, `σ_thick`, `Δσ_k` | `ColumnGrid.σ_full`, `.σ_half`, `.σ_thick` | Sigma coordinate `p / pˢ` at layer midpoints (length `Nz`), interfaces (length `Nz + 1`, 0 at the top, 1 at the surface) and the layer thickness `diff(σ_half)` |
 | ``\chi`` | `χ`, `χH₂O`, `χCO₂`, `χO₃`, `χCH₄`, `χN₂O` | `mole_fractions`, `water_vapor_mole_fraction` | Mole fraction relative to dry air (dry-air volume mixing ratio; RRTMGP's `vmr`), formula glued as in `H₂O` |
 | ``n^d`` | `nᵈ`, `air_moles`, `dry_air_moles` | `gases.composite`, [`hydrostatic_air_moles`](@ref) | Dry-air molar amount of a layer, mol m⁻², `Δp / (g mᵈ)` |
 | ``n`` | `n`, `gases`, `layer_gases` | `ColumnAtmosphere.gases`, [`layer_gases`](@ref) | Molar amount of a gas in a layer, mol m⁻², `χ nᵈ`; keyed `:composite :h2o :co2 :o3 :ch4 :n2o :cfc11 :cfc12` after the ecCKD files |
 | ``\mathrm{CO_2}`` | `CO₂`, `default_CO₂` | `AtmosphereProfile.CO₂` | CO₂ concentration of the column schemes, ppmv |
-| ``\zeta`` | `ζ` | `OneBandShortwaveRadiativeTransfer.ozone_distribution` | Ozone vertical distribution over the sigma coordinate, `∫ ζ dσ_level = 1`; `ozone_absorption_k` is the fraction of the TOA flux it absorbs in layer `k` |
+| ``\zeta`` | `ζ` | `OneBandShortwaveRadiativeTransfer.ozone_distribution` | Ozone vertical distribution over the sigma coordinate, `∫ ζ dσ = 1`; `ozone_absorption_k` is the fraction of the TOA flux it absorbs in layer `k` |
 | **Gas optics** | | | |
 | ``\tau`` | `τ`, `τᶜ` | `optical_depth`, [`longwave_optical_depth`](@ref), [`shortwave_optical_depth`](@ref) | Layer optical depth, absorption plus scattering (the two-stream functions take this total with `ω` and `𝒢`) |
 | ``\Delta\tau`` | `Δτ`, `Δτ_k`, `Δτ_bottom`, `Δτ_H₂O_line`, `Δτ_H₂O_continuum`, `Δτ_CO₂` | [`NumericalRadiation.williams_optical_depth_increment`](@ref) | Layer optical-depth increment, by absorber in the Williams scheme (`q_CO₂` is its CO₂ mass mixing ratio) |
@@ -135,7 +135,7 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``\gamma_1, \gamma_2, \gamma_3, \gamma_4`` | `γ₁`, `γ₂`, `γ₃`, `γ₄` | | Two-stream coefficients (practical improved flux method in the shortwave, hemispheric mean with `D` in the longwave) |
 | ``\alpha_1, \alpha_2`` | `α₁`, `α₂` | | Meador–Weaver direct-beam coefficients `γ₁γ₄ + γ₂γ₃`, `γ₁γ₃ + γ₂γ₄` |
 | ``\lambda`` | `λ`, `λμ₀` | | Two-stream eigenvalue `√((γ₁ - γ₂)(γ₁ + γ₂))` (`k` is the layer index) |
-| ``\mathcal{R}``, ``\mathcal{T}`` | `ℛ`, `𝒯`, `𝒯_k`, `𝒯[k]` | `reflectance`, `transmittance`, `transmissivity_scratch` | Diffuse reflectance and transmittance of a layer |
+| ``\mathcal{R}``, ``\mathcal{T}`` | `ℛ`, `𝒯`, `𝒯ₖ`, `𝒯ˢ`, `𝒯[k]` | `reflectance`, `transmittance`, `transmissivity_scratch` | Diffuse reflectance and transmittance of a layer (`𝒯ˢ`: of the layer above the surface) |
 | ``\mathcal{R}^0``, ``\mathcal{T}^0`` | `ℛ⁰`, `𝒯⁰` | `direct_reflectance`, `direct_diffuse_transmittance` | Direct-beam reflectance and direct-to-diffuse transmittance |
 | ``\mathcal{D}`` | `𝒟` | | Direct transmittance `e^{-τ/μ₀}` of a layer; `ShortwaveColumnScratch.direct_flux` holds its running product times the incoming normal flux |
 | ``S^\uparrow``, ``S^\downarrow`` | `Sꜛ`, `Sꜜ`, `Sꜛₖ`, `Sꜜₖ₊₁`, `S` | `source_up`, `source_down`, `source` | Upward and downward layer emission (longwave); `S` when both directions coincide |
@@ -162,7 +162,7 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | **Surface and geometry** | | | |
 | ``\varepsilon`` | `ε`, `ε_ocean`, `ε_land` | `emissivity`, `SurfaceState.ocean_emissivity`, `land_emissivity` | Surface emissivity; the surface source is `ε B(Tˢ)` |
 | ``\alpha`` | `α`, `α_ocean`, `α_land`, `α_cloud`, `α_stratocumulus`, `α_direct`, `α_diffuse` | `surface_albedo`, `surface_albedo_direct`, `SurfaceState.ocean_albedo`, `land_albedo`, `ShortwaveDiagnostics.albedo`, `stack_albedo` | Albedo of the surface (Lambertian; diffuse and direct), of a cloud, or of the stack below an interface |
-| ``\mathcal{R}_\mathrm{cloud}`` | `ℛ_cloud` | | Cloud-top reflectance `α_cloud cloud_cover` of the one-band shortwave scheme |
+| ``\mathcal{R}^c`` | `ℛᶜ` | | Cloud-top reflectance `α_cloud cloud_cover` of the one-band shortwave scheme |
 | ``\delta`` | `δ` | [`solar_declination`](@ref) | Solar declination, rad |
 | ``\gamma`` | `γ` | `fractional_year_angle` | Fractional-year angle `2π (day - 1) / days_per_year`, rad |
 | | `hour_angle`, `time_correction` | [`equation_of_time`](@ref) | Hour angle and equation-of-time correction, rad |
@@ -184,10 +184,14 @@ and are the only identifiers exempt from the rules above:
   `molmass_dryair`, `Stefan`);
 * SpeedyWeather fields and keywords (`σ_levels_full`, `σ_levels_half`, `σ_levels_thick`, `mol_mass_dry_air`,
   `R_dry`, `greenhouse_gases.co2`, `SpectralGrid(nlayers=8)`,
-  `spectral_grid.nlayers`);
+  `spectral_grid.nlayers`) and the public `ColumnGrid` fields that mirror them
+  (`σ_full`, `σ_half`, `σ_thick`);
 * the Williams (2026) Table 1 parameters of [`AnalyticBandLongwave`](@ref)
-  listed in the table, and the SPEEDY Fortran names quoted in the docstrings of
-  the one-band shortwave scheme (`GSES0`, `absdry`, `azen`, `nzen`);
+  (`κ_rot`, `l_rot`, `κ_vr`, `l_vr1`, `l_vr2`, `κ_cnt1`, `κ_cnt2`, `κ_CO₂`,
+  `l_CO₂`, `ν̃_CO₂`, `p_ref`, `pv_ref`, `T_ref`, `σ_cont`) with the derived
+  `κ_line` and `κ_continuum`, and the SPEEDY Fortran names quoted in the
+  docstrings of the one-band shortwave scheme (`GSES0`, `absdry`, `azen`,
+  `nzen`);
 * the option `Symbol`s `:matrix_alpha`, `:tripleclouds_alpha`,
   `:matrix_maximum`, which are public API values;
 * the column schemes ported from SPEEDY and the Williams (2026) scheme

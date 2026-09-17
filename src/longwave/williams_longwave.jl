@@ -176,9 +176,9 @@ function solve_longwave!(temperature_tendency::AbstractVector,
 
         for k in Nz:-1:1
             Δτ_k = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pˢ, geometry, scheme, g)
-            𝒯_k  = exp(-Δτ_k)
+            𝒯ₖ  = exp(-Δτ_k)
             B_k  = planck_wavenumber(T[k], ν̃)
-            ℐꜛ_new::NF = ℐꜛ * 𝒯_k + Δν̃ * NF(π) * B_k * (1 - 𝒯_k)
+            ℐꜛ_new::NF = ℐꜛ * 𝒯ₖ + Δν̃ * NF(π) * B_k * (1 - 𝒯ₖ)
 
             if k > 1
                 # ℐꜛ_new leaves layer k at the top and enters layer k-1 at the bottom.
@@ -198,9 +198,9 @@ function solve_longwave!(temperature_tendency::AbstractVector,
 
         for k in 1:(Nz - 1)
             Δτ_k = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pˢ, geometry, scheme, g)
-            𝒯_k  = exp(-Δτ_k)
+            𝒯ₖ  = exp(-Δτ_k)
             B_k  = planck_wavenumber(T[k], ν̃)
-            ℐꜜ_new::NF = ℐꜜ * 𝒯_k + Δν̃ * NF(π) * B_k * (1 - 𝒯_k)
+            ℐꜜ_new::NF = ℐꜜ * 𝒯ₖ + Δν̃ * NF(π) * B_k * (1 - 𝒯ₖ)
 
             temperature_tendency[k]     -= flux_to_tendency(ℐꜜ_new / cᵖ, profile, geometry, constants, k)
             temperature_tendency[k + 1] += flux_to_tendency(ℐꜜ_new / cᵖ, profile, geometry, constants, k + 1)
@@ -209,9 +209,9 @@ function solve_longwave!(temperature_tendency::AbstractVector,
 
         # Surface-adjacent layer: the downward flux that reaches the surface.
         Δτ_bottom = williams_optical_depth_increment(Nz, ν̃, CO₂, T, q, pˢ, geometry, scheme, g)
-        𝒯_bottom = exp(-Δτ_bottom)
+        𝒯ˢ = exp(-Δτ_bottom)
         B_bottom = planck_wavenumber(T[Nz], ν̃)
-        ℐꜜ_surface::NF = ℐꜜ * 𝒯_bottom + Δν̃ * NF(π) * B_bottom * (1 - 𝒯_bottom)
+        ℐꜜ_surface::NF = ℐꜜ * 𝒯ˢ + Δν̃ * NF(π) * B_bottom * (1 - 𝒯ˢ)
 
         temperature_tendency[Nz] -= surface_flux_to_tendency(ℐꜜ_surface / cᵖ, profile, geometry, constants)
         surface_longwave_down += ℐꜜ_surface

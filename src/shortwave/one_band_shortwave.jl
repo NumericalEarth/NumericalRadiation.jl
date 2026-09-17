@@ -10,8 +10,8 @@ reflection just above the surface, and surface-albedo reflection.
 Fields:
 - `ozone_absorption`: Total ozone absorption as a fraction of incoming TOA flux (default
   `NF(0.01)`)
-- `ozone_distribution`: Ozone vertical distribution `ζ(σ_level) → weight` over the
-  sigma coordinate, normalised so ∫ ζ dσ_level = 1 (default `default_ozone_distribution(NF)`)
+- `ozone_distribution`: Ozone vertical distribution `ζ(sigma_level) → weight` over the
+  sigma coordinate, normalised so ∫ ζ dσ = 1 (default `default_ozone_distribution(NF)`)
 """
 Base.@kwdef struct OneBandShortwaveRadiativeTransfer{NF, F} <: AbstractShortwaveScheme
     ozone_absorption::NF = NF(0.01)
@@ -21,7 +21,7 @@ end
 Adapt.@adapt_structure OneBandShortwaveRadiativeTransfer
 
 # SPEEDY default: ozone concentrated above the sigma level 0.2.
-default_ozone_distribution(::Type{NF}) where NF = σ_level -> NF(50) * max(zero(NF), NF(1)/NF(5) - σ_level)
+default_ozone_distribution(::Type{NF}) where NF = sigma_level -> NF(50) * max(zero(NF), NF(1)/NF(5) - sigma_level)
 
 OneBandShortwaveRadiativeTransfer(::Type{NF}; kwargs...) where NF =
     OneBandShortwaveRadiativeTransfer{NF, typeof(default_ozone_distribution(NF))}(;
@@ -119,9 +119,9 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
     # --- Downward sweep -----------------------------------------------------
     for k in 1:Nz
         if k == cloud_top
-            ℛ_cloud = α_cloud * cloud_cover
-            ℐꜛ_reflected = ℐꜜ * ℛ_cloud
-            ℐꜜ *= (1 - ℛ_cloud)
+            ℛᶜ = α_cloud * cloud_cover
+            ℐꜛ_reflected = ℐꜜ * ℛᶜ
+            ℐꜜ *= (1 - ℛᶜ)
         end
         # Fraction of the TOA flux absorbed by ozone in layer k.
         ozone_absorption_k = NF(radiative_transfer.ozone_absorption) * radiative_transfer.ozone_distribution(σ_full[k]) * σ_thick[k]
