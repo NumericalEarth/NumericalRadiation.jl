@@ -1099,7 +1099,7 @@ end
 end
 
 @testset "delta-Eddington scaling" begin
-    scale(τ, ω, g) = NumericalRadiation.sw_delta_eddington(Float64, τ, ω, g)
+    scale(τ, ω, g) = NumericalRadiation.shortwave_delta_eddington(Float64, τ, ω, g)
 
     # Rayleigh (g = 0) and backscattering layers have no forward peak to remove.
     @test scale(1.5, 0.9, 0.0) == (1.5, 0.9, 0.0)

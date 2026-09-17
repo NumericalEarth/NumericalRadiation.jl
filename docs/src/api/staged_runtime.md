@@ -46,8 +46,8 @@ TabulatedSurfaceEmission
 streaming_longwave_fluxes!
 ShortwaveColumnScratch
 streaming_shortwave_fluxes!
-NumericalRadiation.sw_two_stream_layer
-NumericalRadiation.sw_path_factor
+NumericalRadiation.shortwave_two_stream_layer
+NumericalRadiation.shortwave_path_factor
 SpectralCloudOptics
 effective_radius_bracket
 cloud_layer_optics

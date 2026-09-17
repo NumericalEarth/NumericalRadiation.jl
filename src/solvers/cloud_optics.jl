@@ -516,8 +516,8 @@ end
     optical_depth[k] += cloud_tau[k]
 
 function add_cloud_tau!(optical_depth::AbstractMatrix, cloud_tau, k)
-    for ig in axes(optical_depth, 1)
-        optical_depth[ig, k] += cloud_tau[k]
+    for gpoint in axes(optical_depth, 1)
+        optical_depth[gpoint, k] += cloud_tau[k]
     end
     return nothing
 end
@@ -541,13 +541,13 @@ function add_cloud_scattering!(optical_depth::AbstractMatrix,
                                 cloud_tau,
                                 cloud_asymmetry,
                                 k)
-    for ig in axes(optical_depth, 1)
-        existing_tau = optical_depth[ig, k]
+    for gpoint in axes(optical_depth, 1)
+        existing_tau = optical_depth[gpoint, k]
         incoming_tau = cloud_tau[k]
         total_tau = existing_tau + incoming_tau
-        asymmetry[ig, k] = total_tau == zero(total_tau) ? zero(total_tau) :
-            (asymmetry[ig, k] * existing_tau + cloud_asymmetry[k] * incoming_tau) / total_tau
-        optical_depth[ig, k] = total_tau
+        asymmetry[gpoint, k] = total_tau == zero(total_tau) ? zero(total_tau) :
+            (asymmetry[gpoint, k] * existing_tau + cloud_asymmetry[k] * incoming_tau) / total_tau
+        optical_depth[gpoint, k] = total_tau
     end
     return nothing
 end
@@ -639,13 +639,13 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
         lwp = fraction_scale * max(FT(liquid_water_path[k]), zero(FT))
         iwp = fraction_scale * max(FT(ice_water_path[k]), zero(FT))
-        for ig in 1:ng
-            τ_absorption = shortwave.optical_depth[ig, k]
-            τ_scattering = shortwave.rayleigh_optical_depth[ig, k]
-            asymmetry = shortwave.scattering_asymmetry[ig, k]
+        for gpoint in 1:ng
+            τ_absorption = shortwave.optical_depth[gpoint, k]
+            τ_scattering = shortwave.rayleigh_optical_depth[gpoint, k]
+            asymmetry = shortwave.scattering_asymmetry[gpoint, k]
 
-            κˡ, ωˡ, gˡ = scaled_phase_optics(liquid_properties, ig, liquid_scale, scattering_scale, FT)
-            κⁱ, ωⁱ, gⁱ = scaled_phase_optics(ice_properties, ig, ice_scale, scattering_scale, FT)
+            κˡ, ωˡ, gˡ = scaled_phase_optics(liquid_properties, gpoint, liquid_scale, scattering_scale, FT)
+            κⁱ, ωⁱ, gⁱ = scaled_phase_optics(ice_properties, gpoint, ice_scale, scattering_scale, FT)
 
             if delta_eddington_scale
                 # ecRad removes the forward peak of the whole cloud after every
@@ -668,22 +668,22 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
                     add_scattering_layer(τ_absorption, τ_scattering, asymmetry, κⁱ, ωⁱ, gⁱ, iwp)
             end
 
-            shortwave.optical_depth[ig, k] = τ_absorption
-            shortwave.rayleigh_optical_depth[ig, k] = τ_scattering
-            shortwave.scattering_asymmetry[ig, k] = asymmetry
+            shortwave.optical_depth[gpoint, k] = τ_absorption
+            shortwave.rayleigh_optical_depth[gpoint, k] = τ_scattering
+            shortwave.scattering_asymmetry[gpoint, k] = asymmetry
         end
     end
     return shortwave
 end
 
-# Clamped and scaled (κ, ω, g) of one phase at g point `ig` for the mapped
+# Clamped and scaled (κ, ω, g) of one phase at g point `gpoint` for the mapped
 # scattering loop: κ scaled by the phase's extinction scale, ω and g clamped to
 # their physical ranges, and then the scattering scale on ω (clamped so
 # scattering never exceeds extinction).
-@inline function scaled_phase_optics(properties, ig, extinction_scale, scattering_scale, ::Type{FT}) where FT
-    κ = extinction_scale * FT(properties.mass_extinction_coefficient[ig])
-    ω = clamp(FT(properties.single_scattering_albedo[ig]), zero(FT), one(FT))
-    g = clamp(FT(properties.asymmetry_factor[ig]), -one(FT), one(FT))
+@inline function scaled_phase_optics(properties, gpoint, extinction_scale, scattering_scale, ::Type{FT}) where FT
+    κ = extinction_scale * FT(properties.mass_extinction_coefficient[gpoint])
+    ω = clamp(FT(properties.single_scattering_albedo[gpoint]), zero(FT), one(FT))
+    g = clamp(FT(properties.asymmetry_factor[gpoint]), -one(FT), one(FT))
     ω = clamp(ω * scattering_scale, zero(FT), one(FT))
     return κ, ω, g
 end

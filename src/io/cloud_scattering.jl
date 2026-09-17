@@ -232,35 +232,35 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
         if delta_eddington_average
             ext, ssa, asym = delta_eddington(ext, ssa, asym)
         end
-        for ig in 1:ng
+        for gpoint in 1:ng
             weight = width * FT(mapping.interval_weight[iw]) *
-                FT(mapping.gpoint_fraction[iw, ig])
+                FT(mapping.gpoint_fraction[iw, gpoint])
             weight == 0 && continue
             scat = ext * ssa
-            mass_ext[ig] += weight * ext
-            scattering_ext[ig] += weight * scat
-            asymmetry_numer[ig] += weight * scat * asym
-            weight_sum[ig] += weight
+            mass_ext[gpoint] += weight * ext
+            scattering_ext[gpoint] += weight * scat
+            asymmetry_numer[gpoint] += weight * scat * asym
+            weight_sum[gpoint] += weight
         end
     end
 
     ssa = zeros(FT, ng)
     asymmetry = zeros(FT, ng)
-    for ig in 1:ng
-        if weight_sum[ig] > 0
-            mass_ext[ig] /= weight_sum[ig]
-            scattering_ext[ig] /= weight_sum[ig]
+    for gpoint in 1:ng
+        if weight_sum[gpoint] > 0
+            mass_ext[gpoint] /= weight_sum[gpoint]
+            scattering_ext[gpoint] /= weight_sum[gpoint]
         end
-        if mass_ext[ig] > 0
-            ssa[ig] = clamp(scattering_ext[ig] / mass_ext[ig], zero(FT), one(FT))
+        if mass_ext[gpoint] > 0
+            ssa[gpoint] = clamp(scattering_ext[gpoint] / mass_ext[gpoint], zero(FT), one(FT))
         end
-        if scattering_ext[ig] > 0
-            asymmetry[ig] = clamp(asymmetry_numer[ig] / (scattering_ext[ig] * weight_sum[ig]),
+        if scattering_ext[gpoint] > 0
+            asymmetry[gpoint] = clamp(asymmetry_numer[gpoint] / (scattering_ext[gpoint] * weight_sum[gpoint]),
                                   -one(FT), one(FT))
         end
         if delta_eddington_average
-            mass_ext[ig], ssa[ig], asymmetry[ig] =
-                revert_delta_eddington(mass_ext[ig], ssa[ig], asymmetry[ig])
+            mass_ext[gpoint], ssa[gpoint], asymmetry[gpoint] =
+                revert_delta_eddington(mass_ext[gpoint], ssa[gpoint], asymmetry[gpoint])
         end
     end
     return (
@@ -361,14 +361,14 @@ function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
         end
 
         interval_weight .*= FT.(mapping.interval_weight)
-        for ig in 1:ng
-            matrix[ig, jwav] = sum(interval_weight .* view(mapping.gpoint_fraction, :, ig))
+        for gpoint in 1:ng
+            matrix[gpoint, jwav] = sum(interval_weight .* view(mapping.gpoint_fraction, :, gpoint))
         end
     end
 
-    for ig in 1:ng
-        total = sum(view(matrix, ig, :))
-        total > 0 && (matrix[ig, :] ./= total)
+    for gpoint in 1:ng
+        total = sum(view(matrix, gpoint, :))
+        total > 0 && (matrix[gpoint, :] ./= total)
     end
     return matrix
 end
@@ -419,35 +419,35 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
             root = sqrt(max((one(FT) - ssa) / denom, zero(FT)))
             ref_inf = (one(FT) - root) / (one(FT) + root)
         end
-        for ig in 1:ng
-            weight = FT(weights[ig, iw])
+        for gpoint in 1:ng
+            weight = FT(weights[gpoint, iw])
             weight == 0 && continue
-            mass_ext[ig] += weight * ext
-            scattering_ext[ig] += weight * scat
-            asymmetry_numer[ig] += weight * scat * asym
-            thick_reflectance[ig] += weight * ref_inf
+            mass_ext[gpoint] += weight * ext
+            scattering_ext[gpoint] += weight * scat
+            asymmetry_numer[gpoint] += weight * scat * asym
+            thick_reflectance[gpoint] += weight * ref_inf
         end
     end
 
     ssa = zeros(FT, ng)
     asymmetry = zeros(FT, ng)
-    for ig in 1:ng
-        mass_ext[ig] > 0 &&
-            (ssa[ig] = clamp(scattering_ext[ig] / mass_ext[ig], zero(FT), one(FT)))
-        scattering_ext[ig] > 0 &&
-            (asymmetry[ig] = clamp(asymmetry_numer[ig] / scattering_ext[ig],
+    for gpoint in 1:ng
+        mass_ext[gpoint] > 0 &&
+            (ssa[gpoint] = clamp(scattering_ext[gpoint] / mass_ext[gpoint], zero(FT), one(FT)))
+        scattering_ext[gpoint] > 0 &&
+            (asymmetry[gpoint] = clamp(asymmetry_numer[gpoint] / scattering_ext[gpoint],
                                    -one(FT), one(FT)))
         if thick_averaging
-            reflectance = clamp(thick_reflectance[ig], zero(FT), one(FT))
+            reflectance = clamp(thick_reflectance[gpoint], zero(FT), one(FT))
             denom = (one(FT) + reflectance)^2 -
-                asymmetry[ig] * (one(FT) - reflectance)^2
-            ssa[ig] = denom > 0 ?
+                asymmetry[gpoint] * (one(FT) - reflectance)^2
+            ssa[gpoint] = denom > 0 ?
                 clamp(FT(4) * reflectance / denom, zero(FT), one(FT)) :
                 zero(FT)
         end
         if delta_eddington_average
-            mass_ext[ig], ssa[ig], asymmetry[ig] =
-                revert_delta_eddington(mass_ext[ig], ssa[ig], asymmetry[ig])
+            mass_ext[gpoint], ssa[gpoint], asymmetry[gpoint] =
+                revert_delta_eddington(mass_ext[gpoint], ssa[gpoint], asymmetry[gpoint])
         end
     end
 

@@ -190,7 +190,7 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
 The evaluation is *streaming*: the only spectral intermediates are the
 caller-owned `(ng, nlayers)` optical-depth and source arrays. Solvers then
 loop over g-points, carry running fluxes through the column, and accumulate
-`weights[ig] * flux` directly into the broadband interface arrays — spectral
+`weights[gpoint] * flux` directly into the broadband interface arrays — spectral
 fluxes are never stored with shape `(ng, ninterfaces)`, and there are no
 four-dimensional intermediates. Host models can fuse the same per-g-point
 recurrences into

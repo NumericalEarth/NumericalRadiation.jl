@@ -144,47 +144,47 @@ function LongwaveBoundaryConditions(; surface_longwave_up,
         surface_longwave_up, down, albedo)
 end
 
-@inline number_of_g_points(optics::LongwaveOptics{<:Any, <:AbstractVector}) = 1
+@inline number_of_gpoints(optics::LongwaveOptics{<:Any, <:AbstractVector}) = 1
 @inline number_of_layers(optics::LongwaveOptics{<:Any, <:AbstractVector}) =
     length(optics.optical_depth)
-@inline tau_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline optical_depth_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.optical_depth[k]
-@inline source_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline source_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.source[k]
 
-@inline number_of_g_points(optics::LongwaveOptics{<:Any, <:AbstractMatrix}) =
+@inline number_of_gpoints(optics::LongwaveOptics{<:Any, <:AbstractMatrix}) =
     size(optics.optical_depth, 1)
 @inline number_of_layers(optics::LongwaveOptics{<:Any, <:AbstractMatrix}) =
     size(optics.optical_depth, 2)
-@inline tau_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.optical_depth[ig, k]
-@inline source_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.source[ig, k]
+@inline optical_depth_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.optical_depth[gpoint, k]
+@inline source_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.source[gpoint, k]
 
 @inline has_interface_sources(optics::LongwaveOptics) =
     optics.source_top !== nothing && optics.source_bottom !== nothing
-@inline source_top_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline source_top_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.source_top[k]
-@inline source_bottom_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline source_bottom_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.source_bottom[k]
-@inline source_top_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.source_top[ig, k]
-@inline source_bottom_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.source_bottom[ig, k]
+@inline source_top_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.source_top[gpoint, k]
+@inline source_bottom_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.source_bottom[gpoint, k]
 
-@inline has_lw_scattering(optics::LongwaveOptics) =
+@inline has_longwave_scattering(optics::LongwaveOptics) =
     optics.single_scattering_albedo !== nothing &&
     optics.scattering_asymmetry !== nothing
-@inline lw_ssa(optics::LongwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline single_scattering_albedo_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.single_scattering_albedo[k]
-@inline lw_asymmetry(optics::LongwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline scattering_asymmetry_at(optics::LongwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.scattering_asymmetry[k]
-@inline lw_ssa(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.single_scattering_albedo[ig, k]
-@inline lw_asymmetry(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.scattering_asymmetry[ig, k]
+@inline single_scattering_albedo_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.single_scattering_albedo[gpoint, k]
+@inline scattering_asymmetry_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.scattering_asymmetry[gpoint, k]
 
-@inline function no_scattering_lw_sources(::Type{FT}, tau, source_top, source_bottom) where FT
+@inline function no_scattering_longwave_sources(::Type{FT}, tau, source_top, source_bottom) where FT
     diffusivity = FT(1.66)
     coeff = diffusivity * FT(tau)
     transmittance = exp(-coeff)
@@ -200,7 +200,7 @@ end
     return transmittance, source, source
 end
 
-@inline function lw_ref_trans_sources(::Type{FT}, tau, ssa, asymmetry,
+@inline function longwave_reflectance_transmittance_sources(::Type{FT}, tau, ssa, asymmetry,
                                        source_top, source_bottom) where FT
     diffusivity = FT(1.66)
     scattering = clamp(FT(ssa), zero(FT), one(FT))
@@ -236,44 +236,44 @@ end
     return reflectance, transmittance, source, source
 end
 
-@inline function lw_fallback_planck_sources(::Type{FT}, optics, ig, k) where FT
+@inline function longwave_fallback_planck_sources(::Type{FT}, optics, gpoint, k) where FT
     if has_interface_sources(optics)
-        return source_top_at(optics, ig, k), source_bottom_at(optics, ig, k)
+        return source_top_at(optics, gpoint, k), source_bottom_at(optics, gpoint, k)
     end
-    src = source_at(optics, ig, k)
-    return src, src
+    source = source_at(optics, gpoint, k)
+    return source, source
 end
 
-@inline surface_longwave_up_at(boundary_conditions::LongwaveBoundaryConditions{FT}, ig) where FT =
+@inline surface_longwave_up_at(boundary_conditions::LongwaveBoundaryConditions{FT}, gpoint) where FT =
     boundary_conditions.surface_longwave_up isa Number ?
     boundary_conditions.surface_longwave_up :
-    FT(boundary_conditions.surface_longwave_up[ig])
-@inline surface_longwave_albedo(boundary_conditions::LongwaveBoundaryConditions{FT}, ig) where FT =
+    FT(boundary_conditions.surface_longwave_up[gpoint])
+@inline surface_longwave_albedo(boundary_conditions::LongwaveBoundaryConditions{FT}, gpoint) where FT =
     boundary_conditions.surface_albedo isa Number ?
     boundary_conditions.surface_albedo :
-    FT(boundary_conditions.surface_albedo[ig])
+    FT(boundary_conditions.surface_albedo[gpoint])
 
 # Adapters that present one g point of precomputed array optics and boundary
 # conditions in the functor form of `streaming_longwave_fluxes!`: the streamed
-# g index is always 1, so both ignore it and read the g point they were built
-# for.
+# g-point index is always 1, so both ignore it and read the g point they were
+# built for.
 struct ArrayLayerOptics{O}
     optics :: O
-    ig :: Int
+    gpoint :: Int
 end
 
 @inline (layer::ArrayLayerOptics)(_, k) =
-    (tau_at(layer.optics, layer.ig, k),
-     source_top_at(layer.optics, layer.ig, k),
-     source_bottom_at(layer.optics, layer.ig, k))
+    (optical_depth_at(layer.optics, layer.gpoint, k),
+     source_top_at(layer.optics, layer.gpoint, k),
+     source_bottom_at(layer.optics, layer.gpoint, k))
 
 struct BoundarySurfaceEmission{B}
     boundary_conditions :: B
-    ig :: Int
+    gpoint :: Int
 end
 
 @inline Base.getindex(emission::BoundarySurfaceEmission, _) =
-    surface_longwave_up_at(emission.boundary_conditions, emission.ig)
+    surface_longwave_up_at(emission.boundary_conditions, emission.gpoint)
 
 """
     radiative_fluxes!(fluxes, CloudlessLongwave(), optics, atmosphere, boundary_conditions)
@@ -296,7 +296,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     fluxes.longwave_up .= zero(FT)
     fluxes.longwave_down .= zero(FT)
 
-    if has_lw_scattering(optics)
+    if has_longwave_scattering(optics)
         has_interface_sources(optics) ||
             throw(ArgumentError("longwave scattering requires source_top and source_bottom interface Planck sources"))
         reflectance = zeros(FT, nlayers)
@@ -307,19 +307,19 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         source = zeros(FT, nlayers + 1)
         inv_denominator = zeros(FT, nlayers)
 
-        for ig in 1:number_of_g_points(optics)
-            w = FT(optics.weights[ig])
+        for gpoint in 1:number_of_gpoints(optics)
+            w = FT(optics.weights[gpoint])
             for k in 1:nlayers
-                top, bottom = lw_fallback_planck_sources(FT, optics, ig, k)
+                top, bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
                 reflectance[k], transmittance[k], source_up[k], source_down[k] =
-                    lw_ref_trans_sources(
-                        FT, tau_at(optics, ig, k), lw_ssa(optics, ig, k),
-                        lw_asymmetry(optics, ig, k), top, bottom)
+                    longwave_reflectance_transmittance_sources(
+                        FT, optical_depth_at(optics, gpoint, k), single_scattering_albedo_at(optics, gpoint, k),
+                        scattering_asymmetry_at(optics, gpoint, k), top, bottom)
             end
 
             albedo[nlayers + 1] =
-                clamp(surface_longwave_albedo(boundary_conditions, ig), zero(FT), one(FT))
-            source[nlayers + 1] = surface_longwave_up_at(boundary_conditions, ig)
+                clamp(surface_longwave_albedo(boundary_conditions, gpoint), zero(FT), one(FT))
+            source[nlayers + 1] = surface_longwave_up_at(boundary_conditions, gpoint)
             for k in nlayers:-1:1
                 inv_denominator[k] =
                     inv(one(FT) - albedo[k + 1] * reflectance[k])
@@ -354,44 +354,44 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     # one g point at a time, so a host kernel streaming that function directly
     # reproduces this solver bit for bit.
     if has_interface_sources(optics)
-        up_g = zeros(FT, nlayers + 1)
-        down_g = zeros(FT, nlayers + 1)
+        gpoint_up = zeros(FT, nlayers + 1)
+        gpoint_down = zeros(FT, nlayers + 1)
         transmittance = zeros(FT, nlayers)
         source_up = zeros(FT, nlayers)
-        for ig in 1:number_of_g_points(optics)
-            w = FT(optics.weights[ig])
-            streaming_longwave_fluxes!(up_g, down_g,
-                                       ArrayLayerOptics(optics, ig),
-                                       BoundarySurfaceEmission(boundary_conditions, ig),
-                                       surface_longwave_albedo(boundary_conditions, ig),
+        for gpoint in 1:number_of_gpoints(optics)
+            w = FT(optics.weights[gpoint])
+            streaming_longwave_fluxes!(gpoint_up, gpoint_down,
+                                       ArrayLayerOptics(optics, gpoint),
+                                       BoundarySurfaceEmission(boundary_conditions, gpoint),
+                                       surface_longwave_albedo(boundary_conditions, gpoint),
                                        boundary_conditions.toa_longwave_down,
                                        (w,), 1, nlayers, transmittance, source_up)
-            fluxes.longwave_up .+= up_g
-            fluxes.longwave_down .+= down_g
+            fluxes.longwave_up .+= gpoint_up
+            fluxes.longwave_down .+= gpoint_down
         end
 
         return fluxes
     end
 
-    for ig in 1:number_of_g_points(optics)
-        w = FT(optics.weights[ig])
+    for gpoint in 1:number_of_gpoints(optics)
+        w = FT(optics.weights[gpoint])
 
         down = boundary_conditions.toa_longwave_down
         fluxes.longwave_down[1] += w * down
         for k in 1:nlayers
-            tr = exp(-tau_at(optics, ig, k))
-            src = source_at(optics, ig, k)
-            down = down * tr + src * (one(FT) - tr)
+            layer_transmittance = exp(-optical_depth_at(optics, gpoint, k))
+            layer_source = source_at(optics, gpoint, k)
+            down = down * layer_transmittance + layer_source * (one(FT) - layer_transmittance)
             fluxes.longwave_down[k + 1] += w * down
         end
 
-        up = surface_longwave_up_at(boundary_conditions, ig) +
-             surface_longwave_albedo(boundary_conditions, ig) * down
+        up = surface_longwave_up_at(boundary_conditions, gpoint) +
+             surface_longwave_albedo(boundary_conditions, gpoint) * down
         fluxes.longwave_up[nlayers + 1] += w * up
         for k in nlayers:-1:1
-            tr = exp(-tau_at(optics, ig, k))
-            src = source_at(optics, ig, k)
-            up = up * tr + src * (one(FT) - tr)
+            layer_transmittance = exp(-optical_depth_at(optics, gpoint, k))
+            layer_source = source_at(optics, gpoint, k)
+            up = up * layer_transmittance + layer_source * (one(FT) - layer_transmittance)
             fluxes.longwave_up[k] += w * up
         end
     end

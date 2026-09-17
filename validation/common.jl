@@ -104,16 +104,16 @@ end
 struct LongwaveLayerOptics{L}
     longwave :: L
 end
-@inline (o::LongwaveLayerOptics)(ig, k) = (o.longwave.optical_depth[ig, k],
-                                           o.longwave.source_top[ig, k],
-                                           o.longwave.source_bottom[ig, k])
+@inline (o::LongwaveLayerOptics)(gpoint, k) = (o.longwave.optical_depth[gpoint, k],
+                                           o.longwave.source_top[gpoint, k],
+                                           o.longwave.source_bottom[gpoint, k])
 
 struct ShortwaveLayerOptics{S}
     shortwave :: S
 end
-@inline (o::ShortwaveLayerOptics)(ig, k) = (o.shortwave.optical_depth[ig, k],
-                                            o.shortwave.rayleigh_optical_depth[ig, k],
-                                            o.shortwave.scattering_asymmetry[ig, k])
+@inline (o::ShortwaveLayerOptics)(gpoint, k) = (o.shortwave.optical_depth[gpoint, k],
+                                            o.shortwave.rayleigh_optical_depth[gpoint, k],
+                                            o.shortwave.scattering_asymmetry[gpoint, k])
 
 # Optics arrays and solver scratch for a model and layer count, allocated once
 # and reused for every profile of a benchmark.
@@ -234,36 +234,36 @@ function longwave_quadrature_fluxes!(up, down, longwave, weights, ng, nlayers,
     nnodes = length(nodes)
     transmittance = zeros(nlayers, nnodes)
     source_up = zeros(nlayers, nnodes)
-    for ig in 1:ng
+    for gpoint in 1:ng
         # Downward sweeps at every node; the reflected part of the total
         # downwelling flux at the surface is isotropic.
         down_surface = 0.0
         for (a, (secant, weight)) in enumerate(nodes)
-            w = weights[ig] * weight
+            w = weights[gpoint] * weight
             d = 0.0
             for k in 1:nlayers
-                τ = longwave.optical_depth[ig, k]
-                B_top, B_bottom = longwave.source_top[ig, k], longwave.source_bottom[ig, k]
+                τ = longwave.optical_depth[gpoint, k]
+                B_top, B_bottom = longwave.source_top[gpoint, k], longwave.source_bottom[gpoint, k]
                 coefficient = secant * τ
-                tr = exp(-coefficient)
+                layer_transmittance = exp(-coefficient)
                 if τ > 1e-3
                     gradient = (B_bottom - B_top) / coefficient
-                    s_up = gradient + B_top - tr * (gradient + B_bottom)
-                    s_down = -gradient + B_bottom - tr * (-gradient + B_top)
+                    layer_source_up = gradient + B_top - layer_transmittance * (gradient + B_bottom)
+                    layer_source_down = -gradient + B_bottom - layer_transmittance * (-gradient + B_top)
                 else
-                    s_up = coefficient * 0.5 * (B_top + B_bottom)
-                    s_down = s_up
+                    layer_source_up = coefficient * 0.5 * (B_top + B_bottom)
+                    layer_source_down = layer_source_up
                 end
-                transmittance[k, a] = tr
-                source_up[k, a] = s_up
-                d = d * tr + s_down
+                transmittance[k, a] = layer_transmittance
+                source_up[k, a] = layer_source_up
+                d = d * layer_transmittance + layer_source_down
                 down[k + 1] += w * d
             end
             down_surface += weight * d
         end
-        surface_up = surface_emission[ig] + surface_albedo * down_surface
+        surface_up = surface_emission[gpoint] + surface_albedo * down_surface
         for (a, (_, weight)) in enumerate(nodes)
-            w = weights[ig] * weight
+            w = weights[gpoint] * weight
             u = surface_up
             up[nlayers + 1] += w * u
             for k in nlayers:-1:1

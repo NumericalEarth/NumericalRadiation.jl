@@ -214,8 +214,8 @@ function read_longwave_source_table(ds, longwave_weights)
     size(planck, 1) == length(longwave_weights) ||
         throw(DimensionMismatch("planck_function g-point dimension must match longwave weights"))
     source = similar(planck)
-    for ig in axes(planck, 1)
-        source[ig, :] .= planck[ig, :] ./ longwave_weights[ig]
+    for gpoint in axes(planck, 1)
+        source[gpoint, :] .= planck[gpoint, :] ./ longwave_weights[gpoint]
     end
     return temperature_grid, source
 end

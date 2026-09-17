@@ -104,42 +104,42 @@ function ShortwaveBoundaryConditions(; toa_shortwave_down,
         FT(toa_shortwave_down), albedo, direct_albedo)
 end
 
-@inline sw_ng(optics::ShortwaveOptics{<:Any, <:AbstractVector}) = 1
-@inline sw_nlayers(optics::ShortwaveOptics{<:Any, <:AbstractVector}) =
+@inline number_of_gpoints(optics::ShortwaveOptics{<:Any, <:AbstractVector}) = 1
+@inline number_of_layers(optics::ShortwaveOptics{<:Any, <:AbstractVector}) =
     length(optics.optical_depth)
-@inline sw_tau(optics::ShortwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline optical_depth_at(optics::ShortwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.optical_depth[k]
-@inline sw_rayleigh_tau(optics::ShortwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline rayleigh_optical_depth_at(optics::ShortwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.rayleigh_optical_depth[k]
-@inline sw_scattering_asymmetry(optics::ShortwaveOptics{<:Any, <:AbstractVector}, ig, k) =
+@inline scattering_asymmetry_at(optics::ShortwaveOptics{<:Any, <:AbstractVector}, gpoint, k) =
     optics.scattering_asymmetry[k]
 
-@inline sw_ng(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}) =
+@inline number_of_gpoints(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}) =
     size(optics.optical_depth, 1)
-@inline sw_nlayers(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}) =
+@inline number_of_layers(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}) =
     size(optics.optical_depth, 2)
-@inline sw_tau(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.optical_depth[ig, k]
-@inline sw_rayleigh_tau(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.rayleigh_optical_depth[ig, k]
-@inline sw_scattering_asymmetry(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}, ig, k) =
-    optics.scattering_asymmetry[ig, k]
+@inline optical_depth_at(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.optical_depth[gpoint, k]
+@inline rayleigh_optical_depth_at(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.rayleigh_optical_depth[gpoint, k]
+@inline scattering_asymmetry_at(optics::ShortwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
+    optics.scattering_asymmetry[gpoint, k]
 
-function has_rayleigh_scattering(optics::ShortwaveOptics, ig)
-    for k in 1:sw_nlayers(optics)
-        sw_rayleigh_tau(optics, ig, k) > zero(eltype(optics)) && return true
+function has_rayleigh_scattering(optics::ShortwaveOptics, gpoint)
+    for k in 1:number_of_layers(optics)
+        rayleigh_optical_depth_at(optics, gpoint, k) > zero(eltype(optics)) && return true
     end
     return false
 end
 
-@inline surface_albedo_at(boundary_conditions::ShortwaveBoundaryConditions{FT}, ig) where FT =
+@inline surface_albedo_at(boundary_conditions::ShortwaveBoundaryConditions{FT}, gpoint) where FT =
     boundary_conditions.surface_albedo isa AbstractArray ?
-        FT(boundary_conditions.surface_albedo[ig]) :
+        FT(boundary_conditions.surface_albedo[gpoint]) :
         FT(boundary_conditions.surface_albedo)
 
-@inline surface_albedo_direct_at(boundary_conditions::ShortwaveBoundaryConditions{FT}, ig) where FT =
+@inline surface_albedo_direct_at(boundary_conditions::ShortwaveBoundaryConditions{FT}, gpoint) where FT =
     boundary_conditions.surface_albedo_direct isa AbstractArray ?
-        FT(boundary_conditions.surface_albedo_direct[ig]) :
+        FT(boundary_conditions.surface_albedo_direct[gpoint]) :
         FT(boundary_conditions.surface_albedo_direct)
 
 """
@@ -151,7 +151,7 @@ or below the horizon gives a finite path; `1` (a vertical path) when the
 atmosphere carries no solar geometry. [`streaming_shortwave_fluxes!`](@ref)
 applies the same clamp to the `μ₀` it is handed directly.
 """
-@inline function sw_path_factor(::Type{FT}, atmosphere) where FT
+@inline function shortwave_path_factor(::Type{FT}, atmosphere) where FT
     if atmosphere !== nothing && hasproperty(atmosphere, :geometry)
         geometry = getproperty(atmosphere, :geometry)
         if hasproperty(geometry, :cos_zenith)
@@ -179,7 +179,7 @@ layer solution then creates energy, by as much as 13% of the incident beam at
 Backscattering layers have no forward peak to remove, so `g ≤ 0` — including the
 `g = 0` Rayleigh case — passes through unscaled.
 """
-@inline function sw_delta_eddington(::Type{FT},
+@inline function shortwave_delta_eddington(::Type{FT},
                                      optical_depth,
                                      single_scattering_albedo,
                                      asymmetry) where FT
@@ -204,20 +204,20 @@ Delta-Eddington-scale a layer and return its two-stream reflectance and
 transmittance. This is the single entry point every shortwave two-stream path
 uses, so the scaling cannot be skipped by one caller and applied by another.
 """
-@inline function sw_two_stream_layer(::Type{FT},
+@inline function shortwave_two_stream_layer(::Type{FT},
                                       μ0,
                                       optical_depth,
                                       single_scattering_albedo,
                                       asymmetry,
                                       direct_source_limit = Val(:unit)) where FT
-    τ, ω, g = sw_delta_eddington(FT, optical_depth, single_scattering_albedo, asymmetry)
-    gamma1, gamma2, gamma3 = sw_two_stream_gammas(FT, μ0, ω, g)
-    return sw_reflectance_transmittance(FT, μ0, τ, ω,
+    τ, ω, g = shortwave_delta_eddington(FT, optical_depth, single_scattering_albedo, asymmetry)
+    gamma1, gamma2, gamma3 = shortwave_two_stream_coefficients(FT, μ0, ω, g)
+    return shortwave_reflectance_transmittance(FT, μ0, τ, ω,
                                          gamma1, gamma2, gamma3,
                                          direct_source_limit)
 end
 
-@inline function sw_two_stream_gammas(::Type{FT}, μ0, single_scattering_albedo, asymmetry) where FT
+@inline function shortwave_two_stream_coefficients(::Type{FT}, μ0, single_scattering_albedo, asymmetry) where FT
     factor = FT(0.75) * FT(asymmetry)
     gamma1 = FT(2) - FT(single_scattering_albedo) * (FT(1.25) + factor)
     gamma2 = FT(single_scattering_albedo) * (FT(0.75) - factor)
@@ -225,7 +225,7 @@ end
     return gamma1, gamma2, gamma3
 end
 
-@inline function sw_reflectance_transmittance(::Type{FT},
+@inline function shortwave_reflectance_transmittance(::Type{FT},
                                                μ0,
                                                optical_depth,
                                                single_scattering_albedo,
@@ -302,7 +302,7 @@ end
 $(TYPEDEF)
 
 Layer-optics functor over precomputed [`ShortwaveOptics`](@ref) arrays for
-[`streaming_shortwave_fluxes!`](@ref): `(ig, k)` returns the tuple
+[`streaming_shortwave_fluxes!`](@ref): `(gpoint, k)` returns the tuple
 `(τ_absorption, τ_scattering, asymmetry)` of layer `k`. With `gpoint::Int` the
 functor ignores the g index it is called with and always reads that g point,
 so a single g point can be streamed with `ng = 1`.
@@ -315,19 +315,19 @@ end
 PrecomputedShortwaveLayerOptics(optics::ShortwaveOptics) =
     PrecomputedShortwaveLayerOptics(optics, nothing)
 
-@inline (layer_optics::PrecomputedShortwaveLayerOptics{<:Any, Nothing})(ig, k) =
-    precomputed_shortwave_layer(layer_optics.optics, ig, k)
+@inline (layer_optics::PrecomputedShortwaveLayerOptics{<:Any, Nothing})(gpoint, k) =
+    precomputed_shortwave_layer(layer_optics.optics, gpoint, k)
 
-@inline (layer_optics::PrecomputedShortwaveLayerOptics{<:Any, <:Integer})(ig, k) =
+@inline (layer_optics::PrecomputedShortwaveLayerOptics{<:Any, <:Integer})(gpoint, k) =
     precomputed_shortwave_layer(layer_optics.optics, layer_optics.gpoint, k)
 
-@inline precomputed_shortwave_layer(optics::ShortwaveOptics, ig, k) =
-    (sw_tau(optics, ig, k), sw_rayleigh_tau(optics, ig, k), sw_scattering_asymmetry(optics, ig, k))
+@inline precomputed_shortwave_layer(optics::ShortwaveOptics, gpoint, k) =
+    (optical_depth_at(optics, gpoint, k), rayleigh_optical_depth_at(optics, gpoint, k), scattering_asymmetry_at(optics, gpoint, k))
 
 """
 $(TYPEDSIGNATURES)
 
-Two-stream adding fluxes of g point `ig` of `optics` for cosine zenith `μ0`,
+Two-stream adding fluxes of g point `gpoint` of `optics` for cosine zenith `μ0`,
 written into `up` and `down` (length `nlayers + 1`, top down, zeroed here).
 `incoming_horizontal` is the downwelling flux through a horizontal surface at
 the top of the atmosphere. A wrapper over
@@ -337,14 +337,14 @@ the top of the atmosphere. A wrapper over
 function ecrad_shortwave_column!(up::AbstractVector{FT},
                                   down::AbstractVector{FT},
                                   optics::ShortwaveOptics,
-                                  ig,
+                                  gpoint,
                                   μ0,
                                   incoming_horizontal,
                                   surface_albedo,
                                   surface_albedo_direct = surface_albedo) where FT
-    nlayers = sw_nlayers(optics)
+    nlayers = number_of_layers(optics)
     scratch = ShortwaveColumnScratch(FT, nlayers)
-    layer_optics = PrecomputedShortwaveLayerOptics(optics, ig)
+    layer_optics = PrecomputedShortwaveLayerOptics(optics, gpoint)
     streaming_shortwave_fluxes!(up, down, layer_optics, μ0, incoming_horizontal,
                                 surface_albedo_direct, surface_albedo, (one(FT),), 1, nlayers, scratch)
     return nothing
@@ -375,17 +375,17 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            optics::ShortwaveOptics{FT},
                            atmosphere,
                            boundary_conditions::ShortwaveBoundaryConditions{FT}) where FT
-    nlayers = sw_nlayers(optics)
+    nlayers = number_of_layers(optics)
     length(fluxes.shortwave_up) == nlayers + 1 ||
         throw(DimensionMismatch("shortwave_up must have length nlayers + 1"))
     length(fluxes.shortwave_down) == nlayers + 1 ||
         throw(DimensionMismatch("shortwave_down must have length nlayers + 1"))
     if boundary_conditions.surface_albedo isa AbstractArray
-        length(boundary_conditions.surface_albedo) == sw_ng(optics) ||
+        length(boundary_conditions.surface_albedo) == number_of_gpoints(optics) ||
             throw(DimensionMismatch("surface_albedo vector must have length ng"))
     end
     if boundary_conditions.surface_albedo_direct isa AbstractArray
-        length(boundary_conditions.surface_albedo_direct) == sw_ng(optics) ||
+        length(boundary_conditions.surface_albedo_direct) == number_of_gpoints(optics) ||
             throw(DimensionMismatch("surface_albedo_direct vector must have length ng"))
     end
 
@@ -397,16 +397,16 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     scratch = ShortwaveColumnScratch(FT, nlayers)
     layer_optics = PrecomputedShortwaveLayerOptics(optics)
 
-    for ig in 1:sw_ng(optics)
-        w = FT(optics.weights[ig])
-        path_factor = sw_path_factor(FT, atmosphere)
+    for gpoint in 1:number_of_gpoints(optics)
+        w = FT(optics.weights[gpoint])
+        path_factor = shortwave_path_factor(FT, atmosphere)
         μ0 = inv(path_factor)
-        surface_albedo = surface_albedo_at(boundary_conditions, ig)
-        surface_albedo_direct = surface_albedo_direct_at(boundary_conditions, ig)
+        surface_albedo = surface_albedo_at(boundary_conditions, gpoint)
+        surface_albedo_direct = surface_albedo_direct_at(boundary_conditions, gpoint)
 
-        if has_rayleigh_scattering(optics, ig)
+        if has_rayleigh_scattering(optics, gpoint)
             add_shortwave_gpoint_fluxes!(fluxes.shortwave_up, fluxes.shortwave_down, layer_optics,
-                                         ig, w, μ0, boundary_conditions.toa_shortwave_down,
+                                         gpoint, w, μ0, boundary_conditions.toa_shortwave_down,
                                          surface_albedo_direct, surface_albedo, nlayers, scratch)
             continue
         end
@@ -418,16 +418,16 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         down = boundary_conditions.toa_shortwave_down
         fluxes.shortwave_down[1] += w * down
         for k in 1:nlayers
-            tr = exp(-sw_tau(optics, ig, k) * path_factor)
-            down *= tr
+            layer_transmittance = exp(-optical_depth_at(optics, gpoint, k) * path_factor)
+            down *= layer_transmittance
             fluxes.shortwave_down[k + 1] += w * down
         end
 
         up = surface_albedo_direct * down
         fluxes.shortwave_up[nlayers + 1] += w * up
         for k in nlayers:-1:1
-            tr = exp(-sw_tau(optics, ig, k) * path_factor)
-            up *= tr
+            layer_transmittance = exp(-optical_depth_at(optics, gpoint, k) * path_factor)
+            up *= layer_transmittance
             fluxes.shortwave_up[k] += w * up
         end
     end

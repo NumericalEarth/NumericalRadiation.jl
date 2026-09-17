@@ -689,15 +689,15 @@ end
 
     longwave_table = zeros(2, 2, 2, 2)
     shortwave_table = zeros(1, 2, 2, 2)
-    for ig in axes(longwave_table, 1), j in axes(longwave_table, 2),
+    for gpoint in axes(longwave_table, 1), j in axes(longwave_table, 2),
         ip in axes(longwave_table, 3), it in axes(longwave_table, 4)
-        longwave_table[ig, j, ip, it] =
-            100ig + 10j + 0.001pressure_grid[ip] + 0.01temperature_grid[it]
+        longwave_table[gpoint, j, ip, it] =
+            100gpoint + 10j + 0.001pressure_grid[ip] + 0.01temperature_grid[it]
     end
-    for ig in axes(shortwave_table, 1), j in axes(shortwave_table, 2),
+    for gpoint in axes(shortwave_table, 1), j in axes(shortwave_table, 2),
         ip in axes(shortwave_table, 3), it in axes(shortwave_table, 4)
-        shortwave_table[ig, j, ip, it] =
-            10ig + j + 0.0001pressure_grid[ip] + 0.001temperature_grid[it]
+        shortwave_table[gpoint, j, ip, it] =
+            10gpoint + j + 0.0001pressure_grid[ip] + 0.001temperature_grid[it]
     end
 
     atmosphere = ColumnAtmosphere(
@@ -730,8 +730,8 @@ end
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
-    lw_coeff(ig, j, p, t) = 100ig + 10j + 0.001p + 0.01t
-    sw_coeff(ig, j, p, t) = 10ig + j + 0.0001p + 0.001t
+    lw_coeff(gpoint, j, p, t) = 100gpoint + 10j + 0.001p + 0.01t
+    sw_coeff(gpoint, j, p, t) = 10gpoint + j + 0.0001p + 0.001t
     interpolated_pressure(p) = let (ip0, ip1, weight) =
             NumericalRadiation.pressure_axis_bracket(pressure_grid, p)
         pressure_grid[ip0] + weight * (pressure_grid[ip1] - pressure_grid[ip0])
@@ -915,8 +915,8 @@ end
         geometry = (;),
     )
 
-    lw_entry(ig, j, p, t) = 1e-4 * (7ig + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
-    sw_entry(ig, j, p, t) = 1e-5 * (5ig + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
+    lw_entry(gpoint, j, p, t) = 1e-4 * (7gpoint + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
+    sw_entry(gpoint, j, p, t) = 1e-5 * (5gpoint + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
 
     @testset "vector temperature grid" begin
         temperature_grid = [200.0, 250.0, 300.0]
@@ -925,10 +925,10 @@ end
             names = (:h2o, :co2),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
-            longwave_absorption = [lw_entry(ig, j, pressure_grid[ip], temperature_grid[it])
-                                   for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            shortwave_absorption = [sw_entry(ig, j, pressure_grid[ip], temperature_grid[it])
-                                    for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            longwave_absorption = [lw_entry(gpoint, j, pressure_grid[ip], temperature_grid[it])
+                                   for gpoint in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            shortwave_absorption = [sw_entry(gpoint, j, pressure_grid[ip], temperature_grid[it])
+                                    for gpoint in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
             longwave_source_scale = [0.7, 1.0, 1.3],
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
@@ -972,20 +972,20 @@ end
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = water_vapor_grid,
             gas_reference_mole_fractions = [0.0, 4.0e-4, 0.0],
-            longwave_absorption = [lw_entry(ig, j, pressure_grid[ip], temperature_grid[ip, it])
-                                   for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            shortwave_absorption = [sw_entry(ig, j, pressure_grid[ip], temperature_grid[ip, it])
-                                    for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            longwave_water_vapor_absorption = [1e-3 * ig * (1 + 1e-5 * pressure_grid[ip]) *
+            longwave_absorption = [lw_entry(gpoint, j, pressure_grid[ip], temperature_grid[ip, it])
+                                   for gpoint in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            shortwave_absorption = [sw_entry(gpoint, j, pressure_grid[ip], temperature_grid[ip, it])
+                                    for gpoint in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            longwave_water_vapor_absorption = [1e-3 * gpoint * (1 + 1e-5 * pressure_grid[ip]) *
                                        (1 + 1e-3 * temperature_grid[ip, it]) * (1 + 10ih)
-                                       for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
-            shortwave_water_vapor_absorption = [1e-4 * ig * (1 + 2e-5 * pressure_grid[ip]) *
+                                       for gpoint in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+            shortwave_water_vapor_absorption = [1e-4 * gpoint * (1 + 2e-5 * pressure_grid[ip]) *
                                         (1 + 2e-3 * temperature_grid[ip, it]) * (1 + 5ih)
-                                        for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+                                        for gpoint in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
             shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
-            longwave_source_table = [1.0 * (ig + 2) * st^2
-                                     for ig in 1:ng_lw, st in source_temperature_grid],
+            longwave_source_table = [1.0 * (gpoint + 2) * st^2
+                                     for gpoint in 1:ng_lw, st in source_temperature_grid],
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
@@ -1051,23 +1051,23 @@ end
             water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
             gas_reference_mole_fractions = FT[0, 4e-4, 0],
             longwave_absorption =
-                FT[1e-4 * (7ig + 3j) * (1 + 1e-5 * pressure_grid[ip]) *
+                FT[1e-4 * (7gpoint + 3j) * (1 + 1e-5 * pressure_grid[ip]) *
                    (1 + 1e-3 * gridded(ip, it))
-                   for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+                   for gpoint in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
             shortwave_absorption =
-                FT[1e-5 * (5ig + 2j) * (1 + 2e-5 * pressure_grid[ip]) *
+                FT[1e-5 * (5gpoint + 2j) * (1 + 2e-5 * pressure_grid[ip]) *
                    (1 + 2e-3 * gridded(ip, it))
-                   for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+                   for gpoint in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
             longwave_water_vapor_absorption =
-                FT[1e-3 * ig * (1 + 10ih)
-                   for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+                FT[1e-3 * gpoint * (1 + 10ih)
+                   for gpoint in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
             shortwave_water_vapor_absorption =
-                FT[1e-4 * ig * (1 + 5ih)
-                   for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+                FT[1e-4 * gpoint * (1 + 5ih)
+                   for gpoint in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
             shortwave_rayleigh_molar_scattering = FT[1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
-            longwave_source_table = FT[(ig + 2) * st^2
-                                       for ig in 1:ng_lw, st in source_temperature_grid],
+            longwave_source_table = FT[(gpoint + 2) * st^2
+                                       for gpoint in 1:ng_lw, st in source_temperature_grid],
             longwave_weights = FT[0.2, 0.3, 0.5],
             shortwave_weights = FT[0.45, 0.55],
         )

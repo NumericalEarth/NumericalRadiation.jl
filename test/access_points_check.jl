@@ -81,23 +81,23 @@ function exported_symbol_status(name)
 end
 
 # Layer-optics functors over precomputed `(ng, nlayers)` matrices, in the
-# `(ig, k)` form a host kernel hands to the streaming solvers: longwave
+# `(gpoint, k)` form a host kernel hands to the streaming solvers: longwave
 # `(τ, B_top, B_bottom)` and shortwave `(τ_absorption, τ_scattering, asymmetry)`.
 struct LongwaveMatrixOptics{L}
     optics :: L
 end
 
-(layer::LongwaveMatrixOptics)(ig, k) = (layer.optics.optical_depth[ig, k],
-                                        layer.optics.source_top[ig, k],
-                                        layer.optics.source_bottom[ig, k])
+(layer::LongwaveMatrixOptics)(gpoint, k) = (layer.optics.optical_depth[gpoint, k],
+                                        layer.optics.source_top[gpoint, k],
+                                        layer.optics.source_bottom[gpoint, k])
 
 struct ShortwaveMatrixOptics{S}
     optics :: S
 end
 
-(layer::ShortwaveMatrixOptics)(ig, k) = (layer.optics.optical_depth[ig, k],
-                                         layer.optics.rayleigh_optical_depth[ig, k],
-                                         layer.optics.scattering_asymmetry[ig, k])
+(layer::ShortwaveMatrixOptics)(gpoint, k) = (layer.optics.optical_depth[gpoint, k],
+                                         layer.optics.rayleigh_optical_depth[gpoint, k],
+                                         layer.optics.scattering_asymmetry[gpoint, k])
 
 # The streaming (kernel-facing) solvers against the array solvers on the same
 # optics. The array longwave solver streams each g point through

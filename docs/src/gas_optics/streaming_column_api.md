@@ -65,11 +65,11 @@ One column is three sweeps of scalar calls:
 per layer k:      s = gas_optics_stencil(model, p, T, χ)          # once per layer
                   b = source_table_bracket(model, T_interface)     # once per interface
 
-per g point:      longwave_optical_depth(model, ig, gases, s)      # LW  τ
-                  longwave_source(model, ig, T_interface, b)       # LW  B at each interface
-                  shortwave_optical_depth(model, ig, gases, s)     # SW  τ_absorption
-                  rayleigh_optical_depth(model, ig, air_moles)     # SW  τ_scattering
-                  add_cloud_scattering_layer(…, cloud, ig, b, wp)  # clouds, per phase
+per g point:      longwave_optical_depth(model, gpoint, gases, s)      # LW  τ
+                  longwave_source(model, gpoint, T_interface, b)       # LW  B at each interface
+                  shortwave_optical_depth(model, gpoint, gases, s)     # SW  τ_absorption
+                  rayleigh_optical_depth(model, gpoint, air_moles)     # SW  τ_scattering
+                  add_cloud_scattering_layer(…, cloud, gpoint, b, wp)  # clouds, per phase
 
 per column:       streaming_longwave_fluxes!(…)
                   streaming_shortwave_fluxes!(…)
@@ -90,7 +90,7 @@ host that stages columns in a separate kernel stores the six scalars
 [`source_table_bracket`](@ref) does the same for the Planck source table at an
 interface temperature; [`longwave_source`](@ref) then interpolates the source
 of each g point. Without a source table the source is the gray
-`longwave_source_scale[ig] σT⁴`.
+`longwave_source_scale[gpoint] σT⁴`.
 
 ### Per-g-point optics
 
@@ -111,9 +111,9 @@ functions (a zero-extinction `(κ, ω, g)`, an unchanged layer, zero
 absorption), so the clear-sky and all-sky kernels are the same code.
 
 The kernel packages these calls into two *layer-optics functors* the solvers
-call back into, each `(ig, k)` returning the layer's tuple:
+call back into, each `(gpoint, k)` returning the layer's tuple:
 
-| Solver | `layer_optics(ig, k)` returns |
+| Solver | `layer_optics(gpoint, k)` returns |
 |:-------|:------------------------------|
 | [`streaming_longwave_fluxes!`](@ref) | `(τ, B_top, B_bottom)` — optical depth and the Planck source at the layer's two interfaces |
 | [`streaming_shortwave_fluxes!`](@ref) | `(τ_absorption, τ_scattering, asymmetry)` — the single-scattering albedo and total optical depth are formed inside the solver |
@@ -123,15 +123,15 @@ call back into, each `(ig, k)` returning the layer's tuple:
 [`streaming_longwave_fluxes!`](@ref) is the no-scattering longwave of
 [`CloudlessLongwave`](@ref) with g points streamed: the ecRad half-level
 Planck path with diffusivity `D = 1.66`, swept down from `toa_down` and then up
-from the surface, where `up = surface_emission[ig] + surface_albedo * down`.
+from the surface, where `up = surface_emission[gpoint] + surface_albedo * down`.
 The surface source is a [`TabulatedSurfaceEmission`](@ref), which brackets the
-surface temperature once and evaluates `ε B_ig(Tₛ)` lazily per g point. Two
+surface temperature once and evaluates `ε B(Tₛ)` lazily per g point. Two
 caller-owned scratch vectors of length `nlayers` carry the layer transmittance
 and upward source between the sweeps.
 
 [`streaming_shortwave_fluxes!`](@ref) is the two-stream adding method of
 [`CloudlessShortwave`](@ref) with g points streamed: every layer passes
-through [`NumericalRadiation.sw_two_stream_layer`](@ref) (delta-Eddington
+through [`NumericalRadiation.shortwave_two_stream_layer`](@ref) (delta-Eddington
 scaling inside), and the adding sweeps run on a
 [`ShortwaveColumnScratch`](@ref) — five layer vectors and two interface
 vectors that a kernel supplies as views of its own arrays. The direct and
@@ -187,7 +187,7 @@ The column carries the host's physical constants; nothing on this path has a
 constant of its own (the model's `stefan_boltzmann` is set at construction).
 
 The longwave functor builds the stencil, the optical depth and the two
-interface Planck sources of layer `k` for g point `ig`:
+interface Planck sources of layer `k` for g point `gpoint`:
 
 ```jldoctest streaming
 julia> struct LongwaveLayers{M, C}
@@ -195,14 +195,14 @@ julia> struct LongwaveLayers{M, C}
            column :: C
        end
 
-julia> function (layers::LongwaveLayers)(ig, k)
+julia> function (layers::LongwaveLayers)(gpoint, k)
            (; model, column) = layers
            gases = (h2o = column.h2o[k], co2 = column.co2)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
-           τ = longwave_optical_depth(model, ig, gases, stencil)
+           τ = longwave_optical_depth(model, gpoint, gases, stencil)
            T_top, T_bottom = column.temperature_interfaces[k], column.temperature_interfaces[k + 1]
-           B_top = longwave_source(model, ig, T_top, source_table_bracket(model, T_top))
-           B_bottom = longwave_source(model, ig, T_bottom, source_table_bracket(model, T_bottom))
+           B_top = longwave_source(model, gpoint, T_top, source_table_bracket(model, T_top))
+           B_bottom = longwave_source(model, gpoint, T_bottom, source_table_bracket(model, T_bottom))
            return τ, B_top, B_bottom
        end;
 
@@ -235,15 +235,15 @@ julia> struct ShortwaveLayers{M, C}
            column :: C
        end
 
-julia> function (layers::ShortwaveLayers)(ig, k)
+julia> function (layers::ShortwaveLayers)(gpoint, k)
            (; model, column) = layers
            gases = (h2o = column.h2o[k], co2 = column.co2)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
-           τ = shortwave_optical_depth(model, ig, gases, stencil)
+           τ = shortwave_optical_depth(model, gpoint, gases, stencil)
            Δp = column.pressure_interfaces[k + 1] - column.pressure_interfaces[k]
            (; gravity, dry_air_molar_mass) = column.constants
            air_moles = hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass)
-           return τ, rayleigh_optical_depth(model, ig, air_moles), 0.0
+           return τ, rayleigh_optical_depth(model, gpoint, air_moles), 0.0
        end;
 
 julia> μ0, S0, albedo = 0.5, column.constants.solar_constant, 0.1;

@@ -11,7 +11,7 @@ to longwave and shortwave optical properties.
 Gas values in [`ColumnAtmosphere`](@ref) are interpreted as layer absorber
 amounts. A gas value may be a scalar, in which case it is applied to every
 layer, or a vector with one entry per layer. The gray longwave source is
-`longwave_source_scale[ig] σT⁴` with the model's `stefan_boltzmann`
+`longwave_source_scale[gpoint] σT⁴` with the model's `stefan_boltzmann`
 (keyword; [`PhysicalConstants`](@ref) default).
 
 """
@@ -101,7 +101,7 @@ The pressure and optional H₂O grids must be positive and uniformly spaced in
 log coordinates, matching the ecCKD file format. A matrix temperature grid is
 shaped `(npressure, ntemperature)` and must use one positive temperature
 increment throughout. Without a Planck source table the longwave source is
-the gray `longwave_source_scale[ig] σT⁴` with the model's `stefan_boltzmann`
+the gray `longwave_source_scale[gpoint] σT⁴` with the model's `stefan_boltzmann`
 (keyword; [`PhysicalConstants`](@ref) default).
 
 """
@@ -503,34 +503,34 @@ end
     return pressure_bracket, (it0, it0 + 1, temperature_index - it0)
 end
 
-@inline function interp_table(table::AbstractArray{<:Any, 4}, ig, j, stencil)
+@inline function interp_table(table::AbstractArray{<:Any, 4}, gpoint, j, stencil)
     (ip0, ip1, wp), (it0, it1, wt) = stencil
-    c00 = table[ig, j, ip0, it0]
-    c10 = table[ig, j, ip1, it0]
-    c01 = table[ig, j, ip0, it1]
-    c11 = table[ig, j, ip1, it1]
+    c00 = table[gpoint, j, ip0, it0]
+    c10 = table[gpoint, j, ip1, it0]
+    c01 = table[gpoint, j, ip0, it1]
+    c11 = table[gpoint, j, ip1, it1]
     cp0 = c00 + wp * (c10 - c00)
     cp1 = c01 + wp * (c11 - c01)
     return cp0 + wt * (cp1 - cp0)
 end
 
-@inline function interp_source_table(table::AbstractMatrix, ig, temperature_bracket)
+@inline function interp_source_table(table::AbstractMatrix, gpoint, temperature_bracket)
     it0, it1, wt = temperature_bracket
-    return table[ig, it0] + wt * (table[ig, it1] - table[ig, it0])
+    return table[gpoint, it0] + wt * (table[gpoint, it1] - table[gpoint, it0])
 end
 
-@inline function interp_water_vapor_table(table::AbstractArray{<:Any, 4}, ig, stencil, water_vapor_bracket)
+@inline function interp_water_vapor_table(table::AbstractArray{<:Any, 4}, gpoint, stencil, water_vapor_bracket)
     (ip0, ip1, wp), (it0, it1, wt) = stencil
     ih0, ih1, wh = water_vapor_bracket
 
-    c000 = table[ig, ip0, it0, ih0]
-    c100 = table[ig, ip1, it0, ih0]
-    c010 = table[ig, ip0, it1, ih0]
-    c110 = table[ig, ip1, it1, ih0]
-    c001 = table[ig, ip0, it0, ih1]
-    c101 = table[ig, ip1, it0, ih1]
-    c011 = table[ig, ip0, it1, ih1]
-    c111 = table[ig, ip1, it1, ih1]
+    c000 = table[gpoint, ip0, it0, ih0]
+    c100 = table[gpoint, ip1, it0, ih0]
+    c010 = table[gpoint, ip0, it1, ih0]
+    c110 = table[gpoint, ip1, it1, ih0]
+    c001 = table[gpoint, ip0, it0, ih1]
+    c101 = table[gpoint, ip1, it0, ih1]
+    c011 = table[gpoint, ip0, it1, ih1]
+    c111 = table[gpoint, ip1, it1, ih1]
 
     c00 = c000 + wp * (c100 - c000)
     c10 = c010 + wp * (c110 - c010)
@@ -562,12 +562,12 @@ end
 end
 
 @inline function longwave_source(model::EcCKDTabulatedGasOpticsModel{FT},
-                                  ig,
+                                  gpoint,
                                   temperature,
                                   source_bracket) where FT
     source_bracket === nothing &&
-        return model.longwave_source_scale[ig] * model.stefan_boltzmann * FT(temperature)^4
-    source = interp_source_table(model.longwave_source_table, ig, source_bracket)
+        return model.longwave_source_scale[gpoint] * model.stefan_boltzmann * FT(temperature)^4
+    source = interp_source_table(model.longwave_source_table, gpoint, source_bracket)
     # Linear to zero below the first node, as in ecRad; the factor is exactly
     # one on and above the table, so in-range sources are untouched.
     T₁ = model.longwave_source_temperature_grid[begin]
@@ -577,10 +577,10 @@ end
 @generated function accumulate_tau(gases::NamedTuple,
                                     coefficients::AbstractMatrix{FT},
                                     ::Val{GasNames},
-                                    ig,
+                                    gpoint,
                                     k) where {FT, GasNames}
     terms = [
-        :(coefficients[ig, $j] * FT(gas_value(gases, $(QuoteNode(name)), k)))
+        :(coefficients[gpoint, $j] * FT(gas_value(gases, $(QuoteNode(name)), k)))
         for (j, name) in enumerate(GasNames)
     ]
     isempty(terms) && return :(zero(FT))
@@ -590,11 +590,11 @@ end
 @inline function accumulate_tau(gases,
                                  coefficients::AbstractMatrix{FT},
                                  gas_names::Tuple,
-                                 ig,
+                                 gpoint,
                                  k) where FT
     tau = zero(FT)
     for j in eachindex(gas_names)
-        tau += coefficients[ig, j] * FT(gas_value(gases, gas_names[j], k))
+        tau += coefficients[gpoint, j] * FT(gas_value(gases, gas_names[j], k))
     end
     return tau
 end
@@ -602,15 +602,15 @@ end
 @inline accumulate_tau(gases,
                         coefficients::AbstractMatrix{FT},
                         ::Val{GasNames},
-                        ig,
+                        gpoint,
                         k) where {FT, GasNames} =
-    accumulate_tau(gases, coefficients, GasNames, ig, k)
+    accumulate_tau(gases, coefficients, GasNames, gpoint, k)
 
 @generated function accumulate_tabulated_tau(gases::NamedTuple,
                                               coefficients::AbstractArray{FT, 4},
                                               gas_reference_mole_fractions,
                                               ::Val{GasNames},
-                                              ig,
+                                              gpoint,
                                               k,
                                               stencil) where {FT, GasNames}
     gas_fields = fieldnames(gases)
@@ -623,7 +623,7 @@ end
                        FT(gas_reference_mole_fractions[$j]) *
                        FT(gas_value(gases, :composite, k)))
         end
-        push!(terms, :(interp_table(coefficients, ig, $j, stencil) * $amount))
+        push!(terms, :(interp_table(coefficients, gpoint, $j, stencil) * $amount))
     end
     isempty(terms) && return :(zero(FT))
     return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
@@ -633,7 +633,7 @@ end
                                            coefficients::AbstractArray{FT, 4},
                                            gas_names::Tuple,
                                            gas_reference_mole_fractions,
-                                           ig,
+                                           gpoint,
                                            k,
                                            stencil) where FT
     tau = zero(FT)
@@ -643,7 +643,7 @@ end
         if reference != zero(FT) && has_gas(gases, :composite)
             amount -= reference * FT(gas_value(gases, :composite, k))
         end
-        tau += interp_table(coefficients, ig, j, stencil) * amount
+        tau += interp_table(coefficients, gpoint, j, stencil) * amount
     end
     return tau
 end
@@ -652,11 +652,11 @@ end
                                   coefficients::AbstractArray{FT, 4},
                                   gas_reference_mole_fractions,
                                   ::Val{GasNames},
-                                  ig,
+                                  gpoint,
                                   k,
                                   stencil) where {FT, GasNames} =
     accumulate_tabulated_tau(gases, coefficients, GasNames,
-                              gas_reference_mole_fractions, ig, k, stencil)
+                              gas_reference_mole_fractions, gpoint, k, stencil)
 
 function check_ecckd_optics_shapes(longwave::LongwaveOptics,
                                     shortwave::ShortwaveOptics,
@@ -753,23 +753,23 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         stencil = gas_optics_stencil(model, nothing, temperature, nothing)
         source_bracket = source_table_bracket(model, temperature)
 
-        for ig in axes(model.longwave_absorption, 1)
-            longwave.optical_depth[ig, k] = longwave_optical_depth(model, ig, gases, stencil)
-            longwave.source[ig, k] = longwave_source(model, ig, temperature, source_bracket)
+        for gpoint in axes(model.longwave_absorption, 1)
+            longwave.optical_depth[gpoint, k] = longwave_optical_depth(model, gpoint, gases, stencil)
+            longwave.source[gpoint, k] = longwave_source(model, gpoint, temperature, source_bracket)
             if longwave.source_top !== nothing && longwave.source_bottom !== nothing
                 temperature_top = atmosphere.temperature_interfaces[k]
                 temperature_bottom = atmosphere.temperature_interfaces[k + 1]
-                longwave.source_top[ig, k] =
-                    longwave_source(model, ig, temperature_top, source_bracket)
-                longwave.source_bottom[ig, k] =
-                    longwave_source(model, ig, temperature_bottom, source_bracket)
+                longwave.source_top[gpoint, k] =
+                    longwave_source(model, gpoint, temperature_top, source_bracket)
+                longwave.source_bottom[gpoint, k] =
+                    longwave_source(model, gpoint, temperature_bottom, source_bracket)
             end
         end
 
-        for ig in axes(model.shortwave_absorption, 1)
-            shortwave.optical_depth[ig, k] = shortwave_optical_depth(model, ig, gases, stencil)
-            shortwave.rayleigh_optical_depth[ig, k] = rayleigh_optical_depth(model, ig, nothing)
-            shortwave.scattering_asymmetry[ig, k] = zero(FT)
+        for gpoint in axes(model.shortwave_absorption, 1)
+            shortwave.optical_depth[gpoint, k] = shortwave_optical_depth(model, gpoint, gases, stencil)
+            shortwave.rayleigh_optical_depth[gpoint, k] = rayleigh_optical_depth(model, gpoint, nothing)
+            shortwave.scattering_asymmetry[gpoint, k] = zero(FT)
         end
     end
 
@@ -851,21 +851,21 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         gases = layer_gases(atmosphere.gases, Val(names), k)
         air_moles = layer_air_moles(FT, atmosphere, k)
 
-        for ig in axes(model.longwave_absorption, 1)
-            longwave.optical_depth[ig, k] = longwave_optical_depth(model, ig, gases, stencil)
-            longwave.source[ig, k] = longwave_source(model, ig, temperature, source_bracket)
+        for gpoint in axes(model.longwave_absorption, 1)
+            longwave.optical_depth[gpoint, k] = longwave_optical_depth(model, gpoint, gases, stencil)
+            longwave.source[gpoint, k] = longwave_source(model, gpoint, temperature, source_bracket)
             if interface_sources
-                longwave.source_top[ig, k] =
-                    longwave_source(model, ig, temperature_top, source_top_bracket)
-                longwave.source_bottom[ig, k] =
-                    longwave_source(model, ig, temperature_bottom, source_bottom_bracket)
+                longwave.source_top[gpoint, k] =
+                    longwave_source(model, gpoint, temperature_top, source_top_bracket)
+                longwave.source_bottom[gpoint, k] =
+                    longwave_source(model, gpoint, temperature_bottom, source_bottom_bracket)
             end
         end
 
-        for ig in axes(model.shortwave_absorption, 1)
-            shortwave.optical_depth[ig, k] = shortwave_optical_depth(model, ig, gases, stencil)
-            shortwave.rayleigh_optical_depth[ig, k] = rayleigh_optical_depth(model, ig, air_moles)
-            shortwave.scattering_asymmetry[ig, k] = zero(FT)
+        for gpoint in axes(model.shortwave_absorption, 1)
+            shortwave.optical_depth[gpoint, k] = shortwave_optical_depth(model, gpoint, gases, stencil)
+            shortwave.rayleigh_optical_depth[gpoint, k] = rayleigh_optical_depth(model, gpoint, air_moles)
+            shortwave.scattering_asymmetry[gpoint, k] = zero(FT)
         end
     end
 
