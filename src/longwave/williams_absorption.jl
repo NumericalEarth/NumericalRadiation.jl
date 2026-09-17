@@ -99,7 +99,7 @@ and of the CO₂ mass mixing ratio are the scheme's
     mᵛ_over_mᵈ = NF(scheme.water_vapor_molar_mass_ratio)
     pᵛ_k = q_k * p_full_k / (mᵛ_over_mᵈ + (1 - mᵛ_over_mᵈ) * q_k)
     κ_continuum  = water_vapor_continuum_absorption_reference(ν̃, scheme)
-    Δτ_H₂O_cont = κ_continuum * (pᵛ_k / NF(scheme.pv_ref)) *
+    Δτ_H₂O_continuum = κ_continuum * (pᵛ_k / NF(scheme.pv_ref)) *
                   exp(NF(scheme.σ_cont) * (NF(scheme.T_ref) - T_k)) *
                   q_k * Δp_k / g
 
@@ -113,5 +113,5 @@ and of the CO₂ mass mixing ratio are the scheme's
     p_half_bottom = NF(σ_half[k+1]) * pˢ
     Δτ_CO₂ = κ_CO₂ * q_CO₂ * (p_half_bottom^2 - p_half_top^2) / (2 * g * NF(scheme.p_ref))
 
-    return NF(scheme.diffusivity) * (Δτ_H₂O_line + Δτ_H₂O_cont + Δτ_CO₂)
+    return NF(scheme.diffusivity) * (Δτ_H₂O_line + Δτ_H₂O_continuum + Δτ_CO₂)
 end

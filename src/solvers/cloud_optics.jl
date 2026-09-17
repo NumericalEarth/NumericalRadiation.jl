@@ -194,12 +194,16 @@ effective-radius, and overlap conventions.
 Optical depths are
 
 ```text
-τ_lw = f_cloud * (κ_lw_liq * LWP + κ_lw_ice * IWP)
-τ_sw_abs = f_cloud * ((1 - ω0_liq) * κ_sw_liq * LWP
-                    + (1 - ω0_ice) * κ_sw_ice * IWP)
-τ_sw_scat = f_cloud * (ω0_liq * κ_sw_liq * LWP
-                     + ω0_ice * κ_sw_ice * IWP)
+τˡʷ            = f (κˡ_longwave liquid_water_path + κⁱ_longwave ice_water_path)
+τˢʷ_absorption = f ((1 - ωˡ) κˡ liquid_water_path + (1 - ωⁱ) κⁱ ice_water_path)
+τˢʷ_scattering = f (ωˡ κˡ liquid_water_path + ωⁱ κⁱ ice_water_path)
 ```
+
+with `f = cloud_fraction^cloud_fraction_exponent` (1 for the cloudy-region
+variant), `κˡ_longwave`, `κⁱ_longwave` the `liquid_longwave_mass_absorption`
+and `ice_longwave_mass_absorption`, `κˡ`, `κⁱ` the shortwave mass extinctions
+and `ωˡ`, `ωⁱ` the shortwave single-scattering albedos of the two phases; the
+layer asymmetry factor is the scattering-weighted mean of `ĝˡ` and `ĝⁱ`.
 
 Fields:
 - `liquid_water_path`: Layer liquid water path, or fallback value when the atmosphere does

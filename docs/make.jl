@@ -62,7 +62,7 @@ makedocs(
             "Cloud and aerosol optics" => "cloud_optics.md",
             "Longwave" => "longwave.md",
             "Shortwave" => "shortwave.md",
-            "Notation" => "notation.md",
+            "Notation and conventions" => "notation.md",
         ],
         "API reference" => [
             "Overview" => "api.md",
