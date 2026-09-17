@@ -11,14 +11,14 @@ Molteni & Bracco, 2006, Appendix B) with the same parameter defaults.
 using NumericalRadiation
 using CairoMakie
 
-N  = 32
-σᵢ = collect(range(0, 1, length = N + 1))   # interface sigma coordinate
+Nz = 32
+σᵢ = collect(range(0, 1, length=Nz + 1))   # interface sigma coordinate
 grid = ColumnGrid(σᵢ)
 
 profile = AtmosphereProfile(
-    temperature      = collect(range(220, 295, length = N)),
-    humidity         = fill(0.005, N),
-    geopotential     = zeros(N),
+    temperature      = collect(range(220, 295, length=Nz)),
+    humidity         = fill(0.005, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000,
 )
 FT = Float64
@@ -27,7 +27,7 @@ thermo    = ThermodynamicConstants(FT)
 scheme    = NumericalRadiation.OneBandShortwave(FT)
 
 zenith_cosines = [0.2, 0.4, 0.6, 0.8, 1]
-fig = Figure(size = (780, 420))
+fig = Figure(size=(780, 420))
 ax  = Axis(fig[1, 1];
            xlabel = "SW heating rate [K day⁻¹]",
            ylabel = "σ (nondimensional pressure)",
@@ -36,19 +36,19 @@ ax  = Axis(fig[1, 1];
 
 for μ₀ in zenith_cosines
     surface = SurfaceState(FT; sea_surface_temperature = 295,
-                               land_surface_temperature = NaN,
-                               land_fraction = 0,
-                               ocean_albedo = 0.07,
-                               land_albedo  = 0.07,
-                               cos_zenith   = μ₀)
-    Ṫ = zeros(N)
-    diagnostics = ShortwaveDiagnostics(FT, N)
+                           land_surface_temperature = NaN,
+                           land_fraction = 0,
+                           ocean_albedo = 0.07,
+                           land_albedo  = 0.07,
+                           cos_zenith   = μ₀)
+    Ṫ = zeros(Nz)
+    diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
     solve_shortwave!(Ṫ, diagnostics, scheme, profile, grid, surface,
                      constants, thermo; transmissivity_scratch = transmissivity)
-    lines!(ax, Ṫ .* 86_400, grid.σ_full; label = "μ₀ = $μ₀", linewidth = 2)
+    lines!(ax, Ṫ .* 86_400, grid.σ_full; label="μ₀ = $μ₀", linewidth=2)
 end
-Legend(fig[2, 1], ax; orientation = :horizontal, framevisible = false)
+Legend(fig[2, 1], ax; orientation=:horizontal, framevisible=false)
 save("sw_zenith.png", fig); nothing # hide
 ```
 
@@ -68,22 +68,22 @@ diagnostic scheme's precipitation term shows the surface-insolation response.
 using NumericalRadiation
 using CairoMakie
 
-N  = 16
-σᵢ = collect(range(0, 1, length = N + 1))
+Nz = 16
+σᵢ = collect(range(0, 1, length=Nz + 1))
 grid = ColumnGrid(σᵢ)
 base_profile = AtmosphereProfile(
-    temperature      = collect(range(220, 295, length = N)),
-    humidity         = fill(0.008, N),
-    geopotential     = zeros(N),
+    temperature      = collect(range(220, 295, length=Nz)),
+    humidity         = fill(0.008, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000,
 )
 FT = Float64
 surface = SurfaceState(FT; sea_surface_temperature = 295,
-                           land_surface_temperature = NaN,
-                           land_fraction = 0,
-                           ocean_albedo = 0.07,
-                           land_albedo  = 0.07,
-                           cos_zenith   = 0.6)
+                       land_surface_temperature = NaN,
+                       land_fraction = 0,
+                       ocean_albedo = 0.07,
+                       land_albedo  = 0.07,
+                       cos_zenith   = 0.6)
 constants = PhysicalConstants(FT)
 thermo    = ThermodynamicConstants(FT)
 scheme    = NumericalRadiation.OneBandShortwave(FT)
@@ -98,8 +98,8 @@ for rain_rate in rain_rates
                                 geopotential = base_profile.geopotential,
                                 surface_pressure = base_profile.surface_pressure,
                                 rain_rate = rain_rate)
-    Ṫ = zeros(N)
-    diagnostics = ShortwaveDiagnostics(FT, N)
+    Ṫ = zeros(Nz)
+    diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
     solve_shortwave!(Ṫ, diagnostics, scheme, profile, grid, surface,
                      constants, thermo; transmissivity_scratch = transmissivity)
@@ -108,14 +108,14 @@ for rain_rate in rain_rates
     push!(cloud_covers, diagnostics.cloud_cover)
 end
 
-fig = Figure(size = (780, 360))
+fig = Figure(size=(780, 360))
 ax  = Axis(fig[1, 1];
            xlabel = "Diagnosed cloud cover",
            ylabel = "Flux [W m⁻²]",
            title  = "Cloud-cover response of SW fluxes")
-scatter!(ax, cloud_covers, surface_down; label = "ℐꜜˢʷ at surface", markersize = 10)
-scatter!(ax, cloud_covers, toa_up;       label = "ℐꜛˢʷ at TOA",      markersize = 10)
-axislegend(ax; position = :rc, framevisible = false)
+scatter!(ax, cloud_covers, surface_down; label="ℐꜜˢʷ at surface", markersize=10)
+scatter!(ax, cloud_covers, toa_up;       label="ℐꜛˢʷ at TOA",      markersize=10)
+axislegend(ax; position=:rc, framevisible=false)
 save("sw_clouds.png", fig); nothing # hide
 ```
 

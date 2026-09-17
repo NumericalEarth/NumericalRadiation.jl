@@ -6,7 +6,7 @@ properties. They do not know where the optics came from: the same
 tables, analytic bands, or a comparison model. All solvers write caller-owned
 [`RadiativeFluxes`](@ref) arrays and follow the package conventions: arrays
 are ordered top-to-bottom, with pressure increasing downward (index 1 = top of
-atmosphere); interface flux arrays have `N + 1` entries; fluxes are in
+atmosphere); interface flux arrays have `Nz + 1` entries; fluxes are in
 W m⁻².
 
 ## Data flow
@@ -41,7 +41,7 @@ the same workflow against reference model files.
 
 [`CloudlessLongwave`](@ref) is a plane-parallel clear-sky solver for
 [`LongwaveOptics`](@ref). Optical depth and source arrays may be
-vectors of length `nlayers` (broadband) or matrices shaped `(ng, nlayers)`;
+vectors of length `Nz` (broadband) or matrices shaped `(Ng, Nz)`;
 `source` is the layer Planck source in flux units (``\pi B``, W m⁻²). The
 atmosphere argument is accepted for interface consistency and is not inspected.
 
@@ -59,8 +59,8 @@ The solver has two paths:
 - **Longwave scattering** (opt-in). Supplying `single_scattering_albedo` and
   `scattering_asymmetry` (both, and interface sources are then required)
   activates an ecRad-style two-stream adding path: per-layer reflectance and
-  transmittance from ``\gamma_1 = D - \tfrac{D}{2}\omega(1+g)``,
-  ``\gamma_2 = \tfrac{D}{2}\omega(1-g)``, a downward sweep accumulating the
+  transmittance from ``\gamma_1 = D - \tfrac{D}{2}\omega(1+\mathcal{G})``,
+  ``\gamma_2 = \tfrac{D}{2}\omega(1-\mathcal{G})``, a downward sweep accumulating the
   albedo and source of the stack below each interface, then a downward flux
   pass.
 
@@ -83,9 +83,9 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   albedo, and upward transmission of the reflected beam through the same slant
   optical depths.
 - **With scattering**: an ecRad-compatible two-stream with
-  ``\gamma_1 = 2 - \omega(1.25 + 0.75 g)``,
-  ``\gamma_2 = \omega(0.75 - 0.75 g)``, and
-  ``\gamma_3 = 0.5 - 0.75\,\mu_0 g``, separate direct and diffuse streams, and
+  ``\gamma_1 = 2 - \omega(1.25 + 0.75 \mathcal{G})``,
+  ``\gamma_2 = \omega(0.75 - 0.75 \mathcal{G})``, and
+  ``\gamma_3 = 0.5 - 0.75\,\mu_0 \mathcal{G}``, separate direct and diffuse streams, and
   the same adding method as the longwave scattering path. The single-scattering
   albedo and asymmetry of each layer are formed from the absorption and
   scattering optical-depth channels, so cloud and aerosol scattering added to
@@ -93,26 +93,64 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   transported without solver changes.
 
 Every layer is delta-Eddington scaled (Joseph, Wiscombe and Weinman 1976) before
-the two-stream coefficients are formed. A fraction ``f = g^2`` of the phase
+the two-stream coefficients are formed. A fraction ``f = \mathcal{G}^2`` of the phase
 function is treated as an unscattered forward peak and removed,
 
 ```math
 \tau' = (1 - \omega f)\,\tau, \qquad
 \omega' = \frac{(1 - f)\,\omega}{1 - \omega f}, \qquad
-g' = \frac{g - f}{1 - f}.
+\mathcal{G}' = \frac{\mathcal{G} - f}{1 - f}.
 ```
 
 This is not only an accuracy refinement. A two-stream solution resolves the
 phase function too coarsely to stay conservative at cloud-like asymmetries, so
 without the scaling a non-absorbing layer returns more energy than it received —
-by as much as 13 % of the incident beam at ``g = 0.95``. Rayleigh scattering has
-``g = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
+by as much as 13 % of the incident beam at ``\mathcal{G} = 0.95``. Rayleigh scattering has
+``\mathcal{G} = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
 
 The scaling is applied to the combined gas, cloud, and aerosol optics of a
 layer, as RRTMGP does. ecRad instead defaults to scaling cloud and aerosol
 optics before they are added to the gas optics, so that a cloud's forward peak
 does not also thin the gas absorption; the two agree when scattering dominates
 the layer and differ slightly when gas absorption does.
+
+### The layer solution near the conservative limit
+
+In the conservative limit ``\omega \to 1`` the two-stream coefficients satisfy
+``\gamma_1 \to \gamma_2``, so the eigenvalue
+``\lambda = \sqrt{(\gamma_1 - \gamma_2)(\gamma_1 + \gamma_2)}`` tends to zero (the
+solver holds it at ``\sqrt{10^{-12}}``) and every reflectance and transmittance
+of the layer is an ``O(\lambda)`` result. Written as ecRad does, with
+``1 - e^{-2\lambda\tau}`` and ``\lambda + \gamma_1 + (\lambda - \gamma_1) e^{-2\lambda\tau}``,
+each is the difference of ``O(1)`` terms, and the relative rounding error
+``\epsilon / (2\lambda\tau)`` reaches ``10^{-10}`` in `Float64` and a few percent in
+`Float32`, breaking energy conservation of non-absorbing layers. The solver
+evaluates the same algebra in terms of the small differences
+
+```math
+m_1 = 1 - e^{-\lambda\tau}, \qquad m_2 = 1 - e^{-2\lambda\tau}, \qquad d = 1 - e^{-\tau/\mu_0},
+```
+
+each computed with `expm1`, and of sums of like-signed terms. With
+``e = e^{-\lambda\tau}``, ``\mathcal{D} = e^{-\tau/\mu_0}``,
+``\alpha_1 = \gamma_1\gamma_4 + \gamma_2\gamma_3`` and
+``\alpha_2 = \gamma_1\gamma_3 + \gamma_2\gamma_4``,
+
+```math
+\begin{aligned}
+\lambda + \gamma_1 + (\lambda - \gamma_1) e^2
+  &= \lambda (1 + e^2) + \gamma_1 m_2, \\
+(1 - \lambda\mu_0)(\alpha_2 + \lambda\gamma_3) - (1 + \lambda\mu_0)(\alpha_2 - \lambda\gamma_3) e^2
+  - 2\lambda e (\gamma_3 - \alpha_2\mu_0) \mathcal{D}
+  &= (\alpha_2 - \lambda^2\mu_0\gamma_3) m_2 + \lambda(\gamma_3 - \mu_0\alpha_2)(m_1^2 + 2 e d), \\
+2\lambda e (\gamma_4 + \alpha_1\mu_0)
+  - \mathcal{D}\left[(1 + \lambda\mu_0)(\alpha_1 + \lambda\gamma_4) - (1 - \lambda\mu_0)(\alpha_1 - \lambda\gamma_4) e^2\right]
+  &= \lambda(\gamma_4 + \mu_0\alpha_1)\left(d\,(1 + e^2) - m_1^2\right) - \mathcal{D}(\alpha_1 + \lambda^2\mu_0\gamma_4) m_2,
+\end{aligned}
+```
+
+using ``1 + e^2 - 2 e \mathcal{D} = m_1^2 + 2 e d`` and
+``2 e - \mathcal{D}(1 + e^2) = d\,(1 + e^2) - m_1^2``.
 
 Surface albedos for diffuse and direct radiation are independent and may be
 broadband scalars or per-g-point vectors.
@@ -122,14 +160,14 @@ broadband scalars or per-g-point vectors.
 The all-sky solvers operate on two-region optical properties:
 [`LongwaveCloudOverlapOptics`](@ref) and
 [`ShortwaveCloudOverlapOptics`](@ref) hold *clear* and *cloudy*
-optics with the same `(ng, nlayers)` shape, plus three layer fields that stay
+optics with the same `(Ng, Nz)` shape, plus three layer fields that stay
 separate from the optical depths:
 
 - `cloud_fraction` — one value per layer; never used to weaken cloudy-region
   optical depth before transport;
 - `overlap_parameter` — the ecRad/Hogan–Illingworth ``\alpha`` between each
-  pair of adjacent layers (`N - 1` values, default 1);
-- `fractional_std` — the fractional standard deviation of in-cloud condensate,
+  pair of adjacent layers (`Nz - 1` values, default 1);
+- `fractional_standard_deviation` — the fractional standard deviation of in-cloud condensate,
   used by the Tripleclouds split (default 1).
 
 [`CloudOverlapShortwave`](@ref) supports six overlap modes, in increasing
@@ -148,7 +186,7 @@ fidelity:
   per-interface `overlap_parameter` for `:matrix_alpha`.
 - `:tripleclouds_alpha` — additionally split the cloudy region into optically
   thin and thick regions. The thin-region area fraction ramps from 0.5 to 0.9
-  as `fractional_std` grows from 1.5 to 3.725, and the two regions scale the
+  as `fractional_standard_deviation` grows from 1.5 to 3.725, and the two regions scale the
   clear-to-cloudy optical-depth difference by ecRad's gamma-distribution
   factors (thin scaling ``0.025 + 0.975\,e^{-f(1 + f/2(1 + f/2))}`` for
   fractional standard deviation ``f``, thick scaling chosen to conserve the
@@ -171,27 +209,27 @@ optical properties; see [Validation](validation.md).
 
 Two runtime gas-optics models implement [`optical_properties!`](@ref):
 
-- [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(ng, ngas)`
+- [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(Ng, Ngases)`
   coefficients — the path used by unit tests and teacher–student training.
 - [`EcCKDTabulatedGasOpticsModel`](@ref) holds reference
-  `(ng, ngas, np, nt)` look-up tables. Per layer it brackets pressure on a
+  `(Ng, Ngases, Npressures, Ntemperatures)` look-up tables. Per layer it brackets pressure on a
   logarithmic grid, interpolates bilinearly in pressure and temperature
   (supporting ecCKD's pressure-dependent temperature grids), and accumulates
   ``\tau_g = \sum_j \kappa_{g,j}(p, T)\, u_j`` over the gases with an unrolled,
   allocation-free sum. The ecCKD concentration conventions are applied at this
   point: the `composite` background gas, `relative-linear` gases as
   ``\kappa\,(u_j - r_j u_\mathrm{composite})`` with reference mole fraction
-  ``r_j``, and the H2O look-up-table dimension interpolated per layer from the
+  ``r_j``, and the H₂O look-up-table dimension interpolated per layer from the
   actual `h2o`/`composite` amounts. Shortwave Rayleigh optical depth is
   ``k_g\,\Delta p / (g M_\mathrm{air})`` from the per-g-point molar scattering
   table, and the longwave Planck source is interpolated from the file's
   source table at layer and interface temperatures.
 
 The evaluation is *streaming*: the only spectral intermediates are the
-caller-owned `(ng, nlayers)` optical-depth and source arrays. Solvers then
+caller-owned `(Ng, Nz)` optical-depth and source arrays. Solvers then
 loop over g-points, carry running fluxes through the column, and accumulate
-`weights[ig] * flux` directly into the broadband interface arrays — spectral
-fluxes are never stored with shape `(ng, ninterfaces)`, and there are no
+`weights[g] * flux` directly into the broadband interface arrays — spectral
+fluxes are never stored with shape `(Ng, Nz + 1)`, and there are no
 four-dimensional intermediates. Host models can fuse the same per-g-point
 recurrences into
 their own column kernels; the model types are `Adapt.jl`-aware so tables can

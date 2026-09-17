@@ -15,9 +15,9 @@ pairs currently exposed are `"32x32"`, `"32x64"`, `"32x96"`, `"64x32"`,
 using NumericalRadiation
 
 spec = reference_ecckd_model_spec("32x32")
-paths = reference_ecckd_definition_paths(spec; require = false)
+paths = reference_ecckd_definition_paths(spec; require=false)
 
-(name = spec.name, longwave = spec.longwave, shortwave = spec.shortwave)
+(name=spec.name, longwave=spec.longwave, shortwave=spec.shortwave)
 ```
 
 Compact selectors such as `"32x64"` and full selectors such as
@@ -41,9 +41,8 @@ using NumericalRadiation
 using NCDatasets
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
-    names = (:composite, :h2o, :co2),
-    h2o_mole_fraction = 0.005,
-)
+                                             names = (:composite, :h2o, :co2),
+                                             water_vapor_mole_fraction = 0.005)
 ```
 
 Gases omitted from `names` are not removed: their reference abundances
@@ -52,12 +51,18 @@ explicitly to vary its amount — or to set it to zero.
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
 of NetCDF after loading and can be moved into a host model's radiation state.
-Because `:h2o` is in `names`, the reference H2O mole-fraction table
+Pass `Float32` as the first positional argument,
+`read_reference_ecckd_gas_optics(Float32, "32x32"; names)`, to load the tables
+in single precision (the files store them that way, so nothing is lost), or
+convert a loaded model with
+`EcCKDTabulatedGasOpticsModel{Float32}(gas_optics)`; `Adapt.adapt` likewise
+follows the element type of the adapted arrays.
+Because `:h2o` is in `names`, the reference H₂O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes
-the layer H2O mole fraction from the `h2o` and `composite` gas amounts and
-interpolates the table per layer. The `h2o_mole_fraction` keyword is not a gas
-input — it is accepted for compatibility/fallback sampling of non-dynamic
-H2O tables.
+the layer H₂O mole fraction from the `h2o` and `composite` gas amounts and
+interpolates the table per layer. The `water_vapor_mole_fraction` keyword is
+not a gas input — it is accepted for compatibility/fallback sampling of
+non-dynamic H₂O tables.
 
 Gas entries in [`ColumnAtmosphere`](@ref) are layer absorber amounts — column
 amounts in mol m⁻² (mole fraction times the layer air column), not mole

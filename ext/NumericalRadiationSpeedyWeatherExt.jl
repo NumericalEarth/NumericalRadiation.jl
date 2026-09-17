@@ -16,12 +16,12 @@ import NumericalRadiation: AtmosphereProfile, ColumnGrid, SurfaceState,
 """
     SpeedyAnalyticBandLongwave{NF} <: SpeedyWeather.AbstractLongwave
 
-SpeedyWeather wrapper around [`NumericalRadiation.AnalyticBandLongwave`](@ref). 
+SpeedyWeather wrapper around [`NumericalRadiation.AnalyticBandLongwave`](@ref).
 Allows for setting the default CO₂ concentration [ppmv], if the model does not specify one.
 
-Usage: 
+Usage:
 
-```julia 
+```julia
 spectral_grid = SpectralGrid()
 model = PrimitiveWetModel(spectral_grid; longwave_radiation = SpeedyAnalyticBandLongwave(spectral_grid; CO₂=280))
 ```
@@ -33,7 +33,7 @@ end
 
 Adapt.@adapt_structure SpeedyAnalyticBandLongwave
 
-function SpeedyAnalyticBandLongwave(SG::SpeedyWeather.SpectralGrid; CO₂ = 280, kwargs...)
+function SpeedyAnalyticBandLongwave(SG::SpeedyWeather.SpectralGrid; CO₂=280, kwargs...)
     return SpeedyAnalyticBandLongwave(AnalyticBandLongwave{SG.NF}(; kwargs...), SG.NF(CO₂))
 end
 
@@ -42,60 +42,64 @@ SpeedyWeather.initialize!(::SpeedyAnalyticBandLongwave, ::SpeedyWeather.Primitiv
 # Re-export under the PR's original name for drop-in compatibility.
 const SimpleSpectralLongwave = SpeedyAnalyticBandLongwave
 
+# Every constant comes from the SpeedyWeather model, so the radiation runs
+# with the host's values; SpeedyWeather stores molar masses in g mol⁻¹.
 @inline function speedy_physical_constants(model)
     NF = typeof(model.planet.gravity)
+    (; planet, atmosphere) = model
     return PhysicalConstants{NF}(
-        gravity          = model.planet.gravity,
-        heat_capacity    = model.atmosphere.heat_capacity,
-        stefan_boltzmann = model.atmosphere.stefan_boltzmann,
-        solar_constant   = model.planet.solar_constant,
+        gravity                = planet.gravity,
+        heat_capacity          = atmosphere.heat_capacity,
+        stefan_boltzmann       = atmosphere.stefan_boltzmann,
+        solar_constant         = planet.solar_constant,
+        dry_air_molar_mass     = atmosphere.mol_mass_dry_air / 1000,
+        water_molar_mass       = atmosphere.mol_mass_vapor / 1000,
+        dry_air_gas_constant   = atmosphere.R_dry,
+        universal_gas_constant = atmosphere.R_gas,
     )
 end
 
 @inline function speedy_column_geometry(model)
-    geom = model.geometry
-    return ColumnGrid(geom.σ_levels_full, geom.σ_levels_half, geom.σ_levels_thick)
+    geometry = model.geometry
+    return ColumnGrid(geometry.σ_levels_full, geometry.σ_levels_half, geometry.σ_levels_thick)
 end
 
-function SpeedyWeather.parameterization!(ij::Integer, vars,
-                                         rad::SpeedyAnalyticBandLongwave{NF},
+function SpeedyWeather.parameterization!(ij::Integer, variables,
+                                         radiation::SpeedyAnalyticBandLongwave{NF},
                                          model) where NF
-    nlayers = size(vars.grid.temperature_prev, 2)
+    Nz = size(variables.grid.temperature_prev, 2)
 
-    T  = @view vars.grid.temperature_prev[ij, :]
-    q  = @view vars.grid.humidity_prev[ij, :]
-    Φ  = @view vars.grid.geopotential[ij, :]
-    pₛ = vars.grid.pressure_prev[ij]
+    T  = @view variables.grid.temperature_prev[ij, :]
+    q  = @view variables.grid.humidity_prev[ij, :]
+    Φ  = @view variables.grid.geopotential[ij, :]
+    pˢ = variables.grid.pressure_prev[ij]
 
-    CO₂ = let prog = vars.prognostic
-        if hasproperty(prog, :greenhouse_gases) && haskey(prog.greenhouse_gases, :co2)
-            NF(prog.greenhouse_gases.co2[])
+    CO₂ = let prognostic = variables.prognostic
+        if hasproperty(prognostic, :greenhouse_gases) && haskey(prognostic.greenhouse_gases, :co2)
+            NF(prognostic.greenhouse_gases.co2[])
         else
-            rad.default_CO₂
+            radiation.default_CO₂
         end
     end
 
-    profile  = AtmosphereProfile(temperature = T, humidity = q,
-                                 geopotential = Φ, surface_pressure = pₛ, 
-                                 CO₂ = CO₂)
-                             
+    profile  = AtmosphereProfile(temperature=T, humidity=q, geopotential=Φ, surface_pressure=pˢ, CO₂=CO₂)
     geometry = speedy_column_geometry(model)
     surface  = SurfaceState{NF}(
-        sea_surface_temperature  = vars.prognostic.ocean.sea_surface_temperature[ij],
-        land_surface_temperature = vars.prognostic.land.soil_temperature[ij, 1],
+        sea_surface_temperature  = variables.prognostic.ocean.sea_surface_temperature[ij],
+        land_surface_temperature = variables.prognostic.land.soil_temperature[ij, 1],
         land_fraction            = model.land_sea_mask.mask[ij],
     )
     constants = speedy_physical_constants(model)
-    diag = LongwaveDiagnostics{NF}()
-    dTdt = @view vars.tendencies.grid.temperature[ij, :]
+    diagnostics = LongwaveDiagnostics{NF}()
+    temperature_tendency = @view variables.tendencies.grid.temperature[ij, :]
 
-    solve_longwave!(dTdt, diag, rad.scheme, profile, geometry, surface, constants)
+    solve_longwave!(temperature_tendency, diagnostics, radiation.scheme, profile, geometry, surface, constants)
 
-    vars.parameterizations.outgoing_longwave[ij]        = diag.outgoing_longwave
-    vars.parameterizations.surface_longwave_down[ij]    = diag.surface_longwave_down
-    vars.parameterizations.surface_longwave_up[ij]      = diag.surface_longwave_up
-    vars.parameterizations.ocean.surface_longwave_up[ij] = diag.ocean_surface_longwave_up
-    vars.parameterizations.land.surface_longwave_up[ij]  = diag.land_surface_longwave_up
+    variables.parameterizations.outgoing_longwave[ij]        = diagnostics.outgoing_longwave
+    variables.parameterizations.surface_longwave_down[ij]    = diagnostics.surface_longwave_down
+    variables.parameterizations.surface_longwave_up[ij]      = diagnostics.surface_longwave_up
+    variables.parameterizations.ocean.surface_longwave_up[ij] = diagnostics.ocean_surface_longwave_up
+    variables.parameterizations.land.surface_longwave_up[ij]  = diagnostics.land_surface_longwave_up
 
     return nothing
 end

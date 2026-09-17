@@ -20,6 +20,6 @@ reference_ecckd_model_spec
 reference_ecckd_definition_path
 reference_ecckd_definition_paths
 ecrad_data_path
+ecrad_test_file
 ecckd_source_path
 ```
-

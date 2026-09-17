@@ -13,7 +13,7 @@ ClimaComms = "0.6"
 Documenter = "1"
 Literate = "2"
 NCDatasets = "0.14"
-RRTMGP = "0.21"
+RRTMGP = "0.22, 0.23, 1"
 
 [sources]
 NumericalRadiation = {path = ".."}
