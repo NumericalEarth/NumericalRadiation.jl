@@ -287,8 +287,8 @@ end
             τ_float = FT.(τ)
             τ = Float64.(τ_float)          # the optical depths the solver sees
             τ_cumulative = vcat(0.0, cumsum(τ))
-            B_middleerface = B₀ .+ β .* τ_cumulative
-            optics = PlanckProfileLayerOptics(τ_float, FT.(B_middleerface[1:Nz]), FT.(B_middleerface[2:Nz + 1]))
+            B_interface = B₀ .+ β .* τ_cumulative
+            optics = PlanckProfileLayerOptics(τ_float, FT.(B_interface[1:Nz]), FT.(B_interface[2:Nz + 1]))
             surface_emission = [FT(ε * Bˢ)]
             up, down = longwave_fluxes(FT, optics, surface_emission, 1 - ε, F_top, [one(FT)], Nz)
 
@@ -297,7 +297,7 @@ end
             F_surface = ε * Bˢ + (1 - ε) * down_exact[end]
             up_exact = [linear_planck_up(τ_cumulative[k], τˢ, F_surface, B₀, β) for k in 1:Nz + 1]
 
-            tol = tolerances(FT, 1e-12, maximum(B_middleerface))
+            tol = tolerances(FT, 1e-12, maximum(B_interface))
             @test all(k -> within(down[k], down_exact[k], tol), 1:Nz + 1)
             @test all(k -> within(up[k], up_exact[k], tol), 1:Nz + 1)
         end
