@@ -26,24 +26,24 @@ surface = SurfaceState(
     cos_zenith = 0.5,
 )
 
-rtm = RadiativeTransferColumn(; grid, profile, surface)
+column = RadiativeTransferColumn(; grid, profile, surface)
 
-elapsed = @elapsed radiative_heating!(rtm)
+elapsed = @elapsed radiative_heating!(column)
 
-heating = similar(rtm.temperature_tendency)
-heating_rates!(heating, rtm)
+heating = similar(column.temperature_tendency)
+heating_rates!(heating, column)
 
-surface_lw_net = rtm.longwave_diagnostics.surface_longwave_down -
-                 rtm.longwave_diagnostics.surface_longwave_up
-surface_sw_net = rtm.shortwave_diagnostics.surface_shortwave_down -
-                 rtm.shortwave_diagnostics.surface_shortwave_up
-toa_net = rtm.shortwave_diagnostics.outgoing_shortwave +
-          rtm.longwave_diagnostics.outgoing_longwave
+surface_lw_net = column.longwave_diagnostics.surface_longwave_down -
+                 column.longwave_diagnostics.surface_longwave_up
+surface_sw_net = column.shortwave_diagnostics.surface_shortwave_down -
+                 column.shortwave_diagnostics.surface_shortwave_up
+toa_net = column.shortwave_diagnostics.outgoing_shortwave +
+          column.longwave_diagnostics.outgoing_longwave
 column_integrated_heating = sum(heating .* grid.σ_thick) *
                             profile.surface_pressure *
-                            rtm.physical_constants.heat_capacity /
-                            rtm.physical_constants.gravity
-toa_down = rtm.physical_constants.solar_constant * surface.cos_zenith
+                            column.physical_constants.heat_capacity /
+                            column.physical_constants.gravity
+toa_down = column.physical_constants.solar_constant * surface.cos_zenith
 top_net_down = toa_down - toa_net
 surface_net_down = surface_lw_net + surface_sw_net
 energy_closure_residual = column_integrated_heating - (top_net_down - surface_net_down)

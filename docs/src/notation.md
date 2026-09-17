@@ -6,6 +6,52 @@ for symbolic names in math, in docstring equations, and in plot labels. Julia
 struct fields stay descriptive snake_case (matching Breeze's public API
 convention), but the mapping to the symbolic notation is always unambiguous.
 
+## Naming scheme
+
+Every identifier — field, keyword, local variable, function name — is either
+**mathematical** or **English**, never a Latin-letter spelling or truncation
+of either:
+
+* Mathematical names are the unicode symbols of the equations, optionally
+  with an English descriptor naming a component or a state: `τ`, `ω`, `g`,
+  `κ`, `μ₀`, `γ₁`, `Tₛ`, `τ_absorption`, `τ_scattering`, `ω_clear`,
+  `g_cloudy`, `κˡ`, `ωⁱ`. Subscripts and superscripts are unicode (`μ₀`,
+  `i₀ᵖ`), never ASCII glued on (`mu0`, `gamma1`, `ip0`).
+* English names are whole snake_case words: `optical_depth`,
+  `transmittance`, `source_up`, `water_path`, `effective_radius`,
+  `cloud_fraction`, `gpoint`, `longwave_…`, `shortwave_…`.
+
+| Quantity | Math | English | Never |
+|:---------|:-----|:--------|:------|
+| Optical depth (layer; absorption; scattering) | `τ`, `τ_absorption`, `τ_scattering`, `Δτ` | `optical_depth`, `scattering_optical_depth` | `tau`, `od` |
+| Single-scattering albedo | `ω` | `single_scattering_albedo` | `ssa` |
+| Asymmetry factor | `g`, `g_cloud`, `gˡ`, `gⁱ` | `scattering_asymmetry`, `asymmetry_factor` | `asym` |
+| Mass-extinction coefficient | `κ`, `κˡ`, `κⁱ` | `mass_extinction_coefficient` | `ext`, `mass_ext`, `kappa` |
+| Reflectance, transmittance | — | `reflectance`, `transmittance`, `direct_reflectance`, `direct_transmittance`, `direct_diffuse_transmittance` | `tr`, `ref_dir`, `trans_dir_diff` |
+| Layer Planck source (flux units) | `B`, `B_top`, `B_bottom` | `source`, `source_up`, `source_down` | `src`, `s_up` |
+| Mass paths (kg m⁻²) | — | `water_path`, `liquid_path`, `ice_path`, `liquid_water_path`, `ice_water_path`, `cloud_water_path` | `wp`, `lwp`, `iwp`, `cwp` |
+| Cloud fraction, in-cloud variability | — | `cloud_fraction`, `fractional_standard_deviation`, `region_fraction` | `cf`, `fsd`, `frac`, `std` |
+| Cosine of the solar zenith angle | `μ₀` | `cos_zenith` (stored field) | `μ0`, `mu0` |
+| Two-stream coefficients | `γ₁, γ₂, γ₃, γ₄, α₁, α₂, k`, `Dτ` | — | `gamma1`, `alpha1`, `coeff` |
+| g-point index | — | `gpoint` | `ig`, `g`, `n` |
+| Layer and generic indices | `k` (layer, top down), `i`, `j` | — | — |
+| Table stencil: lower index, upper index, weight | `(i₀ᵖ, i₁ᵖ, wᵖ)` pressure, `(i₀ᵀ, i₁ᵀ, wᵀ)` temperature, `(i₀ᴴ, i₁ᴴ, wᴴ)` H₂O; grid loop indices `iᵖ, iᵀ, iᴴ`; bracket bounds `lower`, `upper` | — | `ip`, `it`, `wt`, `ih`, `lo`, `hi` |
+| Counts | — | `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`, `Nlongwave_gpoints`, `Nshortwave_gpoints` | `ng`, `nr`, `ncol`, `ngas`, `np`, `nt`, `nwav` |
+| Spectral regions | — | `longwave_…`, `shortwave_…` | `lw_…`, `sw_…` |
+| Surface, top of atmosphere | `Tₛ`, `pₛ` | `surface_…`, `toa_…` (TOA, OLR and RMSE are accepted acronyms) | `sfc`, `surf` |
+| Objects | — | `column` (a `RadiativeTransferColumn`), `diagnostics`, `temperature_tendency`, `geometry`, `constants`, `dataset` | `rtm`, `diag`, `dTdt`, `geom`, `ds` |
+
+Per-g-point, per-layer accessors of the array optics are one English family
+dispatched on the optics type — `optical_depth_at(optics, gpoint, k)`,
+`source_top_at`, `single_scattering_albedo_at`, `scattering_asymmetry_at`,
+`number_of_gpoints`, `number_of_layers` — with no `lw_`/`sw_` prefix. Names
+that mirror an external file or library keep the upstream spelling: the
+ecCKD NetCDF variable and dimension names (`h2o`, `lw_gpoints`), the CKDMIP
+`mu0` coordinate, RRTMGP struct fields and keywords (`vmr_h2o`, `ncol`,
+`nbnd_lw`), SpeedyWeather fields, and the Williams (2026) Table 1 parameters
+of [`AnalyticBandLongwave`](@ref) (`κ_rot`, `l_vr1`, `p_ref`, ...), which are
+documented field by field.
+
 ## Radiative fluxes
 
 | Math | Where it appears in code | NumericalEarth symbol |
@@ -114,9 +160,10 @@ exception: they mirror the ecCKD NetCDF variable prefixes
 |:-----|:-----|:------------|
 | `ν̃` | `ν̃` | Wavenumber (cm⁻¹) |
 | `B(T, ν̃)` | [`planck_wavenumber`](@ref) | Spectral Planck radiance |
-| `κ_line^ref(ν̃)` | [`water_vapor_line_kappa_ref`](@ref) | Reference H₂O line absorption |
-| `κ_cnt^ref(ν̃)` | [`water_vapor_continuum_kappa_ref`](@ref) | Reference H₂O continuum absorption |
-| `κ_CO₂^ref(ν̃)` | [`carbon_dioxide_kappa_ref`](@ref) | Reference CO₂ absorption |
+| `κ_line^ref(ν̃)` | [`water_vapor_line_absorption_reference`](@ref) | Reference H₂O line absorption |
+| `κ_cnt^ref(ν̃)` | [`water_vapor_continuum_absorption_reference`](@ref) | Reference H₂O continuum absorption |
+| `κ_CO₂^ref(ν̃)` | [`carbon_dioxide_absorption_reference`](@ref) | Reference CO₂ absorption |
+| `Δτ` | [`NumericalRadiation.williams_optical_depth_increment`](@ref) | Layer optical-depth increment |
 | `τ(p)` | integrated internally | Optical depth |
 | `D` | `AnalyticBandLongwave.diffusivity` | Two-stream diffusivity factor (≈ 1.5) |
 

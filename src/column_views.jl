@@ -101,13 +101,13 @@ Clausius–Clapeyron saturation specific humidity at `(T, p)` given
 `ThermodynamicConstants`. Returns `NaN` if the partial pressure is
 unresolvable (e.g. zero total pressure).
 """
-@inline function saturation_humidity(T, p, tc::ThermodynamicConstants)
+@inline function saturation_humidity(T, p, constants::ThermodynamicConstants)
     (; saturation_vapor_pressure_reference, latent_heat_condensation,
-       gas_constant_vapor, freezing_temperature, molar_mass_ratio) = tc
-    e_sat = saturation_vapor_pressure_reference *
+       gas_constant_vapor, freezing_temperature, molar_mass_ratio) = constants
+    saturation_vapor_pressure = saturation_vapor_pressure_reference *
             exp(latent_heat_condensation / gas_constant_vapor *
                 (inv(freezing_temperature) - inv(T)))
-    return molar_mass_ratio * e_sat / p
+    return molar_mass_ratio * saturation_vapor_pressure / p
 end
 
 """

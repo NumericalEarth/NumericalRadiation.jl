@@ -15,13 +15,13 @@ struct RadiationErrorMetrics{FT}
     "Root-mean-square flux error."
     flux_rmse::FT
     "Maximum absolute flux error."
-    flux_max_abs::FT
+    flux_maximum_absolute_error::FT
     "Mean signed flux error, candidate minus reference."
     flux_bias::FT
     "Root-mean-square heating-rate error."
     heating_rate_rmse::FT
     "Maximum absolute heating-rate error."
-    heating_rate_max_abs::FT
+    heating_rate_maximum_absolute_error::FT
     "Mean signed heating-rate error, candidate minus reference."
     heating_rate_bias::FT
     "Top-of-atmosphere forcing error."
@@ -44,36 +44,36 @@ $(TYPEDFIELDS)
 """
 struct RadiationThresholds{FT}
     flux_rmse::FT
-    flux_max_abs::FT
-    flux_abs_bias::FT
+    flux_maximum_absolute_error::FT
+    flux_absolute_bias::FT
     heating_rate_rmse::FT
-    heating_rate_max_abs::FT
-    heating_rate_abs_bias::FT
-    toa_forcing_abs_error::FT
-    surface_forcing_abs_error::FT
+    heating_rate_maximum_absolute_error::FT
+    heating_rate_absolute_bias::FT
+    toa_forcing_absolute_error::FT
+    surface_forcing_absolute_error::FT
 end
 
 function RadiationThresholds(; flux_rmse = Inf,
-                             flux_max_abs = Inf,
-                             flux_abs_bias = Inf,
+                             flux_maximum_absolute_error = Inf,
+                             flux_absolute_bias = Inf,
                              heating_rate_rmse = Inf,
-                             heating_rate_max_abs = Inf,
-                             heating_rate_abs_bias = Inf,
-                             toa_forcing_abs_error = Inf,
-                             surface_forcing_abs_error = Inf)
-    FT = promote_type(typeof(flux_rmse), typeof(flux_max_abs), typeof(flux_abs_bias),
-                      typeof(heating_rate_rmse), typeof(heating_rate_max_abs),
-                      typeof(heating_rate_abs_bias), typeof(toa_forcing_abs_error),
-                      typeof(surface_forcing_abs_error))
+                             heating_rate_maximum_absolute_error = Inf,
+                             heating_rate_absolute_bias = Inf,
+                             toa_forcing_absolute_error = Inf,
+                             surface_forcing_absolute_error = Inf)
+    FT = promote_type(typeof(flux_rmse), typeof(flux_maximum_absolute_error), typeof(flux_absolute_bias),
+                      typeof(heating_rate_rmse), typeof(heating_rate_maximum_absolute_error),
+                      typeof(heating_rate_absolute_bias), typeof(toa_forcing_absolute_error),
+                      typeof(surface_forcing_absolute_error))
     return RadiationThresholds{FT}(
         FT(flux_rmse),
-        FT(flux_max_abs),
-        FT(flux_abs_bias),
+        FT(flux_maximum_absolute_error),
+        FT(flux_absolute_bias),
         FT(heating_rate_rmse),
-        FT(heating_rate_max_abs),
-        FT(heating_rate_abs_bias),
-        FT(toa_forcing_abs_error),
-        FT(surface_forcing_abs_error),
+        FT(heating_rate_maximum_absolute_error),
+        FT(heating_rate_absolute_bias),
+        FT(toa_forcing_absolute_error),
+        FT(surface_forcing_absolute_error),
     )
 end
 
@@ -83,33 +83,33 @@ function rmse(candidate, reference)
     length(candidate) == length(reference) ||
         throw(DimensionMismatch("candidate and reference arrays must have equal length"))
     isempty(candidate) && throw(ArgumentError("metric arrays must be non-empty"))
-    err2 = zero(promote_type(eltype(candidate), eltype(reference)))
+    sum_squared_error = zero(promote_type(eltype(candidate), eltype(reference)))
     for i in eachindex(candidate, reference)
-        err2 += squared(candidate[i] - reference[i])
+        sum_squared_error += squared(candidate[i] - reference[i])
     end
-    return sqrt(err2 / length(candidate))
+    return sqrt(sum_squared_error / length(candidate))
 end
 
-function max_abs_error(candidate, reference)
+function maximum_absolute_error(candidate, reference)
     length(candidate) == length(reference) ||
         throw(DimensionMismatch("candidate and reference arrays must have equal length"))
     isempty(candidate) && throw(ArgumentError("metric arrays must be non-empty"))
-    err = zero(promote_type(eltype(candidate), eltype(reference)))
+    maximum_error = zero(promote_type(eltype(candidate), eltype(reference)))
     for i in eachindex(candidate, reference)
-        err = max(err, abs(candidate[i] - reference[i]))
+        maximum_error = max(maximum_error, abs(candidate[i] - reference[i]))
     end
-    return err
+    return maximum_error
 end
 
 function bias(candidate, reference)
     length(candidate) == length(reference) ||
         throw(DimensionMismatch("candidate and reference arrays must have equal length"))
     isempty(candidate) && throw(ArgumentError("metric arrays must be non-empty"))
-    err = zero(promote_type(eltype(candidate), eltype(reference)))
+    sum_error = zero(promote_type(eltype(candidate), eltype(reference)))
     for i in eachindex(candidate, reference)
-        err += candidate[i] - reference[i]
+        sum_error += candidate[i] - reference[i]
     end
-    return err / length(candidate)
+    return sum_error / length(candidate)
 end
 
 """
@@ -137,10 +137,10 @@ function radiation_error_metrics(; candidate_flux,
                       typeof(candidate_surface_flux), typeof(reference_surface_flux))
     return RadiationErrorMetrics{FT}(
         FT(rmse(candidate_flux, reference_flux)),
-        FT(max_abs_error(candidate_flux, reference_flux)),
+        FT(maximum_absolute_error(candidate_flux, reference_flux)),
         FT(bias(candidate_flux, reference_flux)),
         FT(rmse(candidate_heating_rate, reference_heating_rate)),
-        FT(max_abs_error(candidate_heating_rate, reference_heating_rate)),
+        FT(maximum_absolute_error(candidate_heating_rate, reference_heating_rate)),
         FT(bias(candidate_heating_rate, reference_heating_rate)),
         FT(candidate_toa_flux - reference_toa_flux),
         FT(candidate_surface_flux - reference_surface_flux),
@@ -216,20 +216,20 @@ function passes_thresholds(metrics::RadiationErrorMetrics,
     errors = String[]
     metrics.flux_rmse <= thresholds.flux_rmse ||
         push!(errors, "flux_rmse exceeds threshold")
-    metrics.flux_max_abs <= thresholds.flux_max_abs ||
-        push!(errors, "flux_max_abs exceeds threshold")
-    abs(metrics.flux_bias) <= thresholds.flux_abs_bias ||
-        push!(errors, "flux_abs_bias exceeds threshold")
+    metrics.flux_maximum_absolute_error <= thresholds.flux_maximum_absolute_error ||
+        push!(errors, "flux_maximum_absolute_error exceeds threshold")
+    abs(metrics.flux_bias) <= thresholds.flux_absolute_bias ||
+        push!(errors, "flux_absolute_bias exceeds threshold")
     metrics.heating_rate_rmse <= thresholds.heating_rate_rmse ||
         push!(errors, "heating_rate_rmse exceeds threshold")
-    metrics.heating_rate_max_abs <= thresholds.heating_rate_max_abs ||
-        push!(errors, "heating_rate_max_abs exceeds threshold")
-    abs(metrics.heating_rate_bias) <= thresholds.heating_rate_abs_bias ||
-        push!(errors, "heating_rate_abs_bias exceeds threshold")
-    abs(metrics.toa_forcing_error) <= thresholds.toa_forcing_abs_error ||
-        push!(errors, "toa_forcing_abs_error exceeds threshold")
-    abs(metrics.surface_forcing_error) <= thresholds.surface_forcing_abs_error ||
-        push!(errors, "surface_forcing_abs_error exceeds threshold")
+    metrics.heating_rate_maximum_absolute_error <= thresholds.heating_rate_maximum_absolute_error ||
+        push!(errors, "heating_rate_maximum_absolute_error exceeds threshold")
+    abs(metrics.heating_rate_bias) <= thresholds.heating_rate_absolute_bias ||
+        push!(errors, "heating_rate_absolute_bias exceeds threshold")
+    abs(metrics.toa_forcing_error) <= thresholds.toa_forcing_absolute_error ||
+        push!(errors, "toa_forcing_absolute_error exceeds threshold")
+    abs(metrics.surface_forcing_error) <= thresholds.surface_forcing_absolute_error ||
+        push!(errors, "surface_forcing_absolute_error exceeds threshold")
 
     if !isempty(errors)
         throw_on_error &&

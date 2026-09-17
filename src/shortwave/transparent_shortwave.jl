@@ -12,8 +12,8 @@ Adapt.@adapt_structure TransparentShortwave
 """$(TYPEDSIGNATURES)
 Column transparent-atmosphere shortwave.
 """
-function solve_shortwave!(dTdt::AbstractVector,
-                          diag::ShortwaveDiagnostics{NF},
+function solve_shortwave!(temperature_tendency::AbstractVector,
+                          diagnostics::ShortwaveDiagnostics{NF},
                           ::TransparentShortwave,
                           profile::AtmosphereProfile,
                           geometry::ColumnGrid,
@@ -25,23 +25,23 @@ function solve_shortwave!(dTdt::AbstractVector,
     cos_zenith = NF(surface.cos_zenith)
     D = S₀ * cos_zenith
 
-    diag.surface_shortwave_down       = D
-    diag.ocean_surface_shortwave_down = D
-    diag.land_surface_shortwave_down  = D
+    diagnostics.surface_shortwave_down       = D
+    diagnostics.ocean_surface_shortwave_down = D
+    diagnostics.land_surface_shortwave_down  = D
 
     ocean_up = NF(surface.ocean_albedo) * D
     land_up  = NF(surface.land_albedo)  * D
     albedo   = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) +
                NF(surface.land_fraction) * NF(surface.land_albedo)
 
-    diag.ocean_surface_shortwave_up = ocean_up
-    diag.land_surface_shortwave_up  = land_up
-    diag.surface_shortwave_up       = albedo * D
-    diag.albedo                     = albedo
-    diag.outgoing_shortwave         = diag.surface_shortwave_up
+    diagnostics.ocean_surface_shortwave_up = ocean_up
+    diagnostics.land_surface_shortwave_up  = land_up
+    diagnostics.surface_shortwave_up       = albedo * D
+    diagnostics.albedo                     = albedo
+    diagnostics.outgoing_shortwave         = diagnostics.surface_shortwave_up
 
-    diag.cloud_cover        = zero(NF)
-    diag.stratocumulus_cover = zero(NF)
-    diag.cloud_top          = length(profile.temperature) + 1
+    diagnostics.cloud_cover        = zero(NF)
+    diagnostics.stratocumulus_cover = zero(NF)
+    diagnostics.cloud_top          = length(profile.temperature) + 1
     return nothing
 end

@@ -60,8 +60,8 @@ const SimpleSpectralLongwave = SpeedyAnalyticBandLongwave
 end
 
 @inline function speedy_column_geometry(model)
-    geom = model.geometry
-    return ColumnGrid(geom.σ_levels_full, geom.σ_levels_half, geom.σ_levels_thick)
+    geometry = model.geometry
+    return ColumnGrid(geometry.σ_levels_full, geometry.σ_levels_half, geometry.σ_levels_thick)
 end
 
 function SpeedyWeather.parameterization!(ij::Integer, vars,
@@ -93,16 +93,16 @@ function SpeedyWeather.parameterization!(ij::Integer, vars,
         land_fraction            = model.land_sea_mask.mask[ij],
     )
     constants = speedy_physical_constants(model)
-    diag = LongwaveDiagnostics{NF}()
-    dTdt = @view vars.tendencies.grid.temperature[ij, :]
+    diagnostics = LongwaveDiagnostics{NF}()
+    temperature_tendency = @view vars.tendencies.grid.temperature[ij, :]
 
-    solve_longwave!(dTdt, diag, rad.scheme, profile, geometry, surface, constants)
+    solve_longwave!(temperature_tendency, diagnostics, rad.scheme, profile, geometry, surface, constants)
 
-    vars.parameterizations.outgoing_longwave[ij]        = diag.outgoing_longwave
-    vars.parameterizations.surface_longwave_down[ij]    = diag.surface_longwave_down
-    vars.parameterizations.surface_longwave_up[ij]      = diag.surface_longwave_up
-    vars.parameterizations.ocean.surface_longwave_up[ij] = diag.ocean_surface_longwave_up
-    vars.parameterizations.land.surface_longwave_up[ij]  = diag.land_surface_longwave_up
+    vars.parameterizations.outgoing_longwave[ij]        = diagnostics.outgoing_longwave
+    vars.parameterizations.surface_longwave_down[ij]    = diagnostics.surface_longwave_down
+    vars.parameterizations.surface_longwave_up[ij]      = diagnostics.surface_longwave_up
+    vars.parameterizations.ocean.surface_longwave_up[ij] = diagnostics.ocean_surface_longwave_up
+    vars.parameterizations.land.surface_longwave_up[ij]  = diagnostics.land_surface_longwave_up
 
     return nothing
 end

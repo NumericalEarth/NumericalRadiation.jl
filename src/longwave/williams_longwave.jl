@@ -13,9 +13,9 @@ for the upwelling (`ℐꜛˡʷ`) and downwelling (`ℐꜜˡʷ`) spectral longwav
 fluxes at each of `nwavenumber` evenly spaced wavenumbers between
 `wavenumber_min` and `wavenumber_max`, with analytic mass absorption
 coefficients for H₂O
-line (rotation + vibration–rotation + combination bands, [`water_vapor_line_kappa_ref`](@ref)),
-a two-band H₂O continuum ([`water_vapor_continuum_kappa_ref`](@ref)) and a Lorentzian CO₂
-15 μm bending mode ([`carbon_dioxide_kappa_ref`](@ref)). All reference constants are at
+line (rotation + vibration–rotation + combination bands, [`water_vapor_line_absorption_reference`](@ref)),
+a two-band H₂O continuum ([`water_vapor_continuum_absorption_reference`](@ref)) and a Lorentzian CO₂
+15 μm bending mode ([`carbon_dioxide_absorption_reference`](@ref)). All reference constants are at
 (T_ref, p_ref, RH_ref) = (260 K, 500 hPa, 100 %).
 
 Fields and defaults follow Williams (2026), Table 1.
@@ -112,14 +112,14 @@ Base.eltype(::Type{<:AnalyticBandLongwave{NF}}) where NF = NF
 
 """$(TYPEDSIGNATURES)
 Column longwave radiative transfer for the Williams (2026) Simple Spectral
-Model. Tendencies are accumulated into `dTdt` with `+=`/`-=`; diagnostic
-fluxes are written into `diag`.
+Model. Tendencies are accumulated into `temperature_tendency` with `+=`/`-=`; diagnostic
+fluxes are written into `diagnostics`.
 
 Sign convention: temperature tendency has units [K s⁻¹]; positive OLR, positive
 downward surface flux, positive upward surface flux.
 """
-function solve_longwave!(dTdt::AbstractVector,
-                         diag::LongwaveDiagnostics{NF},
+function solve_longwave!(temperature_tendency::AbstractVector,
+                         diagnostics::LongwaveDiagnostics{NF},
                          scheme::AnalyticBandLongwave{NF},
                          profile::AtmosphereProfile{NF},
                          geometry::ColumnGrid,
@@ -142,54 +142,54 @@ function solve_longwave!(dTdt::AbstractVector,
 
     ϵ_ocean = NF(surface.ocean_emissivity)
     ϵ_land  = NF(surface.land_emissivity)
-    sst     = NF(surface.sea_surface_temperature)
-    lst     = NF(surface.land_surface_temperature)
+    T_ocean = NF(surface.sea_surface_temperature)
+    T_land = NF(surface.land_surface_temperature)
     land_fraction = NF(surface.land_fraction)
 
     # Broadband Stefan–Boltzmann surface upward flux (for diagnostics).
-    U_sfc_ocean = ifelse(isfinite(sst), ϵ_ocean * σ_SB * sst^4, zero(NF))
-    U_sfc_land  = ifelse(isfinite(lst), ϵ_land  * σ_SB * lst^4, zero(NF))
-    U_sfc_bb    = (1 - land_fraction) * U_sfc_ocean + land_fraction * U_sfc_land
+    U_surface_ocean = ifelse(isfinite(T_ocean), ϵ_ocean * σ_SB * T_ocean^4, zero(NF))
+    U_surface_land  = ifelse(isfinite(T_land), ϵ_land  * σ_SB * T_land^4, zero(NF))
+    U_surface_broadband = (1 - land_fraction) * U_surface_ocean + land_fraction * U_surface_land
 
     # Wavenumber quadrature.
     Nwavenumbers = scheme.nwavenumber
     Δν̃ = (scheme.wavenumber_max - scheme.wavenumber_min) / NF(Nwavenumbers - 1)
 
-    olr_sum::NF    = zero(NF)
-    D_surf_sum::NF = zero(NF)
+    outgoing_longwave::NF = zero(NF)
+    surface_longwave_down::NF = zero(NF)
 
     for i in 1:Nwavenumbers
         ν̃ = scheme.wavenumber_min + NF(i - 1) * Δν̃
 
-        B_sfc_ocean = ifelse(isfinite(sst), planck_wavenumber(sst, ν̃), zero(NF))
-        B_sfc_land  = ifelse(isfinite(lst), planck_wavenumber(lst, ν̃), zero(NF))
+        B_surface_ocean = ifelse(isfinite(T_ocean), planck_wavenumber(T_ocean, ν̃), zero(NF))
+        B_surface_land  = ifelse(isfinite(T_land), planck_wavenumber(T_land, ν̃), zero(NF))
 
         # Hemispherical surface flux πB(T_sfc), land–sea weighted by emissivity ϵ.
         # ℐꜛˡʷ (surface, spectral bin) [W m⁻²]:
-        U_spec::NF = Δν̃ * NF(π) * (
-            (1 - land_fraction) * ϵ_ocean * B_sfc_ocean +
-             land_fraction      * ϵ_land  * B_sfc_land
+        U_spectral::NF = Δν̃ * NF(π) * (
+            (1 - land_fraction) * ϵ_ocean * B_surface_ocean +
+             land_fraction * ϵ_land  * B_surface_land
         )
 
         # ---- Upward sweep: k = nlayers → 1 (ℐꜛ) --------------------------
-        U::NF = U_spec
+        U::NF = U_spectral
         # Surface upward flux enters the bottom of the lowest layer.
-        dTdt[nlayers] += surface_flux_to_tendency(U / cₚ, profile, geometry, constants)
+        temperature_tendency[nlayers] += surface_flux_to_tendency(U / cₚ, profile, geometry, constants)
 
         for k in nlayers:-1:1
-            Δτ_k  = williams_delta_tau(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
+            Δτ_k  = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
             transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
             U_new::NF = U * transmittance_k + Δν̃ * NF(π) * B_k * (1 - transmittance_k)
 
             if k > 1
                 # U_new leaves layer k at the top and enters layer k-1 at the bottom.
-                dTdt[k]     -= flux_to_tendency(U_new / cₚ, profile, geometry, constants, k)
-                dTdt[k - 1] += flux_to_tendency(U_new / cₚ, profile, geometry, constants, k - 1)
+                temperature_tendency[k]     -= flux_to_tendency(U_new / cₚ, profile, geometry, constants, k)
+                temperature_tendency[k - 1] += flux_to_tendency(U_new / cₚ, profile, geometry, constants, k - 1)
             else
                 # k == 1: U_new is OLR escaping to space.
-                dTdt[1] -= flux_to_tendency(U_new / cₚ, profile, geometry, constants, 1)
-                olr_sum += U_new
+                temperature_tendency[1] -= flux_to_tendency(U_new / cₚ, profile, geometry, constants, 1)
+                outgoing_longwave += U_new
             end
             U = U_new
         end
@@ -199,31 +199,31 @@ function solve_longwave!(dTdt::AbstractVector,
         D::NF = zero(NF)
 
         for k in 1:(nlayers - 1)
-            Δτ_k  = williams_delta_tau(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
+            Δτ_k  = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
             transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
             D_new::NF = D * transmittance_k + Δν̃ * NF(π) * B_k * (1 - transmittance_k)
 
-            dTdt[k]     -= flux_to_tendency(D_new / cₚ, profile, geometry, constants, k)
-            dTdt[k + 1] += flux_to_tendency(D_new / cₚ, profile, geometry, constants, k + 1)
+            temperature_tendency[k]     -= flux_to_tendency(D_new / cₚ, profile, geometry, constants, k)
+            temperature_tendency[k + 1] += flux_to_tendency(D_new / cₚ, profile, geometry, constants, k + 1)
             D = D_new
         end
 
         # Surface-adjacent layer: the downward flux that reaches the surface.
-        Δτ_bottom = williams_delta_tau(nlayers, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
+        Δτ_bottom = williams_optical_depth_increment(nlayers, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
         transmittance_bottom = exp(-Δτ_bottom)
         B_bottom  = planck_wavenumber(T[nlayers], ν̃)
-        D_surf::NF = D * transmittance_bottom + Δν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
+        D_surface::NF = D * transmittance_bottom + Δν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
 
-        dTdt[nlayers] -= surface_flux_to_tendency(D_surf / cₚ, profile, geometry, constants)
-        D_surf_sum    += D_surf
+        temperature_tendency[nlayers] -= surface_flux_to_tendency(D_surface / cₚ, profile, geometry, constants)
+        surface_longwave_down += D_surface
     end
 
-    diag.outgoing_longwave        = olr_sum
-    diag.surface_longwave_down    = D_surf_sum
-    diag.ocean_surface_longwave_up = U_sfc_ocean
-    diag.land_surface_longwave_up  = U_sfc_land
-    diag.surface_longwave_up       = U_sfc_bb
+    diagnostics.outgoing_longwave        = outgoing_longwave
+    diagnostics.surface_longwave_down    = surface_longwave_down
+    diagnostics.ocean_surface_longwave_up = U_surface_ocean
+    diagnostics.land_surface_longwave_up  = U_surface_land
+    diagnostics.surface_longwave_up       = U_surface_broadband
 
     return nothing
 end

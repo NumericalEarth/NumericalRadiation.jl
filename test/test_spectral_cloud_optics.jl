@@ -119,9 +119,9 @@ function background_shortwave(FT, Ngpoints, nlayers)
                            scattering_asymmetry = asymmetry)
 end
 
-copy_shortwave(sw) = ShortwaveOptics(copy(sw.optical_depth);
-                                     scattering_optical_depth = copy(sw.rayleigh_optical_depth),
-                                     scattering_asymmetry = copy(sw.scattering_asymmetry))
+copy_shortwave(shortwave) = ShortwaveOptics(copy(shortwave.optical_depth);
+                                     scattering_optical_depth = copy(shortwave.rayleigh_optical_depth),
+                                     scattering_asymmetry = copy(shortwave.scattering_asymmetry))
 
 function assert_shortwave_close(a, b; rtol)
     @test isapprox(a.optical_depth, b.optical_depth; rtol)
@@ -433,11 +433,11 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
             for cloud in (one_node, three)
                 b = @inferred effective_radius_bracket(cloud, radius)
                 @test b isa Tuple{Int, Int, FT}
-                props = @inferred cloud_layer_optics(cloud, 1, b)
-                @test props isa Tuple{FT, FT, FT}
+                properties = @inferred cloud_layer_optics(cloud, 1, b)
+                @test properties isa Tuple{FT, FT, FT}
                 τ = @inferred cloud_absorption_optical_depth(cloud, 1, b, water_path)
                 @test τ isa FT
-                κ, ω, g = props
+                κ, ω, g = properties
                 updated = @inferred add_scattering_layer(water_path, water_path, water_path, κ, ω, g, water_path)
                 @test updated isa Tuple{FT, FT, FT}
                 @test measure_bracket(cloud, radius) == 0

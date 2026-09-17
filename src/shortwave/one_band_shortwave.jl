@@ -77,8 +77,8 @@ large-scale condensation; pass `length(profile.temperature) + 1` if none.
 
 `rain_rate` for the diagnostic cloud scheme comes from `profile.rain_rate`.
 """
-function solve_shortwave!(dTdt::AbstractVector,
-                          diag::ShortwaveDiagnostics{NF},
+function solve_shortwave!(temperature_tendency::AbstractVector,
+                          diagnostics::ShortwaveDiagnostics{NF},
                           scheme::OneBandShortwave,
                           profile::AtmosphereProfile,
                           geometry::ColumnGrid,
@@ -97,7 +97,7 @@ function solve_shortwave!(dTdt::AbstractVector,
         throw(DimensionMismatch("transmissivity_scratch must have length nlayers"))
     compute_transmissivity!(t, scheme.transmissivity, clouds, profile, geometry, surface)
 
-    rt = scheme.radiative_transfer
+    radiative_transfer = scheme.radiative_transfer
     cos_zenith = NF(surface.cos_zenith)
     S₀ = NF(constants.solar_constant)
     cₚ = NF(constants.heat_capacity)
@@ -121,9 +121,9 @@ function solve_shortwave!(dTdt::AbstractVector,
             U_reflected = D * R
             D *= (1 - R)
         end
-        O₃ = NF(rt.ozone_absorption) * rt.ozone_distribution(σ_full[k]) * σ_thick[k]
+        O₃ = NF(radiative_transfer.ozone_absorption) * radiative_transfer.ozone_distribution(σ_full[k]) * σ_thick[k]
         D_out = (D - O₃ * D_toa) * t[k]
-        dTdt[k] += flux_to_tendency((D - D_out) / cₚ, profile, geometry, constants, k)
+        temperature_tendency[k] += flux_to_tendency((D - D_out) / cₚ, profile, geometry, constants, k)
         D = D_out
     end
 
@@ -145,24 +145,24 @@ function solve_shortwave!(dTdt::AbstractVector,
     U::NF = U_surface + U_stratocumulus
     for k in nlayers:-1:1
         U_out = U * t[k]
-        dTdt[k] += flux_to_tendency((U - U_out) / cₚ, profile, geometry, constants, k)
+        temperature_tendency[k] += flux_to_tendency((U - U_out) / cₚ, profile, geometry, constants, k)
         if k == cloud_top
             U_out += U_reflected
         end
         U = U_out
     end
 
-    diag.surface_shortwave_down       = D_surface
-    diag.ocean_surface_shortwave_down = D_surface
-    diag.land_surface_shortwave_down  = D_surface
-    diag.ocean_surface_shortwave_up   = up_ocean
-    diag.land_surface_shortwave_up    = up_land
-    diag.surface_shortwave_up         = U_surface
-    diag.albedo                       = albedo
-    diag.outgoing_shortwave           = U
-    diag.cloud_cover                  = cloud_cover
-    diag.cloud_top                    = cloud_top
-    diag.stratocumulus_cover          = stratocumulus_cover
+    diagnostics.surface_shortwave_down       = D_surface
+    diagnostics.ocean_surface_shortwave_down = D_surface
+    diagnostics.land_surface_shortwave_down  = D_surface
+    diagnostics.ocean_surface_shortwave_up   = up_ocean
+    diagnostics.land_surface_shortwave_up    = up_land
+    diagnostics.surface_shortwave_up         = U_surface
+    diagnostics.albedo                       = albedo
+    diagnostics.outgoing_shortwave           = U
+    diagnostics.cloud_cover                  = cloud_cover
+    diagnostics.cloud_top                    = cloud_top
+    diagnostics.stratocumulus_cover          = stratocumulus_cover
 
     return nothing
 end

@@ -129,7 +129,7 @@ separate from the optical depths:
   optical depth before transport;
 - `overlap_parameter` — the ecRad/Hogan–Illingworth ``\alpha`` between each
   pair of adjacent layers (`N - 1` values, default 1);
-- `fractional_std` — the fractional standard deviation of in-cloud condensate,
+- `fractional_standard_deviation` — the fractional standard deviation of in-cloud condensate,
   used by the Tripleclouds split (default 1).
 
 [`CloudOverlapShortwave`](@ref) supports six overlap modes, in increasing
@@ -148,7 +148,7 @@ fidelity:
   per-interface `overlap_parameter` for `:matrix_alpha`.
 - `:tripleclouds_alpha` — additionally split the cloudy region into optically
   thin and thick regions. The thin-region area fraction ramps from 0.5 to 0.9
-  as `fractional_std` grows from 1.5 to 3.725, and the two regions scale the
+  as `fractional_standard_deviation` grows from 1.5 to 3.725, and the two regions scale the
   clear-to-cloudy optical-depth difference by ecRad's gamma-distribution
   factors (thin scaling ``0.025 + 0.975\,e^{-f(1 + f/2(1 + f/2))}`` for
   fractional standard deviation ``f``, thick scaling chosen to conserve the

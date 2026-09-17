@@ -85,10 +85,10 @@ using Dates
     try
         read_ecckd_definition("missing-ecckd.nc")
         @test false
-    catch err
-        message = sprint(showerror, err)
+    catch exception
+        message = sprint(showerror, exception)
         if isnothing(Base.get_extension(NumericalRadiation, :NumericalRadiationNCDatasetsExt))
-            @test err isa ArgumentError
+            @test exception isa ArgumentError
             @test occursin("load NCDatasets.jl", message)
         else
             @test occursin("missing-ecckd.nc", message)
@@ -223,25 +223,25 @@ using NCDatasets
     missing_substring = strip(" " * tempname() * "-absent.nc ")
     for reader in (read_ecckd_definition, read_ecckd_spectral_mapping,
                    read_cloud_scattering_table)
-        err = try
+        exception = try
             reader(missing_substring)
             nothing
         catch caught
             caught
         end
-        @test err !== nothing
-        @test !occursin("load NCDatasets.jl", sprint(showerror, err))
+        @test exception !== nothing
+        @test !occursin("load NCDatasets.jl", sprint(showerror, exception))
     end
     for reader in ((longwave, shortwave) -> read_ecckd_tabulated_gas_optics(longwave, shortwave),
                    (longwave, shortwave) -> read_ecckd_tabulated_gas_optics(Float32, longwave, shortwave))
-        err = try
+        exception = try
             reader(missing_substring, missing_substring)
             nothing
         catch caught
             caught
         end
-        @test err !== nothing
-        @test !occursin("load NCDatasets.jl", sprint(showerror, err))
+        @test exception !== nothing
+        @test !occursin("load NCDatasets.jl", sprint(showerror, exception))
     end
 end
 

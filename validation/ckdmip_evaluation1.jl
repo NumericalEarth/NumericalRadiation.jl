@@ -109,8 +109,8 @@ const CKDMIP_FILES = ("concentrations", "lw_fluxes", "sw_fluxes")
 function ckdmip_files()
     root = try
         ecrad_data_path(; require = true)
-    catch err
-        @warn "ecrad_data artifact is not available" exception = (err, catch_backtrace())
+    catch exception
+        @warn "ecrad_data artifact is not available" exception = (exception, catch_backtrace())
         return nothing
     end
     root === nothing && return nothing

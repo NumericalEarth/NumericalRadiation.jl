@@ -209,43 +209,43 @@ function radiation_workspace(model, atmosphere; backend = nothing)
 end
 
 """
-    radiation_workspace(rtm::RadiativeTransferColumn)
+    radiation_workspace(column::RadiativeTransferColumn)
 
 The existing single-column object is already a reusable workspace: it owns the
 temperature-tendency vector, shortwave transmissivity scratch, and diagnostic
 objects used by the analytic-band paths.
 """
-radiation_workspace(rtm::RadiativeTransferColumn; backend = nothing) = rtm
+radiation_workspace(column::RadiativeTransferColumn; backend = nothing) = column
 
 """
-    radiative_heating!(rtm::RadiativeTransferColumn; reset=true, longwave=true, shortwave=true)
+    radiative_heating!(column::RadiativeTransferColumn; reset=true, longwave=true, shortwave=true)
 
 High-level analytic-band column update. This is a convenience wrapper around
 the component calls [`solve_longwave!`](@ref) and [`solve_shortwave!`](@ref);
 host models can keep using those lower-level calls directly when they own
 their own vertical integrals or tendency insertion.
 """
-function radiative_heating!(rtm::RadiativeTransferColumn;
+function radiative_heating!(column::RadiativeTransferColumn;
                             reset::Bool = true,
                             longwave::Bool = true,
                             shortwave::Bool = true,
-                            cloud_top_convective::Integer = length(rtm.profile.temperature) + 1)
-    reset && reset!(rtm)
-    longwave && solve_longwave!(rtm)
-    shortwave && solve_shortwave!(rtm; cloud_top_convective)
-    return rtm
+                            cloud_top_convective::Integer = length(column.profile.temperature) + 1)
+    reset && reset!(column)
+    longwave && solve_longwave!(column)
+    shortwave && solve_shortwave!(column; cloud_top_convective)
+    return column
 end
 
 """
-    heating_rates!(heating, rtm::RadiativeTransferColumn)
+    heating_rates!(heating, column::RadiativeTransferColumn)
 
 Copy the current column temperature tendency into `heating`. This method gives
 the staged interface an allocation-free bridge to the existing analytic-band
 workspace.
 """
-function heating_rates!(heating::AbstractVector, rtm::RadiativeTransferColumn)
-    length(heating) == length(rtm.temperature_tendency) ||
-        throw(DimensionMismatch("heating must have length $(length(rtm.temperature_tendency))"))
-    heating .= rtm.temperature_tendency
+function heating_rates!(heating::AbstractVector, column::RadiativeTransferColumn)
+    length(heating) == length(column.temperature_tendency) ||
+        throw(DimensionMismatch("heating must have length $(length(column.temperature_tendency))"))
+    heating .= column.temperature_tendency
     return heating
 end

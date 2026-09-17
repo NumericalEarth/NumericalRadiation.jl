@@ -93,27 +93,27 @@ end
     cₚ = constants.heat_capacity
     land_fraction = surface.land_fraction
 
-    rh_min = clouds.relative_humidity_threshold_min
-    rh_max = clouds.relative_humidity_threshold_max
+    relative_humidity_min = clouds.relative_humidity_threshold_min
+    relative_humidity_max = clouds.relative_humidity_threshold_max
     q_min  = clouds.specific_humidity_threshold_min
-    precip_weight = clouds.precipitation_weight
-    precip_max    = clouds.precipitation_max
+    precipitation_weight = clouds.precipitation_weight
+    precipitation_max    = clouds.precipitation_max
 
     # Precipitation term — rain_rate in m/s; convert to mm/day.
-    precip_term = min(precip_max, (NF(86400) * profile.rain_rate) / NF(1000))
-    P = precip_weight * sqrt(max(zero(NF), precip_term))
+    precipitation_term = min(precipitation_max, (NF(86400) * profile.rain_rate) / NF(1000))
+    P = precipitation_weight * sqrt(max(zero(NF), precipitation_term))
 
     humidity_term::NF = zero(NF)
     cloud_top_humidity = nlayers + 1
 
     for k in 1:(nlayers - 1)
         q_k = q[k]
-        qsat = saturation_humidity(T[k], σ_full[k] * pₛ, thermodynamic)
-        if q_k > q_min && qsat > 0
-            rh_k = q_k / qsat
-            if rh_k >= rh_min
-                rh_norm = max(zero(NF), (rh_k - rh_min) / (rh_max - rh_min))
-                humidity_term = min(one(NF), rh_norm)^2
+        q_saturation = saturation_humidity(T[k], σ_full[k] * pₛ, thermodynamic)
+        if q_k > q_min && q_saturation > 0
+            relative_humidity_k = q_k / q_saturation
+            if relative_humidity_k >= relative_humidity_min
+                relative_humidity_normalized = max(zero(NF), (relative_humidity_k - relative_humidity_min) / (relative_humidity_max - relative_humidity_min))
+                humidity_term = min(one(NF), relative_humidity_normalized)^2
                 cloud_top_humidity = min(k, cloud_top_humidity)
             end
         end
@@ -127,16 +127,16 @@ end
         surface_k = nlayers
         above_k   = max(1, nlayers - 1)
         G = (cₚ * T[surface_k] + Φ[surface_k]) - (cₚ * T[above_k] + Φ[above_k])
-        stab_min = clouds.stratocumulus_stability_min
-        stab_max = clouds.stratocumulus_stability_max
-        static_stability = clamp((G - stab_min) / (stab_max - stab_min), zero(NF), one(NF))
+        stability_min = clouds.stratocumulus_stability_min
+        stability_max = clouds.stratocumulus_stability_max
+        static_stability = clamp((G - stability_min) / (stability_max - stability_min), zero(NF), one(NF))
         cover_max = clouds.stratocumulus_cover_max
         cloud_factor = clouds.stratocumulus_cloud_factor
-        strc_ocean = static_stability * max(cover_max - cloud_factor * cloud_cover, zero(NF))
-        qsat_surf = saturation_humidity(T[surface_k], σ_full[surface_k] * pₛ, thermodynamic)
-        rh_surf   = q[surface_k] / qsat_surf
-        strc_land = strc_ocean * rh_surf
-        stratocumulus_cover = (1 - land_fraction) * strc_ocean + land_fraction * strc_land
+        stratocumulus_ocean = static_stability * max(cover_max - cloud_factor * cloud_cover, zero(NF))
+        q_saturation_surface = saturation_humidity(T[surface_k], σ_full[surface_k] * pₛ, thermodynamic)
+        relative_humidity_surface = q[surface_k] / q_saturation_surface
+        stratocumulus_land = stratocumulus_ocean * relative_humidity_surface
+        stratocumulus_cover = (1 - land_fraction) * stratocumulus_ocean + land_fraction * stratocumulus_land
     end
 
     return (

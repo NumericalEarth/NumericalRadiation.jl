@@ -131,8 +131,8 @@ function rfmip_files()
                 println("Downloading $(url)")
                 Downloads.download(url, partial; timeout = 300)
                 mv(partial, path; force = true)
-            catch err
-                @warn "Download failed" url exception = (err, catch_backtrace())
+            catch exception
+                @warn "Download failed" url exception = (exception, catch_backtrace())
                 isfile(partial) && rm(partial; force = true)
                 push!(missing_urls, url)
                 continue
@@ -206,14 +206,14 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
     longwave_down = zeros(nlayers + 1, nsites)
     shortwave_up = zeros(nlayers + 1, nsites)
     shortwave_down = zeros(nlayers + 1, nsites)
-    heating = (lw = zeros(nlayers, nsites), lw_reference = zeros(nlayers, nsites),
-               sw = zeros(nlayers, nsites), sw_reference = zeros(nlayers, nsites),
-               lw_quadrature = zeros(nlayers, nsites))
+    heating = (longwave = zeros(nlayers, nsites), longwave_reference = zeros(nlayers, nsites),
+               shortwave = zeros(nlayers, nsites), shortwave_reference = zeros(nlayers, nsites),
+               longwave_quadrature = zeros(nlayers, nsites))
     # Informational: the same longwave optics with exact angular integration
     # (3-node Gauss–Legendre, as LBLRTM's RADSUM) instead of D = 1.66.
     quadrature = gauss_legendre_flux_nodes(3)
-    lw_up_quadrature = zeros(nlayers + 1, nsites)
-    lw_down_quadrature = zeros(nlayers + 1, nsites)
+    longwave_up_quadrature = zeros(nlayers + 1, nsites)
+    longwave_down_quadrature = zeros(nlayers + 1, nsites)
 
     site_mole_fractions(i) = (h2o = benchmark.h2o[:, i], o3 = benchmark.o3[:, i],
                               co2 = benchmark.co2, ch4 = benchmark.ch4, n2o = benchmark.n2o,
@@ -245,14 +245,14 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         longwave_down[:, i] = fluxes.longwave_down
         shortwave_up[:, i] = fluxes.shortwave_up[:, 1]
         shortwave_down[:, i] = fluxes.shortwave_down[:, 1]
-        heating.lw[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
-        heating.lw_reference[:, i] = heating_rate_per_day(reference.rlu[:, i], reference.rld[:, i], atmosphere)
-        heating.sw[:, i] = heating_rate_per_day(shortwave_up[:, i], shortwave_down[:, i], atmosphere)
-        heating.sw_reference[:, i] = heating_rate_per_day(reference.rsu[:, i], reference.rsd[:, i], atmosphere)
-        longwave_quadrature_fluxes!(view(lw_up_quadrature, :, i), view(lw_down_quadrature, :, i), workspace.longwave,
+        heating.longwave[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
+        heating.longwave_reference[:, i] = heating_rate_per_day(reference.rlu[:, i], reference.rld[:, i], atmosphere)
+        heating.shortwave[:, i] = heating_rate_per_day(shortwave_up[:, i], shortwave_down[:, i], atmosphere)
+        heating.shortwave_reference[:, i] = heating_rate_per_day(reference.rsu[:, i], reference.rsd[:, i], atmosphere)
+        longwave_quadrature_fluxes!(view(longwave_up_quadrature, :, i), view(longwave_down_quadrature, :, i), workspace.longwave,
                                     model.longwave_weights, length(model.longwave_weights), nlayers,
                                     TabulatedSurfaceEmission(model, surface_temperature; emissivity), 1 - emissivity, quadrature)
-        heating.lw_quadrature[:, i] = heating_rate_per_day(lw_up_quadrature[:, i], lw_down_quadrature[:, i], atmosphere)
+        heating.longwave_quadrature[:, i] = heating_rate_per_day(longwave_up_quadrature[:, i], longwave_down_quadrature[:, i], atmosphere)
     end
 
     p_hl = benchmark.pressure_interfaces
@@ -264,21 +264,21 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         lw_surface_down = (bias = bias(longwave_down[end, :], reference.rld[end, :]), rmse = rmse(longwave_down[end, :], reference.rld[end, :])),
         lw_surface_up = (bias = bias(longwave_up[end, :], reference.rlu[end, :]), rmse = rmse(longwave_up[end, :], reference.rlu[end, :])),
         lw_profile_rmse = (up = rmse(longwave_up, reference.rlu), down = rmse(longwave_down, reference.rld)),
-        lw_heating_rate = heating_ranges(p_hl, heating.lw, heating.lw_reference),
+        lw_heating_rate = heating_ranges(p_hl, heating.longwave, heating.longwave_reference),
         sw_toa_up = (bias = bias(shortwave_up[1, day], reference.rsu[1, day]), rmse = rmse(shortwave_up[1, day], reference.rsu[1, day])),
         sw_surface_down = (bias = bias(shortwave_down[end, day], reference.rsd[end, day]), rmse = rmse(shortwave_down[end, day], reference.rsd[end, day])),
         sw_toa_down_max_relative_error = maximum(abs, shortwave_down[1, day] ./ reference.rsd[1, day] .- 1),
         sw_profile_rmse = (up = rmse(shortwave_up[:, day], reference.rsu[:, day]), down = rmse(shortwave_down[:, day], reference.rsd[:, day])),
-        sw_heating_rate = heating_ranges(p_hl[:, day], heating.sw[:, day], heating.sw_reference[:, day]),
+        sw_heating_rate = heating_ranges(p_hl[:, day], heating.shortwave[:, day], heating.shortwave_reference[:, day]),
         night_sites_max_flux = maximum(abs, [shortwave_up[:, night]; shortwave_down[:, night]]),
         lw_heating_rate_troposphere_above_lowest_two_layers =
-            weighted_heating_rate_rmse(p_hl, heating.lw, heating.lw_reference, HEATING_RATE_RANGES.troposphere;
+            weighted_heating_rate_rmse(p_hl, heating.longwave, heating.longwave_reference, HEATING_RATE_RANGES.troposphere;
                                        exclude_lowest = 2),
-        lw_quadrature = (toa_up = (bias = bias(lw_up_quadrature[1, :], reference.rlu[1, :]),
-                                   rmse = rmse(lw_up_quadrature[1, :], reference.rlu[1, :])),
-                         surface_down = (bias = bias(lw_down_quadrature[end, :], reference.rld[end, :]),
-                                         rmse = rmse(lw_down_quadrature[end, :], reference.rld[end, :])),
-                         heating_rate = heating_ranges(p_hl, heating.lw_quadrature, heating.lw_reference)),
+        longwave_quadrature = (toa_up = (bias = bias(longwave_up_quadrature[1, :], reference.rlu[1, :]),
+                                   rmse = rmse(longwave_up_quadrature[1, :], reference.rlu[1, :])),
+                         surface_down = (bias = bias(longwave_down_quadrature[end, :], reference.rld[end, :]),
+                                         rmse = rmse(longwave_down_quadrature[end, :], reference.rld[end, :])),
+                         heating_rate = heating_ranges(p_hl, heating.longwave_quadrature, heating.longwave_reference)),
     )
 
     gates_for = getproperty(RFMIP_GATES, Symbol(model_name))
@@ -354,7 +354,7 @@ function rfmip_markdown(results, benchmark)
         push!(lines, markdown_row(("SW heating rate RMSE 4 Pa < p ≤ 100 hPa (μ₀ > 0)", @sprintf("%.4f K day⁻¹", s.sw_heating_rate.stratosphere))))
         push!(lines, markdown_row(("SW TOA down max relative error (S₀ μ₀ check)", @sprintf("%.1e", s.sw_toa_down_max_relative_error))))
         push!(lines, markdown_row(("Night sites max |SW flux|", @sprintf("%.2e W m⁻²", s.night_sites_max_flux))))
-        q = s.lw_quadrature
+        q = s.longwave_quadrature
         push!(lines, markdown_row(("Exact angular integration: LW TOA up bias / RMSE", @sprintf("%+.3f / %.3f W m⁻²", q.toa_up.bias, q.toa_up.rmse))))
         push!(lines, markdown_row(("Exact angular integration: LW surface down bias / RMSE", @sprintf("%+.3f / %.3f W m⁻²", q.surface_down.bias, q.surface_down.rmse))))
         push!(lines, markdown_row(("Exact angular integration: LW heating rate RMSE p > 100 hPa / 4 Pa < p ≤ 100 hPa",

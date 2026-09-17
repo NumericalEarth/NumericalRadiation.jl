@@ -145,8 +145,8 @@ function ecrad_artifact_root(; require::Bool = false)
     try
         path = @artifact_str("ecrad_data")
         return isdir(path) ? normpath(path) : nothing
-    catch err
-        @warn "Unable to resolve lazy ecrad_data artifact; falling back to RH_ECRAD_DATA_PATH or validation checkout" exception = (err, catch_backtrace())
+    catch exception
+        @warn "Unable to resolve lazy ecrad_data artifact; falling back to RH_ECRAD_DATA_PATH or validation checkout" exception = (exception, catch_backtrace())
         return nothing
     end
 end
@@ -158,8 +158,8 @@ function ecckd_source_artifact_root(; require::Bool = false)
     try
         path = @artifact_str("ecckd_source")
         return isdir(path) ? normpath(path) : nothing
-    catch err
-        @warn "Unable to resolve lazy ecckd_source artifact; falling back to RH_ECCKD_SOURCE_PATH or validation checkout" exception = (err, catch_backtrace())
+    catch exception
+        @warn "Unable to resolve lazy ecckd_source artifact; falling back to RH_ECCKD_SOURCE_PATH or validation checkout" exception = (exception, catch_backtrace())
         return nothing
     end
 end

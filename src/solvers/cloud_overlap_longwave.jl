@@ -23,14 +23,14 @@ struct LongwaveCloudOverlapOptics{FT, L, F, O, D}
     "Interface overlap parameter between adjacent cloudy layers."
     overlap_parameter::O
     "Layer fractional standard deviation of in-cloud condensate."
-    fractional_std::D
+    fractional_standard_deviation::D
 end
 
 function LongwaveCloudOverlapOptics(clear::LongwaveOptics{FT},
                                                cloudy::LongwaveOptics{FT},
                                                cloud_fraction::AbstractVector{FT};
                                                overlap_parameter = nothing,
-                                               fractional_std = nothing) where FT
+                                               fractional_standard_deviation = nothing) where FT
     number_of_layers(clear) == number_of_layers(cloudy) ||
         throw(DimensionMismatch("clear and cloudy longwave optics must have the same number of layers"))
     number_of_gpoints(clear) == number_of_gpoints(cloudy) ||
@@ -42,18 +42,18 @@ function LongwaveCloudOverlapOptics(clear::LongwaveOptics{FT},
         FT.(overlap_parameter)
     length(overlap) == max(number_of_layers(clear) - 1, 0) ||
         throw(DimensionMismatch("overlap_parameter must have one value between each adjacent layer"))
-    fsd = fractional_std === nothing ?
+    fractional_standard_deviation = fractional_standard_deviation === nothing ?
         fill(one(FT), number_of_layers(clear)) :
-        FT.(fractional_std)
-    length(fsd) == number_of_layers(clear) ||
-        throw(DimensionMismatch("fractional_std must have one value per layer"))
+        FT.(fractional_standard_deviation)
+    length(fractional_standard_deviation) == number_of_layers(clear) ||
+        throw(DimensionMismatch("fractional_standard_deviation must have one value per layer"))
     has_interface_sources(clear) == has_interface_sources(cloudy) ||
         throw(ArgumentError("clear and cloudy longwave optics must both use interface sources or both omit them"))
     return LongwaveCloudOverlapOptics{FT, typeof(clear),
                                                  typeof(cloud_fraction),
                                                  typeof(overlap),
-                                                 typeof(fsd)}(
-        clear, cloudy, cloud_fraction, overlap, fsd)
+                                                 typeof(fractional_standard_deviation)}(
+        clear, cloudy, cloud_fraction, overlap, fractional_standard_deviation)
 end
 
 Base.eltype(::LongwaveCloudOverlapOptics{FT}) where FT = FT
@@ -103,14 +103,14 @@ function u_overlap_matrix_tripleclouds_alpha!(u::AbstractMatrix{FT},
                                                v::AbstractMatrix{FT},
                                                alpha,
                                                inhomogeneity_exponent,
-                                               upper_frac::AbstractVector{FT},
-                                               lower_frac::AbstractVector{FT}) where FT
+                                               upper_fraction::AbstractVector{FT},
+                                               lower_fraction::AbstractVector{FT}) where FT
     v_overlap_matrix_tripleclouds_alpha!(
-        v, alpha, inhomogeneity_exponent, upper_frac, lower_frac)
+        v, alpha, inhomogeneity_exponent, upper_fraction, lower_fraction)
     fill!(u, zero(FT))
     for upper in 1:3, lower in 1:3
-        lower_frac[lower] <= sqrt(eps(FT)) && continue
-        u[upper, lower] = v[lower, upper] * upper_frac[upper] / lower_frac[lower]
+        lower_fraction[lower] <= sqrt(eps(FT)) && continue
+        u[upper, lower] = v[lower, upper] * upper_fraction[upper] / lower_fraction[lower]
     end
     return u
 end
@@ -236,14 +236,14 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
     nlayers = number_of_layers(optics.clear)
     exponent = max(FT(solver.cloud_fraction_exponent), zero(FT))
 
-    region_frac = Matrix{FT}(undef, 3, nlayers)
+    region_fraction = Matrix{FT}(undef, 3, nlayers)
     thin_scaling = Vector{FT}(undef, nlayers)
     thick_scaling = Vector{FT}(undef, nlayers)
     for k in 1:nlayers
-        cf = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
-        region_frac[1, k], region_frac[2, k], region_frac[3, k],
+        cloud_fraction = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
+        region_fraction[1, k], region_fraction[2, k], region_fraction[3, k],
             thin_scaling[k], thick_scaling[k] =
-            gamma_tripleclouds_regions(FT, cf, optics.fractional_std[k])
+            gamma_tripleclouds_regions(FT, cloud_fraction, optics.fractional_standard_deviation[k])
     end
 
     reflectance = Matrix{FT}(undef, 3, nlayers)
@@ -262,8 +262,8 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
             longwave_layer_terms_scaled(FT, optics.clear, optics.cloudy,
                                    thick_scaling[k], gpoint, k)
         for region in 1:3
-            source_up[region, k] *= region_frac[region, k]
-            source_down[region, k] *= region_frac[region, k]
+            source_up[region, k] *= region_fraction[region, k]
+            source_down[region, k] *= region_fraction[region, k]
         end
     end
 
@@ -272,7 +272,7 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
     total_albedo[:, nlayers + 1] .= clamp(FT(surface_albedo), zero(FT), one(FT))
     for region in 1:3
         total_source[region, nlayers + 1] =
-            region_frac[region, nlayers] * FT(surface_up)
+            region_fraction[region, nlayers] * FT(surface_up)
     end
     v = zeros(FT, 3, 3)
     u = zeros(FT, 3, 3)
@@ -293,8 +293,8 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
                 inverse_denominator
         end
 
-        upper = k == 1 ? FT[one(FT), zero(FT), zero(FT)] : region_frac[:, k - 1]
-        lower = region_frac[:, k]
+        upper = k == 1 ? FT[one(FT), zero(FT), zero(FT)] : region_fraction[:, k - 1]
+        lower = region_fraction[:, k]
         u_overlap_matrix_tripleclouds_alpha!(
             u, v, matrix_overlap_parameter(solver, optics, k - 1, FT),
             solver.inhomogeneity_overlap_exponent, upper, lower)
@@ -314,7 +314,7 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
     flux_up = zeros(FT, 3)
     upper = FT[one(FT), zero(FT), zero(FT)]
     v_overlap_matrix_tripleclouds_alpha!(
-        v, one(FT), solver.inhomogeneity_overlap_exponent, upper, region_frac[:, 1])
+        v, one(FT), solver.inhomogeneity_overlap_exponent, upper, region_fraction[:, 1])
     for region in 1:3
         flux_down[region] = v[region, 1] * FT(toa_down)
     end
@@ -340,7 +340,7 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
             v_overlap_matrix_tripleclouds_alpha!(
                 v, matrix_overlap_parameter(solver, optics, k, FT),
                 solver.inhomogeneity_overlap_exponent,
-                region_frac[:, k], region_frac[:, k + 1])
+                region_fraction[:, k], region_fraction[:, k + 1])
             fill!(next_flux_down, zero(FT))
             for upper_region in 1:3, lower_region in 1:3
                 next_flux_down[lower_region] +=

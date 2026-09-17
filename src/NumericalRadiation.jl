@@ -48,8 +48,8 @@ export LongwaveDiagnostics, ShortwaveDiagnostics
 export planck_wavenumber
 
 export AnalyticBandLongwave
-export water_vapor_line_kappa_ref, water_vapor_continuum_kappa_ref, carbon_dioxide_kappa_ref
-export williams_delta_tau
+export water_vapor_line_absorption_reference, water_vapor_continuum_absorption_reference, carbon_dioxide_absorption_reference
+export williams_optical_depth_increment
 
 export NoClouds, DiagnosticClouds
 export ConstantShortwaveTransmissivity, BackgroundShortwaveTransmissivity

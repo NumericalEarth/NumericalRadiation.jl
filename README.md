@@ -71,20 +71,20 @@ surface = SurfaceState(
 )
 
 # Schemes, constants, and output buffers all wrap up here.
-rtm = RadiativeTransferColumn(; grid, profile, surface)
+column = RadiativeTransferColumn(; grid, profile, surface)
 
-solve_longwave!(rtm)
-solve_shortwave!(rtm)
+solve_longwave!(column)
+solve_shortwave!(column)
 
-@show rtm.longwave_diagnostics.outgoing_longwave        # W m⁻²
-@show rtm.longwave_diagnostics.surface_longwave_down    # W m⁻²
-@show rtm.shortwave_diagnostics.surface_shortwave_down  # W m⁻²
-@show rtm.temperature_tendency                           # K s⁻¹ per layer
+@show column.longwave_diagnostics.outgoing_longwave        # W m⁻²
+@show column.longwave_diagnostics.surface_longwave_down    # W m⁻²
+@show column.shortwave_diagnostics.surface_shortwave_down  # W m⁻²
+@show column.temperature_tendency                           # K s⁻¹ per layer
 ```
 
 For the low-level kernel form (what host extensions such as
 `NumericalRadiationSpeedyWeatherExt` call internally), `solve_longwave!` and `solve_shortwave!` accept the
-flattened `(dTdt, diagnostics, scheme, profile, grid, surface, constants, …)`
+flattened `(temperature_tendency, diagnostics, scheme, profile, grid, surface, constants, …)`
 signature directly, and the `constants` argument is duck-typed — any struct
 or NamedTuple carrying `gravity`, `heat_capacity`, `stefan_boltzmann`,
 `solar_constant` properties works. The staged runtime reads the same kind of

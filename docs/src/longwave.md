@@ -26,9 +26,9 @@ longwave = AnalyticBandLongwave(Float64)
 # Replace zeros with NaN so the log-y plot shows gaps where a band is inactive.
 nan_zero(v) = [x == 0 ? NaN : x for x in v]
 
-water_vapor_line_absorption      = nan_zero([water_vapor_line_kappa_ref(ν, longwave)      for ν in ν̃])
-water_vapor_continuum_absorption =          [water_vapor_continuum_kappa_ref(ν, longwave) for ν in ν̃]
-carbon_dioxide_absorption        = nan_zero([carbon_dioxide_kappa_ref(ν, longwave)        for ν in ν̃])
+water_vapor_line_absorption      = nan_zero([water_vapor_line_absorption_reference(ν, longwave)      for ν in ν̃])
+water_vapor_continuum_absorption =          [water_vapor_continuum_absorption_reference(ν, longwave) for ν in ν̃]
+carbon_dioxide_absorption        = nan_zero([carbon_dioxide_absorption_reference(ν, longwave)        for ν in ν̃])
 
 fig = Figure(size = (760, 440))
 ax  = Axis(fig[1, 1];
@@ -47,7 +47,7 @@ save("absorption.png", fig); nothing # hide
 
 All three curves are evaluated at the paper's reference state
 `(T, p, RH) = (260 K, 500 hPa, 100 %)`. At runtime
-[`williams_delta_tau`](@ref)
+[`williams_optical_depth_increment`](@ref)
 applies pressure broadening (`κ ∝ p / p_ref`), continuum temperature scaling
 (`exp(σ_cont (T_ref − T))`, Mlawer et al. 1997), and the two-stream
 diffusivity factor `D = 1.5` (Armstrong 1968).

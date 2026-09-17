@@ -23,13 +23,13 @@ Layer transmissivities under the constant-transmissivity model. Writes into
 `t` (length `nlayers`) and returns it.
 """
 @inline function compute_transmissivity!(t::AbstractVector,
-                                          cst::ConstantShortwaveTransmissivity,
+                                          transmissivity::ConstantShortwaveTransmissivity,
                                           clouds, profile::AtmosphereProfile,
                                           geometry::ColumnGrid,
                                           surface::SurfaceState)
     NF = eltype(t)
     nlayers = length(t)
-    τ = -log(NF(cst.transmissivity))
+    τ = -log(NF(transmissivity.transmissivity))
     dσ = geometry.σ_thick
     for k in 1:nlayers
         t[k] = exp(-τ * dσ[k])
@@ -91,12 +91,12 @@ BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
     humidity   = profile.humidity
     σ_half     = geometry.σ_half
     σ_full     = geometry.σ_full
-    p_norm     = profile.surface_pressure / NF(100000)
+    p_normalized = profile.surface_pressure / NF(100000)
     cos_zenith = surface.cos_zenith
 
-    azen = transmissivity.zenith_amplitude
-    nzen = transmissivity.zenith_exponent
-    zenith_factor = 1 + azen * (1 - cos_zenith)^nzen
+    zenith_amplitude = transmissivity.zenith_amplitude
+    zenith_exponent = transmissivity.zenith_exponent
+    zenith_factor = 1 + zenith_amplitude * (1 - cos_zenith)^zenith_exponent
 
     q_base = nlayers > 1 ? humidity[nlayers - 1] : humidity[nlayers]
     cloud_term = min(absorptivity_cloud_base * q_base, absorptivity_cloud_limit)
@@ -104,14 +104,14 @@ BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
     for k in 1:nlayers
         q_k = humidity[k]
         aerosol_factor = transmissivity.aerosols ? σ_full[k]^2 : zero(NF)
-        layer_abs = absorptivity_dry_air +
+        layer_absorptivity = absorptivity_dry_air +
                     absorptivity_aerosol * aerosol_factor +
                     absorptivity_water_vapor * q_k
         if k >= cloud_top
-            layer_abs += cloud_term * cloud_cover
+            layer_absorptivity += cloud_term * cloud_cover
         end
         Δσ_k = σ_half[k + 1] - σ_half[k]
-        optical_depth = layer_abs * Δσ_k * p_norm * zenith_factor
+        optical_depth = layer_absorptivity * Δσ_k * p_normalized * zenith_factor
         t[k] = exp(-optical_depth)
     end
 

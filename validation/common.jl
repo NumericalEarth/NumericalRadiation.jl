@@ -357,7 +357,7 @@ end
 
 function flux_gate(name; rmse, bias = 0.0, rmse_threshold, bias_threshold = Inf)
     metrics = RadiationErrorMetrics{Float64}(rmse, 0.0, bias, 0.0, 0.0, 0.0, 0.0, 0.0)
-    thresholds = RadiationThresholds(flux_rmse = rmse_threshold, flux_abs_bias = bias_threshold)
+    thresholds = RadiationThresholds(flux_rmse = rmse_threshold, flux_absolute_bias = bias_threshold)
     return Gate(name, metrics, thresholds)
 end
 
@@ -376,9 +376,9 @@ function gate_summary(gate::Gate)
         return (observed = @sprintf("RMSE %.4f", m.heating_rate_rmse),
                 threshold = @sprintf("RMSE ≤ %.2f", t.heating_rate_rmse),
                 units = "K day⁻¹")
-    elseif isfinite(t.flux_abs_bias)
+    elseif isfinite(t.flux_absolute_bias)
         return (observed = @sprintf("bias %+.3f, RMSE %.3f", m.flux_bias, m.flux_rmse),
-                threshold = @sprintf("|bias| ≤ %.2f, RMSE ≤ %.2f", t.flux_abs_bias, t.flux_rmse),
+                threshold = @sprintf("|bias| ≤ %.2f, RMSE ≤ %.2f", t.flux_absolute_bias, t.flux_rmse),
                 units = "W m⁻²")
     else
         return (observed = @sprintf("RMSE %.3f", m.flux_rmse),
@@ -452,7 +452,7 @@ gate_records(gates) = [(; name = g.name,
                           flux_bias = g.metrics.flux_bias,
                           heating_rate_rmse = g.metrics.heating_rate_rmse,
                           flux_rmse_threshold = g.thresholds.flux_rmse,
-                          flux_abs_bias_threshold = g.thresholds.flux_abs_bias,
+                          flux_abs_bias_threshold = g.thresholds.flux_absolute_bias,
                           heating_rate_rmse_threshold = g.thresholds.heating_rate_rmse,
                           passes = first(gate_passes(g)))
                        for g in gates]

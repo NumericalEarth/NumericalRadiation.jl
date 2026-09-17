@@ -10,10 +10,10 @@ The high-level API is [`solve_longwave!`](@ref) and
 [`solve_shortwave!`](@ref) on a `RadiativeTransferColumn`:
 
 ```julia
-rtm = RadiativeTransferColumn(; grid, profile, surface)
-solve_longwave!(rtm)
-solve_shortwave!(rtm)
-@show rtm.longwave_diagnostics.outgoing_longwave
+column = RadiativeTransferColumn(; grid, profile, surface)
+solve_longwave!(column)
+solve_shortwave!(column)
+@show column.longwave_diagnostics.outgoing_longwave
 ```
 
 Fields are
@@ -91,14 +91,14 @@ function RadiativeTransferColumn(;
 end
 
 """$(TYPEDSIGNATURES)
-Zero the temperature tendency and scalar diagnostics on `rtm` so a fresh
+Zero the temperature tendency and scalar diagnostics on `column` so a fresh
 `solve_longwave!` / `solve_shortwave!` doesn't accumulate onto stale values.
 """
-function reset!(rtm::RadiativeTransferColumn)
-    rtm.temperature_tendency .= 0
-    reset!(rtm.longwave_diagnostics)
-    reset!(rtm.shortwave_diagnostics)
-    return rtm
+function reset!(column::RadiativeTransferColumn)
+    column.temperature_tendency .= 0
+    reset!(column.longwave_diagnostics)
+    reset!(column.shortwave_diagnostics)
+    return column
 end
 
 function reset!(d::LongwaveDiagnostics{NF}) where NF
@@ -126,39 +126,39 @@ function reset!(d::ShortwaveDiagnostics{NF}) where NF
 end
 
 """$(TYPEDSIGNATURES)
-Column longwave radiative transfer using the scheme stored on `rtm`.
-Accumulates into `rtm.temperature_tendency` (call `reset!(rtm)` first if you
-want a clean slate) and writes scalars into `rtm.longwave_diagnostics`.
+Column longwave radiative transfer using the scheme stored on `column`.
+Accumulates into `column.temperature_tendency` (call `reset!(column)` first if you
+want a clean slate) and writes scalars into `column.longwave_diagnostics`.
 """
-function solve_longwave!(rtm::RadiativeTransferColumn)
+function solve_longwave!(column::RadiativeTransferColumn)
     solve_longwave!(
-        rtm.temperature_tendency,
-        rtm.longwave_diagnostics,
-        rtm.longwave_scheme,
-        rtm.profile,
-        rtm.grid,
-        rtm.surface,
-        rtm.physical_constants,
+        column.temperature_tendency,
+        column.longwave_diagnostics,
+        column.longwave_scheme,
+        column.profile,
+        column.grid,
+        column.surface,
+        column.physical_constants,
     )
-    return rtm
+    return column
 end
 
 """$(TYPEDSIGNATURES)
-Column shortwave radiative transfer using the scheme stored on `rtm`.
+Column shortwave radiative transfer using the scheme stored on `column`.
 """
-function solve_shortwave!(rtm::RadiativeTransferColumn;
-                          cloud_top_convective::Integer = length(rtm.profile.temperature) + 1)
+function solve_shortwave!(column::RadiativeTransferColumn;
+                          cloud_top_convective::Integer = length(column.profile.temperature) + 1)
     solve_shortwave!(
-        rtm.temperature_tendency,
-        rtm.shortwave_diagnostics,
-        rtm.shortwave_scheme,
-        rtm.profile,
-        rtm.grid,
-        rtm.surface,
-        rtm.physical_constants,
-        rtm.thermodynamic_constants;
-        transmissivity_scratch = rtm.transmissivity_scratch,
+        column.temperature_tendency,
+        column.shortwave_diagnostics,
+        column.shortwave_scheme,
+        column.profile,
+        column.grid,
+        column.surface,
+        column.physical_constants,
+        column.thermodynamic_constants;
+        transmissivity_scratch = column.transmissivity_scratch,
         cloud_top_convective   = cloud_top_convective,
     )
-    return rtm
+    return column
 end
