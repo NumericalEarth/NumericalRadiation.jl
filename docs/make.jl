@@ -53,6 +53,7 @@ makedocs(
         "Gas optics" => [
             "ecCKD files" => "gas_optics/ecckd_files.md",
             "ecCKD runtime workflow" => "gas_optics/ecckd_runtime_workflow.md",
+            "Streaming column API" => "gas_optics/streaming_column_api.md",
             "Correlated-k method" => "gas_optics/correlated_k.md",
         ],
         "Solvers & schemes" => [
