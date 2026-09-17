@@ -65,6 +65,7 @@ const REQUIRED_EXPORTS = (
     :effective_radius_bracket,
     :cloud_layer_optics,
     :add_scattering_layer,
+    :add_cloud_scattering_layer,
     :cloud_absorption_optical_depth,
     :ecrad_test_file,
 )

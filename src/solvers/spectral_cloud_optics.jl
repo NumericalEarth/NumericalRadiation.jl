@@ -168,6 +168,10 @@ On a one-node model (`w = 0`) the node values are returned exactly.
     return κ, ω, g
 end
 
+# A `Nothing` phase has no optics: zero extinction, so that
+# `add_scattering_layer` leaves the layer unchanged whatever the water path.
+@inline cloud_layer_optics(::Nothing, ig, radius_bracket) = (0, 0, 0)
+
 """
 $(TYPEDSIGNATURES)
 
@@ -197,6 +201,26 @@ and per g point.
                         asymmetry + (g_cloud - asymmetry) * (τ_cloud_scattering / τ_scattering′))
     return τ_absorption′, τ_scattering′, asymmetry′
 end
+
+"""
+$(TYPEDSIGNATURES)
+
+Fold `cloud` at g point `ig` on the effective-radius bracket from
+[`effective_radius_bracket`](@ref) with mass path `water_path` (kg m⁻²) into
+a layer's `(τ_absorption, τ_scattering, asymmetry)`, returning the updated
+triple: [`cloud_layer_optics`](@ref) followed by
+[`add_scattering_layer`](@ref). A `Nothing` phase returns the layer
+unchanged, so one shortwave layer functor serves clear and cloudy skies.
+"""
+@inline function add_cloud_scattering_layer(τ_absorption, τ_scattering, asymmetry,
+                                            cloud::SpectralCloudOptics, ig, radius_bracket, water_path)
+    κ, ω, g = cloud_layer_optics(cloud, ig, radius_bracket)
+    return add_scattering_layer(τ_absorption, τ_scattering, asymmetry, κ, ω, g, water_path)
+end
+
+@inline add_cloud_scattering_layer(τ_absorption, τ_scattering, asymmetry,
+                                   ::Nothing, ig, radius_bracket, water_path) =
+    (τ_absorption, τ_scattering, asymmetry)
 
 """
 $(TYPEDSIGNATURES)

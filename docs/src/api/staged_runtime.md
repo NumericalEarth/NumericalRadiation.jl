@@ -51,6 +51,7 @@ SpectralCloudOptics
 effective_radius_bracket
 cloud_layer_optics
 add_scattering_layer
+add_cloud_scattering_layer
 cloud_absorption_optical_depth
 cloud_optical_properties!
 cloudy_region_optical_properties!

@@ -54,7 +54,7 @@ per g point:      longwave_optical_depth(model, ig, gases, s)      # LW  τ
                   longwave_source(model, ig, T_interface, b)       # LW  B at each interface
                   shortwave_optical_depth(model, ig, gases, s)     # SW  τ_absorption
                   rayleigh_optical_depth(model, ig, air_moles)     # SW  τ_scattering
-                  cloud_layer_optics / add_scattering_layer        # clouds, per phase
+                  add_cloud_scattering_layer(…, cloud, ig, b, wp)  # clouds, per phase
 
 per column:       streaming_longwave_fluxes!(…)
                   streaming_shortwave_fluxes!(…)
@@ -90,8 +90,10 @@ layer and phase, then [`cloud_layer_optics`](@ref) gives `(κ, ω, g)` per g
 point, which [`add_scattering_layer`](@ref) folds into the layer's
 `(τ_absorption, τ_scattering, asymmetry)` for the shortwave and
 [`cloud_absorption_optical_depth`](@ref) adds as pure absorption for the
-longwave. A `Nothing` phase dispatches to no-ops, so the clear-sky and
-all-sky kernels are the same code.
+longwave; [`add_cloud_scattering_layer`](@ref) is the shortwave pair of calls
+in one. A `Nothing` phase dispatches to no-ops in every one of these
+functions (a zero-extinction `(κ, ω, g)`, an unchanged layer, zero
+absorption), so the clear-sky and all-sky kernels are the same code.
 
 The kernel packages these calls into two *layer-optics functors* the solvers
 call back into, each `(ig, k)` returning the layer's tuple:

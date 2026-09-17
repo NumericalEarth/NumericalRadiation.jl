@@ -21,7 +21,7 @@ export CloudOptics, CloudyRegionCloudOptics
 export LayerCloudOpticsModel, LayerLiquidIceCloudOpticsModel
 export add_cloud_optical_depths!, add_mapped_cloud_scattering!
 export SpectralCloudOptics, effective_radius_bracket, cloud_layer_optics
-export add_scattering_layer, cloud_absorption_optical_depth
+export add_scattering_layer, add_cloud_scattering_layer, cloud_absorption_optical_depth
 export AerosolOptics, LayerAerosolOpticsModel, add_aerosol_optical_depths!
 export EcCKDGasOpticsModel, EcCKDTabulatedGasOpticsModel
 export EcCKDDefinition, EcCKDSchemaSummary, EcCKDModelSpec

@@ -151,6 +151,8 @@ Base.@noinline measure_absorption(cloud, b, wp) =
     @allocated cloud_absorption_optical_depth(cloud, 1, b, wp)
 Base.@noinline measure_add_scattering(κ, ω, g, wp) =
     @allocated add_scattering_layer(wp, wp, wp, κ, ω, g, wp)
+Base.@noinline measure_add_cloud(cloud, b, wp) =
+    @allocated add_cloud_scattering_layer(wp, wp, wp, cloud, 1, b, wp)
 
 @testset "Spectral cloud optics" begin
     table = synthetic_table()
@@ -257,6 +259,17 @@ Base.@noinline measure_add_scattering(κ, ω, g, wp) =
         end
         @test cloud_absorption_optical_depth(nothing, 1, effective_radius_bracket(nothing, 1.0e-6), 0.3) === 0.0
         @test cloud_absorption_optical_depth(nothing, 1, (1, 1, 0), 0.3f0) === 0.0f0
+        # The shortwave path has the same no-ops: a `Nothing` phase has zero
+        # extinction and leaves the layer bit-for-bit unchanged.
+        @test cloud_layer_optics(nothing, 1, (1, 1, 0)) === (0, 0, 0)
+        layer = (0.3, 0.05, -0.2)
+        @test add_scattering_layer(layer..., cloud_layer_optics(nothing, 1, (1, 1, 0))..., 0.3) === layer
+        @test add_cloud_scattering_layer(layer..., nothing, 1, (1, 1, 0), 0.3) === layer
+        @test add_cloud_scattering_layer(layer..., nothing, 1, (1, 1, 0), 0.0f0) === layer
+        for ig in 1:2, wp in (0.0, 0.1)
+            @test add_cloud_scattering_layer(layer..., one_node, ig, bracket, wp) ===
+                  add_scattering_layer(layer..., cloud_layer_optics(one_node, ig, bracket)..., wp)
+        end
 
         radius = [1.0e-6, 5.0e-6, 20.0e-6]
         κ = [1.0 2.0 3.0; 4.0 5.0 6.0]
@@ -436,8 +449,13 @@ Base.@noinline measure_add_scattering(κ, ω, g, wp) =
             end
             @test (@inferred effective_radius_bracket(nothing, radius)) === (1, 1, 0)
             @test (@inferred cloud_absorption_optical_depth(nothing, 1, (1, 1, 0), wp)) === zero(FT)
+            @test (@inferred cloud_layer_optics(nothing, 1, (1, 1, 0))) === (0, 0, 0)
+            @test (@inferred add_cloud_scattering_layer(wp, wp, wp, nothing, 1, (1, 1, 0), wp)) === (wp, wp, wp)
+            @test (@inferred add_cloud_scattering_layer(wp, wp, wp, one_node, 1, (1, 1, zero(FT)), wp)) isa Tuple{FT, FT, FT}
             @test measure_bracket(nothing, radius) == 0
             @test measure_absorption(nothing, (1, 1, 0), wp) == 0
+            @test measure_add_cloud(nothing, (1, 1, 0), wp) == 0
+            @test measure_add_cloud(one_node, (1, 1, zero(FT)), wp) == 0
         end
     end
 
