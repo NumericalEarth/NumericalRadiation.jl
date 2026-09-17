@@ -1,8 +1,8 @@
 # Streaming column API for host kernels
 
-The [staged runtime](../solvers.md) fills `(Ngpoints, nlayers)` optics arrays for a
+The [staged runtime](../solvers.md) fills `(Ngpoints, Nz)` optics arrays for a
 whole column and then solves them. A host model that runs radiation inside its
-own kernels — one thread per column, no allocation, no intermediate `(Ngpoints, nlayers)`
+own kernels — one thread per column, no allocation, no intermediate `(Ngpoints, Nz)`
 matrices — needs the same physics as scalar, per-layer, per-g-point functions.
 This page documents that *streaming* form of the API: the loop a host kernel
 runs, the conventions its arguments follow, and the guarantee that i₀ᵀ
@@ -15,8 +15,8 @@ built on.
 
 The streaming functions share the package conventions of the array path:
 
-- **Ordering.** Layers are indexed `k = 1:nlayers` from the top of the
-  atmosphere down; interface arrays have `nlayers + 1` entries with index 1 at
+- **Ordering.** Layers are indexed `k = 1:Nz` from the top of the
+  atmosphere down; interface arrays have `Nz + 1` entries with index 1 at
   the top. A host whose own columns run bottom-up flips the index when i₀ᵀ
   stages the column.
 - **Gases.** A layer's gas amounts are a `NamedTuple` of scalars in mol m⁻²
@@ -126,7 +126,7 @@ Planck path with diffusivity `D = 1.66`, swept down from `toa_down` and then up
 from the surface, where `up = surface_emission[gpoint] + surface_albedo * down`.
 The surface source is a [`TabulatedSurfaceEmission`](@ref), which brackets the
 surface temperature once and evaluates `ε B(Tₛ)` lazily per g point. Two
-caller-owned scratch vectors of length `nlayers` carry the layer transmittance
+caller-owned scratch vectors of length `Nz` carry the layer transmittance
 and upward source between the sweeps.
 
 [`streaming_shortwave_fluxes!`](@ref) is the two-stream adding method of
@@ -206,15 +206,15 @@ julia> function (layers::LongwaveLayers)(gpoint, k)
            return τ, B_top, B_bottom
        end;
 
-julia> nlayers = 2;
+julia> Nz = 2;
 
 julia> surface = TabulatedSurfaceEmission(model, 295.0; emissivity = 0.98);
 
-julia> longwave_up, longwave_down = zeros(nlayers + 1), zeros(nlayers + 1);
+julia> longwave_up, longwave_down = zeros(Nz + 1), zeros(Nz + 1);
 
 julia> streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveLayers(model, column),
-                                  surface, 0.02, 0.0, model.longwave_weights, 2, nlayers,
-                                  zeros(nlayers), zeros(nlayers));
+                                  surface, 0.02, 0.0, model.longwave_weights, 2, Nz,
+                                  zeros(Nz), zeros(Nz));
 
 julia> round.(longwave_up; digits = 2)
 3-element Vector{Float64}:
@@ -248,11 +248,11 @@ julia> function (layers::ShortwaveLayers)(gpoint, k)
 
 julia> μ₀, S₀, albedo = 0.5, column.constants.solar_constant, 0.1;
 
-julia> shortwave_up, shortwave_down = zeros(nlayers + 1), zeros(nlayers + 1);
+julia> shortwave_up, shortwave_down = zeros(Nz + 1), zeros(Nz + 1);
 
 julia> streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveLayers(model, column),
                                    μ₀, S₀ * max(μ₀, 0), albedo, albedo, model.shortwave_weights,
-                                   1, nlayers, ShortwaveColumnScratch(Float64, nlayers));
+                                   1, Nz, ShortwaveColumnScratch(Float64, Nz));
 
 julia> round.(shortwave_down; digits = 2)
 3-element Vector{Float64}:
@@ -262,7 +262,7 @@ julia> round.(shortwave_down; digits = 2)
 ```
 
 The same column through the array path — `optical_properties!` into
-`(Ngpoints, nlayers)` work arrays with interface Planck sources, then
+`(Ngpoints, Nz)` work arrays with interface Planck sources, then
 `radiative_fluxes!` — gives the same longwave fluxes bit for bit, and at this
 `μ₀ = 0.5` the same shortwave fluxes to rounding (this toy model has no
 Rayleigh table, so its single shortwave g point takes the Beer–Lambert branch
@@ -279,19 +279,19 @@ julia> atmosphere = ColumnAtmosphere(pressure_layers = column.pressure,
                                      surface = (; temperature = 295.0),
                                      geometry = (; cos_zenith = μ₀));
 
-julia> longwave = LongwaveOptics(zeros(2, nlayers), zeros(2, nlayers);
-                                 source_top = zeros(2, nlayers),
-                                 source_bottom = zeros(2, nlayers),
+julia> longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
+                                 source_top = zeros(2, Nz),
+                                 source_bottom = zeros(2, Nz),
                                  weights = zeros(2));
 
-julia> shortwave = ShortwaveOptics(zeros(1, nlayers); weights = zeros(1));
+julia> shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1));
 
 julia> optical_properties!(longwave, shortwave, model, atmosphere);
 
-julia> fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
-                                longwave_down = zeros(nlayers + 1),
-                                shortwave_up = zeros(nlayers + 1),
-                                shortwave_down = zeros(nlayers + 1));
+julia> fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                                longwave_down = zeros(Nz + 1),
+                                shortwave_up = zeros(Nz + 1),
+                                shortwave_down = zeros(Nz + 1));
 
 julia> radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
                          LongwaveBoundaryConditions(surface_longwave_up = surface,
@@ -312,6 +312,6 @@ In a kernel the two functors are one `struct` per stream holding the
 gas-optics model, the column's device arrays and the column index, the
 stencil and source brackets are read from arrays filled by a staging kernel,
 and the flux and scratch arguments are views of one row of the host's
-`(ncolumns, nlayers + 1)` and `(ncolumns, nlayers)` matrices. Nothing in the
+`(Ncolumns, Nz + 1)` and `(Ncolumns, Nz)` matrices. Nothing in the
 loop above allocates, so that kernel is the loop above with the host's arrays
 in place of `column`.

@@ -6,7 +6,7 @@ properties. They do not know where the optics came from: the same
 tables, analytic bands, or a comparison model. All solvers write caller-owned
 [`RadiativeFluxes`](@ref) arrays and follow the package conventions: arrays
 are ordered top-to-bottom, with pressure increasing downward (index 1 = top of
-atmosphere); interface flux arrays have `N + 1` entries; fluxes are in
+atmosphere); interface flux arrays have `Nz + 1` entries; fluxes are in
 W m⁻².
 
 ## Data flow
@@ -41,7 +41,7 @@ the same workflow against reference model files.
 
 [`CloudlessLongwave`](@ref) is a plane-parallel clear-sky solver for
 [`LongwaveOptics`](@ref). Optical depth and source arrays may be
-vectors of length `nlayers` (broadband) or matrices shaped `(Ngpoints, nlayers)`;
+vectors of length `Nz` (broadband) or matrices shaped `(Ngpoints, Nz)`;
 `source` is the layer Planck source in flux units (``\pi B``, W m⁻²). The
 atmosphere argument is accepted for interface consistency and is not inspected.
 
@@ -122,13 +122,13 @@ broadband scalars or per-g-point vectors.
 The all-sky solvers operate on two-region optical properties:
 [`LongwaveCloudOverlapOptics`](@ref) and
 [`ShortwaveCloudOverlapOptics`](@ref) hold *clear* and *cloudy*
-optics with the same `(Ngpoints, nlayers)` shape, plus three layer fields that stay
+optics with the same `(Ngpoints, Nz)` shape, plus three layer fields that stay
 separate from the optical depths:
 
 - `cloud_fraction` — one value per layer; never used to weaken cloudy-region
   optical depth before transport;
 - `overlap_parameter` — the ecRad/Hogan–Illingworth ``\alpha`` between each
-  pair of adjacent layers (`N - 1` values, default 1);
+  pair of adjacent layers (`Nz - 1` values, default 1);
 - `fractional_standard_deviation` — the fractional standard deviation of in-cloud condensate,
   used by the Tripleclouds split (default 1).
 
@@ -188,10 +188,10 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
   source table at layer and interface temperatures.
 
 The evaluation is *streaming*: the only spectral intermediates are the
-caller-owned `(Ngpoints, nlayers)` optical-depth and source arrays. Solvers then
+caller-owned `(Ngpoints, Nz)` optical-depth and source arrays. Solvers then
 loop over g-points, carry running fluxes through the column, and accumulate
 `weights[gpoint] * flux` directly into the broadband interface arrays — spectral
-fluxes are never stored with shape `(Ngpoints, ninterfaces)`, and there are no
+fluxes are never stored with shape `(Ngpoints, Nz + 1)`, and there are no
 four-dimensional intermediates. Host models can fuse the same per-g-point
 recurrences into
 their own column kernels; the model types are `Adapt.jl`-aware so tables can

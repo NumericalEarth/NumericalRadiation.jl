@@ -69,7 +69,7 @@ OneBandGreyShortwave(::Type{NF};
 """$(TYPEDSIGNATURES)
 Column shortwave radiative transfer for the one-band scheme.
 
-`transmissivity_scratch` (length `nlayers`) is overwritten with the layer
+`transmissivity_scratch` (length `Nz`) is overwritten with the layer
 transmissivities; pre-allocate it outside of hot loops for GPU kernels.
 
 `cloud_top_convective` is the cloud top set upstream by convection or
@@ -94,7 +94,7 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
 
     t = transmissivity_scratch
     length(t) == length(profile.temperature) ||
-        throw(DimensionMismatch("transmissivity_scratch must have length nlayers"))
+        throw(DimensionMismatch("transmissivity_scratch must have length Nz"))
     compute_transmissivity!(t, scheme.transmissivity, clouds, profile, geometry, surface)
 
     radiative_transfer = scheme.radiative_transfer
@@ -102,7 +102,7 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
     S₀ = NF(constants.solar_constant)
     cₚ = NF(constants.heat_capacity)
 
-    nlayers = length(profile.temperature)
+    Nz = length(profile.temperature)
     σ_full  = geometry.σ_full
     σ_thick = geometry.σ_thick
 
@@ -115,7 +115,7 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
     cloud_cover  = NF(clouds.cloud_cover)
 
     # --- Downward sweep -----------------------------------------------------
-    for k in 1:nlayers
+    for k in 1:Nz
         if k == cloud_top
             R = cloud_albedo * cloud_cover
             U_reflected = D * R
@@ -143,7 +143,7 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
 
     # --- Upward sweep -------------------------------------------------------
     U::NF = U_surface + U_stratocumulus
-    for k in nlayers:-1:1
+    for k in Nz:-1:1
         U_out = U * t[k]
         temperature_tendency[k] += flux_to_tendency((U - U_out) / cₚ, profile, geometry, constants, k)
         if k == cloud_top

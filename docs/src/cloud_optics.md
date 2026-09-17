@@ -79,6 +79,6 @@ reproduces ecRad's spectral averaging matrix; optional delta-Eddington and
 optically-thick averaging follow ecRad's conventions.
 
 [`add_mapped_cloud_scattering!`](@ref) then puts per-g-point liquid and ice
-scattering into `(Ngpoints, nlayers)` shortwave optical properties from layer
+scattering into `(Ngpoints, Nz)` shortwave optical properties from layer
 liquid/ice water paths and cloud fraction, with optional delta-Eddington
 forward-scattering scaling.

@@ -67,7 +67,7 @@ end
 function SpeedyWeather.parameterization!(ij::Integer, vars,
                                          rad::SpeedyAnalyticBandLongwave{NF},
                                          model) where NF
-    nlayers = size(vars.grid.temperature_prev, 2)
+    Nz = size(vars.grid.temperature_prev, 2)
 
     T  = @view vars.grid.temperature_prev[ij, :]
     q  = @view vars.grid.humidity_prev[ij, :]

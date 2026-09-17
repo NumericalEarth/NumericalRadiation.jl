@@ -34,7 +34,7 @@ water_vapor_floor = 4.8e-6         # stratospheric χH₂O floor, mole fraction
 χCH₄ = 1.9e-6                # present-day global means for the
 χN₂O = 3.4e-7                # well-mixed trace gases
 
-N  = 60                      # physical layers, uniform in altitude
+Nz = 60                      # physical layers, uniform in altitude
 zₜ = 60e3                    # m; one isothermal lookup-boundary layer above
 pₛ = 101_325                 # Pa
 
@@ -85,8 +85,8 @@ nothing #hide
 gas_optics = read_reference_ecckd_gas_optics("32x32";
     names = (:composite, :h2o, :o3, :co2, :ch4, :n2o))
 
-zᵢ = collect(range(0, zₜ; length = N + 1))
-z = 0.5 .* (zᵢ[1:N] .+ zᵢ[2:N+1])
+zᵢ = collect(range(0, zₜ; length = Nz + 1))
+z = 0.5 .* (zᵢ[1:Nz] .+ zᵢ[2:Nz+1])
 pᵢ = reverse(standard_pressure.(zᵢ))     # TOA-first, increasing downward
 p = reverse(standard_pressure.(z))       # standard_pressure at altitude midpoints
 
@@ -94,7 +94,7 @@ table_minimum_pressure = first(gas_optics.pressure_grid)
 table_minimum_pressure < pᵢ[1] ||
     error("lookup-table minimum pressure does not lie above the physical top")
 
-N_ext = N + 1                                        # extension layer + physical layers
+Nz_ext = Nz + 1                                        # extension layer + physical layers
 p_ext = vcat(0.5 * (table_minimum_pressure + pᵢ[1]), p)   # arithmetic midpoint
 pᵢ_ext = vcat(table_minimum_pressure, pᵢ)                 # for the extension only
 χO₃ = standard_ozone.(p)
@@ -160,12 +160,12 @@ nothing #hide
 
 function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor = nothing,
                       Δt = 8 * 3_600, max_steps = 20_000, tolerance = 1e-4)
-    T_ext = zeros(N_ext)
-    Tᵢ_ext = zeros(N_ext + 1)
-    χH₂O_ext = zeros(N_ext)
-    nᵈ = zeros(N_ext)
-    gases = (composite = zeros(N_ext), h2o = zeros(N_ext), o3 = zeros(N_ext),
-             co2 = zeros(N_ext), ch4 = zeros(N_ext), n2o = zeros(N_ext))
+    T_ext = zeros(Nz_ext)
+    Tᵢ_ext = zeros(Nz_ext + 1)
+    χH₂O_ext = zeros(Nz_ext)
+    nᵈ = zeros(Nz_ext)
+    gases = (composite = zeros(Nz_ext), h2o = zeros(Nz_ext), o3 = zeros(Nz_ext),
+             co2 = zeros(Nz_ext), ch4 = zeros(Nz_ext), n2o = zeros(Nz_ext))
     atmosphere = ColumnAtmosphere(; pressure_layers = p_ext,
                                   pressure_interfaces = pᵢ_ext,
                                   temperature_layers = T_ext,
@@ -173,28 +173,28 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
                                   gases, surface = nothing,
                                   geometry = (cos_zenith = μ₀,),
                                   constants)
-    longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, N_ext)
+    longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, Nz_ext)
     shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = S₀,
                                                      surface_albedo = α)
     surface_emission = surface_longwave_emission(gas_optics, Tₛ)
     longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_emission)
-    Q = zeros(N_ext)
-    Ṫᵢ = zeros(N + 1)
-    previous = zeros(N + 1)
+    Q = zeros(Nz_ext)
+    Ṫᵢ = zeros(Nz + 1)
+    previous = zeros(Nz + 1)
 
     solve_radiation!() = begin
         ## extension layer: isothermal with, and gas state tied to, the top level
         T_ext[1] = Tᵢ[1]
-        @views @. T_ext[2:N_ext] = (Tᵢ[1:N] + Tᵢ[2:N+1]) / 2
+        @views @. T_ext[2:Nz_ext] = (Tᵢ[1:Nz] + Tᵢ[2:Nz+1]) / 2
         Tᵢ_ext[1] = Tᵢ[1]
-        @views Tᵢ_ext[2:N_ext+1] .= Tᵢ
+        @views Tᵢ_ext[2:Nz_ext+1] .= Tᵢ
         if isnothing(fixed_water_vapor)
             fixed_relative_humidity!(χH₂O_ext, T_ext)
         else
             χH₂O_ext .= fixed_water_vapor
         end
         χH₂O_ext[1] = χH₂O_ext[2]      # extension copies the top physical layer
-        for k in 1:N_ext
+        for k in 1:Nz_ext
             nᵈ[k] = (pᵢ_ext[k + 1] - pᵢ_ext[k]) / (g * (mᵈ + mᵛ * χH₂O_ext[k]))
             gases.composite[k] = nᵈ[k]
             gases.h2o[k] = χH₂O_ext[k] * nᵈ[k]
@@ -228,8 +228,8 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
         heating_rates!(Q, fluxes, atmosphere)     # g and cₚ from atmosphere.constants
         ## discard the extension tendency Q[1]; physical layer j is Q[j + 1]
         Ṫᵢ[1] = Q[2]
-        Ṫᵢ[N+1] = Q[N_ext]
-        @views @. Ṫᵢ[2:N] = (Q[2:N_ext-1] + Q[3:N_ext]) / 2
+        Ṫᵢ[Nz+1] = Q[Nz_ext]
+        @views @. Ṫᵢ[2:Nz] = (Q[2:Nz_ext-1] + Q[3:Nz_ext]) / 2
         @. Tᵢ += clamp(Δt * Ṫᵢ, -2, 2)
     end
     return (; Tᵢ = copy(Tᵢ), Tₛ, converged, final_difference, steps,
@@ -360,7 +360,7 @@ for (state, label, color, style) in
          (doubled, "2× CO₂, fixed RH", :darkorange3, :solid),
          (quadrupled, "4× CO₂, fixed RH", :firebrick, :solid),
          (frozen_vapor, "4× CO₂, frozen water vapor", :firebrick, :dash))
-    lines!(ax, state.T_ext[2:N_ext], p ./ 100; color, label, linewidth = 2,
+    lines!(ax, state.T_ext[2:Nz_ext], p ./ 100; color, label, linewidth = 2,
            linestyle = style)
     scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
 end
@@ -404,7 +404,7 @@ for (state, label, color) in
          (without_H₂O, "no H₂O", :darkorange3),
          (without_CO₂, "no CO₂", :firebrick),
          (without_O₃, "no O₃", :seagreen))
-    lines!(ax, state.T_ext[2:N_ext], p ./ 100; color, label, linewidth = 2)
+    lines!(ax, state.T_ext[2:Nz_ext], p ./ 100; color, label, linewidth = 2)
     scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
 end
 Legend(fig[2, 1], ax; orientation = :horizontal, framevisible = false)
@@ -424,12 +424,12 @@ function verify_equilibria(states; imbalance_gate = 0.1)
         state.converged || error("$name: final equilibration not converged")
         abs(state.asr - state.olr) < imbalance_gate ||
             error("$name: TOA imbalance $(state.asr - state.olr) W/m²")
-        layer_means = (state.Tᵢ[1:N] .+ state.Tᵢ[2:N+1]) ./ 2
-        isequal(layer_means, state.T_ext[2:N_ext]) ||
+        layer_means = (state.Tᵢ[1:Nz] .+ state.Tᵢ[2:Nz+1]) ./ 2
+        isequal(layer_means, state.T_ext[2:Nz_ext]) ||
             error("$name: layer temperatures are not adjacent-level means")
         state.extension_temperature == state.Tᵢ[1] ||
             error("$name: lookup-boundary layer is not isothermal with the top level")
-        inversion_limit = minimum(diff(state.Tᵢ)[pᵢ[1:N] .> 40_000])
+        inversion_limit = minimum(diff(state.Tᵢ)[pᵢ[1:Nz] .> 40_000])
         inversion_limit > -0.05 ||
             error("$name: tropospheric inversion-limit gate: $(inversion_limit) K per level")
     end

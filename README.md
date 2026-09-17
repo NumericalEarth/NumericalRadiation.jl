@@ -48,15 +48,15 @@ with one argument:
 ```julia
 using NumericalRadiation
 
-nlayers = 8
-σ_half  = collect(range(0.0, 1.0, length = nlayers + 1))
+Nz = 8
+σ_half  = collect(range(0.0, 1.0, length = Nz + 1))
 grid    = ColumnGrid(σ_half)
 
-# Lapse-rate profile: top of atmosphere (k=1) cold, surface (k=nlayers) warm.
+# Lapse-rate profile: top of atmosphere (k=1) cold, surface (k=Nz) warm.
 profile = AtmosphereProfile(
-    temperature      = collect(range(220.0, 295.0, length = nlayers)),
-    humidity         = fill(0.005, nlayers),
-    geopotential     = zeros(nlayers),
+    temperature      = collect(range(220.0, 295.0, length = Nz)),
+    humidity         = fill(0.005, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000.0,
     CO₂              = 280.0,
 )

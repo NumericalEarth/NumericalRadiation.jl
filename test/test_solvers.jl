@@ -12,10 +12,9 @@ using Dates
     # π ∫ B(T, ν̃) Δν̃ from 10 to 2510 cm⁻¹ must be within ~1% of σ T⁴ at 300 K.
     T = 300.0f0
     longwave = AnalyticBandLongwave(Float32)
-    Nwavenumbers = longwave.nwavenumber
-    Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (Nwavenumbers - 1)
+    Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (longwave.Nwavenumbers - 1)
     pi_B = sum(Float32(π) * planck_wavenumber(T, longwave.wavenumber_min + (i-1)*Δν̃) * Δν̃
-               for i in 1:Nwavenumbers)
+               for i in 1:longwave.Nwavenumbers)
     σ_SB = 5.670374419f-8
     @test pi_B ≈ σ_SB * T^4 rtol = 0.01
 end
@@ -67,19 +66,19 @@ end
 
 @testset "williams_optical_depth_increment: positivity + rotation-band dominance" begin
     NF = Float32
-    nlayers = 4
-    σ_half = collect(NF.(range(0, 1, length = nlayers + 1)))
+    Nz = 4
+    σ_half = collect(NF.(range(0, 1, length = Nz + 1)))
     geometry = ColumnGrid(σ_half)
-    T = fill(NF(280), nlayers)
-    q = fill(NF(0.005), nlayers)
+    T = fill(NF(280), Nz)
+    q = fill(NF(0.005), Nz)
     pₛ = NF(100_000)
     g  = PhysicalConstants(NF).gravity
 
     longwave = AnalyticBandLongwave(NF)
 
-    Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (longwave.nwavenumber - 1)
+    Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (longwave.Nwavenumbers - 1)
 
-    for k in 1:nlayers
+    for k in 1:Nz
         Δτ_win      = NumericalRadiation.williams_optical_depth_increment(k, NF(1000), NF(0),   T, q, pₛ, geometry, longwave, g)
         Δτ_rot      = NumericalRadiation.williams_optical_depth_increment(k, NF(400),  NF(0),   T, q, pₛ, geometry, longwave, g)
         Δτ_no_CO₂   = NumericalRadiation.williams_optical_depth_increment(k, NF(667),  NF(0),   T, q, pₛ, geometry, longwave, g)
@@ -89,7 +88,7 @@ end
         @test Δτ_rot > Δτ_win
         @test Δτ_with_CO₂ > Δτ_no_CO₂
 
-        for i in 1:longwave.nwavenumber
+        for i in 1:longwave.Nwavenumbers
             ν̃ = longwave.wavenumber_min + (i - 1) * Δν̃
             @test NumericalRadiation.williams_optical_depth_increment(k, NF(ν̃), NF(0), T, q, pₛ, geometry, longwave, g) >= 0
         end
@@ -105,14 +104,14 @@ using NumericalRadiation
 using Dates
 
 # --- begin content of test_williams_longwave.jl ---
-"Build a σ-coordinate column of `nlayers` layers with lapse-rate temperature,
+"Build a σ-coordinate column of `Nz` layers with lapse-rate temperature,
 constant humidity and a 100 kPa surface pressure."
-function _test_column(::Type{NF}, nlayers; T_surface = 295, T_top = 220, q = 0.005) where NF
-    σ_half = collect(NF.(range(0, 1, length = nlayers + 1)))
+function _test_column(::Type{NF}, Nz; T_surface = 295, T_top = 220, q = 0.005) where NF
+    σ_half = collect(NF.(range(0, 1, length = Nz + 1)))
     geometry   = ColumnGrid(σ_half)
-    T      = NF.(collect(T_top .+ (T_surface - T_top) .* range(0, 1, length = nlayers)))
-    q      = fill(NF(q), nlayers)
-    Φ      = zeros(NF, nlayers)
+    T      = NF.(collect(T_top .+ (T_surface - T_top) .* range(0, 1, length = Nz)))
+    q      = fill(NF(q), Nz)
+    Φ      = zeros(NF, Nz)
     profile = AtmosphereProfile(temperature = T, humidity = q, geopotential = Φ,
                             surface_pressure = NF(100_000))
     return profile, geometry
@@ -120,14 +119,14 @@ end
 
 @testset "AnalyticBandLongwave: parameterization smoke test" begin
     NF = Float32
-    nlayers = 8
+    Nz = 8
     longwave = AnalyticBandLongwave(NF)
-    profile, geometry = _test_column(NF, nlayers)
+    profile, geometry = _test_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                 land_surface_temperature = NF(285),
                                 land_fraction = NF(0.3))
     constants = PhysicalConstants{NF}()
-    temperature_tendency = zeros(NF, nlayers)
+    temperature_tendency = zeros(NF, Nz)
     diagnostics = LongwaveDiagnostics{NF}()
     solve_longwave!(temperature_tendency, diagnostics, longwave, profile, geometry, surface, constants)
     @test any(!=(0), temperature_tendency)
@@ -137,14 +136,14 @@ end
 
 @testset "AnalyticBandLongwave: energy conservation sanity" begin
     NF = Float32
-    nlayers = 8
+    Nz = 8
     longwave = AnalyticBandLongwave(NF)
-    profile, geometry = _test_column(NF, nlayers)
+    profile, geometry = _test_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                 land_surface_temperature = NF(285),
                                 land_fraction = NF(0.3))
     constants = PhysicalConstants{NF}()
-    temperature_tendency = zeros(NF, nlayers)
+    temperature_tendency = zeros(NF, Nz)
     diagnostics = LongwaveDiagnostics{NF}()
     solve_longwave!(temperature_tendency, diagnostics, longwave, profile, geometry, surface, constants)
 
@@ -156,11 +155,11 @@ end
 
 @testset "AnalyticBandLongwave: CO₂ forcing" begin
     NF = Float32
-    nlayers = 8
+    Nz = 8
     longwave = AnalyticBandLongwave(NF)
 
     function _olr(CO₂)
-        profile, geometry = _test_column(NF, nlayers)
+        profile, geometry = _test_column(NF, Nz)
         profile = AtmosphereProfile(temperature = profile.temperature,
                                     humidity = profile.humidity,
                                     geopotential = profile.geopotential,
@@ -170,7 +169,7 @@ end
                                     land_surface_temperature = NF(285),
                                     land_fraction = NF(0.3))
         constants = PhysicalConstants{NF}()
-        temperature_tendency = zeros(NF, nlayers)
+        temperature_tendency = zeros(NF, Nz)
         diagnostics = LongwaveDiagnostics{NF}()
         solve_longwave!(temperature_tendency, diagnostics, longwave, profile, geometry, surface, constants)
         return diagnostics.outgoing_longwave
@@ -184,14 +183,14 @@ end
 
 @testset "AnalyticBandLongwave: Float32 vs Float64 compatibility" begin
     for NF in (Float32, Float64)
-        nlayers = 4
+        Nz = 4
         longwave = AnalyticBandLongwave(NF)
-        profile, geometry = _test_column(NF, nlayers)
+        profile, geometry = _test_column(NF, Nz)
         surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                     land_surface_temperature = NF(285),
                                     land_fraction = NF(0.3))
         constants = PhysicalConstants{NF}()
-        temperature_tendency = zeros(NF, nlayers)
+        temperature_tendency = zeros(NF, Nz)
         diagnostics = LongwaveDiagnostics{NF}()
         solve_longwave!(temperature_tendency, diagnostics, longwave, profile, geometry, surface, constants)
         @test all(isfinite, temperature_tendency)
@@ -207,12 +206,12 @@ using NumericalRadiation
 using Dates
 
 # --- begin content of test_shortwave.jl ---
-function _test_sw_column(::Type{NF}, nlayers; q = 0.005) where NF
-    σ_half = collect(NF.(range(0, 1, length = nlayers + 1)))
+function _test_sw_column(::Type{NF}, Nz; q = 0.005) where NF
+    σ_half = collect(NF.(range(0, 1, length = Nz + 1)))
     geometry   = ColumnGrid(σ_half)
-    T      = NF.(collect(220 .+ 9 .* (0:(nlayers - 1))))
-    qv     = fill(NF(q), nlayers)
-    Φ      = zeros(NF, nlayers)
+    T      = NF.(collect(220 .+ 9 .* (0:(Nz - 1))))
+    qv     = fill(NF(q), Nz)
+    Φ      = zeros(NF, Nz)
     profile = AtmosphereProfile(temperature = T, humidity = qv, geopotential = Φ,
                             surface_pressure = NF(100_000))
     return profile, geometry
@@ -220,8 +219,8 @@ end
 
 @testset "TransparentShortwave: surface energy budget" begin
     NF = Float32
-    nlayers = 4
-    profile, geometry = _test_sw_column(NF, nlayers)
+    Nz = 4
+    profile, geometry = _test_sw_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                 land_surface_temperature = NF(NaN),
                                 land_fraction = NF(0),
@@ -230,8 +229,8 @@ end
                                 cos_zenith = NF(0.5))
     constants = PhysicalConstants{NF}()
     thermo = ThermodynamicConstants{NF}()
-    temperature_tendency = zeros(NF, nlayers)
-    diagnostics = ShortwaveDiagnostics{NF}(nlayers)
+    temperature_tendency = zeros(NF, Nz)
+    diagnostics = ShortwaveDiagnostics{NF}(Nz)
     solve_shortwave!(temperature_tendency, diagnostics, NumericalRadiation.TransparentShortwave(), profile, geometry, surface, constants, thermo)
 
     @test diagnostics.surface_shortwave_down ≈ constants.solar_constant * 0.5f0
@@ -241,8 +240,8 @@ end
 
 @testset "OneBandGreyShortwave: absorption in the atmosphere" begin
     NF = Float32
-    nlayers = 8
-    profile, geometry = _test_sw_column(NF, nlayers)
+    Nz = 8
+    profile, geometry = _test_sw_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                 land_surface_temperature = NF(NaN),
                                 land_fraction = NF(0),
@@ -251,9 +250,9 @@ end
                                 cos_zenith = NF(0.5))
     constants = PhysicalConstants{NF}()
     thermo = ThermodynamicConstants{NF}()
-    temperature_tendency = zeros(NF, nlayers)
+    temperature_tendency = zeros(NF, Nz)
     t_scratch = similar(profile.temperature)
-    diagnostics = ShortwaveDiagnostics{NF}(nlayers)
+    diagnostics = ShortwaveDiagnostics{NF}(Nz)
     scheme = NumericalRadiation.OneBandGreyShortwave(NF)
     solve_shortwave!(temperature_tendency, diagnostics, scheme, profile, geometry, surface, constants, thermo;
                      transmissivity_scratch = t_scratch)
@@ -267,8 +266,8 @@ end
 
 @testset "OneBandShortwave (full SPEEDY): runs with diagnostic clouds" begin
     NF = Float32
-    nlayers = 8
-    profile, geometry = _test_sw_column(NF, nlayers; q = 0.01)
+    Nz = 8
+    profile, geometry = _test_sw_column(NF, Nz; q = 0.01)
     profile = AtmosphereProfile(temperature = profile.temperature,
                             humidity = profile.humidity,
                             geopotential = profile.geopotential,
@@ -282,9 +281,9 @@ end
                                 cos_zenith = NF(0.6))
     constants = PhysicalConstants{NF}()
     thermo = ThermodynamicConstants{NF}()
-    temperature_tendency = zeros(NF, nlayers)
+    temperature_tendency = zeros(NF, Nz)
     t_scratch = similar(profile.temperature)
-    diagnostics = ShortwaveDiagnostics{NF}(nlayers)
+    diagnostics = ShortwaveDiagnostics{NF}(Nz)
     scheme = NumericalRadiation.OneBandShortwave(NF)
     solve_shortwave!(temperature_tendency, diagnostics, scheme, profile, geometry, surface, constants, thermo;
                      transmissivity_scratch = t_scratch)
@@ -332,13 +331,13 @@ using Dates
 
 # --- begin content of test_rtc.jl ---
 @testset "RadiativeTransferColumn: umbrella API" begin
-    nlayers = 8
-    σ_half = collect(range(0.0, 1.0, length = nlayers + 1))
+    Nz = 8
+    σ_half = collect(range(0.0, 1.0, length = Nz + 1))
     grid    = ColumnGrid(σ_half)
     profile = AtmosphereProfile(
-        temperature      = collect(range(220.0, 295.0, length = nlayers)),
-        humidity         = fill(0.005, nlayers),
-        geopotential     = zeros(nlayers),
+        temperature      = collect(range(220.0, 295.0, length = Nz)),
+        humidity         = fill(0.005, Nz),
+        geopotential     = zeros(Nz),
         surface_pressure = 100_000.0,
     )
     surface = SurfaceState(
@@ -370,13 +369,13 @@ end
 
 @testset "RadiativeTransferColumn: Float32 propagation" begin
     NF = Float32
-    nlayers = 4
-    σ_half = collect(NF.(range(0, 1, length = nlayers + 1)))
+    Nz = 4
+    σ_half = collect(NF.(range(0, 1, length = Nz + 1)))
     grid   = ColumnGrid(σ_half)
     profile = AtmosphereProfile(
-        temperature = collect(NF.(range(220, 295, length = nlayers))),
-        humidity    = fill(NF(0.005), nlayers),
-        geopotential = zeros(NF, nlayers),
+        temperature = collect(NF.(range(220, 295, length = Nz))),
+        humidity    = fill(NF(0.005), Nz),
+        geopotential = zeros(NF, Nz),
         surface_pressure = NF(100_000),
     )
     surface = SurfaceState{NF}(
@@ -395,13 +394,13 @@ end
 end
 
 @testset "solve_longwave!: duck-typed constants" begin
-    nlayers = 4
-    σ_half = collect(range(0.0, 1.0, length = nlayers + 1))
+    Nz = 4
+    σ_half = collect(range(0.0, 1.0, length = Nz + 1))
     grid   = ColumnGrid(σ_half)
     profile = AtmosphereProfile(
-        temperature = collect(range(220.0, 295.0, length = nlayers)),
-        humidity = fill(0.005, nlayers),
-        geopotential = zeros(nlayers),
+        temperature = collect(range(220.0, 295.0, length = Nz)),
+        humidity = fill(0.005, Nz),
+        geopotential = zeros(Nz),
         surface_pressure = 100_000.0,
     )
     surface = SurfaceState(sea_surface_temperature = 295.0,
@@ -411,7 +410,7 @@ end
     # Plain NamedTuple with the expected field names — should work.
     (; gravity, heat_capacity, stefan_boltzmann, solar_constant) = PhysicalConstants()
     foreign = (; gravity, heat_capacity, stefan_boltzmann, solar_constant)
-    temperature_tendency = zeros(nlayers)
+    temperature_tendency = zeros(Nz)
     diagnostics = LongwaveDiagnostics()
     solve_longwave!(temperature_tendency, diagnostics, AnalyticBandLongwave(), profile, grid, surface, foreign)
     @test diagnostics.outgoing_longwave > 0
@@ -434,10 +433,10 @@ using Dates
     @test AbstractRadiativeTransferSolver isa DataType
     @test AbstractRadiationBackend isa DataType
 
-    nlayers = 4
-    pressure_interfaces = collect(range(1_000.0, 100_000.0, length = nlayers + 1))
+    Nz = 4
+    pressure_interfaces = collect(range(1_000.0, 100_000.0, length = Nz + 1))
     pressure_layers = @views (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end]) ./ 2
-    temperature_interfaces = collect(range(210.0, 290.0, length = nlayers + 1))
+    temperature_interfaces = collect(range(210.0, 290.0, length = Nz + 1))
     temperature_layers = @views (temperature_interfaces[1:end-1] .+ temperature_interfaces[2:end]) ./ 2
 
     atmosphere = ColumnAtmosphere(
@@ -445,7 +444,7 @@ using Dates
         pressure_interfaces = pressure_interfaces,
         temperature_layers = temperature_layers,
         temperature_interfaces = temperature_interfaces,
-        gases = (; h2o = fill(0.005, nlayers), co2 = 420.0),
+        gases = (; h2o = fill(0.005, Nz), co2 = 420.0),
         surface = (; temperature = 290.0, emissivity = 1.0),
         geometry = (; cos_zenith = 0.5),
     )
@@ -454,22 +453,22 @@ using Dates
     @test eltype(atmosphere) === Float64
 
     fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
 
     @test eltype(fluxes) === Float64
-    @test length(fluxes.longwave_up) == nlayers + 1
+    @test length(fluxes.longwave_up) == Nz + 1
 end
 
 @testset "RadiativeFluxes to heating rates" begin
-    nlayers = 2
+    Nz = 2
     pressure_interfaces = [0.0, 50_000.0, 100_000.0]
     pressure_layers = [25_000.0, 75_000.0]
-    temperature_interfaces = fill(280.0, nlayers + 1)
-    temperature_layers = fill(280.0, nlayers)
+    temperature_interfaces = fill(280.0, Nz + 1)
+    temperature_layers = fill(280.0, Nz)
     atmosphere = ColumnAtmosphere(
         pressure_layers = pressure_layers,
         pressure_interfaces = pressure_interfaces,
@@ -481,12 +480,12 @@ end
     )
 
     fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
         shortwave_down = [200.0, 150.0, 150.0],
     )
-    heating = zeros(nlayers)
+    heating = zeros(Nz)
 
     heating_rates!(heating, fluxes, atmosphere; gravity = 10.0, heat_capacity = 1000.0)
 
@@ -516,12 +515,12 @@ end
 end
 
 @testset "RadiativeTransferColumn staged wrapper" begin
-    nlayers = 6
-    grid = ColumnGrid(collect(range(0.0, 1.0, length = nlayers + 1)))
+    Nz = 6
+    grid = ColumnGrid(collect(range(0.0, 1.0, length = Nz + 1)))
     profile = AtmosphereProfile(
-        temperature = collect(range(220.0, 295.0, length = nlayers)),
-        humidity = fill(0.005, nlayers),
-        geopotential = zeros(nlayers),
+        temperature = collect(range(220.0, 295.0, length = Nz)),
+        humidity = fill(0.005, Nz),
+        geopotential = zeros(Nz),
         surface_pressure = 100_000.0,
     )
     surface = SurfaceState(
@@ -561,23 +560,23 @@ using Dates
 
 # --- begin content of test_cloudless_longwave_solver.jl ---
 @testset "CloudlessLongwave precomputed-optics solver" begin
-    nlayers = 3
+    Nz = 3
     fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
     atmosphere = nothing
 
     @testset "no-atmosphere limit" begin
-        optics = LongwaveOptics(zeros(nlayers), zeros(nlayers))
+        optics = LongwaveOptics(zeros(Nz), zeros(Nz))
         boundary = LongwaveBoundaryConditions(surface_longwave_up = 300.0)
 
         radiative_fluxes!(fluxes, CloudlessLongwave(), optics, atmosphere, boundary)
 
-        @test fluxes.longwave_up == fill(300.0, nlayers + 1)
-        @test fluxes.longwave_down == zeros(nlayers + 1)
+        @test fluxes.longwave_up == fill(300.0, Nz + 1)
+        @test fluxes.longwave_down == zeros(Nz + 1)
     end
 
     @testset "single-layer absorber" begin
@@ -847,21 +846,21 @@ using Dates
 # --- begin content of test_cloudless_shortwave_solver.jl ---
 @testset "CloudlessShortwave precomputed-optics solver" begin
     @testset "transparent atmosphere with black surface" begin
-        nlayers = 3
+        Nz = 3
         fluxes = RadiativeFluxes(
-            longwave_up = zeros(nlayers + 1),
-            longwave_down = zeros(nlayers + 1),
-            shortwave_up = zeros(nlayers + 1),
-            shortwave_down = zeros(nlayers + 1),
+            longwave_up = zeros(Nz + 1),
+            longwave_down = zeros(Nz + 1),
+            shortwave_up = zeros(Nz + 1),
+            shortwave_down = zeros(Nz + 1),
         )
-        optics = ShortwaveOptics(zeros(nlayers))
+        optics = ShortwaveOptics(zeros(Nz))
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 500.0,
                                                surface_albedo = 0.0)
 
         radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
 
-        @test fluxes.shortwave_down == fill(500.0, nlayers + 1)
-        @test fluxes.shortwave_up == zeros(nlayers + 1)
+        @test fluxes.shortwave_down == fill(500.0, Nz + 1)
+        @test fluxes.shortwave_up == zeros(Nz + 1)
     end
 
     @testset "no-atmosphere horizontal-flux limit with solar geometry" begin
@@ -904,12 +903,12 @@ using Dates
     end
 
     @testset "weighted spectral accumulation" begin
-        nlayers = 2
+        Nz = 2
         fluxes = RadiativeFluxes(
-            longwave_up = zeros(nlayers + 1),
-            longwave_down = zeros(nlayers + 1),
-            shortwave_up = zeros(nlayers + 1),
-            shortwave_down = zeros(nlayers + 1),
+            longwave_up = zeros(Nz + 1),
+            longwave_down = zeros(Nz + 1),
+            shortwave_up = zeros(Nz + 1),
+            shortwave_down = zeros(Nz + 1),
         )
         τ = [0.0 0.0;
                log(2.0) log(2.0)]
@@ -1131,14 +1130,14 @@ end
 end
 
 @testset "CloudOverlapShortwave all-sky access point" begin
-    nlayers = 2
+    Nz = 2
     fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
-    clear = ShortwaveOptics(zeros(nlayers))
+    clear = ShortwaveOptics(zeros(Nz))
     cloudy = ShortwaveOptics([log(2.0), log(2.0)])
     optics = ShortwaveCloudOverlapOptics(clear, cloudy, [0.0, 1.0])
     boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
@@ -1150,38 +1149,38 @@ end
     @test fluxes.shortwave_down[1] ≈ 400.0
     @test fluxes.shortwave_down[2] ≈ 0.5 * 400.0 + 0.5 * 200.0
     @test fluxes.shortwave_down[3] ≈ 100.0
-    @test fluxes.shortwave_up == zeros(nlayers + 1)
+    @test fluxes.shortwave_up == zeros(Nz + 1)
 
     adding_fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
     radiative_fluxes!(adding_fluxes, CloudOverlapShortwave(overlap = :adding),
                       optics, nothing, boundary)
     @test adding_fluxes.shortwave_down[1] ≈ 400.0
     @test adding_fluxes.shortwave_down[2] ≈ 400.0
     @test adding_fluxes.shortwave_down[3] ≈ 200.0
-    @test adding_fluxes.shortwave_up == zeros(nlayers + 1)
+    @test adding_fluxes.shortwave_up == zeros(Nz + 1)
 
     matrix_fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
     radiative_fluxes!(matrix_fluxes, CloudOverlapShortwave(overlap = :matrix_maximum),
                       optics, nothing, boundary)
     @test matrix_fluxes.shortwave_down[1] ≈ 400.0
     @test 0.0 <= matrix_fluxes.shortwave_down[3] <= 400.0
-    @test matrix_fluxes.shortwave_up == zeros(nlayers + 1)
+    @test matrix_fluxes.shortwave_up == zeros(Nz + 1)
 
     alpha_fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
     alpha_optics = ShortwaveCloudOverlapOptics(
         clear, cloudy, [0.0, 1.0]; overlap_parameter = [0.5])
@@ -1189,13 +1188,13 @@ end
                       alpha_optics, nothing, boundary)
     @test alpha_fluxes.shortwave_down[1] ≈ 400.0
     @test 0.0 <= alpha_fluxes.shortwave_down[3] <= 400.0
-    @test alpha_fluxes.shortwave_up == zeros(nlayers + 1)
+    @test alpha_fluxes.shortwave_up == zeros(Nz + 1)
 
     tripleclouds_fluxes = RadiativeFluxes(
-        longwave_up = zeros(nlayers + 1),
-        longwave_down = zeros(nlayers + 1),
-        shortwave_up = zeros(nlayers + 1),
-        shortwave_down = zeros(nlayers + 1),
+        longwave_up = zeros(Nz + 1),
+        longwave_down = zeros(Nz + 1),
+        shortwave_up = zeros(Nz + 1),
+        shortwave_down = zeros(Nz + 1),
     )
     tripleclouds_optics = ShortwaveCloudOverlapOptics(
         clear,
@@ -1209,7 +1208,7 @@ end
                       tripleclouds_optics, nothing, boundary)
     @test tripleclouds_fluxes.shortwave_down[1] ≈ 400.0
     @test 0.0 <= tripleclouds_fluxes.shortwave_down[3] <= 400.0
-    @test tripleclouds_fluxes.shortwave_up == zeros(nlayers + 1)
+    @test tripleclouds_fluxes.shortwave_up == zeros(Nz + 1)
 
     @test_throws DimensionMismatch ShortwaveCloudOverlapOptics(
         clear, cloudy, [0.0, 1.0]; overlap_parameter = [0.5, 0.5])
@@ -1410,23 +1409,23 @@ using Dates
     end
 
     @testset "absorptive all-sky shortwave reduces surface flux" begin
-        nlayers = 2
+        Nz = 2
         clear_fluxes = RadiativeFluxes(
-            longwave_up = zeros(nlayers + 1),
-            longwave_down = zeros(nlayers + 1),
-            shortwave_up = zeros(nlayers + 1),
-            shortwave_down = zeros(nlayers + 1),
+            longwave_up = zeros(Nz + 1),
+            longwave_down = zeros(Nz + 1),
+            shortwave_up = zeros(Nz + 1),
+            shortwave_down = zeros(Nz + 1),
         )
         cloudy_fluxes = RadiativeFluxes(
-            longwave_up = zeros(nlayers + 1),
-            longwave_down = zeros(nlayers + 1),
-            shortwave_up = zeros(nlayers + 1),
-            shortwave_down = zeros(nlayers + 1),
+            longwave_up = zeros(Nz + 1),
+            longwave_down = zeros(Nz + 1),
+            shortwave_up = zeros(Nz + 1),
+            shortwave_down = zeros(Nz + 1),
         )
-        clear_shortwave = ShortwaveOptics(zeros(nlayers))
-        cloudy_shortwave = ShortwaveOptics(zeros(nlayers))
-        longwave = LongwaveOptics(zeros(nlayers), zeros(nlayers))
-        cloud = CloudOptics(zeros(nlayers), [log(2.0), 0.0])
+        clear_shortwave = ShortwaveOptics(zeros(Nz))
+        cloudy_shortwave = ShortwaveOptics(zeros(Nz))
+        longwave = LongwaveOptics(zeros(Nz), zeros(Nz))
+        cloud = CloudOptics(zeros(Nz), [log(2.0), 0.0])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
 

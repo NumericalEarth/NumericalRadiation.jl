@@ -11,14 +11,14 @@ Molteni & Bracco, 2006, Appendix B) with the same parameter defaults.
 using NumericalRadiation
 using CairoMakie
 
-N  = 32
-σᵢ = collect(range(0, 1, length = N + 1))   # interface sigma coordinate
+Nz = 32
+σᵢ = collect(range(0, 1, length = Nz + 1))   # interface sigma coordinate
 grid = ColumnGrid(σᵢ)
 
 profile = AtmosphereProfile(
-    temperature      = collect(range(220, 295, length = N)),
-    humidity         = fill(0.005, N),
-    geopotential     = zeros(N),
+    temperature      = collect(range(220, 295, length = Nz)),
+    humidity         = fill(0.005, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000,
 )
 FT = Float64
@@ -41,8 +41,8 @@ for μ₀ in zenith_cosines
                                ocean_albedo = 0.07,
                                land_albedo  = 0.07,
                                cos_zenith   = μ₀)
-    Ṫ = zeros(N)
-    diagnostics = ShortwaveDiagnostics(FT, N)
+    Ṫ = zeros(Nz)
+    diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
     solve_shortwave!(Ṫ, diagnostics, scheme, profile, grid, surface,
                      constants, thermo; transmissivity_scratch = transmissivity)
@@ -68,13 +68,13 @@ diagnostic scheme's precipitation term shows the surface-insolation response.
 using NumericalRadiation
 using CairoMakie
 
-N  = 16
-σᵢ = collect(range(0, 1, length = N + 1))
+Nz = 16
+σᵢ = collect(range(0, 1, length = Nz + 1))
 grid = ColumnGrid(σᵢ)
 base_profile = AtmosphereProfile(
-    temperature      = collect(range(220, 295, length = N)),
-    humidity         = fill(0.008, N),
-    geopotential     = zeros(N),
+    temperature      = collect(range(220, 295, length = Nz)),
+    humidity         = fill(0.008, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000,
 )
 FT = Float64
@@ -98,8 +98,8 @@ for rain_rate in rain_rates
                                 geopotential = base_profile.geopotential,
                                 surface_pressure = base_profile.surface_pressure,
                                 rain_rate = rain_rate)
-    Ṫ = zeros(N)
-    diagnostics = ShortwaveDiagnostics(FT, N)
+    Ṫ = zeros(Nz)
+    diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
     solve_shortwave!(Ṫ, diagnostics, scheme, profile, grid, surface,
                      constants, thermo; transmissivity_scratch = transmissivity)

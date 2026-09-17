@@ -31,9 +31,9 @@ layer_scalars(gases::NamedTuple, k) = map(value -> value isa Number ? value : va
 # `hydrostatic_air_moles` with `atmosphere.constants`, the same values here).
 function scalar_optical_properties!(longwave, shortwave, model, atmosphere)
     FT = eltype(model)
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     interface_sources = longwave.source_top !== nothing
-    for k in 1:nlayers
+    for k in 1:Nz
         gases = layer_scalars(atmosphere.gases, k)
         pressure = atmosphere.pressure_layers[k]
         temperature = atmosphere.temperature_layers[k]
@@ -69,21 +69,21 @@ function scalar_optical_properties!(longwave, shortwave, model, atmosphere)
     return longwave, shortwave
 end
 
-function optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources)
-    longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, nlayers), zeros(FT, Nlongwave_gpoints, nlayers);
-                              source_top = interface_sources ? zeros(FT, Nlongwave_gpoints, nlayers) : nothing,
-                              source_bottom = interface_sources ? zeros(FT, Nlongwave_gpoints, nlayers) : nothing,
+function optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
+    longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, Nz), zeros(FT, Nlongwave_gpoints, Nz);
+                              source_top = interface_sources ? zeros(FT, Nlongwave_gpoints, Nz) : nothing,
+                              source_bottom = interface_sources ? zeros(FT, Nlongwave_gpoints, Nz) : nothing,
                               weights = zeros(FT, Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, nlayers); weights = zeros(FT, Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
     return longwave, shortwave
 end
 
 function assert_scalar_matches_array(model, atmosphere; interface_sources)
     FT = eltype(model)
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    array_lw, array_sw = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources)
-    scalar_lw, scalar_sw = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources)
+    array_lw, array_sw = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
+    scalar_lw, scalar_sw = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
     optical_properties!(array_lw, array_sw, model, atmosphere)
     scalar_optical_properties!(scalar_lw, scalar_sw, model, atmosphere)
 
@@ -173,8 +173,8 @@ end
 # with `χ` the H₂O mole fraction relative to dry air, the dry-air molar amount
 # is `nᵈ = Δp / (g (mᵈ + mᵛ χ))`, every gas is `χ_gas nᵈ`, and the layer's
 # mass closes: `mᵈ nᵈ + mᵛ n_H₂O == Δp / g`.
-function reference_column(nlayers)
-    pressure_interfaces = exp.(range(log(100.0), log(101_325.0), length = nlayers + 1))
+function reference_column(Nz)
+    pressure_interfaces = exp.(range(log(100.0), log(101_325.0), length = Nz + 1))
     Δp = diff(pressure_interfaces)
     pressure_layers = Δp ./ log.(pressure_interfaces[2:end] ./ pressure_interfaces[1:end - 1])
     temperature_interfaces = [200 + 95 * (p / 101_325.0)^0.3 for p in pressure_interfaces]
@@ -227,10 +227,10 @@ end
                                  gases = atmosphere.gases, surface = atmosphere.surface,
                                  geometry = atmosphere.geometry,
                                  constants = PhysicalConstants(FT; gravity = 2 * FT(GRAVITY)))
-        nlayers = length(atmosphere.temperature_layers)
+        Nz = length(atmosphere.temperature_layers)
         Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-        longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources = false)
-        heavy_longwave, heavy_shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources = false)
+        longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = false)
+        heavy_longwave, heavy_shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = false)
         optical_properties!(longwave, shortwave, model, atmosphere)
         optical_properties!(heavy_longwave, heavy_shortwave, model, heavy)
         @test heavy_shortwave.rayleigh_optical_depth == shortwave.rayleigh_optical_depth ./ 2
@@ -238,11 +238,11 @@ end
         @test heavy_longwave.optical_depth == longwave.optical_depth
 
         # `heating_rates!` defaults to the column's constants.
-        fluxes = RadiativeFluxes(longwave_up = FT.(collect(range(300, 400; length = nlayers + 1))),
-                                 longwave_down = FT.(collect(range(250, 150; length = nlayers + 1))),
-                                 shortwave_up = zeros(FT, nlayers + 1),
-                                 shortwave_down = zeros(FT, nlayers + 1))
-        heating, heavy_heating, explicit = zeros(FT, nlayers), zeros(FT, nlayers), zeros(FT, nlayers)
+        fluxes = RadiativeFluxes(longwave_up = FT.(collect(range(300, 400; length = Nz + 1))),
+                                 longwave_down = FT.(collect(range(250, 150; length = Nz + 1))),
+                                 shortwave_up = zeros(FT, Nz + 1),
+                                 shortwave_down = zeros(FT, Nz + 1))
+        heating, heavy_heating, explicit = zeros(FT, Nz), zeros(FT, Nz), zeros(FT, Nz)
         heating_rates!(heating, fluxes, atmosphere)
         heating_rates!(heavy_heating, fluxes, heavy)
         heating_rates!(explicit, fluxes, atmosphere; gravity = heavy.constants.gravity,
@@ -577,14 +577,14 @@ end
 # model's element type.
 function broadband_fluxes(model, atmosphere; surface_temperature, cos_zenith, surface_albedo)
     FT = eltype(model)
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources = true)
+    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
     optical_properties!(longwave, shortwave, model, atmosphere)
-    fluxes = RadiativeFluxes(longwave_up = zeros(FT, nlayers + 1),
-                             longwave_down = zeros(FT, nlayers + 1),
-                             shortwave_up = zeros(FT, nlayers + 1),
-                             shortwave_down = zeros(FT, nlayers + 1))
+    fluxes = RadiativeFluxes(longwave_up = zeros(FT, Nz + 1),
+                             longwave_down = zeros(FT, Nz + 1),
+                             shortwave_up = zeros(FT, Nz + 1),
+                             shortwave_down = zeros(FT, Nz + 1))
     surface_up = surface_longwave_emission(model, FT(surface_temperature))
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
                       LongwaveBoundaryConditions(surface_longwave_up = surface_up))
@@ -625,10 +625,10 @@ array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray,
                           getfield(model, name), array_fields(model))
 
         atmosphere32 = convert_column(Float32, atmosphere)
-        nlayers = length(atmosphere.temperature_layers)
+        Nz = length(atmosphere.temperature_layers)
         Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-        longwave32, shortwave32 = optics_arrays(Float32, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources = true)
-        longwave64, shortwave64 = optics_arrays(Float64, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources = true)
+        longwave32, shortwave32 = optics_arrays(Float32, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
+        longwave64, shortwave64 = optics_arrays(Float64, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
         @test (@inferred optical_properties!(longwave32, shortwave32, model32, atmosphere32)) isa Tuple
         optical_properties!(longwave64, shortwave64, model, atmosphere)
         @test eltype(longwave32.optical_depth) === Float32
@@ -694,15 +694,15 @@ end
 # surface reflection), copied verbatim so the reordered solver can be pinned
 # bit for bit for the default albedo of zero.
 function legacy_no_scattering_fluxes!(fluxes, optics::LongwaveOptics{FT}, boundary_conditions) where FT
-    nlayers = NumericalRadiation.number_of_layers(optics)
+    Nz = NumericalRadiation.number_of_layers(optics)
     fluxes.longwave_up .= zero(FT)
     fluxes.longwave_down .= zero(FT)
     for gpoint in 1:NumericalRadiation.number_of_gpoints(optics)
         w = FT(optics.weights[gpoint])
 
         up = NumericalRadiation.surface_longwave_up_at(boundary_conditions, gpoint)
-        fluxes.longwave_up[nlayers + 1] += w * up
-        for k in nlayers:-1:1
+        fluxes.longwave_up[Nz + 1] += w * up
+        for k in Nz:-1:1
             τ = NumericalRadiation.optical_depth_at(optics, gpoint, k)
             if NumericalRadiation.has_interface_sources(optics)
                 transmittance, source_up, _ = NumericalRadiation.no_scattering_longwave_sources(
@@ -719,7 +719,7 @@ function legacy_no_scattering_fluxes!(fluxes, optics::LongwaveOptics{FT}, bounda
 
         down = boundary_conditions.toa_longwave_down
         fluxes.longwave_down[1] += w * down
-        for k in 1:nlayers
+        for k in 1:Nz
             τ = NumericalRadiation.optical_depth_at(optics, gpoint, k)
             if NumericalRadiation.has_interface_sources(optics)
                 transmittance, _, source_down = NumericalRadiation.no_scattering_longwave_sources(
@@ -737,12 +737,12 @@ function legacy_no_scattering_fluxes!(fluxes, optics::LongwaveOptics{FT}, bounda
     return fluxes
 end
 
-longwave_fluxes(FT, nlayers) = RadiativeFluxes(longwave_up = zeros(FT, nlayers + 1),
-                                               longwave_down = zeros(FT, nlayers + 1),
-                                               shortwave_up = zeros(FT, nlayers + 1),
-                                               shortwave_down = zeros(FT, nlayers + 1))
+longwave_fluxes(FT, Nz) = RadiativeFluxes(longwave_up = zeros(FT, Nz + 1),
+                                               longwave_down = zeros(FT, Nz + 1),
+                                               shortwave_up = zeros(FT, Nz + 1),
+                                               shortwave_down = zeros(FT, Nz + 1))
 
-# The functor form of precomputed `(Ngpoints, nlayers)` interface-source optics.
+# The functor form of precomputed `(Ngpoints, Nz)` interface-source optics.
 struct MatrixLayerOptics{L}
     longwave :: L
 end
@@ -760,18 +760,18 @@ end
 
 # Stream a column's longwave fluxes with the full g loop, returning
 # `(up, down)` as fresh vectors.
-function stream_longwave(FT, layer_optics, surface_emission, surface_albedo, toa_down, weights, Ngpoints, nlayers)
-    up = zeros(FT, nlayers + 1)
-    down = zeros(FT, nlayers + 1)
+function stream_longwave(FT, layer_optics, surface_emission, surface_albedo, toa_down, weights, Ngpoints, Nz)
+    up = zeros(FT, Nz + 1)
+    down = zeros(FT, Nz + 1)
     streaming_longwave_fluxes!(up, down, layer_optics, surface_emission, surface_albedo, toa_down,
-                               weights, Ngpoints, nlayers, zeros(FT, nlayers), zeros(FT, nlayers))
+                               weights, Ngpoints, Nz, zeros(FT, Nz), zeros(FT, Nz))
     return up, down
 end
 
 # Stream the same column through the array solver with the same boundary.
 function solve_longwave_array(FT, model, longwave; surface_temperature, emissivity, surface_albedo, toa_down)
-    nlayers = size(longwave.optical_depth, 2)
-    fluxes = longwave_fluxes(FT, nlayers)
+    Nz = size(longwave.optical_depth, 2)
+    fluxes = longwave_fluxes(FT, Nz)
     surface_up = surface_longwave_emission(model, surface_temperature; emissivity)
     boundary = LongwaveBoundaryConditions(; surface_longwave_up = surface_up,
                                           toa_longwave_down = toa_down,
@@ -782,15 +782,15 @@ end
 
 function assert_streaming_matches_array(model, atmosphere; surface_temperature, emissivity, surface_albedo, toa_down)
     FT = eltype(model)
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, nlayers; interface_sources = true)
+    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
     optical_properties!(longwave, shortwave, model, atmosphere)
 
     fluxes = solve_longwave_array(FT, model, longwave; surface_temperature, emissivity, surface_albedo, toa_down)
     surface = TabulatedSurfaceEmission(model, surface_temperature; emissivity)
     up, down = stream_longwave(FT, MatrixLayerOptics(longwave), surface, FT(surface_albedo), FT(toa_down),
-                               model.longwave_weights, Nlongwave_gpoints, nlayers)
+                               model.longwave_weights, Nlongwave_gpoints, Nz)
 
     @test all(isfinite, up) && all(isfinite, down)
     @test up[1] > 0 && down[end] > 0
@@ -803,13 +803,13 @@ function assert_streaming_matches_array(model, atmosphere; surface_temperature, 
     # Reflection is visible: with the same emission but no albedo the surface
     # upwelling flux is smaller by exactly the reflected downwelling flux.
     up0, down0 = stream_longwave(FT, MatrixLayerOptics(longwave), surface, zero(FT), FT(toa_down),
-                                 model.longwave_weights, Nlongwave_gpoints, nlayers)
+                                 model.longwave_weights, Nlongwave_gpoints, Nz)
     @test down0 == down
     @test up[end] - up0[end] ≈ FT(surface_albedo) * down[end] rtol = (FT === Float64 ? 1e-10 : 1e-4)
 
     # A lazy `TabulatedSurfaceEmission` works as the boundary of the array
     # solver directly, in place of its `collect`.
-    lazy_fluxes = longwave_fluxes(FT, nlayers)
+    lazy_fluxes = longwave_fluxes(FT, Nz)
     boundary = LongwaveBoundaryConditions(surface_longwave_up = surface,
                                           toa_longwave_down = toa_down,
                                           surface_albedo = surface_albedo)
@@ -888,24 +888,24 @@ end
 
     @testset "per-g surface albedo" begin
         model, atmosphere = tabulated_fixture(Float64)
-        nlayers = length(atmosphere.temperature_layers)
+        Nz = length(atmosphere.temperature_layers)
         Ngpoints = length(model.longwave_weights)
-        longwave, shortwave = optics_arrays(Float64, Ngpoints, length(model.shortwave_weights), nlayers; interface_sources = true)
+        longwave, shortwave = optics_arrays(Float64, Ngpoints, length(model.shortwave_weights), Nz; interface_sources = true)
         optical_properties!(longwave, shortwave, model, atmosphere)
         albedo = [0.01, 0.05, 0.1]
         fluxes = solve_longwave_array(Float64, model, longwave; surface_temperature = 290.0, emissivity = 0.95,
                                       surface_albedo = albedo, toa_down = 0.0)
         # The array solver applies each g point's albedo; streaming one g point
         # at a time with its own albedo and summing reproduces it.
-        up = zeros(nlayers + 1)
-        down = zeros(nlayers + 1)
+        up = zeros(Nz + 1)
+        down = zeros(Nz + 1)
         for gpoint in 1:Ngpoints
             # Only g point `gpoint` of the streamed result carries albedo[gpoint]; pick
             # it out by streaming with a one-hot weight vector.
             onehot = [j == gpoint ? model.longwave_weights[j] : 0.0 for j in 1:Ngpoints]
             gpoint_up, gpoint_down = stream_longwave(Float64, MatrixLayerOptics(longwave),
                                            TabulatedSurfaceEmission(model, 290.0; emissivity = 0.95),
-                                           albedo[gpoint], 0.0, onehot, Ngpoints, nlayers)
+                                           albedo[gpoint], 0.0, onehot, Ngpoints, Nz)
             up .+= gpoint_up
             down .+= gpoint_down
         end
@@ -920,13 +920,13 @@ shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
 
 @testset "reordered CloudlessLongwave is bitwise unchanged for zero albedo" begin
     for FT in (Float64, Float32)
-        nlayers = 7
+        Nz = 7
         Ngpoints = 3
-        τ = FT.(10 .^ range(-4, 1, length = Ngpoints * nlayers))
-        τ = reshape(shuffle_like(τ), Ngpoints, nlayers)
-        source = FT.(100 .+ 150 .* rand(Ngpoints, nlayers))
-        source_top = FT.(100 .+ 150 .* rand(Ngpoints, nlayers))
-        source_bottom = FT.(100 .+ 150 .* rand(Ngpoints, nlayers))
+        τ = FT.(10 .^ range(-4, 1, length = Ngpoints * Nz))
+        τ = reshape(shuffle_like(τ), Ngpoints, Nz)
+        source = FT.(100 .+ 150 .* rand(Ngpoints, Nz))
+        source_top = FT.(100 .+ 150 .* rand(Ngpoints, Nz))
+        source_bottom = FT.(100 .+ 150 .* rand(Ngpoints, Nz))
         weights = FT[0.2, 0.3, 0.5]
         surface_up = FT[310, 330, 350]
         for (optics, boundary) in (
@@ -941,8 +941,8 @@ shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
                 (LongwaveOptics(vec(τ[1, :]), vec(source[1, :]);
                                 source_top = vec(source_top[1, :]), source_bottom = vec(source_bottom[1, :])),
                  LongwaveBoundaryConditions(surface_longwave_up = FT(300), toa_longwave_down = FT(3))))
-            new = longwave_fluxes(FT, nlayers)
-            legacy = longwave_fluxes(FT, nlayers)
+            new = longwave_fluxes(FT, Nz)
+            legacy = longwave_fluxes(FT, Nz)
             radiative_fluxes!(new, CloudlessLongwave(), optics, nothing, boundary)
             legacy_no_scattering_fluxes!(legacy, optics, boundary)
             @test new.longwave_up == legacy.longwave_up
@@ -954,13 +954,13 @@ shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
     # The component-smoke fixture through the array solver, with and without
     # interface sources.
     model, atmosphere = smoke_fixture()
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     for interface_sources in (false, true)
-        longwave, shortwave = optics_arrays(Float64, 2, 1, nlayers; interface_sources)
+        longwave, shortwave = optics_arrays(Float64, 2, 1, Nz; interface_sources)
         optical_properties!(longwave, shortwave, model, atmosphere)
         boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_longwave_emission(model, 295.0))
-        new = longwave_fluxes(Float64, nlayers)
-        legacy = longwave_fluxes(Float64, nlayers)
+        new = longwave_fluxes(Float64, Nz)
+        legacy = longwave_fluxes(Float64, Nz)
         radiative_fluxes!(new, CloudlessLongwave(), longwave, atmosphere, boundary)
         legacy_no_scattering_fluxes!(legacy, longwave, boundary)
         @test new.longwave_up == legacy.longwave_up
@@ -979,26 +979,26 @@ end
     for FT in (Float64, Float32)
         T = FT(280)
         B = FT(σ_SB) * T^4
-        nlayers = 6
+        Nz = 6
         layer = UniformLayerOptics(FT(50), B)
         model = NumericalRadiation.Adapt.adapt(Array{FT}, gray)
         surface = TabulatedSurfaceEmission(model, T; emissivity = 0.9)
         @test surface[1] ≈ FT(0.9) * B rtol = 4eps(FT)
-        up, down = stream_longwave(FT, layer, surface, FT(0.1), zero(FT), model.longwave_weights, 1, nlayers)
+        up, down = stream_longwave(FT, layer, surface, FT(0.1), zero(FT), model.longwave_weights, 1, Nz)
         rtol = FT === Float64 ? 1e-12 : 200eps(Float32)
         @test up[end] ≈ B rtol = rtol
         @test down[end] ≈ B rtol = rtol
         @test down[1] == 0
-        @test all(k -> isapprox(up[k], B; rtol), 1:nlayers + 1)
-        @test all(k -> isapprox(down[k], B; rtol), 2:nlayers + 1)
+        @test all(k -> isapprox(up[k], B; rtol), 1:Nz + 1)
+        @test all(k -> isapprox(down[k], B; rtol), 2:Nz + 1)
         # Emission alone: without reflection the surface flux is only εσT⁴.
-        up0, _ = stream_longwave(FT, layer, surface, zero(FT), zero(FT), model.longwave_weights, 1, nlayers)
+        up0, _ = stream_longwave(FT, layer, surface, zero(FT), zero(FT), model.longwave_weights, 1, Nz)
         @test up0[end] ≈ FT(0.9) * B rtol = rtol
     end
 end
 
-Base.@noinline measure_streaming_longwave(up, down, layer, surface, albedo, toa, weights, Ngpoints, nlayers, transmittance, source_up) =
-    @allocated streaming_longwave_fluxes!(up, down, layer, surface, albedo, toa, weights, Ngpoints, nlayers, transmittance, source_up)
+Base.@noinline measure_streaming_longwave(up, down, layer, surface, albedo, toa, weights, Ngpoints, Nz, transmittance, source_up) =
+    @allocated streaming_longwave_fluxes!(up, down, layer, surface, albedo, toa, weights, Ngpoints, Nz, transmittance, source_up)
 Base.@noinline measure_surface_emission(model, T, ε) =
     @allocated TabulatedSurfaceEmission(model, T; emissivity = ε)
 Base.@noinline measure_surface_index(surface, gpoint) = @allocated surface[gpoint]
@@ -1006,25 +1006,25 @@ Base.@noinline measure_surface_index(surface, gpoint) = @allocated surface[gpoin
 @testset "streaming longwave is inferrable and allocation-free" begin
     for FT in (Float64, Float32)
         model, atmosphere = tabulated_fixture(FT)
-        nlayers = length(atmosphere.temperature_layers)
+        Nz = length(atmosphere.temperature_layers)
         Ngpoints = length(model.longwave_weights)
-        longwave, shortwave = optics_arrays(FT, Ngpoints, 2, nlayers; interface_sources = true)
+        longwave, shortwave = optics_arrays(FT, Ngpoints, 2, Nz; interface_sources = true)
         optical_properties!(longwave, shortwave, model, atmosphere)
         layer = MatrixLayerOptics(longwave)
 
         surface = @inferred TabulatedSurfaceEmission(model, FT(290); emissivity = FT(0.98))
         @test typeof(@inferred surface[1]) === FT
 
-        # Column rows of `(Nc, N + 1)` and `(Nc, N)` workspaces, as a host
+        # Column rows of `(Ncolumns, N + 1)` and `(Ncolumns, N)` workspaces, as a host
         # model stores them.
-        Nc = 3
-        up = zeros(FT, Nc, nlayers + 1)
-        down = zeros(FT, Nc, nlayers + 1)
-        transmittance = zeros(FT, Nc, nlayers)
-        source_up = zeros(FT, Nc, nlayers)
+        Ncolumns = 3
+        up = zeros(FT, Ncolumns, Nz + 1)
+        down = zeros(FT, Ncolumns, Nz + 1)
+        transmittance = zeros(FT, Ncolumns, Nz)
+        source_up = zeros(FT, Ncolumns, Nz)
         c = 2
         args = (view(up, c, :), view(down, c, :), layer, surface, FT(0.02), zero(FT),
-                model.longwave_weights, Ngpoints, nlayers, view(transmittance, c, :), view(source_up, c, :))
+                model.longwave_weights, Ngpoints, Nz, view(transmittance, c, :), view(source_up, c, :))
         @inferred streaming_longwave_fluxes!(args...)
         for _ in 1:2   # compile, then measure
             @test measure_streaming_longwave(args...) == 0
@@ -1078,17 +1078,17 @@ end
 # A 3-g-point, 6-layer column with Rayleigh scattering in every layer, a mix
 # of forward- and back-scattering asymmetries and per-g-point albedos.
 function shortwave_fixture(FT)
-    Ngpoints, nlayers = 3, 6
-    absorption = FT[0.02 * gpoint * (1 + 0.3 * k) for gpoint in 1:Ngpoints, k in 1:nlayers]
-    scattering = FT[0.05 * (4 - gpoint) * (1 + 0.1 * k) for gpoint in 1:Ngpoints, k in 1:nlayers]
-    asymmetry = FT[clamp(0.3 * (k - 2) - 0.1 * gpoint, -1, 1) for gpoint in 1:Ngpoints, k in 1:nlayers]
+    Ngpoints, Nz = 3, 6
+    absorption = FT[0.02 * gpoint * (1 + 0.3 * k) for gpoint in 1:Ngpoints, k in 1:Nz]
+    scattering = FT[0.05 * (4 - gpoint) * (1 + 0.1 * k) for gpoint in 1:Ngpoints, k in 1:Nz]
+    asymmetry = FT[clamp(0.3 * (k - 2) - 0.1 * gpoint, -1, 1) for gpoint in 1:Ngpoints, k in 1:Nz]
     weights = FT[0.2, 0.3, 0.5]
     direct_albedo = FT[0.05, 0.15, 0.25]
     diffuse_albedo = FT[0.1, 0.2, 0.3]
     optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering,
                              scattering_asymmetry = asymmetry, weights)
     layer_optics = ShortwaveMatrixOptics(absorption, scattering, asymmetry)
-    return (; Ngpoints, nlayers, optics, layer_optics, weights, direct_albedo, diffuse_albedo)
+    return (; Ngpoints, Nz, optics, layer_optics, weights, direct_albedo, diffuse_albedo)
 end
 
 # The adding algorithm of `ecrad_shortwave_column!` before it became a wrapper
@@ -1096,14 +1096,14 @@ end
 # kept as the reference the refactor must reproduce bitwise.
 function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{FT}, layer_optics, gpoint,
                                   μ₀, incoming_horizontal, surface_albedo, surface_albedo_direct,
-                                  nlayers) where FT
+                                  Nz) where FT
     incoming_normal = incoming_horizontal / μ₀
-    reflectance = Vector{FT}(undef, nlayers)
-    transmittance = Vector{FT}(undef, nlayers)
-    direct_reflectance = Vector{FT}(undef, nlayers)
-    direct_diffuse_transmittance = Vector{FT}(undef, nlayers)
-    direct_transmittance = Vector{FT}(undef, nlayers)
-    for k in 1:nlayers
+    reflectance = Vector{FT}(undef, Nz)
+    transmittance = Vector{FT}(undef, Nz)
+    direct_reflectance = Vector{FT}(undef, Nz)
+    direct_diffuse_transmittance = Vector{FT}(undef, Nz)
+    direct_transmittance = Vector{FT}(undef, Nz)
+    for k in 1:Nz
         τ_absorption, τ_scattering, asymmetry = layer_optics(gpoint, k)
         τ_absorption = max(FT(τ_absorption), zero(FT))
         rayleigh_tau = max(FT(τ_scattering), zero(FT))
@@ -1113,18 +1113,18 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
         reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k], direct_transmittance[k] =
             NumericalRadiation.shortwave_two_stream_layer(FT, μ₀, τ_total, ω, g)
     end
-    flux_direct = Vector{FT}(undef, nlayers + 1)
-    flux_diffuse = Vector{FT}(undef, nlayers + 1)
-    source = Vector{FT}(undef, nlayers + 1)
-    stack_albedo = Vector{FT}(undef, nlayers + 1)
-    inv_denominator = Vector{FT}(undef, nlayers)
+    flux_direct = Vector{FT}(undef, Nz + 1)
+    flux_diffuse = Vector{FT}(undef, Nz + 1)
+    source = Vector{FT}(undef, Nz + 1)
+    stack_albedo = Vector{FT}(undef, Nz + 1)
+    inv_denominator = Vector{FT}(undef, Nz)
     flux_direct[1] = incoming_normal
-    for k in 1:nlayers
+    for k in 1:Nz
         flux_direct[k + 1] = flux_direct[k] * direct_transmittance[k]
     end
-    stack_albedo[nlayers + 1] = surface_albedo
-    source[nlayers + 1] = surface_albedo_direct * flux_direct[nlayers + 1] * μ₀
-    for k in nlayers:-1:1
+    stack_albedo[Nz + 1] = surface_albedo
+    source[Nz + 1] = surface_albedo_direct * flux_direct[Nz + 1] * μ₀
+    for k in Nz:-1:1
         below = stack_albedo[k + 1]
         inv_denominator[k] = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] +
@@ -1137,7 +1137,7 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     flux_diffuse[1] = zero(FT)
     up[1] += source[1]
     down[1] += flux_direct[1] * μ₀
-    for k in 1:nlayers
+    for k in 1:Nz
         flux_diffuse[k + 1] =
             (transmittance[k] * flux_diffuse[k] +
              reflectance[k] * source[k + 1] +
@@ -1149,12 +1149,12 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
 end
 
 function streamed_shortwave(fixture, FT, μ₀, toa_irradiance)
-    (; Ngpoints, nlayers, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
-    up = fill(FT(NaN), nlayers + 1)   # the solver must zero its outputs
-    down = fill(FT(NaN), nlayers + 1)
-    scratch = ShortwaveColumnScratch(FT, nlayers)
+    (; Ngpoints, Nz, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+    up = fill(FT(NaN), Nz + 1)   # the solver must zero its outputs
+    down = fill(FT(NaN), Nz + 1)
+    scratch = ShortwaveColumnScratch(FT, Nz)
     streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa_irradiance,
-                                direct_albedo, diffuse_albedo, weights, Ngpoints, nlayers, scratch)
+                                direct_albedo, diffuse_albedo, weights, Ngpoints, Nz, scratch)
     return up, down
 end
 
@@ -1180,7 +1180,7 @@ end
 
 @testset "streaming shortwave reproduces the adding solver, $FT" for FT in (Float64, Float32)
     fixture = shortwave_fixture(FT)
-    (; Ngpoints, nlayers, optics, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+    (; Ngpoints, Nz, optics, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
     S₀ = FT(SOLAR_CONSTANT)
     tolerance = FT === Float64 ? 1e-12 : 20 * eps(Float32)
     for μ₀ in FT[1, 0.5, 0.1]
@@ -1192,18 +1192,18 @@ end
 
         # Weighted sum of the per-g-point wrapper, and the pre-refactor
         # reference algorithm: the same arithmetic in the same order.
-        wrapped_up, wrapped_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
-        reference_up, reference_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+        wrapped_up, wrapped_down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
+        reference_up, reference_down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
         for gpoint in 1:Ngpoints
-            scratch_up, scratch_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+            scratch_up, scratch_down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
             NumericalRadiation.ecrad_shortwave_column!(scratch_up, scratch_down, optics, gpoint, μ₀,
                                                        toa_irradiance, diffuse_albedo[gpoint],
                                                        direct_albedo[gpoint])
             wrapped_up .+= weights[gpoint] .* scratch_up
             wrapped_down .+= weights[gpoint] .* scratch_down
-            scratch_up, scratch_down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
+            scratch_up, scratch_down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
             reference_adding_column!(scratch_up, scratch_down, layer_optics, gpoint, μ₀, toa_irradiance,
-                                     diffuse_albedo[gpoint], direct_albedo[gpoint], nlayers)
+                                     diffuse_albedo[gpoint], direct_albedo[gpoint], Nz)
             reference_up .+= weights[gpoint] .* scratch_up
             reference_down .+= weights[gpoint] .* scratch_down
         end
@@ -1213,10 +1213,10 @@ end
         @test down == reference_down
 
         # The array solver with solar geometry and per-g-point albedos.
-        fluxes = RadiativeFluxes(longwave_up = zeros(FT, nlayers + 1),
-                                 longwave_down = zeros(FT, nlayers + 1),
-                                 shortwave_up = zeros(FT, nlayers + 1),
-                                 shortwave_down = zeros(FT, nlayers + 1))
+        fluxes = RadiativeFluxes(longwave_up = zeros(FT, Nz + 1),
+                                 longwave_down = zeros(FT, Nz + 1),
+                                 shortwave_up = zeros(FT, Nz + 1),
+                                 shortwave_down = zeros(FT, Nz + 1))
         radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ₀)),
                           ShortwaveBoundaryConditions(toa_shortwave_down = toa_irradiance,
                                                       surface_albedo = diffuse_albedo,
@@ -1228,9 +1228,9 @@ end
     # Broadband albedos are accepted in place of per-g-point vectors.
     μ₀ = FT(0.5)
     up, down = streamed_shortwave(fixture, FT, μ₀, S₀ * μ₀)
-    scalar_up, scalar_down = fill(FT(NaN), nlayers + 1), fill(FT(NaN), nlayers + 1)
+    scalar_up, scalar_down = fill(FT(NaN), Nz + 1), fill(FT(NaN), Nz + 1)
     streaming_shortwave_fluxes!(scalar_up, scalar_down, layer_optics, μ₀, S₀ * μ₀, FT(0.15), FT(0.2),
-                                weights, Ngpoints, nlayers, ShortwaveColumnScratch(FT, nlayers))
+                                weights, Ngpoints, Nz, ShortwaveColumnScratch(FT, Nz))
     @test all(isfinite, scalar_up) && all(isfinite, scalar_down)
     @test scalar_down[1] == down[1]
     @test scalar_up != up
@@ -1247,14 +1247,14 @@ end
     # it with the two-stream diffusivity 2, `e^{-2τ}` (γ₁ = 2, γ₂ = 0 for
     # ω = 0). The two coincide only at μ₀ = 1/2, so this test runs at μ₀ = 0.6
     # and compares each path with its own closed form.
-    nlayers = 3
+    Nz = 3
     absorption = [0.1 0.2 0.3; 0.05 0.1 0.15]
     scattering = [0.0 0.0 0.0; 0.02 0.03 0.04]
     weights = [0.4, 0.6]
     optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering, weights)
     μ₀, S₀, albedo = 0.6, SOLAR_CONSTANT, 0.2
-    fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1), longwave_down = zeros(nlayers + 1),
-                             shortwave_up = zeros(nlayers + 1), shortwave_down = zeros(nlayers + 1))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1), longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1), shortwave_down = zeros(Nz + 1))
     radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ₀)),
                       ShortwaveBoundaryConditions(toa_shortwave_down = S₀ * μ₀, surface_albedo = albedo))
 
@@ -1264,13 +1264,13 @@ end
     slant_up = albedo * beer_down[end] .* exp.(-τ_below ./ μ₀)      # closed-form branch
     diffuse_up = albedo * beer_down[end] .* exp.(-2 .* τ_below)     # adding method
     @test !(slant_up ≈ diffuse_up)
-    up, down = zeros(nlayers + 1), zeros(nlayers + 1)
+    up, down = zeros(Nz + 1), zeros(Nz + 1)
     streaming_shortwave_fluxes!(up, down, ShortwaveMatrixOptics(absorption, scattering, zero(absorption)),
-                                μ₀, S₀ * μ₀, albedo, albedo, (1.0,), 1, nlayers,
-                                ShortwaveColumnScratch(Float64, nlayers))
+                                μ₀, S₀ * μ₀, albedo, albedo, (1.0,), 1, Nz,
+                                ShortwaveColumnScratch(Float64, Nz))
     @test down ≈ beer_down rtol = 1e-10
     @test up ≈ diffuse_up rtol = 1e-10
-    scratch_up, scratch_down = zeros(nlayers + 1), zeros(nlayers + 1)
+    scratch_up, scratch_down = zeros(Nz + 1), zeros(Nz + 1)
     NumericalRadiation.ecrad_shortwave_column!(scratch_up, scratch_down, optics, 2, μ₀, S₀ * μ₀, albedo)
     @test fluxes.shortwave_down ≈ weights[1] .* beer_down .+ weights[2] .* scratch_down rtol = 1e-12
     @test fluxes.shortwave_up ≈ weights[1] .* slant_up .+ weights[2] .* scratch_up rtol = 1e-12
@@ -1280,8 +1280,8 @@ end
     μ₀ = 0.5
     beer_down = S₀ * μ₀ .* exp.(-τ_cumulative ./ μ₀)
     streaming_shortwave_fluxes!(up, down, ShortwaveMatrixOptics(absorption, scattering, zero(absorption)),
-                                μ₀, S₀ * μ₀, albedo, albedo, (1.0,), 1, nlayers,
-                                ShortwaveColumnScratch(Float64, nlayers))
+                                μ₀, S₀ * μ₀, albedo, albedo, (1.0,), 1, Nz,
+                                ShortwaveColumnScratch(Float64, Nz))
     @test up ≈ albedo * beer_down[end] .* exp.(-τ_below ./ μ₀) rtol = 1e-10
 end
 
@@ -1305,37 +1305,37 @@ end
 end
 
 Base.@noinline measure_streaming_shortwave(up, down, layer_optics, μ₀, toa, α_dir, α_dif, weights,
-                                           Ngpoints, nlayers, scratch) =
+                                           Ngpoints, Nz, scratch) =
     @allocated streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa, α_dir, α_dif, weights,
-                                           Ngpoints, nlayers, scratch)
+                                           Ngpoints, Nz, scratch)
 
 @testset "streaming shortwave is inferrable and allocation-free, $FT" for FT in (Float64, Float32)
     fixture = shortwave_fixture(FT)
-    (; Ngpoints, nlayers, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
-    up, down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
-    scratch = ShortwaveColumnScratch(FT, nlayers)
+    (; Ngpoints, Nz, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+    up, down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
+    scratch = ShortwaveColumnScratch(FT, Nz)
     μ₀, toa = FT(0.5), FT(SOLAR_CONSTANT) * FT(0.5)
     @test (@inferred streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa, direct_albedo,
-                                                 diffuse_albedo, weights, Ngpoints, nlayers, scratch)) === nothing
+                                                 diffuse_albedo, weights, Ngpoints, Nz, scratch)) === nothing
     for _ in 1:2   # compile on the first pass, measure on the second
         @test measure_streaming_shortwave(up, down, layer_optics, μ₀, toa, direct_albedo, diffuse_albedo,
-                                          weights, Ngpoints, nlayers, scratch) == 0
+                                          weights, Ngpoints, Nz, scratch) == 0
         # Scalar albedos and a tuple of weights, as a host with one g point passes.
         @test measure_streaming_shortwave(up, down, layer_optics, μ₀, toa, FT(0.1), FT(0.2),
-                                          (one(FT),), 1, nlayers, scratch) == 0
+                                          (one(FT),), 1, Nz, scratch) == 0
     end
     # Views of host matrices as scratch and flux storage allocate nothing either.
-    layers, interfaces = zeros(FT, 5, nlayers), zeros(FT, 4, nlayers + 1)
+    layers, interfaces = zeros(FT, 5, Nz), zeros(FT, 4, Nz + 1)
     view_scratch = ShortwaveColumnScratch(view(layers, 1, :), view(layers, 2, :), view(layers, 3, :),
                                           view(layers, 4, :), view(layers, 5, :),
                                           view(interfaces, 1, :), view(interfaces, 2, :))
     view_up, view_down = view(interfaces, 3, :), view(interfaces, 4, :)
     for _ in 1:2
         @test measure_streaming_shortwave(view_up, view_down, layer_optics, μ₀, toa, direct_albedo,
-                                          diffuse_albedo, weights, Ngpoints, nlayers, view_scratch) == 0
+                                          diffuse_albedo, weights, Ngpoints, Nz, view_scratch) == 0
     end
     streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa, direct_albedo, diffuse_albedo,
-                                weights, Ngpoints, nlayers, scratch)
+                                weights, Ngpoints, Nz, scratch)
     @test view_up == up && view_down == down
 end
 

@@ -170,23 +170,23 @@ function heating_rates!(heating::AbstractVector,
                         gravity = atmosphere.constants.gravity,
                         heat_capacity = atmosphere.constants.heat_capacity)
     p_interface = atmosphere.pressure_interfaces
-    nlayers = length(atmosphere.temperature_layers)
-    length(heating) == nlayers ||
-        throw(DimensionMismatch("heating must have length nlayers"))
-    length(p_interface) == nlayers + 1 ||
-        throw(DimensionMismatch("pressure_interfaces must have length nlayers + 1"))
-    length(fluxes.longwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_up must have length nlayers + 1"))
-    length(fluxes.longwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_down must have length nlayers + 1"))
-    length(fluxes.shortwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("shortwave_up must have length nlayers + 1"))
-    length(fluxes.shortwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("shortwave_down must have length nlayers + 1"))
+    Nz = length(atmosphere.temperature_layers)
+    length(heating) == Nz ||
+        throw(DimensionMismatch("heating must have length Nz"))
+    length(p_interface) == Nz + 1 ||
+        throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
+    length(fluxes.longwave_up) == Nz + 1 ||
+        throw(DimensionMismatch("longwave_up must have length Nz + 1"))
+    length(fluxes.longwave_down) == Nz + 1 ||
+        throw(DimensionMismatch("longwave_down must have length Nz + 1"))
+    length(fluxes.shortwave_up) == Nz + 1 ||
+        throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
+    length(fluxes.shortwave_down) == Nz + 1 ||
+        throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
 
     FT = eltype(heating)
     g_over_cp = FT(gravity) / FT(heat_capacity)
-    for k in 1:nlayers
+    for k in 1:Nz
         Δp = FT(p_interface[k + 1] - p_interface[k])
         Δp > zero(FT) || throw(ArgumentError("pressure_interfaces must increase downward"))
         net_top = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +

@@ -128,32 +128,32 @@ end
 #####
 
 function longwave_fluxes(::Type{FT}, layer_optics, surface_emission, surface_albedo, toa_down,
-                         weights, nlayers) where FT
-    flux_up = zeros(FT, nlayers + 1)
-    flux_down = zeros(FT, nlayers + 1)
-    transmittance = zeros(FT, nlayers)
-    source_up = zeros(FT, nlayers)
+                         weights, Nz) where FT
+    flux_up = zeros(FT, Nz + 1)
+    flux_down = zeros(FT, Nz + 1)
+    transmittance = zeros(FT, Nz)
+    source_up = zeros(FT, Nz)
     streaming_longwave_fluxes!(flux_up, flux_down, layer_optics, surface_emission,
                                FT(surface_albedo), FT(toa_down), weights, length(weights),
-                               nlayers, transmittance, source_up)
+                               Nz, transmittance, source_up)
     return flux_up, flux_down
 end
 
 function shortwave_fluxes(::Type{FT}, layer_optics, μ₀, toa_irradiance, direct_albedo, diffuse_albedo,
-                          nlayers; weights = [one(FT)]) where FT
-    flux_up = zeros(FT, nlayers + 1)
-    flux_down = zeros(FT, nlayers + 1)
-    scratch = ShortwaveColumnScratch(FT, nlayers)
+                          Nz; weights = [one(FT)]) where FT
+    flux_up = zeros(FT, Nz + 1)
+    flux_down = zeros(FT, Nz + 1)
+    scratch = ShortwaveColumnScratch(FT, Nz)
     streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, FT(μ₀), FT(toa_irradiance),
                                 FT(direct_albedo), FT(diffuse_albedo), weights, length(weights),
-                                nlayers, scratch)
+                                Nz, scratch)
     return flux_up, flux_down
 end
 
 # Optical depths of every layer as the solver saw them, in Float64, for
 # g point `gpoint`, and their cumulative sum at the interfaces (0 at the top).
-function layer_optical_depths(layer_optics, nlayers, gpoint = 1)
-    τ = [Float64(layer_optics(gpoint, k)[1]) for k in 1:nlayers]
+function layer_optical_depths(layer_optics, Nz, gpoint = 1)
+    τ = [Float64(layer_optics(gpoint, k)[1]) for k in 1:Nz]
     return τ, vcat(0.0, cumsum(τ))
 end
 
@@ -204,27 +204,27 @@ end
             # Closed forms (β = 0):  up[k] = σT⁴ for every k, and
             #   down[k] = σT⁴ Σ_g w_g (1 - e^{-D τ_g,cum[k]}),  τ_g,cum[1] = 0.
             rng = LinearCongruentialDraws(0x2f6e2b1a5c3d4e01)
-            nlayers = 12
+            Nz = 12
             T = 280.0
-            amounts = FT[draw!(rng, 0.01, 5.0) for _ in 1:nlayers]   # τ of g point 1
+            amounts = FT[draw!(rng, 0.01, 5.0) for _ in 1:Nz]   # τ of g point 1
             κ = [1.0, 0.35]
             weights = [0.4, 0.6]
             model = gray_model(FT, κ, [1.0]; longwave_weights = weights)
-            temperatures = fill(FT(T), nlayers)
+            temperatures = fill(FT(T), Nz)
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
             surface = TabulatedSurfaceEmission(model, T; emissivity = 1)
-            up, down = longwave_fluxes(FT, optics, surface, 0, 0, model.longwave_weights, nlayers)
+            up, down = longwave_fluxes(FT, optics, surface, 0, 0, model.longwave_weights, Nz)
 
             B = σ * T^4
-            τ_cum = [layer_optical_depths(optics, nlayers, gpoint)[2] for gpoint in 1:2]
+            τ_cum = [layer_optical_depths(optics, Nz, gpoint)[2] for gpoint in 1:2]
             down_exact = [B * sum(weights[gpoint] * (1 - exp(-D * τ_cum[gpoint][k])) for gpoint in 1:2)
-                          for k in 1:nlayers + 1]
+                          for k in 1:Nz + 1]
 
             tol_up = tolerances(FT, 1e-13, B)
             tol_down = tolerances(FT, 1e-12, B)
-            @test all(k -> within(up[k], B, tol_up), 1:nlayers + 1)
+            @test all(k -> within(up[k], B, tol_up), 1:Nz + 1)
             @test down[1] == 0
-            @test all(k -> within(down[k], down_exact[k], tol_down), 2:nlayers + 1)
+            @test all(k -> within(down[k], down_exact[k], tol_down), 2:Nz + 1)
         end
 
         @testset "black lid ($FT)" begin
@@ -233,21 +233,21 @@ end
             # equilibrium with the Planck function, so up = down = σT⁴ at every
             # interface and the net flux down - up vanishes identically.
             rng = LinearCongruentialDraws(0x7a1b3c5d7e9f0123)
-            nlayers = 6
+            Nz = 6
             T = 265.0
-            amounts = FT[draw!(rng, 0.05, 3.0) for _ in 1:nlayers]
+            amounts = FT[draw!(rng, 0.05, 3.0) for _ in 1:Nz]
             model = gray_model(FT, [1.0], [1.0])
-            temperatures = fill(FT(T), nlayers)
+            temperatures = fill(FT(T), Nz)
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
             surface = TabulatedSurfaceEmission(model, T; emissivity = 1)
             B_model = longwave_source(model, 1, FT(T), nothing)   # the lid emits what the model emits
-            up, down = longwave_fluxes(FT, optics, surface, 0, B_model, model.longwave_weights, nlayers)
+            up, down = longwave_fluxes(FT, optics, surface, 0, B_model, model.longwave_weights, Nz)
 
             B = σ * T^4
             tol = tolerances(FT, 0, B; atol = 1e-9)
-            @test all(k -> within(up[k], B, tol), 1:nlayers + 1)
-            @test all(k -> within(down[k], B, tol), 1:nlayers + 1)
-            @test all(k -> within(down[k] - up[k], 0, tol), 1:nlayers + 1)
+            @test all(k -> within(up[k], B, tol), 1:Nz + 1)
+            @test all(k -> within(down[k], B, tol), 1:Nz + 1)
+            @test all(k -> within(down[k] - up[k], 0, tol), 1:Nz + 1)
         end
 
         @testset "surface reflection ($FT)" begin
@@ -258,15 +258,15 @@ end
             #   up[end] = ε σT⁴ + (1 - ε) down[end] = 0.9 σT⁴ + 0.1 σT⁴ = σT⁴:
             # a gray surface in equilibrium with a black cavity is
             # indistinguishable from a black one.
-            nlayers = 2
+            Nz = 2
             T = 300.0
             ε = 0.9
-            amounts = fill(FT(50), nlayers)
+            amounts = fill(FT(50), Nz)
             model = gray_model(FT, [1.0], [1.0])
-            temperatures = fill(FT(T), nlayers)
+            temperatures = fill(FT(T), Nz)
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
             surface = TabulatedSurfaceEmission(model, T; emissivity = ε)
-            up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, nlayers)
+            up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, Nz)
 
             B = σ * T^4
             tol = tolerances(FT, 1e-12, B)
@@ -282,29 +282,29 @@ end
             #   F↑(τₛ) = ε Bₛ + (1 - ε) F↓(τₛ),
             # the closed forms in the header hold at every interface.
             rng = LinearCongruentialDraws(0x0123456789abcdef)
-            nlayers = 8
+            Nz = 8
             B₀, β = 250.0, 12.0
             F_top = 30.0
             ε, Bₛ = 0.9, 420.0
-            τ = [draw!(rng, 0.01, 2.0) for _ in 1:nlayers]
+            τ = [draw!(rng, 0.01, 2.0) for _ in 1:Nz]
             τ_FT = FT.(τ)
             τ = Float64.(τ_FT)          # the optical depths the solver sees
             τ_cum = vcat(0.0, cumsum(τ))
             B_interface = B₀ .+ β .* τ_cum
             optics = PlanckProfileLayerOptics(τ_FT,
-                                              FT.(B_interface[1:nlayers]),
-                                              FT.(B_interface[2:nlayers + 1]))
+                                              FT.(B_interface[1:Nz]),
+                                              FT.(B_interface[2:Nz + 1]))
             surface_emission = [FT(ε * Bₛ)]
-            up, down = longwave_fluxes(FT, optics, surface_emission, 1 - ε, F_top, [one(FT)], nlayers)
+            up, down = longwave_fluxes(FT, optics, surface_emission, 1 - ε, F_top, [one(FT)], Nz)
 
             τₛ = τ_cum[end]
-            down_exact = [linear_planck_down(τ_cum[k], F_top, B₀, β) for k in 1:nlayers + 1]
+            down_exact = [linear_planck_down(τ_cum[k], F_top, B₀, β) for k in 1:Nz + 1]
             F_surface = ε * Bₛ + (1 - ε) * down_exact[end]
-            up_exact = [linear_planck_up(τ_cum[k], τₛ, F_surface, B₀, β) for k in 1:nlayers + 1]
+            up_exact = [linear_planck_up(τ_cum[k], τₛ, F_surface, B₀, β) for k in 1:Nz + 1]
 
             tol = tolerances(FT, 1e-12, maximum(B_interface))
-            @test all(k -> within(down[k], down_exact[k], tol), 1:nlayers + 1)
-            @test all(k -> within(up[k], up_exact[k], tol), 1:nlayers + 1)
+            @test all(k -> within(down[k], down_exact[k], tol), 1:Nz + 1)
+            @test all(k -> within(up[k], up_exact[k], tol), 1:Nz + 1)
         end
 
         @testset "optically thin limit ($FT)" begin
@@ -321,29 +321,29 @@ end
             # so the column is transparent to leading order — up[1] → ε Bₛ and
             # down[end] → 0 — with first-order departures pinned below to their
             # second-order remainders, |O(x²)| ≤ x² max(Bₐ, Bₛ) (1 + 2(1 - ε)).
-            nlayers = 4
+            Nz = 4
             Tₐ, Tₛ = 250.0, 300.0
             ε = 0.95
-            amounts = fill(FT(1.01e-3), nlayers)
+            amounts = fill(FT(1.01e-3), Nz)
             model = gray_model(FT, [1.0], [1.0])
-            temperatures = fill(FT(Tₐ), nlayers)
+            temperatures = fill(FT(Tₐ), Nz)
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
             surface = TabulatedSurfaceEmission(model, Tₛ; emissivity = ε)
-            up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, nlayers)
+            up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, Nz)
 
             Bₐ, Bₛ = σ * Tₐ^4, σ * Tₛ^4
-            _, τ_cum = layer_optical_depths(optics, nlayers)
+            _, τ_cum = layer_optical_depths(optics, Nz)
             τₛ = τ_cum[end]
             x = D * τₛ
-            @test all(k -> layer_optical_depths(optics, nlayers)[1][k] > 1e-3, 1:nlayers)
+            @test all(k -> layer_optical_depths(optics, Nz)[1][k] > 1e-3, 1:Nz)
 
             # Exact closed forms at every interface.
-            down_exact = [Bₐ * (1 - exp(-D * τ_cum[k])) for k in 1:nlayers + 1]
+            down_exact = [Bₐ * (1 - exp(-D * τ_cum[k])) for k in 1:Nz + 1]
             F_surface = ε * Bₛ + (1 - ε) * down_exact[end]
-            up_exact = [Bₐ + exp(-D * (τₛ - τ_cum[k])) * (F_surface - Bₐ) for k in 1:nlayers + 1]
+            up_exact = [Bₐ + exp(-D * (τₛ - τ_cum[k])) * (F_surface - Bₐ) for k in 1:Nz + 1]
             tol = tolerances(FT, 0, max(Bₐ, Bₛ); atol = 1e-6)
-            @test all(k -> within(down[k], down_exact[k], tol), 1:nlayers + 1)
-            @test all(k -> within(up[k], up_exact[k], tol), 1:nlayers + 1)
+            @test all(k -> within(down[k], down_exact[k], tol), 1:Nz + 1)
+            @test all(k -> within(up[k], up_exact[k], tol), 1:Nz + 1)
 
             # The limits with their first-order departures.
             remainder = x^2 * max(Bₐ, Bₛ) * (1 + 2 * (1 - ε))
@@ -360,15 +360,15 @@ end
             # emission of the adjacent layer on its own side:
             #   up[1] = σT_top⁴,   down[2] = σT_top⁴,   up[2] = down[3] = σT_int⁴,
             #   up[3] = down[4] = σT_bot⁴,   up[4] = ε σTₛ⁴ + (1 - ε) σT_bot⁴.
-            nlayers = 3
+            Nz = 3
             T_top, T_int, T_bot, Tₛ = 230.0, 260.0, 290.0, 300.0
             ε = 0.9
-            amounts = fill(FT(50), nlayers)
+            amounts = fill(FT(50), Nz)
             model = gray_model(FT, [1.0], [1.0])
             temperatures = FT[T_top, T_int, T_bot]
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
             surface = TabulatedSurfaceEmission(model, Tₛ; emissivity = ε)
-            up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, nlayers)
+            up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, Nz)
 
             B_top, B_int, B_bot, Bₛ = σ .* (T_top, T_int, T_bot, Tₛ) .^ 4
             tol = tolerances(FT, 1e-8, Bₛ)
@@ -422,62 +422,62 @@ end
     for FT in FLOAT_TYPES
         @testset "Beer–Lambert on the adding path ($FT)" begin
             rng = LinearCongruentialDraws(0x5eed5eed5eed5eed)
-            nlayers = 6
+            Nz = 6
             μ₀, S₀, α = 0.6, SOLAR_CONSTANT, 0.3
-            amounts = FT[draw!(rng, 0.01, 1.0) for _ in 1:nlayers]
+            amounts = FT[draw!(rng, 0.01, 1.0) for _ in 1:Nz]
             model = gray_model(FT, [1.0], [1.0])
             optics = GrayShortwaveLayerOptics(model, amounts)
-            up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, α, α, nlayers;
+            up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, α, α, Nz;
                                         weights = model.shortwave_weights)
 
-            _, τ_cum = layer_optical_depths(optics, nlayers)
+            _, τ_cum = layer_optical_depths(optics, Nz)
             τₛ = τ_cum[end]
-            down_exact = [S₀ * μ₀ * exp(-τ_cum[k] / μ₀) for k in 1:nlayers + 1]
-            up_exact = [α * S₀ * μ₀ * exp(-τₛ / μ₀) * exp(-2 * (τₛ - τ_cum[k])) for k in 1:nlayers + 1]
+            down_exact = [S₀ * μ₀ * exp(-τ_cum[k] / μ₀) for k in 1:Nz + 1]
+            up_exact = [α * S₀ * μ₀ * exp(-τₛ / μ₀) * exp(-2 * (τₛ - τ_cum[k])) for k in 1:Nz + 1]
 
             tol = tolerances(FT, 1e-10, S₀ * μ₀)
             @test down[1] == FT(S₀ * μ₀)
-            @test all(k -> within(down[k], down_exact[k], tol), 1:nlayers + 1)
-            @test all(k -> within(up[k], up_exact[k], tol), 1:nlayers + 1)
+            @test all(k -> within(down[k], down_exact[k], tol), 1:Nz + 1)
+            @test all(k -> within(up[k], up_exact[k], tol), 1:Nz + 1)
         end
 
         @testset "conservative scattering ($FT)" begin
-            nlayers = 4
+            Nz = 4
             μ₀, S₀ = 0.5, SOLAR_CONSTANT
             scattering = FT[0.3, 1.0, 0.5, 2.0]
-            absorption = zeros(FT, nlayers)
+            absorption = zeros(FT, Nz)
             tol = tolerances(FT, 1e-10, S₀ * μ₀)
             for g in (-0.5, 0.0, 0.5, 0.85, 0.95)
-                asymmetry = fill(FT(g), nlayers)
+                asymmetry = fill(FT(g), Nz)
                 optics = ScatteringLayerOptics(absorption, scattering, asymmetry)
-                up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, nlayers)
+                up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, Nz)
                 net = down .- up
                 @test within(up[1] + down[end], S₀ * μ₀, tol)
-                @test all(k -> within(net[k], net[end], tol), 1:nlayers + 1)
+                @test all(k -> within(net[k], net[end], tol), 1:Nz + 1)
                 @test down[1] == FT(S₀ * μ₀)
             end
         end
 
         @testset "reciprocity of the stack diffuse transmittance ($FT)" begin
             rng = LinearCongruentialDraws(0x9e3779b97f4a7c15)
-            nlayers = 5
+            Nz = 5
             μ₀, S₀ = 0.7, 1000.0
-            τ = [draw!(rng, 0.05, 1.0) for _ in 1:nlayers]
-            ω = [draw!(rng, 0.3, 0.95) for _ in 1:nlayers]
-            g = [draw!(rng, -0.3, 0.85) for _ in 1:nlayers]
+            τ = [draw!(rng, 0.05, 1.0) for _ in 1:Nz]
+            ω = [draw!(rng, 0.3, 0.95) for _ in 1:Nz]
+            g = [draw!(rng, -0.3, 0.85) for _ in 1:Nz]
             absorption = FT.((1 .- ω) .* τ)
             scattering = FT.(ω .* τ)
             asymmetry = FT.(g)
 
             function transmittance_from_below(order)
                 optics = ScatteringLayerOptics(absorption[order], scattering[order], asymmetry[order])
-                up_black, _ = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, nlayers)
-                up_source, _ = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 1, 0, nlayers)
+                up_black, _ = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, Nz)
+                up_source, _ = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 1, 0, Nz)
                 return up_source[1] - up_black[1]     # T_below · J
             end
 
-            T_below = transmittance_from_below(1:nlayers)
-            T_above = transmittance_from_below(nlayers:-1:1)
+            T_below = transmittance_from_below(1:Nz)
+            T_above = transmittance_from_below(Nz:-1:1)
             tol = tolerances(FT, 1e-12, S₀ * μ₀)
             @test T_below > 0
             @test within(T_below, T_above, tol)

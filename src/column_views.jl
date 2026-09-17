@@ -3,9 +3,9 @@ $(TYPEDEF)
 
 Vertical geometry for a single column expressed in sigma-pressure coordinates.
 
-`σ_full` has length `nlayers` and gives the midpoint of each layer.
-`σ_half` has length `nlayers + 1` and gives the layer interfaces.
-`σ_thick = diff(σ_half)` has length `nlayers`.
+`σ_full` has length `Nz` and gives the midpoint of each layer.
+`σ_half` has length `Nz + 1` and gives the layer interfaces.
+`σ_thick = diff(σ_half)` has length `Nz`.
 """
 struct ColumnGrid{NF, V<:AbstractVector{NF}}
     σ_full::V
@@ -14,8 +14,8 @@ struct ColumnGrid{NF, V<:AbstractVector{NF}}
 end
 
 function ColumnGrid(σ_half::AbstractVector{NF}) where NF
-    nlayers = length(σ_half) - 1
-    σ_full  = @views (σ_half[1:nlayers] .+ σ_half[2:end]) ./ 2
+    Nz = length(σ_half) - 1
+    σ_full  = @views (σ_half[1:Nz] .+ σ_half[2:end]) ./ 2
     σ_thick = diff(σ_half)
     return ColumnGrid{NF, typeof(σ_half)}(σ_full, σ_half, σ_thick)
 end
@@ -27,7 +27,7 @@ Column thermodynamic profile and lower boundary quantities read by the
 radiation solvers.
 
 The arrays are indexed top-down: `k = 1` is the top of the atmosphere,
-`k = nlayers` is the bottom (surface-adjacent) layer.
+`k = Nz` is the bottom (surface-adjacent) layer.
 """
 struct AtmosphereProfile{NF, V<:AbstractVector{NF}}
     temperature::V
@@ -149,11 +149,11 @@ mutable struct ShortwaveDiagnostics{NF}
     stratocumulus_cover::NF
 end
 
-ShortwaveDiagnostics(::Type{NF}, nlayers::Integer = 1) where NF =
-    ShortwaveDiagnostics{NF}(nlayers)
+ShortwaveDiagnostics(::Type{NF}, Nz::Integer = 1) where NF =
+    ShortwaveDiagnostics{NF}(Nz)
 
-ShortwaveDiagnostics{NF}(nlayers::Integer = 1) where NF = ShortwaveDiagnostics{NF}(
+ShortwaveDiagnostics{NF}(Nz::Integer = 1) where NF = ShortwaveDiagnostics{NF}(
     zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF),
-    zero(NF), zero(NF), nlayers + 1, zero(NF))
+    zero(NF), zero(NF), Nz + 1, zero(NF))
 
-ShortwaveDiagnostics(nlayers::Integer = 1) = ShortwaveDiagnostics{Float64}(nlayers)
+ShortwaveDiagnostics(Nz::Integer = 1) = ShortwaveDiagnostics{Float64}(Nz)

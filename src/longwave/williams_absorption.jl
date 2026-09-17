@@ -69,7 +69,7 @@ line absorption (Williams 2026, Eq. 7), H₂O continuum (Eq. 8) and CO₂ (Eq. 9
 The result already includes the two-stream diffusivity factor `D ≈ 1.5`
 (Armstrong 1968).
 
-`temperature` and `humidity` are length-`nlayers` column vectors; `geometry`
+`temperature` and `humidity` are length-`Nz` column vectors; `geometry`
 is a [`ColumnGrid`](@ref). The molar mass ratios of the vapor partial pressure
 and of the CO₂ mass mixing ratio are the scheme's
 `water_vapor_molar_mass_ratio` and `carbon_dioxide_molar_mass_ratio`.

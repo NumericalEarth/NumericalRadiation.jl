@@ -26,12 +26,12 @@ using ClimaComms     # RRTMGP adapter extension trigger …
 using RRTMGP         # … and RRTMGP itself
 using Printf
 
-# The column: ``N`` layers with interface pressures ``pᵢ`` (Pa, top of
+# The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
 # atmosphere first), layer pressures ``p``, an idealized capped lapse rate,
 # and analytic moisture and ozone mixing-ratio profiles:
 
-N  = 48
-pᵢ = collect(range(2_000, 101_325; length = N + 1))
+Nz = 48
+pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
 Tₛ = 300
@@ -117,22 +117,22 @@ function ecckd_member(selector)
     @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, N),
-                                         zeros(longwave_gpoints, N);
-                                         source_top = zeros(longwave_gpoints, N),
-                                         source_bottom = zeros(longwave_gpoints, N),
+    longwave = LongwaveOptics(zeros(longwave_gpoints, Nz),
+                                         zeros(longwave_gpoints, Nz);
+                                         source_top = zeros(longwave_gpoints, Nz),
+                                         source_bottom = zeros(longwave_gpoints, Nz),
                                          weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
+    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
                                            weights = zeros(shortwave_gpoints))
-    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                             longwave_down = zeros(N + 1),
-                             shortwave_up = zeros(N + 1),
-                             shortwave_down = zeros(N + 1))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
     optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
     surface_emission = surface_longwave_emission(gas_optics, Tₛ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
                       LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
-    Ṫ = zeros(N)
+    Ṫ = zeros(Nz)
     heating_rates!(Ṫ, fluxes, ecckd_atmosphere)
     return (; fluxes, Ṫ)
 end
@@ -156,14 +156,14 @@ function rrtmgp_member()
         toa_shortwave_down = 0,   # longwave-only page
         cos_zenith = 0.5)
     workspace = radiation_workspace(model, rrtmgp_atmosphere)
-    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                             longwave_down = zeros(N + 1),
-                             shortwave_up = zeros(N + 1),
-                             shortwave_down = zeros(N + 1))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
     radiative_fluxes!(fluxes, model, rrtmgp_atmosphere, boundary, workspace)
     @assert all(iszero, fluxes.shortwave_up)
     @assert all(iszero, fluxes.shortwave_down)
-    Ṫ = zeros(N)
+    Ṫ = zeros(Nz)
     heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere)
     return (; fluxes, Ṫ, workspace)
 end

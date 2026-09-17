@@ -57,7 +57,7 @@ const σ_SB = PhysicalConstants().stefan_boltzmann
 end
 
 @testset "total optical-depth clamp" begin
-    nlayers = 1
+    Nz = 1
     atmosphere_gases(methane_amount) = (composite = [100.0], ch4 = [methane_amount])
     # Synthetic tabulated model with a relative-linear CH₄-like gas: with a
     # reference mole fraction and zero requested amount, the CH₄ term is
@@ -86,11 +86,11 @@ end
         surface = nothing,
         geometry = (;),
     )
-    longwave = LongwaveOptics(zeros(1, nlayers), zeros(1, nlayers);
+    longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz);
                                          weights = zeros(1))
-    shortwave = ShortwaveOptics(zeros(1, nlayers);
-                                           rayleigh_optical_depth = zeros(1, nlayers),
-                                           scattering_asymmetry = zeros(1, nlayers),
+    shortwave = ShortwaveOptics(zeros(1, Nz);
+                                           rayleigh_optical_depth = zeros(1, Nz),
+                                           scattering_asymmetry = zeros(1, Nz),
                                            weights = zeros(1))
 
     # Zero CH₄ amount: total = composite - reference * composite * k_CH₄ < 0

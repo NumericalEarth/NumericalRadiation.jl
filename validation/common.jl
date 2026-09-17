@@ -73,11 +73,11 @@ function benchmark_column(pressure_interfaces, temperature_interfaces, mole_frac
                           surface, geometry, column_amount_convention = :dry)
     p_hl = Float64.(pressure_interfaces)
     T_hl = Float64.(temperature_interfaces)
-    nlayers = length(p_hl) - 1
-    p_fl = pressure_layers === nothing ? 0.5 .* (p_hl[1:nlayers] .+ p_hl[2:end]) : Float64.(pressure_layers)
-    T_fl = temperature_layers === nothing ? 0.5 .* (T_hl[1:nlayers] .+ T_hl[2:end]) : Float64.(temperature_layers)
+    Nz = length(p_hl) - 1
+    p_fl = pressure_layers === nothing ? 0.5 .* (p_hl[1:Nz] .+ p_hl[2:end]) : Float64.(pressure_layers)
+    T_fl = temperature_layers === nothing ? 0.5 .* (T_hl[1:Nz] .+ T_hl[2:end]) : Float64.(temperature_layers)
     Δp = diff(p_hl)
-    χ_H₂O = Float64.(mole_fractions.h2o) .* ones(nlayers)
+    χ_H₂O = Float64.(mole_fractions.h2o) .* ones(Nz)
     dry_air = if column_amount_convention === :dry
         Δp ./ (GRAVITY * DRY_AIR_MOLAR_MASS)
     elseif column_amount_convention === :moist
@@ -99,7 +99,7 @@ end
 ##### One column through the optics and the streaming solvers
 #####
 
-# Layer-optics functors over the `(Ngpoints, nlayers)` arrays `optical_properties!`
+# Layer-optics functors over the `(Ngpoints, Nz)` arrays `optical_properties!`
 # fills, in the form the streaming solvers take.
 struct LongwaveLayerOptics{L}
     longwave :: L
@@ -125,16 +125,16 @@ struct ColumnWorkspace{L, S, V, C}
     scratch :: C
 end
 
-function ColumnWorkspace(model, nlayers)
+function ColumnWorkspace(model, Nz)
     FT = eltype(model)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, nlayers), zeros(FT, Nlongwave_gpoints, nlayers);
-                              source_top = zeros(FT, Nlongwave_gpoints, nlayers),
-                              source_bottom = zeros(FT, Nlongwave_gpoints, nlayers),
+    longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, Nz), zeros(FT, Nlongwave_gpoints, Nz);
+                              source_top = zeros(FT, Nlongwave_gpoints, Nz),
+                              source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
                               weights = zeros(FT, Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, nlayers); weights = zeros(FT, Nshortwave_gpoints))
-    return ColumnWorkspace(longwave, shortwave, zeros(FT, nlayers), zeros(FT, nlayers),
-                           ShortwaveColumnScratch(FT, nlayers))
+    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
+    return ColumnWorkspace(longwave, shortwave, zeros(FT, Nz), zeros(FT, Nz),
+                           ShortwaveColumnScratch(FT, Nz))
 end
 
 """
@@ -147,31 +147,31 @@ albedo `1 - ε`, no downwelling flux at the top) and, for each `μ₀` in
 `cos_zeniths`, `streaming_shortwave_fluxes!` with the horizontal TOA
 irradiance `S₀ max(μ₀, 0)` and one albedo for direct and diffuse light.
 Returns `(; longwave_up, longwave_down, shortwave_up, shortwave_down)` with
-the longwave vectors of length `nlayers + 1` and the shortwave matrices of
-size `(nlayers + 1, length(cos_zeniths))`, all top-down and positive in their
+the longwave vectors of length `Nz + 1` and the shortwave matrices of
+size `(Nz + 1, length(cos_zeniths))`, all top-down and positive in their
 own direction.
 """
 function column_fluxes!(workspace::ColumnWorkspace, model, atmosphere;
                         surface_temperature, emissivity, albedo, cos_zeniths, solar_constant)
     FT = eltype(model)
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     optical_properties!(workspace.longwave, workspace.shortwave, model, atmosphere)
 
-    longwave_up = zeros(FT, nlayers + 1)
-    longwave_down = zeros(FT, nlayers + 1)
+    longwave_up = zeros(FT, Nz + 1)
+    longwave_down = zeros(FT, Nz + 1)
     surface_emission = TabulatedSurfaceEmission(model, surface_temperature; emissivity)
     streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveLayerOptics(workspace.longwave),
                                surface_emission, FT(1 - emissivity), zero(FT),
-                               model.longwave_weights, length(model.longwave_weights), nlayers,
+                               model.longwave_weights, length(model.longwave_weights), Nz,
                                workspace.transmittance, workspace.source_up)
 
-    shortwave_up = zeros(FT, nlayers + 1, length(cos_zeniths))
-    shortwave_down = zeros(FT, nlayers + 1, length(cos_zeniths))
+    shortwave_up = zeros(FT, Nz + 1, length(cos_zeniths))
+    shortwave_down = zeros(FT, Nz + 1, length(cos_zeniths))
     for (j, μ₀) in enumerate(cos_zeniths)
         streaming_shortwave_fluxes!(view(shortwave_up, :, j), view(shortwave_down, :, j),
                                     ShortwaveLayerOptics(workspace.shortwave), FT(μ₀),
                                     FT(solar_constant) * max(FT(μ₀), zero(FT)), FT(albedo), FT(albedo),
-                                    model.shortwave_weights, length(model.shortwave_weights), nlayers,
+                                    model.shortwave_weights, length(model.shortwave_weights), Nz,
                                     workspace.scratch)
     end
     return (; longwave_up, longwave_down, shortwave_up, shortwave_down)
@@ -215,7 +215,7 @@ function gauss_legendre_flux_nodes(n)
 end
 
 """
-    longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, nlayers,
+    longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz,
                                 surface_emission, surface_albedo, nodes)
 
 No-scattering longwave fluxes of one column with the layer transfer of
@@ -227,13 +227,13 @@ Lambertian surface reflection of the angle-integrated downwelling flux. With
 [`gauss_legendre_flux_nodes`](@ref) it isolates the angular-integration part
 of a difference to a line-by-line reference.
 """
-function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, nlayers,
+function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz,
                                      surface_emission, surface_albedo, nodes)
     fill!(up, 0)
     fill!(down, 0)
-    nnodes = length(nodes)
-    transmittance = zeros(nlayers, nnodes)
-    source_up = zeros(nlayers, nnodes)
+    Nnodes = length(nodes)
+    transmittance = zeros(Nz, Nnodes)
+    source_up = zeros(Nz, Nnodes)
     for gpoint in 1:Ngpoints
         # Downward sweeps at every node; the reflected part of the total
         # downwelling flux at the surface is isotropic.
@@ -241,7 +241,7 @@ function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, nlay
         for (a, (secant, weight)) in enumerate(nodes)
             w = weights[gpoint] * weight
             d = 0.0
-            for k in 1:nlayers
+            for k in 1:Nz
                 τ = longwave.optical_depth[gpoint, k]
                 B_top, B_bottom = longwave.source_top[gpoint, k], longwave.source_bottom[gpoint, k]
                 coefficient = secant * τ
@@ -265,8 +265,8 @@ function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, nlay
         for (a, (_, weight)) in enumerate(nodes)
             w = weights[gpoint] * weight
             u = surface_up
-            up[nlayers + 1] += w * u
-            for k in nlayers:-1:1
+            up[Nz + 1] += w * u
+            for k in Nz:-1:1
                 u = u * transmittance[k, a] + source_up[k, a]
                 up[k] += w * u
             end
@@ -284,9 +284,9 @@ Layer heating rate (K day⁻¹) of one band from its interface fluxes, through
 reference, so those constants cancel in every error statistic.
 """
 function heating_rate_per_day(up, down, atmosphere)
-    nlayers = length(atmosphere.temperature_layers)
-    heating = zeros(nlayers)
-    zero_flux = zeros(nlayers + 1)
+    Nz = length(atmosphere.temperature_layers)
+    heating = zeros(Nz)
+    zero_flux = zeros(Nz + 1)
     fluxes = RadiativeFluxes(longwave_up = Float64.(up), longwave_down = Float64.(down),
                              shortwave_up = zero_flux, shortwave_down = zero_flux)
     heating_rates!(heating, fluxes, atmosphere)
@@ -308,17 +308,17 @@ CKDMIP test suite): a root-mean-square error over the layers whose mid-level
 pressure lies in `pressure_range = (low, high)` (Pa; `low ≤ p < high`),
 weighting each layer by its increment of the cube root of pressure, with the
 weights normalized per profile and the mean taken over profiles. All arrays
-are `(n, nprofiles)` matrices with `n = nlayers + 1` for the interfaces;
+are `(n, Nprofiles)` matrices with `n = Nz + 1` for the interfaces;
 `exclude_lowest` drops that many layers next to the surface from the statistic.
 """
 function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range;
                                     exclude_lowest = 0)
-    nlayers, nprofiles = size(heating)
+    Nz, Nprofiles = size(heating)
     low, high = pressure_range
     total = 0.0
-    for j in 1:nprofiles
-        weights = zeros(nlayers)
-        for k in 1:nlayers - exclude_lowest
+    for j in 1:Nprofiles
+        weights = zeros(Nz)
+        for k in 1:Nz - exclude_lowest
             p_top, p_bottom = pressure_interfaces[k, j], pressure_interfaces[k + 1, j]
             p_mid = 0.5 * (p_top + p_bottom)
             if low <= p_mid < high
@@ -326,11 +326,11 @@ function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pre
             end
         end
         weights ./= sum(weights)
-        for k in 1:nlayers
+        for k in 1:Nz
             total += weights[k] * (heating[k, j] - reference[k, j])^2
         end
     end
-    return sqrt(total / nprofiles)
+    return sqrt(total / Nprofiles)
 end
 
 # Pressure ranges (Pa) of the heating-rate statistics. The two gated ranges

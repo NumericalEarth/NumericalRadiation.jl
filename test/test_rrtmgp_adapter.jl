@@ -24,7 +24,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
 
 @testset "RRTMGP adapter reference" begin
     FT = Float64
-    nlayers = 4
+    Nz = 4
     pressure_interfaces = [10_000.0, 30_000.0, 55_000.0, 80_000.0, 100_000.0]
     pressure_layers = (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end]) ./ 2
     temperature_interfaces = [210.0, 235.0, 260.0, 285.0, 300.0]
@@ -72,9 +72,9 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         @test state.p_lev[end, 1] == 10_000.0
         @test state.t_lev[1, 1] == 300.0
         @test state.t_lev[end, 1] == 210.0
-        # Layer arrays: our layer k lands at RRTMGP layer nlayers - k + 1.
-        for k in 1:nlayers
-            k_reversed = nlayers - k + 1
+        # Layer arrays: our layer k lands at RRTMGP layer Nz - k + 1.
+        for k in 1:Nz
+            k_reversed = Nz - k + 1
             @test state.layerdata[2, k_reversed, 1] == pressure_layers[k]
             @test state.layerdata[3, k_reversed, 1] == temperature_layers[k]
             @test state.vmr.vmr_h2o[k_reversed, 1] == water_vapor[k]
@@ -84,8 +84,8 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
 
     @testset "column amounts: RRTMGP dry-air mole-fraction convention" begin
         params = model.parameters
-        for k in 1:nlayers
-            k_reversed = nlayers - k + 1
+        for k in 1:Nz
+            k_reversed = Nz - k + 1
             Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             expected = Δp * params.avogad / (1e4 * m_air * params.grav)
@@ -102,10 +102,10 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
 
     # One adapter solve, reused by the canonical comparison and the endpoint
     # diagnostics below (no redundant workspace construction or solves).
-    adapter_fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
-                                     longwave_down = zeros(nlayers + 1),
-                                     shortwave_up = zeros(nlayers + 1),
-                                     shortwave_down = zeros(nlayers + 1))
+    adapter_fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                                     longwave_down = zeros(Nz + 1),
+                                     shortwave_up = zeros(Nz + 1),
+                                     shortwave_down = zeros(Nz + 1))
     radiative_fluxes!(adapter_fluxes, model, atmosphere, boundary, workspace)
 
     @testset "canonical bottom-up solve matches the public adapter" begin
@@ -117,8 +117,8 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         canonical = radiation_workspace(model, atmosphere)
         canonical_state = canonical.atmospheric_state
         params = model.parameters
-        for k_reversed in 1:nlayers                       # k_reversed: 1 = bottom (canonical)
-            k = nlayers - k_reversed + 1                  # our top-down index
+        for k_reversed in 1:Nz                       # k_reversed: 1 = bottom (canonical)
+            k = Nz - k_reversed + 1                  # our top-down index
             canonical_state.layerdata[2, k_reversed, 1] = pressure_layers[k]
             canonical_state.layerdata[3, k_reversed, 1] = temperature_layers[k]
             canonical_state.layerdata[4, k_reversed, 1] = 0.0
@@ -129,8 +129,8 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
             canonical_state.layerdata[1, k_reversed, 1] = Δp * params.avogad /
                                          (1e4 * m_air * params.grav)
         end
-        for k_reversed in 1:(nlayers + 1)
-            k = nlayers + 2 - k_reversed
+        for k_reversed in 1:(Nz + 1)
+            k = Nz + 2 - k_reversed
             canonical_state.p_lev[k_reversed, 1] = pressure_interfaces[k]
             canonical_state.t_lev[k_reversed, 1] = temperature_interfaces[k]
         end
@@ -156,8 +156,8 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         canonical_sw_up = RRTMGP.sw_flux_up(canonical.solver)
         canonical_sw_dn = RRTMGP.sw_flux_dn(canonical.solver)
 
-        for k in 1:(nlayers + 1)
-            k_reversed = nlayers + 2 - k
+        for k in 1:(Nz + 1)
+            k_reversed = Nz + 2 - k
             @test adapter_fluxes.longwave_up[k] ≈ canonical_lw_up[k_reversed, 1] rtol = 1e-10
             @test adapter_fluxes.longwave_down[k] ≈ canonical_lw_dn[k_reversed, 1] rtol = 1e-10
             @test adapter_fluxes.shortwave_up[k] ≈ canonical_sw_up[k_reversed, 1] rtol = 1e-10
@@ -187,10 +187,10 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
     end
 
     @testset "malformed non-first output buffer throws before solving" begin
-        bad = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
-                              longwave_down = zeros(nlayers + 1),
-                              shortwave_up = zeros(nlayers + 1),
-                              shortwave_down = zeros(nlayers))    # wrong length
+        bad = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                              longwave_down = zeros(Nz + 1),
+                              shortwave_up = zeros(Nz + 1),
+                              shortwave_down = zeros(Nz))    # wrong length
         # Sentinel: fill_atmospheric_state! would overwrite t_sfc, so it
         # surviving as NaN proves the guard fired before any state fill.
         workspace.atmospheric_state.t_sfc[1] = NaN

@@ -6,13 +6,13 @@
 
 using NumericalRadiation
 
-nlayers = 32
-grid = ColumnGrid(collect(range(0.0, 1.0, length = nlayers + 1)))
+Nz = 32
+grid = ColumnGrid(collect(range(0.0, 1.0, length = Nz + 1)))
 
 profile = AtmosphereProfile(
-    temperature = collect(range(215.0, 295.0, length = nlayers)),
-    humidity = [0.018 * exp(-z / 2.0) for z in range(0.0, 8.0, length = nlayers)],
-    geopotential = zeros(nlayers),
+    temperature = collect(range(215.0, 295.0, length = Nz)),
+    humidity = [0.018 * exp(-z / 2.0) for z in range(0.0, 8.0, length = Nz)],
+    geopotential = zeros(Nz),
     surface_pressure = 100_000.0,
     CO₂ = 420.0,
 )

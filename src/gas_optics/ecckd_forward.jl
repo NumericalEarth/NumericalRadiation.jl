@@ -94,12 +94,12 @@ ecCKD-style tabulated gas-optics model with bilinear pressure/temperature
 interpolation.
 
 `longwave_absorption` and `shortwave_absorption` are shaped
-`(Ngpoints, Ngases, npressure, ntemperature)`. The runtime method interpolates
+`(Ngpoints, Ngases, Npressures, Ntemperatures)`. The runtime method interpolates
 coefficients for each layer, multiplies them by layer absorber amounts from
 [`ColumnAtmosphere`](@ref), and writes caller-owned optical-property arrays.
 The pressure and optional H₂O grids must be positive and uniformly spaced in
 log coordinates, matching the ecCKD file format. A matrix temperature grid is
-shaped `(npressure, ntemperature)` and must use one positive temperature
+shaped `(Npressures, Ntemperatures)` and must use one positive temperature
 increment throughout. Without a Planck source table the longwave source is
 the gray `longwave_source_scale[gpoint] σT⁴` with the model's `stefan_boltzmann`
 (keyword; [`PhysicalConstants`](@ref) default).
@@ -118,7 +118,7 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     shortwave_rayleigh_molar_scattering::SWR   # Optional shortwave Rayleigh molar scattering coefficients with length `Nshortwave_gpoints`.
     longwave_source_scale::LWS   # Longwave source scaling per g-point.
     longwave_source_temperature_grid::LST   # Optional longwave source temperature grid.
-    longwave_source_table::LSTB   # Optional longwave source table with shape `(Nlongwave_gpoints, ntemperature)`.
+    longwave_source_table::LSTB   # Optional longwave source table with shape `(Nlongwave_gpoints, Ntemperatures)`.
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
     stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source fallback, W m⁻² K⁻⁴.
@@ -310,25 +310,25 @@ end
 @inline gas_profile(gases::AbstractDict, name::Symbol) = gases[name]
 @inline gas_profile(gases, name::Symbol) = getproperty(gases, name)
 
-@inline function check_gas_profile_length(gases, name, nlayers)
+@inline function check_gas_profile_length(gases, name, Nz)
     profile = gas_profile(gases, name)
     profile isa Number && return nothing
-    length(profile) >= nlayers ||
-        throw(DimensionMismatch("gas profile $name must contain at least nlayers values"))
+    length(profile) >= Nz ||
+        throw(DimensionMismatch("gas profile $name must contain at least Nz values"))
     return nothing
 end
 
-@inline function check_gas_profile_lengths(gases, names, nlayers)
+@inline function check_gas_profile_lengths(gases, names, Nz)
     for name in names
-        check_gas_profile_length(gases, name, nlayers)
+        check_gas_profile_length(gases, name, Nz)
     end
     return nothing
 end
 
 @generated function check_gas_profile_lengths(gases::NamedTuple{Keys},
                                                ::Val{Names},
-                                               nlayers) where {Keys, Names}
-    checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), nlayers) )
+                                               Nz) where {Keys, Names}
+    checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), Nz) )
               for name in Names]
     return quote
         $(checks...)
@@ -336,23 +336,23 @@ end
     end
 end
 
-@inline check_gas_profile_lengths(gases, ::Val{Names}, nlayers) where Names =
-    check_gas_profile_lengths(gases, Names, nlayers)
+@inline check_gas_profile_lengths(gases, ::Val{Names}, Nz) where Names =
+    check_gas_profile_lengths(gases, Names, Nz)
 
-@inline function check_tabulated_gas_profile_lengths(gases, names, nlayers)
-    check_gas_profile_lengths(gases, names, nlayers)
+@inline function check_tabulated_gas_profile_lengths(gases, names, Nz)
+    check_gas_profile_lengths(gases, names, Nz)
     if !(:composite in names) && has_gas(gases, :composite)
-        check_gas_profile_length(gases, :composite, nlayers)
+        check_gas_profile_length(gases, :composite, Nz)
     end
     return nothing
 end
 
 @generated function check_tabulated_gas_profile_lengths(gases::NamedTuple{Keys},
                                                          ::Val{Names},
-                                                         nlayers) where {Keys, Names}
+                                                         Nz) where {Keys, Names}
     names_to_check = collect(Names)
     :composite in Keys && !(:composite in Names) && push!(names_to_check, :composite)
-    checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), nlayers) )
+    checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), Nz) )
               for name in names_to_check]
     return quote
         $(checks...)
@@ -360,8 +360,8 @@ end
     end
 end
 
-@inline check_tabulated_gas_profile_lengths(gases, ::Val{Names}, nlayers) where Names =
-    check_tabulated_gas_profile_lengths(gases, Names, nlayers)
+@inline check_tabulated_gas_profile_lengths(gases, ::Val{Names}, Nz) where Names =
+    check_tabulated_gas_profile_lengths(gases, Names, Nz)
 
 @inline source_temperature(atmosphere::ColumnAtmosphere, k) = atmosphere.temperature_layers[k]
 
@@ -662,27 +662,27 @@ function check_ecckd_optics_shapes(longwave::LongwaveOptics,
                                     shortwave::ShortwaveOptics,
                                     model::EcCKDGasOpticsModel,
                                     atmosphere::ColumnAtmosphere)
-    nlayers = length(atmosphere.temperature_layers)
-    check_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), nlayers)
+    Nz = length(atmosphere.temperature_layers)
+    check_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), Nz)
     interface_sources = longwave.source_top !== nothing || longwave.source_bottom !== nothing
     (longwave.source_top === nothing) == (longwave.source_bottom === nothing) ||
         throw(ArgumentError("longwave source_top and source_bottom must both be provided or both be nothing"))
     if interface_sources
-        length(atmosphere.temperature_interfaces) == nlayers + 1 ||
-            throw(DimensionMismatch("temperature_interfaces must contain nlayers + 1 values"))
+        length(atmosphere.temperature_interfaces) == Nz + 1 ||
+            throw(DimensionMismatch("temperature_interfaces must contain Nz + 1 values"))
     end
-    size(longwave.optical_depth) == (size(model.longwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("longwave optical_depth must have shape (Nlongwave_gpoints, nlayers)"))
+    size(longwave.optical_depth) == (size(model.longwave_absorption, 1), Nz) ||
+        throw(DimensionMismatch("longwave optical_depth must have shape (Nlongwave_gpoints, Nz)"))
     size(longwave.source) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source must have shape (Nlongwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("longwave source must have shape (Nlongwave_gpoints, Nz)"))
     longwave.source_top === nothing || size(longwave.source_top) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_top must have shape (Nlongwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("longwave source_top must have shape (Nlongwave_gpoints, Nz)"))
     longwave.source_bottom === nothing || size(longwave.source_bottom) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_bottom must have shape (Nlongwave_gpoints, nlayers)"))
-    size(shortwave.optical_depth) == (size(model.shortwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("shortwave optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("longwave source_bottom must have shape (Nlongwave_gpoints, Nz)"))
+    size(shortwave.optical_depth) == (size(model.shortwave_absorption, 1), Nz) ||
+        throw(DimensionMismatch("shortwave optical_depth must have shape (Nshortwave_gpoints, Nz)"))
     size(shortwave.rayleigh_optical_depth) == size(shortwave.optical_depth) ||
-        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (Nshortwave_gpoints, Nz)"))
     length(longwave.weights) == size(model.longwave_absorption, 1) ||
         throw(DimensionMismatch("longwave weights must have length Nlongwave_gpoints"))
     length(shortwave.weights) == size(model.shortwave_absorption, 1) ||
@@ -694,31 +694,31 @@ function check_ecckd_optics_shapes(longwave::LongwaveOptics,
                                     shortwave::ShortwaveOptics,
                                     model::EcCKDTabulatedGasOpticsModel,
                                     atmosphere::ColumnAtmosphere)
-    nlayers = length(atmosphere.temperature_layers)
-    length(atmosphere.pressure_layers) == nlayers ||
-        throw(DimensionMismatch("pressure_layers must contain nlayers values"))
-    length(atmosphere.pressure_interfaces) == nlayers + 1 ||
-        throw(DimensionMismatch("pressure_interfaces must contain nlayers + 1 values"))
-    check_tabulated_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), nlayers)
+    Nz = length(atmosphere.temperature_layers)
+    length(atmosphere.pressure_layers) == Nz ||
+        throw(DimensionMismatch("pressure_layers must contain Nz values"))
+    length(atmosphere.pressure_interfaces) == Nz + 1 ||
+        throw(DimensionMismatch("pressure_interfaces must contain Nz + 1 values"))
+    check_tabulated_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), Nz)
     interface_sources = longwave.source_top !== nothing || longwave.source_bottom !== nothing
     (longwave.source_top === nothing) == (longwave.source_bottom === nothing) ||
         throw(ArgumentError("longwave source_top and source_bottom must both be provided or both be nothing"))
     if interface_sources
-        length(atmosphere.temperature_interfaces) == nlayers + 1 ||
-            throw(DimensionMismatch("temperature_interfaces must contain nlayers + 1 values"))
+        length(atmosphere.temperature_interfaces) == Nz + 1 ||
+            throw(DimensionMismatch("temperature_interfaces must contain Nz + 1 values"))
     end
-    size(longwave.optical_depth) == (size(model.longwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("longwave optical_depth must have shape (Nlongwave_gpoints, nlayers)"))
+    size(longwave.optical_depth) == (size(model.longwave_absorption, 1), Nz) ||
+        throw(DimensionMismatch("longwave optical_depth must have shape (Nlongwave_gpoints, Nz)"))
     size(longwave.source) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source must have shape (Nlongwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("longwave source must have shape (Nlongwave_gpoints, Nz)"))
     longwave.source_top === nothing || size(longwave.source_top) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_top must have shape (Nlongwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("longwave source_top must have shape (Nlongwave_gpoints, Nz)"))
     longwave.source_bottom === nothing || size(longwave.source_bottom) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_bottom must have shape (Nlongwave_gpoints, nlayers)"))
-    size(shortwave.optical_depth) == (size(model.shortwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("shortwave optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("longwave source_bottom must have shape (Nlongwave_gpoints, Nz)"))
+    size(shortwave.optical_depth) == (size(model.shortwave_absorption, 1), Nz) ||
+        throw(DimensionMismatch("shortwave optical_depth must have shape (Nshortwave_gpoints, Nz)"))
     size(shortwave.rayleigh_optical_depth) == size(shortwave.optical_depth) ||
-        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
+        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (Nshortwave_gpoints, Nz)"))
     length(longwave.weights) == size(model.longwave_absorption, 1) ||
         throw(DimensionMismatch("longwave weights must have length Nlongwave_gpoints"))
     length(shortwave.weights) == size(model.shortwave_absorption, 1) ||
@@ -739,13 +739,13 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
                              atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
 
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     names = gas_names(model)
 
     # Each layer is one call into the scalar layer API of `ecckd_layer.jl`
     # with its gas amounts picked out as scalars, so a host kernel that calls
     # those functions directly reproduces this loop bit for bit.
-    for k in 1:nlayers
+    for k in 1:Nz
         temperature = source_temperature(atmosphere, k)
         gases = layer_gases(atmosphere.gases, Val(names), k)
         # Fixed coefficients: the stencil and source bracket are `nothing`, and
@@ -818,10 +818,10 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
                              atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
 
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     names = gas_names(model)
 
-    for k in 1:nlayers
+    for k in 1:Nz
         pressure = atmosphere.pressure_layers[k]
         temperature = atmosphere.temperature_layers[k]
         water_vapor_mole_fraction = has_dynamic_water_vapor(model) ?

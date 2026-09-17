@@ -54,13 +54,13 @@ function legacy_add_mapped_cloud_scattering!(shortwave,
                                              ice_extinction_scale = 1,
                                              shortwave_scattering_scale = 1,
                                              delta_eddington_scale = false)
-    Ngpoints, nlayers = size(shortwave.optical_depth)
+    Ngpoints, Nz = size(shortwave.optical_depth)
     FT = eltype(shortwave)
     exponent = max(FT(cloud_fraction_exponent), zero(FT))
     liquid_scale = FT(liquid_extinction_scale)
     ice_scale = FT(ice_extinction_scale)
     scattering_scale = max(FT(shortwave_scattering_scale), zero(FT))
-    for k in 1:nlayers
+    for k in 1:Nz
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
         liquid_path = max(FT(liquid_water_path[k]), zero(FT))
         ice_path = max(FT(ice_water_path[k]), zero(FT))
@@ -110,10 +110,10 @@ end
 
 # Deterministic "gas" background with non-trivial Rayleigh scattering and
 # asymmetry so the mixing weights are exercised.
-function background_shortwave(FT, Ngpoints, nlayers)
-    optical_depth = FT[0.01 + 0.003 * gpoint + 0.02 * k for gpoint in 1:Ngpoints, k in 1:nlayers]
-    scattering = FT[0.05 + 0.001 * gpoint * k for gpoint in 1:Ngpoints, k in 1:nlayers]
-    asymmetry = FT[0.1 * ((gpoint + k) % 3) for gpoint in 1:Ngpoints, k in 1:nlayers]
+function background_shortwave(FT, Ngpoints, Nz)
+    optical_depth = FT[0.01 + 0.003 * gpoint + 0.02 * k for gpoint in 1:Ngpoints, k in 1:Nz]
+    scattering = FT[0.05 + 0.001 * gpoint * k for gpoint in 1:Ngpoints, k in 1:Nz]
+    asymmetry = FT[0.1 * ((gpoint + k) % 3) for gpoint in 1:Ngpoints, k in 1:Nz]
     return ShortwaveOptics(optical_depth;
                            scattering_optical_depth = scattering,
                            scattering_asymmetry = asymmetry)
@@ -306,9 +306,9 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     end
 
     @testset "add_mapped_cloud_scattering! reproduces its pre-rewrite arithmetic" begin
-        Ngpoints, nlayers = 4, 4
+        Ngpoints, Nz = 4, 4
         for FT in (Float64, Float32)
-            base = background_shortwave(FT, Ngpoints, nlayers)
+            base = background_shortwave(FT, Ngpoints, Nz)
             rtol = FT === Float64 ? 1e-12 : 1e-5
             cases = (
                 (;),
@@ -343,10 +343,10 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         end
 
         # Negative water paths are treated as zero; zero paths leave the layer unchanged.
-        base = background_shortwave(Float64, Ngpoints, nlayers)
+        base = background_shortwave(Float64, Ngpoints, Nz)
         untouched = copy_shortwave(base)
         add_mapped_cloud_scattering!(untouched, LIQUID_PROPERTIES, ICE_PROPERTIES,
-                                     zeros(nlayers), fill(-1.0, nlayers), ones(nlayers))
+                                     zeros(Nz), fill(-1.0, Nz), ones(Nz))
         @test untouched.optical_depth == base.optical_depth
         @test untouched.rayleigh_optical_depth == base.rayleigh_optical_depth
         @test untouched.scattering_asymmetry == base.scattering_asymmetry
@@ -374,14 +374,14 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         ice_nodes = cloud_scattering_gpoint_properties(ice_table, mapping, ice_radius;
                                                        mapping_method = :ecrad,
                                                        delta_eddington_average = true)
-        Ngpoints, nlayers = 2, 4
+        Ngpoints, Nz = 2, 4
         liquid_path = [0.1, 0.0, 0.05, 0.2]
         ice_path = [0.0, 0.2, 0.03, 0.1]
         fraction = [1.0, 0.5, 0.25, 0.0]
         exponent = 0.5
 
         for FT in (Float64, Float32)
-            base = background_shortwave(FT, Ngpoints, nlayers)
+            base = background_shortwave(FT, Ngpoints, Nz)
             array = copy_shortwave(base)
             add_mapped_cloud_scattering!(array, liquid_nodes, ice_nodes, liquid_path, ice_path, fraction;
                                          cloud_fraction_exponent = exponent)
@@ -389,7 +389,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
             kernel = copy_shortwave(base)
             liquid_bracket = effective_radius_bracket(liquid, liquid_radius)
             ice_bracket = effective_radius_bracket(ice, ice_radius)
-            for k in 1:nlayers
+            for k in 1:Nz
                 weight = clamp(FT(fraction[k]), 0, 1)^FT(exponent)
                 liquid_pathₖ = weight * FT(liquid_path[k])
                 ice_pathₖ = weight * FT(ice_path[k])

@@ -22,11 +22,11 @@ gas_optics = read_reference_ecckd_gas_optics(spec;
     water_vapor_mole_fraction = 0.005,
 )
 
-nlayers = 24
-pressure_interfaces = collect(range(10_000.0, 100_000.0; length = nlayers + 1))
+Nz = 24
+pressure_interfaces = collect(range(10_000.0, 100_000.0; length = Nz + 1))
 pressure_layers = 0.5 .* (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end])
-temperature_layers = collect(range(220.0, 295.0; length = nlayers))
-temperature_interfaces = collect(range(215.0, 300.0; length = nlayers + 1))
+temperature_layers = collect(range(220.0, 295.0; length = Nz))
+temperature_interfaces = collect(range(215.0, 300.0; length = Nz + 1))
 air_column = hydrostatic_air_moles.(diff(pressure_interfaces), constants.gravity, constants.dry_air_molar_mass)
 
 atmosphere = ColumnAtmosphere(
@@ -36,8 +36,8 @@ atmosphere = ColumnAtmosphere(
     temperature_interfaces = temperature_interfaces,
     gases = (
         composite = air_column,
-        h2o = collect(range(0.002, 0.015; length = nlayers)) .* air_column,
-        co2 = fill(420.0e-6, nlayers) .* air_column,
+        h2o = collect(range(0.002, 0.015; length = Nz)) .* air_column,
+        co2 = fill(420.0e-6, Nz) .* air_column,
     ),
     surface = (temperature = temperature_interfaces[end],),
     geometry = (cos_zenith = 0.55,),
@@ -48,27 +48,27 @@ Nlongwave_gpoints = length(gas_optics.longwave_weights)
 Nshortwave_gpoints = length(gas_optics.shortwave_weights)
 
 longwave = LongwaveOptics(
-    zeros(Nlongwave_gpoints, nlayers),
-    zeros(Nlongwave_gpoints, nlayers);
-    source_top = zeros(Nlongwave_gpoints, nlayers),
-    source_bottom = zeros(Nlongwave_gpoints, nlayers),
+    zeros(Nlongwave_gpoints, Nz),
+    zeros(Nlongwave_gpoints, Nz);
+    source_top = zeros(Nlongwave_gpoints, Nz),
+    source_bottom = zeros(Nlongwave_gpoints, Nz),
     weights = zeros(Nlongwave_gpoints),
 )
 
 shortwave = ShortwaveOptics(
-    zeros(Nshortwave_gpoints, nlayers);
-    rayleigh_optical_depth = zeros(Nshortwave_gpoints, nlayers),
-    scattering_asymmetry = zeros(Nshortwave_gpoints, nlayers),
+    zeros(Nshortwave_gpoints, Nz);
+    rayleigh_optical_depth = zeros(Nshortwave_gpoints, Nz),
+    scattering_asymmetry = zeros(Nshortwave_gpoints, Nz),
     weights = zeros(Nshortwave_gpoints),
 )
 
 optical_properties!(longwave, shortwave, gas_optics, atmosphere)
 
 fluxes = RadiativeFluxes(
-    longwave_up = zeros(nlayers + 1),
-    longwave_down = zeros(nlayers + 1),
-    shortwave_up = zeros(nlayers + 1),
-    shortwave_down = zeros(nlayers + 1),
+    longwave_up = zeros(Nz + 1),
+    longwave_down = zeros(Nz + 1),
+    shortwave_up = zeros(Nz + 1),
+    shortwave_down = zeros(Nz + 1),
 )
 
 radiative_fluxes!(
@@ -92,7 +92,7 @@ radiative_fluxes!(
     ),
 )
 
-heating = zeros(nlayers)
+heating = zeros(Nz)
 heating_rates!(heating, fluxes, atmosphere)
 
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+

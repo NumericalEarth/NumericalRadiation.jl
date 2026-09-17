@@ -177,14 +177,14 @@ function adding_longwave_column!(up::AbstractVector{FT},
                             surface_up,
                             surface_albedo,
                             toa_down) where FT
-    nlayers = number_of_layers(optics.clear)
+    Nz = number_of_layers(optics.clear)
     exponent = max(FT(solver.cloud_fraction_exponent), zero(FT))
-    reflectance = Vector{FT}(undef, nlayers)
-    transmittance = Vector{FT}(undef, nlayers)
-    source_up = Vector{FT}(undef, nlayers)
-    source_down = Vector{FT}(undef, nlayers)
+    reflectance = Vector{FT}(undef, Nz)
+    transmittance = Vector{FT}(undef, Nz)
+    source_up = Vector{FT}(undef, Nz)
+    source_down = Vector{FT}(undef, Nz)
 
-    for k in 1:nlayers
+    for k in 1:Nz
         clear_reflectance, clear_transmittance, clear_up, clear_down =
             longwave_layer_terms(FT, optics.clear, gpoint, k)
         cloudy_reflectance, cloudy_transmittance, cloudy_up, cloudy_down =
@@ -197,12 +197,12 @@ function adding_longwave_column!(up::AbstractVector{FT},
         source_down[k] = clear_weight * clear_down + cloud_weight * cloudy_down
     end
 
-    albedo = Vector{FT}(undef, nlayers + 1)
-    source = Vector{FT}(undef, nlayers + 1)
-    inv_denominator = Vector{FT}(undef, nlayers)
-    albedo[nlayers + 1] = clamp(FT(surface_albedo), zero(FT), one(FT))
-    source[nlayers + 1] = FT(surface_up)
-    for k in nlayers:-1:1
+    albedo = Vector{FT}(undef, Nz + 1)
+    source = Vector{FT}(undef, Nz + 1)
+    inv_denominator = Vector{FT}(undef, Nz)
+    albedo[Nz + 1] = clamp(FT(surface_albedo), zero(FT), one(FT))
+    source[Nz + 1] = FT(surface_up)
+    for k in Nz:-1:1
         inv_denominator[k] = inv(one(FT) - albedo[k + 1] * reflectance[k])
         albedo[k] = reflectance[k] +
             transmittance[k]^2 * albedo[k + 1] * inv_denominator[k]
@@ -215,7 +215,7 @@ function adding_longwave_column!(up::AbstractVector{FT},
     diffuse_down = FT(toa_down)
     down[1] += diffuse_down
     up[1] += source[1] + albedo[1] * diffuse_down
-    for k in 1:nlayers
+    for k in 1:Nz
         diffuse_down = (transmittance[k] * diffuse_down +
                         reflectance[k] * source[k + 1] +
                         source_down[k]) * inv_denominator[k]
@@ -233,24 +233,24 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
                                   surface_up,
                                   surface_albedo,
                                   toa_down) where FT
-    nlayers = number_of_layers(optics.clear)
+    Nz = number_of_layers(optics.clear)
     exponent = max(FT(solver.cloud_fraction_exponent), zero(FT))
 
-    region_fraction = Matrix{FT}(undef, 3, nlayers)
-    thin_scaling = Vector{FT}(undef, nlayers)
-    thick_scaling = Vector{FT}(undef, nlayers)
-    for k in 1:nlayers
+    region_fraction = Matrix{FT}(undef, 3, Nz)
+    thin_scaling = Vector{FT}(undef, Nz)
+    thick_scaling = Vector{FT}(undef, Nz)
+    for k in 1:Nz
         cloud_fraction = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
         region_fraction[1, k], region_fraction[2, k], region_fraction[3, k],
             thin_scaling[k], thick_scaling[k] =
             gamma_tripleclouds_regions(FT, cloud_fraction, optics.fractional_standard_deviation[k])
     end
 
-    reflectance = Matrix{FT}(undef, 3, nlayers)
-    transmittance = Matrix{FT}(undef, 3, nlayers)
-    source_up = Matrix{FT}(undef, 3, nlayers)
-    source_down = Matrix{FT}(undef, 3, nlayers)
-    for k in 1:nlayers
+    reflectance = Matrix{FT}(undef, 3, Nz)
+    transmittance = Matrix{FT}(undef, 3, Nz)
+    source_up = Matrix{FT}(undef, 3, Nz)
+    source_down = Matrix{FT}(undef, 3, Nz)
+    for k in 1:Nz
         reflectance[1, k], transmittance[1, k], source_up[1, k],
             source_down[1, k] = longwave_layer_terms(FT, optics.clear, gpoint, k)
         reflectance[2, k], transmittance[2, k], source_up[2, k],
@@ -267,19 +267,19 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
         end
     end
 
-    total_albedo = zeros(FT, 3, nlayers + 1)
-    total_source = zeros(FT, 3, nlayers + 1)
-    total_albedo[:, nlayers + 1] .= clamp(FT(surface_albedo), zero(FT), one(FT))
+    total_albedo = zeros(FT, 3, Nz + 1)
+    total_source = zeros(FT, 3, Nz + 1)
+    total_albedo[:, Nz + 1] .= clamp(FT(surface_albedo), zero(FT), one(FT))
     for region in 1:3
-        total_source[region, nlayers + 1] =
-            region_fraction[region, nlayers] * FT(surface_up)
+        total_source[region, Nz + 1] =
+            region_fraction[region, Nz] * FT(surface_up)
     end
     v = zeros(FT, 3, 3)
     u = zeros(FT, 3, 3)
     below_albedo = zeros(FT, 3)
     below_source = zeros(FT, 3)
 
-    for k in nlayers:-1:1
+    for k in Nz:-1:1
         for region in 1:3
             inverse_denominator = inv(one(FT) - total_albedo[region, k + 1] *
                         reflectance[region, k])
@@ -323,7 +323,7 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
     down[1] += FT(toa_down)
 
     next_flux_down = zeros(FT, 3)
-    for k in 1:nlayers
+    for k in 1:Nz
         for region in 1:3
             inverse_denominator = inv(one(FT) - reflectance[region, k] *
                         total_albedo[region, k + 1])
@@ -336,7 +336,7 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
                 total_source[region, k + 1]
         end
 
-        if k < nlayers
+        if k < Nz
             v_overlap_matrix_tripleclouds_alpha!(
                 v, matrix_overlap_parameter(solver, optics, k, FT),
                 solver.inhomogeneity_overlap_exponent,
@@ -366,18 +366,18 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            optics::LongwaveCloudOverlapOptics{FT},
                            atmosphere,
                            boundary_conditions::LongwaveBoundaryConditions{FT}) where FT
-    nlayers = number_of_layers(optics.clear)
-    length(fluxes.longwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_up must have length nlayers + 1"))
-    length(fluxes.longwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_down must have length nlayers + 1"))
+    Nz = number_of_layers(optics.clear)
+    length(fluxes.longwave_up) == Nz + 1 ||
+        throw(DimensionMismatch("longwave_up must have length Nz + 1"))
+    length(fluxes.longwave_down) == Nz + 1 ||
+        throw(DimensionMismatch("longwave_down must have length Nz + 1"))
     fluxes.longwave_up .= zero(FT)
     fluxes.longwave_down .= zero(FT)
 
     for gpoint in 1:number_of_gpoints(optics.clear)
         w = FT(optics.clear.weights[gpoint])
-        spectral_up = zeros(FT, nlayers + 1)
-        spectral_down = zeros(FT, nlayers + 1)
+        spectral_up = zeros(FT, Nz + 1)
+        spectral_down = zeros(FT, Nz + 1)
         if solver.overlap == :tripleclouds_alpha
             tripleclouds_longwave_column!(
                 spectral_up,

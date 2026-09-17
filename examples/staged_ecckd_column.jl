@@ -18,7 +18,7 @@ day = 86_400         # s
 
 # ## A top-down column
 #
-# The ``N``-layer column has interface pressures ``pᵢ`` increasing from top
+# The ``Nz``-layer column has interface pressures ``pᵢ`` increasing from top
 # of atmosphere to surface, layer pressures ``p`` at their midpoints, and
 # layer and interface temperatures ``T`` and ``Tᵢ``. Gas values in this
 # minimal staged model are layer path amounts. The column carries the
@@ -26,11 +26,11 @@ day = 86_400         # s
 # the heating rates; the solar constant for the shortwave boundary).
 
 constants = PhysicalConstants()
-N  = 24
-pᵢ = collect(range(10_000, 100_000; length = N + 1))
+Nz = 24
+pᵢ = collect(range(10_000, 100_000; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
-T  = collect(range(220, 295; length = N))
-Tᵢ = collect(range(215, 300; length = N + 1))
+T  = collect(range(220, 295; length = Nz))
+Tᵢ = collect(range(215, 300; length = Nz + 1))
 
 atmosphere = ColumnAtmosphere(
     pressure_layers = p,
@@ -38,8 +38,8 @@ atmosphere = ColumnAtmosphere(
     temperature_layers = T,
     temperature_interfaces = Tᵢ,
     gases = (
-        h2o = collect(range(0.2, 2.2; length = N)),
-        co2 = fill(1, N),
+        h2o = collect(range(0.2, 2.2; length = Nz)),
+        co2 = fill(1, Nz),
     ),
     surface = (temperature = Tᵢ[end],),
     geometry = (cos_zenith = 0.55,),
@@ -82,27 +82,27 @@ model = EcCKDTabulatedGasOpticsModel(;
 # ## Caller-owned work arrays
 
 longwave = LongwaveOptics(
-    zeros(2, N),
-    zeros(2, N);
-    source_top = zeros(2, N),
-    source_bottom = zeros(2, N),
+    zeros(2, Nz),
+    zeros(2, Nz);
+    source_top = zeros(2, Nz),
+    source_bottom = zeros(2, Nz),
     weights = zeros(2),
 )
 
 shortwave = ShortwaveOptics(
-    zeros(2, N);
-    rayleigh_optical_depth = zeros(2, N),
-    scattering_asymmetry = zeros(2, N),
+    zeros(2, Nz);
+    rayleigh_optical_depth = zeros(2, Nz),
+    scattering_asymmetry = zeros(2, Nz),
     weights = zeros(2),
 )
 
 optical_properties!(longwave, shortwave, model, atmosphere)
 
 fluxes = RadiativeFluxes(
-    longwave_up = zeros(N + 1),
-    longwave_down = zeros(N + 1),
-    shortwave_up = zeros(N + 1),
-    shortwave_down = zeros(N + 1),
+    longwave_up = zeros(Nz + 1),
+    longwave_down = zeros(Nz + 1),
+    shortwave_up = zeros(Nz + 1),
+    shortwave_down = zeros(Nz + 1),
 )
 
 radiative_fluxes!(
@@ -128,7 +128,7 @@ radiative_fluxes!(
     ),
 )
 
-Ṫ = zeros(N)
+Ṫ = zeros(Nz)
 heating_rates!(Ṫ, fluxes, atmosphere)     # gravity and heat capacity from atmosphere.constants
 daily_heating_rate = day .* Ṫ
 

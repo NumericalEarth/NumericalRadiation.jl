@@ -84,7 +84,7 @@ end
 $(TYPEDSIGNATURES)
 
 No-scattering longwave interface fluxes of one column, streamed over g
-points and accumulated into `flux_up` and `flux_down` (length `nlayers + 1`,
+points and accumulated into `flux_up` and `flux_down` (length `Nz + 1`,
 top-down, interface 1 at the top of the atmosphere; both are zeroed here).
 Each layer is the ecRad half-level Planck path of
 [`CloudlessLongwave`](@ref): with diffusivity `D = 1.66` and the layer's
@@ -99,14 +99,14 @@ the surface, where `up = surface_emission[gpoint] + surface_albedo * down`:
 included (a [`TabulatedSurfaceEmission`](@ref)) and `surface_albedo` is the
 diffuse longwave surface albedo. Each g point's fluxes are added with
 `weights[gpoint]` for `gpoint in 1:Ngpoints`. `transmittance` and `source_up` are caller
-scratch of length `nlayers` that carry the layer coefficients from the
+scratch of length `Nz` that carry the layer coefficients from the
 downward sweep to the upward one. Allocation-free.
 """
 @inline function streaming_longwave_fluxes!(flux_up, flux_down, layer_optics, surface_emission, surface_albedo, toa_down,
-                                            weights, Ngpoints, nlayers, transmittance, source_up)
+                                            weights, Ngpoints, Nz, transmittance, source_up)
     FT = eltype(flux_up)
 
-    @inbounds for k in 1:nlayers + 1
+    @inbounds for k in 1:Nz + 1
         flux_up[k] = zero(FT)
         flux_down[k] = zero(FT)
     end
@@ -118,7 +118,7 @@ downward sweep to the upward one. Allocation-free.
         # transmittance and upward source for the sweep back up.
         down = FT(toa_down)
         flux_down[1] += w * down
-        for k in 1:nlayers
+        for k in 1:Nz
             τ, B_top, B_bottom = layer_optics(gpoint, k)
             transmittance[k], source_up[k], source_down =
                 no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
@@ -129,8 +129,8 @@ downward sweep to the upward one. Allocation-free.
         # Upward sweep from the surface: emission plus the reflected
         # downwelling flux that just arrived there.
         up = FT(surface_emission[gpoint]) + FT(surface_albedo) * down
-        flux_up[nlayers + 1] += w * up
-        for k in nlayers:-1:1
+        flux_up[Nz + 1] += w * up
+        for k in Nz:-1:1
             up = up * transmittance[k] + source_up[k]
             flux_up[k] += w * up
         end

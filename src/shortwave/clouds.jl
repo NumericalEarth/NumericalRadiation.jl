@@ -56,7 +56,7 @@ DiagnosticClouds(::Type{NF}; kwargs...) where NF = DiagnosticClouds{NF}(; kwargs
 Returned tuple from cloud diagnosis: `(cloud_cover, cloud_top, cloud_albedo,
 stratocumulus_cover, stratocumulus_albedo)`.
 
-For `NoClouds`, `cloud_top = nlayers + 1` (below the surface) so downstream
+For `NoClouds`, `cloud_top = Nz + 1` (below the surface) so downstream
 shortwave code skips the cloud-reflection branch.
 """
 @inline function diagnose_clouds(::NoClouds, profile::AtmosphereProfile,
@@ -66,10 +66,10 @@ shortwave code skips the cloud-reflection branch.
                                   thermodynamic::ThermodynamicConstants,
                                   cloud_top_convective::Integer)
     NF = eltype(profile.temperature)
-    nlayers = length(profile.temperature)
+    Nz = length(profile.temperature)
     return (
         cloud_cover = zero(NF),
-        cloud_top = nlayers + 1,
+        cloud_top = Nz + 1,
         cloud_albedo = zero(NF),
         stratocumulus_cover = zero(NF),
         stratocumulus_albedo = zero(NF),
@@ -87,7 +87,7 @@ end
     T = profile.temperature
     q = profile.humidity
     Φ = profile.geopotential
-    nlayers = length(T)
+    Nz = length(T)
     pₛ = profile.surface_pressure
     σ_full = geometry.σ_full
     cₚ = constants.heat_capacity
@@ -104,9 +104,9 @@ end
     P = precipitation_weight * sqrt(max(zero(NF), precipitation_term))
 
     humidity_term::NF = zero(NF)
-    cloud_top_humidity = nlayers + 1
+    cloud_top_humidity = Nz + 1
 
-    for k in 1:(nlayers - 1)
+    for k in 1:(Nz - 1)
         q_k = q[k]
         q_saturation = saturation_humidity(T[k], σ_full[k] * pₛ, thermodynamic)
         if q_k > q_min && q_saturation > 0
@@ -124,8 +124,8 @@ end
 
     stratocumulus_cover::NF = zero(NF)
     if clouds.use_stratocumulus
-        surface_k = nlayers
-        above_k   = max(1, nlayers - 1)
+        surface_k = Nz
+        above_k   = max(1, Nz - 1)
         G = (cₚ * T[surface_k] + Φ[surface_k]) - (cₚ * T[above_k] + Φ[above_k])
         stability_min = clouds.stratocumulus_stability_min
         stability_max = clouds.stratocumulus_stability_max

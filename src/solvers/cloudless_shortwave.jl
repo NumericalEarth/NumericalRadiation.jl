@@ -4,8 +4,8 @@ $(TYPEDEF)
 Precomputed shortwave optical properties for clear-sky solver tests and future
 ecCKD gas-optics outputs.
 
-`optical_depth` may be a vector of length `nlayers` or a matrix with shape
-`(Ngpoints, nlayers)`. `weights` has length `Ngpoints` and is applied while accumulating
+`optical_depth` may be a vector of length `Nz` or a matrix with shape
+`(Ngpoints, Nz)`. `weights` has length `Ngpoints` and is applied while accumulating
 broadband fluxes.
 
 Fields are
@@ -328,7 +328,7 @@ PrecomputedShortwaveLayerOptics(optics::ShortwaveOptics) =
 $(TYPEDSIGNATURES)
 
 Two-stream adding fluxes of g point `gpoint` of `optics` for cosine zenith `μ₀`,
-written into `up` and `down` (length `nlayers + 1`, top down, zeroed here).
+written into `up` and `down` (length `Nz + 1`, top down, zeroed here).
 `incoming_horizontal` is the downwelling flux through a horizontal surface at
 the top of the atmosphere. A wrapper over
 [`streaming_shortwave_fluxes!`](@ref) with `Ngpoints = 1` that allocates its own
@@ -342,11 +342,11 @@ function ecrad_shortwave_column!(up::AbstractVector{FT},
                                   incoming_horizontal,
                                   surface_albedo,
                                   surface_albedo_direct = surface_albedo) where FT
-    nlayers = number_of_layers(optics)
-    scratch = ShortwaveColumnScratch(FT, nlayers)
+    Nz = number_of_layers(optics)
+    scratch = ShortwaveColumnScratch(FT, Nz)
     layer_optics = PrecomputedShortwaveLayerOptics(optics, gpoint)
     streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, incoming_horizontal,
-                                surface_albedo_direct, surface_albedo, (one(FT),), 1, nlayers, scratch)
+                                surface_albedo_direct, surface_albedo, (one(FT),), 1, Nz, scratch)
     return nothing
 end
 
@@ -375,11 +375,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            optics::ShortwaveOptics{FT},
                            atmosphere,
                            boundary_conditions::ShortwaveBoundaryConditions{FT}) where FT
-    nlayers = number_of_layers(optics)
-    length(fluxes.shortwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("shortwave_up must have length nlayers + 1"))
-    length(fluxes.shortwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("shortwave_down must have length nlayers + 1"))
+    Nz = number_of_layers(optics)
+    length(fluxes.shortwave_up) == Nz + 1 ||
+        throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
+    length(fluxes.shortwave_down) == Nz + 1 ||
+        throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
     if boundary_conditions.surface_albedo isa AbstractArray
         length(boundary_conditions.surface_albedo) == number_of_gpoints(optics) ||
             throw(DimensionMismatch("surface_albedo vector must have length Ngpoints"))
@@ -394,7 +394,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
 
     # One scratch for every scattering g point; the adding method accumulates
     # its weighted fluxes in place.
-    scratch = ShortwaveColumnScratch(FT, nlayers)
+    scratch = ShortwaveColumnScratch(FT, Nz)
     layer_optics = PrecomputedShortwaveLayerOptics(optics)
 
     for gpoint in 1:number_of_gpoints(optics)
@@ -407,7 +407,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         if has_rayleigh_scattering(optics, gpoint)
             add_shortwave_gpoint_fluxes!(fluxes.shortwave_up, fluxes.shortwave_down, layer_optics,
                                          gpoint, w, μ₀, boundary_conditions.toa_shortwave_down,
-                                         surface_albedo_direct, surface_albedo, nlayers, scratch)
+                                         surface_albedo_direct, surface_albedo, Nz, scratch)
             continue
         end
 
@@ -417,15 +417,15 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         # reproduced exactly.
         down = boundary_conditions.toa_shortwave_down
         fluxes.shortwave_down[1] += w * down
-        for k in 1:nlayers
+        for k in 1:Nz
             layer_transmittance = exp(-optical_depth_at(optics, gpoint, k) * path_factor)
             down *= layer_transmittance
             fluxes.shortwave_down[k + 1] += w * down
         end
 
         up = surface_albedo_direct * down
-        fluxes.shortwave_up[nlayers + 1] += w * up
-        for k in nlayers:-1:1
+        fluxes.shortwave_up[Nz + 1] += w * up
+        for k in Nz:-1:1
             layer_transmittance = exp(-optical_depth_at(optics, gpoint, k) * path_factor)
             up *= layer_transmittance
             fluxes.shortwave_up[k] += w * up

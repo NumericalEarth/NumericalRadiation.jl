@@ -298,26 +298,26 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
                                          incoming_horizontal,
                                          surface_albedo,
                                          surface_albedo_direct = surface_albedo) where FT
-    nlayers = number_of_layers(optics.clear)
+    Nz = number_of_layers(optics.clear)
     incoming_normal = incoming_horizontal / μ₀
     exponent = max(FT(solver.cloud_fraction_exponent), zero(FT))
 
-    region_fraction = Matrix{FT}(undef, 3, nlayers)
-    thin_scaling = Vector{FT}(undef, nlayers)
-    thick_scaling = Vector{FT}(undef, nlayers)
-    for k in 1:nlayers
+    region_fraction = Matrix{FT}(undef, 3, Nz)
+    thin_scaling = Vector{FT}(undef, Nz)
+    thick_scaling = Vector{FT}(undef, Nz)
+    for k in 1:Nz
         cloud_fraction = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
         region_fraction[1, k], region_fraction[2, k], region_fraction[3, k],
             thin_scaling[k], thick_scaling[k] =
             gamma_tripleclouds_regions(FT, cloud_fraction, optics.fractional_standard_deviation[k])
     end
 
-    reflectance = Matrix{FT}(undef, 3, nlayers)
-    transmittance = Matrix{FT}(undef, 3, nlayers)
-    direct_reflectance = Matrix{FT}(undef, 3, nlayers)
-    direct_diffuse_transmittance = Matrix{FT}(undef, 3, nlayers)
-    direct_transmittance = Matrix{FT}(undef, 3, nlayers)
-    for k in 1:nlayers
+    reflectance = Matrix{FT}(undef, 3, Nz)
+    transmittance = Matrix{FT}(undef, 3, Nz)
+    direct_reflectance = Matrix{FT}(undef, 3, Nz)
+    direct_diffuse_transmittance = Matrix{FT}(undef, 3, Nz)
+    direct_transmittance = Matrix{FT}(undef, 3, Nz)
+    for k in 1:Nz
         reflectance[1, k], transmittance[1, k], direct_reflectance[1, k],
             direct_diffuse_transmittance[1, k], direct_transmittance[1, k] =
             shortwave_layer_reflectance_transmittance(FT, optics.clear, gpoint, k, μ₀)
@@ -331,15 +331,15 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
                 FT, optics.clear, optics.cloudy, thick_scaling[k], gpoint, k, μ₀)
     end
 
-    total_albedo = zeros(FT, 3, nlayers + 1)
-    total_albedo_direct = zeros(FT, 3, nlayers + 1)
-    total_albedo[:, nlayers + 1] .= surface_albedo
-    total_albedo_direct[:, nlayers + 1] .= μ₀ * surface_albedo_direct
+    total_albedo = zeros(FT, 3, Nz + 1)
+    total_albedo_direct = zeros(FT, 3, Nz + 1)
+    total_albedo[:, Nz + 1] .= surface_albedo
+    total_albedo_direct[:, Nz + 1] .= μ₀ * surface_albedo_direct
     v = zeros(FT, 3, 3)
     below = zeros(FT, 3)
     below_direct = zeros(FT, 3)
 
-    for k in nlayers:-1:1
+    for k in Nz:-1:1
         for region in 1:3
             inverse_denominator = inv(one(FT) - total_albedo[region, k + 1] *
                         reflectance[region, k])
@@ -382,7 +382,7 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
 
     next_flux_dn = zeros(FT, 3)
     next_direct_dn = zeros(FT, 3)
-    for k in 1:nlayers
+    for k in 1:Nz
         for region in 1:3
             inverse_denominator = inv(one(FT) - reflectance[region, k] *
                         total_albedo[region, k + 1])
@@ -399,7 +399,7 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
                 flux_dn[region] * total_albedo[region, k + 1]
         end
 
-        if k < nlayers
+        if k < Nz
             v_overlap_matrix_tripleclouds_alpha!(
                 v, matrix_overlap_parameter(solver, optics, k, FT),
                 solver.inhomogeneity_overlap_exponent,
@@ -429,17 +429,17 @@ function adding_shortwave_column!(up::AbstractVector{FT},
                                    incoming_horizontal,
                                    surface_albedo,
                                    surface_albedo_direct = surface_albedo) where FT
-    nlayers = number_of_layers(optics.clear)
+    Nz = number_of_layers(optics.clear)
     incoming_normal = incoming_horizontal / μ₀
 
-    reflectance = Vector{FT}(undef, nlayers)
-    transmittance = Vector{FT}(undef, nlayers)
-    direct_reflectance = Vector{FT}(undef, nlayers)
-    direct_diffuse_transmittance = Vector{FT}(undef, nlayers)
-    direct_transmittance = Vector{FT}(undef, nlayers)
+    reflectance = Vector{FT}(undef, Nz)
+    transmittance = Vector{FT}(undef, Nz)
+    direct_reflectance = Vector{FT}(undef, Nz)
+    direct_diffuse_transmittance = Vector{FT}(undef, Nz)
+    direct_transmittance = Vector{FT}(undef, Nz)
     exponent = max(FT(solver.cloud_fraction_exponent), zero(FT))
 
-    for k in 1:nlayers
+    for k in 1:Nz
         clear_reflectance, clear_transmittance, clear_direct_reflectance, clear_direct_diffuse_transmittance, clear_direct_transmittance =
             shortwave_layer_reflectance_transmittance(FT, optics.clear, gpoint, k, μ₀)
         cloudy_reflectance, cloudy_transmittance, cloudy_direct_reflectance, cloudy_direct_diffuse_transmittance, cloudy_direct_transmittance =
@@ -455,20 +455,20 @@ function adding_shortwave_column!(up::AbstractVector{FT},
             clear_weight * clear_direct_transmittance + cloud_weight * cloudy_direct_transmittance
     end
 
-    flux_direct = Vector{FT}(undef, nlayers + 1)
-    flux_diffuse = Vector{FT}(undef, nlayers + 1)
-    source = Vector{FT}(undef, nlayers + 1)
-    stack_albedo = Vector{FT}(undef, nlayers + 1)
-    inv_denominator = Vector{FT}(undef, nlayers)
+    flux_direct = Vector{FT}(undef, Nz + 1)
+    flux_diffuse = Vector{FT}(undef, Nz + 1)
+    source = Vector{FT}(undef, Nz + 1)
+    stack_albedo = Vector{FT}(undef, Nz + 1)
+    inv_denominator = Vector{FT}(undef, Nz)
 
     flux_direct[1] = incoming_normal
-    for k in 1:nlayers
+    for k in 1:Nz
         flux_direct[k + 1] = flux_direct[k] * direct_transmittance[k]
     end
 
-    stack_albedo[nlayers + 1] = surface_albedo
-    source[nlayers + 1] = surface_albedo_direct * flux_direct[nlayers + 1] * μ₀
-    for k in nlayers:-1:1
+    stack_albedo[Nz + 1] = surface_albedo
+    source[Nz + 1] = surface_albedo_direct * flux_direct[Nz + 1] * μ₀
+    for k in Nz:-1:1
         below = stack_albedo[k + 1]
         inv_denominator[k] = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] +
@@ -482,7 +482,7 @@ function adding_shortwave_column!(up::AbstractVector{FT},
     flux_diffuse[1] = zero(FT)
     up[1] += source[1]
     down[1] += flux_direct[1] * μ₀
-    for k in 1:nlayers
+    for k in 1:Nz
         flux_diffuse[k + 1] =
             (transmittance[k] * flux_diffuse[k] +
              reflectance[k] * source[k + 1] +
@@ -502,24 +502,24 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
                                            incoming_horizontal,
                                            surface_albedo,
                                            surface_albedo_direct = surface_albedo) where FT
-    nlayers = number_of_layers(optics.clear)
+    Nz = number_of_layers(optics.clear)
     incoming_normal = incoming_horizontal / μ₀
     exponent = max(FT(solver.cloud_fraction_exponent), zero(FT))
 
     cloud_fraction = [clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
-          for k in 1:nlayers]
-    region_fraction = Matrix{FT}(undef, 2, nlayers)
-    for k in 1:nlayers
+          for k in 1:Nz]
+    region_fraction = Matrix{FT}(undef, 2, Nz)
+    for k in 1:Nz
         region_fraction[1, k] = one(FT) - cloud_fraction[k]
         region_fraction[2, k] = cloud_fraction[k]
     end
 
-    reflectance = Matrix{FT}(undef, 2, nlayers)
-    transmittance = Matrix{FT}(undef, 2, nlayers)
-    direct_reflectance = Matrix{FT}(undef, 2, nlayers)
-    direct_diffuse_transmittance = Matrix{FT}(undef, 2, nlayers)
-    direct_transmittance = Matrix{FT}(undef, 2, nlayers)
-    for k in 1:nlayers
+    reflectance = Matrix{FT}(undef, 2, Nz)
+    transmittance = Matrix{FT}(undef, 2, Nz)
+    direct_reflectance = Matrix{FT}(undef, 2, Nz)
+    direct_diffuse_transmittance = Matrix{FT}(undef, 2, Nz)
+    direct_transmittance = Matrix{FT}(undef, 2, Nz)
+    for k in 1:Nz
         reflectance[1, k], transmittance[1, k], direct_reflectance[1, k],
             direct_diffuse_transmittance[1, k], direct_transmittance[1, k] =
             shortwave_layer_reflectance_transmittance(FT, optics.clear, gpoint, k, μ₀)
@@ -528,15 +528,15 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
             shortwave_layer_reflectance_transmittance(FT, optics.cloudy, gpoint, k, μ₀)
     end
 
-    total_albedo = zeros(FT, 2, nlayers + 1)
-    total_albedo_direct = zeros(FT, 2, nlayers + 1)
-    total_albedo[:, nlayers + 1] .= surface_albedo
-    total_albedo_direct[:, nlayers + 1] .= μ₀ * surface_albedo_direct
+    total_albedo = zeros(FT, 2, Nz + 1)
+    total_albedo_direct = zeros(FT, 2, Nz + 1)
+    total_albedo[:, Nz + 1] .= surface_albedo
+    total_albedo_direct[:, Nz + 1] .= μ₀ * surface_albedo_direct
     v = zeros(FT, 2, 2)
     below = zeros(FT, 2)
     below_direct = zeros(FT, 2)
 
-    for k in nlayers:-1:1
+    for k in Nz:-1:1
         for region in 1:2
             inverse_denominator = inv(one(FT) - total_albedo[region, k + 1] *
                         reflectance[region, k])
@@ -581,7 +581,7 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
 
     next_flux_dn = zeros(FT, 2)
     next_direct_dn = zeros(FT, 2)
-    for k in 1:nlayers
+    for k in 1:Nz
         for region in 1:2
             inverse_denominator = inv(one(FT) - reflectance[region, k] *
                         total_albedo[region, k + 1])
@@ -598,7 +598,7 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
                 flux_dn[region] * total_albedo[region, k + 1]
         end
 
-        if k < nlayers
+        if k < Nz
             v_overlap_matrix_alpha!(v,
                                      matrix_overlap_parameter(solver, optics, k, FT),
                                      region_fraction[1, k], region_fraction[2, k],
@@ -623,12 +623,12 @@ end
 @inline function interface_cloud_fraction(solver::CloudOverlapShortwave{FT},
                                            cloud_fraction,
                                            interface_index,
-                                           nlayers) where FT
+                                           Nz) where FT
     exponent = max(solver.cloud_fraction_exponent, zero(FT))
     if interface_index == 1
         fraction = FT(cloud_fraction[1])
-    elseif interface_index == nlayers + 1
-        fraction = FT(cloud_fraction[nlayers])
+    elseif interface_index == Nz + 1
+        fraction = FT(cloud_fraction[Nz])
     elseif solver.overlap == :average
         fraction = (FT(cloud_fraction[interface_index - 1]) +
                     FT(cloud_fraction[interface_index])) / FT(2)
@@ -650,7 +650,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            optics::ShortwaveCloudOverlapOptics{FT},
                            atmosphere,
                            boundary_conditions::ShortwaveBoundaryConditions{FT}) where FT
-    nlayers = number_of_layers(optics.clear)
+    Nz = number_of_layers(optics.clear)
     if boundary_conditions.surface_albedo isa AbstractArray
         length(boundary_conditions.surface_albedo) == number_of_gpoints(optics.clear) ||
             throw(DimensionMismatch("surface_albedo vector must have length Ngpoints"))
@@ -664,8 +664,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         fluxes.shortwave_up .= zero(FT)
         fluxes.shortwave_down .= zero(FT)
         for gpoint in 1:number_of_gpoints(optics.clear)
-            scratch_up = zeros(FT, nlayers + 1)
-            scratch_down = zeros(FT, nlayers + 1)
+            scratch_up = zeros(FT, Nz + 1)
+            scratch_down = zeros(FT, Nz + 1)
             path_factor = shortwave_path_factor(FT, atmosphere)
             μ₀ = inv(path_factor)
             if solver.overlap == :tripleclouds_alpha
@@ -732,8 +732,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
 
     fluxes.shortwave_up .= zero(FT)
     fluxes.shortwave_down .= zero(FT)
-    for i in 1:(nlayers + 1)
-        fraction = interface_cloud_fraction(solver, optics.cloud_fraction, i, nlayers)
+    for i in 1:(Nz + 1)
+        fraction = interface_cloud_fraction(solver, optics.cloud_fraction, i, Nz)
         clear_weight = one(FT) - fraction
         fluxes.shortwave_up[i] =
             clear_weight * clear_fluxes.shortwave_up[i] +

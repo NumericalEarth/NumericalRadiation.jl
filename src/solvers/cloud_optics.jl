@@ -83,18 +83,18 @@ function CloudyRegionCloudOptics(cloud_fraction::AbstractVector{FT},
                                                 zero.(shortwave_optical_depth),
                                             shortwave_scattering_asymmetry =
                                                 zero.(shortwave_optical_depth)) where FT
-    nlayers = length(cloud_fraction)
-    length(longwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("longwave cloudy-region optical depth must have length nlayers"))
-    length(shortwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave cloudy-region optical depth must have length nlayers"))
-    length(shortwave_scattering_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave cloudy-region scattering optical depth must have length nlayers"))
-    length(shortwave_scattering_asymmetry) == nlayers ||
-        throw(DimensionMismatch("shortwave cloudy-region scattering asymmetry must have length nlayers"))
-    if !(length(overlap_parameter) == max(nlayers - 1, 0) ||
-         length(overlap_parameter) == nlayers)
-        throw(DimensionMismatch("overlap_parameter must have length nlayers - 1 or nlayers"))
+    Nz = length(cloud_fraction)
+    length(longwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("longwave cloudy-region optical depth must have length Nz"))
+    length(shortwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave cloudy-region optical depth must have length Nz"))
+    length(shortwave_scattering_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave cloudy-region scattering optical depth must have length Nz"))
+    length(shortwave_scattering_asymmetry) == Nz ||
+        throw(DimensionMismatch("shortwave cloudy-region scattering asymmetry must have length Nz"))
+    if !(length(overlap_parameter) == max(Nz - 1, 0) ||
+         length(overlap_parameter) == Nz)
+        throw(DimensionMismatch("overlap_parameter must have length Nz - 1 or Nz"))
     end
     return CloudyRegionCloudOptics{FT, typeof(cloud_fraction)}(
         cloud_fraction,
@@ -314,11 +314,11 @@ path model.
 function cloud_optical_properties!(cloud::CloudOptics{FT},
                                    model::LayerCloudOpticsModel,
                                    atmosphere) where FT
-    nlayers = length(cloud.longwave_optical_depth)
-    length(cloud.shortwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave cloud optical depth must have length nlayers"))
+    Nz = length(cloud.longwave_optical_depth)
+    length(cloud.shortwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave cloud optical depth must have length Nz"))
 
-    for k in 1:nlayers
+    for k in 1:Nz
         cloud_water_path = FT(cloud_water_path_at(model, atmosphere, k))
         shortwave_extinction = FT(model.shortwave_mass_extinction) * cloud_water_path
         ω_shortwave = clamp(FT(model.shortwave_single_scattering_albedo), zero(FT), one(FT))
@@ -336,11 +336,11 @@ function fill_liquid_ice_cloud_optics!(cloud::CloudOptics{FT},
                                         model::LayerLiquidIceCloudOpticsModel,
                                         atmosphere;
                                         scale_by_cloud_fraction::Bool) where FT
-    nlayers = length(cloud.longwave_optical_depth)
-    length(cloud.shortwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave cloud optical depth must have length nlayers"))
+    Nz = length(cloud.longwave_optical_depth)
+    length(cloud.shortwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave cloud optical depth must have length Nz"))
 
-    for k in 1:nlayers
+    for k in 1:Nz
         liquid = max(FT(layer_property(atmosphere, model.liquid_water_path,
                                         :liquid_water_path, k)), zero(FT))
         ice = max(FT(layer_property(atmosphere, model.ice_water_path,
@@ -410,7 +410,7 @@ optical depths are not multiplied by cloud fraction.
 function cloudy_region_optical_properties!(cloud::CloudyRegionCloudOptics{FT},
                                            model::LayerLiquidIceCloudOpticsModel,
                                            atmosphere) where FT
-    nlayers = length(cloud.cloud_fraction)
+    Nz = length(cloud.cloud_fraction)
     scratch = CloudOptics(cloud.longwave_optical_depth,
                                      cloud.shortwave_optical_depth;
                                      shortwave_scattering_optical_depth =
@@ -419,7 +419,7 @@ function cloudy_region_optical_properties!(cloud::CloudyRegionCloudOptics{FT},
                                          cloud.shortwave_scattering_asymmetry)
     fill_liquid_ice_cloud_optics!(scratch, model, atmosphere;
                                    scale_by_cloud_fraction = false)
-    for k in 1:nlayers
+    for k in 1:Nz
         cloud.cloud_fraction[k] =
             clamp(FT(layer_property(atmosphere, model.cloud_fraction,
                                      :cloud_fraction, k)), zero(FT), one(FT))
@@ -494,11 +494,11 @@ model.
 function aerosol_optical_properties!(aerosol::AerosolOptics{FT},
                                      model::LayerAerosolOpticsModel,
                                      atmosphere) where FT
-    nlayers = length(aerosol.longwave_optical_depth)
-    length(aerosol.shortwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave aerosol optical depth must have length nlayers"))
+    Nz = length(aerosol.longwave_optical_depth)
+    length(aerosol.shortwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave aerosol optical depth must have length Nz"))
 
-    for k in 1:nlayers
+    for k in 1:Nz
         path = FT(aerosol_path_at(model, atmosphere, k))
         shortwave_extinction = FT(model.shortwave_mass_extinction) * path
         ω_shortwave = clamp(FT(model.shortwave_single_scattering_albedo), zero(FT), one(FT))
@@ -564,11 +564,11 @@ while providing an initial all-sky composition path.
 function add_cloud_optical_depths!(longwave::LongwaveOptics,
                                    shortwave::ShortwaveOptics,
                                    cloud::CloudOptics)
-    nlayers = length(cloud.longwave_optical_depth)
-    length(cloud.shortwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave cloud optical depth must have length nlayers"))
+    Nz = length(cloud.longwave_optical_depth)
+    length(cloud.shortwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave cloud optical depth must have length Nz"))
 
-    for k in 1:nlayers
+    for k in 1:Nz
         add_cloud_optical_depth!(longwave.optical_depth, cloud.longwave_optical_depth, k)
         add_cloud_optical_depth!(shortwave.optical_depth, cloud.shortwave_optical_depth, k)
         add_cloud_scattering!(shortwave.rayleigh_optical_depth,
@@ -618,16 +618,16 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
                                       ice_extinction_scale = 1,
                                       shortwave_scattering_scale = 1,
                                       delta_eddington_scale = false)
-    Ngpoints, nlayers = size(shortwave.optical_depth)
+    Ngpoints, Nz = size(shortwave.optical_depth)
     length(liquid_properties.mass_extinction_coefficient) == Ngpoints ||
         throw(DimensionMismatch("liquid cloud g-point properties must match shortwave g-points"))
     length(ice_properties.mass_extinction_coefficient) == Ngpoints ||
         throw(DimensionMismatch("ice cloud g-point properties must match shortwave g-points"))
-    length(liquid_water_path) == nlayers ||
+    length(liquid_water_path) == Nz ||
         throw(DimensionMismatch("liquid_water_path must match shortwave layers"))
-    length(ice_water_path) == nlayers ||
+    length(ice_water_path) == Nz ||
         throw(DimensionMismatch("ice_water_path must match shortwave layers"))
-    length(cloud_fraction) == nlayers ||
+    length(cloud_fraction) == Nz ||
         throw(DimensionMismatch("cloud_fraction must match shortwave layers"))
 
     FT = eltype(shortwave)
@@ -635,7 +635,7 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
     liquid_scale = FT(liquid_extinction_scale)
     ice_scale = FT(ice_extinction_scale)
     scattering_scale = max(FT(shortwave_scattering_scale), zero(FT))
-    for k in 1:nlayers
+    for k in 1:Nz
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
         liquid_path = fraction_scale * max(FT(liquid_water_path[k]), zero(FT))
         ice_path = fraction_scale * max(FT(ice_water_path[k]), zero(FT))
@@ -703,11 +703,11 @@ absorptive gas+cloud+aerosol composition path.
 function add_aerosol_optical_depths!(longwave::LongwaveOptics,
                                      shortwave::ShortwaveOptics,
                                      aerosol::AerosolOptics)
-    nlayers = length(aerosol.longwave_optical_depth)
-    length(aerosol.shortwave_optical_depth) == nlayers ||
-        throw(DimensionMismatch("shortwave aerosol optical depth must have length nlayers"))
+    Nz = length(aerosol.longwave_optical_depth)
+    length(aerosol.shortwave_optical_depth) == Nz ||
+        throw(DimensionMismatch("shortwave aerosol optical depth must have length Nz"))
 
-    for k in 1:nlayers
+    for k in 1:Nz
         add_cloud_optical_depth!(longwave.optical_depth, aerosol.longwave_optical_depth, k)
         add_cloud_optical_depth!(shortwave.optical_depth, aerosol.shortwave_optical_depth, k)
         add_cloud_scattering!(shortwave.rayleigh_optical_depth,

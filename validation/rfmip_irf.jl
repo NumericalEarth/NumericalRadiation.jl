@@ -182,7 +182,7 @@ function load_rfmip(paths; experiment = RFMIP_EXPERIMENT)
             dense(dataset[variable][:, :, experiment])
         end
     end
-    nsites = size(sites.pressure_interfaces, 2)
+    Nsites = size(sites.pressure_interfaces, 2)
     all(size(flux) == size(sites.pressure_interfaces) for flux in reference) ||
         throw(DimensionMismatch("LBLRTM flux shapes do not match the input levels"))
     # Levels run top-down from 0.01 Pa, as the solvers expect.
@@ -191,29 +191,29 @@ function load_rfmip(paths; experiment = RFMIP_EXPERIMENT)
     cos_zenith = cosd.(sites.solar_zenith_angle)
     # Daytime is where the reference has sunlight: LBLRTM treated one site
     # with the sun 2.4° above the horizon (site 46, μ₀ = 0.042) as night.
-    daytime = findall(i -> cos_zenith[i] > 0 && reference.rsd[1, i] > 0, 1:nsites)
-    excluded_sites = findall(i -> cos_zenith[i] > 0 && reference.rsd[1, i] == 0, 1:nsites)
-    return (; sites..., reference, nsites, cos_zenith, daytime, excluded_sites)
+    daytime = findall(i -> cos_zenith[i] > 0 && reference.rsd[1, i] > 0, 1:Nsites)
+    excluded_sites = findall(i -> cos_zenith[i] > 0 && reference.rsd[1, i] == 0, 1:Nsites)
+    return (; sites..., reference, Nsites, cos_zenith, daytime, excluded_sites)
 end
 
 function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
-    (; nsites, cos_zenith, daytime, reference) = benchmark
-    nlayers = size(benchmark.pressure_layers, 1)
+    (; Nsites, cos_zenith, daytime, reference) = benchmark
+    Nz = size(benchmark.pressure_layers, 1)
     model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
-    workspace = ColumnWorkspace(model, nlayers)
+    workspace = ColumnWorkspace(model, Nz)
 
-    longwave_up = zeros(nlayers + 1, nsites)
-    longwave_down = zeros(nlayers + 1, nsites)
-    shortwave_up = zeros(nlayers + 1, nsites)
-    shortwave_down = zeros(nlayers + 1, nsites)
-    heating = (longwave = zeros(nlayers, nsites), longwave_reference = zeros(nlayers, nsites),
-               shortwave = zeros(nlayers, nsites), shortwave_reference = zeros(nlayers, nsites),
-               longwave_quadrature = zeros(nlayers, nsites))
+    longwave_up = zeros(Nz + 1, Nsites)
+    longwave_down = zeros(Nz + 1, Nsites)
+    shortwave_up = zeros(Nz + 1, Nsites)
+    shortwave_down = zeros(Nz + 1, Nsites)
+    heating = (longwave = zeros(Nz, Nsites), longwave_reference = zeros(Nz, Nsites),
+               shortwave = zeros(Nz, Nsites), shortwave_reference = zeros(Nz, Nsites),
+               longwave_quadrature = zeros(Nz, Nsites))
     # Informational: the same longwave optics with exact angular integration
     # (3-node Gauss–Legendre, as LBLRTM's RADSUM) instead of D = 1.66.
     quadrature = gauss_legendre_flux_nodes(3)
-    longwave_up_quadrature = zeros(nlayers + 1, nsites)
-    longwave_down_quadrature = zeros(nlayers + 1, nsites)
+    longwave_up_quadrature = zeros(Nz + 1, Nsites)
+    longwave_down_quadrature = zeros(Nz + 1, Nsites)
 
     site_mole_fractions(i) = (h2o = benchmark.h2o[:, i], o3 = benchmark.o3[:, i],
                               co2 = benchmark.co2, ch4 = benchmark.ch4, n2o = benchmark.n2o,
@@ -234,7 +234,7 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
                    cos_zeniths = (cos_zenith[1],), solar_constant = benchmark.total_solar_irradiance[1])
 
     elapsed = 0.0   # optics and solves only
-    for i in 1:nsites
+    for i in 1:Nsites
         surface_temperature = benchmark.surface_temperature[i]
         emissivity = benchmark.surface_emissivity[i]
         atmosphere = site_column(i)
@@ -250,7 +250,7 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         heating.shortwave[:, i] = heating_rate_per_day(shortwave_up[:, i], shortwave_down[:, i], atmosphere)
         heating.shortwave_reference[:, i] = heating_rate_per_day(reference.rsu[:, i], reference.rsd[:, i], atmosphere)
         longwave_quadrature_fluxes!(view(longwave_up_quadrature, :, i), view(longwave_down_quadrature, :, i), workspace.longwave,
-                                    model.longwave_weights, length(model.longwave_weights), nlayers,
+                                    model.longwave_weights, length(model.longwave_weights), Nz,
                                     TabulatedSurfaceEmission(model, surface_temperature; emissivity), 1 - emissivity, quadrature)
         heating.longwave_quadrature[:, i] = heating_rate_per_day(longwave_up_quadrature[:, i], longwave_down_quadrature[:, i], atmosphere)
     end
@@ -300,10 +300,10 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
     return (; model_name = String(model_name),
               longwave_gpoints = length(model.longwave_weights),
               shortwave_gpoints = length(model.shortwave_weights),
-              nsites, nlayers, ndaytime = length(day), excluded_sites = benchmark.excluded_sites,
+              Nsites, Nz, Ndaytime = length(day), excluded_sites = benchmark.excluded_sites,
               column_amount_convention,
               elapsed_seconds = elapsed,
-              microseconds_per_column = 1e6 * elapsed / nsites,
+              microseconds_per_column = 1e6 * elapsed / Nsites,
               statistics, gates)
 end
 
@@ -313,7 +313,7 @@ function rfmip_markdown(results, benchmark)
     push!(lines, "")
     push!(lines, "Generated $(Dates.format(now(), "yyyy-mm-dd HH:MM")) by `validation/rfmip_irf.jl`.")
     push!(lines, "")
-    push!(lines, "$(benchmark.nsites) sites of experiment $(RFMIP_EXPERIMENT) (\"$(benchmark.experiment_label)\"), " *
+    push!(lines, "$(benchmark.Nsites) sites of experiment $(RFMIP_EXPERIMENT) (\"$(benchmark.experiment_label)\"), " *
                  "$(size(benchmark.pressure_layers, 1)) layers from $(benchmark.pressure_interfaces[1, 1]) Pa; " *
                  "per-site skin temperature, emissivity, albedo, solar zenith angle and total solar irradiance; " *
                  "$(length(benchmark.daytime)) daytime sites enter the shortwave statistics" *
@@ -384,7 +384,7 @@ function run_rfmip_irf(; models = (:climate_32x32, :climate_64x64))
             return results
         end
         benchmark = load_rfmip(paths)
-        println("RFMIP-IRF: $(benchmark.nsites) sites, experiment $(RFMIP_EXPERIMENT) ($(benchmark.experiment_label)), " *
+        println("RFMIP-IRF: $(benchmark.Nsites) sites, experiment $(RFMIP_EXPERIMENT) ($(benchmark.experiment_label)), " *
                 "$(length(benchmark.daytime)) daytime sites")
         for model_name in models
             result = evaluate_rfmip(model_name, benchmark)
@@ -412,8 +412,8 @@ function run_rfmip_irf(; models = (:climate_32x32, :climate_64x64))
                         model = result.model_name,
                         longwave_gpoints = result.longwave_gpoints,
                         shortwave_gpoints = result.shortwave_gpoints,
-                        nsites = result.nsites, ndaytime = result.ndaytime, excluded_sites = result.excluded_sites,
-                        nlayers = result.nlayers,
+                        Nsites = result.Nsites, Ndaytime = result.Ndaytime, excluded_sites = result.excluded_sites,
+                        Nz = result.Nz,
                         well_mixed_mole_fractions = (; co2 = benchmark.co2, ch4 = benchmark.ch4, n2o = benchmark.n2o,
                                                        cfc11 = benchmark.cfc11, cfc12 = benchmark.cfc12),
                         column_amount_convention = result.column_amount_convention,

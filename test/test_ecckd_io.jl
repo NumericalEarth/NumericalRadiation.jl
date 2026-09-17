@@ -565,7 +565,7 @@ end
 
 # --- begin content of test_ecckd_forward.jl ---
 @testset "ecCKD-style forward gas optics" begin
-    nlayers = 3
+    Nz = 3
     atmosphere = ColumnAtmosphere(
         pressure_layers = [20_000.0, 50_000.0, 80_000.0],
         pressure_interfaces = [10_000.0, 35_000.0, 65_000.0, 95_000.0],
@@ -589,9 +589,9 @@ end
         shortwave_weights = [1.0],
     )
 
-    longwave = LongwaveOptics(zeros(2, nlayers), zeros(2, nlayers);
+    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
                                          weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, nlayers); weights = zeros(1))
+    shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
 
     returned = optical_properties!(longwave, shortwave, model, atmosphere)
     @test returned == (longwave, shortwave)
@@ -610,7 +610,7 @@ end
     optical_properties_allocations(longwave, shortwave, model, atmosphere)
     @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
-    bad_longwave = LongwaveOptics(zeros(1, nlayers), zeros(1, nlayers);
+    bad_longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz);
                                              weights = zeros(1))
     @test_throws DimensionMismatch optical_properties!(bad_longwave, shortwave, model, atmosphere)
 
@@ -683,7 +683,7 @@ end
 end
 
 @testset "ecCKD-style tabulated gas optics" begin
-    nlayers = 2
+    Nz = 2
     pressure_grid = [10_000.0, 20_000.0]
     temperature_grid = [250.0, 300.0]
 
@@ -724,9 +724,9 @@ end
         shortwave_weights = [1.0],
     )
 
-    longwave = LongwaveOptics(zeros(2, nlayers), zeros(2, nlayers);
+    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
                                          weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, nlayers); weights = zeros(1))
+    shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
@@ -1035,7 +1035,7 @@ end
 @testset "tabulated gas optics is inferrable, Float32-clean, and Adapt-stable" begin
     function tabulated_fixture(FT, matrix_temperature_grid::Bool)
         Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
-        Nlongwave_gpoints, Nshortwave_gpoints, Ngases, nlayers = 3, 2, 3, 3
+        Nlongwave_gpoints, Nshortwave_gpoints, Ngases, Nz = 3, 2, 3, 3
         pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = Npressures)))
         temperature_grid = matrix_temperature_grid ?
             FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures] :
@@ -1081,12 +1081,12 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, nlayers),
-                                             zeros(FT, Nlongwave_gpoints, nlayers);
-                                             source_top = zeros(FT, Nlongwave_gpoints, nlayers),
-                                             source_bottom = zeros(FT, Nlongwave_gpoints, nlayers),
+        longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, Nz),
+                                             zeros(FT, Nlongwave_gpoints, Nz);
+                                             source_top = zeros(FT, Nlongwave_gpoints, Nz),
+                                             source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
                                              weights = zeros(FT, Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, nlayers);
+        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz);
                                                weights = zeros(FT, Nshortwave_gpoints))
         return model, atmosphere, longwave, shortwave
     end

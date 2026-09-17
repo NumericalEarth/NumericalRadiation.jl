@@ -20,7 +20,7 @@ ConstantShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
 
 """$(TYPEDSIGNATURES)
 Layer transmissivities under the constant-transmissivity model. Writes into
-`t` (length `nlayers`) and returns it.
+`t` (length `Nz`) and returns it.
 """
 @inline function compute_transmissivity!(t::AbstractVector,
                                           transmissivity::ConstantShortwaveTransmissivity,
@@ -28,10 +28,10 @@ Layer transmissivities under the constant-transmissivity model. Writes into
                                           geometry::ColumnGrid,
                                           surface::SurfaceState)
     NF = eltype(t)
-    nlayers = length(t)
+    Nz = length(t)
     τ = -log(NF(transmissivity.transmissivity))
     dσ = geometry.σ_thick
-    for k in 1:nlayers
+    for k in 1:Nz
         t[k] = exp(-τ * dσ[k])
     end
     return t
@@ -81,7 +81,7 @@ BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
                                           geometry::ColumnGrid,
                                           surface::SurfaceState)
     NF = eltype(t)
-    nlayers = length(t)
+    Nz = length(t)
 
     (; absorptivity_dry_air, absorptivity_aerosol, absorptivity_water_vapor,
        absorptivity_cloud_base, absorptivity_cloud_limit) = transmissivity
@@ -98,10 +98,10 @@ BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF =
     zenith_exponent = transmissivity.zenith_exponent
     zenith_factor = 1 + zenith_amplitude * (1 - cos_zenith)^zenith_exponent
 
-    q_base = nlayers > 1 ? humidity[nlayers - 1] : humidity[nlayers]
+    q_base = Nz > 1 ? humidity[Nz - 1] : humidity[Nz]
     cloud_term = min(absorptivity_cloud_base * q_base, absorptivity_cloud_limit)
 
-    for k in 1:nlayers
+    for k in 1:Nz
         q_k = humidity[k]
         aerosol_factor = transmissivity.aerosols ? σ_full[k]^2 : zero(NF)
         layer_absorptivity = absorptivity_dry_air +

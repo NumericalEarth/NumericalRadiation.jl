@@ -36,7 +36,7 @@ of either:
 | g-point index | — | `gpoint` | `ig`, `g`, `n` |
 | Layer and generic indices | `k` (layer, top down), `i`, `j` | — | — |
 | Table stencil: lower index, upper index, weight | `(i₀ᵖ, i₁ᵖ, wᵖ)` pressure, `(i₀ᵀ, i₁ᵀ, wᵀ)` temperature, `(i₀ᴴ, i₁ᴴ, wᴴ)` H₂O; grid loop indices `iᵖ, iᵀ, iᴴ`; bracket bounds `lower`, `upper` | — | `ip`, `it`, `wt`, `ih`, `lo`, `hi` |
-| Counts | — | `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`, `Nlongwave_gpoints`, `Nshortwave_gpoints` | `ng`, `nr`, `ncol`, `ngas`, `np`, `nt`, `nwav` |
+| Counts (Oceananigans capital-`N` notation) | `Nz` (layers of a column; interfaces are `Nz + 1`) | `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`, `Nlongwave_gpoints`, `Nshortwave_gpoints`, `Nprofiles`, `Nsites`, `Nzenith` | `nlayers`, `N`, `nlev`, `ninterfaces`, `ng`, `nr`, `ncol`, `ngas`, `np`, `nt`, `nwav`, `nsites` |
 | Spectral regions | — | `longwave_…`, `shortwave_…` | `lw_…`, `sw_…` |
 | Surface, top of atmosphere | `Tₛ`, `pₛ` | `surface_…`, `toa_…` (TOA, OLR and RMSE are accepted acronyms) | `sfc`, `surf` |
 | Objects | — | `column` (a `RadiativeTransferColumn`), `diagnostics`, `temperature_tendency`, `geometry`, `constants`, `dataset` | `rtm`, `diag`, `dTdt`, `geom`, `ds` |
@@ -48,7 +48,8 @@ dispatched on the optics type — `optical_depth_at(optics, gpoint, k)`,
 that mirror an external file or library keep the upstream spelling: the
 ecCKD NetCDF variable and dimension names (`h2o`, `lw_gpoints`), the CKDMIP
 `mu0` coordinate, RRTMGP struct fields and keywords (`vmr_h2o`, `ncol`,
-`nbnd_lw`), SpeedyWeather fields, and the Williams (2026) Table 1 parameters
+`nbnd_lw`), SpeedyWeather fields and keywords (`SpectralGrid(nlayers = 8)`,
+`spectral_grid.nlayers`), and the Williams (2026) Table 1 parameters
 of [`AnalyticBandLongwave`](@ref) (`κ_rot`, `l_vr1`, `p_ref`, ...), which are
 documented field by field.
 
@@ -98,8 +99,8 @@ pressure-normalized `σ = p / pₛ` convention inherited from SpeedyWeather.
 
 | Math | Code | Description |
 |:-----|:-----|:------------|
-| `σₖ` at midpoints | `σ_full` | Length `N` |
-| `σₖ₊½` at interfaces | `σ_half` | Length `N + 1`, monotonic from 0 (TOA) to 1 (surface) |
+| `σₖ` at midpoints | `σ_full` | Length `Nz` |
+| `σₖ₊½` at interfaces | `σ_half` | Length `Nz + 1`, monotonic from 0 (TOA) to 1 (surface) |
 | `Δσₖ` | `σ_thick` | Layer thickness, `= diff(σ_half)` |
 
 Note: the package uses `σ` for the vertical coordinate *and* `σ` in context
@@ -113,7 +114,7 @@ defined at first use on each page:
 
 | Symbol | Meaning |
 |:-------|:--------|
-| `N` | Number of layers |
+| `Nz` | Number of layers; interface arrays have length `Nz + 1` |
 | `pᵢ`, `p` | Interface and layer pressures (Pa), top-down, increasing downward |
 | `Tᵢ`, `T`, `Tₛ` | Interface, layer, and surface temperatures (K) |
 | `χH₂O`, `χO₃`, `χCO₂`, … | Mole fractions relative to dry air (dry-air volume mixing ratios) |

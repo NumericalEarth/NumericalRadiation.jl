@@ -8,7 +8,7 @@ equations
 \frac{dF^{\downarrow}}{d\tau} = \pi B(T) - F^{\downarrow}
 ```
 
-at each of `nwavenumber = 41` evenly spaced wavenumbers between 10 and
+at each of `Nwavenumbers = 41` evenly spaced wavenumbers between 10 and
 2500 cm⁻¹ (inclusive of both endpoints, spacing 62.25 cm⁻¹) and integrates
 the resulting fluxes spectrally.
 
@@ -62,8 +62,8 @@ specific humidity `q = 5 g kg⁻¹` and surface pressure 1000 hPa.
 using NumericalRadiation
 using CairoMakie
 
-N  = 32
-σᵢ = collect(range(0, 1, length = N + 1))   # interface sigma coordinate
+Nz = 32
+σᵢ = collect(range(0, 1, length = Nz + 1))   # interface sigma coordinate
 grid = ColumnGrid(σᵢ)
 
 FT = Float64
@@ -78,13 +78,13 @@ carbon_dioxide_ppm = [50, 100, 200, 280, 400, 560, 800, 1120]
 OLR = FT[]
 for CO₂ in carbon_dioxide_ppm
     profile = AtmosphereProfile(
-        temperature      = collect(range(220, 295, length = N)),
-        humidity         = fill(0.005, N),
-        geopotential     = zeros(N),
+        temperature      = collect(range(220, 295, length = Nz)),
+        humidity         = fill(0.005, Nz),
+        geopotential     = zeros(Nz),
         surface_pressure = 100_000,
         CO₂              = CO₂,
     )
-    Ṫ = zeros(N)
+    Ṫ = zeros(Nz)
     diagnostics = LongwaveDiagnostics(FT)
     solve_longwave!(Ṫ, diagnostics, longwave, profile, grid, surface, constants)
     push!(OLR, diagnostics.outgoing_longwave)

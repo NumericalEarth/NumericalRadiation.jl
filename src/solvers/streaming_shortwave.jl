@@ -2,8 +2,8 @@
 $(TYPEDEF)
 
 Per-column scratch storage for [`streaming_shortwave_fluxes!`](@ref): five
-layer vectors of length `nlayers` and two interface vectors of length
-`nlayers + 1`. On the host `V` is a `Vector{FT}`; a host kernel hands in views
+layer vectors of length `Nz` and two interface vectors of length
+`Nz + 1`. On the host `V` is a `Vector{FT}`; a host kernel hands in views
 of one row of its own device matrices instead, so the solver never allocates.
 
 The five layer vectors hold the delta-Eddington two-stream properties of each
@@ -20,36 +20,36 @@ initialized. Fields are
 $(TYPEDFIELDS)
 """
 struct ShortwaveColumnScratch{V}
-    "Layer diffuse reflectance, length `nlayers`."
+    "Layer diffuse reflectance, length `Nz`."
     reflectance::V
-    "Layer diffuse transmittance, length `nlayers`."
+    "Layer diffuse transmittance, length `Nz`."
     transmittance::V
-    "Layer reflectance of the direct beam into the diffuse upward stream, length `nlayers`."
+    "Layer reflectance of the direct beam into the diffuse upward stream, length `Nz`."
     direct_reflectance::V
-    "Layer transmittance of the direct beam into the diffuse downward stream, length `nlayers`."
+    "Layer transmittance of the direct beam into the diffuse downward stream, length `Nz`."
     direct_diffuse_transmittance::V
-    "Normal-incidence direct-beam flux at the bottom of each layer, length `nlayers`."
+    "Normal-incidence direct-beam flux at the bottom of each layer, length `Nz`."
     direct_transmittance::V
-    "Diffuse albedo of the stack below each interface, length `nlayers + 1`."
+    "Diffuse albedo of the stack below each interface, length `Nz + 1`."
     stack_albedo::V
-    "Upward diffuse source of the stack below each interface, length `nlayers + 1`."
+    "Upward diffuse source of the stack below each interface, length `Nz + 1`."
     source::V
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Allocate host scratch storage of element type `FT` for a column of `nlayers`
+Allocate host scratch storage of element type `FT` for a column of `Nz`
 layers.
 """
-ShortwaveColumnScratch(::Type{FT}, nlayers) where FT =
-    ShortwaveColumnScratch(Vector{FT}(undef, nlayers),
-                           Vector{FT}(undef, nlayers),
-                           Vector{FT}(undef, nlayers),
-                           Vector{FT}(undef, nlayers),
-                           Vector{FT}(undef, nlayers),
-                           Vector{FT}(undef, nlayers + 1),
-                           Vector{FT}(undef, nlayers + 1))
+ShortwaveColumnScratch(::Type{FT}, Nz) where FT =
+    ShortwaveColumnScratch(Vector{FT}(undef, Nz),
+                           Vector{FT}(undef, Nz),
+                           Vector{FT}(undef, Nz),
+                           Vector{FT}(undef, Nz),
+                           Vector{FT}(undef, Nz),
+                           Vector{FT}(undef, Nz + 1),
+                           Vector{FT}(undef, Nz + 1))
 
 Base.eltype(::ShortwaveColumnScratch{V}) where V = eltype(V)
 
@@ -60,14 +60,14 @@ Base.eltype(::ShortwaveColumnScratch{V}) where V = eltype(V)
 $(TYPEDSIGNATURES)
 
 Add the `weight`-scaled fluxes of g point `gpoint` to `flux_up` and `flux_down`
-(length `nlayers + 1`, top down), by the two-stream adding method of
+(length `Nz + 1`, top down), by the two-stream adding method of
 [`streaming_shortwave_fluxes!`](@ref) with scalar `direct_albedo` and
 `diffuse_albedo`. This is the single g-point body that every clear-sky
 shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
 """
 @inline function add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, gpoint, weight,
                                               μ₀, toa_irradiance, direct_albedo, diffuse_albedo,
-                                              nlayers, scratch::ShortwaveColumnScratch)
+                                              Nz, scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
     μ₀ = max(FT(μ₀), sqrt(eps(FT)))
     incoming_normal = FT(toa_irradiance) / μ₀
@@ -84,7 +84,7 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     # Top down: delta-Eddington two-stream properties of each layer and the
     # direct beam, attenuated by the direct transmittance of every layer above.
     direct_above = incoming_normal
-    @inbounds for k in 1:nlayers
+    @inbounds for k in 1:Nz
         τ_absorption, τ_scattering, asymmetry = layer_optics(gpoint, k)
         τ_absorption = max(FT(τ_absorption), zero(FT))
         τ_scattering = max(FT(τ_scattering), zero(FT))
@@ -100,9 +100,9 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
 
     # Bottom up (adding): diffuse albedo and upward diffuse source of the
     # stack below each interface, starting from the surface.
-    @inbounds stack_albedo[nlayers + 1] = FT(diffuse_albedo)
-    @inbounds source[nlayers + 1] = FT(direct_albedo) * direct_surface * μ₀
-    @inbounds for k in nlayers:-1:1
+    @inbounds stack_albedo[Nz + 1] = FT(diffuse_albedo)
+    @inbounds source[Nz + 1] = FT(direct_albedo) * direct_surface * μ₀
+    @inbounds for k in Nz:-1:1
         below = stack_albedo[k + 1]
         inv_denominator = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] +
@@ -120,7 +120,7 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     @inbounds flux_up[1] += w * source[1]
     @inbounds flux_down[1] += w * (incoming_normal * μ₀)
     direct_above = incoming_normal
-    @inbounds for k in 1:nlayers
+    @inbounds for k in 1:Nz
         below = stack_albedo[k + 1]
         inv_denominator = inv(one(FT) - below * reflectance[k])
         direct_below = direct_flux[k]
@@ -142,7 +142,7 @@ $(TYPEDSIGNATURES)
 Clear-sky shortwave interface fluxes of one column by the two-stream adding
 method of ecRad, with every g point streamed through one
 [`ShortwaveColumnScratch`](@ref) and accumulated in place. `flux_up` and
-`flux_down` have length `nlayers + 1`, are ordered top down (index 1 at the
+`flux_down` have length `Nz + 1`, are ordered top down (index 1 at the
 top of the atmosphere), and are zeroed here; `FT = eltype(flux_up)`.
 
 `layer_optics(gpoint, k)` returns the tuple `(τ_absorption, τ_scattering, asymmetry)`
@@ -164,10 +164,10 @@ night (`μ₀ ≤ 0`).
 Allocation-free; `scratch` may hold views into a host's own arrays.
 """
 @inline function streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, μ₀, toa_irradiance,
-                                             direct_albedo, diffuse_albedo, weights, Ngpoints, nlayers,
+                                             direct_albedo, diffuse_albedo, weights, Ngpoints, Nz,
                                              scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
-    @inbounds for k in 1:nlayers + 1
+    @inbounds for k in 1:Nz + 1
         flux_up[k] = zero(FT)
         flux_down[k] = zero(FT)
     end
@@ -176,7 +176,7 @@ Allocation-free; `scratch` may hold views into a host's own arrays.
                                      @inbounds(weights[gpoint]), μ₀, toa_irradiance,
                                      gpoint_albedo(direct_albedo, gpoint),
                                      gpoint_albedo(diffuse_albedo, gpoint),
-                                     nlayers, scratch)
+                                     Nz, scratch)
     end
     return nothing
 end

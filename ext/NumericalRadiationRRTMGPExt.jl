@@ -69,9 +69,9 @@ end
 # Zero-initialized global-mean gas mole fractions: H₂O and O₃ vary per
 # layer, every other gas is a well-mixed scalar (the layout of RRTMGP's
 # `VmrGM`, which calls them volume mixing ratios).
-function initialize_global_mean_mole_fractions(Ngases, nlayers, Ncolumns, FT, array_type)
-    water_vapor_mole_fraction = array_type{FT}(undef, nlayers, Ncolumns)
-    ozone_mole_fraction = array_type{FT}(undef, nlayers, Ncolumns)
+function initialize_global_mean_mole_fractions(Ngases, Nz, Ncolumns, FT, array_type)
+    water_vapor_mole_fraction = array_type{FT}(undef, Nz, Ncolumns)
+    ozone_mole_fraction = array_type{FT}(undef, Nz, Ncolumns)
     mole_fractions = array_type{FT}(undef, Ngases)
     fill!(water_vapor_mole_fraction, zero(FT))
     fill!(ozone_mole_fraction, zero(FT))
@@ -82,9 +82,9 @@ end
 function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
                                                    atmosphere::ColumnAtmosphere;
                                                    backend = nothing) where FT
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     Ncolumns = 1
-    grid_params = RRTMGPGridParams(FT; context = model.context, domain_nlay = nlayers, ncol = Ncolumns)
+    grid_params = RRTMGPGridParams(FT; context = model.context, domain_nlay = Nz, ncol = Ncolumns)
     array_type = ClimaComms.array_type(ClimaComms.device(model.context))
 
     # Read the NetCDF lookup tables once and hand the bundle to the solver.
@@ -96,11 +96,11 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
 
     longitude = array_type{FT}(zeros(Ncolumns))
     latitude = array_type{FT}(zeros(Ncolumns))
-    layerdata = array_type{FT}(undef, 4, nlayers, Ncolumns)
-    pressure_interfaces = array_type{FT}(undef, nlayers + 1, Ncolumns)
-    temperature_interfaces = array_type{FT}(undef, nlayers + 1, Ncolumns)
+    layerdata = array_type{FT}(undef, 4, Nz, Ncolumns)
+    pressure_interfaces = array_type{FT}(undef, Nz + 1, Ncolumns)
+    temperature_interfaces = array_type{FT}(undef, Nz + 1, Ncolumns)
     surface_temperature = array_type{FT}(undef, Ncolumns)
-    mole_fractions = initialize_global_mean_mole_fractions(Ngases, nlayers, Ncolumns, FT, array_type)
+    mole_fractions = initialize_global_mean_mole_fractions(Ngases, Nz, Ncolumns, FT, array_type)
     atmospheric_state = AtmosphericState(longitude,
                                          latitude,
                                          layerdata,
@@ -137,7 +137,7 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
                                  model::RRTMGPClearSkyModel{FT},
                                  atmosphere::ColumnAtmosphere,
                                  boundary::RRTMGPBoundaryConditions) where FT
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     state = workspace.atmospheric_state
     gases = atmosphere.gases
     water_vapor = gas_value(gases, :h2o, zero(FT))
@@ -153,8 +153,8 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     # hydrostatic Δp in compute_col_gas_kernel! assume p decreasing with
     # index), while ColumnAtmosphere is top-down by contract, so every
     # per-layer/per-level copy reverses the vertical index.
-    for k in 1:nlayers
-        k_reversed = nlayers - k + 1
+    for k in 1:Nz
+        k_reversed = Nz - k + 1
         water_vapor_k = max(FT(layer_value(water_vapor, k)), zero(FT))
         state.layerdata[2, k_reversed, 1] = FT(atmosphere.pressure_layers[k])
         state.layerdata[3, k_reversed, 1] = clamp(FT(atmosphere.temperature_layers[k]), FT(160), FT(355))
@@ -163,8 +163,8 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
         state.vmr.vmr_o3[k_reversed, 1] = max(FT(layer_value(ozone, k)), zero(FT))
     end
 
-    for k in 1:(nlayers + 1)
-        k_reversed = nlayers + 2 - k
+    for k in 1:(Nz + 1)
+        k_reversed = Nz + 2 - k
         state.p_lev[k_reversed, 1] = FT(atmosphere.pressure_interfaces[k])
         state.t_lev[k_reversed, 1] = clamp(FT(atmosphere.temperature_interfaces[k]), FT(160), FT(355))
     end
@@ -207,13 +207,13 @@ function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
                                                  boundary::RRTMGPBoundaryConditions,
                                                  workspace::RRTMGPWorkspace =
                                                      radiation_workspace(model, atmosphere))
-    nlayers = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.temperature_layers)
     for (name, v) in ((:longwave_up, fluxes.longwave_up),
                       (:longwave_down, fluxes.longwave_down),
                       (:shortwave_up, fluxes.shortwave_up),
                       (:shortwave_down, fluxes.shortwave_down))
-        length(v) == nlayers + 1 ||
-            throw(DimensionMismatch("$name must have length nlayers + 1"))
+        length(v) == Nz + 1 ||
+            throw(DimensionMismatch("$name must have length Nz + 1"))
     end
 
     fill_atmospheric_state!(workspace, model, atmosphere, boundary)
@@ -221,14 +221,14 @@ function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
     RRTMGP.update_lw_fluxes!(solver)
     RRTMGP.update_sw_fluxes!(solver)
     # RRTMGP level fluxes are bottom-at-index-1; reverse back to the
-    # package's top-down convention. The `(nlayers + 1, Ncolumns)` views are
+    # package's top-down convention. The `(Nz + 1, Ncolumns)` views are
     # RRTMGP's public flux accessors, refreshed by the update calls above.
     longwave_up = RRTMGP.lw_flux_up(solver)
     longwave_down = RRTMGP.lw_flux_dn(solver)
     shortwave_up = RRTMGP.sw_flux_up(solver)
     shortwave_down = RRTMGP.sw_flux_dn(solver)
-    for k in 1:(nlayers + 1)
-        k_reversed = nlayers + 2 - k
+    for k in 1:(Nz + 1)
+        k_reversed = Nz + 2 - k
         fluxes.longwave_up[k] = longwave_up[k_reversed, 1]
         fluxes.longwave_down[k] = longwave_down[k_reversed, 1]
         fluxes.shortwave_up[k] = shortwave_up[k_reversed, 1]

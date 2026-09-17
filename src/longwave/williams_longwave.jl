@@ -10,7 +10,7 @@ The scheme solves Schwarzschild's two-stream equations
     dℐꜜ/dτ = πB(T) − ℐꜜ
 
 for the upwelling (`ℐꜛˡʷ`) and downwelling (`ℐꜜˡʷ`) spectral longwave
-fluxes at each of `nwavenumber` evenly spaced wavenumbers between
+fluxes at each of `Nwavenumbers` evenly spaced wavenumbers between
 `wavenumber_min` and `wavenumber_max`, with analytic mass absorption
 coefficients for H₂O
 line (rotation + vibration–rotation + combination bands, [`water_vapor_line_absorption_reference`](@ref)),
@@ -31,7 +31,7 @@ $(TYPEDFIELDS)
 """
 struct AnalyticBandLongwave{NF} <: AbstractLongwaveScheme
     "Number of evenly spaced wavenumber quadrature points"
-    nwavenumber::Int
+    Nwavenumbers::Int
     "Minimum wavenumber of the spectral integration range [cm⁻¹]"
     wavenumber_min::NF
     "Maximum wavenumber of the spectral integration range [cm⁻¹]"
@@ -75,7 +75,7 @@ end
 Adapt.@adapt_structure AnalyticBandLongwave
 
 function AnalyticBandLongwave{NF}(;
-        nwavenumber::Int = 41,
+        Nwavenumbers::Int = 41,
         wavenumber_min = NF(10),
         wavenumber_max = NF(2500),
         κ_rot  = NF(37),    l_rot  = NF(56),
@@ -89,7 +89,7 @@ function AnalyticBandLongwave{NF}(;
         carbon_dioxide_molar_mass_ratio = NF(44 / 29),
     ) where NF
     return AnalyticBandLongwave{NF}(
-        nwavenumber, wavenumber_min, wavenumber_max,
+        Nwavenumbers, wavenumber_min, wavenumber_max,
         κ_rot, l_rot, κ_vr, l_vr1, l_vr2, κ_cnt1, κ_cnt2,
         κ_CO₂, l_CO₂, ν̃_CO₂,
         diffusivity, p_ref, T_ref, pv_ref, σ_cont,
@@ -134,7 +134,7 @@ function solve_longwave!(temperature_tendency::AbstractVector,
     q  = profile.humidity
     pₛ = profile.surface_pressure
     CO₂ = NF(profile.CO₂)
-    nlayers = length(T)
+    Nz = length(T)
 
     σ_SB = NF(constants.stefan_boltzmann)
     cₚ   = NF(constants.heat_capacity)
@@ -152,13 +152,12 @@ function solve_longwave!(temperature_tendency::AbstractVector,
     U_surface_broadband = (1 - land_fraction) * U_surface_ocean + land_fraction * U_surface_land
 
     # Wavenumber quadrature.
-    Nwavenumbers = scheme.nwavenumber
-    Δν̃ = (scheme.wavenumber_max - scheme.wavenumber_min) / NF(Nwavenumbers - 1)
+    Δν̃ = (scheme.wavenumber_max - scheme.wavenumber_min) / NF(scheme.Nwavenumbers - 1)
 
     outgoing_longwave::NF = zero(NF)
     surface_longwave_down::NF = zero(NF)
 
-    for i in 1:Nwavenumbers
+    for i in 1:scheme.Nwavenumbers
         ν̃ = scheme.wavenumber_min + NF(i - 1) * Δν̃
 
         B_surface_ocean = ifelse(isfinite(T_ocean), planck_wavenumber(T_ocean, ν̃), zero(NF))
@@ -171,12 +170,12 @@ function solve_longwave!(temperature_tendency::AbstractVector,
              land_fraction * ϵ_land  * B_surface_land
         )
 
-        # ---- Upward sweep: k = nlayers → 1 (ℐꜛ) --------------------------
+        # ---- Upward sweep: k = Nz → 1 (ℐꜛ) --------------------------
         U::NF = U_spectral
         # Surface upward flux enters the bottom of the lowest layer.
-        temperature_tendency[nlayers] += surface_flux_to_tendency(U / cₚ, profile, geometry, constants)
+        temperature_tendency[Nz] += surface_flux_to_tendency(U / cₚ, profile, geometry, constants)
 
-        for k in nlayers:-1:1
+        for k in Nz:-1:1
             Δτ_k  = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
             transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
@@ -194,11 +193,11 @@ function solve_longwave!(temperature_tendency::AbstractVector,
             U = U_new
         end
 
-        # ---- Downward sweep: k = 1 → nlayers (ℐꜜ) ------------------------
+        # ---- Downward sweep: k = 1 → Nz (ℐꜜ) ------------------------
         # TOA boundary: ℐꜜˡʷ(TOA) = 0 (no longwave from space).
         D::NF = zero(NF)
 
-        for k in 1:(nlayers - 1)
+        for k in 1:(Nz - 1)
             Δτ_k  = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
             transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
@@ -210,12 +209,12 @@ function solve_longwave!(temperature_tendency::AbstractVector,
         end
 
         # Surface-adjacent layer: the downward flux that reaches the surface.
-        Δτ_bottom = williams_optical_depth_increment(nlayers, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
+        Δτ_bottom = williams_optical_depth_increment(Nz, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
         transmittance_bottom = exp(-Δτ_bottom)
-        B_bottom  = planck_wavenumber(T[nlayers], ν̃)
+        B_bottom  = planck_wavenumber(T[Nz], ν̃)
         D_surface::NF = D * transmittance_bottom + Δν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
 
-        temperature_tendency[nlayers] -= surface_flux_to_tendency(D_surface / cₚ, profile, geometry, constants)
+        temperature_tendency[Nz] -= surface_flux_to_tendency(D_surface / cₚ, profile, geometry, constants)
         surface_longwave_down += D_surface
     end
 

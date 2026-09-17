@@ -19,13 +19,13 @@ using Printf
 # ## The column
 #
 # The gas state reuses the family column of the
-# [correlated-k spread](rrtmgp_comparison.md) page: ``N`` layers with
+# [correlated-k spread](rrtmgp_comparison.md) page: ``Nz`` layers with
 # interface pressures ``pᵢ`` (Pa, top of atmosphere first), an idealized
 # capped lapse rate, analytic moisture and ozone profiles, and the full
 # ecCKD gas activation.
 
-N  = 48
-pᵢ = collect(range(2_000, 101_325; length = N + 1))
+Nz = 48
+pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
 Tₛ = 300
@@ -39,7 +39,7 @@ constants = PhysicalConstants()      # Earth defaults, carried by the column bel
 g  = constants.gravity               # m s⁻²
 mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
 mᵛ = constants.water_molar_mass      # kg mol⁻¹
-nᵈ = [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:N]
+nᵈ = [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:Nz]
 
 atmosphere = ColumnAtmosphere(;
     constants,
@@ -73,11 +73,11 @@ nothing #hide
 # plausible magnitude, not derived from the ecCKD tables or any scattering
 # database.
 
-deck = findall(k -> 80_000 <= p[k] <= 90_000, 1:N)
-cloud_fraction = zeros(N)
+deck = findall(k -> 80_000 <= p[k] <= 90_000, 1:Nz)
+cloud_fraction = zeros(Nz)
 cloud_fraction[deck] .= 0.8
 @assert !isempty(deck)
-liquid_water_path = zeros(N)
+liquid_water_path = zeros(Nz)
 liquid_water_path[deck] .= 0.060 / length(deck)     # in-cloud, kg m⁻² per layer
 
 cloud_model = LayerLiquidIceCloudOpticsModel(;
@@ -105,14 +105,14 @@ gas_optics = read_reference_ecckd_gas_optics("32x32";
 function gas_optics_containers()
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, N),
-                                         zeros(longwave_gpoints, N);
-                                         source_top = zeros(longwave_gpoints, N),
-                                         source_bottom = zeros(longwave_gpoints, N),
+    longwave = LongwaveOptics(zeros(longwave_gpoints, Nz),
+                                         zeros(longwave_gpoints, Nz);
+                                         source_top = zeros(longwave_gpoints, Nz),
+                                         source_bottom = zeros(longwave_gpoints, Nz),
                                          weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
-                                           rayleigh_optical_depth = zeros(shortwave_gpoints, N),
-                                           scattering_asymmetry = zeros(shortwave_gpoints, N),
+    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
+                                           rayleigh_optical_depth = zeros(shortwave_gpoints, Nz),
+                                           scattering_asymmetry = zeros(shortwave_gpoints, Nz),
                                            weights = zeros(shortwave_gpoints))
     return longwave, shortwave
 end
@@ -142,10 +142,10 @@ nothing #hide
 # [`cloudy_region_optical_properties!`](@ref) and are added to the cloudy
 # containers only:
 
-cloud = CloudyRegionCloudOptics(zeros(N), zeros(N - 1),
-                                           zeros(N), zeros(N);
-                                           shortwave_scattering_optical_depth = zeros(N),
-                                           shortwave_scattering_asymmetry = zeros(N))
+cloud = CloudyRegionCloudOptics(zeros(Nz), zeros(Nz - 1),
+                                           zeros(Nz), zeros(Nz);
+                                           shortwave_scattering_optical_depth = zeros(Nz),
+                                           shortwave_scattering_asymmetry = zeros(Nz))
 cloudy_region_optical_properties!(cloud, cloud_model, atmosphere)
 add_cloud_optical_depths!(cloudy_longwave, cloudy_shortwave,
                           CloudOptics(cloud.longwave_optical_depth,
@@ -168,10 +168,10 @@ longwave_boundary = LongwaveBoundaryConditions(
 shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 340.25,
                                                  surface_albedo = 0.06)
 
-flux_containers() = RadiativeFluxes(longwave_up = zeros(N + 1),
-                                    longwave_down = zeros(N + 1),
-                                    shortwave_up = zeros(N + 1),
-                                    shortwave_down = zeros(N + 1))
+flux_containers() = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                                    longwave_down = zeros(Nz + 1),
+                                    shortwave_up = zeros(Nz + 1),
+                                    shortwave_down = zeros(Nz + 1))
 
 clear_fluxes = flux_containers()
 radiative_fluxes!(clear_fluxes, CloudlessLongwave(), clear_longwave,
@@ -191,8 +191,8 @@ radiative_fluxes!(allsky_fluxes, CloudOverlapShortwave(overlap = :adding),
                                                          cloud.cloud_fraction),
                   atmosphere, shortwave_boundary)
 
-clear_Ṫ = zeros(N)
-allsky_Ṫ = zeros(N)
+clear_Ṫ = zeros(Nz)
+allsky_Ṫ = zeros(Nz)
 heating_rates!(clear_Ṫ, clear_fluxes, atmosphere)     # g and cₚ from atmosphere.constants
 heating_rates!(allsky_Ṫ, allsky_fluxes, atmosphere)
 nothing #hide

@@ -143,14 +143,14 @@ function load_ckdmip(paths)
         (; μ₀, up, down)
     end
 
-    nprofiles = size(data.pressure_hl, 2)
+    Nprofiles = size(data.pressure_hl, 2)
     size(longwave.up) == size(data.pressure_hl) || throw(DimensionMismatch("longwave reference shape"))
-    size(shortwave.up) == (size(data.pressure_hl, 1), length(shortwave.μ₀), nprofiles) ||
+    size(shortwave.up) == (size(data.pressure_hl, 1), length(shortwave.μ₀), Nprofiles) ||
         throw(DimensionMismatch("shortwave reference shape"))
 
     # Solar constant and albedo of the reference calculation, from the fluxes
     # themselves: `S₀ = down_TOA / μ₀` and `α = up_surface / down_surface`.
-    solar_constants = [shortwave.down[1, j, i] / shortwave.μ₀[j] for j in eachindex(shortwave.μ₀), i in 1:nprofiles]
+    solar_constants = [shortwave.down[1, j, i] / shortwave.μ₀[j] for j in eachindex(shortwave.μ₀), i in 1:Nprofiles]
     solar_constant = round(mean(solar_constants); digits = 1)
     maximum(abs, solar_constants .- solar_constant) < 0.05 ||
         throw(ArgumentError("reference TOA irradiance is not a single solar constant"))
@@ -159,28 +159,28 @@ function load_ckdmip(paths)
     maximum(abs, albedos .- albedo) < 1e-4 ||
         throw(ArgumentError("reference surface albedo is not spectrally and spatially constant"))
 
-    return (; data..., longwave, shortwave, nprofiles, solar_constant, albedo)
+    return (; data..., longwave, shortwave, Nprofiles, solar_constant, albedo)
 end
 
 # Run one model over every profile, returning fluxes, heating rates and the
 # statistics of the CKDMIP evaluation.
 function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
-    (; pressure_hl, temperature_hl, mole_fractions, longwave, shortwave, nprofiles, solar_constant, albedo) = benchmark
+    (; pressure_hl, temperature_hl, mole_fractions, longwave, shortwave, Nprofiles, solar_constant, albedo) = benchmark
     μ₀ = shortwave.μ₀
-    nlayers = size(pressure_hl, 1) - 1
-    nzenith = length(μ₀)
+    Nz = size(pressure_hl, 1) - 1
+    Nzenith = length(μ₀)
 
     model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
-    workspace = ColumnWorkspace(model, nlayers)
+    workspace = ColumnWorkspace(model, Nz)
 
-    longwave_up = zeros(nlayers + 1, nprofiles)
-    longwave_down = zeros(nlayers + 1, nprofiles)
-    shortwave_up = zeros(nlayers + 1, nzenith, nprofiles)
-    shortwave_down = zeros(nlayers + 1, nzenith, nprofiles)
-    longwave_heating = zeros(nlayers, nprofiles)
-    lw_heating_reference = zeros(nlayers, nprofiles)
-    shortwave_heating = zeros(nlayers, nzenith, nprofiles)
-    sw_heating_reference = zeros(nlayers, nzenith, nprofiles)
+    longwave_up = zeros(Nz + 1, Nprofiles)
+    longwave_down = zeros(Nz + 1, Nprofiles)
+    shortwave_up = zeros(Nz + 1, Nzenith, Nprofiles)
+    shortwave_down = zeros(Nz + 1, Nzenith, Nprofiles)
+    longwave_heating = zeros(Nz, Nprofiles)
+    lw_heating_reference = zeros(Nz, Nprofiles)
+    shortwave_heating = zeros(Nz, Nzenith, Nprofiles)
+    sw_heating_reference = zeros(Nz, Nzenith, Nprofiles)
 
     profile_column(i) = benchmark_column(pressure_hl[:, i], temperature_hl[:, i], map(mf -> mf[:, i], mole_fractions);
                                          surface = (; temperature = temperature_hl[end, i], emissivity = 1.0),
@@ -191,7 +191,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
                    emissivity = 1.0, albedo, cos_zeniths = μ₀, solar_constant)
 
     elapsed = 0.0   # optics and solves only
-    for i in 1:nprofiles
+    for i in 1:Nprofiles
         surface_temperature = temperature_hl[end, i]
         atmosphere = profile_column(i)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity = 1.0,
@@ -202,7 +202,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
         shortwave_down[:, :, i] = fluxes.shortwave_down
         longwave_heating[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
         lw_heating_reference[:, i] = heating_rate_per_day(longwave.up[:, i], longwave.down[:, i], atmosphere)
-        for j in 1:nzenith
+        for j in 1:Nzenith
             shortwave_heating[:, j, i] = heating_rate_per_day(fluxes.shortwave_up[:, j], fluxes.shortwave_down[:, j], atmosphere)
             sw_heating_reference[:, j, i] = heating_rate_per_day(shortwave.up[:, j, i], shortwave.down[:, j, i], atmosphere)
         end
@@ -211,7 +211,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     # Shortwave statistics pool profiles and zenith angles; the pressure
     # interfaces are replicated per zenith angle for the weighted heating-rate
     # RMSE. The surface-downwelling gate excludes μ₀ < 0.3.
-    pressure_sw = repeat(pressure_hl, inner = (1, nzenith))
+    pressure_sw = repeat(pressure_hl, inner = (1, Nzenith))
     flat(x) = reshape(x, size(x, 1), :)
     high_sun = findall(>=(0.3), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
@@ -233,7 +233,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
                                  heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
                                      pressure_hl, shortwave_heating[:, j, :], sw_heating_reference[:, j, :],
                                      HEATING_RATE_RANGES.troposphere))
-                              for j in 1:nzenith],
+                              for j in 1:Nzenith],
     )
 
     gates_for = getproperty(CKDMIP_GATES, Symbol(model_name))
@@ -259,9 +259,9 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     return (; model_name = String(model_name),
               longwave_gpoints = length(model.longwave_weights),
               shortwave_gpoints = length(model.shortwave_weights),
-              nprofiles, nlayers, mu0 = μ₀, solar_constant, albedo, column_amount_convention,
+              Nprofiles, Nz, mu0 = μ₀, solar_constant, albedo, column_amount_convention,
               elapsed_seconds = elapsed,
-              microseconds_per_column = 1e6 * elapsed / nprofiles,
+              microseconds_per_column = 1e6 * elapsed / Nprofiles,
               statistics, gates)
 end
 
@@ -271,7 +271,7 @@ function ckdmip_markdown(results, benchmark, paths)
     push!(lines, "")
     push!(lines, "Generated $(Dates.format(now(), "yyyy-mm-dd HH:MM")) by `validation/ckdmip_evaluation1.jl`.")
     push!(lines, "")
-    push!(lines, "$(benchmark.nprofiles) present-day clear-sky profiles, $(size(benchmark.pressure_hl, 1) - 1) layers " *
+    push!(lines, "$(benchmark.Nprofiles) present-day clear-sky profiles, $(size(benchmark.pressure_hl, 1) - 1) layers " *
                  "from $(benchmark.pressure_hl[1, 1]) Pa; longwave with `ε = 1` and `Tₛ = temperature_hl[end]`; " *
                  "shortwave with `S₀ = $(benchmark.solar_constant)` W m⁻², albedo $(benchmark.albedo), " *
                  "μ₀ ∈ $(benchmark.shortwave.μ₀). Reference: line-by-line fluxes of CKDMIP " *
@@ -334,7 +334,7 @@ function run_ckdmip_evaluation1(; models = (:climate_32x32, :climate_64x64))
             return results
         end
         benchmark = load_ckdmip(paths)
-        println("CKDMIP Evaluation-1: $(benchmark.nprofiles) profiles, S₀ = $(benchmark.solar_constant) W m⁻², " *
+        println("CKDMIP Evaluation-1: $(benchmark.Nprofiles) profiles, S₀ = $(benchmark.solar_constant) W m⁻², " *
                 "albedo $(benchmark.albedo), μ₀ = $(benchmark.shortwave.μ₀)")
         for model_name in models
             result = evaluate_ckdmip(model_name, benchmark)
@@ -358,7 +358,7 @@ function run_ckdmip_evaluation1(; models = (:climate_32x32, :climate_64x64))
                         model = result.model_name,
                         longwave_gpoints = result.longwave_gpoints,
                         shortwave_gpoints = result.shortwave_gpoints,
-                        nprofiles = result.nprofiles, nlayers = result.nlayers,
+                        Nprofiles = result.Nprofiles, Nz = result.Nz,
                         mu0 = result.mu0, solar_constant = result.solar_constant, albedo = result.albedo,
                         surface_emissivity = 1.0,
                         column_amount_convention = result.column_amount_convention,

@@ -21,7 +21,7 @@ gas_optics = read_reference_ecckd_gas_optics("32x32";
     names = (:composite, :h2o, :co2))
 nothing #hide
 
-# The column: ``N`` layers with interface pressures ``pᵢ`` (Pa, top of
+# The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
 # atmosphere first), layer pressures ``p`` at their midpoints, and the
 # dry-air molar amount ``nᵈ`` of each layer from the hydrostatic relation:
 
@@ -29,8 +29,8 @@ constants = PhysicalConstants()
 g  = constants.gravity               # m s⁻²
 mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
 
-N  = 48
-pᵢ = collect(range(2_000, 101_325; length = N + 1))
+Nz = 48
+pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 nᵈ = diff(pᵢ) ./ (g * mᵈ)                                # mol m⁻²
 
@@ -57,16 +57,16 @@ function solve_column(χCO₂)
 
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, N), zeros(longwave_gpoints, N);
-                                         source_top = zeros(longwave_gpoints, N),
-                                         source_bottom = zeros(longwave_gpoints, N),
+    longwave = LongwaveOptics(zeros(longwave_gpoints, Nz), zeros(longwave_gpoints, Nz);
+                                         source_top = zeros(longwave_gpoints, Nz),
+                                         source_bottom = zeros(longwave_gpoints, Nz),
                                          weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
+    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
                                            weights = zeros(shortwave_gpoints))
-    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                             longwave_down = zeros(N + 1),
-                             shortwave_up = zeros(N + 1),
-                             shortwave_down = zeros(N + 1))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
 
     optical_properties!(longwave, shortwave, gas_optics, atmosphere)
     surface_emission = surface_longwave_emission(gas_optics, Tₛ)

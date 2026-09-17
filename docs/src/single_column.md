@@ -11,14 +11,14 @@ debugging a new band parameterization.
 using NumericalRadiation
 using CairoMakie
 
-N  = 32
-σᵢ = collect(range(0, 1, length = N + 1))   # interface sigma coordinate
+Nz = 32
+σᵢ = collect(range(0, 1, length = Nz + 1))   # interface sigma coordinate
 grid = ColumnGrid(σᵢ)
 
 base_profile = AtmosphereProfile(
-    temperature      = collect(range(220, 295, length = N)),
-    humidity         = fill(0.008, N),
-    geopotential     = zeros(N),
+    temperature      = collect(range(220, 295, length = Nz)),
+    humidity         = fill(0.008, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000,
 )
 FT = Float64
@@ -42,10 +42,10 @@ function solve_column(carbon_dioxide_ppmv)
         surface_pressure = base_profile.surface_pressure,
         CO₂              = carbon_dioxide_ppmv,
     )
-    Ṫˡʷ = zeros(N)
-    Ṫˢʷ = zeros(N)
+    Ṫˡʷ = zeros(Nz)
+    Ṫˢʷ = zeros(Nz)
     longwave_diagnostics  = LongwaveDiagnostics(FT)
-    shortwave_diagnostics = ShortwaveDiagnostics(FT, N)
+    shortwave_diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
 
     solve_longwave!(Ṫˡʷ, longwave_diagnostics, longwave, profile, grid,

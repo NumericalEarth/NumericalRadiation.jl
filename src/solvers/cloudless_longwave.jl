@@ -4,8 +4,8 @@ $(TYPEDEF)
 Precomputed longwave optical properties for clear-sky solver tests and future
 ecCKD gas-optics outputs.
 
-`optical_depth` and `source` may be vectors of length `nlayers` or matrices
-with shape `(Ngpoints, nlayers)`. `source` is the layer source function in flux units
+`optical_depth` and `source` may be vectors of length `Nz` or matrices
+with shape `(Ngpoints, Nz)`. `source` is the layer source function in flux units
 for each spectral point. Optional `source_top` and `source_bottom` arrays with
 the same shape enable ecRad-style no-scattering longwave emission from
 half-level Planck functions. Optional `single_scattering_albedo` and
@@ -287,11 +287,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            optics::LongwaveOptics{FT},
                            atmosphere,
                            boundary_conditions::LongwaveBoundaryConditions{FT}) where FT
-    nlayers = number_of_layers(optics)
-    length(fluxes.longwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_up must have length nlayers + 1"))
-    length(fluxes.longwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_down must have length nlayers + 1"))
+    Nz = number_of_layers(optics)
+    length(fluxes.longwave_up) == Nz + 1 ||
+        throw(DimensionMismatch("longwave_up must have length Nz + 1"))
+    length(fluxes.longwave_down) == Nz + 1 ||
+        throw(DimensionMismatch("longwave_down must have length Nz + 1"))
 
     fluxes.longwave_up .= zero(FT)
     fluxes.longwave_down .= zero(FT)
@@ -299,17 +299,17 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     if has_longwave_scattering(optics)
         has_interface_sources(optics) ||
             throw(ArgumentError("longwave scattering requires source_top and source_bottom interface Planck sources"))
-        reflectance = zeros(FT, nlayers)
-        transmittance = zeros(FT, nlayers)
-        source_up = zeros(FT, nlayers)
-        source_down = zeros(FT, nlayers)
-        albedo = zeros(FT, nlayers + 1)
-        source = zeros(FT, nlayers + 1)
-        inv_denominator = zeros(FT, nlayers)
+        reflectance = zeros(FT, Nz)
+        transmittance = zeros(FT, Nz)
+        source_up = zeros(FT, Nz)
+        source_down = zeros(FT, Nz)
+        albedo = zeros(FT, Nz + 1)
+        source = zeros(FT, Nz + 1)
+        inv_denominator = zeros(FT, Nz)
 
         for gpoint in 1:number_of_gpoints(optics)
             w = FT(optics.weights[gpoint])
-            for k in 1:nlayers
+            for k in 1:Nz
                 top, bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
                 reflectance[k], transmittance[k], source_up[k], source_down[k] =
                     longwave_reflectance_transmittance_sources(
@@ -317,10 +317,10 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                         scattering_asymmetry_at(optics, gpoint, k), top, bottom)
             end
 
-            albedo[nlayers + 1] =
+            albedo[Nz + 1] =
                 clamp(surface_longwave_albedo(boundary_conditions, gpoint), zero(FT), one(FT))
-            source[nlayers + 1] = surface_longwave_up_at(boundary_conditions, gpoint)
-            for k in nlayers:-1:1
+            source[Nz + 1] = surface_longwave_up_at(boundary_conditions, gpoint)
+            for k in Nz:-1:1
                 inv_denominator[k] =
                     inv(one(FT) - albedo[k + 1] * reflectance[k])
                 albedo[k] = reflectance[k] +
@@ -334,7 +334,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
             down = boundary_conditions.toa_longwave_down
             fluxes.longwave_down[1] += w * down
             fluxes.longwave_up[1] += w * (source[1] + albedo[1] * down)
-            for k in 1:nlayers
+            for k in 1:Nz
                 down = (transmittance[k] * down +
                         reflectance[k] * source[k + 1] +
                         source_down[k]) * inv_denominator[k]
@@ -354,10 +354,10 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     # one g point at a time, so a host kernel streaming that function directly
     # reproduces this solver bit for bit.
     if has_interface_sources(optics)
-        gpoint_up = zeros(FT, nlayers + 1)
-        gpoint_down = zeros(FT, nlayers + 1)
-        transmittance = zeros(FT, nlayers)
-        source_up = zeros(FT, nlayers)
+        gpoint_up = zeros(FT, Nz + 1)
+        gpoint_down = zeros(FT, Nz + 1)
+        transmittance = zeros(FT, Nz)
+        source_up = zeros(FT, Nz)
         for gpoint in 1:number_of_gpoints(optics)
             w = FT(optics.weights[gpoint])
             streaming_longwave_fluxes!(gpoint_up, gpoint_down,
@@ -365,7 +365,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                                        BoundarySurfaceEmission(boundary_conditions, gpoint),
                                        surface_longwave_albedo(boundary_conditions, gpoint),
                                        boundary_conditions.toa_longwave_down,
-                                       (w,), 1, nlayers, transmittance, source_up)
+                                       (w,), 1, Nz, transmittance, source_up)
             fluxes.longwave_up .+= gpoint_up
             fluxes.longwave_down .+= gpoint_down
         end
@@ -378,7 +378,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
 
         down = boundary_conditions.toa_longwave_down
         fluxes.longwave_down[1] += w * down
-        for k in 1:nlayers
+        for k in 1:Nz
             layer_transmittance = exp(-optical_depth_at(optics, gpoint, k))
             layer_source = source_at(optics, gpoint, k)
             down = down * layer_transmittance + layer_source * (one(FT) - layer_transmittance)
@@ -387,8 +387,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
 
         up = surface_longwave_up_at(boundary_conditions, gpoint) +
              surface_longwave_albedo(boundary_conditions, gpoint) * down
-        fluxes.longwave_up[nlayers + 1] += w * up
-        for k in nlayers:-1:1
+        fluxes.longwave_up[Nz + 1] += w * up
+        for k in Nz:-1:1
             layer_transmittance = exp(-optical_depth_at(optics, gpoint, k))
             layer_source = source_at(optics, gpoint, k)
             up = up * layer_transmittance + layer_source * (one(FT) - layer_transmittance)

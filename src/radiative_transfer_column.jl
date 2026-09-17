@@ -51,7 +51,7 @@ Construct a [`RadiativeTransferColumn`](@ref).
 
 Required:
 - `grid`     — a [`ColumnGrid`](@ref).
-- `profile`  — an [`AtmosphereProfile`](@ref) whose temperature vector drives `nlayers`.
+- `profile`  — an [`AtmosphereProfile`](@ref) whose temperature vector drives `Nz`.
 - `surface`  — a [`SurfaceState`](@ref).
 
 Optional schemes and constants default to sensible Earth choices of the same
@@ -67,7 +67,7 @@ function RadiativeTransferColumn(;
         thermodynamic_constants = ThermodynamicConstants{eltype(profile.temperature)}(),
     )
     NF      = eltype(profile.temperature)
-    nlayers = length(profile.temperature)
+    Nz = length(profile.temperature)
     V       = typeof(profile.temperature)
     G       = typeof(grid)
     AP      = typeof(profile)
@@ -76,10 +76,10 @@ function RadiativeTransferColumn(;
     PC      = typeof(physical_constants)
     TC      = typeof(thermodynamic_constants)
 
-    temperature_tendency   = zeros(NF, nlayers)
+    temperature_tendency   = zeros(NF, Nz)
     transmissivity_scratch = similar(profile.temperature)
     longwave_diagnostics   = LongwaveDiagnostics{NF}()
-    shortwave_diagnostics  = ShortwaveDiagnostics{NF}(nlayers)
+    shortwave_diagnostics  = ShortwaveDiagnostics{NF}(Nz)
 
     return RadiativeTransferColumn{NF, LW, SW, PC, TC, V, G, AP}(
         grid, profile, surface,
