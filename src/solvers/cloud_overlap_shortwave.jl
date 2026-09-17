@@ -356,9 +356,9 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
             inverse_denominator = inv(one(FT) - reflectance[region, k] * total_albedo[region, k + 1])
             flux_down[region] = (transmittance[region, k] * flux_down[region] +
                                  direct_down[region] * (direct_transmittance[region, k] *
-                                                      total_albedo_direct[region, k + 1] *
-                                                      reflectance[region, k] +
-                                                      direct_diffuse_transmittance[region, k])) * inverse_denominator
+                                                        total_albedo_direct[region, k + 1] *
+                                                        reflectance[region, k] +
+                                                        direct_diffuse_transmittance[region, k])) * inverse_denominator
             direct_down[region] = direct_transmittance[region, k] * direct_down[region]
             flux_up[region] = direct_down[region] * total_albedo_direct[region, k + 1] +
                               flux_down[region] * total_albedo[region, k + 1]
@@ -546,9 +546,9 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
             inverse_denominator = inv(one(FT) - reflectance[region, k] * total_albedo[region, k + 1])
             flux_down[region] = (transmittance[region, k] * flux_down[region] +
                                  direct_down[region] * (direct_transmittance[region, k] *
-                                                      total_albedo_direct[region, k + 1] *
-                                                      reflectance[region, k] +
-                                                      direct_diffuse_transmittance[region, k])) * inverse_denominator
+                                                        total_albedo_direct[region, k + 1] *
+                                                        reflectance[region, k] +
+                                                        direct_diffuse_transmittance[region, k])) * inverse_denominator
             direct_down[region] = direct_transmittance[region, k] * direct_down[region]
             flux_up[region] = direct_down[region] * total_albedo_direct[region, k + 1] +
                               flux_down[region] * total_albedo[region, k + 1]

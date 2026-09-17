@@ -805,8 +805,7 @@ end
         geometry = (;),
     )
 
-    @test_throws DimensionMismatch optical_properties!(
-        longwave, shortwave, model, atmosphere(pressure_layers=[200.0]))
+    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(pressure_layers=[200.0]))
     @test_throws DimensionMismatch optical_properties!(
         longwave, shortwave, model,
         atmosphere(pressure_interfaces=[100.0, 1_000.0]))
