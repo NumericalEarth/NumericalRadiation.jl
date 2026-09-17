@@ -883,15 +883,17 @@ end
 # it stood before the scratch refactor, copied below, (3) exact zeros at night
 # and (4) zero allocation.
 
-# Layer-optics functor over plain matrices, the way a host kernel supplies
-# optics: `(ig, k) -> (τ_absorption, τ_scattering, asymmetry)`.
-struct MatrixLayerOptics{M}
+# Shortwave layer-optics functor over plain matrices, the way a host kernel
+# supplies optics: `(ig, k) -> (τ_absorption, τ_scattering, asymmetry)`. (The
+# longwave `MatrixLayerOptics` above wraps a `LongwaveOptics`; Julia 1.10
+# rejects a second `struct` of the same name in one module.)
+struct ShortwaveMatrixOptics{M}
     absorption::M
     scattering::M
     asymmetry::M
 end
 
-@inline (optics::MatrixLayerOptics)(ig, k) =
+@inline (optics::ShortwaveMatrixOptics)(ig, k) =
     (optics.absorption[ig, k], optics.scattering[ig, k], optics.asymmetry[ig, k])
 
 # A 3-g-point, 6-layer column with Rayleigh scattering in every layer, a mix
@@ -906,7 +908,7 @@ function shortwave_fixture(FT)
     diffuse_albedo = FT[0.1, 0.2, 0.3]
     optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering,
                              scattering_asymmetry = asymmetry, weights)
-    layer_optics = MatrixLayerOptics(absorption, scattering, asymmetry)
+    layer_optics = ShortwaveMatrixOptics(absorption, scattering, asymmetry)
     return (; ng, nlayers, optics, layer_optics, weights, direct_albedo, diffuse_albedo)
 end
 
@@ -1076,7 +1078,7 @@ end
     # Streamed through the adding method, the scattering-free g point is
     # Beer-Lambert too, up to rounding.
     up, down = zeros(nlayers + 1), zeros(nlayers + 1)
-    streaming_shortwave_fluxes!(up, down, MatrixLayerOptics(absorption, scattering, zero(absorption)),
+    streaming_shortwave_fluxes!(up, down, ShortwaveMatrixOptics(absorption, scattering, zero(absorption)),
                                 μ0, S0 * μ0, albedo, albedo, (1.0,), 1, nlayers,
                                 ShortwaveColumnScratch(Float64, nlayers))
     @test down ≈ beer_down rtol = 1e-10
