@@ -39,10 +39,10 @@ end
 
 # The pre-rewrite body of `add_mapped_cloud_scattering!` (matrix method),
 # kept verbatim as the reference the loop over `add_scattering_layer` must
-# reproduce. Its delta-Eddington and scattering-scale steps act on the
-# combined liquid+ice mixture, so the rewrite (which applies them per phase)
-# is compared with those keywords only where the two agree: one phase only,
-# or an unclamped scattering scale.
+# reproduce. Delta-Eddington scaling acts on the combined liquid+ice mixture
+# in both (as in ecRad). The scattering-scale step acts on the mixture here
+# but per phase in the rewrite, so that keyword is compared only where the
+# two agree: an unclamped scattering scale.
 function legacy_add_mapped_cloud_scattering!(shortwave,
                                              liquid_properties,
                                              ice_properties,
@@ -330,9 +330,10 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
                 assert_shortwave_close(new, old; rtol)
             end
 
-            # Delta-Eddington scaling is applied per phase, which coincides with the
-            # combined-mixture scaling of the old method when only one phase is present.
-            for (lwp, iwp) in ((LIQUID_PATH, zero(ICE_PATH)), (zero(LIQUID_PATH), ICE_PATH))
+            # Delta-Eddington scaling removes the forward peak of the liquid+ice
+            # mixture once, as the old method (and ecRad) did: with both phases
+            # present, and with either alone.
+            for (lwp, iwp) in ((LIQUID_PATH, ICE_PATH), (LIQUID_PATH, zero(ICE_PATH)), (zero(LIQUID_PATH), ICE_PATH))
                 new = copy_shortwave(base)
                 old = copy_shortwave(base)
                 add_mapped_cloud_scattering!(new, LIQUID_PROPERTIES, ICE_PROPERTIES,
