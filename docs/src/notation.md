@@ -18,16 +18,19 @@ The conventions the table relies on:
   glyph in the identifier: `μ₀`, `γ₁`, `c₀₀`, `i₀ᵖ`, `Tˢ`, `κˡ`, never
   `mu0`, `gamma1`, `c00`, `ip0`, `Ts`, `kappa_l`.
 * **One register per function.** Within a function or struct a quantity is
-  named either by the unicode symbol of the equation in its docstring — with
-  an optional English descriptor after `_` (`τ_absorption`, `𝒢_cloud`,
-  `ε_ocean`) or a phase or region label as a superscript (`ωˡ`, `κⁱ`,
-  `τᶜ_scattering`), and index suffixes `_k`, `_top`, `_bottom` — or by whole
-  English words (`optical_depth`, `water_path`, `cloud_fraction`); the two
-  are never mixed in one expression. Struct fields and caller-owned arrays are
+  named either by the unicode symbol of the equation in its docstring, with
+  its phase, process and interface labels as sub- and superscripts (`ωˡ`,
+  `κⁱ`, `τₛᶜ`, `Bₖ₊₁`), or by whole English words (`optical_depth`,
+  `water_path`, `cloud_fraction`). An identifier is never half of each — no
+  `_` in a symbolic name, no symbol in an English one — and the two registers
+  never meet in one expression. Struct fields and caller-owned arrays are
   descriptive snake_case (public storage, matching Breeze); reading
-  `optics.single_scattering_albedo[g, k]` into a local `ω` is the
-  boundary between the registers. Where a docstring writes an equation, the
-  code below it uses those exact symbols.
+  `optics.single_scattering_albedo[g, k]` into a local `ω` is the boundary
+  between the registers. Where a docstring writes an equation, the code below
+  it uses those exact symbols.
+* **Processes and interfaces are subscripts**: `ₐ` absorption, `ₛ`
+  scattering and `ₑ` extinction (`τₐ`, `τₛ`, `τₑ`, `κₛ`, `Σκₛ`); a layer's
+  top and bottom interfaces are `ₖ` and `ₖ₊₁` (`Bₖ`, `Bₖ₊₁`, `Sꜛₖ`, `ℐₖ₊₁`).
 * **Reference quantities** take a subscript ``r`` (`p_ref`, `T_ref` are the
   Williams (2026) Table 1 names and the one exception).
 * **Phase and region labels are superscripts**: `ˡ` liquid, `ⁱ` ice, `ᶜ`
@@ -46,7 +49,7 @@ The conventions the table relies on:
   interfaces run `k = 1:Nz + 1` with interface `1` at the top and `Nz + 1`
   at the surface, and pressure increases with `k`.
 * **Fluxes are positive in their own direction**: `ℐꜜ` is positive downward,
-  `ℐꜛ` positive upward, and the net flux `ℐ_net = ℐꜜ - ℐꜛ` is positive
+  `ℐꜛ` positive upward, and the net flux `ℐ = ℐꜜ - ℐꜛ` is positive
   downward; a positive heating rate warms the layer.
 * **Gas amounts are molar column amounts** in mol m⁻² per layer, under the
   *dry column-amount convention* of the ecCKD tables: the dry air of a
@@ -110,24 +113,24 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``\mathrm{CO_2}`` | `CO₂`, `default_CO₂` | `AtmosphereProfile.CO₂` | CO₂ concentration of the column schemes, ppmv |
 | ``\zeta`` | `ζ` | `OneBandShortwaveRadiativeTransfer.ozone_distribution` | Ozone vertical distribution over the sigma coordinate, `∫ ζ dσ_level = 1`; `ozone_absorption_k` is the fraction of the TOA flux it absorbs in layer `k` |
 | **Gas optics** | | | |
-| ``\tau`` | `τ`, `τ_k`, `τ_total`, `τ_clear`, `τ_cloudy`, `τ_cloud`, `τ_existing`, `τ_incoming` | `optical_depth`, [`longwave_optical_depth`](@ref), [`shortwave_optical_depth`](@ref) | Layer optical depth (the two-stream functions take the total; descriptors name the region or constituent) |
+| ``\tau`` | `τ`, `τᶜ` | `optical_depth`, [`longwave_optical_depth`](@ref), [`shortwave_optical_depth`](@ref) | Layer optical depth, absorption plus scattering (the two-stream functions take this total with `ω` and `𝒢`) |
 | ``\Delta\tau`` | `Δτ`, `Δτ_k`, `Δτ_bottom`, `Δτ_H₂O_line`, `Δτ_H₂O_continuum`, `Δτ_CO₂` | [`NumericalRadiation.williams_optical_depth_increment`](@ref) | Layer optical-depth increment, by absorber in the Williams scheme (`q_CO₂` is its CO₂ mass mixing ratio) |
-| ``\tau^{lw}``, ``\tau^{sw}`` | `τˡʷ`, `τˢʷ`, `τˢʷ_absorption`, `τˢʷ_scattering`, `τˢʷ_extinction` | `CloudOptics.longwave_optical_depth`, `shortwave_optical_depth`, `shortwave_scattering_optical_depth` | Longwave and shortwave optical depths (Breeze) |
+| ``\tau^{lw}``, ``\tau^{sw}`` | `τˡʷ`, `τˢʷ`, `τₐˢʷ`, `τₛˢʷ`, `τₑˢʷ` | `CloudOptics.longwave_optical_depth`, `shortwave_optical_depth`, `shortwave_scattering_optical_depth` | Longwave and shortwave optical depths (Breeze) |
 | ``\kappa`` | `κ`, `κ_line`, `κ_continuum`, `κ_CO₂` | `mass_extinction_coefficient`, `longwave_mass_absorption`, `shortwave_mass_extinction`, table `longwave_absorption`/`shortwave_absorption` | Mass (m² kg⁻¹) or molar (m² mol⁻¹) absorption or extinction coefficient |
 | ``(i_0, i_1, w)`` | `(i₀, i₁, w)`, `(i₀ᵖ, i₁ᵖ, wᵖ)`, `(i₀ᵀ, i₁ᵀ, wᵀ)`, `(i₀ᴴ, i₁ᴴ, wᴴ)` | [`GasOpticsStencil`](@ref) `.pressure`, `.temperature`, `.water_vapor`; [`effective_radius_bracket`](@ref); [`source_table_bracket`](@ref) | Table bracket: lower node, upper node and interpolation weight; `w₀ = 1 - w`; `T₁` is the first node of the Planck source-table temperature grid, below which the source is scaled linearly to zero |
 | ``i^p, i^T, i^H`` | `iᵖ`, `iᵀ`, `iᴴ` | | Loop indices over the pressure, temperature and H₂O table grids |
 | ``c_{00}, \ldots, c_{111}``; ``c_0, c_1`` | `c₀₀ … c₁₁`, `c₀₀₀ … c₁₁₁`; `c₀`, `c₁` | | Table corner values, subscripts naming the pressure, temperature (and H₂O) nodes; partial interpolants at the nodes still to be interpolated |
-| ``B`` | `B`, `B_k`, `B_top`, `B_bottom`, `B_surface_ocean` | [`longwave_source`](@ref), `LongwaveOptics.source`, `source_top`, `source_bottom`, [`planck_wavenumber`](@ref) | Planck source in flux units at a layer or interface; `σT⁴` is the gray fallback; `πB(T, ν̃)` the hemispheric spectral flux |
-| ``\partial B`` | `∂B` | | Planck gradient along optical depth in a layer, `(B_bottom - B_top) / (Dτ)` |
+| ``B`` | `B`, `Bₖ`, `Bₖ₊₁`, `Bˢ` | [`longwave_source`](@ref), `LongwaveOptics.source`, `source_top`, `source_bottom`, [`planck_wavenumber`](@ref) | Planck source in flux units at a layer, at its top and bottom interfaces `k`, `k + 1`, or at the surface; `σT⁴` is the gray fallback; `πB(T, ν̃)` the hemispheric spectral flux |
+| ``\partial B`` | `∂B` | | Planck gradient along optical depth in a layer, `(Bₖ₊₁ - Bₖ) / (Dτ)` |
 | ``w_g`` | `w`, `weights` | `model.longwave_weights`, `shortwave_weights`, `optics.weights` | Spectral quadrature weight of a g point |
 | ``g`` | `g`, `Ng`, `Ngˡʷ`, `Ngˢʷ` | [`gas_names`](@ref), `number_of_gpoints(optics)` | Index and count of correlated-*k* quadrature points: `g` is the cumulative-probability coordinate of the correlated-*k* method, so the g-point index is literally `g` (`for g in 1:Ng`, `layer_optics(g, k)`); never in scope together with gravity |
 | ``\tilde\nu`` | `ν̃`, `ν̃ₘ`, `Δν̃`, `ν̃₀`, `ν̃₁`, `ν̃₂` | `wavenumber1`, `wavenumber2`, `wavenumber_min`, `wavenumber_max` | Wavenumber, cm⁻¹ (`ν̃ₘ` in m⁻¹), spectral step, and the bounds of neighbouring spectral intervals `interval₀`, `interval₁`, `interval₂` |
-| ``\tau_\mathrm{Rayleigh}`` | `τ_scattering`, `τ_rayleigh` | [`rayleigh_optical_depth`](@ref), `ShortwaveOptics.rayleigh_optical_depth` | Rayleigh (clear-sky) scattering optical depth |
+| ``\tau_\mathrm{Rayleigh}`` | `τₛ` | [`rayleigh_optical_depth`](@ref), `ShortwaveOptics.rayleigh_optical_depth` | Rayleigh (clear-sky) scattering optical depth |
 | ``\kappa_\mathrm{rot}, l_\mathrm{rot}, \ldots`` | `κ_rot l_rot κ_vr l_vr1 l_vr2 κ_cnt1 κ_cnt2 κ_CO₂ l_CO₂ ν̃_CO₂ p_ref pv_ref T_ref σ_cont` | [`AnalyticBandLongwave`](@ref) fields | Williams (2026) Table 1 parameters, spelled as in the paper and documented field by field |
 | **Radiative transfer and two-stream coefficients** | | | |
 | ``\mu_0`` | `μ₀` | `geometry.cos_zenith`, `SurfaceState.cos_zenith`, [`cosine_solar_zenith`](@ref) | Cosine of the solar zenith angle (Breeze); `1/μ₀` is the direct-beam slant-path factor |
-| ``\omega`` | `ω`, `ωˡ`, `ωⁱ`, `ωᶜ`, `ω_clear`, `ω_cloudy` | `single_scattering_albedo`, `shortwave_single_scattering_albedo` | Single-scattering albedo, `τ_scattering / (τ_absorption + τ_scattering)`; one symbol, never `ω₀` |
-| ``\mathcal{G}`` | `𝒢`, `𝒢ˡ`, `𝒢ⁱ`, `𝒢ᶜ`, `𝒢_cloud`, `𝒢_clear`, `𝒢_cloudy` | `asymmetry_factor`, `scattering_asymmetry`, `shortwave_scattering_asymmetry` | Scattering asymmetry factor; `𝒢` because `g` is the g-point index (and gravity) and `γ` is the two-stream coefficient family. `𝒢τ_scattering` is the scattering-weighted moment `Σ 𝒢 τ_scattering` |
+| ``\omega`` | `ω`, `ωˡ`, `ωⁱ`, `ωᶜ` | `single_scattering_albedo`, `shortwave_single_scattering_albedo` | Single-scattering albedo, `τₛ / (τₐ + τₛ)`; one symbol, never `ω₀` |
+| ``\mathcal{G}`` | `𝒢`, `𝒢ˡ`, `𝒢ⁱ`, `𝒢ᶜ` | `asymmetry_factor`, `scattering_asymmetry`, `shortwave_scattering_asymmetry` | Scattering asymmetry factor; `𝒢` because `g` is the g-point index (and gravity) and `γ` is the two-stream coefficient family |
 | ``f`` | `f` | | Delta-Eddington forward-peak fraction `f = 𝒢²`; scaled optics are `τ′ ω′ 𝒢′` |
 | ``\gamma_1, \gamma_2, \gamma_3, \gamma_4`` | `γ₁`, `γ₂`, `γ₃`, `γ₄` | | Two-stream coefficients (practical improved flux method in the shortwave, hemispheric mean with `D` in the longwave) |
 | ``\alpha_1, \alpha_2`` | `α₁`, `α₂` | | Meador–Weaver direct-beam coefficients `γ₁γ₄ + γ₂γ₃`, `γ₁γ₃ + γ₂γ₄` |
@@ -135,16 +138,16 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``\mathcal{R}``, ``\mathcal{T}`` | `ℛ`, `𝒯`, `𝒯_k`, `𝒯[k]` | `reflectance`, `transmittance`, `transmissivity_scratch` | Diffuse reflectance and transmittance of a layer |
 | ``\mathcal{R}^0``, ``\mathcal{T}^0`` | `ℛ⁰`, `𝒯⁰` | `direct_reflectance`, `direct_diffuse_transmittance` | Direct-beam reflectance and direct-to-diffuse transmittance |
 | ``\mathcal{D}`` | `𝒟` | `direct_transmittance` | Direct transmittance `e^{-τ/μ₀}` |
-| ``S^\uparrow``, ``S^\downarrow`` | `Sꜛ`, `Sꜜ`, `Sꜛ_top`, `Sꜜ_bottom`, `S` | `source_up`, `source_down`, `source` | Upward and downward layer emission (longwave); `S` when both directions coincide |
+| ``S^\uparrow``, ``S^\downarrow`` | `Sꜛ`, `Sꜜ`, `Sꜛₖ`, `Sꜜₖ₊₁`, `S` | `source_up`, `source_down`, `source` | Upward and downward layer emission (longwave); `S` when both directions coincide |
 | ``e, e^2, m_1, m_2, d`` | `e`, `e₂`, `m₁`, `m₂`, `d` | | `e^{-λτ}`, `e^{-2λτ}`, `1 - e^{-λτ}`, `1 - e^{-2λτ}`, `1 - e^{-τ/μ₀}` (the conservative-limit rearrangement of the shortwave layer solution) |
 | ``\alpha`` | `α` | `overlap_parameter` | ecRad/Hogan–Illingworth cloud-overlap parameter between adjacent layers (also the surface albedo, below; the two never meet in one function) |
 | ``\mathcal{R}_\infty`` | `ℛ∞`, `Σℛ∞` | | Reflectance of a semi-infinite layer used by ecRad's thick averaging, and its weighted sum |
-| ``\Sigma`` | `Σκ`, `Σκ_scattering`, `Σκ_scattering_𝒢`, `Σw` | | Weighted sums over spectral intervals when mapping cloud properties onto g points |
+| ``\Sigma`` | `Σκ`, `Σκₛ`, `Σκₛ𝒢`, `Σw` | | Weighted sums over spectral intervals when mapping cloud properties onto g points |
 | **Cloud and aerosol optics** | | | |
 | ``\kappa^l``, ``\kappa^i`` | `κˡ`, `κⁱ` | `liquid_shortwave_mass_extinction`, `ice_shortwave_mass_extinction`, `mass_extinction_coefficient` | Liquid and ice mass-extinction coefficients, m² kg⁻¹ |
-| ``\tau_\mathrm{absorption}``, ``\tau_\mathrm{scattering}``, ``\tau_\mathrm{extinction}`` | `τ_absorption`, `τ_scattering`, `τ_extinction`, `τˡ_extinction`, `τⁱ_scattering`, `τᶜ_absorption`, `τᶜ_scattering`, `τ_absorption′` | `optical_depth`, `rayleigh_optical_depth` | Absorption, scattering and extinction optical depths of a layer, a phase or the cloud mixture; a prime marks the value after folding in a constituent |
+| ``\tau_a``, ``\tau_s``, ``\tau_e`` | `τₐ`, `τₛ`, `τₑ`, `τₑˡ`, `τₛⁱ`, `τₐᶜ`, `τₛᶜ`, `τₐ′` | `optical_depth`, `rayleigh_optical_depth` | Absorption, scattering and extinction optical depths of a layer, a phase or the cloud mixture; a prime marks the value after folding in a constituent |
 | ``\tau^c``, ``\omega^c``, ``\mathcal{G}^c`` | `τᶜ`, `ωᶜ`, `𝒢ᶜ` | | Optics of the combined liquid + ice cloud |
-| ``\mathrm{WP}`` | `water_path`, `liquid_water_path`, `ice_water_path`, `cloud_water_path`, `aerosol_path`, `liquid_path_k` | `liquid_water_path`, `ice_water_path`, `cloud_water_path`, `aerosol_path` | Condensed-water or aerosol mass path of a layer, kg m⁻² |
+| ``W`` | `W`, `Wˡ`, `Wⁱ` | `water_path`, `liquid_water_path`, `ice_water_path`, `cloud_water_path`, `aerosol_path` | Condensed-water or aerosol mass path of a layer, kg m⁻² |
 | ``r_e`` | `effective_radius`, `radius_bracket`, `Nr` | `SpectralCloudOptics.effective_radius`, [`effective_radius_bracket`](@ref) | Effective radius, m, its node bracket, and the count `Nr` of tabulated effective-radius nodes |
 | ``c`` | `cloud_fraction`, `cloud_cover` | `cloud_fraction`, `ShortwaveDiagnostics.cloud_cover` | Layer cloud fraction and column cloud cover |
 | ``f_\mathrm{sd}`` | `fractional_standard_deviation` | `fractional_standard_deviation` | In-cloud optical-depth variability of the Tripleclouds split |
@@ -153,8 +156,8 @@ fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``\mathscr{I}^{\uparrow lw}``, ``\mathscr{I}^{\downarrow lw}`` | `ℐꜛˡʷ`, `ℐꜜˡʷ` | `LongwaveDiagnostics.outgoing_longwave` (TOA), `surface_longwave_up`, `ocean_surface_longwave_up`, `land_surface_longwave_up`, `surface_longwave_down` | Longwave fluxes (Breeze) |
 | ``\mathscr{I}^{\uparrow sw}``, ``\mathscr{I}^{\downarrow sw}`` | `ℐꜛˢʷ`, `ℐꜜˢʷ` | `ShortwaveDiagnostics.outgoing_shortwave` (TOA), `surface_shortwave_up`, `surface_shortwave_down`, `ocean_surface_shortwave_up`, `land_surface_shortwave_down`, … | Shortwave fluxes (Breeze) |
 | ``\mathscr{I}^\downarrow_\mathrm{toa}`` | `ℐꜜ_toa` | `toa_shortwave_down`, `toa_irradiance` | Downwelling shortwave flux through a horizontal surface at the top of the atmosphere, `S₀ μ₀` |
-| ``\mathscr{I}_\mathrm{net}`` | `ℐ_net`, `ℐ_net_top`, `ℐ_net_bottom` | | Net downward flux `ℐꜜ - ℐꜛ` summed over the longwave and shortwave |
-| ``F_{\mathscr{I}}`` | `Ṫ`, `heating`, `g_over_cᵖ` | [`heating_rates!`](@ref), [`radiative_heating!`](@ref) | Radiative heating rate `g / cᵖ (ℐ_net[k] - ℐ_net[k+1]) / Δp[k]`, K s⁻¹ (Breeze's `Fℐ`) |
+| ``\mathscr{I}`` | `ℐ`, `ℐₖ`, `ℐₖ₊₁` | | Net downward flux `ℐꜜ - ℐꜛ` summed over the longwave and shortwave, at a layer's interfaces `k`, `k + 1` |
+| ``F_{\mathscr{I}}`` | `Ṫ`, `heating` | [`heating_rates!`](@ref), [`radiative_heating!`](@ref) | Radiative heating rate `g / cᵖ (ℐₖ - ℐₖ₊₁) / Δp`, K s⁻¹ (Breeze's `Fℐ`) |
 | ``\mathrm{OLR}`` | `outgoing_longwave`, `OLR`, `olr₁` | `LongwaveDiagnostics.outgoing_longwave` | Outgoing longwave radiation at the top of the atmosphere (an accepted acronym, like TOA and RMSE) |
 | **Surface and geometry** | | | |
 | ``\varepsilon`` | `ε`, `ε_ocean`, `ε_land` | `emissivity`, `SurfaceState.ocean_emissivity`, `land_emissivity` | Surface emissivity; the surface source is `ε B(Tˢ)` |
@@ -186,7 +189,10 @@ and are the only identifiers exempt from the rules above:
   listed in the table, and the SPEEDY Fortran names quoted in the docstrings of
   the one-band shortwave scheme (`GSES0`, `absdry`, `azen`, `nzen`);
 * the option `Symbol`s `:matrix_alpha`, `:tripleclouds_alpha`,
-  `:matrix_maximum`, which are public API values.
+  `:matrix_maximum`, which are public API values;
+* the column schemes ported from SPEEDY and the Williams (2026) scheme
+  (`src/shortwave`, `src/longwave`, `column_views.jl`), which keep descriptor
+  suffixes such as `q_k`, `ℐꜛ_surface`, `α_ocean` and `Δσ_k`.
 
 Identifiers otherwise never spell a species by chemical formula — they say
 `water_vapor`, `carbon_dioxide`, `ozone`, `methane`, `nitrous_oxide` — while

@@ -197,60 +197,55 @@ end
 $(TYPEDSIGNATURES)
 
 Fold one scattering constituent with mass-extinction coefficient `κ`,
-single-scattering albedo `ω`, asymmetry factor `𝒢_cloud`, and mass path
-`water_path` (kg m⁻²) into a layer's absorption optical depth `τ_absorption`,
-scattering optical depth `τ_scattering`, and scattering-weighted asymmetry
-factor `𝒢`, returning the updated triple:
+single-scattering albedo `ω`, asymmetry factor `𝒢ᶜ`, and mass path `W`
+(kg m⁻²) into a layer's absorption optical depth `τₐ`, scattering optical
+depth `τₛ`, and scattering-weighted asymmetry factor `𝒢`, returning the
+updated triple:
 
 ```text
-τ_absorption′ = τ_absorption + κ (1 - ω) water_path
-τ_scattering′ = τ_scattering + κ ω water_path
-𝒢′ = (𝒢 τ_scattering + 𝒢_cloud κ ω water_path) / τ_scattering′,    or 0 when τ_scattering′ = 0
+τₐ′ = τₐ + κ (1 - ω) W
+τₛ′ = τₛ + κ ω W
+𝒢′ = (𝒢 τₛ + 𝒢ᶜ κ ω W) / τₛ′,    or 0 when τₛ′ = 0
 ```
 
-The asymmetry update is evaluated as `𝒢 + (𝒢_cloud - 𝒢) κ ω water_path / τ_scattering′`,
-which is the same number and leaves the layer bit-for-bit unchanged when
-`water_path = 0`. [`add_mapped_cloud_scattering!`](@ref) applies this per phase
-and per g point.
+The asymmetry update is evaluated as `𝒢 + (𝒢ᶜ - 𝒢) κ ω W / τₛ′`, which is
+the same number and leaves the layer bit-for-bit unchanged when `W = 0`.
 """
-@inline function add_scattering_layer(τ_absorption, τ_scattering, 𝒢, κ, ω, 𝒢_cloud, water_path)
-    τ_cloud_scattering = κ * ω * water_path
-    τ_absorption′ = τ_absorption + κ * (1 - ω) * water_path
-    τ_scattering′ = τ_scattering + τ_cloud_scattering
-    𝒢′ = ifelse(τ_scattering′ == 0, zero(τ_scattering′), 𝒢 + (𝒢_cloud - 𝒢) * (τ_cloud_scattering / τ_scattering′))
-    return τ_absorption′, τ_scattering′, 𝒢′
+@inline function add_scattering_layer(τₐ, τₛ, 𝒢, κ, ω, 𝒢ᶜ, W)
+    τₛᶜ = κ * ω * W
+    τₐ′ = τₐ + κ * (1 - ω) * W
+    τₛ′ = τₛ + τₛᶜ
+    𝒢′ = ifelse(τₛ′ == 0, zero(τₛ′), 𝒢 + (𝒢ᶜ - 𝒢) * (τₛᶜ / τₛ′))
+    return τₐ′, τₛ′, 𝒢′
 end
 
 """
 $(TYPEDSIGNATURES)
 
 Fold `cloud` at g point `g` on the effective-radius bracket from
-[`effective_radius_bracket`](@ref) with mass path `water_path` (kg m⁻²) into
-a layer's `(τ_absorption, τ_scattering, 𝒢)`, returning the updated
-triple: [`cloud_layer_optics`](@ref) followed by
-[`add_scattering_layer`](@ref). A `Nothing` phase returns the layer
-unchanged, so one shortwave layer functor serves clear and cloudy skies.
+[`effective_radius_bracket`](@ref) with mass path `W` (kg m⁻²) into a
+layer's `(τₐ, τₛ, 𝒢)`, returning the updated triple: [`cloud_layer_optics`](@ref)
+followed by [`add_scattering_layer`](@ref). A `Nothing` phase returns the
+layer unchanged, so one shortwave layer functor serves clear and cloudy skies.
 """
-@inline function add_cloud_scattering_layer(τ_absorption, τ_scattering, 𝒢,
-                                            cloud::SpectralCloudOptics, g, radius_bracket, water_path)
-    κ, ω, 𝒢_cloud = cloud_layer_optics(cloud, g, radius_bracket)
-    return add_scattering_layer(τ_absorption, τ_scattering, 𝒢, κ, ω, 𝒢_cloud, water_path)
+@inline function add_cloud_scattering_layer(τₐ, τₛ, 𝒢, cloud::SpectralCloudOptics, g, radius_bracket, W)
+    κ, ω, 𝒢ᶜ = cloud_layer_optics(cloud, g, radius_bracket)
+    return add_scattering_layer(τₐ, τₛ, 𝒢, κ, ω, 𝒢ᶜ, W)
 end
 
-@inline add_cloud_scattering_layer(τ_absorption, τ_scattering, 𝒢,
-                                   ::Nothing, g, radius_bracket, water_path) = (τ_absorption, τ_scattering, 𝒢)
+@inline add_cloud_scattering_layer(τₐ, τₛ, 𝒢, ::Nothing, g, radius_bracket, W) = (τₐ, τₛ, 𝒢)
 
 """
 $(TYPEDSIGNATURES)
 
-Longwave cloud absorption optical depth `κ (1 - ω) water_path` of `cloud` at g point
-`g` for mass path `water_path` (kg m⁻²) on the effective-radius bracket from
+Longwave cloud absorption optical depth `κ (1 - ω) W` of `cloud` at g point
+`g` for mass path `W` (kg m⁻²) on the effective-radius bracket from
 [`effective_radius_bracket`](@ref); longwave cloud scattering is neglected.
 Zero for a `Nothing` phase.
 """
-@inline function cloud_absorption_optical_depth(cloud::SpectralCloudOptics, g, radius_bracket, water_path)
+@inline function cloud_absorption_optical_depth(cloud::SpectralCloudOptics, g, radius_bracket, W)
     κ, ω, _ = cloud_layer_optics(cloud, g, radius_bracket)
-    return κ * (1 - ω) * water_path
+    return κ * (1 - ω) * W
 end
 
-@inline cloud_absorption_optical_depth(::Nothing, g, radius_bracket, water_path) = zero(water_path)
+@inline cloud_absorption_optical_depth(::Nothing, g, radius_bracket, W) = zero(W)

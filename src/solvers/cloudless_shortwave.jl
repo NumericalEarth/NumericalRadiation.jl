@@ -225,8 +225,7 @@ end
     end
 
     τ = max(FT(τ), zero(FT))
-    τ_over_μ₀ = max(τ / μ₀, zero(FT))
-    𝒟 = exp(-τ_over_μ₀)
+    𝒟 = exp(-τ / μ₀)
     e = exp(-λ * τ)
     e₂ = e * e
 
@@ -249,7 +248,7 @@ end
     # 2e - 𝒟(1 + e²) = d(1 + e²) - m₁².
     m₁ = -expm1(-λ * τ)
     m₂ = -expm1(-FT(2) * λ * τ)
-    d = -expm1(-τ_over_μ₀)
+    d = -expm1(-τ / μ₀)
     one_plus_e₂ = one(FT) + e₂
     inverse_denominator = inv(λ * one_plus_e₂ + γ₁ * m₂)
 
@@ -273,7 +272,7 @@ $(TYPEDEF)
 
 Layer-optics functor over precomputed [`ShortwaveOptics`](@ref) arrays for
 [`streaming_shortwave_fluxes!`](@ref): `(g, k)` returns the tuple
-`(τ_absorption, τ_scattering, 𝒢)` of layer `k`. With `g::Int` the
+`(τₐ, τₛ, 𝒢)` of layer `k`. With `g::Int` the
 functor ignores the g index it is called with and always reads that g point,
 so a single g point can be streamed with `Ng = 1`.
 """

@@ -71,7 +71,7 @@ function gray_model(::Type{FT}, κ_longwave::AbstractVector, κ_shortwave::Abstr
                                                   FT.(longwave_weights))
 end
 
-# `(g, k) -> (τ, B_top, B_bottomtom)` from the gray model: layer amounts `n[k]`
+# `(g, k) -> (τ, Bₖ, Bₖ₊₁)` from the gray model: layer amounts `n[k]`
 # (mol m⁻², so `τ = κ_ig n[k]`) and Planck temperatures at the layer top and
 # bottom. Isothermal layers pass the same vector twice.
 struct GrayLongwaveLayerOptics{M, V, T}
@@ -84,11 +84,11 @@ end
 @inline function (optics::GrayLongwaveLayerOptics)(g, k)
     τ = longwave_optical_depth(optics.model, g, (composite=optics.amounts[k],), nothing)
     B_top = longwave_source(optics.model, g, optics.temperature_top[k], nothing)
-    B_bottomtom = longwave_source(optics.model, g, optics.temperature_bottom[k], nothing)
-    return (τ, B_top, B_bottomtom)
+    B_bottom = longwave_source(optics.model, g, optics.temperature_bottom[k], nothing)
+    return (τ, B_top, B_bottom)
 end
 
-# `(g, k) -> (τ, B_top, B_bottomtom)` with the Planck function prescribed
+# `(g, k) -> (τ, Bₖ, Bₖ₊₁)` with the Planck function prescribed
 # directly at the layer interfaces, for the linear-in-τ profile.
 struct PlanckProfileLayerOptics{V}
     optical_depth :: V

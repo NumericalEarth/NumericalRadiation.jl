@@ -152,10 +152,10 @@ Conventions:
 For layer `k`, the heating rate is
 
 ```text
-Ṫ[k] = g / cᵖ (ℐ_net[k] - ℐ_net[k + 1]) / Δp[k]
+Ṫ[k] = g / cᵖ (ℐ[k] - ℐ[k + 1]) / Δp[k]
 ```
 
-where `ℐ_net = ℐꜜˡʷ - ℐꜛˡʷ + ℐꜜˢʷ - ℐꜛˢʷ` is the net downward flux
+where `ℐ = ℐꜜˡʷ - ℐꜛˡʷ + ℐꜜˢʷ - ℐꜛˢʷ` is the net downward flux
 (`longwave_down - longwave_up + shortwave_down - shortwave_up`), and `g` and
 `cᵖ` are `gravity` and `heat_capacity`.
 """
@@ -164,10 +164,10 @@ function heating_rates!(heating::AbstractVector,
                         atmosphere::ColumnAtmosphere;
                         gravity = atmosphere.constants.gravity,
                         heat_capacity = atmosphere.constants.heat_capacity)
-    p_interface = atmosphere.pressure_interfaces
+    pᵢ = atmosphere.pressure_interfaces
     Nz = length(atmosphere.temperature_layers)
     length(heating) == Nz || throw(DimensionMismatch("heating must have length Nz"))
-    length(p_interface) == Nz + 1 || throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
+    length(pᵢ) == Nz + 1 || throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
     length(fluxes.longwave_up) == Nz + 1 || throw(DimensionMismatch("longwave_up must have length Nz + 1"))
     length(fluxes.longwave_down) == Nz + 1 || throw(DimensionMismatch("longwave_down must have length Nz + 1"))
     length(fluxes.shortwave_up) == Nz + 1 || throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
@@ -176,15 +176,14 @@ function heating_rates!(heating::AbstractVector,
     FT = eltype(heating)
     g = FT(gravity)
     cᵖ = FT(heat_capacity)
-    g_over_cᵖ = g / cᵖ
     for k in 1:Nz
-        Δp = FT(p_interface[k + 1] - p_interface[k])
+        Δp = FT(pᵢ[k + 1] - pᵢ[k])
         Δp > zero(FT) || throw(ArgumentError("pressure_interfaces must increase downward"))
-        ℐ_net_top = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
-                       fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
-        ℐ_net_bottom = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +
-                          fluxes.shortwave_down[k + 1] - fluxes.shortwave_up[k + 1])
-        heating[k] = g_over_cᵖ * (ℐ_net_top - ℐ_net_bottom) / Δp
+        ℐₖ = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
+                fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
+        ℐₖ₊₁ = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +
+                  fluxes.shortwave_down[k + 1] - fluxes.shortwave_up[k + 1])
+        heating[k] = g / cᵖ * (ℐₖ - ℐₖ₊₁) / Δp
     end
     return heating
 end

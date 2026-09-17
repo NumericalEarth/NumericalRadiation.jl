@@ -119,13 +119,13 @@ end
 # `S = B (1 - 𝒯)`.
 @inline function longwave_layer_terms(::Type{FT}, optics, g, k) where FT
     τ = optical_depth_at(optics, g, k)
-    B_top, B_bottom = longwave_fallback_planck_sources(FT, optics, g, k)
+    Bₖ, Bₖ₊₁ = longwave_fallback_planck_sources(FT, optics, g, k)
     if has_longwave_scattering(optics)
-        return longwave_reflectance_transmittance_sources(
-            FT, τ, single_scattering_albedo_at(optics, g, k), scattering_asymmetry_at(optics, g, k),
-            B_top, B_bottom)
+        ω = single_scattering_albedo_at(optics, g, k)
+        𝒢 = scattering_asymmetry_at(optics, g, k)
+        return longwave_reflectance_transmittance_sources(FT, τ, ω, 𝒢, Bₖ, Bₖ₊₁)
     elseif has_interface_sources(optics)
-        𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
+        𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, Bₖ, Bₖ₊₁)
         return zero(FT), 𝒯, Sꜛ, Sꜜ
     end
     𝒯 = exp(-FT(τ))
@@ -134,33 +134,37 @@ end
 end
 
 @inline function longwave_layer_terms_scaled(::Type{FT}, clear, cloudy, scale, g, k) where FT
-    τ_clear = max(FT(optical_depth_at(clear, g, k)), zero(FT))
-    τ_cloudy = max(FT(optical_depth_at(cloudy, g, k)), zero(FT))
-    τ = max(τ_clear + max(FT(scale), zero(FT)) * (τ_cloudy - τ_clear), zero(FT))
-    B_top, B_bottom = longwave_fallback_planck_sources(FT, clear, g, k)
+    clear_optical_depth = max(FT(optical_depth_at(clear, g, k)), zero(FT))
+    cloudy_optical_depth = max(FT(optical_depth_at(cloudy, g, k)), zero(FT))
+    scale = max(FT(scale), zero(FT))
+    optical_depth = max(clear_optical_depth + scale * (cloudy_optical_depth - clear_optical_depth), zero(FT))
+    source_top, source_bottom = longwave_fallback_planck_sources(FT, clear, g, k)
 
     if has_longwave_scattering(clear) || has_longwave_scattering(cloudy)
-        ω_clear = has_longwave_scattering(clear) ?
+        clear_albedo = has_longwave_scattering(clear) ?
             clamp(FT(single_scattering_albedo_at(clear, g, k)), zero(FT), one(FT)) : zero(FT)
-        ω_cloudy = has_longwave_scattering(cloudy) ?
+        cloudy_albedo = has_longwave_scattering(cloudy) ?
             clamp(FT(single_scattering_albedo_at(cloudy, g, k)), zero(FT), one(FT)) : zero(FT)
-        𝒢_clear = has_longwave_scattering(clear) ?
+        clear_asymmetry = has_longwave_scattering(clear) ?
             clamp(FT(scattering_asymmetry_at(clear, g, k)), -one(FT), one(FT)) : zero(FT)
-        𝒢_cloudy = has_longwave_scattering(cloudy) ?
+        cloudy_asymmetry = has_longwave_scattering(cloudy) ?
             clamp(FT(scattering_asymmetry_at(cloudy, g, k)), -one(FT), one(FT)) : zero(FT)
-        τ_scattering = τ_clear * ω_clear + max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy - τ_clear * ω_clear)
-        𝒢τ_scattering = τ_clear * ω_clear * 𝒢_clear +
-                        max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy * 𝒢_cloudy - τ_clear * ω_clear * 𝒢_clear)
-        ω = τ <= 0 ? zero(FT) : clamp(τ_scattering / τ, zero(FT), one(FT))
-        𝒢 = τ_scattering <= 0 ? zero(FT) : clamp(𝒢τ_scattering / τ_scattering, -one(FT), one(FT))
-        return longwave_reflectance_transmittance_sources(FT, τ, ω, 𝒢, B_top, B_bottom)
+        scattering_depth = clear_optical_depth * clear_albedo +
+            scale * (cloudy_optical_depth * cloudy_albedo - clear_optical_depth * clear_albedo)
+        weighted_asymmetry = clear_optical_depth * clear_albedo * clear_asymmetry +
+            scale * (cloudy_optical_depth * cloudy_albedo * cloudy_asymmetry -
+                     clear_optical_depth * clear_albedo * clear_asymmetry)
+        albedo = optical_depth <= 0 ? zero(FT) : clamp(scattering_depth / optical_depth, zero(FT), one(FT))
+        asymmetry = scattering_depth <= 0 ? zero(FT) : clamp(weighted_asymmetry / scattering_depth, -one(FT), one(FT))
+        return longwave_reflectance_transmittance_sources(FT, optical_depth, albedo, asymmetry, source_top, source_bottom)
     elseif has_interface_sources(clear)
-        𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
-        return zero(FT), 𝒯, Sꜛ, Sꜜ
+        transmittance, source_up, source_down =
+            no_scattering_longwave_sources(FT, optical_depth, source_top, source_bottom)
+        return zero(FT), transmittance, source_up, source_down
     end
-    𝒯 = exp(-τ)
-    S = FT(source_at(clear, g, k)) * (one(FT) - 𝒯)
-    return zero(FT), 𝒯, S, S
+    transmittance = exp(-optical_depth)
+    source = FT(source_at(clear, g, k)) * (one(FT) - transmittance)
+    return zero(FT), transmittance, source, source
 end
 
 function adding_longwave_column!(up::AbstractVector{FT},

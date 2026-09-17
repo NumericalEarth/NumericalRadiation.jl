@@ -81,7 +81,7 @@ end
 
 # The absorption tables index `(g, gas, pressure, temperature)` with the pressure and
 # temperature brackets; the H₂O tables add the mole-fraction bracket.
-@inline table_brackets(s::GasOpticsStencil) = (s.pressure, s.temperature)
+@inline table_brackets(stencil::GasOpticsStencil) = (stencil.pressure, stencil.temperature)
 
 """
 $(TYPEDSIGNATURES)
@@ -119,10 +119,10 @@ when the model has no H₂O grid or the table is empty.
                                                  table,
                                                  water_vapor_moles,
                                                  g,
-                                                 s::GasOpticsStencil) where FT
+                                                 stencil::GasOpticsStencil) where FT
     length(model.water_vapor_mole_fraction_grid) == 0 && return zero(FT)
     length(table) == 0 && return zero(FT)
-    coefficient = interpolate_water_vapor_table(table, g, table_brackets(s), s.water_vapor)
+    coefficient = interpolate_water_vapor_table(table, g, table_brackets(stencil), stencil.water_vapor)
     return coefficient * FT(water_vapor_moles)
 end
 
@@ -136,11 +136,11 @@ end
                                          water_vapor_table,
                                          g,
                                          gases::NamedTuple,
-                                         s::GasOpticsStencil) where FT
+                                         stencil::GasOpticsStencil) where FT
     τ = accumulate_tabulated_optical_depth(gases, table, model.gas_reference_mole_fractions,
-                                           Val(gas_names(model)), g, 1, table_brackets(s))
+                                           Val(gas_names(model)), g, 1, table_brackets(stencil))
     water_vapor_moles = water_vapor_layer_amount(FT, gases)
-    τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, g, s)
+    τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, g, stencil)
     return max(τ, 0)
 end
 
@@ -150,14 +150,14 @@ $(TYPEDSIGNATURES)
 Longwave gas optical depth of one layer for g point `g`. `gases` is a
 `NamedTuple` of scalar layer amounts (mol m⁻²) keyed by the model's gas names,
 plus `composite` (dry air) when the model applies the ecCKD relative-linear
-convention; `s` is the layer's [`gas_optics_stencil`](@ref). The total is
+convention; `stencil` is the layer's [`gas_optics_stencil`](@ref). The total is
 clamped at zero.
 """
 @inline longwave_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
                                g,
                                gases::NamedTuple,
-                               s::GasOpticsStencil) where FT =
-    tabulated_optical_depth(model, model.longwave_absorption, model.longwave_water_vapor_absorption, g, gases, s)
+                               stencil::GasOpticsStencil) where FT =
+    tabulated_optical_depth(model, model.longwave_absorption, model.longwave_water_vapor_absorption, g, gases, stencil)
 
 """
 $(TYPEDSIGNATURES)
@@ -168,8 +168,8 @@ arguments as the longwave method.
 @inline shortwave_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
                                 g,
                                 gases::NamedTuple,
-                                s::GasOpticsStencil) where FT =
-    tabulated_optical_depth(model, model.shortwave_absorption, model.shortwave_water_vapor_absorption, g, gases, s)
+                                stencil::GasOpticsStencil) where FT =
+    tabulated_optical_depth(model, model.shortwave_absorption, model.shortwave_water_vapor_absorption, g, gases, stencil)
 
 @inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT}, g, gases::NamedTuple, ::Nothing) where FT =
     accumulate_optical_depth(gases, model.longwave_absorption, Val(gas_names(model)), g, 1)

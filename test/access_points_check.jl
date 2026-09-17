@@ -78,7 +78,7 @@ end
 
 # Layer-optics functors over precomputed `(Ng, Nz)` matrices, in the
 # `(g, k)` form a host kernel hands to the streaming solvers: longwave
-# `(τ, B_top, B_bottom)` and shortwave `(τ_absorption, τ_scattering, asymmetry)`.
+# `(τ, Bₖ, Bₖ₊₁)` and shortwave `(τₐ, τₛ, 𝒢)`.
 struct LongwaveMatrixOptics{L}
     optics :: L
 end

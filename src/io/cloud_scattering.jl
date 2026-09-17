@@ -205,8 +205,8 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
     # Weighted sums over the intervals of each g point: Σw κ, Σw κω (the
     # scattering extinction) and Σw κω 𝒢, plus the weights Σw.
     Σκ = zeros(FT, Ng)
-    Σκ_scattering = zeros(FT, Ng)
-    Σκ_scattering_𝒢 = zeros(FT, Ng)
+    Σκₛ = zeros(FT, Ng)
+    Σκₛ𝒢 = zeros(FT, Ng)
     Σw = zeros(FT, Ng)
 
     for interval in axes(mapping.gpoint_fraction, 1)
@@ -223,10 +223,10 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
         for g in 1:Ng
             w = width * FT(mapping.interval_weight[interval]) * FT(mapping.gpoint_fraction[interval, g])
             w == 0 && continue
-            κ_scattering = κ * ω
+            κₛ = κ * ω
             Σκ[g] += w * κ
-            Σκ_scattering[g] += w * κ_scattering
-            Σκ_scattering_𝒢[g] += w * κ_scattering * 𝒢
+            Σκₛ[g] += w * κₛ
+            Σκₛ𝒢[g] += w * κₛ * 𝒢
             Σw[g] += w
         end
     end
@@ -236,13 +236,13 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
     for g in 1:Ng
         if Σw[g] > 0
             Σκ[g] /= Σw[g]
-            Σκ_scattering[g] /= Σw[g]
+            Σκₛ[g] /= Σw[g]
         end
         if Σκ[g] > 0
-            ω[g] = clamp(Σκ_scattering[g] / Σκ[g], zero(FT), one(FT))
+            ω[g] = clamp(Σκₛ[g] / Σκ[g], zero(FT), one(FT))
         end
-        if Σκ_scattering[g] > 0
-            𝒢[g] = clamp(Σκ_scattering_𝒢[g] / (Σκ_scattering[g] * Σw[g]), -one(FT), one(FT))
+        if Σκₛ[g] > 0
+            𝒢[g] = clamp(Σκₛ𝒢[g] / (Σκₛ[g] * Σw[g]), -one(FT), one(FT))
         end
         if delta_eddington_average
             Σκ[g], ω[g], 𝒢[g] = revert_delta_eddington(Σκ[g], ω[g], 𝒢[g])
@@ -382,8 +382,8 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
     # each g point sum to one): Σw κ, Σw κω, Σw κω 𝒢 and Σw ℛ∞, the latter the
     # reflectance of a semi-infinite layer used by ecRad's thick averaging.
     Σκ = zeros(FT, Ng)
-    Σκ_scattering = zeros(FT, Ng)
-    Σκ_scattering_𝒢 = zeros(FT, Ng)
+    Σκₛ = zeros(FT, Ng)
+    Σκₛ𝒢 = zeros(FT, Ng)
     Σℛ∞ = zeros(FT, Ng)
 
     for wavenumber_index in axes(weights, 2)
@@ -394,7 +394,7 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
         if delta_eddington_average
             κ, ω, 𝒢 = delta_eddington(κ, ω, 𝒢)
         end
-        κ_scattering = κ * ω
+        κₛ = κ * ω
         ℛ∞ = zero(FT)
         if thick_averaging
             denominator = max(one(FT) - ω * 𝒢, eps(FT))
@@ -405,8 +405,8 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
             w = FT(weights[g, wavenumber_index])
             w == 0 && continue
             Σκ[g] += w * κ
-            Σκ_scattering[g] += w * κ_scattering
-            Σκ_scattering_𝒢[g] += w * κ_scattering * 𝒢
+            Σκₛ[g] += w * κₛ
+            Σκₛ𝒢[g] += w * κₛ * 𝒢
             Σℛ∞[g] += w * ℛ∞
         end
     end
@@ -414,9 +414,9 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
     ω = zeros(FT, Ng)
     𝒢 = zeros(FT, Ng)
     for g in 1:Ng
-        Σκ[g] > 0 && (ω[g] = clamp(Σκ_scattering[g] / Σκ[g], zero(FT), one(FT)))
-        Σκ_scattering[g] > 0 &&
-            (𝒢[g] = clamp(Σκ_scattering_𝒢[g] / Σκ_scattering[g],
+        Σκ[g] > 0 && (ω[g] = clamp(Σκₛ[g] / Σκ[g], zero(FT), one(FT)))
+        Σκₛ[g] > 0 &&
+            (𝒢[g] = clamp(Σκₛ𝒢[g] / Σκₛ[g],
                           -one(FT), one(FT)))
         if thick_averaging
             ℛ∞ = clamp(Σℛ∞[g], zero(FT), one(FT))

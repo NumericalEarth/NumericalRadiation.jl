@@ -5,7 +5,7 @@
 # The per-column, per-g-point core of the no-scattering longwave path of
 # `radiative_fluxes!(…, CloudlessLongwave(), …)`, written so that a host
 # kernel can run it with scalar layer optics: the caller supplies a functor
-# `layer_optics(g, k) -> (τ, B_top, B_bottom)` and an indexable per-g surface
+# `layer_optics(g, k) -> (τ, Bₖ, Bₖ₊₁)` and an indexable per-g surface
 # source, and the solver streams over g points accumulating weighted broadband
 # fluxes into caller-owned interface arrays. The array solver in
 # `cloudless_longwave.jl` calls this function one g point at a time, so the
@@ -84,7 +84,7 @@ points and accumulated into `flux_up` and `flux_down` (length `Nz + 1`,
 top-down, interface 1 at the top of the atmosphere; both are zeroed here).
 Each layer is the ecRad half-level Planck path of
 [`CloudlessLongwave`](@ref): with diffusivity `D = 1.66` and the layer's
-`(τ, B_top, B_bottom)` from `layer_optics(g, k)`, the layer transmittance
+`(τ, Bₖ, Bₖ₊₁)` from `layer_optics(g, k)`, the layer transmittance
 is `e^{-Dτ}` and its emission is that of a Planck function linear in optical
 depth between the two interfaces (the thin-layer limit below `τ = 10⁻³`).
 
@@ -115,8 +115,8 @@ downward sweep to the upward one. Allocation-free.
         down = FT(toa_down)
         flux_down[1] += w * down
         for k in 1:Nz
-            τ, B_top, B_bottom = layer_optics(g, k)
-            transmittance[k], source_up[k], source_down = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
+            τ, Bₖ, Bₖ₊₁ = layer_optics(g, k)
+            transmittance[k], source_up[k], source_down = no_scattering_longwave_sources(FT, τ, Bₖ, Bₖ₊₁)
             down = down * transmittance[k] + source_down
             flux_down[k + 1] += w * down
         end

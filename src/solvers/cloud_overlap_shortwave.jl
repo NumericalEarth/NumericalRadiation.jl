@@ -162,37 +162,32 @@ end
 
 @inline function shortwave_layer_reflectance_transmittance(::Type{FT}, optics, g, k, μ₀,
                                                            direct_source_limit = Val(:unit)) where FT
-    τ_absorption = max(FT(optical_depth_at(optics, g, k)), zero(FT))
-    τ_scattering = max(FT(rayleigh_optical_depth_at(optics, g, k)), zero(FT))
-    τ_total = τ_absorption + τ_scattering
-    ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
+    τₐ = max(FT(optical_depth_at(optics, g, k)), zero(FT))
+    τₛ = max(FT(rayleigh_optical_depth_at(optics, g, k)), zero(FT))
+    τ = τₐ + τₛ
+    ω = τ == zero(FT) ? zero(FT) : τₛ / τ
     𝒢 = clamp(FT(scattering_asymmetry_at(optics, g, k)), -one(FT), one(FT))
-    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, 𝒢, direct_source_limit)
+    return shortwave_two_stream_layer(FT, μ₀, τ, ω, 𝒢, direct_source_limit)
 end
 
-@inline function shortwave_layer_reflectance_transmittance_scaled(::Type{FT},
-                                                                  clear,
-                                                                  cloudy,
-                                                                  scale,
-                                                                  g,
-                                                                  k,
-                                                                  μ₀,
+@inline function shortwave_layer_reflectance_transmittance_scaled(::Type{FT}, clear, cloudy, scale, g, k, μ₀,
                                                                   direct_source_limit = Val(:unit)) where FT
-    τ_absorption_clear = max(FT(optical_depth_at(clear, g, k)), zero(FT))
-    τ_absorption_cloudy = max(FT(optical_depth_at(cloudy, g, k)), zero(FT))
-    τ_scattering_clear = max(FT(rayleigh_optical_depth_at(clear, g, k)), zero(FT))
-    τ_scattering_cloudy = max(FT(rayleigh_optical_depth_at(cloudy, g, k)), zero(FT))
-    𝒢_clear = clamp(FT(scattering_asymmetry_at(clear, g, k)), -one(FT), one(FT))
-    𝒢_cloudy = clamp(FT(scattering_asymmetry_at(cloudy, g, k)), -one(FT), one(FT))
+    clear_absorption_depth = max(FT(optical_depth_at(clear, g, k)), zero(FT))
+    cloudy_absorption_depth = max(FT(optical_depth_at(cloudy, g, k)), zero(FT))
+    clear_scattering_depth = max(FT(rayleigh_optical_depth_at(clear, g, k)), zero(FT))
+    cloudy_scattering_depth = max(FT(rayleigh_optical_depth_at(cloudy, g, k)), zero(FT))
+    clear_asymmetry = clamp(FT(scattering_asymmetry_at(clear, g, k)), -one(FT), one(FT))
+    cloudy_asymmetry = clamp(FT(scattering_asymmetry_at(cloudy, g, k)), -one(FT), one(FT))
     scale = max(FT(scale), zero(FT))
 
-    τ_absorption = max(τ_absorption_clear + scale * (τ_absorption_cloudy - τ_absorption_clear), zero(FT))
-    τ_scattering = max(τ_scattering_clear + scale * (τ_scattering_cloudy - τ_scattering_clear), zero(FT))
-    𝒢τ_scattering = τ_scattering_clear * 𝒢_clear + scale * (τ_scattering_cloudy * 𝒢_cloudy - τ_scattering_clear * 𝒢_clear)
-    𝒢 = τ_scattering == zero(FT) ? zero(FT) : clamp(𝒢τ_scattering / τ_scattering, -one(FT), one(FT))
-    τ_total = τ_absorption + τ_scattering
-    ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
-    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, 𝒢, direct_source_limit)
+    absorption_depth = max(clear_absorption_depth + scale * (cloudy_absorption_depth - clear_absorption_depth), zero(FT))
+    scattering_depth = max(clear_scattering_depth + scale * (cloudy_scattering_depth - clear_scattering_depth), zero(FT))
+    weighted_asymmetry = clear_scattering_depth * clear_asymmetry +
+        scale * (cloudy_scattering_depth * cloudy_asymmetry - clear_scattering_depth * clear_asymmetry)
+    asymmetry = scattering_depth == zero(FT) ? zero(FT) : clamp(weighted_asymmetry / scattering_depth, -one(FT), one(FT))
+    optical_depth = absorption_depth + scattering_depth
+    albedo = optical_depth == zero(FT) ? zero(FT) : scattering_depth / optical_depth
+    return shortwave_two_stream_layer(FT, μ₀, optical_depth, albedo, asymmetry, direct_source_limit)
 end
 
 @inline function gamma_tripleclouds_regions(::Type{FT}, cloud_fraction, fractional_standard_deviation) where FT

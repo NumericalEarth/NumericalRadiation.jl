@@ -62,14 +62,15 @@ The streaming functions share the package conventions of the array path:
 One column is three sweeps of scalar calls:
 
 ```text
-per layer k:      s = gas_optics_stencil(model, p, T, χ)          # once per layer
-                  b = source_table_bracket(model, T_interface)     # once per interface
+per layer k:      stencil = gas_optics_stencil(model, p, T, χ)                # once per layer
+                  source_bracket = source_table_bracket(model, Tᵢ)            # once per interface
+                  radius_bracket = effective_radius_bracket(cloud, radius)    # once per layer and phase
 
-per g point:      longwave_optical_depth(model, g, gases, s)      # LW  τ
-                  longwave_source(model, g, T_interface, b)       # LW  B at each interface
-                  shortwave_optical_depth(model, g, gases, s)     # SW  τ_absorption
-                  rayleigh_optical_depth(model, g, air_moles)     # SW  τ_scattering
-                  add_cloud_scattering_layer(…, cloud, g, b, water_path)  # clouds, per phase
+per g point:      longwave_optical_depth(model, g, gases, stencil)            # LW  τ
+                  longwave_source(model, g, Tᵢ, source_bracket)               # LW  B at each interface
+                  shortwave_optical_depth(model, g, gases, stencil)           # SW  τₐ
+                  rayleigh_optical_depth(model, g, air_moles)                 # SW  τₛ
+                  add_cloud_scattering_layer(…, cloud, g, radius_bracket, W)  # clouds, per phase
 
 per column:       streaming_longwave_fluxes!(…)
                   streaming_shortwave_fluxes!(…)
@@ -103,7 +104,7 @@ times the layer's molar amount of air. Clouds enter through
 [`SpectralCloudOptics`](@ref): [`effective_radius_bracket`](@ref) once per
 layer and phase, then [`cloud_layer_optics`](@ref) gives `(κ, ω, 𝒢)` per g
 point, which [`add_scattering_layer`](@ref) folds into the layer's
-`(τ_absorption, τ_scattering, 𝒢)` for the shortwave and
+`(τₐ, τₛ, 𝒢)` for the shortwave and
 [`cloud_absorption_optical_depth`](@ref) adds as pure absorption for the
 longwave; [`add_cloud_scattering_layer`](@ref) is the shortwave pair of calls
 in one. A `Nothing` phase dispatches to no-ops in every one of these
@@ -115,8 +116,8 @@ call back into, each `(g, k)` returning the layer's tuple:
 
 | Solver | `layer_optics(g, k)` returns |
 |:-------|:------------------------------|
-| [`streaming_longwave_fluxes!`](@ref) | `(τ, B_top, B_bottom)` — optical depth and the Planck source at the layer's two interfaces |
-| [`streaming_shortwave_fluxes!`](@ref) | `(τ_absorption, τ_scattering, asymmetry)` — the single-scattering albedo and total optical depth are formed inside the solver |
+| [`streaming_longwave_fluxes!`](@ref) | `(τ, Bₖ, Bₖ₊₁)` — optical depth and the Planck source at the layer's top and bottom interfaces |
+| [`streaming_shortwave_fluxes!`](@ref) | `(τₐ, τₛ, 𝒢)` — absorption and scattering optical depths and asymmetry factor; the single-scattering albedo and total optical depth are formed inside the solver |
 
 ### Per-column solve
 
@@ -200,10 +201,10 @@ julia> function (layers::LongwaveLayers)(g, k)
            gases = (h2o = column.h2o[k], co2 = column.co2)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
            τ = longwave_optical_depth(model, g, gases, stencil)
-           T_top, T_bottom = column.temperature_interfaces[k], column.temperature_interfaces[k + 1]
-           B_top = longwave_source(model, g, T_top, source_table_bracket(model, T_top))
-           B_bottom = longwave_source(model, g, T_bottom, source_table_bracket(model, T_bottom))
-           return τ, B_top, B_bottom
+           Tₖ, Tₖ₊₁ = column.temperature_interfaces[k], column.temperature_interfaces[k + 1]
+           Bₖ = longwave_source(model, g, Tₖ, source_table_bracket(model, Tₖ))
+           Bₖ₊₁ = longwave_source(model, g, Tₖ₊₁, source_table_bracket(model, Tₖ₊₁))
+           return τ, Bₖ, Bₖ₊₁
        end;
 
 julia> Nz = 2;

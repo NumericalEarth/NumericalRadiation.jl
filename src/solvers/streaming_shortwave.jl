@@ -94,14 +94,14 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     # direct beam, attenuated by the direct transmittance of every layer above.
     direct_above = incoming_normal
     @inbounds for k in 1:Nz
-        τ_absorption, τ_scattering, 𝒢 = layer_optics(g, k)
-        τ_absorption = max(FT(τ_absorption), zero(FT))
-        τ_scattering = max(FT(τ_scattering), zero(FT))
-        τ_total = τ_absorption + τ_scattering
-        ω = ifelse(τ_total == zero(FT), zero(FT), τ_scattering / τ_total)
+        τₐ, τₛ, 𝒢 = layer_optics(g, k)
+        τₐ = max(FT(τₐ), zero(FT))
+        τₛ = max(FT(τₛ), zero(FT))
+        τ = τₐ + τₛ
+        ω = ifelse(τ == zero(FT), zero(FT), τₛ / τ)
         𝒢 = clamp(FT(𝒢), -one(FT), one(FT))
         reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k],
-            direct_transmittance = shortwave_two_stream_layer(FT, μ₀, τ_total, ω, 𝒢)
+            direct_transmittance = shortwave_two_stream_layer(FT, μ₀, τ, ω, 𝒢)
         direct_above *= direct_transmittance
         direct_flux[k] = direct_above
     end
@@ -152,9 +152,9 @@ method of ecRad, with every g point streamed through one
 `flux_down` have length `Nz + 1`, are ordered top down (index 1 at the
 top of the atmosphere), and are zeroed here; `FT = eltype(flux_up)`.
 
-`layer_optics(g, k)` returns the tuple `(τ_absorption, τ_scattering, 𝒢)`
+`layer_optics(g, k)` returns the tuple `(τₐ, τₛ, 𝒢)`
 of layer `k` for g point `g`; the single-scattering albedo
-`ω = τ_scattering / (τ_absorption + τ_scattering)` and the total optical depth
+`ω = τₛ / (τₐ + τₛ)` and the total optical depth
 are formed here, and every layer passes through
 [`shortwave_two_stream_layer`](@ref), which applies delta-Eddington scaling.
 `weights[g]` scales the g point's contribution. `direct_albedo` and
