@@ -14,9 +14,10 @@
 # Conventions (those of the ecRad driver on the same input):
 #   * layer pressure and temperature are the arithmetic means of the bounding
 #     half levels; the Planck sources are evaluated at the half levels;
-#   * layer amounts follow the moist-molar-mass convention, dry air
-#     `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))` and every gas `χ nᵈ`; N₂ and O₂ are the
-#     `composite` gas of the tables;
+#   * layer amounts follow the dry column-amount convention of the ecCKD
+#     tables, dry air `nᵈ = Δp / (g mᵈ)` and every gas `χ nᵈ`; N₂ and O₂ are
+#     the `composite` gas of the tables. The moist-molar-mass convention
+#     `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))` is run alongside, ungated;
 #   * longwave: surface temperature `Tₛ = temperature_hl[end]`, emissivity 1,
 #     no downwelling flux at 0.01 Pa;
 #   * shortwave: the five cosines of the solar zenith angle are read from the

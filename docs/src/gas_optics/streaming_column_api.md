@@ -23,9 +23,19 @@ The streaming functions share the package conventions of the array path:
   keyed by the model's gas names ([`gas_names`](@ref)), plus `composite` (dry
   air) whenever the model applies the ecCKD relative-linear convention. The
   H2O mole fraction handed to [`gas_optics_stencil`](@ref) is relative to dry
-  air, `h2o / composite`. For a hydrostatic layer of pressure thickness `Δp`,
-  the moist molar-mass convention is `composite = Δp / (g (mᵈ + mᵛ χ))` with
-  `χ` the H2O mole fraction, so that `mᵈ composite + mᵛ h2o == Δp / g`.
+  air, `h2o / composite`. The ecCKD tables expect the *dry* column-amount
+  convention: for a hydrostatic layer of pressure thickness `Δp`,
+  `composite = Δp / (g mᵈ)` — the whole layer mass over the dry molar mass,
+  so in a host model `composite = ρ Δz / mᵈ` with the *total* density — and
+  every gas is `χ composite` (`h2o = χ composite`). This is how the ecCKD tool
+  derived the molar absorption coefficients from the line-by-line optical
+  depths and how ecRad applies them, so it reproduces the ecRad/CKDMIP
+  reference fluxes (`validation/ckdmip_evaluation1.jl`). The moist molar-mass
+  convention `composite = Δp / (g (mᵈ + mᵛ χ))`, under which
+  `mᵈ composite + mᵛ h2o == Δp / g`, is an alternative that under-counts every
+  absorber by the factor `1 + χ mᵛ/mᵈ` (up to ~3 % in the humid boundary
+  layer); on the CKDMIP profiles it biases the surface downwelling longwave
+  flux by about −0.2 W m⁻² and raises the surface shortwave RMSE by ~50 %.
 - **Fluxes.** Longwave and shortwave fluxes are each positive in their own
   direction, in W m⁻²; the streaming solvers zero their output arrays before
   accumulating the weighted g points into them.

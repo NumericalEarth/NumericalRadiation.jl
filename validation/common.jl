@@ -59,8 +59,8 @@ The dry-air molar amount `nᵈ` of a layer of pressure thickness `Δp` follows
   it reproduces the reference optical depths and is the convention the
   gated benchmark runs use.
 * `:moist` — `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))`, the moist-molar-mass
-  convention of RRTMGP's column amounts and of Breeze's column staging,
-  under which the layer mass closes as `mᵈ nᵈ + mᵛ n_h2o = Δp / g`. It
+  convention of RRTMGP's column amounts, under which the layer mass closes
+  as `mᵈ nᵈ + mᵛ n_h2o = Δp / g`. It
   carries up to ~3 % less absorber than `:dry` in the humid boundary layer,
   which shows up as a small surface-flux bias; the benchmarks report it
   alongside.
