@@ -66,6 +66,7 @@ const REQUIRED_EXPORTS = (
     :cloud_layer_optics,
     :add_scattering_layer,
     :cloud_absorption_optical_depth,
+    :ecrad_test_file,
 )
 
 function exported_symbol_status(name)

@@ -256,6 +256,36 @@ function ecrad_data_file(filename::AbstractString; require::Bool = true)
 end
 
 """
+$(TYPEDSIGNATURES)
+
+Path of a file under the `test/` directory of the ecRad checkout that the
+`ecrad_data` artifact carries, resolved as `<root>/test/<relative_path>` with
+the same root as [`ecrad_data_path`](@ref) (`RH_ECRAD_DATA_PATH`, the lazy
+artifact, or the local `validation/external/ecrad` checkout; an archive whose
+files live under one top-level child directory is handled too). This is where
+the CKDMIP "Evaluation-1" profiles and their line-by-line fluxes live, for
+example `ecrad_test_file("ckdmip/ckdmip_evaluation1_lw_fluxes_present_reduced.nc")`.
+
+With `require = true` (the default) a missing root or file throws an
+`ArgumentError`, and the lazy artifact is downloaded if needed; with
+`require = false` the function returns `nothing` instead and never downloads.
+"""
+function ecrad_test_file(relative_path::AbstractString; require::Bool = true)
+    root = ecrad_data_path(; require)
+    root === nothing && return nothing
+    candidates = String[joinpath(root, "test", relative_path)]
+    for child in readdir(root)
+        path = joinpath(root, child)
+        isdir(path) && push!(candidates, joinpath(path, "test", relative_path))
+    end
+    for path in candidates
+        isfile(path) && return normpath(path)
+    end
+    require && throw(ArgumentError("ecRad test file not found in $(root): test/$(relative_path)"))
+    return nothing
+end
+
+"""
     reference_ecckd_model_inventory()
 
 Return the reference ecCKD CKD-definition filenames distributed with the pinned

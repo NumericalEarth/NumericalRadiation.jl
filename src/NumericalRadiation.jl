@@ -34,7 +34,8 @@ export rayleigh_optical_depth, longwave_source, source_table_bracket
 export ShortwaveColumnScratch, streaming_shortwave_fluxes!
 export reference_ecckd_model_inventory, reference_ecckd_definition_path,
        reference_ecckd_definition_paths, reference_ecckd_model_specs,
-       reference_ecckd_model_spec, ecrad_data_path, ecckd_source_path
+       reference_ecckd_model_spec, ecrad_data_path, ecckd_source_path,
+       ecrad_test_file
 export CloudScatteringTable, EcCKDSpectralMapping
 export read_cloud_scattering_table, read_ecckd_spectral_mapping
 export cloud_scattering_properties, cloud_scattering_gpoint_properties

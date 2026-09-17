@@ -153,6 +153,31 @@ using NumericalRadiation
 
     @test_throws ArgumentError reference_ecckd_definition_path(:not_a_model; require = false)
 end
+
+@testset "ecrad_test_file resolves the CKDMIP evaluation files" begin
+    # The ecRad checkout in the artifact ships the CKDMIP "Evaluation-1"
+    # profiles and line-by-line fluxes under `test/ckdmip/`; the validation
+    # scripts in `validation/` read them through this helper.
+    for name in ("concentrations", "lw_fluxes", "sw_fluxes")
+        path = ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require = false)
+        @test path !== nothing && isfile(path)
+        @test ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc") == path
+    end
+    @test ecrad_test_file("ckdmip/not_a_file.nc"; require = false) === nothing
+    @test_throws ArgumentError ecrad_test_file("ckdmip/not_a_file.nc")
+
+    # A checkout whose files live under one top-level child directory (a GitHub
+    # archive) resolves the same way as the artifact does.
+    mktempdir() do temp_root
+        nested = joinpath(temp_root, "ecrad-archive", "test", "ckdmip")
+        mkpath(nested)
+        write(joinpath(nested, "profiles.nc"), "")
+        withenv("RH_ECRAD_DATA_PATH" => temp_root) do
+            @test ecrad_test_file("ckdmip/profiles.nc") == normpath(joinpath(nested, "profiles.nc"))
+            @test ecrad_test_file("ckdmip/missing.nc"; require = false) === nothing
+        end
+    end
+end
 # --- end content of test_ecckd_artifacts.jl ---
 
 end # module TestEcckdArtifacts
