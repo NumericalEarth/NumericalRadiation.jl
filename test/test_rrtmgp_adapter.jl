@@ -64,6 +64,11 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         # A host's own constants propagate into the adapter.
         heavy = PhysicalConstants(FT; gravity = 2 * constants.gravity)
         @test EXT.RRTMGPClearSkyModel(FT; constants = heavy).parameters.grav == heavy.gravity
+        # Without a leading element type the adapter defaults to Float64.
+        default_model = EXT.RRTMGPClearSkyModel()
+        @test default_model isa EXT.RRTMGPClearSkyModel{Float64}
+        @test default_model.parameters == params
+        @test EXT.RRTMGPClearSkyModel(; constants = heavy).parameters.grav == heavy.gravity
     end
 
     @testset "orientation: ingest is bottom-at-index-1" begin

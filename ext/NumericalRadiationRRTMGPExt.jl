@@ -19,8 +19,10 @@ end
 # RRTMGP's `RRTMGPParameters` are built from a `PhysicalConstants` (or any
 # object with the same properties), so the adapter runs with the same gravity,
 # molar masses and Stefan–Boltzmann constant as the rest of a host's radiation
-# (`kappa_d = Rᵈ / cₚ`). The keyword names on the right are RRTMGP's.
-function RRTMGPClearSkyModel(::Type{FT} = Float64;
+# (`kappa_d = Rᵈ / cₚ`). The keyword names on the right are RRTMGP's. The
+# element type `FT` is the first positional argument, as everywhere in
+# NumericalRadiation; the keyword-only method supplies the `Float64` default.
+function RRTMGPClearSkyModel(::Type{FT};
                              context = ClimaComms.context(ClimaComms.CPUSingleThreaded()),
                              constants = PhysicalConstants(FT)) where FT
     parameters = RRTMGPParameters(
@@ -34,6 +36,8 @@ function RRTMGPClearSkyModel(::Type{FT} = Float64;
     )
     return RRTMGPClearSkyModel{FT, typeof(context)}(context, parameters)
 end
+
+RRTMGPClearSkyModel(; kwargs...) = RRTMGPClearSkyModel(Float64; kwargs...)
 
 struct RRTMGPBoundaryConditions{FT}
     surface_temperature::FT

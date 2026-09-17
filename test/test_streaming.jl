@@ -1158,6 +1158,10 @@ end
         @test length(scratch.stack_albedo) == 6
         @test length(scratch.source) == 6
     end
+    # Without a leading element type the scratch defaults to Float64.
+    default_scratch = ShortwaveColumnScratch(5)
+    @test default_scratch isa ShortwaveColumnScratch{Vector{Float64}}
+    @test length(default_scratch.source) == 6
     # Views of a host's own row-major column arrays are accepted as scratch.
     layers, interfaces = zeros(2, 5), zeros(2, 6)
     scratch = ShortwaveColumnScratch(view(layers, 1, :), view(layers, 2, :), view(layers, 1, :),

@@ -42,8 +42,8 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Allocate host scratch storage of element type `FT` for a column of `Nz`
-layers.
+Allocate host scratch storage of element type `FT`, passed as the first
+positional argument, for a column of `Nz` layers.
 """
 ShortwaveColumnScratch(::Type{FT}, Nz) where FT = ShortwaveColumnScratch(Vector{FT}(undef, Nz),
                                                                          Vector{FT}(undef, Nz),
@@ -52,6 +52,13 @@ ShortwaveColumnScratch(::Type{FT}, Nz) where FT = ShortwaveColumnScratch(Vector{
                                                                          Vector{FT}(undef, Nz),
                                                                          Vector{FT}(undef, Nz + 1),
                                                                          Vector{FT}(undef, Nz + 1))
+
+"""
+$(TYPEDSIGNATURES)
+
+Allocate `Float64` host scratch storage for a column of `Nz` layers.
+"""
+ShortwaveColumnScratch(Nz::Integer) = ShortwaveColumnScratch(Float64, Nz)
 
 Base.eltype(::ShortwaveColumnScratch{V}) where V = eltype(V)
 
