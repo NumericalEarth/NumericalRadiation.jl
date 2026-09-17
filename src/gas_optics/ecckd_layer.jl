@@ -216,7 +216,7 @@ per-unit-weight flux convention: the tabulated source interpolated with
                                  ig,
                                  temperature,
                                  ::Nothing) where FT
-    return model.longwave_source_scale[ig] * (FT(5.670374419e-8) * temperature^4)
+    return model.longwave_source_scale[ig] * (FT(5.670374419e-8) * FT(temperature)^4)
 end
 
 """

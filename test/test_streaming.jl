@@ -391,11 +391,20 @@ function assert_inferred_and_allocation_free(model, atmosphere)
     @test typeof(τ_r) === FT
     @test typeof(B) === FT
     @inferred layer_gases(atmosphere.gases, names, k)
+    # A wider temperature (a Float64 host state on a Float32 model) is
+    # converted to the model precision, so the bracket and the sources stay
+    # in `FT` rather than following the caller.
+    T_wide = Float64(T)
+    b_wide = @inferred source_table_bracket(model, T_wide)
+    @test typeof(b_wide) === typeof(b)
+    @test typeof(@inferred longwave_source(model, 1, T_wide, b_wide)) === FT
+    @test typeof(gas_optics_stencil(model, Float64(p), T_wide, Float64(χ))) === typeof(s)
     if model isa EcCKDTabulatedGasOpticsModel
         τ_h2o = @inferred h2o_table_optical_depth(model, model.longwave_h2o_absorption, gases.h2o, 1, s)
         @test typeof(τ_h2o) === FT
         @inferred GasOpticsStencil(Int32(s.pressure[1]), s.pressure[3], Int32(s.temperature[1]),
                                    s.temperature[3], Int32(s.h2o[1]), s.h2o[3])
+        @test typeof(b_wide) === (b === nothing ? Nothing : Tuple{Int, Int, FT})
     end
 
     for _ in 1:2   # compile on the first pass, measure on the second

@@ -529,16 +529,19 @@ end
     return ct0 + wh * (ct1 - ct0)
 end
 
-@inline source_table_bracket(model::EcCKDTabulatedGasOpticsModel, temperature) =
+# The temperature is converted to the model precision before bracketing, as
+# `gas_optics_stencil` does, so the bracket and the sources built on it are
+# in `FT` whatever the caller's temperature type.
+@inline source_table_bracket(model::EcCKDTabulatedGasOpticsModel{FT}, temperature) where FT =
     model.longwave_source_table === nothing ?
-        nothing : bracket(model.longwave_source_temperature_grid, temperature)
+        nothing : bracket(model.longwave_source_temperature_grid, FT(temperature))
 
 @inline function longwave_source(model::EcCKDTabulatedGasOpticsModel{FT},
                                   ig,
                                   temperature,
                                   source_bracket) where FT
     source_bracket === nothing &&
-        return model.longwave_source_scale[ig] * FT(5.670374419e-8) * temperature^4
+        return model.longwave_source_scale[ig] * FT(5.670374419e-8) * FT(temperature)^4
     return interp_source_table(model.longwave_source_table, ig, source_bracket)
 end
 
