@@ -32,7 +32,7 @@ p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 T  = collect(range(220, 295; length = Nz))
 Tᵢ = collect(range(215, 300; length = Nz + 1))
 
-atmosphere = ColumnAtmosphere(
+atmosphere = ColumnAtmosphere(;
     pressure_layers = p,
     pressure_interfaces = pᵢ,
     temperature_layers = T,

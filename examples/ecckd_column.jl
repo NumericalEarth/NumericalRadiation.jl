@@ -29,7 +29,7 @@ temperature_layers = collect(range(220.0, 295.0; length = Nz))
 temperature_interfaces = collect(range(215.0, 300.0; length = Nz + 1))
 air_column = hydrostatic_air_moles.(diff(pressure_interfaces), constants.gravity, constants.dry_air_molar_mass)
 
-atmosphere = ColumnAtmosphere(
+atmosphere = ColumnAtmosphere(;
     pressure_layers = pressure_layers,
     pressure_interfaces = pressure_interfaces,
     temperature_layers = temperature_layers,
