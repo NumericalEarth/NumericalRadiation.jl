@@ -1121,6 +1121,28 @@ end
             @test adapted_shortwave.optical_depth == shortwave.optical_depth
         end
     end
+
+    @testset "mixed-precision inputs share the promoted element type" begin
+        model = EcCKDTabulatedGasOpticsModel(names = (:co2,),
+                                             pressure_grid = Float32[1, 10],
+                                             temperature_grid = [200.0, 300.0],
+                                             longwave_absorption = ones(1, 1, 2, 2),
+                                             shortwave_absorption = ones(1, 1, 2, 2))
+        adapted = NumericalRadiation.Adapt.adapt(Array, model)
+        @test eltype(model) === eltype(adapted) === Float64
+        @test eltype(model.pressure_grid) === eltype(adapted.pressure_grid) === Float64
+        atmosphere = ColumnAtmosphere(pressure_layers = [5.0], pressure_interfaces = [1.0, 10.0],
+                                      temperature_layers = [250.0], temperature_interfaces = [240.0, 260.0],
+                                      gases = (; co2=1.0), surface = (;), geometry = (;))
+        longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1))
+        shortwave = ShortwaveOptics(zeros(1, 1))
+        optical_properties!(longwave, shortwave, adapted, atmosphere)
+        @test longwave.optical_depth == shortwave.optical_depth == [1.0;;]
+
+        gray = EcCKDGasOpticsModel(names = (:co2,), longwave_absorption = Float32[1;;], shortwave_absorption = [1.0;;])
+        @test eltype(gray.longwave_absorption) === Float64
+        @test NumericalRadiation.Adapt.adapt(Array, gray) isa EcCKDGasOpticsModel{Float64}
+    end
 end
 # --- end content of test_ecckd_forward.jl ---
 

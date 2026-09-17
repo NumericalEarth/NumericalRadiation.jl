@@ -24,9 +24,7 @@ struct EcCKDGasOpticsModel{FT, GasNames, LWA, SWA, LWS, LWW, SWW} <: AbstractGas
     stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source, W m⁻² K⁻⁴.
 end
 
-# The element type of an adapted model follows its adapted tables, so
-# `adapt(Array{Float32}, model)` (or a device adaptor that changes precision)
-# yields a `Float32` model whose scalar layer optics compute in `Float32`.
+# Every array shares one element type, which the adapted model takes as its `FT`.
 function Adapt.adapt_structure(to, model::EcCKDGasOpticsModel{<:Any, GasNames}) where GasNames
     longwave_absorption = Adapt.adapt(to, model.longwave_absorption)
     shortwave_absorption = Adapt.adapt(to, model.shortwave_absorption)
@@ -69,7 +67,8 @@ function EcCKDGasOpticsModel(; names,
 
     gas_name_tuple = Tuple(Symbol.(names))
     fields = (longwave_absorption, shortwave_absorption, longwave_source_scale, longwave_weights, shortwave_weights)
-    return EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
+    model = EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
+    return Adapt.adapt(FloatTypeConverter{FT}(), model)
 end
 
 Base.eltype(::EcCKDGasOpticsModel{FT}) where FT = FT
@@ -120,9 +119,7 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source fallback, W m⁻² K⁻⁴.
 end
 
-# As for `EcCKDGasOpticsModel`, the adapted model's element type follows its
-# adapted tables (the pressure grid stands for all of them: the constructor and
-# `EcCKDTabulatedGasOpticsModel{FT}` keep every table in one element type).
+# Every array shares one element type, which the adapted model takes as its `FT`.
 function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, GasNames}) where GasNames
     pressure_grid = Adapt.adapt(to, model.pressure_grid)
     temperature_grid = Adapt.adapt(to, model.temperature_grid)
@@ -197,9 +194,9 @@ function EcCKDTabulatedGasOpticsModel(; names,
                       source_types...)
     water_vapor_grid = collect(FT, water_vapor_mole_fraction_grid)
     longwave_water_vapor = longwave_water_vapor_absorption === nothing ?
-        zeros(FT, 0, 0, 0, 0) : FT.(longwave_water_vapor_absorption)
+        zeros(FT, 0, 0, 0, 0) : longwave_water_vapor_absorption
     shortwave_water_vapor = shortwave_water_vapor_absorption === nothing ?
-        zeros(FT, 0, 0, 0, 0) : FT.(shortwave_water_vapor_absorption)
+        zeros(FT, 0, 0, 0, 0) : shortwave_water_vapor_absorption
     longwave_source_scale = longwave_source_scale === nothing ?
         ones(FT, size(longwave_absorption, 1)) : longwave_source_scale
     longwave_weights = longwave_weights === nothing ?
@@ -212,7 +209,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
         zeros(FT, size(shortwave_absorption, 1)) :
         shortwave_rayleigh_molar_scattering
     gas_reference_mole_fractions = gas_reference_mole_fractions === nothing ?
-        zeros(FT, length(names)) : FT.(gas_reference_mole_fractions)
+        zeros(FT, length(names)) : gas_reference_mole_fractions
 
     gas_name_tuple = Tuple(Symbol.(names))
     Ngases = length(names)
@@ -266,10 +263,11 @@ function EcCKDTabulatedGasOpticsModel(; names,
         throw(DimensionMismatch("gas_reference_mole_fractions must match names length"))
 
     fields = (pressure_grid, temperature_grid, water_vapor_grid, gas_reference_mole_fractions,
-              longwave_absorption, shortwave_absorption,
-              longwave_water_vapor, shortwave_water_vapor, shortwave_rayleigh_molar_scattering, longwave_source_scale, longwave_source_temperature_grid,
+              longwave_absorption, shortwave_absorption, longwave_water_vapor, shortwave_water_vapor,
+              shortwave_rayleigh_molar_scattering, longwave_source_scale, longwave_source_temperature_grid,
               longwave_source_table, longwave_weights, shortwave_weights)
-    return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
+    model = EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
+    return EcCKDTabulatedGasOpticsModel{FT}(model)
 end
 
 Base.eltype(::EcCKDTabulatedGasOpticsModel{FT}) where FT = FT
