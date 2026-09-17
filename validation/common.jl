@@ -133,8 +133,7 @@ function ColumnWorkspace(model, Nz)
                               source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
                               weights = zeros(FT, Nlongwave_gpoints))
     shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
-    return ColumnWorkspace(longwave, shortwave, zeros(FT, Nz), zeros(FT, Nz),
-                           ShortwaveColumnScratch(FT, Nz))
+    return ColumnWorkspace(longwave, shortwave, zeros(FT, Nz), zeros(FT, Nz), ShortwaveColumnScratch(FT, Nz))
 end
 
 """
@@ -229,8 +228,7 @@ Lambertian surface reflection of the angle-integrated downwelling flux. With
 [`gauss_legendre_flux_nodes`](@ref) it isolates the angular-integration part
 of a difference to a line-by-line reference.
 """
-function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz,
-                                     surface_emission, surface_albedo, nodes)
+function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz, surface_emission, surface_albedo, nodes)
     fill!(up, 0)
     fill!(down, 0)
     Nnodes = length(nodes)
@@ -313,8 +311,7 @@ weights normalized per profile and the mean taken over profiles. All arrays
 are `(Nz + 1, Nprofiles)` matrices over the interfaces;
 `exclude_lowest` drops that many layers next to the surface from the statistic.
 """
-function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range;
-                                    exclude_lowest = 0)
+function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range; exclude_lowest = 0)
     Nz, Nprofiles = size(heating)
     low, high = pressure_range
     total = 0.0
@@ -438,8 +435,7 @@ write_json(path, object) = (write(path, json_object(object) * "\n"); path)
 markdown_row(cells) = "| " * join(cells, " | ") * " |"
 
 function markdown_gate_table(gates)
-    lines = [markdown_row(("Gate", "Observed", "Threshold", "Result")),
-             markdown_row(("---", "---", "---", "---"))]
+    lines = [markdown_row(("Gate", "Observed", "Threshold", "Result")), markdown_row(("---", "---", "---", "---"))]
     for gate in gates
         ok, _ = gate_passes(gate)
         s = gate_summary(gate)

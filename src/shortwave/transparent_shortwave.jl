@@ -31,8 +31,7 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
 
     ℐꜛ_ocean = NF(surface.ocean_albedo) * ℐꜜ
     ℐꜛ_land  = NF(surface.land_albedo)  * ℐꜜ
-    α = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) +
-        NF(surface.land_fraction) * NF(surface.land_albedo)
+    α = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) + NF(surface.land_fraction) * NF(surface.land_albedo)
 
     diagnostics.ocean_surface_shortwave_up = ℐꜛ_ocean
     diagnostics.land_surface_shortwave_up  = ℐꜛ_land

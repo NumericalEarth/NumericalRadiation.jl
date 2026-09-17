@@ -97,8 +97,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
             @test state.layerdata[1, k_reversed, 1] ≈ expected rtol = 1e-12
             # Guard against regressing to the (1 - χH₂O) mass-fraction form:
             # for the humid bottom layer the two formulas differ materially.
-            wrong = (Δp / params.grav) * (1 - water_vapor[k]) /
-                    params.molmass_dryair * params.avogad / 1e4
+            wrong = (Δp / params.grav) * (1 - water_vapor[k]) / params.molmass_dryair * params.avogad / 1e4
             if water_vapor[k] >= 1e-2
                 @test abs(state.layerdata[1, k_reversed, 1] - wrong) / expected > 5e-3
             end
@@ -131,8 +130,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
             canonical_state.vmr.vmr_o3[k_reversed, 1] = atmosphere.gases.o3[k]
             Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
-            canonical_state.layerdata[1, k_reversed, 1] = Δp * params.avogad /
-                                         (1e4 * m_air * params.grav)
+            canonical_state.layerdata[1, k_reversed, 1] = Δp * params.avogad / (1e4 * m_air * params.grav)
         end
         for k_reversed in 1:(Nz + 1)
             k = Nz + 2 - k_reversed
@@ -199,8 +197,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         # Sentinel: fill_atmospheric_state! would overwrite t_sfc, so it
         # surviving as NaN proves the guard fired before any state fill.
         workspace.atmospheric_state.t_sfc[1] = NaN
-        @test_throws DimensionMismatch radiative_fluxes!(
-            bad, model, atmosphere, boundary, workspace)
+        @test_throws DimensionMismatch radiative_fluxes!(bad, model, atmosphere, boundary, workspace)
         @test isnan(workspace.atmospheric_state.t_sfc[1])
     end
 end

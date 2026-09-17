@@ -19,10 +19,7 @@ println("Selected ecCKD model: ", spec.name)
 println("  LW: ", basename(paths.longwave))
 println("  SW: ", basename(paths.shortwave))
 
-gas_optics = read_reference_ecckd_gas_optics(spec;
-                                             names = (:composite, :h2o, :co2),
-                                             water_vapor_mole_fraction = 0.005,
-)
+gas_optics = read_reference_ecckd_gas_optics(spec; names = (:composite, :h2o, :co2), water_vapor_mole_fraction = 0.005)
 
 Nz = 24
 pressure_interfaces = collect(range(10_000.0, 100_000.0; length = Nz + 1))
@@ -97,8 +94,7 @@ radiative_fluxes!(
 heating = zeros(Nz)
 heating_rates!(heating, fluxes, atmosphere)
 
-net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
-           fluxes.shortwave_down .- fluxes.shortwave_up
+net_flux = fluxes.longwave_down .- fluxes.longwave_up .+ fluxes.shortwave_down .- fluxes.shortwave_up
 
 println("Runtime g-points: ", Nlongwave_gpoints, " LW, ", Nshortwave_gpoints, " SW")
 println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m^-2")

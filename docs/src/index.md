@@ -50,11 +50,10 @@ atmosphere = ColumnAtmosphere(;
 longwave_gpoints = length(gas_optics.longwave_weights)
 shortwave_gpoints = length(gas_optics.shortwave_weights)
 longwave = LongwaveOptics(zeros(longwave_gpoints, Nz), zeros(longwave_gpoints, Nz);
-                                     source_top = zeros(longwave_gpoints, Nz),
-                                     source_bottom = zeros(longwave_gpoints, Nz),
-                                     weights = zeros(longwave_gpoints))
-shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
-                                       weights = zeros(shortwave_gpoints))
+                          source_top = zeros(longwave_gpoints, Nz),
+                          source_bottom = zeros(longwave_gpoints, Nz),
+                          weights = zeros(longwave_gpoints))
+shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz); weights = zeros(shortwave_gpoints))
 fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                          longwave_down = zeros(Nz + 1),
                          shortwave_up = zeros(Nz + 1),
@@ -81,17 +80,12 @@ fig = Figure(size = (780, 400))
 ax1 = Axis(fig[1, 1]; xlabel = "g point", ylabel = "pressure (hPa)",
            yreversed = true,
            title = "log₁₀ layer optical depth (ecCKD 32×32)")
-hm = heatmap!(ax1, 1:longwave_gpoints, p ./ 100,
-              log10.(max.(longwave.optical_depth, 1e-8));
-              colormap = :viridis)
+hm = heatmap!(ax1, 1:longwave_gpoints, p ./ 100, log10.(max.(longwave.optical_depth, 1e-8)); colormap = :viridis)
 Colorbar(fig[1, 2], hm)
 
-ax2 = Axis(fig[1, 3]; xlabel = "longwave flux (W m⁻²)",
-           ylabel = "pressure (hPa)", yreversed = true)
-lines!(ax2, fluxes.longwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2, label = "upwelling")
-lines!(ax2, fluxes.longwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2, label = "downwelling")
+ax2 = Axis(fig[1, 3]; xlabel = "longwave flux (W m⁻²)", ylabel = "pressure (hPa)", yreversed = true)
+lines!(ax2, fluxes.longwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2, label = "upwelling")
+lines!(ax2, fluxes.longwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2, label = "downwelling")
 axislegend(ax2; position = :rt, framevisible = false)
 fig
 ```

@@ -50,8 +50,7 @@ a day or set `time` to noon and absorb the daily mean separately.
     γ = NF(fractional_year_angle(time, equinox, days_per_year))
     δ = solar_declination(γ)
     time_correction = equation_of_time(γ)
-    day_fraction = NF(((time - DateTime(year(time), month(time), day(time))).value / 1000) /
-               seconds_per_day)
+    day_fraction = NF(((time - DateTime(year(time), month(time), day(time))).value / 1000) / seconds_per_day)
     hour_angle = NF(2π) * (day_fraction - NF(0.5)) + longitude + time_correction
     μ₀ = sin(δ) * sin(latitude) + cos(δ) * cos(latitude) * cos(hour_angle)
     return max(zero(NF), μ₀)

@@ -92,9 +92,7 @@ end
         shortwave_down = [99.0, 79.0, 59.0],
     )
 
-    metrics = radiative_flux_error_metrics(candidate, reference, atmosphere;
-                                           gravity = 10.0,
-                                           heat_capacity = 1000.0)
+    metrics = radiative_flux_error_metrics(candidate, reference, atmosphere; gravity = 10.0, heat_capacity = 1000.0)
     @test metrics isa RadiationErrorMetrics
     @test metrics.flux_rmse ≈ sqrt(10 / 12)
     @test metrics.flux_maximum_absolute_error == 1.0

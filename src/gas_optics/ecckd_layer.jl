@@ -73,8 +73,7 @@ are not interpolated.
                                     temperature,
                                     water_vapor_mole_fraction) where FT
     pressure_bracket, temperature_bracket = table_stencil(FT, model.pressure_grid, model.temperature_grid, pressure, temperature)
-    water_vapor_bracket = water_vapor_axis_bracket(model.water_vapor_mole_fraction_grid,
-                                                   water_vapor_mole_fraction)
+    water_vapor_bracket = water_vapor_axis_bracket(model.water_vapor_mole_fraction_grid, water_vapor_mole_fraction)
     return GasOpticsStencil{FT}(pressure_bracket, temperature_bracket, water_vapor_bracket)
 end
 
@@ -172,16 +171,10 @@ arguments as the longwave method.
                                 s::GasOpticsStencil) where FT =
     tabulated_optical_depth(model, model.shortwave_absorption, model.shortwave_water_vapor_absorption, gpoint, gases, s)
 
-@inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT},
-                               gpoint,
-                               gases::NamedTuple,
-                               ::Nothing) where FT =
+@inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT}, gpoint, gases::NamedTuple, ::Nothing) where FT =
     accumulate_optical_depth(gases, model.longwave_absorption, Val(gas_names(model)), gpoint, 1)
 
-@inline shortwave_optical_depth(model::EcCKDGasOpticsModel{FT},
-                                gpoint,
-                                gases::NamedTuple,
-                                ::Nothing) where FT =
+@inline shortwave_optical_depth(model::EcCKDGasOpticsModel{FT}, gpoint, gases::NamedTuple, ::Nothing) where FT =
     accumulate_optical_depth(gases, model.shortwave_absorption, Val(gas_names(model)), gpoint, 1)
 
 """
@@ -193,9 +186,7 @@ air `air_moles` (mol m⁻²; `Δp / (g mᵈ)` for a hydrostatic layer). Zero whe
 model carries no Rayleigh table, and always zero for an
 [`EcCKDGasOpticsModel`](@ref).
 """
-@inline function rayleigh_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
-                                        gpoint,
-                                        air_moles) where FT
+@inline function rayleigh_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT}, gpoint, air_moles) where FT
     length(model.shortwave_rayleigh_molar_scattering) == 0 && return zero(FT)
     return FT(model.shortwave_rayleigh_molar_scattering[gpoint]) * FT(air_moles)
 end
@@ -225,10 +216,7 @@ per-unit-weight flux convention: the tabulated source interpolated with
 `stefan_boltzmann` field (set at construction, [`PhysicalConstants`](@ref)
 default).
 """
-@inline function longwave_source(model::EcCKDGasOpticsModel{FT},
-                                 gpoint,
-                                 temperature,
-                                 ::Nothing) where FT
+@inline function longwave_source(model::EcCKDGasOpticsModel{FT}, gpoint, temperature, ::Nothing) where FT
     return model.longwave_source_scale[gpoint] * (model.stefan_boltzmann * FT(temperature)^4)
 end
 

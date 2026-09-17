@@ -214,8 +214,7 @@ function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
                       (:longwave_down, fluxes.longwave_down),
                       (:shortwave_up, fluxes.shortwave_up),
                       (:shortwave_down, fluxes.shortwave_down))
-        length(v) == Nz + 1 ||
-            throw(DimensionMismatch("$name must have length Nz + 1"))
+        length(v) == Nz + 1 || throw(DimensionMismatch("$name must have length Nz + 1"))
     end
 
     fill_atmospheric_state!(workspace, model, atmosphere, boundary)

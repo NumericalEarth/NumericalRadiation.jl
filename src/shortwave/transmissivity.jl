@@ -102,8 +102,8 @@ BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF = BackgroundSh
         q_k = humidity[k]
         aerosol_factor = transmissivity.aerosols ? σ_full[k]^2 : zero(NF)
         layer_absorptivity = absorptivity_dry_air +
-                    absorptivity_aerosol * aerosol_factor +
-                    absorptivity_water_vapor * q_k
+                             absorptivity_aerosol * aerosol_factor +
+                             absorptivity_water_vapor * q_k
         if k >= cloud_top
             layer_absorptivity += cloud_term * cloud_cover
         end

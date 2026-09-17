@@ -148,8 +148,7 @@ function coefficient_table(dataset, gas::Symbol; water_vapor_mole_fraction, dyna
     end
     table = Array(dataset[name])
     if ndims(table) == 4
-        gas == :h2o ||
-            throw(ArgumentError("unsupported four-dimensional coefficient table for gas $gas"))
+        gas == :h2o || throw(ArgumentError("unsupported four-dimensional coefficient table for gas $gas"))
         dynamic_water_vapor && return zeros(Float64, size(table, 1), size(table, 2), size(table, 3))
         water_vapor_grid = Float64.(Array(dataset["h2o_mole_fraction"]))
         water_vapor_index = nearest_index(water_vapor_grid, water_vapor_mole_fraction)
@@ -171,10 +170,8 @@ function stack_coefficients(dataset, gas_names; water_vapor_mole_fraction, dynam
                                         allow_missing = allow_missing)
         first_table === nothing || break
     end
-    first_table === nothing &&
-        throw(ArgumentError("no requested gases have ecCKD coefficient variables"))
-    output = zeros(Float64, size(first_table, 1), length(gas_names),
-                   size(first_table, 2), size(first_table, 3))
+    first_table === nothing && throw(ArgumentError("no requested gases have ecCKD coefficient variables"))
+    output = zeros(Float64, size(first_table, 1), length(gas_names), size(first_table, 2), size(first_table, 3))
     for (gas_index, gas) in enumerate(gas_names)
         table = coefficient_table(dataset, gas;
                                   water_vapor_mole_fraction = water_vapor_mole_fraction,

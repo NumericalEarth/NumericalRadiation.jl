@@ -41,9 +41,8 @@ using NumericalRadiation
 using NCDatasets
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
-    names = (:composite, :h2o, :co2),
-    water_vapor_mole_fraction = 0.005,
-)
+                                             names = (:composite, :h2o, :co2),
+                                             water_vapor_mole_fraction = 0.005)
 ```
 
 Gases omitted from `names` are not removed: their reference abundances

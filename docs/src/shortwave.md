@@ -36,11 +36,11 @@ ax  = Axis(fig[1, 1];
 
 for μ₀ in zenith_cosines
     surface = SurfaceState(FT; sea_surface_temperature = 295,
-                               land_surface_temperature = NaN,
-                               land_fraction = 0,
-                               ocean_albedo = 0.07,
-                               land_albedo  = 0.07,
-                               cos_zenith   = μ₀)
+                           land_surface_temperature = NaN,
+                           land_fraction = 0,
+                           ocean_albedo = 0.07,
+                           land_albedo  = 0.07,
+                           cos_zenith   = μ₀)
     Ṫ = zeros(Nz)
     diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
@@ -79,11 +79,11 @@ base_profile = AtmosphereProfile(
 )
 FT = Float64
 surface = SurfaceState(FT; sea_surface_temperature = 295,
-                           land_surface_temperature = NaN,
-                           land_fraction = 0,
-                           ocean_albedo = 0.07,
-                           land_albedo  = 0.07,
-                           cos_zenith   = 0.6)
+                       land_surface_temperature = NaN,
+                       land_fraction = 0,
+                       ocean_albedo = 0.07,
+                       land_albedo  = 0.07,
+                       cos_zenith   = 0.6)
 constants = PhysicalConstants(FT)
 thermo    = ThermodynamicConstants(FT)
 scheme    = NumericalRadiation.OneBandShortwave(FT)

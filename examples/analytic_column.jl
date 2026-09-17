@@ -34,11 +34,10 @@ heating = similar(column.temperature_tendency)
 heating_rates!(heating, column)
 
 surface_longwave_net = column.longwave_diagnostics.surface_longwave_down -
-                 column.longwave_diagnostics.surface_longwave_up
+                       column.longwave_diagnostics.surface_longwave_up
 surface_shortwave_net = column.shortwave_diagnostics.surface_shortwave_down -
-                 column.shortwave_diagnostics.surface_shortwave_up
-toa_net = column.shortwave_diagnostics.outgoing_shortwave +
-          column.longwave_diagnostics.outgoing_longwave
+                        column.shortwave_diagnostics.surface_shortwave_up
+toa_net = column.shortwave_diagnostics.outgoing_shortwave + column.longwave_diagnostics.outgoing_longwave
 column_integrated_heating = sum(heating .* grid.σ_thick) *
                             profile.surface_pressure *
                             column.physical_constants.heat_capacity /

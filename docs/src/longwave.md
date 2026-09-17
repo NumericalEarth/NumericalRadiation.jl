@@ -67,9 +67,7 @@ Nz = 32
 grid = ColumnGrid(σᵢ)
 
 FT = Float64
-surface   = SurfaceState(FT; sea_surface_temperature = 295,
-                             land_surface_temperature = 285,
-                             land_fraction = 0.3)
+surface   = SurfaceState(FT; sea_surface_temperature = 295, land_surface_temperature = 285, land_fraction = 0.3)
 constants = PhysicalConstants(FT)
 longwave  = AnalyticBandLongwave(FT)
 

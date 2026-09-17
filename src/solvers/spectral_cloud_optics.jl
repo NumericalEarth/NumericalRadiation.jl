@@ -217,9 +217,7 @@ and per g point.
     τ_cloud_scattering = κ * ω * water_path
     τ_absorption′ = τ_absorption + κ * (1 - ω) * water_path
     τ_scattering′ = τ_scattering + τ_cloud_scattering
-    ĝ′ = ifelse(τ_scattering′ == 0,
-                zero(τ_scattering′),
-                ĝ + (ĝ_cloud - ĝ) * (τ_cloud_scattering / τ_scattering′))
+    ĝ′ = ifelse(τ_scattering′ == 0, zero(τ_scattering′), ĝ + (ĝ_cloud - ĝ) * (τ_cloud_scattering / τ_scattering′))
     return τ_absorption′, τ_scattering′, ĝ′
 end
 

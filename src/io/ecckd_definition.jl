@@ -28,8 +28,7 @@ function EcCKDDefinition(; model_name::AbstractString,
                            dimensions,
                            variables,
                            attributes = (;))
-    return EcCKDDefinition(String(model_name), String(version),
-                           dimensions, variables, attributes)
+    return EcCKDDefinition(String(model_name), String(version), dimensions, variables, attributes)
 end
 
 """
@@ -341,8 +340,7 @@ filename from [`reference_ecckd_model_inventory`](@ref) or one of
 """
 function reference_ecckd_definition_path(name; require::Bool = true)
     filename = if name isa Symbol
-        haskey(_REFERENCE_ECCKD_DEFAULTS, name) ||
-            throw(ArgumentError("unknown reference ecCKD model key: $(name)"))
+        haskey(_REFERENCE_ECCKD_DEFAULTS, name) || throw(ArgumentError("unknown reference ecCKD model key: $(name)"))
         getproperty(_REFERENCE_ECCKD_DEFAULTS, name)
     else
         String(name)
@@ -356,9 +354,7 @@ end
 Return `(longwave=..., shortwave=...)` paths for the default reference ecCKD
 runtime pair used by validation and examples.
 """
-function reference_ecckd_definition_paths(; longwave = :longwave_64,
-                                            shortwave = :shortwave_32,
-                                            require::Bool = true)
+function reference_ecckd_definition_paths(; longwave = :longwave_64, shortwave = :shortwave_32, require::Bool = true)
     return (
         longwave = reference_ecckd_definition_path(longwave; require),
         shortwave = reference_ecckd_definition_path(shortwave; require),
@@ -375,11 +371,7 @@ downloading lazy artifacts or throwing when the data are not already installed.
 """
 function reference_ecckd_definition_paths(model; require::Bool = true)
     spec = reference_ecckd_model_spec(model)
-    return reference_ecckd_definition_paths(;
-        longwave = spec.longwave,
-        shortwave = spec.shortwave,
-        require,
-    )
+    return reference_ecckd_definition_paths(; longwave = spec.longwave, shortwave = spec.shortwave, require)
 end
 
 const _ECCKD_DIM_ALIASES = (
@@ -437,9 +429,7 @@ function dimension(definition::EcCKDDefinition, name::Symbol)
     value = lookup_any(definition.dimensions, getproperty(_ECCKD_DIM_ALIASES, name))
     if value === nothing && name in (:lw_bands, :sw_bands)
         kind = radiation_kind(definition)
-        if kind == :combined ||
-           (kind == :longwave && name == :lw_bands) ||
-           (kind == :shortwave && name == :sw_bands)
+        if kind == :combined || (kind == :longwave && name == :lw_bands) || (kind == :shortwave && name == :sw_bands)
             value = lookup_named(definition.dimensions, :band)
         end
     end
@@ -528,8 +518,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
     throw(ArgumentError("read_ecckd_tabulated_gas_optics requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
-read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
-                                shortwave_path::AbstractString; kwargs...) =
+read_ecckd_tabulated_gas_optics(longwave_path::AbstractString, shortwave_path::AbstractString; kwargs...) =
     read_ecckd_tabulated_gas_optics(Float64, longwave_path, shortwave_path; kwargs...)
 
 """
@@ -546,8 +535,7 @@ example `names`, `water_vapor_mole_fraction` and `stefan_boltzmann`.
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.
 """
-function read_reference_ecckd_gas_optics(FT::DataType, model = :climate_64x32;
-                                         require::Bool = true, kwargs...)
+function read_reference_ecckd_gas_optics(FT::DataType, model = :climate_64x32; require::Bool = true, kwargs...)
     paths = reference_ecckd_definition_paths(model; require)
     if paths.longwave === nothing || paths.shortwave === nothing
         return nothing
@@ -622,14 +610,12 @@ function Base.show(io::IO, summary::EcCKDSchemaSummary)
 end
 
 function require_positive!(errors, definition, name::Symbol)
-    dimension(definition, name) > 0 ||
-        push!(errors, "missing or nonpositive dimension: $(name)")
+    dimension(definition, name) > 0 || push!(errors, "missing or nonpositive dimension: $(name)")
     return errors
 end
 
 function require_variable!(errors, definition, names, label)
-    variable_dims(definition, names) !== nothing ||
-        push!(errors, "missing required variable group: $(label)")
+    variable_dims(definition, names) !== nothing || push!(errors, "missing required variable group: $(label)")
     return errors
 end
 

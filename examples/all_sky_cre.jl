@@ -99,8 +99,7 @@ nothing #hide
 # containers cannot touch the clear reference. That non-aliasing contract
 # is gate-verified below, not assumed.
 
-gas_optics = read_reference_ecckd_gas_optics("32x32";
-                                             names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
 
 function gas_optics_containers()
     Nlongwave_gpoints = length(gas_optics.longwave_weights)
@@ -160,10 +159,8 @@ nothing #hide
 # per-g Planck emission; the shortwave boundary is a prescribed global-mean
 # insolation over an idealized dark surface.
 
-longwave_boundary = LongwaveBoundaryConditions(
-    surface_longwave_up = surface_longwave_emission(gas_optics, Tˢ))
-shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 340.25,
-                                                 surface_albedo = 0.06)
+longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_longwave_emission(gas_optics, Tˢ))
+shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 340.25, surface_albedo = 0.06)
 
 flux_containers() = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                                     longwave_down = zeros(Nz + 1),
@@ -171,10 +168,8 @@ flux_containers() = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                                     shortwave_down = zeros(Nz + 1))
 
 clear_fluxes = flux_containers()
-radiative_fluxes!(clear_fluxes, CloudlessLongwave(), clear_longwave,
-                  atmosphere, longwave_boundary)
-radiative_fluxes!(clear_fluxes, CloudlessShortwave(), clear_shortwave,
-                  atmosphere, shortwave_boundary)
+radiative_fluxes!(clear_fluxes, CloudlessLongwave(), clear_longwave, atmosphere, longwave_boundary)
+radiative_fluxes!(clear_fluxes, CloudlessShortwave(), clear_shortwave, atmosphere, shortwave_boundary)
 
 allsky_fluxes = flux_containers()
 radiative_fluxes!(allsky_fluxes, CloudOverlapLongwave(overlap = :adding),
@@ -248,23 +243,15 @@ axes3 = map(enumerate((("Longwave flux (W m⁻²)", "Longwave"),
     ax
 end
 
-lines!(axes3[1], clear_fluxes.longwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2)
-lines!(axes3[1], allsky_fluxes.longwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2, linestyle = :dash)
-lines!(axes3[1], clear_fluxes.longwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2)
-lines!(axes3[1], allsky_fluxes.longwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2, linestyle = :dash)
+lines!(axes3[1], clear_fluxes.longwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2)
+lines!(axes3[1], allsky_fluxes.longwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2, linestyle = :dash)
+lines!(axes3[1], clear_fluxes.longwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2)
+lines!(axes3[1], allsky_fluxes.longwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2, linestyle = :dash)
 
-lines!(axes3[2], clear_fluxes.shortwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2)
-lines!(axes3[2], allsky_fluxes.shortwave_up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2, linestyle = :dash)
-lines!(axes3[2], clear_fluxes.shortwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2)
-lines!(axes3[2], allsky_fluxes.shortwave_down, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2, linestyle = :dash)
+lines!(axes3[2], clear_fluxes.shortwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2)
+lines!(axes3[2], allsky_fluxes.shortwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2, linestyle = :dash)
+lines!(axes3[2], clear_fluxes.shortwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2)
+lines!(axes3[2], allsky_fluxes.shortwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2, linestyle = :dash)
 
 ΔṪ = (allsky_Ṫ .- clear_Ṫ) .* 86_400
 @assert all(isfinite, ΔṪ)

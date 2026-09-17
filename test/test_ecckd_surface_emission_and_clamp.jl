@@ -86,8 +86,7 @@ end
         surface = nothing,
         geometry = (;),
     )
-    longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz);
-                              weights = zeros(1))
+    longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz); weights = zeros(1))
     shortwave = ShortwaveOptics(zeros(1, Nz);
                                 rayleigh_optical_depth = zeros(1, Nz),
                                 scattering_asymmetry = zeros(1, Nz),
@@ -102,8 +101,7 @@ end
     # CH₄ at its reference abundance: the subtraction cancels and the
     # positive composite total must be preserved, not clamped.
     reference_amount = 1e-3 * 100.0
-    optical_properties!(longwave, shortwave, model,
-                        atmosphere(atmosphere_gases(reference_amount)))
+    optical_properties!(longwave, shortwave, model, atmosphere(atmosphere_gases(reference_amount)))
     @test longwave.optical_depth[1, 1] > 0
     @test isapprox(longwave.optical_depth[1, 1], 1e-4 * 100.0; rtol = 1e-10)
     @test shortwave.optical_depth[1, 1] > 0

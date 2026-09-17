@@ -50,11 +50,7 @@ using Dates
     @test summary.source_tables_present
     @test summary.rayleigh_tables_present
 
-    invalid = EcCKDDefinition(
-        model_name = "invalid",
-        dimensions = (lw_bands = 16, gases = 1),
-        variables = (;),
-    )
+    invalid = EcCKDDefinition(model_name = "invalid", dimensions = (lw_bands = 16, gases = 1), variables = (;))
     valid, errors = validate_ecckd_definition(invalid; throw_on_error = false)
     @test !valid
     @test any(contains("sw_bands"), errors)
@@ -221,8 +217,7 @@ using NCDatasets
     # A path that is not a `String` must still reach the reader, so a missing
     # file has to report the missing file rather than a missing extension.
     missing_substring = strip(" " * tempname() * "-absent.nc ")
-    for reader in (read_ecckd_definition, read_ecckd_spectral_mapping,
-                   read_cloud_scattering_table)
+    for reader in (read_ecckd_definition, read_ecckd_spectral_mapping, read_cloud_scattering_table)
         exception = try
             reader(missing_substring)
             nothing
@@ -257,10 +252,8 @@ end
         defDim(dataset, "pressure", 6)
         defDim(dataset, "temperature", 7)
 
-        defVar(dataset, "lw_absorption", Float64,
-               ("gases", "lw_gpoints", "pressure", "temperature"))
-        defVar(dataset, "sw_absorption", Float64,
-               ("gases", "sw_gpoints", "pressure", "temperature"))
+        defVar(dataset, "lw_absorption", Float64, ("gases", "lw_gpoints", "pressure", "temperature"))
+        defVar(dataset, "sw_absorption", Float64, ("gases", "sw_gpoints", "pressure", "temperature"))
         defVar(dataset, "lw_source", Float64, ("lw_gpoints", "temperature"))
         defVar(dataset, "sw_rayleigh", Float64, ("sw_gpoints", "pressure"))
 
@@ -338,8 +331,7 @@ end
             NCDataset(copied, "a") do dataset
                 dataset["ch4_reference_mole_fraction"][] *= 2
             end
-            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(
-                longwave_path, copied; names = (:ch4, :n2o))
+            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(longwave_path, copied; names = (:ch4, :n2o))
         end
     else
         @info "Skipping paired ecCKD axis check; ecRad data files are not present"
@@ -384,10 +376,8 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(64, 2), zeros(64, 2);
-                                  weights = zeros(64))
-        shortwave = ShortwaveOptics(zeros(32, 2);
-                                    weights = zeros(32))
+        longwave = LongwaveOptics(zeros(64, 2), zeros(64, 2); weights = zeros(64))
+        shortwave = ShortwaveOptics(zeros(32, 2); weights = zeros(32))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test all(isfinite, longwave.optical_depth)
@@ -593,8 +583,7 @@ end
         shortwave_weights = [1.0],
     )
 
-    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
-                              weights = zeros(2))
+    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz); weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
 
     returned = optical_properties!(longwave, shortwave, model, atmosphere)
@@ -614,8 +603,7 @@ end
     optical_properties_allocations(longwave, shortwave, model, atmosphere)
     @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
-    bad_longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz);
-                                  weights = zeros(1))
+    bad_longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz); weights = zeros(1))
     @test_throws DimensionMismatch optical_properties!(bad_longwave, shortwave, model, atmosphere)
 
     @test_throws DimensionMismatch EcCKDGasOpticsModel(
@@ -647,8 +635,7 @@ end
         longwave_weights = [0.5, 0.5],
         shortwave_weights = [1.0],
     )
-    longwave = LongwaveOptics(zeros(2, 1), zeros(2, 1);
-                              weights = zeros(2))
+    longwave = LongwaveOptics(zeros(2, 1), zeros(2, 1); weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, 1); weights = zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
@@ -676,8 +663,7 @@ end
         longwave_weights = [1.0],
         shortwave_weights = [0.5, 0.5],
     )
-    longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1);
-                              weights = zeros(1))
+    longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1); weights = zeros(1))
     shortwave = ShortwaveOptics(zeros(2, 1); weights = zeros(2))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
@@ -726,8 +712,7 @@ end
         shortwave_weights = [1.0],
     )
 
-    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
-                              weights = zeros(2))
+    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz); weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
@@ -767,8 +752,7 @@ end
 end
 
 @testset "ecCKD tabulated interpolation and atmosphere contracts" begin
-    @test NumericalRadiation.pressure_axis_bracket(
-        [100.0, 1_000.0, 10_000.0], sqrt(100.0 * 1_000.0))[3] ≈ 0.5
+    @test NumericalRadiation.pressure_axis_bracket([100.0, 1_000.0, 10_000.0], sqrt(100.0 * 1_000.0))[3] ≈ 0.5
     @test NumericalRadiation.table_stencil(
         Float64, [100.0, 1_000.0, 10_000.0], [200.0, 300.0],
         sqrt(100.0 * 1_000.0), 250.0)[1][3] ≈ 0.5
@@ -806,8 +790,7 @@ end
     )
 
     model = contract_model()
-    longwave = LongwaveOptics(zeros(1, 2), zeros(1, 2);
-                              weights = zeros(1))
+    longwave = LongwaveOptics(zeros(1, 2), zeros(1, 2); weights = zeros(1))
     shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
     atmosphere(; pressure_layers = [200.0, 800.0],
                  pressure_interfaces = [100.0, 500.0, 1_000.0],
@@ -827,8 +810,7 @@ end
     @test_throws DimensionMismatch optical_properties!(
         longwave, shortwave, model,
         atmosphere(pressure_interfaces = [100.0, 1_000.0]))
-    @test_throws DimensionMismatch optical_properties!(
-        longwave, shortwave, model, atmosphere(gases = (h2o = [1.0],)))
+    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(gases = (h2o = [1.0],)))
 
     interface_longwave = LongwaveOptics(
         zeros(1, 2), zeros(1, 2);
@@ -836,8 +818,7 @@ end
     @test_throws DimensionMismatch optical_properties!(
         interface_longwave, shortwave, model,
         atmosphere(temperature_interfaces = [240.0, 270.0]))
-    top_only = LongwaveOptics(
-        zeros(1, 2), zeros(1, 2); source_top = zeros(1, 2), weights = zeros(1))
+    top_only = LongwaveOptics(zeros(1, 2), zeros(1, 2); source_top = zeros(1, 2), weights = zeros(1))
     @test_throws ArgumentError optical_properties!(
         top_only, shortwave, model,
         atmosphere(temperature_interfaces = [240.0, 255.0, 270.0]))
@@ -880,8 +861,7 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1);
-                                  weights = zeros(1))
+        longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1); weights = zeros(1))
         shortwave = ShortwaveOptics(zeros(1, 1); weights = zeros(1))
         optical_properties!(longwave, shortwave, model, atmosphere)
         return longwave.optical_depth, shortwave.optical_depth
@@ -992,8 +972,7 @@ end
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
-        atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3,
-                                      composite = [4.2e2, 1.1e3, 2.6e3]))
+        atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3, composite = [4.2e2, 1.1e3, 2.6e3]))
         longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
                                   source_top = zeros(Nlongwave_gpoints, 3),
                                   source_bottom = zeros(Nlongwave_gpoints, 3),
@@ -1043,8 +1022,7 @@ end
         temperature_grid = matrix_temperature_grid ?
             FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures] :
             FT[200, 250, 300]
-        gridded(iᵖ, iᵀ) = matrix_temperature_grid ?
-            temperature_grid[iᵖ, iᵀ] : temperature_grid[iᵀ]
+        gridded(iᵖ, iᵀ) = matrix_temperature_grid ? temperature_grid[iᵖ, iᵀ] : temperature_grid[iᵀ]
         source_temperature_grid = FT[180, 240, 300]
 
         model = EcCKDTabulatedGasOpticsModel(
@@ -1089,8 +1067,7 @@ end
                                   source_top = zeros(FT, Nlongwave_gpoints, Nz),
                                   source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
                                   weights = zeros(FT, Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz);
-                                    weights = zeros(FT, Nshortwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
         return model, atmosphere, longwave, shortwave
     end
 
@@ -1099,8 +1076,7 @@ end
             model, atmosphere, longwave, shortwave = tabulated_fixture(FT, matrix_temperature_grid)
 
             @test eltype(model) === FT
-            @test (@inferred optical_properties!(longwave, shortwave, model,
-                                                 atmosphere)) isa Tuple
+            @test (@inferred optical_properties!(longwave, shortwave, model, atmosphere)) isa Tuple
             @test eltype(longwave.optical_depth) === FT
             @test eltype(shortwave.optical_depth) === FT
             @test all(isfinite, longwave.optical_depth)
@@ -1140,8 +1116,7 @@ end
                                               source_top = zero(longwave.source_top),
                                               source_bottom = zero(longwave.source_bottom),
                                               weights = zero(longwave.weights))
-            adapted_shortwave = ShortwaveOptics(zero(shortwave.optical_depth);
-                                                weights = zero(shortwave.weights))
+            adapted_shortwave = ShortwaveOptics(zero(shortwave.optical_depth); weights = zero(shortwave.weights))
             optical_properties!(adapted_longwave, adapted_shortwave, adapted, atmosphere)
             @test adapted_longwave.optical_depth == longwave.optical_depth
             @test adapted_shortwave.optical_depth == shortwave.optical_depth

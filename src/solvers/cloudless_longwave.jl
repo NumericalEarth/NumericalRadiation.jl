@@ -68,8 +68,7 @@ function LongwaveOptics(optical_depth::AbstractMatrix{FT},
                         scattering_asymmetry = nothing,
                         weights = fill(inv(FT(size(optical_depth, 1))),
                                        size(optical_depth, 1))) where FT
-    size(optical_depth) == size(source) ||
-        throw(DimensionMismatch("optical_depth and source must have the same shape"))
+    size(optical_depth) == size(source) || throw(DimensionMismatch("optical_depth and source must have the same shape"))
     source_top === nothing || size(source_top) == size(source) ||
         throw(DimensionMismatch("source_top must match source shape"))
     source_bottom === nothing || size(source_bottom) == size(source) ||
@@ -80,8 +79,7 @@ function LongwaveOptics(optical_depth::AbstractMatrix{FT},
         throw(DimensionMismatch("scattering_asymmetry must match source shape"))
     (single_scattering_albedo === nothing) == (scattering_asymmetry === nothing) ||
         throw(ArgumentError("single_scattering_albedo and scattering_asymmetry must both be provided or both be nothing"))
-    length(weights) == size(optical_depth, 1) ||
-        throw(DimensionMismatch("weights must have length Ngpoints"))
+    length(weights) == size(optical_depth, 1) || throw(DimensionMismatch("weights must have length Ngpoints"))
     return LongwaveOptics{FT, typeof(optical_depth),
                           typeof(source_top), typeof(source_bottom),
                           typeof(single_scattering_albedo),
@@ -128,12 +126,8 @@ struct LongwaveBoundaryConditions{FT, S, A}
     surface_albedo::A
 end
 
-function LongwaveBoundaryConditions(; surface_longwave_up,
-                                      toa_longwave_down = nothing,
-                                      surface_albedo = nothing)
-    FT = surface_longwave_up isa Number ?
-        typeof(surface_longwave_up) :
-        eltype(surface_longwave_up)
+function LongwaveBoundaryConditions(; surface_longwave_up, toa_longwave_down = nothing, surface_albedo = nothing)
+    FT = surface_longwave_up isa Number ? typeof(surface_longwave_up) : eltype(surface_longwave_up)
     down = toa_longwave_down === nothing ? zero(FT) : FT(toa_longwave_down)
     albedo = surface_albedo === nothing ? zero(FT) : surface_albedo
     return LongwaveBoundaryConditions{FT, typeof(surface_longwave_up), typeof(albedo)}(
@@ -274,10 +268,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            atmosphere,
                            boundary_conditions::LongwaveBoundaryConditions{FT}) where FT
     Nz = number_of_layers(optics)
-    length(fluxes.longwave_up) == Nz + 1 ||
-        throw(DimensionMismatch("longwave_up must have length Nz + 1"))
-    length(fluxes.longwave_down) == Nz + 1 ||
-        throw(DimensionMismatch("longwave_down must have length Nz + 1"))
+    length(fluxes.longwave_up) == Nz + 1 || throw(DimensionMismatch("longwave_up must have length Nz + 1"))
+    length(fluxes.longwave_down) == Nz + 1 || throw(DimensionMismatch("longwave_down must have length Nz + 1"))
 
     fluxes.longwave_up .= zero(FT)
     fluxes.longwave_down .= zero(FT)
@@ -306,8 +298,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
             source[Nz + 1] = surface_longwave_up_at(boundary_conditions, gpoint)
             for k in Nz:-1:1
                 inverse_denominator[k] = inv(one(FT) - albedo[k + 1] * reflectance[k])
-                albedo[k] = reflectance[k] +
-                    transmittance[k]^2 * albedo[k + 1] * inverse_denominator[k]
+                albedo[k] = reflectance[k] + transmittance[k]^2 * albedo[k + 1] * inverse_denominator[k]
                 source[k] = source_up[k] +
                     transmittance[k] *
                     (source[k + 1] + albedo[k + 1] * source_down[k]) *

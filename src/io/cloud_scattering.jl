@@ -64,9 +64,7 @@ function EcCKDSpectralMapping(; wavenumber1::AbstractVector{FT},
         throw(DimensionMismatch("wavenumber1 and wavenumber2 must have the same length"))
     size(gpoint_fraction, 1) == length(wavenumber1) ||
         throw(DimensionMismatch("gpoint_fraction first dimension must match wavenumber intervals"))
-    resolved_interval_weight = interval_weight === nothing ?
-        fill(one(FT), length(wavenumber1)) :
-        interval_weight
+    resolved_interval_weight = interval_weight === nothing ? fill(one(FT), length(wavenumber1)) : interval_weight
     length(resolved_interval_weight) == length(wavenumber1) ||
         throw(DimensionMismatch("interval_weight must match wavenumber intervals"))
     return EcCKDSpectralMapping{FT, typeof(wavenumber1), typeof(gpoint_fraction)}(
@@ -155,8 +153,7 @@ end
         return lastindex(grid)
     end
     lower = upper - 1
-    return abs(grid[upper] - wavenumber) < abs(wavenumber - grid[lower]) ?
-        upper : lower
+    return abs(grid[upper] - wavenumber) < abs(wavenumber - grid[lower]) ? upper : lower
 end
 
 """
@@ -166,8 +163,7 @@ Interpolate raw cloud scattering properties at one wavenumber-grid index and
 effective radius. Returns mass extinction, single-scattering albedo, and
 asymmetry factor.
 """
-function cloud_scattering_properties(table::CloudScatteringTable, iwavenumber::Integer,
-                                     effective_radius)
+function cloud_scattering_properties(table::CloudScatteringTable, iwavenumber::Integer, effective_radius)
     lower, upper, weight = linear_radius_index(table, effective_radius)
     w₀ = one(eltype(table)) - weight
     mass_extinction_coefficient = w₀ * table.mass_extinction_coefficient[iwavenumber, lower] +
@@ -229,8 +225,7 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
             κ, ω, ĝ = delta_eddington(κ, ω, ĝ)
         end
         for gpoint in 1:Ngpoints
-            w = width * FT(mapping.interval_weight[interval]) *
-                FT(mapping.gpoint_fraction[interval, gpoint])
+            w = width * FT(mapping.interval_weight[interval]) * FT(mapping.gpoint_fraction[interval, gpoint])
             w == 0 && continue
             κ_scattering = κ * ω
             Σκ[gpoint] += w * κ
@@ -251,18 +246,13 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
             ω[gpoint] = clamp(Σκ_scattering[gpoint] / Σκ[gpoint], zero(FT), one(FT))
         end
         if Σκ_scattering[gpoint] > 0
-            ĝ[gpoint] = clamp(Σκ_scattering_ĝ[gpoint] / (Σκ_scattering[gpoint] * Σw[gpoint]),
-                              -one(FT), one(FT))
+            ĝ[gpoint] = clamp(Σκ_scattering_ĝ[gpoint] / (Σκ_scattering[gpoint] * Σw[gpoint]), -one(FT), one(FT))
         end
         if delta_eddington_average
             Σκ[gpoint], ω[gpoint], ĝ[gpoint] = revert_delta_eddington(Σκ[gpoint], ω[gpoint], ĝ[gpoint])
         end
     end
-    return (
-        mass_extinction_coefficient = Σκ,
-        single_scattering_albedo = ω,
-        asymmetry_factor = ĝ,
-    )
+    return (mass_extinction_coefficient = Σκ, single_scattering_albedo = ω, asymmetry_factor = ĝ)
 end
 
 @inline function find_spectral_interval(mapping::EcCKDSpectralMapping, wavenumber)
@@ -274,8 +264,7 @@ end
     return 0
 end
 
-function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
-                                    mapping::EcCKDSpectralMapping)
+function ecrad_cloud_mapping_matrix(table::CloudScatteringTable, mapping::EcCKDSpectralMapping)
     FT = promote_type(eltype(table), eltype(mapping))
     Nwavenumbers = length(table.wavenumber)
     Nintervals = length(mapping.wavenumber1)
@@ -372,11 +361,7 @@ end
 @inline function delta_eddington(τ, ω, ĝ)
     f = ĝ * ĝ
     denominator = one(τ) - ω * f
-    return (
-        τ * denominator,
-        ω * (one(ω) - f) / denominator,
-        ĝ / (one(ĝ) + ĝ),
-    )
+    return (τ * denominator, ω * (one(ω) - f) / denominator, ĝ / (one(ĝ) + ĝ))
 end
 
 @inline function revert_delta_eddington(τ′, ω′, ĝ′)
@@ -431,27 +416,19 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
     ω = zeros(FT, Ngpoints)
     ĝ = zeros(FT, Ngpoints)
     for gpoint in 1:Ngpoints
-        Σκ[gpoint] > 0 &&
-            (ω[gpoint] = clamp(Σκ_scattering[gpoint] / Σκ[gpoint], zero(FT), one(FT)))
+        Σκ[gpoint] > 0 && (ω[gpoint] = clamp(Σκ_scattering[gpoint] / Σκ[gpoint], zero(FT), one(FT)))
         Σκ_scattering[gpoint] > 0 &&
             (ĝ[gpoint] = clamp(Σκ_scattering_ĝ[gpoint] / Σκ_scattering[gpoint],
                                -one(FT), one(FT)))
         if thick_averaging
             ℛ∞ = clamp(Σℛ∞[gpoint], zero(FT), one(FT))
-            denominator = (one(FT) + ℛ∞)^2 -
-                ĝ[gpoint] * (one(FT) - ℛ∞)^2
-            ω[gpoint] = denominator > 0 ?
-                clamp(FT(4) * ℛ∞ / denominator, zero(FT), one(FT)) :
-                zero(FT)
+            denominator = (one(FT) + ℛ∞)^2 - ĝ[gpoint] * (one(FT) - ℛ∞)^2
+            ω[gpoint] = denominator > 0 ? clamp(FT(4) * ℛ∞ / denominator, zero(FT), one(FT)) : zero(FT)
         end
         if delta_eddington_average
             Σκ[gpoint], ω[gpoint], ĝ[gpoint] = revert_delta_eddington(Σκ[gpoint], ω[gpoint], ĝ[gpoint])
         end
     end
 
-    return (
-        mass_extinction_coefficient = Σκ,
-        single_scattering_albedo = ω,
-        asymmetry_factor = ĝ,
-    )
+    return (mass_extinction_coefficient = Σκ, single_scattering_albedo = ω, asymmetry_factor = ĝ)
 end

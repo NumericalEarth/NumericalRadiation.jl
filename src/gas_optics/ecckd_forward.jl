@@ -33,11 +33,9 @@ function Adapt.adapt_structure(to, model::EcCKDGasOpticsModel{<:Any, GasNames}) 
     longwave_source_scale = Adapt.adapt(to, model.longwave_source_scale)
     longwave_weights = Adapt.adapt(to, model.longwave_weights)
     shortwave_weights = Adapt.adapt(to, model.shortwave_weights)
-    fields = (longwave_absorption, shortwave_absorption, longwave_source_scale,
-              longwave_weights, shortwave_weights)
+    fields = (longwave_absorption, shortwave_absorption, longwave_source_scale, longwave_weights, shortwave_weights)
     FT = eltype(longwave_absorption)
-    return EcCKDGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...,
-                                                                     FT(model.stefan_boltzmann))
+    return EcCKDGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields..., FT(model.stefan_boltzmann))
 end
 
 function EcCKDGasOpticsModel(; names,
@@ -70,10 +68,8 @@ function EcCKDGasOpticsModel(; names,
         throw(DimensionMismatch("shortwave_weights must have length Nshortwave_gpoints"))
 
     gas_name_tuple = Tuple(Symbol.(names))
-    fields = (longwave_absorption, shortwave_absorption, longwave_source_scale,
-              longwave_weights, shortwave_weights)
-    return EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...,
-                                                                           FT(stefan_boltzmann))
+    fields = (longwave_absorption, shortwave_absorption, longwave_source_scale, longwave_weights, shortwave_weights)
+    return EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
 end
 
 Base.eltype(::EcCKDGasOpticsModel{FT}) where FT = FT
@@ -149,8 +145,7 @@ function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, Ga
               longwave_source_scale, longwave_source_temperature_grid,
               longwave_source_table, longwave_weights, shortwave_weights)
     FT = eltype(pressure_grid)
-    return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...,
-                                                                              FT(model.stefan_boltzmann))
+    return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields..., FT(model.stefan_boltzmann))
 end
 
 # Adaptor that converts the element type of every array in a model while
@@ -221,8 +216,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
 
     gas_name_tuple = Tuple(Symbol.(names))
     Ngases = length(names)
-    length(pressure_grid) >= 2 ||
-        throw(DimensionMismatch("pressure_grid must contain at least two points"))
+    length(pressure_grid) >= 2 || throw(DimensionMismatch("pressure_grid must contain at least two points"))
     temperature_grid_length(temperature_grid) >= 2 ||
         throw(DimensionMismatch("temperature_grid must contain at least two points"))
     validate_log_uniform_grid(pressure_grid, "pressure_grid")
@@ -242,8 +236,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
     if length(water_vapor_grid) > 0
         length(water_vapor_grid) >= 2 ||
             throw(DimensionMismatch("water_vapor_mole_fraction_grid must contain at least two points when supplied"))
-        :h2o in gas_name_tuple ||
-            throw(ArgumentError("water_vapor_mole_fraction_grid requires :h2o in names"))
+        :h2o in gas_name_tuple || throw(ArgumentError("water_vapor_mole_fraction_grid requires :h2o in names"))
         validate_log_uniform_grid(water_vapor_grid, "water_vapor_mole_fraction_grid")
         size(longwave_water_vapor) == (size(longwave_absorption, 1), length(pressure_grid),
                                        temperature_grid_length(temperature_grid), length(water_vapor_grid)) ||
@@ -261,8 +254,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
             throw(DimensionMismatch("longwave_source_table first dimension must match Nlongwave_gpoints"))
         size(longwave_source_table, 2) == length(longwave_source_temperature_grid) ||
             throw(DimensionMismatch("longwave_source_table temperature dimension must match longwave_source_temperature_grid"))
-        validate_increasing_grid(longwave_source_temperature_grid,
-                                 "longwave_source_temperature_grid")
+        validate_increasing_grid(longwave_source_temperature_grid, "longwave_source_temperature_grid")
     end
     length(longwave_weights) == size(longwave_absorption, 1) ||
         throw(DimensionMismatch("longwave_weights must have length Nlongwave_gpoints"))
@@ -277,8 +269,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
               longwave_absorption, shortwave_absorption,
               longwave_water_vapor, shortwave_water_vapor, shortwave_rayleigh_molar_scattering, longwave_source_scale, longwave_source_temperature_grid,
               longwave_source_table, longwave_weights, shortwave_weights)
-    return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...,
-                                                                                    FT(stefan_boltzmann))
+    return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
 end
 
 Base.eltype(::EcCKDTabulatedGasOpticsModel{FT}) where FT = FT
@@ -313,8 +304,7 @@ end
 @inline function check_gas_profile_length(gases, name, Nz)
     profile = gas_profile(gases, name)
     profile isa Number && return nothing
-    length(profile) >= Nz ||
-        throw(DimensionMismatch("gas profile $name must contain at least Nz values"))
+    length(profile) >= Nz || throw(DimensionMismatch("gas profile $name must contain at least Nz values"))
     return nothing
 end
 
@@ -325,9 +315,7 @@ end
     return nothing
 end
 
-@generated function check_gas_profile_lengths(gases::NamedTuple{Keys},
-                                              ::Val{Names},
-                                              Nz) where {Keys, Names}
+@generated function check_gas_profile_lengths(gases::NamedTuple{Keys}, ::Val{Names}, Nz) where {Keys, Names}
     checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), Nz) )
               for name in Names]
     return quote
@@ -346,9 +334,7 @@ end
     return nothing
 end
 
-@generated function check_tabulated_gas_profile_lengths(gases::NamedTuple{Keys},
-                                                        ::Val{Names},
-                                                        Nz) where {Keys, Names}
+@generated function check_tabulated_gas_profile_lengths(gases::NamedTuple{Keys}, ::Val{Names}, Nz) where {Keys, Names}
     names_to_check = collect(Names)
     :composite in Keys && !(:composite in Names) && push!(names_to_check, :composite)
     checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), Nz) )
@@ -410,15 +396,13 @@ end
 function validate_increasing_grid(grid, name)
     all(isfinite, grid) || throw(ArgumentError("$name must contain only finite values"))
     for i in (firstindex(grid) + 1):lastindex(grid)
-        grid[i] > grid[i - 1] ||
-            throw(ArgumentError("$name must be strictly increasing"))
+        grid[i] > grid[i - 1] || throw(ArgumentError("$name must be strictly increasing"))
     end
     return nothing
 end
 
 function validate_log_uniform_grid(grid, name)
-    all(>(zero(eltype(grid))), grid) ||
-        throw(ArgumentError("$name must contain only positive values"))
+    all(>(zero(eltype(grid))), grid) || throw(ArgumentError("$name must contain only positive values"))
     validate_increasing_grid(grid, name)
     # The ecCKD reference kernel derives every index from the first log-grid
     # interval. Refuse tables that violate that format instead of interpolating
@@ -437,17 +421,14 @@ validate_temperature_grid(grid::AbstractVector, _) = validate_increasing_grid(gr
 function validate_temperature_grid(grid::AbstractMatrix, pressure_count)
     size(grid, 1) == pressure_count ||
         throw(DimensionMismatch("temperature_grid pressure dimension must match pressure_grid"))
-    all(isfinite, grid) ||
-        throw(ArgumentError("temperature_grid must contain only finite values"))
+    all(isfinite, grid) || throw(ArgumentError("temperature_grid must contain only finite values"))
     expected_step = grid[1, 2] - grid[1, 1]
-    expected_step > 0 ||
-        throw(ArgumentError("temperature_grid rows must be strictly increasing"))
+    expected_step > 0 || throw(ArgumentError("temperature_grid rows must be strictly increasing"))
     # The reference kernel likewise carries one temperature increment for the
     # whole pressure-dependent table.
     for iᵖ in axes(grid, 1), iᵀ in 2:size(grid, 2)
         step = grid[iᵖ, iᵀ] - grid[iᵖ, iᵀ - 1]
-        step > 0 ||
-            throw(ArgumentError("temperature_grid rows must be strictly increasing"))
+        step > 0 || throw(ArgumentError("temperature_grid rows must be strictly increasing"))
         isapprox(step, expected_step; rtol = 1.0e-5, atol = 0.0) ||
             throw(ArgumentError("temperature_grid must use one uniform temperature increment"))
     end
@@ -475,11 +456,7 @@ end
 # the grids: the matrix-grid temperature index below is evaluated in it, and
 # `EcCKDTabulatedGasOpticsModel` stores absorption tables as given, so their
 # element type need not match the model's.
-@inline table_stencil(::Type{FT},
-                      pressure_grid,
-                      temperature_grid::AbstractVector,
-                      pressure,
-                      temperature) where FT =
+@inline table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractVector, pressure, temperature) where FT =
     (pressure_axis_bracket(pressure_grid, pressure), bracket(temperature_grid, temperature))
 
 @inline function table_stencil(::Type{FT},
@@ -489,8 +466,7 @@ end
                                temperature) where FT
     pressure_bracket = pressure_axis_bracket(pressure_grid, pressure)
     i₀ᵖ, i₁ᵖ, wᵖ = pressure_bracket
-    temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] +
-                         wᵖ * temperature_grid[i₁ᵖ, 1]
+    temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] + wᵖ * temperature_grid[i₁ᵖ, 1]
     temperature_step = temperature_grid[1, 2] - temperature_grid[1, 1]
     temperature_index = one(FT) + clamp((temperature - temperature_origin) / temperature_step,
                                         zero(FT),
@@ -563,10 +539,7 @@ end
     return i₀, i₁, ifelse(T > grid[last], w_above, w)
 end
 
-@inline function longwave_source(model::EcCKDTabulatedGasOpticsModel{FT},
-                                 gpoint,
-                                 temperature,
-                                 source_bracket) where FT
+@inline function longwave_source(model::EcCKDTabulatedGasOpticsModel{FT}, gpoint, temperature, source_bracket) where FT
     source_bracket === nothing &&
         return model.longwave_source_scale[gpoint] * model.stefan_boltzmann * FT(temperature)^4
     source = interpolate_source_table(model.longwave_source_table, gpoint, source_bracket)
@@ -589,11 +562,7 @@ end
     return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
 end
 
-@inline function accumulate_optical_depth(gases,
-                                          coefficients::AbstractMatrix{FT},
-                                          gas_names::Tuple,
-                                          gpoint,
-                                          k) where FT
+@inline function accumulate_optical_depth(gases, coefficients::AbstractMatrix{FT}, gas_names::Tuple, gpoint, k) where FT
     τ = zero(FT)
     for j in eachindex(gas_names)
         τ += coefficients[gpoint, j] * FT(gas_value(gases, gas_names[j], k))
@@ -620,9 +589,7 @@ end
     for (j, name) in enumerate(GasNames)
         amount = :(FT(gas_value(gases, $(QuoteNode(name)), k)))
         if has_composite
-            amount = :($amount -
-                       FT(gas_reference_mole_fractions[$j]) *
-                       FT(gas_value(gases, :composite, k)))
+            amount = :($amount - FT(gas_reference_mole_fractions[$j]) * FT(gas_value(gases, :composite, k)))
         end
         push!(terms, :(interpolate_table(coefficients, gpoint, $j, stencil) * $amount))
     end
@@ -695,8 +662,7 @@ function check_ecckd_optics_shapes(longwave::LongwaveOptics,
                                    model::EcCKDTabulatedGasOpticsModel,
                                    atmosphere::ColumnAtmosphere)
     Nz = length(atmosphere.temperature_layers)
-    length(atmosphere.pressure_layers) == Nz ||
-        throw(DimensionMismatch("pressure_layers must contain Nz values"))
+    length(atmosphere.pressure_layers) == Nz || throw(DimensionMismatch("pressure_layers must contain Nz values"))
     length(atmosphere.pressure_interfaces) == Nz + 1 ||
         throw(DimensionMismatch("pressure_interfaces must contain Nz + 1 values"))
     check_tabulated_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), Nz)
@@ -792,9 +758,7 @@ end
 # Layer H₂O mole fraction relative to dry air for the H₂O-axis bracket: the
 # `composite` amount when the column carries one, else the hydrostatic molar
 # amount of the layer, `Δp / (g mᵈ)`.
-@inline function layer_water_vapor_mole_fraction(::Type{FT},
-                                                 atmosphere::ColumnAtmosphere,
-                                                 k) where FT
+@inline function layer_water_vapor_mole_fraction(::Type{FT}, atmosphere::ColumnAtmosphere, k) where FT
     water_vapor_moles = max(FT(gas_value(atmosphere.gases, :h2o, k)), zero(FT))
     dry_air_moles = has_gas(atmosphere.gases, :composite) ?
         max(FT(gas_value(atmosphere.gases, :composite, k)), sqrt(eps(FT))) :
@@ -828,12 +792,9 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         # required to be populated when they are requested, so fall back to the
         # layer temperature otherwise rather than indexing it. The condition is
         # decided by the optical-property types, so this folds away.
-        interface_sources = longwave.source_top !== nothing &&
-                            longwave.source_bottom !== nothing
-        temperature_top = interface_sources ?
-            atmosphere.temperature_interfaces[k] : temperature
-        temperature_bottom = interface_sources ?
-            atmosphere.temperature_interfaces[k + 1] : temperature
+        interface_sources = longwave.source_top !== nothing && longwave.source_bottom !== nothing
+        temperature_top = interface_sources ? atmosphere.temperature_interfaces[k] : temperature
+        temperature_bottom = interface_sources ? atmosphere.temperature_interfaces[k + 1] : temperature
 
         # Every interpolation bracket depends only on the layer, so build the
         # stencil once here instead of once per g point and gas. From here on

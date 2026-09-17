@@ -132,8 +132,7 @@ radiative_fluxes!(
 heating_rates!(Ṫ, fluxes, atmosphere)     # gravity and heat capacity from atmosphere.constants
 daily_heating_rate = day .* Ṫ
 
-net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
-           fluxes.shortwave_down .- fluxes.shortwave_up
+net_flux = fluxes.longwave_down .- fluxes.longwave_up .+ fluxes.shortwave_down .- fluxes.shortwave_up
 
 println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m⁻²")
 println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m⁻²")
@@ -145,18 +144,12 @@ println("Heating range:    ",
 
 fig = Figure(size = (900, 420))
 
-ax_flux = Axis(fig[1, 1],
-               xlabel = "Net downward flux (W m⁻²)",
-               ylabel = "Pressure (hPa)",
-               title = "Interface flux")
+ax_flux = Axis(fig[1, 1], xlabel = "Net downward flux (W m⁻²)", ylabel = "Pressure (hPa)", title = "Interface flux")
 lines!(ax_flux, net_flux, pᵢ ./ 100; linewidth = 2)
 scatter!(ax_flux, net_flux, pᵢ ./ 100; markersize = 5)
 ax_flux.yreversed = true
 
-ax_heat = Axis(fig[1, 2],
-               xlabel = "Heating rate (K day⁻¹)",
-               ylabel = "Pressure (hPa)",
-               title = "Layer heating")
+ax_heat = Axis(fig[1, 2], xlabel = "Heating rate (K day⁻¹)", ylabel = "Pressure (hPa)", title = "Layer heating")
 lines!(ax_heat, daily_heating_rate, p ./ 100; linewidth = 2)
 scatter!(ax_heat, daily_heating_rate, p ./ 100; markersize = 5)
 vlines!(ax_heat, [0]; color = (:gray50, 0.5), linestyle = :dash)

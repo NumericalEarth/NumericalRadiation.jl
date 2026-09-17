@@ -223,17 +223,17 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
         longwave_heating_rate = heating_ranges(pressure_hl, longwave_heating, longwave_heating_reference),
         shortwave_toa_up = (bias = bias(shortwave_up[1, :, :], shortwave.up[1, :, :]), rmse = rmse(shortwave_up[1, :, :], shortwave.up[1, :, :])),
         shortwave_surface_down = (bias = bias(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
-                           rmse = rmse(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
-                           rmse_all_zenith_angles = rmse(shortwave_down[end, :, :], shortwave.down[end, :, :])),
+                                  rmse = rmse(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
+                                  rmse_all_zenith_angles = rmse(shortwave_down[end, :, :], shortwave.down[end, :, :])),
         shortwave_profile_rmse = (up = rmse(shortwave_up, shortwave.up), down = rmse(shortwave_down, shortwave.down)),
         shortwave_heating_rate = heating_ranges(pressure_shortwave, flat(shortwave_heating), flat(shortwave_heating_reference)),
         shortwave_by_zenith_angle = [(; μ₀ = μ₀[j],
-                                 toa_up_rmse = rmse(shortwave_up[1, j, :], shortwave.up[1, j, :]),
-                                 surface_down_rmse = rmse(shortwave_down[end, j, :], shortwave.down[end, j, :]),
-                                 heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
-                                     pressure_hl, shortwave_heating[:, j, :], shortwave_heating_reference[:, j, :],
-                                     HEATING_RATE_RANGES.troposphere))
-                              for j in 1:Nzenith],
+                                        toa_up_rmse = rmse(shortwave_up[1, j, :], shortwave.up[1, j, :]),
+                                        surface_down_rmse = rmse(shortwave_down[end, j, :], shortwave.down[end, j, :]),
+                                        heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
+                                            pressure_hl, shortwave_heating[:, j, :], shortwave_heating_reference[:, j, :],
+                                            HEATING_RATE_RANGES.troposphere))
+                                     for j in 1:Nzenith],
     )
 
     gates_for = getproperty(CKDMIP_GATES, Symbol(model_name))

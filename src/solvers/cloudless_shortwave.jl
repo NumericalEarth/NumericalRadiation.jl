@@ -47,8 +47,7 @@ function ShortwaveOptics(optical_depth::AbstractMatrix{FT};
         throw(DimensionMismatch("scattering_optical_depth must match optical_depth shape"))
     size(scattering_asymmetry) == size(optical_depth) ||
         throw(DimensionMismatch("scattering_asymmetry must match optical_depth shape"))
-    length(weights) == size(optical_depth, 1) ||
-        throw(DimensionMismatch("weights must have length Ngpoints"))
+    length(weights) == size(optical_depth, 1) || throw(DimensionMismatch("weights must have length Ngpoints"))
     return ShortwaveOptics{FT, typeof(optical_depth),
                            typeof(scattering_optical_depth),
                            typeof(scattering_asymmetry), typeof(weights)}(
@@ -87,18 +86,13 @@ struct ShortwaveBoundaryConditions{FT, A, D}
     surface_albedo_direct::D
 end
 
-function ShortwaveBoundaryConditions(; toa_shortwave_down,
-                                       surface_albedo,
-                                       surface_albedo_direct = surface_albedo)
-    albedo_type = surface_albedo isa AbstractArray ? eltype(surface_albedo) :
-        typeof(surface_albedo)
+function ShortwaveBoundaryConditions(; toa_shortwave_down, surface_albedo, surface_albedo_direct = surface_albedo)
+    albedo_type = surface_albedo isa AbstractArray ? eltype(surface_albedo) : typeof(surface_albedo)
     direct_albedo_type = surface_albedo_direct isa AbstractArray ?
         eltype(surface_albedo_direct) : typeof(surface_albedo_direct)
     FT = promote_type(typeof(toa_shortwave_down), albedo_type, direct_albedo_type)
-    albedo = surface_albedo isa AbstractArray ? FT.(surface_albedo) :
-        FT(surface_albedo)
-    direct_albedo = surface_albedo_direct isa AbstractArray ?
-        FT.(surface_albedo_direct) : FT(surface_albedo_direct)
+    albedo = surface_albedo isa AbstractArray ? FT.(surface_albedo) : FT(surface_albedo)
+    direct_albedo = surface_albedo_direct isa AbstractArray ? FT.(surface_albedo_direct) : FT(surface_albedo_direct)
     return ShortwaveBoundaryConditions{FT, typeof(albedo), typeof(direct_albedo)}(
         FT(toa_shortwave_down), albedo, direct_albedo)
 end
@@ -265,12 +259,8 @@ end
     λμ₀ = λ * μ₀
     direct_factor = μ₀ * FT(ω) * inverse_denominator / (one(FT) - λμ₀ * λμ₀)
 
-    ℛ⁰ = direct_factor *
-        ((α₂ - λμ₀ * λ * γ₃) * m₂ +
-         λ * (γ₃ - μ₀ * α₂) * (m₁ * m₁ + FT(2) * e * d))
-    𝒯⁰ = direct_factor *
-        (λ * (γ₄ + μ₀ * α₁) * (d * one_plus_e₂ - m₁ * m₁) -
-         𝒟 * (α₁ + λμ₀ * λ * γ₄) * m₂)
+    ℛ⁰ = direct_factor * ((α₂ - λμ₀ * λ * γ₃) * m₂ + λ * (γ₃ - μ₀ * α₂) * (m₁ * m₁ + FT(2) * e * d))
+    𝒯⁰ = direct_factor * (λ * (γ₄ + μ₀ * α₁) * (d * one_plus_e₂ - m₁ * m₁) - 𝒟 * (α₁ + λμ₀ * λ * γ₄) * m₂)
 
     direct_scattering_limit = direct_source_limit isa Val{:horizontal} ? μ₀ * (one(FT) - 𝒟) : one(FT)
     ℛ⁰ = clamp(ℛ⁰, zero(FT), direct_scattering_limit)
@@ -355,10 +345,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            atmosphere,
                            boundary_conditions::ShortwaveBoundaryConditions{FT}) where FT
     Nz = number_of_layers(optics)
-    length(fluxes.shortwave_up) == Nz + 1 ||
-        throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
-    length(fluxes.shortwave_down) == Nz + 1 ||
-        throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
+    length(fluxes.shortwave_up) == Nz + 1 || throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
+    length(fluxes.shortwave_down) == Nz + 1 || throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
     if boundary_conditions.surface_albedo isa AbstractArray
         length(boundary_conditions.surface_albedo) == number_of_gpoints(optics) ||
             throw(DimensionMismatch("surface_albedo vector must have length Ngpoints"))

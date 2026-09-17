@@ -125,8 +125,7 @@ end
 ##### Solver drivers
 #####
 
-function longwave_fluxes(::Type{FT}, layer_optics, surface_emission, surface_albedo, toa_down,
-                         weights, Nz) where FT
+function longwave_fluxes(::Type{FT}, layer_optics, surface_emission, surface_albedo, toa_down, weights, Nz) where FT
     flux_up = zeros(FT, Nz + 1)
     flux_down = zeros(FT, Nz + 1)
     transmittance = zeros(FT, Nz)
@@ -289,9 +288,7 @@ end
             τ = Float64.(τ_float)          # the optical depths the solver sees
             τ_cumulative = vcat(0.0, cumsum(τ))
             B_middleerface = B₀ .+ β .* τ_cumulative
-            optics = PlanckProfileLayerOptics(τ_float,
-                                              FT.(B_middleerface[1:Nz]),
-                                              FT.(B_middleerface[2:Nz + 1]))
+            optics = PlanckProfileLayerOptics(τ_float, FT.(B_middleerface[1:Nz]), FT.(B_middleerface[2:Nz + 1]))
             surface_emission = [FT(ε * Bˢ)]
             up, down = longwave_fluxes(FT, optics, surface_emission, 1 - ε, F_top, [one(FT)], Nz)
 
@@ -425,8 +422,7 @@ end
             amounts = FT[draw!(rng, 0.01, 1.0) for _ in 1:Nz]
             model = gray_model(FT, [1.0], [1.0])
             optics = GrayShortwaveLayerOptics(model, amounts)
-            up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, α, α, Nz;
-                                        weights = model.shortwave_weights)
+            up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, α, α, Nz; weights = model.shortwave_weights)
 
             _, τ_cumulative = layer_optical_depths(optics, Nz)
             τˢ = τ_cumulative[end]

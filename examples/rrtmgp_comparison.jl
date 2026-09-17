@@ -121,8 +121,7 @@ function ecckd_member(selector)
                               source_top = zeros(Nlongwave_gpoints, Nz),
                               source_bottom = zeros(Nlongwave_gpoints, Nz),
                               weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz);
-                                weights = zeros(Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights = zeros(Nshortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),
@@ -180,8 +179,7 @@ Nᴬ = constants.avogadro_number
 
 molecular_column_rrtmgp = reverse(rrtmgp.workspace.atmospheric_state.layerdata[1, :, 1])
 molecular_column_ecckd = nᵈ .* Nᴬ ./ 1e4
-relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./
-                         molecular_column_ecckd)
+relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./ molecular_column_ecckd)
 @assert relative_error < 1e-6
 relative_error
 
@@ -217,10 +215,8 @@ ax1 = Axis(fig[1, 1]; xlabel = "Longwave flux (W m⁻²)",
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Fluxes")
 for f in family
-    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100;
-           color = f.color, linewidth = 2)
-    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100;
-           color = f.color, linewidth = 2, linestyle = :dash)
+    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100; color = f.color, linewidth = 2)
+    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100; color = f.color, linewidth = 2, linestyle = :dash)
 end
 
 ax2 = Axis(fig[1, 2]; xlabel = "Ṫ (K day⁻¹)",

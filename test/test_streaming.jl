@@ -584,8 +584,7 @@ function broadband_fluxes(model, atmosphere; surface_temperature, cos_zenith, su
     return longwave, shortwave, fluxes
 end
 
-array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray,
-                             fieldnames(typeof(model)))
+array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray, fieldnames(typeof(model)))
 
 @testset "Float32 models" begin
     @testset "adapt derives the element type from the adapted arrays" begin
@@ -963,9 +962,7 @@ end
     # the full Planck flux, so with `ε = 0.9` and `α = 0.1` the surface
     # upwelling flux `ε σT⁴ + α σT⁴` closes to `σT⁴`, as does every interior
     # interface in radiative equilibrium with the isothermal gas.
-    gray = EcCKDGasOpticsModel(names = (:composite,),
-                               longwave_absorption = [1.0;;],
-                               shortwave_absorption = [0.5;;])
+    gray = EcCKDGasOpticsModel(names = (:composite,), longwave_absorption = [1.0;;], shortwave_absorption = [0.5;;])
     for FT in (Float64, Float32)
         T = FT(280)
         B = FT(σ) * T^4
@@ -1116,8 +1113,7 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     for k in Nz:-1:1
         below = stack_albedo[k + 1]
         inverse_denominator[k] = inv(one(FT) - below * reflectance[k])
-        stack_albedo[k] = reflectance[k] +
-            transmittance[k] * transmittance[k] * below * inverse_denominator[k]
+        stack_albedo[k] = reflectance[k] + transmittance[k] * transmittance[k] * below * inverse_denominator[k]
         source[k] = direct_reflectance[k] * flux_direct[k] +
             transmittance[k] *
             (source[k + 1] + below * direct_diffuse_transmittance[k] * flux_direct[k]) *

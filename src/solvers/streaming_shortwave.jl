@@ -114,8 +114,7 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     @inbounds for k in Nz:-1:1
         below = stack_albedo[k + 1]
         inverse_denominator = inv(one(FT) - below * reflectance[k])
-        stack_albedo[k] = reflectance[k] +
-            transmittance[k] * transmittance[k] * below * inverse_denominator
+        stack_albedo[k] = reflectance[k] + transmittance[k] * transmittance[k] * below * inverse_denominator
         direct_above = ifelse(k == 1, incoming_normal, direct_flux[max(k - 1, 1)])
         source[k] = direct_reflectance[k] * direct_above +
             transmittance[k] *

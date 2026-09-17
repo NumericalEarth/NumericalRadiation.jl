@@ -91,13 +91,11 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
                           cloud_top_convective::Integer = length(profile.temperature) + 1) where NF
     # `constants` and `thermodynamic` are duck-typed; see `solve_longwave!`.
 
-    clouds = diagnose_clouds(scheme.clouds, profile, geometry, surface,
-                             constants, thermodynamic, cloud_top_convective)
+    clouds = diagnose_clouds(scheme.clouds, profile, geometry, surface, constants, thermodynamic, cloud_top_convective)
 
     # Layer transmissivities 𝒯[k] of the configured transmissivity model.
     𝒯 = transmissivity_scratch
-    length(𝒯) == length(profile.temperature) ||
-        throw(DimensionMismatch("transmissivity_scratch must have length Nz"))
+    length(𝒯) == length(profile.temperature) || throw(DimensionMismatch("transmissivity_scratch must have length Nz"))
     compute_transmissivity!(𝒯, scheme.transmissivity, clouds, profile, geometry, surface)
 
     radiative_transfer = scheme.radiative_transfer

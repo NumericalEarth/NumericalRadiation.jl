@@ -23,4 +23,3 @@ ecrad_data_path
 ecrad_test_file
 ecckd_source_path
 ```
-

@@ -67,10 +67,8 @@ function legacy_add_mapped_cloud_scattering!(shortwave,
         for gpoint in 1:Ngpoints
             τˡ_extinction = liquid_scale * FT(liquid_properties.mass_extinction_coefficient[gpoint]) * liquid_path
             τⁱ_extinction = ice_scale * FT(ice_properties.mass_extinction_coefficient[gpoint]) * ice_path
-            ωˡ = clamp(FT(liquid_properties.single_scattering_albedo[gpoint]),
-                       zero(FT), one(FT))
-            ωⁱ = clamp(FT(ice_properties.single_scattering_albedo[gpoint]),
-                       zero(FT), one(FT))
+            ωˡ = clamp(FT(liquid_properties.single_scattering_albedo[gpoint]), zero(FT), one(FT))
+            ωⁱ = clamp(FT(ice_properties.single_scattering_albedo[gpoint]), zero(FT), one(FT))
             τˡ_scattering = ωˡ * τˡ_extinction
             τⁱ_scattering = ωⁱ * τⁱ_extinction
             scattering_sum = τˡ_scattering + τⁱ_scattering
@@ -88,11 +86,9 @@ function legacy_add_mapped_cloud_scattering!(shortwave,
                 incoming_asymmetry /= one(FT) + incoming_asymmetry
             end
             if scattering_scale != one(FT)
-                scattering_sum = min(scattering_sum * scattering_scale,
-                                     max(total_extinction, zero(FT)))
+                scattering_sum = min(scattering_sum * scattering_scale, max(total_extinction, zero(FT)))
             end
-            τ_absorption = fraction_scale *
-                max(total_extinction - scattering_sum, zero(FT))
+            τ_absorption = fraction_scale * max(total_extinction - scattering_sum, zero(FT))
             τ_scattering = fraction_scale * scattering_sum
 
             shortwave.optical_depth[gpoint, k] += τ_absorption
@@ -114,9 +110,7 @@ function background_shortwave(FT, Ngpoints, Nz)
     optical_depth = FT[0.01 + 0.003 * gpoint + 0.02 * k for gpoint in 1:Ngpoints, k in 1:Nz]
     scattering = FT[0.05 + 0.001 * gpoint * k for gpoint in 1:Ngpoints, k in 1:Nz]
     asymmetry = FT[0.1 * ((gpoint + k) % 3) for gpoint in 1:Ngpoints, k in 1:Nz]
-    return ShortwaveOptics(optical_depth;
-                           scattering_optical_depth = scattering,
-                           scattering_asymmetry = asymmetry)
+    return ShortwaveOptics(optical_depth; scattering_optical_depth = scattering, scattering_asymmetry = asymmetry)
 end
 
 copy_shortwave(shortwave) = ShortwaveOptics(copy(shortwave.optical_depth);
@@ -344,8 +338,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         # Negative water paths are treated as zero; zero paths leave the layer unchanged.
         base = background_shortwave(Float64, Ngpoints, Nz)
         untouched = copy_shortwave(base)
-        add_mapped_cloud_scattering!(untouched, LIQUID_PROPERTIES, ICE_PROPERTIES,
-                                     zeros(Nz), fill(-1.0, Nz), ones(Nz))
+        add_mapped_cloud_scattering!(untouched, LIQUID_PROPERTIES, ICE_PROPERTIES, zeros(Nz), fill(-1.0, Nz), ones(Nz))
         @test untouched.optical_depth == base.optical_depth
         @test untouched.rayleigh_optical_depth == base.rayleigh_optical_depth
         @test untouched.scattering_asymmetry == base.scattering_asymmetry
@@ -425,8 +418,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     @testset "device-path functions are inferrable and allocation-free" begin
         for FT in (Float64, Float32)
             one_node = SpectralCloudOptics(FT, table, mapping; effective_radius = 2.0e-6)
-            three = SpectralCloudOptics(FT, [1.0e-6, 5.0e-6, 20.0e-6],
-                                        rand(2, 3), rand(2, 3), rand(2, 3))
+            three = SpectralCloudOptics(FT, [1.0e-6, 5.0e-6, 20.0e-6], rand(2, 3), rand(2, 3), rand(2, 3))
             radius = 3.0e-6
             water_path = FT(0.1)
             for cloud in (one_node, three)
@@ -471,10 +463,8 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     end
 
     @testset "reference ecRad tables map onto climate_32x32" begin
-        liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc";
-                                                         require = false)
-        ice_path = NumericalRadiation.ecrad_data_file(
-            "baum-general-habit-mixture_ice_scattering.nc"; require = false)
+        liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc"; require = false)
+        ice_path = NumericalRadiation.ecrad_data_file("baum-general-habit-mixture_ice_scattering.nc"; require = false)
         longwave_path = reference_ecckd_definition_path(:longwave_32; require = false)
         shortwave_path = reference_ecckd_definition_path(:shortwave_32; require = false)
 

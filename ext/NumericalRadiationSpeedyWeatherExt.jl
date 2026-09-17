@@ -16,12 +16,12 @@ import NumericalRadiation: AtmosphereProfile, ColumnGrid, SurfaceState,
 """
     SpeedyAnalyticBandLongwave{NF} <: SpeedyWeather.AbstractLongwave
 
-SpeedyWeather wrapper around [`NumericalRadiation.AnalyticBandLongwave`](@ref). 
+SpeedyWeather wrapper around [`NumericalRadiation.AnalyticBandLongwave`](@ref).
 Allows for setting the default CO₂ concentration [ppmv], if the model does not specify one.
 
-Usage: 
+Usage:
 
-```julia 
+```julia
 spectral_grid = SpectralGrid()
 model = PrimitiveWetModel(spectral_grid; longwave_radiation = SpeedyAnalyticBandLongwave(spectral_grid; CO₂=280))
 ```
@@ -82,10 +82,7 @@ function SpeedyWeather.parameterization!(ij::Integer, variables,
         end
     end
 
-    profile  = AtmosphereProfile(temperature = T, humidity = q,
-                                 geopotential = Φ, surface_pressure = pˢ,
-                                 CO₂ = CO₂)
-                             
+    profile  = AtmosphereProfile(temperature = T, humidity = q, geopotential = Φ, surface_pressure = pˢ, CO₂ = CO₂)
     geometry = speedy_column_geometry(model)
     surface  = SurfaceState{NF}(
         sea_surface_temperature  = variables.prognostic.ocean.sea_surface_temperature[ij],

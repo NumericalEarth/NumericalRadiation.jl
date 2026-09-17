@@ -84,8 +84,7 @@ Construct a [`SurfaceState`](@ref). Floating-point type defaults to `Float64`.
 """
 SurfaceState(::Type{NF}; kwargs...) where NF = SurfaceState{NF}(; kwargs...)
 
-function SurfaceState(; sea_surface_temperature, land_surface_temperature,
-                        land_fraction, kwargs...)
+function SurfaceState(; sea_surface_temperature, land_surface_temperature, land_fraction, kwargs...)
     NF = Float64
     return SurfaceState{NF}(;
         sea_surface_temperature  = convert(NF, sea_surface_temperature),
@@ -105,8 +104,8 @@ unresolvable (e.g. zero total pressure).
     (; saturation_vapor_pressure_reference, latent_heat_condensation,
        gas_constant_vapor, freezing_temperature, molar_mass_ratio) = constants
     saturation_vapor_pressure = saturation_vapor_pressure_reference *
-            exp(latent_heat_condensation / gas_constant_vapor *
-                (inv(freezing_temperature) - inv(T)))
+        exp(latent_heat_condensation / gas_constant_vapor *
+            (inv(freezing_temperature) - inv(T)))
     return molar_mass_ratio * saturation_vapor_pressure / p
 end
 
@@ -125,8 +124,7 @@ end
 
 LongwaveDiagnostics(::Type{NF}) where NF = LongwaveDiagnostics{NF}()
 
-LongwaveDiagnostics{NF}() where NF = LongwaveDiagnostics{NF}(
-    zero(NF), zero(NF), zero(NF), zero(NF), zero(NF))
+LongwaveDiagnostics{NF}() where NF = LongwaveDiagnostics{NF}(zero(NF), zero(NF), zero(NF), zero(NF), zero(NF))
 
 LongwaveDiagnostics() = LongwaveDiagnostics{Float64}()
 

@@ -42,9 +42,7 @@ Reference: Williams (2026), Eq. 5.
 @inline function carbon_dioxide_absorption_reference(ν̃, scheme)
     NF = typeof(ν̃)
     (; κ_CO₂, l_CO₂, ν̃_CO₂) = scheme
-    return ifelse(ν̃ > 500 && ν̃ < 850,
-                  NF(κ_CO₂ * exp(-abs(ν̃ - ν̃_CO₂) / l_CO₂)),
-                  zero(NF))
+    return ifelse(ν̃ > 500 && ν̃ < 850, NF(κ_CO₂ * exp(-abs(ν̃ - ν̃_CO₂) / l_CO₂)), zero(NF))
 end
 
 """
@@ -100,8 +98,8 @@ and of the CO₂ mass mixing ratio are the scheme's
     pᵛ_k = q_k * p_full_k / (mᵛ_over_mᵈ + (1 - mᵛ_over_mᵈ) * q_k)
     κ_continuum  = water_vapor_continuum_absorption_reference(ν̃, scheme)
     Δτ_H₂O_continuum = κ_continuum * (pᵛ_k / NF(scheme.pv_ref)) *
-                  exp(NF(scheme.σ_cont) * (NF(scheme.T_ref) - T_k)) *
-                  q_k * Δp_k / g
+                       exp(NF(scheme.σ_cont) * (NF(scheme.T_ref) - T_k)) *
+                       q_k * Δp_k / g
 
     # CO₂ (well-mixed): analytic integral across the layer.
     # For a well-mixed gas with κ ∝ p / p_ref the column integral from the TOA

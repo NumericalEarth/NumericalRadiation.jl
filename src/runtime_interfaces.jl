@@ -77,10 +77,7 @@ struct RadiativeFluxes{FT, A}
     shortwave_down::A
 end
 
-function RadiativeFluxes(; longwave_up::A,
-                           longwave_down::A,
-                           shortwave_up::A,
-                           shortwave_down::A) where A
+function RadiativeFluxes(; longwave_up::A, longwave_down::A, shortwave_up::A, shortwave_down::A) where A
     FT = eltype(longwave_up)
     return RadiativeFluxes{FT, A}(longwave_up, longwave_down, shortwave_up, shortwave_down)
 end
@@ -169,18 +166,12 @@ function heating_rates!(heating::AbstractVector,
                         heat_capacity = atmosphere.constants.heat_capacity)
     p_interface = atmosphere.pressure_interfaces
     Nz = length(atmosphere.temperature_layers)
-    length(heating) == Nz ||
-        throw(DimensionMismatch("heating must have length Nz"))
-    length(p_interface) == Nz + 1 ||
-        throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
-    length(fluxes.longwave_up) == Nz + 1 ||
-        throw(DimensionMismatch("longwave_up must have length Nz + 1"))
-    length(fluxes.longwave_down) == Nz + 1 ||
-        throw(DimensionMismatch("longwave_down must have length Nz + 1"))
-    length(fluxes.shortwave_up) == Nz + 1 ||
-        throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
-    length(fluxes.shortwave_down) == Nz + 1 ||
-        throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
+    length(heating) == Nz || throw(DimensionMismatch("heating must have length Nz"))
+    length(p_interface) == Nz + 1 || throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
+    length(fluxes.longwave_up) == Nz + 1 || throw(DimensionMismatch("longwave_up must have length Nz + 1"))
+    length(fluxes.longwave_down) == Nz + 1 || throw(DimensionMismatch("longwave_down must have length Nz + 1"))
+    length(fluxes.shortwave_up) == Nz + 1 || throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
+    length(fluxes.shortwave_down) == Nz + 1 || throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
 
     FT = eltype(heating)
     g = FT(gravity)

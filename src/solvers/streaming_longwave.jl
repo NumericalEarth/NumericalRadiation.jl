@@ -44,9 +44,7 @@ $(TYPEDSIGNATURES)
 Surface longwave source of `model` at `temperature` (K) scaled by
 `emissivity`, evaluated lazily per g point; see [`TabulatedSurfaceEmission`](@ref).
 """
-@inline function TabulatedSurfaceEmission(model::EcCKDModels{FT},
-                                          temperature;
-                                          emissivity = one(FT)) where FT
+@inline function TabulatedSurfaceEmission(model::EcCKDModels{FT}, temperature; emissivity = one(FT)) where FT
     Tˢ = FT(temperature)
     bracket = source_table_bracket(model, Tˢ)
     return TabulatedSurfaceEmission{FT, typeof(model), typeof(bracket)}(model, Tˢ, FT(emissivity), bracket)
@@ -74,9 +72,7 @@ For multi-g spectral models a scalar ``σT⁴`` boundary is a gray
 approximation: it does not reproduce the model's tabulated Planck spectrum
 across g points and may bias outgoing longwave fluxes.
 """
-function surface_longwave_emission(model::EcCKDModels{FT},
-                                   temperature;
-                                   emissivity = one(FT)) where FT
+function surface_longwave_emission(model::EcCKDModels{FT}, temperature; emissivity = one(FT)) where FT
     return collect(TabulatedSurfaceEmission(model, temperature; emissivity))
 end
 

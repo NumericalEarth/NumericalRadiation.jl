@@ -183,13 +183,10 @@ function radiative_flux_error_metrics(candidate_fluxes::RadiativeFluxes,
                                       gravity = atmosphere.constants.gravity,
                                       heat_capacity = atmosphere.constants.heat_capacity)
     Nz = length(atmosphere.temperature_layers)
-    candidate_heating = zeros(promote_type(eltype(candidate_fluxes),
-                                           eltype(reference_fluxes)), Nz)
+    candidate_heating = zeros(promote_type(eltype(candidate_fluxes), eltype(reference_fluxes)), Nz)
     reference_heating = similar(candidate_heating)
-    heating_rates!(candidate_heating, candidate_fluxes, atmosphere;
-                   gravity, heat_capacity)
-    heating_rates!(reference_heating, reference_fluxes, atmosphere;
-                   gravity, heat_capacity)
+    heating_rates!(candidate_heating, candidate_fluxes, atmosphere; gravity, heat_capacity)
+    heating_rates!(reference_heating, reference_fluxes, atmosphere; gravity, heat_capacity)
 
     candidate_flux = eltype(candidate_heating)[]
     reference_flux = eltype(candidate_heating)[]
@@ -219,14 +216,11 @@ function passes_thresholds(metrics::RadiationErrorMetrics,
                            thresholds::RadiationThresholds;
                            throw_on_error::Bool = false)
     errors = String[]
-    metrics.flux_rmse <= thresholds.flux_rmse ||
-        push!(errors, "flux_rmse exceeds threshold")
+    metrics.flux_rmse <= thresholds.flux_rmse || push!(errors, "flux_rmse exceeds threshold")
     metrics.flux_maximum_absolute_error <= thresholds.flux_maximum_absolute_error ||
         push!(errors, "flux_maximum_absolute_error exceeds threshold")
-    abs(metrics.flux_bias) <= thresholds.flux_absolute_bias ||
-        push!(errors, "flux_absolute_bias exceeds threshold")
-    metrics.heating_rate_rmse <= thresholds.heating_rate_rmse ||
-        push!(errors, "heating_rate_rmse exceeds threshold")
+    abs(metrics.flux_bias) <= thresholds.flux_absolute_bias || push!(errors, "flux_absolute_bias exceeds threshold")
+    metrics.heating_rate_rmse <= thresholds.heating_rate_rmse || push!(errors, "heating_rate_rmse exceeds threshold")
     metrics.heating_rate_maximum_absolute_error <= thresholds.heating_rate_maximum_absolute_error ||
         push!(errors, "heating_rate_maximum_absolute_error exceeds threshold")
     abs(metrics.heating_rate_bias) <= thresholds.heating_rate_absolute_bias ||
@@ -237,8 +231,7 @@ function passes_thresholds(metrics::RadiationErrorMetrics,
         push!(errors, "surface_forcing_absolute_error exceeds threshold")
 
     if !isempty(errors)
-        throw_on_error &&
-            throw(ArgumentError("radiation metrics failed thresholds:\n" * join(errors, "\n")))
+        throw_on_error && throw(ArgumentError("radiation metrics failed thresholds:\n" * join(errors, "\n")))
         return false, errors
     end
     return throw_on_error ? true : (true, errors)

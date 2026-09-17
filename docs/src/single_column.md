@@ -23,11 +23,11 @@ base_profile = AtmosphereProfile(
 )
 FT = Float64
 surface = SurfaceState(FT; sea_surface_temperature = 295,
-                           land_surface_temperature = NaN,
-                           land_fraction = 0,
-                           ocean_albedo = 0.07,
-                           land_albedo  = 0.07,
-                           cos_zenith   = 0.5)
+                       land_surface_temperature = NaN,
+                       land_fraction = 0,
+                       ocean_albedo = 0.07,
+                       land_albedo  = 0.07,
+                       cos_zenith   = 0.5)
 constants = PhysicalConstants(FT)
 thermo    = ThermodynamicConstants(FT)
 
@@ -48,8 +48,7 @@ function solve_column(carbon_dioxide_ppmv)
     shortwave_diagnostics = ShortwaveDiagnostics(FT, Nz)
     transmissivity = similar(profile.temperature)
 
-    solve_longwave!(Ṫˡʷ, longwave_diagnostics, longwave, profile, grid,
-                    surface, constants)
+    solve_longwave!(Ṫˡʷ, longwave_diagnostics, longwave, profile, grid, surface, constants)
     solve_shortwave!(Ṫˢʷ, shortwave_diagnostics, shortwave, profile, grid,
                      surface, constants, thermo;
                      transmissivity_scratch = transmissivity)
@@ -60,21 +59,15 @@ baseline = solve_column(280)
 doubled  = solve_column(560)
 
 fig = Figure(size = (920, 460))
-ax_longwave = Axis(fig[1, 1]; xlabel = "LW heating rate [K day⁻¹]",
-                   ylabel = "σ", yreversed = true, title = "Longwave")
+ax_longwave = Axis(fig[1, 1]; xlabel = "LW heating rate [K day⁻¹]", ylabel = "σ", yreversed = true, title = "Longwave")
 ax_shortwave = Axis(fig[1, 2]; xlabel = "SW heating rate [K day⁻¹]",
                     ylabel = "σ", yreversed = true, title = "Shortwave")
-ax_net = Axis(fig[1, 3]; xlabel = "Net heating rate [K day⁻¹]",
-              ylabel = "σ", yreversed = true, title = "Net (LW + SW)")
+ax_net = Axis(fig[1, 3]; xlabel = "Net heating rate [K day⁻¹]", ylabel = "σ", yreversed = true, title = "Net (LW + SW)")
 
-for (result, label, color) in ((baseline, "280 ppmv", :dodgerblue),
-                               (doubled,  "560 ppmv", :crimson))
-    lines!(ax_longwave, result.Ṫˡʷ .* 86_400, grid.σ_full;
-           label, color, linewidth = 2)
-    lines!(ax_shortwave, result.Ṫˢʷ .* 86_400, grid.σ_full;
-           label, color, linewidth = 2)
-    lines!(ax_net, (result.Ṫˡʷ .+ result.Ṫˢʷ) .* 86_400, grid.σ_full;
-           label, color, linewidth = 2)
+for (result, label, color) in ((baseline, "280 ppmv", :dodgerblue), (doubled, "560 ppmv", :crimson))
+    lines!(ax_longwave, result.Ṫˡʷ .* 86_400, grid.σ_full; label, color, linewidth = 2)
+    lines!(ax_shortwave, result.Ṫˢʷ .* 86_400, grid.σ_full; label, color, linewidth = 2)
+    lines!(ax_net, (result.Ṫˡʷ .+ result.Ṫˢʷ) .* 86_400, grid.σ_full; label, color, linewidth = 2)
 end
 Legend(fig[2, 1:3], ax_longwave; orientation = :horizontal, framevisible = false)
 save("single_column.png", fig); nothing # hide

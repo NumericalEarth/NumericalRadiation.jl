@@ -17,8 +17,7 @@ using NumericalRadiation
 using NCDatasets
 using Printf
 
-gas_optics = read_reference_ecckd_gas_optics("32x32";
-                                             names = (:composite, :h2o, :co2))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
 nothing #hide
 
 # The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
@@ -61,8 +60,7 @@ function solve_column(χCO₂)
                               source_top = zeros(Nlongwave_gpoints, Nz),
                               source_bottom = zeros(Nlongwave_gpoints, Nz),
                               weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz);
-                                weights = zeros(Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights = zeros(Nshortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),
@@ -104,10 +102,8 @@ ax1 = Axis(fig[1, 1]; xlabel = "Upwelling longwave flux (W m⁻²)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Upwelling longwave flux")
-lines!(ax1, base.up, pᵢ ./ 100;
-       color = :steelblue4, linewidth = 2, label = "420 ppm")
-lines!(ax1, doubled.up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2, label = "840 ppm")
+lines!(ax1, base.up, pᵢ ./ 100; color = :steelblue4, linewidth = 2, label = "420 ppm")
+lines!(ax1, doubled.up, pᵢ ./ 100; color = :firebrick, linewidth = 2, label = "840 ppm")
 axislegend(ax1; position = :rt, framevisible = false)
 
 ax2 = Axis(fig[1, 2]; xlabel = "Δ upwelling flux, 1× − 2× (W m⁻²)",
@@ -115,8 +111,7 @@ ax2 = Axis(fig[1, 2]; xlabel = "Δ upwelling flux, 1× − 2× (W m⁻²)",
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "OLR reduction from doubling CO₂")
 vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax2, base.up .- doubled.up, pᵢ ./ 100;
-       color = :firebrick, linewidth = 2)
+lines!(ax2, base.up .- doubled.up, pᵢ ./ 100; color = :firebrick, linewidth = 2)
 scatter!(ax2, [ΔOLR], [pᵢ[1] / 100]; color = :firebrick, markersize = 10)
 text!(ax2, ΔOLR, pᵢ[1] / 100;
       text = "TOA: $(round(ΔOLR; digits = 2)) W m⁻² ",

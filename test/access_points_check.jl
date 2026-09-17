@@ -73,11 +73,7 @@ const REQUIRED_EXPORTS = (
 
 function exported_symbol_status(name)
     names = Base.names(NumericalRadiation)
-    return (
-        name = string(name),
-        exported = name in names,
-        defined = isdefined(NumericalRadiation, name),
-    )
+    return (name = string(name), exported = name in names, defined = isdefined(NumericalRadiation, name))
 end
 
 # Layer-optics functors over precomputed `(Ngpoints, Nz)` matrices, in the
@@ -192,8 +188,7 @@ function component_smoke()
     longwave = LongwaveOptics(zeros(2, 2), zeros(2, 2); weights = zeros(2))
     shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
     cloud = CloudOptics(zeros(2), zeros(2))
-    cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1),
-                                                  zeros(2), zeros(2))
+    cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1), zeros(2), zeros(2))
     aerosol = AerosolOptics(zeros(2), zeros(2))
     fluxes = RadiativeFluxes(
         longwave_up = zeros(3),
@@ -205,8 +200,7 @@ function component_smoke()
 
     optical_properties!(longwave, shortwave, gas_model, atmosphere)
     cloud_optical_properties!(cloud, cloud_model, atmosphere)
-    cloudy_region_optical_properties!(cloudy_region_cloud, cloud_model,
-                                      (; overlap_parameter = [0.8]))
+    cloudy_region_optical_properties!(cloudy_region_cloud, cloud_model, (; overlap_parameter = [0.8]))
     aerosol_optical_properties!(aerosol, aerosol_model, atmosphere)
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
@@ -305,8 +299,7 @@ end
 function main()
     export_status = [exported_symbol_status(name) for name in REQUIRED_EXPORTS]
     smoke = component_smoke()
-    passed = all(item -> item.exported && item.defined, export_status) &&
-             all(value -> value === true, values(smoke))
+    passed = all(item -> item.exported && item.defined, export_status) && all(value -> value === true, values(smoke))
     result = (
         case = "host_model_access_points_check",
         date = string(Dates.now()),

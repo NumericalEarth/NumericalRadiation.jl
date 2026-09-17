@@ -107,8 +107,7 @@ and can be passed directly to `PrimitiveWetModel`:
 
 ```julia
 using SpeedyWeather, NumericalRadiation
-const SpeedyExt = Base.get_extension(NumericalRadiation,
-                                     :NumericalRadiationSpeedyWeatherExt)
+const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 spectral_grid = SpectralGrid(trunc = 31, nlayers = 8)
 longwave      = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
