@@ -26,6 +26,8 @@ day = 86_400         # s
 # the heating rates; the solar constant for the shortwave boundary).
 
 constants = PhysicalConstants()
+S₀ = constants.solar_constant   # solar constant, W m⁻²
+μ₀ = 0.55                       # cosine of the solar zenith angle
 Nz = 24
 pᵢ = collect(range(10_000, 100_000; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
@@ -42,7 +44,7 @@ atmosphere = ColumnAtmosphere(;
         co2 = fill(1, Nz),
     ),
     surface = (temperature = Tᵢ[end],),
-    geometry = (cos_zenith = 0.55,),
+    geometry = (cos_zenith = μ₀,),
     constants,
 )
 
@@ -121,7 +123,7 @@ radiative_fluxes!(
     shortwave,
     atmosphere,
     ShortwaveBoundaryConditions(
-        toa_shortwave_down = constants.solar_constant * atmosphere.geometry.cos_zenith,
+        toa_shortwave_down = S₀ * μ₀,
         surface_albedo = 0.15,
     ),
 )

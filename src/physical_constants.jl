@@ -15,8 +15,8 @@
 # and the ecCKD spectral-mapping reader weights intervals with c₂.
 const PLANCK_CONSTANT = 6.62607015e-34          # h, J s
 const SPEED_OF_LIGHT = 2.99792458e8             # c, m s⁻¹
-const BOLTZMANN_CONSTANT = 1.380649e-23         # k_B, J K⁻¹
-const SECOND_RADIATION_CONSTANT = 1.438776877   # c₂ = 100 h c / k_B, cm K
+const BOLTZMANN_CONSTANT = 1.380649e-23         # kᴮ, J K⁻¹
+const SECOND_RADIATION_CONSTANT = 1.438776877   # c₂ = 100 h c / kᴮ, cm K
 
 """
 $(TYPEDEF)
@@ -27,13 +27,13 @@ Hosts pass their own values through the keyword constructor; the fields and
 their Earth defaults are
 
 * `gravity` — `g`, 9.80665 m s⁻²
-* `heat_capacity` — `cₚ`, isobaric specific heat of dry air, 1004.64 J kg⁻¹ K⁻¹
+* `heat_capacity` — `cᵖ`, isobaric specific heat of dry air, 1004.64 J kg⁻¹ K⁻¹
 * `stefan_boltzmann` — `σ`, 5.670374419e-8 W m⁻² K⁻⁴
 * `solar_constant` — `S₀`, 1361 W m⁻²
 * `dry_air_molar_mass` — `mᵈ`, 0.0289647 kg mol⁻¹ (the ecCKD/CKDMIP value)
 * `water_molar_mass` — `mᵛ`, 0.01801528 kg mol⁻¹
 * `dry_air_gas_constant` — `Rᵈ`, 287.05 J kg⁻¹ K⁻¹
-* `universal_gas_constant` — `R`, 8.31446261815324 J mol⁻¹ K⁻¹
+* `universal_gas_constant` — `ℛ`, 8.31446261815324 J mol⁻¹ K⁻¹
 * `avogadro_number` — `Nᴬ`, 6.02214076e23 mol⁻¹
 
 The column schemes read `constants` duck-typed, so any object with the

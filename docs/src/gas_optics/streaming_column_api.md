@@ -125,7 +125,7 @@ call back into, each `(gpoint, k)` returning the layer's tuple:
 Planck path with diffusivity `D = 1.66`, swept down from `toa_down` and then up
 from the surface, where `up = surface_emission[gpoint] + surface_albedo * down`.
 The surface source is a [`TabulatedSurfaceEmission`](@ref), which brackets the
-surface temperature once and evaluates `ε B(Tₛ)` lazily per g point. Two
+surface temperature once and evaluates `ε B(Tˢ)` lazily per g point. Two
 caller-owned scratch vectors of length `Nz` carry the layer transmittance
 and upward source between the sweeps.
 

@@ -35,7 +35,7 @@ end
 
 """$(TYPEDSIGNATURES)
 Cosine of the solar zenith angle at `longitude` and `latitude` [rad] and UT
-`time`. Clipped to `max(cosθ, 0)` so the night side returns 0.
+`time`. Clipped to `max(μ₀, 0)` so the night side returns 0.
 
 For seasonal-only (daily-average) insolation the caller should average over
 a day or set `time` to noon and absorb the daily mean separately.
@@ -53,6 +53,6 @@ a day or set `time` to noon and absorb the daily mean separately.
     day_fraction = NF(((time - DateTime(year(time), month(time), day(time))).value / 1000) /
                seconds_per_day)
     hour_angle = NF(2π) * (day_fraction - NF(0.5)) + longitude + time_correction
-    cosθ = sin(δ) * sin(latitude) + cos(δ) * cos(latitude) * cos(hour_angle)
-    return max(zero(NF), cosθ)
+    μ₀ = sin(δ) * sin(latitude) + cos(δ) * cos(latitude) * cos(hour_angle)
+    return max(zero(NF), μ₀)
 end

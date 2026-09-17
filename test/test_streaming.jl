@@ -14,7 +14,7 @@ using NCDatasets   # extension trigger for the reference ecCKD reader
 # Every constant the tests need comes from the package's Earth defaults, the
 # same object a `ColumnAtmosphere` carries when none is passed.
 const CONSTANTS = PhysicalConstants()
-const σ_SB = CONSTANTS.stefan_boltzmann
+const σ = CONSTANTS.stefan_boltzmann
 const GRAVITY = CONSTANTS.gravity
 const DRY_AIR_MOLAR_MASS = CONSTANTS.dry_air_molar_mass
 const WATER_MOLAR_MASS = CONSTANTS.water_molar_mass
@@ -169,7 +169,7 @@ end
 # Hydrostatic reference column for the climate_32x32 tables. Layer amounts
 # follow the moist-molar-mass convention of RRTMGP's compute_col_gas_kernel!:
 # with `χ` the H₂O mole fraction relative to dry air, the dry-air molar amount
-# is `nᵈ = Δp / (g (mᵈ + mᵛ χ))`, every gas is `χ_gas nᵈ`, and the layer's
+# is `nᵈ = Δp / (g (mᵈ + mᵛ χ))`, every gas is `χ nᵈ`, and the layer's
 # mass closes: `mᵈ nᵈ + mᵛ n_H₂O == Δp / g`.
 function reference_column(Nz)
     pressure_interfaces = exp.(range(log(100.0), log(101_325.0), length = Nz + 1))
@@ -177,12 +177,12 @@ function reference_column(Nz)
     pressure_layers = Δp ./ log.(pressure_interfaces[2:end] ./ pressure_interfaces[1:end - 1])
     temperature_interfaces = [200 + 95 * (p / 101_325.0)^0.3 for p in pressure_interfaces]
     temperature_layers = [200 + 95 * (p / 101_325.0)^0.3 for p in pressure_layers]
-    χ_H₂O = [max(2e-2 * (p / 101_325.0)^3, 3e-6) for p in pressure_layers]
-    χ_O₃ = [1e-7 + 8e-6 * exp(-((log(p) - log(2_000.0)) / 0.8)^2) for p in pressure_layers]
-    dry_air = Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_H₂O))
+    χH₂O = [max(2e-2 * (p / 101_325.0)^3, 3e-6) for p in pressure_layers]
+    χO₃ = [1e-7 + 8e-6 * exp(-((log(p) - log(2_000.0)) / 0.8)^2) for p in pressure_layers]
+    dry_air = Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χH₂O))
     gases = (composite = dry_air,
-             h2o = χ_H₂O .* dry_air,
-             o3 = χ_O₃ .* dry_air,
+             h2o = χH₂O .* dry_air,
+             o3 = χO₃ .* dry_air,
              co2 = 420e-6 .* dry_air,
              ch4 = 1.9e-6 .* dry_air,
              n2o = 3.3e-7 .* dry_air,
@@ -191,16 +191,16 @@ function reference_column(Nz)
     atmosphere = ColumnAtmosphere(; pressure_layers, pressure_interfaces,
                                     temperature_layers, temperature_interfaces,
                                     gases, surface = (;), geometry = (;))
-    return atmosphere, Δp, χ_H₂O
+    return atmosphere, Δp, χH₂O
 end
 
 @testset "moist-molar-mass column amounts" begin
-    atmosphere, Δp, χ_H₂O = reference_column(4)
+    atmosphere, Δp, χH₂O = reference_column(4)
     dry_air = atmosphere.gases.composite
     water_vapor = atmosphere.gases.h2o
-    @test dry_air ≈ Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_H₂O)) rtol = 1e-12
+    @test dry_air ≈ Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χH₂O)) rtol = 1e-12
     @test DRY_AIR_MOLAR_MASS .* dry_air .+ WATER_MOLAR_MASS .* water_vapor ≈ Δp ./ GRAVITY rtol = 1e-12
-    @test water_vapor ./ dry_air ≈ χ_H₂O rtol = 1e-12
+    @test water_vapor ./ dry_air ≈ χH₂O rtol = 1e-12
 end
 
 # No physical constant is hard-coded on the runtime path: the hydrostatic air
@@ -214,7 +214,7 @@ end
     for FT in (Float64, Float32)
         model, atmosphere = tabulated_fixture(FT)
         @test atmosphere.constants isa PhysicalConstants{FT}
-        @test model.stefan_boltzmann === FT(σ_SB)
+        @test model.stefan_boltzmann === FT(σ)
         # A column with twice the gravity has half the air per layer, so the
         # Rayleigh optical depth (the only term built from the hydrostatic
         # amount when `composite` is supplied) halves exactly.
@@ -251,25 +251,25 @@ end
 
     # The Stefan–Boltzmann constant is a model field: a custom value scales the
     # gray source and survives element-type conversion and adaptation.
-    σ = 2 * σ_SB
+    σ_scaled = 2 * σ
     gray = EcCKDGasOpticsModel(names = (:h2o,),
                                longwave_absorption = [0.1; 0.2;;],
                                shortwave_absorption = [0.01;;],
                                longwave_source_scale = [1.0, 1.05],
-                               stefan_boltzmann = σ)
-    @test gray.stefan_boltzmann == σ
-    @test longwave_source(gray, 2, 240.0, nothing) == 1.05 * (σ * 240.0^4)
+                               stefan_boltzmann = σ_scaled)
+    @test gray.stefan_boltzmann == σ_scaled
+    @test longwave_source(gray, 2, 240.0, nothing) == 1.05 * (σ_scaled * 240.0^4)
     gray32 = NumericalRadiation.Adapt.adapt(Array{Float32}, gray)
-    @test gray32.stefan_boltzmann === Float32(σ)
+    @test gray32.stefan_boltzmann === Float32(σ_scaled)
     tabulated = EcCKDTabulatedGasOpticsModel(names = (:h2o,),
                                              pressure_grid = [10_000.0, 100_000.0],
                                              temperature_grid = [220.0, 300.0],
                                              longwave_absorption = ones(2, 1, 2, 2),
                                              shortwave_absorption = ones(1, 1, 2, 2),
-                                             stefan_boltzmann = σ)
-    @test tabulated.stefan_boltzmann == σ
-    @test longwave_source(tabulated, 1, 260.0, nothing) == σ * 260.0^4
-    @test EcCKDTabulatedGasOpticsModel{Float32}(tabulated).stefan_boltzmann === Float32(σ)
+                                             stefan_boltzmann = σ_scaled)
+    @test tabulated.stefan_boltzmann == σ_scaled
+    @test longwave_source(tabulated, 1, 260.0, nothing) == σ_scaled * 260.0^4
+    @test EcCKDTabulatedGasOpticsModel{Float32}(tabulated).stefan_boltzmann === Float32(σ_scaled)
 end
 
 @testset "scalar layer optics reproduce optical_properties! bitwise" begin
@@ -282,8 +282,8 @@ end
         @test gas_optics_stencil(model, 20_000.0, 240.0, 0.0) === nothing
         @test source_table_bracket(model, 240.0) === nothing
         @test rayleigh_optical_depth(model, 1, 100.0) === 0.0
-        @test longwave_source(model, 2, 240.0, nothing) == 1.05 * (σ_SB * 240.0^4)
-        @test model.stefan_boltzmann == σ_SB
+        @test longwave_source(model, 2, 240.0, nothing) == 1.05 * (σ * 240.0^4)
+        @test model.stefan_boltzmann == σ
     end
 
     @testset "synthetic tabulated model, $FT" for FT in (Float64, Float32)
@@ -829,7 +829,7 @@ end
             @test emission[end] == emission[length(emission)]
         end
         # Gray path: scale × σT⁴, emissivity folded in.
-        @test TabulatedSurfaceEmission(gray, 300.0; emissivity = 0.5)[2] == 0.5 * (1.05 * (σ_SB * 300.0^4))
+        @test TabulatedSurfaceEmission(gray, 300.0; emissivity = 0.5)[2] == 0.5 * (1.05 * (σ * 300.0^4))
     end
 
     @testset "reference climate_32x32 tables" begin
@@ -844,7 +844,7 @@ end
             @test collect(emission) == surface_longwave_emission(model, 300)
             @test collect(TabulatedSurfaceEmission(model, 300; emissivity = 0.98)) ==
                   surface_longwave_emission(model, 300; emissivity = 0.98)
-            @test sum(model.longwave_weights .* collect(emission)) ≈ σ_SB * 300.0^4 atol = 0.2
+            @test sum(model.longwave_weights .* collect(emission)) ≈ σ * 300.0^4 atol = 0.2
         end
     end
 end
@@ -968,7 +968,7 @@ end
                                shortwave_absorption = [0.5;;])
     for FT in (Float64, Float32)
         T = FT(280)
-        B = FT(σ_SB) * T^4
+        B = FT(σ) * T^4
         Nz = 6
         layer = UniformLayerOptics(FT(50), B)
         model = NumericalRadiation.Adapt.adapt(Array{FT}, gray)

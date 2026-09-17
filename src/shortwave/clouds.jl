@@ -94,9 +94,9 @@ end
     q = profile.humidity
     Φ = profile.geopotential
     Nz = length(T)
-    pₛ = profile.surface_pressure
+    pˢ = profile.surface_pressure
     σ_full = geometry.σ_full
-    cₚ = constants.heat_capacity
+    cᵖ = constants.heat_capacity
     land_fraction = surface.land_fraction
 
     relative_humidity_min = clouds.relative_humidity_threshold_min
@@ -114,7 +114,7 @@ end
 
     for k in 1:(Nz - 1)
         q_k = q[k]
-        q_saturation = saturation_humidity(T[k], σ_full[k] * pₛ, thermodynamic)
+        q_saturation = saturation_humidity(T[k], σ_full[k] * pˢ, thermodynamic)
         if q_k > q_min && q_saturation > 0
             relative_humidity_k = q_k / q_saturation
             if relative_humidity_k >= relative_humidity_min
@@ -132,14 +132,14 @@ end
     if clouds.use_stratocumulus
         surface_k = Nz
         above_k   = max(1, Nz - 1)
-        G = (cₚ * T[surface_k] + Φ[surface_k]) - (cₚ * T[above_k] + Φ[above_k])
+        G = (cᵖ * T[surface_k] + Φ[surface_k]) - (cᵖ * T[above_k] + Φ[above_k])
         stability_min = clouds.stratocumulus_stability_min
         stability_max = clouds.stratocumulus_stability_max
         static_stability = clamp((G - stability_min) / (stability_max - stability_min), zero(NF), one(NF))
         cover_max = clouds.stratocumulus_cover_max
         cloud_factor = clouds.stratocumulus_cloud_factor
         stratocumulus_ocean = static_stability * max(cover_max - cloud_factor * cloud_cover, zero(NF))
-        q_saturation_surface = saturation_humidity(T[surface_k], σ_full[surface_k] * pₛ, thermodynamic)
+        q_saturation_surface = saturation_humidity(T[surface_k], σ_full[surface_k] * pˢ, thermodynamic)
         relative_humidity_surface = q[surface_k] / q_saturation_surface
         stratocumulus_land = stratocumulus_ocean * relative_humidity_surface
         stratocumulus_cover = (1 - land_fraction) * stratocumulus_ocean + land_fraction * stratocumulus_land

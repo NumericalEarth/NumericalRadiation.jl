@@ -10,8 +10,8 @@ reflection just above the surface, and surface-albedo reflection.
 Fields:
 - `ozone_absorption`: Total ozone absorption as a fraction of incoming TOA flux (default
   `NF(0.01)`)
-- `ozone_distribution`: Ozone vertical distribution `ζ(σ) → weight`, normalised so
-  ∫ ζ(σ) dσ = 1 (default `default_ozone_distribution(NF)`)
+- `ozone_distribution`: Ozone vertical distribution `ζ(σ_level) → weight` over the
+  sigma coordinate, normalised so ∫ ζ dσ_level = 1 (default `default_ozone_distribution(NF)`)
 """
 Base.@kwdef struct OneBandShortwaveRadiativeTransfer{NF, F} <: AbstractShortwaveScheme
     ozone_absorption::NF = NF(0.01)
@@ -20,8 +20,8 @@ end
 
 Adapt.@adapt_structure OneBandShortwaveRadiativeTransfer
 
-# SPEEDY default: ozone concentrated above σ = 0.2.
-default_ozone_distribution(::Type{NF}) where NF = σ -> NF(50) * max(zero(NF), NF(1)/NF(5) - σ)
+# SPEEDY default: ozone concentrated above the sigma level 0.2.
+default_ozone_distribution(::Type{NF}) where NF = σ_level -> NF(50) * max(zero(NF), NF(1)/NF(5) - σ_level)
 
 OneBandShortwaveRadiativeTransfer(::Type{NF}; kwargs...) where NF =
     OneBandShortwaveRadiativeTransfer{NF, typeof(default_ozone_distribution(NF))}(;
@@ -94,74 +94,77 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
     clouds = diagnose_clouds(scheme.clouds, profile, geometry, surface,
                              constants, thermodynamic, cloud_top_convective)
 
-    t = transmissivity_scratch
-    length(t) == length(profile.temperature) ||
+    # Layer transmissivities 𝒯[k] of the configured transmissivity model.
+    𝒯 = transmissivity_scratch
+    length(𝒯) == length(profile.temperature) ||
         throw(DimensionMismatch("transmissivity_scratch must have length Nz"))
-    compute_transmissivity!(t, scheme.transmissivity, clouds, profile, geometry, surface)
+    compute_transmissivity!(𝒯, scheme.transmissivity, clouds, profile, geometry, surface)
 
     radiative_transfer = scheme.radiative_transfer
-    cos_zenith = NF(surface.cos_zenith)
+    μ₀ = NF(surface.cos_zenith)
     S₀ = NF(constants.solar_constant)
-    cₚ = NF(constants.heat_capacity)
+    cᵖ = NF(constants.heat_capacity)
 
     Nz = length(profile.temperature)
     σ_full  = geometry.σ_full
     σ_thick = geometry.σ_thick
 
-    D_toa = S₀ * cos_zenith
-    D::NF = D_toa
+    # Downwelling flux ℐꜜ entering the top of the atmosphere, S₀ μ₀.
+    ℐꜜ_toa = S₀ * μ₀
+    ℐꜜ::NF = ℐꜜ_toa
 
-    U_reflected::NF = zero(NF)
+    ℐꜛ_reflected::NF = zero(NF)
     cloud_top = clouds.cloud_top
-    cloud_albedo = NF(clouds.cloud_albedo)
-    cloud_cover  = NF(clouds.cloud_cover)
+    α_cloud = NF(clouds.cloud_albedo)
+    cloud_cover = NF(clouds.cloud_cover)
 
     # --- Downward sweep -----------------------------------------------------
     for k in 1:Nz
         if k == cloud_top
-            R = cloud_albedo * cloud_cover
-            U_reflected = D * R
-            D *= (1 - R)
+            ℛ_cloud = α_cloud * cloud_cover
+            ℐꜛ_reflected = ℐꜜ * ℛ_cloud
+            ℐꜜ *= (1 - ℛ_cloud)
         end
-        O₃ = NF(radiative_transfer.ozone_absorption) * radiative_transfer.ozone_distribution(σ_full[k]) * σ_thick[k]
-        D_out = (D - O₃ * D_toa) * t[k]
-        temperature_tendency[k] += flux_to_tendency((D - D_out) / cₚ, profile, geometry, constants, k)
-        D = D_out
+        # Fraction of the TOA flux absorbed by ozone in layer k.
+        ozone_absorption_k = NF(radiative_transfer.ozone_absorption) * radiative_transfer.ozone_distribution(σ_full[k]) * σ_thick[k]
+        ℐꜜ_out = (ℐꜜ - ozone_absorption_k * ℐꜜ_toa) * 𝒯[k]
+        temperature_tendency[k] += flux_to_tendency((ℐꜜ - ℐꜜ_out) / cᵖ, profile, geometry, constants, k)
+        ℐꜜ = ℐꜜ_out
     end
 
-    stratocumulus_cover  = NF(clouds.stratocumulus_cover)
-    stratocumulus_albedo = NF(clouds.stratocumulus_albedo)
-    U_stratocumulus = D * stratocumulus_albedo * stratocumulus_cover
-    D_surface = D - U_stratocumulus
+    stratocumulus_cover = NF(clouds.stratocumulus_cover)
+    α_stratocumulus = NF(clouds.stratocumulus_albedo)
+    ℐꜛ_stratocumulus = ℐꜜ * α_stratocumulus * stratocumulus_cover
+    ℐꜜ_surface = ℐꜜ - ℐꜛ_stratocumulus
 
-    albedo_ocean = NF(surface.ocean_albedo)
-    albedo_land  = NF(surface.land_albedo)
+    α_ocean = NF(surface.ocean_albedo)
+    α_land  = NF(surface.land_albedo)
     land_fraction = NF(surface.land_fraction)
-    albedo = (1 - land_fraction) * albedo_ocean + land_fraction * albedo_land
+    α = (1 - land_fraction) * α_ocean + land_fraction * α_land
 
-    up_ocean = albedo_ocean * D_surface
-    up_land  = albedo_land  * D_surface
-    U_surface = albedo * D_surface
+    ℐꜛ_ocean = α_ocean * ℐꜜ_surface
+    ℐꜛ_land  = α_land  * ℐꜜ_surface
+    ℐꜛ_surface = α * ℐꜜ_surface
 
     # --- Upward sweep -------------------------------------------------------
-    U::NF = U_surface + U_stratocumulus
+    ℐꜛ::NF = ℐꜛ_surface + ℐꜛ_stratocumulus
     for k in Nz:-1:1
-        U_out = U * t[k]
-        temperature_tendency[k] += flux_to_tendency((U - U_out) / cₚ, profile, geometry, constants, k)
+        ℐꜛ_out = ℐꜛ * 𝒯[k]
+        temperature_tendency[k] += flux_to_tendency((ℐꜛ - ℐꜛ_out) / cᵖ, profile, geometry, constants, k)
         if k == cloud_top
-            U_out += U_reflected
+            ℐꜛ_out += ℐꜛ_reflected
         end
-        U = U_out
+        ℐꜛ = ℐꜛ_out
     end
 
-    diagnostics.surface_shortwave_down       = D_surface
-    diagnostics.ocean_surface_shortwave_down = D_surface
-    diagnostics.land_surface_shortwave_down  = D_surface
-    diagnostics.ocean_surface_shortwave_up   = up_ocean
-    diagnostics.land_surface_shortwave_up    = up_land
-    diagnostics.surface_shortwave_up         = U_surface
-    diagnostics.albedo                       = albedo
-    diagnostics.outgoing_shortwave           = U
+    diagnostics.surface_shortwave_down       = ℐꜜ_surface
+    diagnostics.ocean_surface_shortwave_down = ℐꜜ_surface
+    diagnostics.land_surface_shortwave_down  = ℐꜜ_surface
+    diagnostics.ocean_surface_shortwave_up   = ℐꜛ_ocean
+    diagnostics.land_surface_shortwave_up    = ℐꜛ_land
+    diagnostics.surface_shortwave_up         = ℐꜛ_surface
+    diagnostics.albedo                       = α
+    diagnostics.outgoing_shortwave           = ℐꜛ
     diagnostics.cloud_cover                  = cloud_cover
     diagnostics.cloud_top                    = cloud_top
     diagnostics.stratocumulus_cover          = stratocumulus_cover

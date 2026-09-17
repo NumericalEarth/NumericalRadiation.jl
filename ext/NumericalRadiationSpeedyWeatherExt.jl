@@ -72,7 +72,7 @@ function SpeedyWeather.parameterization!(ij::Integer, variables,
     T  = @view variables.grid.temperature_prev[ij, :]
     q  = @view variables.grid.humidity_prev[ij, :]
     Φ  = @view variables.grid.geopotential[ij, :]
-    pₛ = variables.grid.pressure_prev[ij]
+    pˢ = variables.grid.pressure_prev[ij]
 
     CO₂ = let prognostic = variables.prognostic
         if hasproperty(prognostic, :greenhouse_gases) && haskey(prognostic.greenhouse_gases, :co2)
@@ -83,7 +83,7 @@ function SpeedyWeather.parameterization!(ij::Integer, variables,
     end
 
     profile  = AtmosphereProfile(temperature = T, humidity = q,
-                                 geopotential = Φ, surface_pressure = pₛ, 
+                                 geopotential = Φ, surface_pressure = pˢ,
                                  CO₂ = CO₂)
                              
     geometry = speedy_column_geometry(model)

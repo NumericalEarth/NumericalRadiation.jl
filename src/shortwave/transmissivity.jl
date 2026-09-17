@@ -41,9 +41,9 @@ $(TYPEDEF)
 SPEEDY-style background shortwave transmissivity (Kucharski, Molteni &
 Bracco, 2006; cf. Fortran SPEEDY `absdry`, `absaer`, `abswv1`/`abswv2`,
 `abscl1`/`abscl2`, `azen`, `nzen`). The layer optical depth sums
-contributions from dry air, aerosols (∝ σ²), water vapour (∝ q), and clouds
+contributions from dry air, aerosols (∝ σ_full²), water vapour (∝ q), and clouds
 (active below the diagnosed cloud top); the column is weighted by a zenith
-correction factor `1 + azen (1 − cosθ)^nzen`.
+correction factor `1 + azen (1 − μ₀)^nzen`.
 
 Fields:
 - `zenith_amplitude`: Zenith correction amplitude (SPEEDY azen) (default `NF(1)`)
@@ -89,11 +89,11 @@ BackgroundShortwaveTransmissivity(::Type{NF}; kwargs...) where NF = BackgroundSh
     σ_half     = geometry.σ_half
     σ_full     = geometry.σ_full
     p_normalized = profile.surface_pressure / NF(100000)
-    cos_zenith = surface.cos_zenith
+    μ₀ = surface.cos_zenith
 
     zenith_amplitude = transmissivity.zenith_amplitude
     zenith_exponent = transmissivity.zenith_exponent
-    zenith_factor = 1 + zenith_amplitude * (1 - cos_zenith)^zenith_exponent
+    zenith_factor = 1 + zenith_amplitude * (1 - μ₀)^zenith_exponent
 
     q_base = Nz > 1 ? humidity[Nz - 1] : humidity[Nz]
     cloud_term = min(absorptivity_cloud_base * q_base, absorptivity_cloud_limit)

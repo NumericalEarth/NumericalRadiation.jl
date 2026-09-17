@@ -34,9 +34,9 @@ Nz = 48
 pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
-Tₛ = 300
-T  = clamp.(Tₛ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tₛ)
-Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
+Tˢ = 300
+T  = clamp.(Tˢ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tˢ)
+Tᵢ = clamp.(Tˢ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tˢ)
 
 χH₂O = @. 0.015 * (p / 101_325)^3 + 3e-6      # moist below, dry aloft
 χO₃  = @. 3e-8 + 5e-6 * (2_000 / p)           # crude ozone increase aloft
@@ -84,7 +84,7 @@ ecckd_atmosphere = ColumnAtmosphere(;
              n2o = χN₂O .* nᵈ,
              cfc11 = 0,
              cfc12 = 0),
-    surface = (temperature = Tₛ,),
+    surface = (temperature = Tˢ,),
     geometry = (cos_zenith = 0.5,),
     constants)
 
@@ -96,7 +96,7 @@ rrtmgp_atmosphere = ColumnAtmosphere(;
     gases = (h2o = χH₂O, o3 = χO₃, co2 = χCO₂,
              ch4 = χCH₄, n2o = χN₂O,
              o2 = 0.20946, n2 = 0.78084, co = 0),
-    surface = (temperature = Tₛ,),
+    surface = (temperature = Tˢ,),
     geometry = (cos_zenith = 0.5,),
     constants)
 nothing #hide
@@ -128,7 +128,7 @@ function ecckd_member(selector)
                              shortwave_up = zeros(Nz + 1),
                              shortwave_down = zeros(Nz + 1))
     optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
-    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
+    surface_emission = surface_longwave_emission(gas_optics, Tˢ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
                       LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
     Ṫ = zeros(Nz)
@@ -149,7 +149,7 @@ rrtmgp_extension = Base.get_extension(NumericalRadiation, :NumericalRadiationRRT
 function rrtmgp_member()
     model = rrtmgp_extension.RRTMGPClearSkyModel(Float64; constants)
     boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
-        surface_temperature = Tₛ,
+        surface_temperature = Tˢ,
         surface_emissivity = 1,
         surface_albedo = 0,
         toa_shortwave_down = 0,   # longwave-only page

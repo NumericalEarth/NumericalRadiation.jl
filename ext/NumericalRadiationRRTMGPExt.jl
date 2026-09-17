@@ -19,7 +19,7 @@ end
 # RRTMGP's `RRTMGPParameters` are built from a `PhysicalConstants` (or any
 # object with the same properties), so the adapter runs with the same gravity,
 # molar masses and Stefan–Boltzmann constant as the rest of a host's radiation
-# (`kappa_d = Rᵈ / cₚ`). The keyword names on the right are RRTMGP's. The
+# (`kappa_d = Rᵈ / cᵖ`). The keyword names on the right are RRTMGP's. The
 # element type `FT` is the first positional argument, as everywhere in
 # NumericalRadiation; the keyword-only method supplies the `Float64` default.
 function RRTMGPClearSkyModel(::Type{FT};

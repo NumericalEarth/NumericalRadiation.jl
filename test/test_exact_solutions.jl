@@ -71,7 +71,7 @@ function gray_model(::Type{FT}, κ_longwave::AbstractVector, κ_shortwave::Abstr
                                                   FT.(longwave_weights))
 end
 
-# `(gpoint, k) -> (τ, B_top, B_bottom)` from the gray model: layer amounts `n[k]`
+# `(gpoint, k) -> (τ, B_top, B_bottomtom)` from the gray model: layer amounts `n[k]`
 # (mol m⁻², so `τ = κ_ig n[k]`) and Planck temperatures at the layer top and
 # bottom. Isothermal layers pass the same vector twice.
 struct GrayLongwaveLayerOptics{M, V, T}
@@ -84,11 +84,11 @@ end
 @inline function (optics::GrayLongwaveLayerOptics)(gpoint, k)
     τ = longwave_optical_depth(optics.model, gpoint, (composite = optics.amounts[k],), nothing)
     B_top = longwave_source(optics.model, gpoint, optics.temperature_top[k], nothing)
-    B_bottom = longwave_source(optics.model, gpoint, optics.temperature_bottom[k], nothing)
-    return (τ, B_top, B_bottom)
+    B_bottomtom = longwave_source(optics.model, gpoint, optics.temperature_bottom[k], nothing)
+    return (τ, B_top, B_bottomtom)
 end
 
-# `(gpoint, k) -> (τ, B_top, B_bottom)` with the Planck function prescribed
+# `(gpoint, k) -> (τ, B_top, B_bottomtom)` with the Planck function prescribed
 # directly at the layer interfaces, for the linear-in-τ profile.
 struct PlanckProfileLayerOptics{V}
     optical_depth :: V
@@ -166,10 +166,10 @@ end
 #   dF↓/dτ = D (B - F↓),       dF↑/dτ = D (F↑ - B),       B(τ) = B₀ + β τ.
 #
 # Integrating factors e^{±Dτ} give, with F↓(0) the downwelling flux entering
-# the top and F↑(τₛ) the upwelling flux leaving the surface at τ = τₛ,
+# the top and F↑(τˢ) the upwelling flux leaving the surface at τ = τˢ,
 #
 #   F↓(τ) = B(τ) - β/D + e^{-Dτ}        (F↓(0)  - B(0)  + β/D),
-#   F↑(τ) = B(τ) + β/D + e^{-D(τₛ - τ)} (F↑(τₛ) - B(τₛ) - β/D).
+#   F↑(τ) = B(τ) + β/D + e^{-D(τˢ - τ)} (F↑(τˢ) - B(τˢ) - β/D).
 #
 # A layer with a Planck function linear between its interfaces is a special
 # case of the same equations, so the solver's per-layer transmittance
@@ -177,15 +177,15 @@ end
 # restricted to one layer, and chaining exact solutions of a linear ODE with
 # the correct interface values reproduces the global closed form exactly.
 # Setting β = 0 gives the isothermal profile: F↑ = B everywhere when
-# F↑(τₛ) = B, and F↓(τ) = B (1 - e^{-Dτ}) when nothing enters the top.
+# F↑(τˢ) = B, and F↓(τ) = B (1 - e^{-Dτ}) when nothing enters the top.
 
 function linear_planck_down(τ, F_top, B₀, β)
     return B₀ + β * τ - β / D + exp(-D * τ) * (F_top - B₀ + β / D)
 end
 
-function linear_planck_up(τ, τₛ, F_surface, B₀, β)
-    Bₛ = B₀ + β * τₛ
-    return B₀ + β * τ + β / D + exp(-D * (τₛ - τ)) * (F_surface - Bₛ - β / D)
+function linear_planck_up(τ, τˢ, F_surface, B₀, β)
+    Bˢ = B₀ + β * τˢ
+    return B₀ + β * τ + β / D + exp(-D * (τˢ - τ)) * (F_surface - Bˢ - β / D)
 end
 
 #####
@@ -214,8 +214,8 @@ end
             up, down = longwave_fluxes(FT, optics, surface, 0, 0, model.longwave_weights, Nz)
 
             B = σ * T^4
-            τ_cum = [layer_optical_depths(optics, Nz, gpoint)[2] for gpoint in 1:2]
-            down_exact = [B * sum(weights[gpoint] * (1 - exp(-D * τ_cum[gpoint][k])) for gpoint in 1:2)
+            τ_cumulative = [layer_optical_depths(optics, Nz, gpoint)[2] for gpoint in 1:2]
+            down_exact = [B * sum(weights[gpoint] * (1 - exp(-D * τ_cumulative[gpoint][k])) for gpoint in 1:2)
                           for k in 1:Nz + 1]
 
             tol_up = tolerances(FT, 1e-13, B)
@@ -276,108 +276,108 @@ end
         @testset "linear-in-τ Planck profile ($FT)" begin
             # Eight non-uniform layers with B(τ) = B₀ + βτ prescribed at every
             # interface, a nonzero flux entering the top, and a gray surface
-            # (ε = 0.9, albedo 0.1) with its own Planck source Bₛ. With
-            #   F↑(τₛ) = ε Bₛ + (1 - ε) F↓(τₛ),
+            # (ε = 0.9, albedo 0.1) with its own Planck source Bˢ. With
+            #   F↑(τˢ) = ε Bˢ + (1 - ε) F↓(τˢ),
             # the closed forms in the header hold at every interface.
             rng = LinearCongruentialDraws(0x0123456789abcdef)
             Nz = 8
             B₀, β = 250.0, 12.0
             F_top = 30.0
-            ε, Bₛ = 0.9, 420.0
+            ε, Bˢ = 0.9, 420.0
             τ = [draw!(rng, 0.01, 2.0) for _ in 1:Nz]
-            τ_FT = FT.(τ)
-            τ = Float64.(τ_FT)          # the optical depths the solver sees
-            τ_cum = vcat(0.0, cumsum(τ))
-            B_interface = B₀ .+ β .* τ_cum
-            optics = PlanckProfileLayerOptics(τ_FT,
-                                              FT.(B_interface[1:Nz]),
-                                              FT.(B_interface[2:Nz + 1]))
-            surface_emission = [FT(ε * Bₛ)]
+            τ_float = FT.(τ)
+            τ = Float64.(τ_float)          # the optical depths the solver sees
+            τ_cumulative = vcat(0.0, cumsum(τ))
+            B_middleerface = B₀ .+ β .* τ_cumulative
+            optics = PlanckProfileLayerOptics(τ_float,
+                                              FT.(B_middleerface[1:Nz]),
+                                              FT.(B_middleerface[2:Nz + 1]))
+            surface_emission = [FT(ε * Bˢ)]
             up, down = longwave_fluxes(FT, optics, surface_emission, 1 - ε, F_top, [one(FT)], Nz)
 
-            τₛ = τ_cum[end]
-            down_exact = [linear_planck_down(τ_cum[k], F_top, B₀, β) for k in 1:Nz + 1]
-            F_surface = ε * Bₛ + (1 - ε) * down_exact[end]
-            up_exact = [linear_planck_up(τ_cum[k], τₛ, F_surface, B₀, β) for k in 1:Nz + 1]
+            τˢ = τ_cumulative[end]
+            down_exact = [linear_planck_down(τ_cumulative[k], F_top, B₀, β) for k in 1:Nz + 1]
+            F_surface = ε * Bˢ + (1 - ε) * down_exact[end]
+            up_exact = [linear_planck_up(τ_cumulative[k], τˢ, F_surface, B₀, β) for k in 1:Nz + 1]
 
-            tol = tolerances(FT, 1e-12, maximum(B_interface))
+            tol = tolerances(FT, 1e-12, maximum(B_middleerface))
             @test all(k -> within(down[k], down_exact[k], tol), 1:Nz + 1)
             @test all(k -> within(up[k], up_exact[k], tol), 1:Nz + 1)
         end
 
         @testset "optically thin limit ($FT)" begin
-            # Four isothermal layers at Tₐ, each of τ = 1.01e-3 (just above the
+            # Four isothermal layers at Tᵃ, each of τ = 1.01e-3 (just above the
             # thin-layer switch, so the exact branch is used), over a gray
-            # surface at Tₛ with ε = 0.95, albedo 0.05, nothing entering the
-            # top. With Bₐ = σTₐ⁴, Bₛ = σTₛ⁴, x = D τₛ and the header closed
+            # surface at Tˢ with ε = 0.95, albedo 0.05, nothing entering the
+            # top. With Bᵃ = σTᵃ⁴, Bˢ = σTˢ⁴, x = D τˢ and the header closed
             # forms (β = 0):
-            #   down[end] = Bₐ (1 - e^{-x}),
-            #   up[1]     = Bₐ + e^{-x} (ε Bₛ + (1 - ε) down[end] - Bₐ).
+            #   down[end] = Bᵃ (1 - e^{-x}),
+            #   up[1]     = Bᵃ + e^{-x} (ε Bˢ + (1 - ε) down[end] - Bᵃ).
             # Expanding in x:
-            #   down[end] = x Bₐ - x²/2 Bₐ + O(x³),
-            #   up[1]     = ε Bₛ + x (Bₐ - ε Bₛ + (1 - ε) Bₐ) + O(x²),
-            # so the column is transparent to leading order — up[1] → ε Bₛ and
+            #   down[end] = x Bᵃ - x²/2 Bᵃ + O(x³),
+            #   up[1]     = ε Bˢ + x (Bᵃ - ε Bˢ + (1 - ε) Bᵃ) + O(x²),
+            # so the column is transparent to leading order — up[1] → ε Bˢ and
             # down[end] → 0 — with first-order departures pinned below to their
-            # second-order remainders, |O(x²)| ≤ x² max(Bₐ, Bₛ) (1 + 2(1 - ε)).
+            # second-order remainders, |O(x²)| ≤ x² max(Bᵃ, Bˢ) (1 + 2(1 - ε)).
             Nz = 4
-            Tₐ, Tₛ = 250.0, 300.0
+            Tᵃ, Tˢ = 250.0, 300.0
             ε = 0.95
             amounts = fill(FT(1.01e-3), Nz)
             model = gray_model(FT, [1.0], [1.0])
-            temperatures = fill(FT(Tₐ), Nz)
+            temperatures = fill(FT(Tᵃ), Nz)
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
-            surface = TabulatedSurfaceEmission(model, Tₛ; emissivity = ε)
+            surface = TabulatedSurfaceEmission(model, Tˢ; emissivity = ε)
             up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, Nz)
 
-            Bₐ, Bₛ = σ * Tₐ^4, σ * Tₛ^4
-            _, τ_cum = layer_optical_depths(optics, Nz)
-            τₛ = τ_cum[end]
-            x = D * τₛ
+            Bᵃ, Bˢ = σ * Tᵃ^4, σ * Tˢ^4
+            _, τ_cumulative = layer_optical_depths(optics, Nz)
+            τˢ = τ_cumulative[end]
+            x = D * τˢ
             @test all(k -> layer_optical_depths(optics, Nz)[1][k] > 1e-3, 1:Nz)
 
             # Exact closed forms at every interface.
-            down_exact = [Bₐ * (1 - exp(-D * τ_cum[k])) for k in 1:Nz + 1]
-            F_surface = ε * Bₛ + (1 - ε) * down_exact[end]
-            up_exact = [Bₐ + exp(-D * (τₛ - τ_cum[k])) * (F_surface - Bₐ) for k in 1:Nz + 1]
-            tol = tolerances(FT, 0, max(Bₐ, Bₛ); atol = 1e-6)
+            down_exact = [Bᵃ * (1 - exp(-D * τ_cumulative[k])) for k in 1:Nz + 1]
+            F_surface = ε * Bˢ + (1 - ε) * down_exact[end]
+            up_exact = [Bᵃ + exp(-D * (τˢ - τ_cumulative[k])) * (F_surface - Bᵃ) for k in 1:Nz + 1]
+            tol = tolerances(FT, 0, max(Bᵃ, Bˢ); atol = 1e-6)
             @test all(k -> within(down[k], down_exact[k], tol), 1:Nz + 1)
             @test all(k -> within(up[k], up_exact[k], tol), 1:Nz + 1)
 
             # The limits with their first-order departures.
-            remainder = x^2 * max(Bₐ, Bₛ) * (1 + 2 * (1 - ε))
-            @test isapprox(up[1], ε * Bₛ; atol = 2 * x * max(Bₐ, Bₛ))
-            @test isapprox(down[end], 0; atol = 2 * x * Bₐ)
-            @test isapprox(up[1] - ε * Bₛ, x * (Bₐ - ε * Bₛ + (1 - ε) * Bₐ); atol = remainder)
-            @test isapprox(down[end], x * Bₐ; atol = remainder)
+            remainder = x^2 * max(Bᵃ, Bˢ) * (1 + 2 * (1 - ε))
+            @test isapprox(up[1], ε * Bˢ; atol = 2 * x * max(Bᵃ, Bˢ))
+            @test isapprox(down[end], 0; atol = 2 * x * Bᵃ)
+            @test isapprox(up[1] - ε * Bˢ, x * (Bᵃ - ε * Bˢ + (1 - ε) * Bᵃ); atol = remainder)
+            @test isapprox(down[end], x * Bᵃ; atol = remainder)
         end
 
         @testset "optically thick limit ($FT)" begin
             # Three isothermal layers of τ = 50 (Dτ = 83, e^{-83} ≈ 1e-36) at
-            # T_top, T_int, T_bot over a gray surface (ε = 0.9, albedo 0.1) at
-            # Tₛ. Each layer is opaque, so every interface flux is the Planck
+            # T_top, T_middle, T_bottom over a gray surface (ε = 0.9, albedo 0.1) at
+            # Tˢ. Each layer is opaque, so every interface flux is the Planck
             # emission of the adjacent layer on its own side:
-            #   up[1] = σT_top⁴,   down[2] = σT_top⁴,   up[2] = down[3] = σT_int⁴,
-            #   up[3] = down[4] = σT_bot⁴,   up[4] = ε σTₛ⁴ + (1 - ε) σT_bot⁴.
+            #   up[1] = σT_top⁴,   down[2] = σT_top⁴,   up[2] = down[3] = σT_middle⁴,
+            #   up[3] = down[4] = σT_bottom⁴,   up[4] = ε σTˢ⁴ + (1 - ε) σT_bottom⁴.
             Nz = 3
-            T_top, T_int, T_bot, Tₛ = 230.0, 260.0, 290.0, 300.0
+            T_top, T_middle, T_bottom, Tˢ = 230.0, 260.0, 290.0, 300.0
             ε = 0.9
             amounts = fill(FT(50), Nz)
             model = gray_model(FT, [1.0], [1.0])
-            temperatures = FT[T_top, T_int, T_bot]
+            temperatures = FT[T_top, T_middle, T_bottom]
             optics = GrayLongwaveLayerOptics(model, amounts, temperatures, temperatures)
-            surface = TabulatedSurfaceEmission(model, Tₛ; emissivity = ε)
+            surface = TabulatedSurfaceEmission(model, Tˢ; emissivity = ε)
             up, down = longwave_fluxes(FT, optics, surface, 1 - ε, 0, model.longwave_weights, Nz)
 
-            B_top, B_int, B_bot, Bₛ = σ .* (T_top, T_int, T_bot, Tₛ) .^ 4
-            tol = tolerances(FT, 1e-8, Bₛ)
+            B_top, B_middle, B_bottom, Bˢ = σ .* (T_top, T_middle, T_bottom, Tˢ) .^ 4
+            tol = tolerances(FT, 1e-8, Bˢ)
             @test down[1] == 0
             @test within(up[1], B_top, tol)
             @test within(down[2], B_top, tol)
-            @test within(up[2], B_int, tol)
-            @test within(down[3], B_int, tol)
-            @test within(up[3], B_bot, tol)
-            @test within(down[4], B_bot, tol)
-            @test within(up[4], ε * Bₛ + (1 - ε) * B_bot, tol)
+            @test within(up[2], B_middle, tol)
+            @test within(down[3], B_middle, tol)
+            @test within(up[3], B_bottom, tol)
+            @test within(down[4], B_bottom, tol)
+            @test within(up[4], ε * Bˢ + (1 - ε) * B_bottom, tol)
         end
     end
 end
@@ -393,8 +393,8 @@ end
 # S₀μ₀ at the top and τ_k the cumulative optical depth above interface k,
 #   down[k] = S₀ μ₀ e^{-τ_k/μ₀}                            (all direct),
 # the surface reflects α down[end] into the diffuse upward stream, and that
-# diffuse flux is attenuated by e^{-2(τₛ - τ_k)} on its way up:
-#   up[k] = α S₀ μ₀ e^{-τₛ/μ₀} e^{-2(τₛ - τ_k)}.
+# diffuse flux is attenuated by e^{-2(τˢ - τ_k)} on its way up:
+#   up[k] = α S₀ μ₀ e^{-τˢ/μ₀} e^{-2(τˢ - τ_k)}.
 #
 # Conservative scattering (ω = 1, black surface). Nothing is absorbed, so
 # the net downward flux down[k] - up[k] is the same at every interface and
@@ -428,10 +428,10 @@ end
             up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, α, α, Nz;
                                         weights = model.shortwave_weights)
 
-            _, τ_cum = layer_optical_depths(optics, Nz)
-            τₛ = τ_cum[end]
-            down_exact = [S₀ * μ₀ * exp(-τ_cum[k] / μ₀) for k in 1:Nz + 1]
-            up_exact = [α * S₀ * μ₀ * exp(-τₛ / μ₀) * exp(-2 * (τₛ - τ_cum[k])) for k in 1:Nz + 1]
+            _, τ_cumulative = layer_optical_depths(optics, Nz)
+            τˢ = τ_cumulative[end]
+            down_exact = [S₀ * μ₀ * exp(-τ_cumulative[k] / μ₀) for k in 1:Nz + 1]
+            up_exact = [α * S₀ * μ₀ * exp(-τˢ / μ₀) * exp(-2 * (τˢ - τ_cumulative[k])) for k in 1:Nz + 1]
 
             tol = tolerances(FT, 1e-10, S₀ * μ₀)
             @test down[1] == FT(S₀ * μ₀)

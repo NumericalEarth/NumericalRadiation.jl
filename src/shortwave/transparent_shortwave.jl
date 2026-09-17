@@ -22,22 +22,22 @@ function solve_shortwave!(temperature_tendency::AbstractVector,
                           thermodynamic;
                           cloud_top_convective::Integer = length(profile.temperature) + 1) where NF
     S₀ = NF(constants.solar_constant)
-    cos_zenith = NF(surface.cos_zenith)
-    D = S₀ * cos_zenith
+    μ₀ = NF(surface.cos_zenith)
+    ℐꜜ = S₀ * μ₀
 
-    diagnostics.surface_shortwave_down       = D
-    diagnostics.ocean_surface_shortwave_down = D
-    diagnostics.land_surface_shortwave_down  = D
+    diagnostics.surface_shortwave_down       = ℐꜜ
+    diagnostics.ocean_surface_shortwave_down = ℐꜜ
+    diagnostics.land_surface_shortwave_down  = ℐꜜ
 
-    ocean_up = NF(surface.ocean_albedo) * D
-    land_up  = NF(surface.land_albedo)  * D
-    albedo   = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) +
-               NF(surface.land_fraction) * NF(surface.land_albedo)
+    ℐꜛ_ocean = NF(surface.ocean_albedo) * ℐꜜ
+    ℐꜛ_land  = NF(surface.land_albedo)  * ℐꜜ
+    α = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) +
+        NF(surface.land_fraction) * NF(surface.land_albedo)
 
-    diagnostics.ocean_surface_shortwave_up = ocean_up
-    diagnostics.land_surface_shortwave_up  = land_up
-    diagnostics.surface_shortwave_up       = albedo * D
-    diagnostics.albedo                     = albedo
+    diagnostics.ocean_surface_shortwave_up = ℐꜛ_ocean
+    diagnostics.land_surface_shortwave_up  = ℐꜛ_land
+    diagnostics.surface_shortwave_up       = α * ℐꜜ
+    diagnostics.albedo                     = α
     diagnostics.outgoing_shortwave         = diagnostics.surface_shortwave_up
 
     diagnostics.cloud_cover        = zero(NF)

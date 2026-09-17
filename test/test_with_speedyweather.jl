@@ -61,31 +61,31 @@ end
     variables.prognostic.greenhouse_gases.co2[] = 280
     variables.tendencies.grid.temperature .= 0
     SpeedyWeather.column_parameterizations!(variables, model)
-    dT1  = copy(variables.tendencies.grid.temperature)
-    olr1 = copy(variables.parameterizations.outgoing_longwave)
+    Ṫ₁  = copy(variables.tendencies.grid.temperature)
+    olr₁ = copy(variables.parameterizations.outgoing_longwave)
 
     # --- Run 2: 600 ppm CO₂ (much higher) ---
     variables.prognostic.greenhouse_gases.co2[] = 600
     variables.tendencies.grid.temperature .= 0
     SpeedyWeather.column_parameterizations!(variables, model)
-    dT2  = copy(variables.tendencies.grid.temperature)
-    olr2 = copy(variables.parameterizations.outgoing_longwave)
+    Ṫ₂  = copy(variables.tendencies.grid.temperature)
+    olr₂ = copy(variables.parameterizations.outgoing_longwave)
 
     # Both runs produced finite, non-trivial tendencies.
-    @test all(isfinite, dT1)
-    @test all(isfinite, dT2)
-    @test any(!=(zero(NF)), dT1)
-    @test any(!=(zero(NF)), dT2)
+    @test all(isfinite, Ṫ₁)
+    @test all(isfinite, Ṫ₂)
+    @test any(!=(zero(NF)), Ṫ₁)
+    @test any(!=(zero(NF)), Ṫ₂)
 
     # Tendencies should differ between the two CO₂ levels (the forcing was applied).
-    @test dT1 != dT2
+    @test Ṫ₁ != Ṫ₂
 
     # OLR is positive and finite, and increasing CO₂ reduces OLR (greenhouse effect).
-    @test all(isfinite, olr1)
-    @test all(>(zero(NF)), olr1)
-    @test all(>(zero(NF)), olr2)
-    @test all(olr2 .< olr1)
+    @test all(isfinite, olr₁)
+    @test all(>(zero(NF)), olr₁)
+    @test all(>(zero(NF)), olr₂)
+    @test all(olr₂ .< olr₁)
 
     # Global-mean OLR decreases at higher CO₂, confirming the forcing is active.
-    @test mean(olr2) < mean(olr1)
+    @test mean(olr₂) < mean(olr₁)
 end

@@ -4,8 +4,8 @@ The [`AnalyticBandLongwave`](@ref) solver advances Schwarzschild's two-stream
 equations
 
 ```math
-\frac{dF^{\uparrow}}{d\tau} = F^{\uparrow} - \pi B(T), \qquad
-\frac{dF^{\downarrow}}{d\tau} = \pi B(T) - F^{\downarrow}
+\frac{d\mathscr{I}^{\uparrow}}{d\tau} = \mathscr{I}^{\uparrow} - \pi B(T), \qquad
+\frac{d\mathscr{I}^{\downarrow}}{d\tau} = \pi B(T) - \mathscr{I}^{\downarrow}
 ```
 
 at each of `Nwavenumbers = 41` evenly spaced wavenumbers between 10 and

@@ -155,10 +155,12 @@ Conventions:
 For layer `k`, the heating rate is
 
 ```text
-gravity / heat_capacity * (F_net[k] - F_net[k + 1]) / Δp[k]
+Ṫ[k] = g / cᵖ (ℐ_net[k] - ℐ_net[k + 1]) / Δp[k]
 ```
 
-where `F_net = longwave_down - longwave_up + shortwave_down - shortwave_up`.
+where `ℐ_net = ℐꜜˡʷ - ℐꜛˡʷ + ℐꜜˢʷ - ℐꜛˢʷ` is the net downward flux
+(`longwave_down - longwave_up + shortwave_down - shortwave_up`), and `g` and
+`cᵖ` are `gravity` and `heat_capacity`.
 """
 function heating_rates!(heating::AbstractVector,
                         fluxes::RadiativeFluxes,
@@ -181,15 +183,17 @@ function heating_rates!(heating::AbstractVector,
         throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
 
     FT = eltype(heating)
-    g_over_cp = FT(gravity) / FT(heat_capacity)
+    g = FT(gravity)
+    cᵖ = FT(heat_capacity)
+    g_over_cᵖ = g / cᵖ
     for k in 1:Nz
         Δp = FT(p_interface[k + 1] - p_interface[k])
         Δp > zero(FT) || throw(ArgumentError("pressure_interfaces must increase downward"))
-        net_top = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
-                     fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
-        net_bottom = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +
-                        fluxes.shortwave_down[k + 1] - fluxes.shortwave_up[k + 1])
-        heating[k] = g_over_cp * (net_top - net_bottom) / Δp
+        ℐ_net_top = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
+                       fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
+        ℐ_net_bottom = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +
+                          fluxes.shortwave_down[k + 1] - fluxes.shortwave_up[k + 1])
+        heating[k] = g_over_cᵖ * (ℐ_net_top - ℐ_net_bottom) / Δp
     end
     return heating
 end

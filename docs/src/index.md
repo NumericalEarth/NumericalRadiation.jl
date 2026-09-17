@@ -30,7 +30,7 @@ using NCDatasets   # activates the NetCDF reader extension
 
 gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
 
-constants = PhysicalConstants()   # Earth defaults: g, mᵈ, cₚ, σ, S₀, …
+constants = PhysicalConstants()   # Earth defaults: g, mᵈ, cᵖ, σ, S₀, …
 
 Nz = 24
 pᵢ = collect(range(10_000, 100_000; length = Nz + 1))   # Pa, TOA first

@@ -25,7 +25,8 @@ using Printf
 
 Γ  = 6.5e-3                  # critical lapse rate, K m⁻¹ (Manabe-Wetherald)
 μ₀ = cosd(47.9)              # cosine of the solar zenith angle
-S₀ = 509 * μ₀                # horizontal TOA shortwave flux, W m⁻²
+S₀ = 509                     # solar constant, W m⁻² (Manabe-Wetherald daily mean)
+ℐꜜ_toa = S₀ * μ₀             # horizontal TOA shortwave flux, W m⁻²
 α  = 0.3                     # surface albedo
 
 surface_relative_humidity = 0.77   # Manabe-Wetherald humidity profile parameter
@@ -36,11 +37,11 @@ water_vapor_floor = 4.8e-6         # stratospheric χH₂O floor, mole fraction
 
 Nz = 60                      # physical layers, uniform in altitude
 zₜ = 60e3                    # m; one isothermal lookup-boundary layer above
-pₛ = 101_325                 # Pa
+pˢ = 101_325                 # Pa
 
 constants = PhysicalConstants()      # Earth defaults; every constant below is one of its fields
 g  = constants.gravity               # gravitational acceleration, m s⁻²
-cₚ = constants.heat_capacity         # isobaric heat capacity, J kg⁻¹ K⁻¹
+cᵖ = constants.heat_capacity         # isobaric heat capacity, J kg⁻¹ K⁻¹
 σ  = constants.stefan_boltzmann      # Stefan-Boltzmann constant, W m⁻² K⁻⁴
 Rᵈ = constants.dry_air_gas_constant  # dry-air gas constant, J kg⁻¹ K⁻¹
 mᵈ = constants.dry_air_molar_mass    # dry-air molar mass, kg mol⁻¹
@@ -65,8 +66,8 @@ standard_temperature(z) = z <= z_tropopause ? T₀ - Γ * z :
 
 function standard_pressure(z)
     T_tropopause = T₀ - Γ * z_tropopause
-    z <= z_tropopause && return pₛ * (standard_temperature(z) / T₀)^(g / (Rᵈ * Γ))
-    p_tropopause = pₛ * (T_tropopause / T₀)^(g / (Rᵈ * Γ))
+    z <= z_tropopause && return pˢ * (standard_temperature(z) / T₀)^(g / (Rᵈ * Γ))
+    p_tropopause = pˢ * (T_tropopause / T₀)^(g / (Rᵈ * Γ))
     return p_tropopause * (standard_temperature(z) / T_tropopause)^(-g / (Rᵈ * Γ_stratosphere))
 end
 
@@ -112,9 +113,9 @@ saturation_vapor_pressure(T) = 610.94 * exp(17.625 * (T - freezing_temperature) 
 
 function fixed_relative_humidity!(χH₂O_extended, T_extended)
     for k in eachindex(χH₂O_extended)
-        relative_humidity = max(surface_relative_humidity * (p_extended[k] / pₛ - 0.02) / 0.98, 0)
-        eₛ = saturation_vapor_pressure(T_extended[k])
-        χH₂O_extended[k] = max(relative_humidity * eₛ / max(p_extended[k] - relative_humidity * eₛ, 1),
+        relative_humidity = max(surface_relative_humidity * (p_extended[k] / pˢ - 0.02) / 0.98, 0)
+        pᵛ⁺ = saturation_vapor_pressure(T_extended[k])
+        χH₂O_extended[k] = max(relative_humidity * pᵛ⁺ / max(p_extended[k] - relative_humidity * pᵛ⁺, 1),
                           water_vapor_floor)
     end
     return χH₂O_extended
@@ -150,7 +151,7 @@ nothing #hide
 #
 # `equilibrate!` marches the column at a *fixed* trial surface temperature,
 # in the RRTMGP tutorial's exact order and stopping rule: clamp levels onto
-# the critical profile ``T_c(p) = Tₛ (p/pₛ)^{Γ R^{\mathrm{d}}/g}``; set
+# the critical profile ``T_c(p) = Tˢ (p/pˢ)^{Γ R^{\mathrm{d}}/g}``; set
 # layer temperatures to adjacent-level means; update humidity and fluxes;
 # stop when one successive adjusted level profile changes by less than
 # `tolerance` (kelvin); otherwise map layer heating to level tendencies
@@ -158,7 +159,7 @@ nothing #hide
 # levels take the edge rate) and march with the tutorial's ±2 K increment
 # clamp, up to `max_steps` steps.
 
-function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_extended, fixed_water_vapor = nothing,
+function equilibrate!(Tᵢ, Tˢ; χCO₂, ozone = χO₃_extended, fixed_water_vapor = nothing,
                       Δt = 8 * 3_600, max_steps = 20_000, tolerance = 1e-4)
     T_extended = zeros(Nz_extended)
     Tᵢ_extended = zeros(Nz_extended + 1)
@@ -174,9 +175,9 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_extended, fixed_water_
                                     geometry = (cos_zenith = μ₀,),
                                     constants)
     longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, Nz_extended)
-    shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = S₀,
+    shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = ℐꜜ_toa,
                                                      surface_albedo = α)
-    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
+    surface_emission = surface_longwave_emission(gas_optics, Tˢ)
     longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_emission)
     Q = zeros(Nz_extended)
     Ṫᵢ = zeros(Nz + 1)
@@ -210,7 +211,7 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_extended, fixed_water_
                           shortwave_boundary)
     end
 
-    critical = Tₛ .* (pᵢ ./ pₛ) .^ (Γ * Rᵈ / g)
+    critical = Tˢ .* (pᵢ ./ pˢ) .^ (Γ * Rᵈ / g)
     fill!(previous, 0)
     final_difference = Inf
     steps = max_steps
@@ -225,14 +226,14 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_extended, fixed_water_
             break
         end
         previous .= Tᵢ
-        heating_rates!(Q, fluxes, atmosphere)     # g and cₚ from atmosphere.constants
+        heating_rates!(Q, fluxes, atmosphere)     # g and cᵖ from atmosphere.constants
         ## discard the extension tendency Q[1]; physical layer j is Q[j + 1]
         Ṫᵢ[1] = Q[2]
         Ṫᵢ[Nz+1] = Q[Nz_extended]
         @views @. Ṫᵢ[2:Nz] = (Q[2:Nz_extended-1] + Q[3:Nz_extended]) / 2
         @. Tᵢ += clamp(Δt * Ṫᵢ, -2, 2)
     end
-    return (; Tᵢ = copy(Tᵢ), Tₛ, converged, final_difference, steps,
+    return (; Tᵢ = copy(Tᵢ), Tˢ, converged, final_difference, steps,
               days = steps * Δt / day,
               χH₂O = copy(χH₂O_extended),
               T_extended = copy(T_extended),
@@ -258,10 +259,10 @@ function bracketed_secant(toa_imbalance, guesses; imbalance_tolerance = 0.1,
     expansions = 0
     while sign(ΔF_lower) == sign(ΔF_upper)
         expansions < max_expansions ||
-            error("no sign-changing Tₛ bracket after $max_expansions expansions")
+            error("no sign-changing Tˢ bracket after $max_expansions expansions")
         saturated = lower == 150 && upper == 350
         saturated &&
-            error("Tₛ bracket saturated the [150, 350] K domain without a sign change")
+            error("Tˢ bracket saturated the [150, 350] K domain without a sign change")
         lower = max(lower - expansion, 150)
         upper = min(upper + expansion, 350)
         expansion *= 2
@@ -269,7 +270,7 @@ function bracketed_secant(toa_imbalance, guesses; imbalance_tolerance = 0.1,
         ΔF_lower, state_lower = toa_imbalance(lower)
         ΔF_upper, state_upper = toa_imbalance(upper)
     end
-    Tₛ, ΔF, state = abs(ΔF_lower) < abs(ΔF_upper) ? (lower, ΔF_lower, state_lower) : (upper, ΔF_upper, state_upper)
+    Tˢ, ΔF, state = abs(ΔF_lower) < abs(ΔF_upper) ? (lower, ΔF_lower, state_lower) : (upper, ΔF_upper, state_upper)
     a, b, ΔF_a, ΔF_b = lower, upper, ΔF_lower, ΔF_upper
     iterations = 0
     step_size = Inf
@@ -284,27 +285,27 @@ function bracketed_secant(toa_imbalance, guesses; imbalance_tolerance = 0.1,
         else
             b, ΔF_b = candidate, ΔF_c
         end
-        step_size = abs(candidate - Tₛ)
-        Tₛ, ΔF, state = candidate, ΔF_c, state_c
+        step_size = abs(candidate - Tˢ)
+        Tˢ, ΔF, state = candidate, ΔF_c, state_c
         iterations += 1
     end
-    return Tₛ, state, iterations, expansions
+    return Tˢ, state, iterations, expansions
 end
 
 function rce(χCO₂; ozone = χO₃_extended, fixed_water_vapor = nothing,
-             Tₛ_guesses = (285, 295), warm_start = nothing,
+             Tˢ_guesses = (285, 295), warm_start = nothing,
              imbalance_tolerance = 0.1, max_expansions = 8, max_iterations = 12)
     Tᵢ = isnothing(warm_start) ? standard_temperature.(reverse(zᵢ)) : copy(warm_start)
-    toa_imbalance(Tₛ) = begin
-        state = equilibrate!(Tᵢ, Tₛ; χCO₂, ozone, fixed_water_vapor)
-        state.converged || error("inner equilibration at trial Tₛ = $Tₛ did not converge")
+    toa_imbalance(Tˢ) = begin
+        state = equilibrate!(Tᵢ, Tˢ; χCO₂, ozone, fixed_water_vapor)
+        state.converged || error("inner equilibration at trial Tˢ = $Tˢ did not converge")
         ΔF = state.asr - state.olr
-        isfinite(ΔF) || error("nonfinite TOA residual at trial Tₛ = $Tₛ")
+        isfinite(ΔF) || error("nonfinite TOA residual at trial Tˢ = $Tˢ")
         (ΔF, state)
     end
-    Tₛ, state, iterations, expansions = bracketed_secant(toa_imbalance, Tₛ_guesses; imbalance_tolerance,
+    Tˢ, state, iterations, expansions = bracketed_secant(toa_imbalance, Tˢ_guesses; imbalance_tolerance,
                                                          max_expansions, max_iterations)
-    return (; state..., Tₛ, secant_iterations = iterations,
+    return (; state..., Tˢ, secant_iterations = iterations,
               bracket_expansions = expansions)
 end
 nothing #hide
@@ -328,8 +329,8 @@ for (name, state) in (("control, 420 ppm CO₂", control),
                       ("2× CO₂, fixed RH", doubled),
                       ("4× CO₂, fixed RH", quadrupled),
                       ("4× CO₂, frozen water vapor", frozen_vapor))
-    @printf("%-28s Tₛ = %7.2f K   ΔTₛ = %+6.2f K\n",
-            name, state.Tₛ, state.Tₛ - control.Tₛ)
+    @printf("%-28s Tˢ = %7.2f K   ΔTˢ = %+6.2f K\n",
+            name, state.Tˢ, state.Tˢ - control.Tˢ)
 end
 
 # Comparing the two 4× equilibria isolates the fixed-RH water-vapor
@@ -361,7 +362,7 @@ for (state, label, color, style) in
          (frozen_vapor, "4× CO₂, frozen water vapor", :firebrick, :dash))
     lines!(ax, state.T_extended[2:Nz_extended], p ./ 100; color, label, linewidth = 2,
            linestyle = style)
-    scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
+    scatter!(ax, [state.Tˢ], [pˢ / 100]; color, markersize = 10)
 end
 Legend(fig[2, 1], ax; orientation = :horizontal, nbanks = 2, framevisible = false)
 save("manabe_rce_states.png", fig); nothing #hide
@@ -383,17 +384,17 @@ save("manabe_rce_states.png", fig); nothing #hide
 
 without_H₂O = rce(χCO₂; warm_start = control.Tᵢ,
                   fixed_water_vapor = zero(control.χH₂O),
-                  Tₛ_guesses = (255, 275))
+                  Tˢ_guesses = (255, 275))
 without_CO₂ = rce(0; warm_start = control.Tᵢ,
-                  Tₛ_guesses = (265, 285))
+                  Tˢ_guesses = (265, 285))
 without_O₃  = rce(χCO₂; warm_start = control.Tᵢ, ozone = zero(χO₃_extended),
-                  Tₛ_guesses = (275, 292))
+                  Tˢ_guesses = (275, 292))
 
 for (name, state) in (("without water vapor", without_H₂O),
                       ("without CO₂", without_CO₂),
                       ("without O₃", without_O₃))
-    @printf("%-28s Tₛ = %7.2f K   ΔTₛ = %+6.2f K\n",
-            name, state.Tₛ, state.Tₛ - control.Tₛ)
+    @printf("%-28s Tˢ = %7.2f K   ΔTˢ = %+6.2f K\n",
+            name, state.Tˢ, state.Tˢ - control.Tˢ)
 end
 
 fig = Figure(size = (700, 660))
@@ -404,7 +405,7 @@ for (state, label, color) in
          (without_CO₂, "no CO₂", :firebrick),
          (without_O₃, "no O₃", :seagreen))
     lines!(ax, state.T_extended[2:Nz_extended], p ./ 100; color, label, linewidth = 2)
-    scatter!(ax, [state.Tₛ], [pₛ / 100]; color, markersize = 10)
+    scatter!(ax, [state.Tˢ], [pˢ / 100]; color, markersize = 10)
 end
 Legend(fig[2, 1], ax; orientation = :horizontal, framevisible = false)
 save("manabe_rce_absorbers.png", fig); nothing #hide
@@ -434,9 +435,9 @@ function verify_equilibria(states; imbalance_gate = 0.1)
     end
     reference_state = states[1][2]
     weighted_emission = sum(gas_optics.longwave_weights .*
-                            surface_longwave_emission(gas_optics, reference_state.Tₛ))
-    abs(weighted_emission - σ * reference_state.Tₛ^4) < 0.2 ||
-        error("weighted surface emission inconsistent with σTₛ⁴")
+                            surface_longwave_emission(gas_optics, reference_state.Tˢ))
+    abs(weighted_emission - σ * reference_state.Tˢ^4) < 0.2 ||
+        error("weighted surface emission inconsistent with σTˢ⁴")
     return nothing
 end
 
@@ -452,7 +453,7 @@ verify_equilibria([("control", control), ("2×", doubled),
 # emission — producing an unstably steep profile in the lower atmosphere.
 # **Convective adjustment** is the instantaneous limit of the convection
 # that such a profile would trigger: any level colder than the critical
-# profile ``T_c(p) = Tₛ (p/pₛ)^{Γ R^{\mathrm{d}}/g}`` anchored at the surface is
+# profile ``T_c(p) = Tˢ (p/pˢ)^{Γ R^{\mathrm{d}}/g}`` anchored at the surface is
 # clamped onto it, so the troposphere rides the critical lapse rate over a
 # radiatively balanced stratosphere while the surface temperature itself is
 # solved from top-of-atmosphere balance. **The fixed-RH humidity closure**

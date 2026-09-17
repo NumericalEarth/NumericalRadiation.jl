@@ -23,7 +23,7 @@ const CONSTANTS = PhysicalConstants()
 const GRAVITY = CONSTANTS.gravity                        # m s⁻²
 const DRY_AIR_MOLAR_MASS = CONSTANTS.dry_air_molar_mass  # kg mol⁻¹ (mᵈ)
 const WATER_MOLAR_MASS = CONSTANTS.water_molar_mass      # kg mol⁻¹ (mᵛ)
-const HEAT_CAPACITY = CONSTANTS.heat_capacity            # J kg⁻¹ K⁻¹ (cₚ)
+const HEAT_CAPACITY = CONSTANTS.heat_capacity            # J kg⁻¹ K⁻¹ (cᵖ)
 const SECONDS_PER_DAY = 86_400.0
 
 # The gas set of the reference ecCKD "climate" models: dry air (`composite`,
@@ -54,14 +54,14 @@ pressures and temperatures default to the arithmetic mean of the bounding
 half levels, which is what the ecRad driver does with CKDMIP input.
 
 The dry-air molar amount `nᵈ` of a layer of pressure thickness `Δp` follows
-`column_amount_convention`, and every gas is `χ_gas nᵈ`:
+`column_amount_convention`, and every gas is `χ nᵈ`:
 
 * `:dry` — `nᵈ = Δp / (g mᵈ)`. This is how ecRad applies the ecCKD tables
   and how the ecCKD tool derived their molar absorption coefficients from
   the CKDMIP line-by-line optical depths (`average_optical_depth.cpp`), so
   it reproduces the reference optical depths and is the convention the
   gated benchmark runs use.
-* `:moist` — `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`, the moist-molar-mass
+* `:moist` — `nᵈ = Δp / (g (mᵈ + mᵛ χH₂O))`, the moist-molar-mass
   convention of RRTMGP's column amounts, under which the layer mass closes
   as `mᵈ nᵈ + mᵛ n_H₂O = Δp / g`. It
   carries up to ~3 % less absorber than `:dry` in the humid boundary layer,
@@ -77,11 +77,11 @@ function benchmark_column(pressure_interfaces, temperature_interfaces, mole_frac
     p_fl = pressure_layers === nothing ? 0.5 .* (p_hl[1:Nz] .+ p_hl[2:end]) : Float64.(pressure_layers)
     T_fl = temperature_layers === nothing ? 0.5 .* (T_hl[1:Nz] .+ T_hl[2:end]) : Float64.(temperature_layers)
     Δp = diff(p_hl)
-    χ_H₂O = Float64.(mole_fractions.h2o) .* ones(Nz)
+    χH₂O = Float64.(mole_fractions.h2o) .* ones(Nz)
     dry_air = if column_amount_convention === :dry
         Δp ./ (GRAVITY * DRY_AIR_MOLAR_MASS)
     elseif column_amount_convention === :moist
-        Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_H₂O))
+        Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χH₂O))
     else
         throw(ArgumentError("column_amount_convention must be :dry or :moist"))
     end
@@ -142,7 +142,7 @@ end
                    albedo, cos_zeniths, solar_constant)
 
 Clear-sky broadband fluxes of one column: `optical_properties!` once, then
-`streaming_longwave_fluxes!` (surface emission `ε B_g(Tₛ)`, longwave surface
+`streaming_longwave_fluxes!` (surface emission `ε B_g(Tˢ)`, longwave surface
 albedo `1 - ε`, no downwelling flux at the top) and, for each `μ₀` in
 `cos_zeniths`, `streaming_shortwave_fluxes!` with the horizontal TOA
 irradiance `S₀ max(μ₀, 0)` and one albedo for direct and diffuse light.
@@ -193,20 +193,22 @@ function gauss_legendre_flux_nodes(Nnodes)
     for i in 1:Nnodes
         # Newton iteration for the i-th root of Pₙ on [-1, 1].
         z = cos(π * (i - 0.25) / (Nnodes + 0.5))
-        pp = 0.0
+        # Legendre recurrence: P₁ = P_j(z), P₂ = P_{j-1}(z), P₃ = P_{j-2}(z), and the
+        # derivative P′ = P_n′(z).
+        P′ = 0.0
         for _ in 1:100
-            p1, p2 = 1.0, 0.0
+            P₁, P₂ = 1.0, 0.0
             for j in 1:Nnodes
-                p3 = p2
-                p2 = p1
-                p1 = ((2j - 1) * z * p2 - (j - 1) * p3) / j
+                P₃ = P₂
+                P₂ = P₁
+                P₁ = ((2j - 1) * z * P₂ - (j - 1) * P₃) / j
             end
-            pp = Nnodes * (z * p1 - p2) / (z^2 - 1)
-            step = p1 / pp
+            P′ = Nnodes * (z * P₁ - P₂) / (z^2 - 1)
+            step = P₁ / P′
             z -= step
             abs(step) < 1e-15 && break
         end
-        w = 2 / ((1 - z^2) * pp^2)
+        w = 2 / ((1 - z^2) * P′^2)
         μ = 0.5 * (z + 1)
         push!(nodes, (1 / μ, 2 * μ * 0.5 * w))
     end

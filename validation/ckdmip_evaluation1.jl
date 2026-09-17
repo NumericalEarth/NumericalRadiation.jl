@@ -17,8 +17,8 @@
 #   * layer amounts follow the dry column-amount convention of the ecCKD
 #     tables, dry air `nᵈ = Δp / (g mᵈ)` and every gas `χ nᵈ`; N₂ and O₂ are
 #     the `composite` gas of the tables. The moist-molar-mass convention
-#     `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))` is run alongside, ungated;
-#   * longwave: surface temperature `Tₛ = temperature_hl[end]`, emissivity 1,
+#     `nᵈ = Δp / (g (mᵈ + mᵛ χH₂O))` is run alongside, ungated;
+#   * longwave: surface temperature `Tˢ = temperature_hl[end]`, emissivity 1,
 #     no downwelling flux at 0.01 Pa;
 #   * shortwave: the five cosines of the solar zenith angle are read from the
 #     reference file's `mu0` dimension, the solar constant from its TOA
@@ -227,7 +227,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
                            rmse_all_zenith_angles = rmse(shortwave_down[end, :, :], shortwave.down[end, :, :])),
         shortwave_profile_rmse = (up = rmse(shortwave_up, shortwave.up), down = rmse(shortwave_down, shortwave.down)),
         shortwave_heating_rate = heating_ranges(pressure_shortwave, flat(shortwave_heating), flat(shortwave_heating_reference)),
-        shortwave_by_zenith_angle = [(; mu0 = μ₀[j],
+        shortwave_by_zenith_angle = [(; μ₀ = μ₀[j],
                                  toa_up_rmse = rmse(shortwave_up[1, j, :], shortwave.up[1, j, :]),
                                  surface_down_rmse = rmse(shortwave_down[end, j, :], shortwave.down[end, j, :]),
                                  heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
@@ -259,7 +259,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     return (; model_name = String(model_name),
               Nlongwave_gpoints = length(model.longwave_weights),
               Nshortwave_gpoints = length(model.shortwave_weights),
-              Nprofiles, Nz, mu0 = μ₀, solar_constant, albedo, column_amount_convention,
+              Nprofiles, Nz, μ₀, solar_constant, albedo, column_amount_convention,
               elapsed_seconds = elapsed,
               microseconds_per_column = 1e6 * elapsed / Nprofiles,
               statistics, gates)
@@ -272,7 +272,7 @@ function ckdmip_markdown(results, benchmark, paths)
     push!(lines, "Generated $(Dates.format(now(), "yyyy-mm-dd HH:MM")) by `validation/ckdmip_evaluation1.jl`.")
     push!(lines, "")
     push!(lines, "$(benchmark.Nprofiles) present-day clear-sky profiles, $(size(benchmark.pressure_hl, 1) - 1) layers " *
-                 "from $(benchmark.pressure_hl[1, 1]) Pa; longwave with `ε = 1` and `Tₛ = temperature_hl[end]`; " *
+                 "from $(benchmark.pressure_hl[1, 1]) Pa; longwave with `ε = 1` and `Tˢ = temperature_hl[end]`; " *
                  "shortwave with `S₀ = $(benchmark.solar_constant)` W m⁻², albedo $(benchmark.albedo), " *
                  "μ₀ ∈ $(benchmark.shortwave.μ₀). Reference: line-by-line fluxes of CKDMIP " *
                  "(`$(basename(paths[2]))`, `$(basename(paths[3]))`).")
@@ -280,13 +280,13 @@ function ckdmip_markdown(results, benchmark, paths)
     push!(lines, "Heating-rate RMSEs are weighted by the cube root of pressure within the range " *
                  "(the CKDMIP statistic); fluxes in W m⁻², heating rates in K day⁻¹. Gated runs use the " *
                  "dry column-amount convention `nᵈ = Δp / (g mᵈ)` of the ecCKD tables; the rows marked " *
-                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`.")
+                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χH₂O))`.")
     for r in results
         s = r.statistics
         push!(lines, "")
         push!(lines, "## $(r.model_name) ($(r.Nlongwave_gpoints) LW × $(r.Nshortwave_gpoints) SW g-points)")
         push!(lines, "")
-        push!(lines, "$(round(r.microseconds_per_column; digits = 1)) μs per column (optics + LW + $(length(r.mu0)) SW solves), " *
+        push!(lines, "$(round(r.microseconds_per_column; digits = 1)) μs per column (optics + LW + $(length(r.μ₀)) SW solves), " *
                      "$(round(r.elapsed_seconds; digits = 3)) s total.")
         push!(lines, "")
         push!(lines, markdown_gate_table(r.gates))
@@ -316,7 +316,7 @@ function ckdmip_markdown(results, benchmark, paths)
         push!(lines, markdown_row(("μ₀", "SW TOA up RMSE", "SW surface down RMSE", "SW heating rate RMSE p > 100 hPa")))
         push!(lines, markdown_row(("---", "---", "---", "---")))
         for z in s.shortwave_by_zenith_angle
-            push!(lines, markdown_row((string(z.mu0), @sprintf("%.3f", z.toa_up_rmse),
+            push!(lines, markdown_row((string(z.μ₀), @sprintf("%.3f", z.toa_up_rmse),
                                        @sprintf("%.3f", z.surface_down_rmse), @sprintf("%.4f", z.heating_rate_troposphere_rmse))))
         end
     end
@@ -359,7 +359,7 @@ function run_ckdmip_evaluation1(; models = (:climate_32x32, :climate_64x64))
                         Nlongwave_gpoints = result.Nlongwave_gpoints,
                         Nshortwave_gpoints = result.Nshortwave_gpoints,
                         Nprofiles = result.Nprofiles, Nz = result.Nz,
-                        mu0 = result.mu0, solar_constant = result.solar_constant, albedo = result.albedo,
+                        μ₀ = result.μ₀, solar_constant = result.solar_constant, albedo = result.albedo,
                         surface_emissivity = 1.0,
                         column_amount_convention = result.column_amount_convention,
                         elapsed_seconds = result.elapsed_seconds,

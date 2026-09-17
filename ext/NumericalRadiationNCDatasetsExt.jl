@@ -120,7 +120,7 @@ function read_ecckd_spectral_mapping(path::String;
 end
 
 # Planck weight `ν̃³ / (exp(c₂ ν̃ / T) - 1)` with the second radiation constant
-# c₂ = hc/k_B in cm K.
+# c₂ = hc/kᴮ in cm K.
 function planck_wavenumber_weight(wavenumber_cm, temperature)
     w = max(Float64(wavenumber_cm), 0)
     t = max(Float64(temperature), eps(Float64))

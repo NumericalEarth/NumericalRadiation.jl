@@ -88,16 +88,17 @@ end
 $(TYPEDSIGNATURES)
 
 Molar amount of air (mol m⁻²) in a layer of pressure thickness `Δp` (Pa) under
-hydrostatic balance, `Δp / (g mᵈ)`, with `gravity` and `dry_air_molar_mass`
-supplied by the caller rather than fixed here, so a host's own constants
-propagate (a [`PhysicalConstants`](@ref) carries both). The array
+hydrostatic balance, `Δp / (g mᵈ)`, with the gravitational acceleration `g`
+and dry-air molar mass `mᵈ` supplied by the caller rather than fixed here, so
+a host's own constants propagate (a [`PhysicalConstants`](@ref) carries both
+as `gravity` and `dry_air_molar_mass`). The array
 `optical_properties!` methods read them from `atmosphere.constants`; a host
 kernel passes the values of its own constants object. Feeds the Rayleigh
 scattering optical depth and the dry-air fallback of the layer H₂O mole
 fraction. The result takes the promoted type of the arguments, so pass them
 in the model's element type.
 """
-@inline hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass) = Δp / (gravity * dry_air_molar_mass)
+@inline hydrostatic_air_moles(Δp, g, mᵈ) = Δp / (g * mᵈ)
 
 # Scalar H₂O amount of a layer for the H₂O tables, `0` when the gas container
 # carries no `h2o` key (only legal for models without an H₂O table, which never

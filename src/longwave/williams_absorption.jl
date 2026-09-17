@@ -83,9 +83,9 @@ and of the CO₂ mass mixing ratio are the scheme's
     σ_half  = geometry.σ_half
     σ_thick = geometry.σ_thick
 
-    pₛ = NF(surface_pressure)
-    p_full_k = NF(σ_full[k]) * pₛ
-    Δp_k     = NF(σ_thick[k]) * pₛ
+    pˢ = NF(surface_pressure)
+    p_full_k = NF(σ_full[k]) * pˢ
+    Δp_k     = NF(σ_thick[k]) * pˢ
     T_k      = NF(temperature[k])
     q_k      = NF(humidity[k])
     g        = NF(gravity)
@@ -95,9 +95,9 @@ and of the CO₂ mass mixing ratio are the scheme's
     Δτ_H₂O_line = κ_line * (p_full_k / NF(scheme.p_ref)) * q_k * Δp_k / g
 
     # H₂O continuum: self-broadening + temperature scaling
-    # Vapor partial pressure: pᵥ = q p / (ε + (1 − ε) q), ε = mᵛ / mᵈ
-    ε       = NF(scheme.water_vapor_molar_mass_ratio)
-    pᵛ_k   = q_k * p_full_k / (ε + (1 - ε) * q_k)
+    # Vapor partial pressure: pᵛ = q p / (mᵛ/mᵈ + (1 − mᵛ/mᵈ) q)
+    mᵛ_over_mᵈ = NF(scheme.water_vapor_molar_mass_ratio)
+    pᵛ_k = q_k * p_full_k / (mᵛ_over_mᵈ + (1 - mᵛ_over_mᵈ) * q_k)
     κ_continuum  = water_vapor_continuum_absorption_reference(ν̃, scheme)
     Δτ_H₂O_cont = κ_continuum * (pᵛ_k / NF(scheme.pv_ref)) *
                   exp(NF(scheme.σ_cont) * (NF(scheme.T_ref) - T_k)) *
@@ -109,8 +109,8 @@ and of the CO₂ mass mixing ratio are the scheme's
     # is the difference of τ at the two bounding half levels.
     q_CO₂ = NF(CO₂ * NF(1e-6) * NF(scheme.carbon_dioxide_molar_mass_ratio))
     κ_CO₂ = carbon_dioxide_absorption_reference(ν̃, scheme)
-    p_half_top   = NF(σ_half[k])   * pₛ
-    p_half_bottom = NF(σ_half[k+1]) * pₛ
+    p_half_top   = NF(σ_half[k])   * pˢ
+    p_half_bottom = NF(σ_half[k+1]) * pˢ
     Δτ_CO₂ = κ_CO₂ * q_CO₂ * (p_half_bottom^2 - p_half_top^2) / (2 * g * NF(scheme.p_ref))
 
     return NF(scheme.diffusivity) * (Δτ_H₂O_line + Δτ_H₂O_cont + Δτ_CO₂)

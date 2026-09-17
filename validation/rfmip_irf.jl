@@ -188,16 +188,16 @@ function load_rfmip(paths; experiment = RFMIP_EXPERIMENT)
     # Levels run top-down from 0.01 Pa, as the solvers expect.
     all(sites.pressure_interfaces[1, :] .< sites.pressure_interfaces[end, :]) ||
         throw(ArgumentError("RFMIP levels are expected top-down"))
-    cos_zenith = cosd.(sites.solar_zenith_angle)
+    μ₀ = cosd.(sites.solar_zenith_angle)
     # Daytime is where the reference has sunlight: LBLRTM treated one site
     # with the sun 2.4° above the horizon (site 46, μ₀ = 0.042) as night.
-    daytime = findall(i -> cos_zenith[i] > 0 && reference.rsd[1, i] > 0, 1:Nsites)
-    excluded_sites = findall(i -> cos_zenith[i] > 0 && reference.rsd[1, i] == 0, 1:Nsites)
-    return (; sites..., reference, Nsites, cos_zenith, daytime, excluded_sites)
+    daytime = findall(i -> μ₀[i] > 0 && reference.rsd[1, i] > 0, 1:Nsites)
+    excluded_sites = findall(i -> μ₀[i] > 0 && reference.rsd[1, i] == 0, 1:Nsites)
+    return (; sites..., reference, Nsites, μ₀, daytime, excluded_sites)
 end
 
 function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
-    (; Nsites, cos_zenith, daytime, reference) = benchmark
+    (; Nsites, μ₀, daytime, reference) = benchmark
     Nz = size(benchmark.pressure_layers, 1)
     model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, Nz)
@@ -225,13 +225,13 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
                                       temperature_layers = benchmark.temperature_layers[:, i],
                                       surface = (; temperature = benchmark.surface_temperature[i],
                                                    emissivity = benchmark.surface_emissivity[i]),
-                                      geometry = (; cos_zenith = cos_zenith[i]),
+                                      geometry = (; cos_zenith = μ₀[i]),
                                       column_amount_convention)
 
     # One untimed column first, so that the timing below excludes compilation.
     column_fluxes!(workspace, model, site_column(1); surface_temperature = benchmark.surface_temperature[1],
                    emissivity = benchmark.surface_emissivity[1], albedo = benchmark.surface_albedo[1],
-                   cos_zeniths = (cos_zenith[1],), solar_constant = benchmark.total_solar_irradiance[1])
+                   cos_zeniths = (μ₀[1],), solar_constant = benchmark.total_solar_irradiance[1])
 
     elapsed = 0.0   # optics and solves only
     for i in 1:Nsites
@@ -239,7 +239,7 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         emissivity = benchmark.surface_emissivity[i]
         atmosphere = site_column(i)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity,
-                                                    albedo = benchmark.surface_albedo[i], cos_zeniths = (cos_zenith[i],),
+                                                    albedo = benchmark.surface_albedo[i], cos_zeniths = (μ₀[i],),
                                                     solar_constant = benchmark.total_solar_irradiance[i])
         longwave_up[:, i] = fluxes.longwave_up
         longwave_down[:, i] = fluxes.longwave_down
@@ -257,7 +257,7 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
 
     p_hl = benchmark.pressure_interfaces
     day = daytime
-    night = findall(<=(0), cos_zenith)
+    night = findall(<=(0), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
     statistics = (;
         longwave_toa_up = (bias = bias(longwave_up[1, :], reference.rlu[1, :]), rmse = rmse(longwave_up[1, :], reference.rlu[1, :])),
@@ -326,7 +326,7 @@ function rfmip_markdown(results, benchmark)
     push!(lines, "Heating-rate RMSEs are weighted by the cube root of pressure within the range " *
                  "(the CKDMIP statistic); fluxes in W m⁻², heating rates in K day⁻¹. Gated runs use the " *
                  "dry column-amount convention `nᵈ = Δp / (g mᵈ)` of the ecCKD tables; the rows marked " *
-                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`.")
+                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χH₂O))`.")
     for r in results
         s = r.statistics
         m = r.moist_convention_statistics

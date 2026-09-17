@@ -12,12 +12,12 @@ The constants are the module's `PLANCK_CONSTANT`, `SPEED_OF_LIGHT` and
 `BOLTZMANN_CONSTANT` (CODATA 2018).
 """
 @inline function planck_wavenumber(T::NF, ν̃::NF) where NF
-    h   = NF(PLANCK_CONSTANT)     # [J s]
-    c   = NF(SPEED_OF_LIGHT)      # [m s⁻¹]
-    k_B = NF(BOLTZMANN_CONSTANT)  # [J K⁻¹]
-    ν_m = ν̃ * 100              # cm⁻¹ → m⁻¹
+    h  = NF(PLANCK_CONSTANT)     # [J s]
+    c  = NF(SPEED_OF_LIGHT)      # [m s⁻¹]
+    kᴮ = NF(BOLTZMANN_CONSTANT)  # [J K⁻¹]
+    ν̃ₘ = ν̃ * 100                 # cm⁻¹ → m⁻¹
     # Radiance per-m⁻¹, multiply by 100 to convert to per-cm⁻¹.
-    return NF(100) * 2 * h * ν_m^3 * c^2 / (exp(h * c * ν_m / (k_B * T)) - 1)
+    return NF(100) * 2 * h * ν̃ₘ^3 * c^2 / (exp(h * c * ν̃ₘ / (kᴮ * T)) - 1)
 end
 
 @inline planck_wavenumber(T, ν̃) = planck_wavenumber(promote(T, ν̃)...)

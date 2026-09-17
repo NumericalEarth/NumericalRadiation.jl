@@ -8,6 +8,8 @@ using NumericalRadiation
 using NCDatasets
 
 constants = PhysicalConstants()
+S₀ = constants.solar_constant   # solar constant, W m⁻²
+μ₀ = 0.55                       # cosine of the solar zenith angle
 
 model_name = get(ENV, "ECCKD_MODEL", "32x32")
 spec = reference_ecckd_model_spec(model_name)
@@ -40,7 +42,7 @@ atmosphere = ColumnAtmosphere(;
         co2 = fill(420.0e-6, Nz) .* air_column,
     ),
     surface = (temperature = temperature_interfaces[end],),
-    geometry = (cos_zenith = 0.55,),
+    geometry = (cos_zenith = μ₀,),
     constants,
 )
 
@@ -87,7 +89,7 @@ radiative_fluxes!(
     shortwave,
     atmosphere,
     ShortwaveBoundaryConditions(
-        toa_shortwave_down = constants.solar_constant * atmosphere.geometry.cos_zenith,
+        toa_shortwave_down = S₀ * μ₀,
         surface_albedo = 0.15,
     ),
 )

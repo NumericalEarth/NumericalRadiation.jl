@@ -503,13 +503,15 @@ end
 
 @inline function interpolate_table(table::AbstractArray{<:Any, 4}, gpoint, j, stencil)
     (i₀ᵖ, i₁ᵖ, wᵖ), (i₀ᵀ, i₁ᵀ, wᵀ) = stencil
-    c00 = table[gpoint, j, i₀ᵖ, i₀ᵀ]
-    c10 = table[gpoint, j, i₁ᵖ, i₀ᵀ]
-    c01 = table[gpoint, j, i₀ᵖ, i₁ᵀ]
-    c11 = table[gpoint, j, i₁ᵖ, i₁ᵀ]
-    cp0 = c00 + wᵖ * (c10 - c00)
-    cp1 = c01 + wᵖ * (c11 - c01)
-    return cp0 + wᵀ * (cp1 - cp0)
+    # Corner values c₍pressure node₎₍temperature node₎, interpolated first in
+    # pressure (c₀, c₁ at the two temperature nodes) and then in temperature.
+    c₀₀ = table[gpoint, j, i₀ᵖ, i₀ᵀ]
+    c₁₀ = table[gpoint, j, i₁ᵖ, i₀ᵀ]
+    c₀₁ = table[gpoint, j, i₀ᵖ, i₁ᵀ]
+    c₁₁ = table[gpoint, j, i₁ᵖ, i₁ᵀ]
+    c₀ = c₀₀ + wᵖ * (c₁₀ - c₀₀)
+    c₁ = c₀₁ + wᵖ * (c₁₁ - c₀₁)
+    return c₀ + wᵀ * (c₁ - c₀)
 end
 
 @inline function interpolate_source_table(table::AbstractMatrix, gpoint, temperature_bracket)
@@ -521,22 +523,24 @@ end
     (i₀ᵖ, i₁ᵖ, wᵖ), (i₀ᵀ, i₁ᵀ, wᵀ) = stencil
     i₀ᴴ, i₁ᴴ, wᴴ = water_vapor_bracket
 
-    c000 = table[gpoint, i₀ᵖ, i₀ᵀ, i₀ᴴ]
-    c100 = table[gpoint, i₁ᵖ, i₀ᵀ, i₀ᴴ]
-    c010 = table[gpoint, i₀ᵖ, i₁ᵀ, i₀ᴴ]
-    c110 = table[gpoint, i₁ᵖ, i₁ᵀ, i₀ᴴ]
-    c001 = table[gpoint, i₀ᵖ, i₀ᵀ, i₁ᴴ]
-    c101 = table[gpoint, i₁ᵖ, i₀ᵀ, i₁ᴴ]
-    c011 = table[gpoint, i₀ᵖ, i₁ᵀ, i₁ᴴ]
-    c111 = table[gpoint, i₁ᵖ, i₁ᵀ, i₁ᴴ]
+    # Corner values c₍pressure₎₍temperature₎₍H₂O₎, interpolated in pressure,
+    # then temperature (c₀₀ … c₁₁ at the remaining nodes), then H₂O (c₀, c₁).
+    c₀₀₀ = table[gpoint, i₀ᵖ, i₀ᵀ, i₀ᴴ]
+    c₁₀₀ = table[gpoint, i₁ᵖ, i₀ᵀ, i₀ᴴ]
+    c₀₁₀ = table[gpoint, i₀ᵖ, i₁ᵀ, i₀ᴴ]
+    c₁₁₀ = table[gpoint, i₁ᵖ, i₁ᵀ, i₀ᴴ]
+    c₀₀₁ = table[gpoint, i₀ᵖ, i₀ᵀ, i₁ᴴ]
+    c₁₀₁ = table[gpoint, i₁ᵖ, i₀ᵀ, i₁ᴴ]
+    c₀₁₁ = table[gpoint, i₀ᵖ, i₁ᵀ, i₁ᴴ]
+    c₁₁₁ = table[gpoint, i₁ᵖ, i₁ᵀ, i₁ᴴ]
 
-    c00 = c000 + wᵖ * (c100 - c000)
-    c10 = c010 + wᵖ * (c110 - c010)
-    c01 = c001 + wᵖ * (c101 - c001)
-    c11 = c011 + wᵖ * (c111 - c011)
-    ct0 = c00 + wᵀ * (c10 - c00)
-    ct1 = c01 + wᵀ * (c11 - c01)
-    return ct0 + wᴴ * (ct1 - ct0)
+    c₀₀ = c₀₀₀ + wᵖ * (c₁₀₀ - c₀₀₀)
+    c₁₀ = c₀₁₀ + wᵖ * (c₁₁₀ - c₀₁₀)
+    c₀₁ = c₀₀₁ + wᵖ * (c₁₀₁ - c₀₀₁)
+    c₁₁ = c₀₁₁ + wᵖ * (c₁₁₁ - c₀₁₁)
+    c₀ = c₀₀ + wᵀ * (c₁₀ - c₀₀)
+    c₁ = c₀₁ + wᵀ * (c₁₁ - c₀₁)
+    return c₀ + wᴴ * (c₁ - c₀)
 end
 
 # The temperature is converted to the model precision before bracketing, as

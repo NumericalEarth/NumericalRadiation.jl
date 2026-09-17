@@ -34,9 +34,9 @@ pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 nᵈ = diff(pᵢ) ./ (g * mᵈ)                                # mol m⁻²
 
-Tₛ = 300
-T  = clamp.(Tₛ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tₛ)
-Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
+Tˢ = 300
+T  = clamp.(Tˢ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tˢ)
+Tᵢ = clamp.(Tˢ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tˢ)
 nothing #hide
 
 # The temperature profile is an idealized lapse rate capped at 200 K aloft; it
@@ -51,7 +51,7 @@ function solve_column(χCO₂)
         gases = (composite = nᵈ,
                  h2o = 0.006 .* nᵈ,
                  co2 = χCO₂ .* nᵈ),
-        surface = (temperature = Tₛ,),
+        surface = (temperature = Tˢ,),
         geometry = (cos_zenith = 0.5,),
         constants)
 
@@ -69,7 +69,7 @@ function solve_column(χCO₂)
                              shortwave_down = zeros(Nz + 1))
 
     optical_properties!(longwave, shortwave, gas_optics, atmosphere)
-    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
+    surface_emission = surface_longwave_emission(gas_optics, Tˢ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
                       LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
     return (; olr = fluxes.longwave_up[1], up = fluxes.longwave_up)

@@ -28,9 +28,9 @@ Nz = 48
 pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
-Tₛ = 300
-T  = clamp.(Tₛ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tₛ)
-Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
+Tˢ = 300
+T  = clamp.(Tˢ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tˢ)
+Tᵢ = clamp.(Tˢ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tˢ)
 
 χH₂O = @. 0.015 * (p / 101_325)^3 + 3e-6
 χO₃  = @. 3e-8 + 5e-6 * (2_000 / p)
@@ -55,7 +55,7 @@ atmosphere = ColumnAtmosphere(;
              n2o = 330e-9 .* nᵈ,
              cfc11 = 0,
              cfc12 = 0),
-    surface = (temperature = Tₛ,),
+    surface = (temperature = Tˢ,),
     geometry = (cos_zenith = 0.5,))
 nothing #hide
 
@@ -161,7 +161,7 @@ nothing #hide
 # insolation over an idealized dark surface.
 
 longwave_boundary = LongwaveBoundaryConditions(
-    surface_longwave_up = surface_longwave_emission(gas_optics, Tₛ))
+    surface_longwave_up = surface_longwave_emission(gas_optics, Tˢ))
 shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 340.25,
                                                  surface_albedo = 0.06)
 
@@ -190,7 +190,7 @@ radiative_fluxes!(allsky_fluxes, CloudOverlapShortwave(overlap = :adding),
 
 clear_Ṫ = zeros(Nz)
 allsky_Ṫ = zeros(Nz)
-heating_rates!(clear_Ṫ, clear_fluxes, atmosphere)     # g and cₚ from atmosphere.constants
+heating_rates!(clear_Ṫ, clear_fluxes, atmosphere)     # g and cᵖ from atmosphere.constants
 heating_rates!(allsky_Ṫ, allsky_fluxes, atmosphere)
 nothing #hide
 

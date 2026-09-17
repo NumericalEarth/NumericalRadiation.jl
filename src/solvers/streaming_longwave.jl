@@ -19,7 +19,7 @@ $(TYPEDEF)
 
 Per-g-point surface longwave source of an ecCKD gas-optics model at one
 surface `temperature`, with the surface `emissivity` folded in:
-`e[gpoint] = ε B(Tₛ)`, where `B` is the model's [`longwave_source`](@ref) at
+`e[gpoint] = ε B(Tˢ)`, where `B` is the model's [`longwave_source`](@ref) at
 that g point in its per-unit-weight flux convention. The Planck source-table bracket is
 taken once at construction, so indexing is one table interpolation per
 g point, and construction inside a kernel is allocation-free.
@@ -47,9 +47,9 @@ Surface longwave source of `model` at `temperature` (K) scaled by
 @inline function TabulatedSurfaceEmission(model::EcCKDModels{FT},
                                           temperature;
                                           emissivity = one(FT)) where FT
-    Tₛ = FT(temperature)
-    bracket = source_table_bracket(model, Tₛ)
-    return TabulatedSurfaceEmission{FT, typeof(model), typeof(bracket)}(model, Tₛ, FT(emissivity), bracket)
+    Tˢ = FT(temperature)
+    bracket = source_table_bracket(model, Tˢ)
+    return TabulatedSurfaceEmission{FT, typeof(model), typeof(bracket)}(model, Tˢ, FT(emissivity), bracket)
 end
 
 @inline Base.getindex(e::TabulatedSurfaceEmission, gpoint::Integer) =

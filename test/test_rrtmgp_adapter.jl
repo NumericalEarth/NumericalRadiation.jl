@@ -12,7 +12,7 @@ using ClimaComms
 #    divides the hydrostatic Δp by the moist molar mass
 #    `m_air = molmass_dryair + molmass_water * vmr_h2o`.
 #    The adapter must fill `layerdata[1, :, :]` (col_dry) with exactly that
-#    convention, not a (1 - χ_H₂O) mass-fraction approximation.
+#    convention, not a (1 - χH₂O) mass-fraction approximation.
 #
 # 2. ORIENTATION: RRTMGP's two-stream kernels are bottom-at-index-1 (surface
 #    source/albedo at level 1; longwave2stream.jl), while ColumnAtmosphere is
@@ -95,7 +95,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             expected = Δp * params.avogad / (1e4 * m_air * params.grav)
             @test state.layerdata[1, k_reversed, 1] ≈ expected rtol = 1e-12
-            # Guard against regressing to the (1 - χ_H₂O) mass-fraction form:
+            # Guard against regressing to the (1 - χH₂O) mass-fraction form:
             # for the humid bottom layer the two formulas differ materially.
             wrong = (Δp / params.grav) * (1 - water_vapor[k]) /
                     params.molmass_dryair * params.avogad / 1e4

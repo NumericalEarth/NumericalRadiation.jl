@@ -44,7 +44,7 @@ Fields:
 - `T_ref`: Reference temperature for absorption coefficient fits [K]
 - `pv_ref`: Reference saturation water-vapor pressure at T_ref [Pa]
 - `σ_cont`: Temperature-scaling exponent for the continuum (Mlawer et al. 1997) [K⁻¹]
-- `water_vapor_molar_mass_ratio`: Water-to-dry-air molar mass ratio ε = mᵛ / mᵈ of the vapor
+- `water_vapor_molar_mass_ratio`: Water-to-dry-air molar mass ratio mᵛ/mᵈ of the vapor
   partial pressure
 - `carbon_dioxide_molar_mass_ratio`: CO₂-to-dry-air molar mass ratio converting ppmv to a
   mass mixing ratio
@@ -131,24 +131,24 @@ function solve_longwave!(temperature_tendency::AbstractVector,
 
     T  = profile.temperature
     q  = profile.humidity
-    pₛ = profile.surface_pressure
+    pˢ = profile.surface_pressure
     CO₂ = NF(profile.CO₂)
     Nz = length(T)
 
-    σ_SB = NF(constants.stefan_boltzmann)
-    cₚ   = NF(constants.heat_capacity)
-    g    = NF(constants.gravity)
+    σ  = NF(constants.stefan_boltzmann)
+    cᵖ = NF(constants.heat_capacity)
+    g  = NF(constants.gravity)
 
-    ϵ_ocean = NF(surface.ocean_emissivity)
-    ϵ_land  = NF(surface.land_emissivity)
+    ε_ocean = NF(surface.ocean_emissivity)
+    ε_land  = NF(surface.land_emissivity)
     T_ocean = NF(surface.sea_surface_temperature)
     T_land = NF(surface.land_surface_temperature)
     land_fraction = NF(surface.land_fraction)
 
-    # Broadband Stefan–Boltzmann surface upward flux (for diagnostics).
-    U_surface_ocean = ifelse(isfinite(T_ocean), ϵ_ocean * σ_SB * T_ocean^4, zero(NF))
-    U_surface_land  = ifelse(isfinite(T_land), ϵ_land  * σ_SB * T_land^4, zero(NF))
-    U_surface_broadband = (1 - land_fraction) * U_surface_ocean + land_fraction * U_surface_land
+    # Broadband Stefan–Boltzmann surface upward flux ℐꜛ = ε σ T⁴ (for diagnostics).
+    ℐꜛ_surface_ocean = ifelse(isfinite(T_ocean), ε_ocean * σ * T_ocean^4, zero(NF))
+    ℐꜛ_surface_land  = ifelse(isfinite(T_land), ε_land  * σ * T_land^4, zero(NF))
+    ℐꜛ_surface_broadband = (1 - land_fraction) * ℐꜛ_surface_ocean + land_fraction * ℐꜛ_surface_land
 
     # Wavenumber quadrature.
     Δν̃ = (scheme.wavenumber_max - scheme.wavenumber_min) / NF(scheme.Nwavenumbers - 1)
@@ -162,66 +162,66 @@ function solve_longwave!(temperature_tendency::AbstractVector,
         B_surface_ocean = ifelse(isfinite(T_ocean), planck_wavenumber(T_ocean, ν̃), zero(NF))
         B_surface_land  = ifelse(isfinite(T_land), planck_wavenumber(T_land, ν̃), zero(NF))
 
-        # Hemispherical surface flux πB(T_sfc), land–sea weighted by emissivity ϵ.
+        # Hemispherical surface flux πB(Tˢ), land–sea weighted by emissivity ε.
         # ℐꜛˡʷ (surface, spectral bin) [W m⁻²]:
-        U_spectral::NF = Δν̃ * NF(π) * (
-            (1 - land_fraction) * ϵ_ocean * B_surface_ocean +
-             land_fraction * ϵ_land  * B_surface_land
+        ℐꜛ_spectral::NF = Δν̃ * NF(π) * (
+            (1 - land_fraction) * ε_ocean * B_surface_ocean +
+             land_fraction * ε_land  * B_surface_land
         )
 
         # ---- Upward sweep: k = Nz → 1 (ℐꜛ) --------------------------
-        U::NF = U_spectral
+        ℐꜛ::NF = ℐꜛ_spectral
         # Surface upward flux enters the bottom of the lowest layer.
-        temperature_tendency[Nz] += surface_flux_to_tendency(U / cₚ, profile, geometry, constants)
+        temperature_tendency[Nz] += surface_flux_to_tendency(ℐꜛ / cᵖ, profile, geometry, constants)
 
         for k in Nz:-1:1
-            Δτ_k  = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
-            transmittance_k  = exp(-Δτ_k)
-            B_k   = planck_wavenumber(T[k], ν̃)
-            U_new::NF = U * transmittance_k + Δν̃ * NF(π) * B_k * (1 - transmittance_k)
+            Δτ_k = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pˢ, geometry, scheme, g)
+            𝒯_k  = exp(-Δτ_k)
+            B_k  = planck_wavenumber(T[k], ν̃)
+            ℐꜛ_new::NF = ℐꜛ * 𝒯_k + Δν̃ * NF(π) * B_k * (1 - 𝒯_k)
 
             if k > 1
-                # U_new leaves layer k at the top and enters layer k-1 at the bottom.
-                temperature_tendency[k]     -= flux_to_tendency(U_new / cₚ, profile, geometry, constants, k)
-                temperature_tendency[k - 1] += flux_to_tendency(U_new / cₚ, profile, geometry, constants, k - 1)
+                # ℐꜛ_new leaves layer k at the top and enters layer k-1 at the bottom.
+                temperature_tendency[k]     -= flux_to_tendency(ℐꜛ_new / cᵖ, profile, geometry, constants, k)
+                temperature_tendency[k - 1] += flux_to_tendency(ℐꜛ_new / cᵖ, profile, geometry, constants, k - 1)
             else
-                # k == 1: U_new is OLR escaping to space.
-                temperature_tendency[1] -= flux_to_tendency(U_new / cₚ, profile, geometry, constants, 1)
-                outgoing_longwave += U_new
+                # k == 1: ℐꜛ_new is OLR escaping to space.
+                temperature_tendency[1] -= flux_to_tendency(ℐꜛ_new / cᵖ, profile, geometry, constants, 1)
+                outgoing_longwave += ℐꜛ_new
             end
-            U = U_new
+            ℐꜛ = ℐꜛ_new
         end
 
         # ---- Downward sweep: k = 1 → Nz (ℐꜜ) ------------------------
         # TOA boundary: ℐꜜˡʷ(TOA) = 0 (no longwave from space).
-        D::NF = zero(NF)
+        ℐꜜ::NF = zero(NF)
 
         for k in 1:(Nz - 1)
-            Δτ_k  = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
-            transmittance_k  = exp(-Δτ_k)
-            B_k   = planck_wavenumber(T[k], ν̃)
-            D_new::NF = D * transmittance_k + Δν̃ * NF(π) * B_k * (1 - transmittance_k)
+            Δτ_k = williams_optical_depth_increment(k, ν̃, CO₂, T, q, pˢ, geometry, scheme, g)
+            𝒯_k  = exp(-Δτ_k)
+            B_k  = planck_wavenumber(T[k], ν̃)
+            ℐꜜ_new::NF = ℐꜜ * 𝒯_k + Δν̃ * NF(π) * B_k * (1 - 𝒯_k)
 
-            temperature_tendency[k]     -= flux_to_tendency(D_new / cₚ, profile, geometry, constants, k)
-            temperature_tendency[k + 1] += flux_to_tendency(D_new / cₚ, profile, geometry, constants, k + 1)
-            D = D_new
+            temperature_tendency[k]     -= flux_to_tendency(ℐꜜ_new / cᵖ, profile, geometry, constants, k)
+            temperature_tendency[k + 1] += flux_to_tendency(ℐꜜ_new / cᵖ, profile, geometry, constants, k + 1)
+            ℐꜜ = ℐꜜ_new
         end
 
         # Surface-adjacent layer: the downward flux that reaches the surface.
-        Δτ_bottom = williams_optical_depth_increment(Nz, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
-        transmittance_bottom = exp(-Δτ_bottom)
-        B_bottom  = planck_wavenumber(T[Nz], ν̃)
-        D_surface::NF = D * transmittance_bottom + Δν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
+        Δτ_bottom = williams_optical_depth_increment(Nz, ν̃, CO₂, T, q, pˢ, geometry, scheme, g)
+        𝒯_bottom = exp(-Δτ_bottom)
+        B_bottom = planck_wavenumber(T[Nz], ν̃)
+        ℐꜜ_surface::NF = ℐꜜ * 𝒯_bottom + Δν̃ * NF(π) * B_bottom * (1 - 𝒯_bottom)
 
-        temperature_tendency[Nz] -= surface_flux_to_tendency(D_surface / cₚ, profile, geometry, constants)
-        surface_longwave_down += D_surface
+        temperature_tendency[Nz] -= surface_flux_to_tendency(ℐꜜ_surface / cᵖ, profile, geometry, constants)
+        surface_longwave_down += ℐꜜ_surface
     end
 
-    diagnostics.outgoing_longwave        = outgoing_longwave
-    diagnostics.surface_longwave_down    = surface_longwave_down
-    diagnostics.ocean_surface_longwave_up = U_surface_ocean
-    diagnostics.land_surface_longwave_up  = U_surface_land
-    diagnostics.surface_longwave_up       = U_surface_broadband
+    diagnostics.outgoing_longwave         = outgoing_longwave
+    diagnostics.surface_longwave_down     = surface_longwave_down
+    diagnostics.ocean_surface_longwave_up = ℐꜛ_surface_ocean
+    diagnostics.land_surface_longwave_up  = ℐꜛ_surface_land
+    diagnostics.surface_longwave_up       = ℐꜛ_surface_broadband
 
     return nothing
 end

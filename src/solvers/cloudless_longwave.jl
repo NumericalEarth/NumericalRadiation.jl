@@ -332,7 +332,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
 
     # No scattering: sweep down from the top of the atmosphere, then up from
     # the surface, where the upwelling flux is the surface emission plus the
-    # reflected downwelling flux, `up = ε B(Tₛ) + α down`. The interface-source
+    # reflected downwelling flux, `up = ε B(Tˢ) + α down`. The interface-source
     # (ecRad half-level Planck) layers run through `streaming_longwave_fluxes!`
     # one g point at a time, so a host kernel streaming that function directly
     # reproduces this solver bit for bit.

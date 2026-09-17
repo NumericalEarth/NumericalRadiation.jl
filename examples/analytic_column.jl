@@ -43,8 +43,9 @@ column_integrated_heating = sum(heating .* grid.σ_thick) *
                             profile.surface_pressure *
                             column.physical_constants.heat_capacity /
                             column.physical_constants.gravity
-toa_down = column.physical_constants.solar_constant * surface.cos_zenith
-top_net_down = toa_down - toa_net
+S₀ = column.physical_constants.solar_constant
+μ₀ = surface.cos_zenith
+top_net_down = S₀ * μ₀ - toa_net
 surface_net_down = surface_longwave_net + surface_shortwave_net
 energy_closure_residual = column_integrated_heating - (top_net_down - surface_net_down)
 

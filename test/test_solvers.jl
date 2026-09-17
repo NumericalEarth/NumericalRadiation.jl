@@ -13,10 +13,10 @@ using Dates
     T = 300.0f0
     longwave = AnalyticBandLongwave(Float32)
     Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (longwave.Nwavenumbers - 1)
-    pi_B = sum(Float32(π) * planck_wavenumber(T, longwave.wavenumber_min + (i-1)*Δν̃) * Δν̃
-               for i in 1:longwave.Nwavenumbers)
-    σ_SB = 5.670374419f-8
-    @test pi_B ≈ σ_SB * T^4 rtol = 0.01
+    πB = sum(Float32(π) * planck_wavenumber(T, longwave.wavenumber_min + (i-1)*Δν̃) * Δν̃
+             for i in 1:longwave.Nwavenumbers)
+    σ = 5.670374419f-8
+    @test πB ≈ σ * T^4 rtol = 0.01
 end
 
 @testset "planck: monotonic in temperature" begin
@@ -71,7 +71,7 @@ end
     geometry = ColumnGrid(σ_half)
     T = fill(NF(280), Nz)
     q = fill(NF(0.005), Nz)
-    pₛ = NF(100_000)
+    pˢ = NF(100_000)
     g  = PhysicalConstants(NF).gravity
 
     longwave = AnalyticBandLongwave(NF)
@@ -79,10 +79,10 @@ end
     Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (longwave.Nwavenumbers - 1)
 
     for k in 1:Nz
-        Δτ_win      = NumericalRadiation.williams_optical_depth_increment(k, NF(1000), NF(0),   T, q, pₛ, geometry, longwave, g)
-        Δτ_rot      = NumericalRadiation.williams_optical_depth_increment(k, NF(400),  NF(0),   T, q, pₛ, geometry, longwave, g)
-        Δτ_no_CO₂   = NumericalRadiation.williams_optical_depth_increment(k, NF(667),  NF(0),   T, q, pₛ, geometry, longwave, g)
-        Δτ_with_CO₂ = NumericalRadiation.williams_optical_depth_increment(k, NF(667),  NF(280), T, q, pₛ, geometry, longwave, g)
+        Δτ_win      = NumericalRadiation.williams_optical_depth_increment(k, NF(1000), NF(0),   T, q, pˢ, geometry, longwave, g)
+        Δτ_rot      = NumericalRadiation.williams_optical_depth_increment(k, NF(400),  NF(0),   T, q, pˢ, geometry, longwave, g)
+        Δτ_no_CO₂   = NumericalRadiation.williams_optical_depth_increment(k, NF(667),  NF(0),   T, q, pˢ, geometry, longwave, g)
+        Δτ_with_CO₂ = NumericalRadiation.williams_optical_depth_increment(k, NF(667),  NF(280), T, q, pˢ, geometry, longwave, g)
 
         @test Δτ_win > 0
         @test Δτ_rot > Δτ_win
@@ -90,7 +90,7 @@ end
 
         for i in 1:longwave.Nwavenumbers
             ν̃ = longwave.wavenumber_min + (i - 1) * Δν̃
-            @test NumericalRadiation.williams_optical_depth_increment(k, NF(ν̃), NF(0), T, q, pₛ, geometry, longwave, g) >= 0
+            @test NumericalRadiation.williams_optical_depth_increment(k, NF(ν̃), NF(0), T, q, pˢ, geometry, longwave, g) >= 0
         end
     end
 end
@@ -257,8 +257,8 @@ end
     solve_shortwave!(temperature_tendency, diagnostics, scheme, profile, geometry, surface, constants, thermo;
                      transmissivity_scratch = t_scratch)
 
-    D_toa = constants.solar_constant * NF(0.5)
-    @test 0 < diagnostics.surface_shortwave_down < D_toa
+    ℐꜜ_toa = constants.solar_constant * NF(0.5)
+    @test 0 < diagnostics.surface_shortwave_down < ℐꜜ_toa
     @test all(temperature_tendency .> 0)              # heating everywhere
     @test diagnostics.outgoing_shortwave > 0
     @test 0 < diagnostics.albedo < 1
@@ -315,10 +315,10 @@ end
 
 @testset "cosine_solar_zenith: nightside = 0" begin
     t = DateTime(2026, 6, 21, 12, 0, 0)
-    cosθ_noon_equator = cosine_solar_zenith(0.0, 0.0, t)
-    cosθ_midnight = cosine_solar_zenith(π, 0.0, t)
-    @test cosθ_noon_equator > 0.8
-    @test cosθ_midnight ≈ 0 atol = 1e-6
+    μ₀_noon_equator = cosine_solar_zenith(0.0, 0.0, t)
+    μ₀_midnight = cosine_solar_zenith(π, 0.0, t)
+    @test μ₀_noon_equator > 0.8
+    @test μ₀_midnight ≈ 0 atol = 1e-6
 end
 # --- end content of test_zenith.jl ---
 
