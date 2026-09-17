@@ -167,61 +167,68 @@ end
 @inline scattering_asymmetry_at(optics::LongwaveOptics{<:Any, <:AbstractMatrix}, gpoint, k) =
     optics.scattering_asymmetry[gpoint, k]
 
-@inline function no_scattering_longwave_sources(::Type{FT}, τ, source_top, source_bottom) where FT
-    diffusivity = FT(1.66)
-    Dτ = diffusivity * FT(τ)
-    transmittance = exp(-Dτ)
+# Transmittance 𝒯 = e^{-Dτ} and upward and downward emission Sꜛ, Sꜜ of a
+# non-scattering layer whose Planck source is linear in optical depth between
+# B_top and B_bottom, with diffusivity factor D = 1.66 (ecRad's half-level
+# Planck path); the thin-layer limit below τ = 10⁻³ emits Dτ (B_top + B_bottom)/2
+# in each direction.
+@inline function no_scattering_longwave_sources(::Type{FT}, τ, B_top, B_bottom) where FT
+    D = FT(1.66)
+    Dτ = D * FT(τ)
+    𝒯 = exp(-Dτ)
     if τ > FT(1.0e-3)
-        gradient = (FT(source_bottom) - FT(source_top)) / Dτ
-        source_up = gradient + FT(source_top) -
-            transmittance * (gradient + FT(source_bottom))
-        source_down = -gradient + FT(source_bottom) -
-            transmittance * (-gradient + FT(source_top))
-        return transmittance, source_up, source_down
+        ∂B = (FT(B_bottom) - FT(B_top)) / Dτ
+        Sꜛ = ∂B + FT(B_top) - 𝒯 * (∂B + FT(B_bottom))
+        Sꜜ = -∂B + FT(B_bottom) - 𝒯 * (-∂B + FT(B_top))
+        return 𝒯, Sꜛ, Sꜜ
     end
-    source = Dτ * FT(0.5) * (FT(source_top) + FT(source_bottom))
-    return transmittance, source, source
+    S = Dτ * FT(0.5) * (FT(B_top) + FT(B_bottom))
+    return 𝒯, S, S
 end
 
-@inline function longwave_reflectance_transmittance_sources(::Type{FT}, τ, ω, asymmetry,
-                                                            source_top, source_bottom) where FT
-    diffusivity = FT(1.66)
-    scattering = clamp(FT(ω), zero(FT), one(FT))
-    g = clamp(FT(asymmetry), -one(FT), one(FT))
-    factor = (diffusivity * FT(0.5)) * scattering
-    γ₁ = diffusivity - factor * (one(FT) + g)
-    γ₂ = factor * (one(FT) - g)
-    k_exponent = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+# Reflectance ℛ, transmittance 𝒯 and upward and downward emission Sꜛ, Sꜜ of
+# a scattering longwave layer (single-scattering albedo ω, asymmetry factor ĝ)
+# with the hemispheric-mean two-stream coefficients
+#     γ₁ = D - (D/2) ω (1 + ĝ),   γ₂ = (D/2) ω (1 - ĝ),   λ = √((γ₁ - γ₂)(γ₁ + γ₂)),
+# D = 1.66, and a Planck source linear in τ between B_top and B_bottom.
+@inline function longwave_reflectance_transmittance_sources(::Type{FT}, τ, ω, ĝ, B_top, B_bottom) where FT
+    D = FT(1.66)
+    ω = clamp(FT(ω), zero(FT), one(FT))
+    ĝ = clamp(FT(ĝ), -one(FT), one(FT))
+    factor = (D * FT(0.5)) * ω
+    γ₁ = D - factor * (one(FT) + ĝ)
+    γ₂ = factor * (one(FT) - ĝ)
+    λ = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
     τ = max(FT(τ), zero(FT))
     if τ > FT(1.0e-3)
-        exponential = exp(-k_exponent * τ)
-        exponential2 = exponential * exponential
-        inverse_denominator = inv(k_exponent + γ₁ + (k_exponent - γ₁) * exponential2)
-        reflectance = γ₂ * (one(FT) - exponential2) * inverse_denominator
-        transmittance = FT(2) * k_exponent * exponential * inverse_denominator
-        gradient = (FT(source_bottom) - FT(source_top)) / (τ * (γ₁ + γ₂))
-        source_up_top = gradient + FT(source_top)
-        source_up_bottom = gradient + FT(source_bottom)
-        source_down_top = -gradient + FT(source_top)
-        source_down_bottom = -gradient + FT(source_bottom)
-        source_up = source_up_top - reflectance * source_down_top - transmittance * source_up_bottom
-        source_down = source_down_bottom - reflectance * source_up_bottom - transmittance * source_down_top
-        return reflectance, transmittance, source_up, source_down
+        e = exp(-λ * τ)
+        e₂ = e * e
+        inverse_denominator = inv(λ + γ₁ + (λ - γ₁) * e₂)
+        ℛ = γ₂ * (one(FT) - e₂) * inverse_denominator
+        𝒯 = FT(2) * λ * e * inverse_denominator
+        ∂B = (FT(B_bottom) - FT(B_top)) / (τ * (γ₁ + γ₂))
+        Sꜛ_top = ∂B + FT(B_top)
+        Sꜛ_bottom = ∂B + FT(B_bottom)
+        Sꜜ_top = -∂B + FT(B_top)
+        Sꜜ_bottom = -∂B + FT(B_bottom)
+        Sꜛ = Sꜛ_top - ℛ * Sꜜ_top - 𝒯 * Sꜛ_bottom
+        Sꜜ = Sꜜ_bottom - ℛ * Sꜛ_bottom - 𝒯 * Sꜜ_top
+        return ℛ, 𝒯, Sꜛ, Sꜜ
     end
-    reflectance = γ₂ * τ
-    transmittance = (one(FT) - k_exponent * τ) /
-        (one(FT) + τ * (γ₁ - k_exponent))
-    source = (one(FT) - reflectance - transmittance) *
-        FT(0.5) * (FT(source_top) + FT(source_bottom))
-    return reflectance, transmittance, source, source
+    ℛ = γ₂ * τ
+    𝒯 = (one(FT) - λ * τ) / (one(FT) + τ * (γ₁ - λ))
+    S = (one(FT) - ℛ - 𝒯) * FT(0.5) * (FT(B_top) + FT(B_bottom))
+    return ℛ, 𝒯, S, S
 end
 
+# Interface Planck sources `(B_top, B_bottom)` of layer `k`, or the layer
+# source on both interfaces when the optics carry none.
 @inline function longwave_fallback_planck_sources(::Type{FT}, optics, gpoint, k) where FT
     if has_interface_sources(optics)
         return source_top_at(optics, gpoint, k), source_bottom_at(optics, gpoint, k)
     end
-    source = source_at(optics, gpoint, k)
-    return source, source
+    B = source_at(optics, gpoint, k)
+    return B, B
 end
 
 @inline surface_longwave_up_at(boundary_conditions::LongwaveBoundaryConditions{FT}, gpoint) where FT =
@@ -289,10 +296,10 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         for gpoint in 1:number_of_gpoints(optics)
             w = FT(optics.weights[gpoint])
             for k in 1:Nz
-                top, bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
+                B_top, B_bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
                 reflectance[k], transmittance[k], source_up[k], source_down[k] = longwave_reflectance_transmittance_sources(
                         FT, optical_depth_at(optics, gpoint, k), single_scattering_albedo_at(optics, gpoint, k),
-                        scattering_asymmetry_at(optics, gpoint, k), top, bottom)
+                        scattering_asymmetry_at(optics, gpoint, k), B_top, B_bottom)
             end
 
             albedo[Nz + 1] = clamp(surface_longwave_albedo(boundary_conditions, gpoint), zero(FT), one(FT))

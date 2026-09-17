@@ -490,11 +490,11 @@ function assert_inferred_and_allocation_free(model, atmosphere)
     b = @inferred source_table_bracket(model, T)
     τ_lw = @inferred longwave_optical_depth(model, 1, gases, s)
     τ_sw = @inferred shortwave_optical_depth(model, 1, gases, s)
-    τ_r = @inferred rayleigh_optical_depth(model, 1, air)
+    τ_rayleigh = @inferred rayleigh_optical_depth(model, 1, air)
     B = @inferred longwave_source(model, 1, T, b)
     @test typeof(τ_lw) === FT
     @test typeof(τ_sw) === FT
-    @test typeof(τ_r) === FT
+    @test typeof(τ_rayleigh) === FT
     @test typeof(B) === FT
     @inferred layer_gases(atmosphere.gases, names, k)
     # A wider temperature (a Float64 host state on a Float32 model) is
@@ -792,10 +792,10 @@ function assert_streaming_matches_array(model, atmosphere; surface_temperature, 
     @test down == fluxes.longwave_down
     # Reflection is visible: with the same emission but no albedo the surface
     # upwelling flux is smaller by exactly the reflected downwelling flux.
-    up0, down0 = stream_longwave(FT, MatrixLayerOptics(longwave), surface, zero(FT), FT(toa_down),
-                                 model.longwave_weights, Nlongwave_gpoints, Nz)
-    @test down0 == down
-    @test up[end] - up0[end] ≈ FT(surface_albedo) * down[end] rtol = (FT === Float64 ? 1e-10 : 1e-4)
+    up_no_albedo, down_no_albedo = stream_longwave(FT, MatrixLayerOptics(longwave), surface, zero(FT), FT(toa_down),
+                                                   model.longwave_weights, Nlongwave_gpoints, Nz)
+    @test down_no_albedo == down
+    @test up[end] - up_no_albedo[end] ≈ FT(surface_albedo) * down[end] rtol = (FT === Float64 ? 1e-10 : 1e-4)
 
     # A lazy `TabulatedSurfaceEmission` works as the boundary of the array
     # solver directly, in place of its `collect`.
@@ -982,8 +982,8 @@ end
         @test all(k -> isapprox(up[k], B; rtol), 1:Nz + 1)
         @test all(k -> isapprox(down[k], B; rtol), 2:Nz + 1)
         # Emission alone: without reflection the surface flux is only εσT⁴.
-        up0, _ = stream_longwave(FT, layer, surface, zero(FT), zero(FT), model.longwave_weights, 1, Nz)
-        @test up0[end] ≈ FT(0.9) * B rtol = rtol
+        up_no_albedo, _ = stream_longwave(FT, layer, surface, zero(FT), zero(FT), model.longwave_weights, 1, Nz)
+        @test up_no_albedo[end] ≈ FT(0.9) * B rtol = rtol
     end
 end
 
@@ -1052,7 +1052,7 @@ end
 # and (4) zero allocation.
 
 # Shortwave layer-optics functor over plain matrices, the way a host kernel
-# supplies optics: `(gpoint, k) -> (τ_absorption, τ_scattering, asymmetry)`. (The
+# supplies optics: `(gpoint, k) -> (τ_absorption, τ_scattering, ĝ)`. (The
 # longwave `MatrixLayerOptics` above wraps a `LongwaveOptics`; Julia 1.10
 # rejects a second `struct` of the same name in one module.)
 struct ShortwaveMatrixOptics{M}
@@ -1093,14 +1093,14 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     direct_diffuse_transmittance = Vector{FT}(undef, Nz)
     direct_transmittance = Vector{FT}(undef, Nz)
     for k in 1:Nz
-        τ_absorption, τ_scattering, asymmetry = layer_optics(gpoint, k)
+        τ_absorption, τ_scattering, ĝ = layer_optics(gpoint, k)
         τ_absorption = max(FT(τ_absorption), zero(FT))
-        rayleigh_tau = max(FT(τ_scattering), zero(FT))
-        τ_total = τ_absorption + rayleigh_tau
-        ω = τ_total == zero(FT) ? zero(FT) : rayleigh_tau / τ_total
-        g = clamp(FT(asymmetry), -one(FT), one(FT))
+        τ_scattering = max(FT(τ_scattering), zero(FT))
+        τ_total = τ_absorption + τ_scattering
+        ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
+        ĝ = clamp(FT(ĝ), -one(FT), one(FT))
         reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k], direct_transmittance[k] =
-            NumericalRadiation.shortwave_two_stream_layer(FT, μ₀, τ_total, ω, g)
+            NumericalRadiation.shortwave_two_stream_layer(FT, μ₀, τ_total, ω, ĝ)
     end
     flux_direct = Vector{FT}(undef, Nz + 1)
     flux_diffuse = Vector{FT}(undef, Nz + 1)
@@ -1296,9 +1296,9 @@ end
     @test down[end] < S₀
 end
 
-Base.@noinline measure_streaming_shortwave(up, down, layer_optics, μ₀, toa, α_dir, α_dif, weights,
+Base.@noinline measure_streaming_shortwave(up, down, layer_optics, μ₀, toa, α_direct, α_diffuse, weights,
                                            Ngpoints, Nz, scratch) =
-    @allocated streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa, α_dir, α_dif, weights,
+    @allocated streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa, α_direct, α_diffuse, weights,
                                            Ngpoints, Nz, scratch)
 
 @testset "streaming shortwave is inferrable and allocation-free, $FT" for FT in (Float64, Float32)

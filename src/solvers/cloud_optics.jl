@@ -156,10 +156,13 @@ Simple layer-cloud optical model.
 object supporting `getproperty(..., :cloud_water_path)`. Optical depths are
 
 ```text
-τ_lw = longwave_mass_absorption * cloud_water_path
-τ_sw_abs = (1 - ω0) * shortwave_mass_extinction * cloud_water_path
-τ_sw_scat = ω0 * shortwave_mass_extinction * cloud_water_path
+τˡʷ = κˡʷ cloud_water_path
+τˢʷ_absorption = (1 - ω) κˢʷ cloud_water_path
+τˢʷ_scattering = ω κˢʷ cloud_water_path
 ```
+
+with `κˡʷ = longwave_mass_absorption`, `κˢʷ = shortwave_mass_extinction` and
+`ω = shortwave_single_scattering_albedo`.
 
 Fields:
 - `cloud_water_path`: Layer cloud water path, or fallback value when the atmosphere does not
@@ -314,11 +317,11 @@ function cloud_optical_properties!(cloud::CloudOptics{FT},
 
     for k in 1:Nz
         cloud_water_path = FT(cloud_water_path_at(model, atmosphere, k))
-        shortwave_extinction = FT(model.shortwave_mass_extinction) * cloud_water_path
-        ω_shortwave = clamp(FT(model.shortwave_single_scattering_albedo), zero(FT), one(FT))
+        τˢʷ_extinction = FT(model.shortwave_mass_extinction) * cloud_water_path
+        ω = clamp(FT(model.shortwave_single_scattering_albedo), zero(FT), one(FT))
         cloud.longwave_optical_depth[k] = FT(model.longwave_mass_absorption) * cloud_water_path
-        cloud.shortwave_optical_depth[k] = (one(FT) - ω_shortwave) * shortwave_extinction
-        cloud.shortwave_scattering_optical_depth[k] = ω_shortwave * shortwave_extinction
+        cloud.shortwave_optical_depth[k] = (one(FT) - ω) * τˢʷ_extinction
+        cloud.shortwave_scattering_optical_depth[k] = ω * τˢʷ_extinction
         cloud.shortwave_scattering_asymmetry[k] = clamp(FT(model.shortwave_scattering_asymmetry), -one(FT), one(FT))
     end
 
@@ -334,34 +337,34 @@ function fill_liquid_ice_cloud_optics!(cloud::CloudOptics{FT},
         throw(DimensionMismatch("shortwave cloud optical depth must have length Nz"))
 
     for k in 1:Nz
-        liquid = max(FT(layer_property(atmosphere, model.liquid_water_path,
-                                       :liquid_water_path, k)), zero(FT))
-        ice = max(FT(layer_property(atmosphere, model.ice_water_path,
-                                    :ice_water_path, k)), zero(FT))
+        liquid_water_path = max(FT(layer_property(atmosphere, model.liquid_water_path,
+                                                  :liquid_water_path, k)), zero(FT))
+        ice_water_path = max(FT(layer_property(atmosphere, model.ice_water_path,
+                                               :ice_water_path, k)), zero(FT))
         fraction = clamp(FT(layer_property(atmosphere, model.cloud_fraction,
                                            :cloud_fraction, k)), zero(FT), one(FT))
         fraction_scale = scale_by_cloud_fraction ?
             fraction ^ max(FT(model.cloud_fraction_exponent), zero(FT)) :
             one(FT)
-        τˡ_extinction = FT(model.liquid_shortwave_mass_extinction) * liquid
-        τⁱ_extinction = FT(model.ice_shortwave_mass_extinction) * ice
+        τˡ_extinction = FT(model.liquid_shortwave_mass_extinction) * liquid_water_path
+        τⁱ_extinction = FT(model.ice_shortwave_mass_extinction) * ice_water_path
         ωˡ = clamp(FT(model.liquid_shortwave_single_scattering_albedo), zero(FT), one(FT))
         ωⁱ = clamp(FT(model.ice_shortwave_single_scattering_albedo), zero(FT), one(FT))
-        gˡ = clamp(FT(model.liquid_shortwave_scattering_asymmetry), -one(FT), one(FT))
-        gⁱ = clamp(FT(model.ice_shortwave_scattering_asymmetry), -one(FT), one(FT))
+        ĝˡ = clamp(FT(model.liquid_shortwave_scattering_asymmetry), -one(FT), one(FT))
+        ĝⁱ = clamp(FT(model.ice_shortwave_scattering_asymmetry), -one(FT), one(FT))
         τˡ_scattering = ωˡ * τˡ_extinction
         τⁱ_scattering = ωⁱ * τⁱ_extinction
         τ_scattering = τˡ_scattering + τⁱ_scattering
         cloud.longwave_optical_depth[k] = fraction_scale *
-            (FT(model.liquid_longwave_mass_absorption) * liquid +
-             FT(model.ice_longwave_mass_absorption) * ice)
+            (FT(model.liquid_longwave_mass_absorption) * liquid_water_path +
+             FT(model.ice_longwave_mass_absorption) * ice_water_path)
         cloud.shortwave_optical_depth[k] = fraction_scale *
             ((one(FT) - ωˡ) * τˡ_extinction +
              (one(FT) - ωⁱ) * τⁱ_extinction)
         cloud.shortwave_scattering_optical_depth[k] = fraction_scale * τ_scattering
         cloud.shortwave_scattering_asymmetry[k] = τ_scattering == zero(FT) ?
             zero(FT) :
-            (gˡ * τˡ_scattering + gⁱ * τⁱ_scattering) / τ_scattering
+            (ĝˡ * τˡ_scattering + ĝⁱ * τⁱ_scattering) / τ_scattering
     end
 
     return cloud
@@ -427,9 +430,13 @@ Simple layer-aerosol optical model.
 provided by `getproperty(atmosphere, :aerosol_path)`. Optical depths are
 
 ```text
-τ_lw = longwave_mass_absorption * aerosol_path
-τ_sw = shortwave_mass_extinction * aerosol_path
+τˡʷ = κˡʷ aerosol_path
+τˢʷ_absorption = (1 - ω) κˢʷ aerosol_path
+τˢʷ_scattering = ω κˢʷ aerosol_path
 ```
+
+with `κˡʷ = longwave_mass_absorption`, `κˢʷ = shortwave_mass_extinction` and
+`ω = shortwave_single_scattering_albedo`.
 
 Fields:
 - `aerosol_path`: Layer aerosol path, or fallback value when the atmosphere does not provide
@@ -486,12 +493,12 @@ function aerosol_optical_properties!(aerosol::AerosolOptics{FT},
         throw(DimensionMismatch("shortwave aerosol optical depth must have length Nz"))
 
     for k in 1:Nz
-        path = FT(aerosol_path_at(model, atmosphere, k))
-        shortwave_extinction = FT(model.shortwave_mass_extinction) * path
-        ω_shortwave = clamp(FT(model.shortwave_single_scattering_albedo), zero(FT), one(FT))
-        aerosol.longwave_optical_depth[k] = FT(model.longwave_mass_absorption) * path
-        aerosol.shortwave_optical_depth[k] = (one(FT) - ω_shortwave) * shortwave_extinction
-        aerosol.shortwave_scattering_optical_depth[k] = ω_shortwave * shortwave_extinction
+        aerosol_path = FT(aerosol_path_at(model, atmosphere, k))
+        τˢʷ_extinction = FT(model.shortwave_mass_extinction) * aerosol_path
+        ω = clamp(FT(model.shortwave_single_scattering_albedo), zero(FT), one(FT))
+        aerosol.longwave_optical_depth[k] = FT(model.longwave_mass_absorption) * aerosol_path
+        aerosol.shortwave_optical_depth[k] = (one(FT) - ω) * τˢʷ_extinction
+        aerosol.shortwave_scattering_optical_depth[k] = ω * τˢʷ_extinction
         aerosol.shortwave_scattering_asymmetry[k] = clamp(FT(model.shortwave_scattering_asymmetry), -one(FT), one(FT))
     end
 
@@ -589,7 +596,7 @@ weight `cloud_fraction^cloud_fraction_exponent` multiplies both water paths;
 (clamped to `[0, 1]`); and `delta_eddington_scale` removes the
 forward-scattering peak of the combined liquid+ice mixture once with
 `delta_eddington`, after the phases are mixed and before the mixture is
-folded into the layer, as ecRad does (`f = g²` is nonlinear, so scaling the
+folded into the layer, as ecRad does (`f = ĝ²` is nonlinear, so scaling the
 phases separately would differ whenever their asymmetries differ).
 """
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:AbstractMatrix},
@@ -625,47 +632,47 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
         liquid_path = fraction_scale * max(FT(liquid_water_path[k]), zero(FT))
         ice_path = fraction_scale * max(FT(ice_water_path[k]), zero(FT))
         for gpoint in 1:Ngpoints
-            τᵃ = shortwave.optical_depth[gpoint, k]
-            τˢ = shortwave.rayleigh_optical_depth[gpoint, k]
-            g = shortwave.scattering_asymmetry[gpoint, k]
+            τ_absorption = shortwave.optical_depth[gpoint, k]
+            τ_scattering = shortwave.rayleigh_optical_depth[gpoint, k]
+            ĝ = shortwave.scattering_asymmetry[gpoint, k]
 
-            κˡ, ωˡ, gˡ = scaled_phase_optics(liquid_properties, gpoint, liquid_scale, scattering_scale, FT)
-            κⁱ, ωⁱ, gⁱ = scaled_phase_optics(ice_properties, gpoint, ice_scale, scattering_scale, FT)
+            κˡ, ωˡ, ĝˡ = scaled_phase_optics(liquid_properties, gpoint, liquid_scale, scattering_scale, FT)
+            κⁱ, ωⁱ, ĝⁱ = scaled_phase_optics(ice_properties, gpoint, ice_scale, scattering_scale, FT)
 
             if delta_eddington_scale
                 # ecRad removes the forward peak of the whole cloud after every
                 # constituent has been added, so compose the liquid+ice mixture
                 # on its own, scale it once, and fold it into the layer as one
                 # constituent of unit mass path.
-                τᶜᵃ, τᶜˢ, gᶜ = add_scattering_layer(zero(FT), zero(FT), zero(FT), κˡ, ωˡ, gˡ, liquid_path)
-                τᶜᵃ, τᶜˢ, gᶜ = add_scattering_layer(τᶜᵃ, τᶜˢ, gᶜ, κⁱ, ωⁱ, gⁱ, ice_path)
-                τᶜ = τᶜᵃ + τᶜˢ
-                ωᶜ = ifelse(τᶜ == 0, zero(FT), τᶜˢ / τᶜ)
-                τᶜ, ωᶜ, gᶜ = delta_eddington(τᶜ, ωᶜ, gᶜ)
-                τᵃ, τˢ, g = add_scattering_layer(τᵃ, τˢ, g, τᶜ, ωᶜ, gᶜ, one(FT))
+                τᶜ_absorption, τᶜ_scattering, ĝᶜ = add_scattering_layer(zero(FT), zero(FT), zero(FT), κˡ, ωˡ, ĝˡ, liquid_path)
+                τᶜ_absorption, τᶜ_scattering, ĝᶜ = add_scattering_layer(τᶜ_absorption, τᶜ_scattering, ĝᶜ, κⁱ, ωⁱ, ĝⁱ, ice_path)
+                τᶜ = τᶜ_absorption + τᶜ_scattering
+                ωᶜ = ifelse(τᶜ == 0, zero(FT), τᶜ_scattering / τᶜ)
+                τᶜ, ωᶜ, ĝᶜ = delta_eddington(τᶜ, ωᶜ, ĝᶜ)
+                τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, τᶜ, ωᶜ, ĝᶜ, one(FT))
             else
-                τᵃ, τˢ, g = add_scattering_layer(τᵃ, τˢ, g, κˡ, ωˡ, gˡ, liquid_path)
-                τᵃ, τˢ, g = add_scattering_layer(τᵃ, τˢ, g, κⁱ, ωⁱ, gⁱ, ice_path)
+                τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, κˡ, ωˡ, ĝˡ, liquid_path)
+                τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, κⁱ, ωⁱ, ĝⁱ, ice_path)
             end
 
-            shortwave.optical_depth[gpoint, k] = τᵃ
-            shortwave.rayleigh_optical_depth[gpoint, k] = τˢ
-            shortwave.scattering_asymmetry[gpoint, k] = g
+            shortwave.optical_depth[gpoint, k] = τ_absorption
+            shortwave.rayleigh_optical_depth[gpoint, k] = τ_scattering
+            shortwave.scattering_asymmetry[gpoint, k] = ĝ
         end
     end
     return shortwave
 end
 
-# Clamped and scaled (κ, ω, g) of one phase at g point `gpoint` for the mapped
-# scattering loop: κ scaled by the phase's extinction scale, ω and g clamped to
+# Clamped and scaled (κ, ω, ĝ) of one phase at g point `gpoint` for the mapped
+# scattering loop: κ scaled by the phase's extinction scale, ω and ĝ clamped to
 # their physical ranges, and then the scattering scale on ω (clamped so
 # scattering never exceeds extinction).
 @inline function scaled_phase_optics(properties, gpoint, extinction_scale, scattering_scale, ::Type{FT}) where FT
     κ = extinction_scale * FT(properties.mass_extinction_coefficient[gpoint])
     ω = clamp(FT(properties.single_scattering_albedo[gpoint]), zero(FT), one(FT))
-    g = clamp(FT(properties.asymmetry_factor[gpoint]), -one(FT), one(FT))
+    ĝ = clamp(FT(properties.asymmetry_factor[gpoint]), -one(FT), one(FT))
     ω = clamp(ω * scattering_scale, zero(FT), one(FT))
-    return κ, ω, g
+    return κ, ω, ĝ
 end
 
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:AbstractVector},

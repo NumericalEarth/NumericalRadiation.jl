@@ -5,7 +5,7 @@
 # A `SpectralCloudOptics` holds one hydrometeor phase (liquid droplets or ice
 # crystals) already mapped onto the g points of one ecCKD spectral mapping, on
 # a grid of effective-radius nodes. A host kernel brackets the layer's
-# effective radius once, reads the per-g-point `(κ, ω, g)` with
+# effective radius once, reads the per-g-point `(κ, ω, ĝ)` with
 # `cloud_layer_optics`, and folds them into the layer's absorption and
 # scattering optical depth with `add_scattering_layer` (shortwave) or
 # `cloud_absorption_optical_depth` (longwave, where cloud scattering is
@@ -22,7 +22,7 @@ $(TYPEDEF)
 Cloud scattering properties of one hydrometeor phase mapped onto the g points
 of one [`EcCKDSpectralMapping`](@ref), tabulated on `Nradii` effective-radius
 nodes. The mass-extinction coefficient `κ` (m² kg⁻¹), single-scattering albedo
-`ω`, and asymmetry factor `g` have shape `(Ngpoints, Nradii)`; a layer's values are
+`ω`, and asymmetry factor `ĝ` have shape `(Ngpoints, Nradii)`; a layer's values are
 read by bracketing its effective radius with [`effective_radius_bracket`](@ref)
 and interpolating with [`cloud_layer_optics`](@ref). The element type `FT`
 follows the stored arrays, so `Adapt.adapt(Array{Float32}, cloud)` yields a
@@ -70,8 +70,8 @@ function SpectralCloudOptics(FT::DataType,
     radius = Vector{FT}(effective_radius)
     κ = Matrix{FT}(mass_extinction_coefficient)
     ω = Matrix{FT}(single_scattering_albedo)
-    g = Matrix{FT}(asymmetry_factor)
-    return SpectralCloudOptics{FT, typeof(radius), typeof(κ)}(radius, κ, ω, g)
+    ĝ = Matrix{FT}(asymmetry_factor)
+    return SpectralCloudOptics{FT, typeof(radius), typeof(κ)}(radius, κ, ω, ĝ)
 end
 
 """
@@ -119,8 +119,8 @@ function SpectralCloudOptics(FT::DataType,
     radius = [effective_radius]
     κ = reshape(properties.mass_extinction_coefficient, Ngpoints, 1)
     ω = reshape(properties.single_scattering_albedo, Ngpoints, 1)
-    g = reshape(properties.asymmetry_factor, Ngpoints, 1)
-    return SpectralCloudOptics(FT, radius, κ, ω, g)
+    ĝ = reshape(properties.asymmetry_factor, Ngpoints, 1)
+    return SpectralCloudOptics(FT, radius, κ, ω, ĝ)
 end
 
 """
@@ -139,9 +139,9 @@ function Adapt.adapt_structure(to, cloud::SpectralCloudOptics)
     effective_radius = Adapt.adapt(to, cloud.effective_radius)
     κ = Adapt.adapt(to, cloud.mass_extinction_coefficient)
     ω = Adapt.adapt(to, cloud.single_scattering_albedo)
-    g = Adapt.adapt(to, cloud.asymmetry_factor)
+    ĝ = Adapt.adapt(to, cloud.asymmetry_factor)
     FT = eltype(κ)
-    return SpectralCloudOptics{FT, typeof(effective_radius), typeof(κ)}(effective_radius, κ, ω, g)
+    return SpectralCloudOptics{FT, typeof(effective_radius), typeof(κ)}(effective_radius, κ, ω, ĝ)
 end
 
 function Base.show(io::IO, cloud::SpectralCloudOptics{FT}) where FT
@@ -176,7 +176,7 @@ end
 $(TYPEDSIGNATURES)
 
 Mass-extinction coefficient `κ` (m² kg⁻¹), single-scattering albedo `ω`, and
-asymmetry factor `g` of `cloud` at g point `gpoint`, interpolated on the
+asymmetry factor `ĝ` of `cloud` at g point `gpoint`, interpolated on the
 effective-radius bracket `(i₀, i₁, w)` from [`effective_radius_bracket`](@ref).
 On a one-node model (`w = 0`) the node values are returned exactly.
 """
@@ -185,8 +185,8 @@ On a one-node model (`w = 0`) the node values are returned exactly.
     w₀ = one(FT) - w
     κ = w₀ * cloud.mass_extinction_coefficient[gpoint, i₀] + w * cloud.mass_extinction_coefficient[gpoint, i₁]
     ω = w₀ * cloud.single_scattering_albedo[gpoint, i₀] + w * cloud.single_scattering_albedo[gpoint, i₁]
-    g = w₀ * cloud.asymmetry_factor[gpoint, i₀] + w * cloud.asymmetry_factor[gpoint, i₁]
-    return κ, ω, g
+    ĝ = w₀ * cloud.asymmetry_factor[gpoint, i₀] + w * cloud.asymmetry_factor[gpoint, i₁]
+    return κ, ω, ĝ
 end
 
 # A `Nothing` phase has no optics: zero extinction, so that
@@ -197,30 +197,30 @@ end
 $(TYPEDSIGNATURES)
 
 Fold one scattering constituent with mass-extinction coefficient `κ`,
-single-scattering albedo `ω`, asymmetry factor `g_cloud`, and mass path
+single-scattering albedo `ω`, asymmetry factor `ĝ_cloud`, and mass path
 `water_path` (kg m⁻²) into a layer's absorption optical depth `τ_absorption`,
 scattering optical depth `τ_scattering`, and scattering-weighted asymmetry
-factor `asymmetry`, returning the updated triple:
+factor `ĝ`, returning the updated triple:
 
 ```text
-τₐ′ = τₐ + κ (1 - ω) water_path
-τₛ′ = τₛ + κ ω water_path
-g′  = (g τₛ + g_cloud κ ω water_path) / τₛ′,    or 0 when τₛ′ = 0
+τ_absorption′ = τ_absorption + κ (1 - ω) water_path
+τ_scattering′ = τ_scattering + κ ω water_path
+ĝ′ = (ĝ τ_scattering + ĝ_cloud κ ω water_path) / τ_scattering′,    or 0 when τ_scattering′ = 0
 ```
 
-The asymmetry update is evaluated as `g + (g_cloud - g) κ ω water_path / τₛ′`, which
-is the same number and leaves the layer bit-for-bit unchanged when
+The asymmetry update is evaluated as `ĝ + (ĝ_cloud - ĝ) κ ω water_path / τ_scattering′`,
+which is the same number and leaves the layer bit-for-bit unchanged when
 `water_path = 0`. [`add_mapped_cloud_scattering!`](@ref) applies this per phase
 and per g point.
 """
-@inline function add_scattering_layer(τ_absorption, τ_scattering, asymmetry, κ, ω, g_cloud, water_path)
+@inline function add_scattering_layer(τ_absorption, τ_scattering, ĝ, κ, ω, ĝ_cloud, water_path)
     τ_cloud_scattering = κ * ω * water_path
     τ_absorption′ = τ_absorption + κ * (1 - ω) * water_path
     τ_scattering′ = τ_scattering + τ_cloud_scattering
-    asymmetry′ = ifelse(τ_scattering′ == 0,
-                        zero(τ_scattering′),
-                        asymmetry + (g_cloud - asymmetry) * (τ_cloud_scattering / τ_scattering′))
-    return τ_absorption′, τ_scattering′, asymmetry′
+    ĝ′ = ifelse(τ_scattering′ == 0,
+                zero(τ_scattering′),
+                ĝ + (ĝ_cloud - ĝ) * (τ_cloud_scattering / τ_scattering′))
+    return τ_absorption′, τ_scattering′, ĝ′
 end
 
 """
@@ -228,19 +228,19 @@ $(TYPEDSIGNATURES)
 
 Fold `cloud` at g point `gpoint` on the effective-radius bracket from
 [`effective_radius_bracket`](@ref) with mass path `water_path` (kg m⁻²) into
-a layer's `(τ_absorption, τ_scattering, asymmetry)`, returning the updated
+a layer's `(τ_absorption, τ_scattering, ĝ)`, returning the updated
 triple: [`cloud_layer_optics`](@ref) followed by
 [`add_scattering_layer`](@ref). A `Nothing` phase returns the layer
 unchanged, so one shortwave layer functor serves clear and cloudy skies.
 """
-@inline function add_cloud_scattering_layer(τ_absorption, τ_scattering, asymmetry,
+@inline function add_cloud_scattering_layer(τ_absorption, τ_scattering, ĝ,
                                             cloud::SpectralCloudOptics, gpoint, radius_bracket, water_path)
-    κ, ω, g = cloud_layer_optics(cloud, gpoint, radius_bracket)
-    return add_scattering_layer(τ_absorption, τ_scattering, asymmetry, κ, ω, g, water_path)
+    κ, ω, ĝ_cloud = cloud_layer_optics(cloud, gpoint, radius_bracket)
+    return add_scattering_layer(τ_absorption, τ_scattering, ĝ, κ, ω, ĝ_cloud, water_path)
 end
 
-@inline add_cloud_scattering_layer(τ_absorption, τ_scattering, asymmetry,
-                                   ::Nothing, gpoint, radius_bracket, water_path) = (τ_absorption, τ_scattering, asymmetry)
+@inline add_cloud_scattering_layer(τ_absorption, τ_scattering, ĝ,
+                                   ::Nothing, gpoint, radius_bracket, water_path) = (τ_absorption, τ_scattering, ĝ)
 
 """
 $(TYPEDSIGNATURES)

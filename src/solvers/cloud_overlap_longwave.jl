@@ -71,7 +71,7 @@ is still a diagnostic solver, not a bit-for-bit ecRad McICA implementation.
 Fields:
 - `overlap`: Cloud-fraction overlap rule
 - `cloud_fraction_exponent`: Exponent applied to layer cloud fraction before mixing
-- `inhomogeneity_overlap_exponent`: Exponent applied to alpha overlap inside the
+- `inhomogeneity_overlap_exponent`: Exponent applied to the ``α`` overlap inside the
   Tripleclouds inhomogeneity split
 """
 struct CloudOverlapLongwave{FT} <: AbstractRadiativeTransferSolver
@@ -103,12 +103,12 @@ end
 
 function u_overlap_matrix_tripleclouds_alpha!(u::AbstractMatrix{FT},
                                               v::AbstractMatrix{FT},
-                                              alpha,
+                                              α,
                                               inhomogeneity_exponent,
                                               upper_fraction::AbstractVector{FT},
                                               lower_fraction::AbstractVector{FT}) where FT
     v_overlap_matrix_tripleclouds_alpha!(
-        v, alpha, inhomogeneity_exponent, upper_fraction, lower_fraction)
+        v, α, inhomogeneity_exponent, upper_fraction, lower_fraction)
     fill!(u, zero(FT))
     for upper in 1:3, lower in 1:3
         lower_fraction[lower] <= sqrt(eps(FT)) && continue
@@ -117,20 +117,25 @@ function u_overlap_matrix_tripleclouds_alpha!(u::AbstractMatrix{FT},
     return u
 end
 
+# Reflectance, transmittance and upward and downward sources `(ℛ, 𝒯, Sꜛ, Sꜜ)`
+# of layer `k` at g point `gpoint`: the scattering two-stream solution when
+# the optics carry `ω` and `ĝ`, the linear-in-τ Planck path when they carry
+# interface sources, and otherwise the isothermal layer `𝒯 = e^{-τ}`,
+# `S = B (1 - 𝒯)`.
 @inline function longwave_layer_terms(::Type{FT}, optics, gpoint, k) where FT
     τ = optical_depth_at(optics, gpoint, k)
-    top, bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
+    B_top, B_bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
     if has_longwave_scattering(optics)
         return longwave_reflectance_transmittance_sources(
             FT, τ, single_scattering_albedo_at(optics, gpoint, k), scattering_asymmetry_at(optics, gpoint, k),
-            top, bottom)
+            B_top, B_bottom)
     elseif has_interface_sources(optics)
-        transmittance, source_up, source_down = no_scattering_longwave_sources(FT, τ, top, bottom)
-        return zero(FT), transmittance, source_up, source_down
+        𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
+        return zero(FT), 𝒯, Sꜛ, Sꜜ
     end
-    transmittance = exp(-FT(τ))
-    source = FT(source_at(optics, gpoint, k)) * (one(FT) - transmittance)
-    return zero(FT), transmittance, source, source
+    𝒯 = exp(-FT(τ))
+    S = FT(source_at(optics, gpoint, k)) * (one(FT) - 𝒯)
+    return zero(FT), 𝒯, S, S
 end
 
 @inline function longwave_layer_terms_scaled(::Type{FT}, clear, cloudy, scale, gpoint, k) where FT
@@ -138,31 +143,31 @@ end
     τ_cloudy = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
     τ = max(τ_clear + max(FT(scale), zero(FT)) * (τ_cloudy - τ_clear),
             zero(FT))
-    top, bottom = longwave_fallback_planck_sources(FT, clear, gpoint, k)
+    B_top, B_bottom = longwave_fallback_planck_sources(FT, clear, gpoint, k)
 
     if has_longwave_scattering(clear) || has_longwave_scattering(cloudy)
         ω_clear = has_longwave_scattering(clear) ?
             clamp(FT(single_scattering_albedo_at(clear, gpoint, k)), zero(FT), one(FT)) : zero(FT)
         ω_cloudy = has_longwave_scattering(cloudy) ?
             clamp(FT(single_scattering_albedo_at(cloudy, gpoint, k)), zero(FT), one(FT)) : zero(FT)
-        g_clear = has_longwave_scattering(clear) ?
+        ĝ_clear = has_longwave_scattering(clear) ?
             clamp(FT(scattering_asymmetry_at(clear, gpoint, k)), -one(FT), one(FT)) : zero(FT)
-        g_cloudy = has_longwave_scattering(cloudy) ?
+        ĝ_cloudy = has_longwave_scattering(cloudy) ?
             clamp(FT(scattering_asymmetry_at(cloudy, gpoint, k)), -one(FT), one(FT)) : zero(FT)
-        scattering = τ_clear * ω_clear + max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy - τ_clear * ω_clear)
-        moment = τ_clear * ω_clear * g_clear +
-                 max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy * g_cloudy - τ_clear * ω_clear * g_clear)
-        ω = τ <= 0 ? zero(FT) : clamp(scattering / τ, zero(FT), one(FT))
-        asymmetry = scattering <= 0 ? zero(FT) :
-            clamp(moment / scattering, -one(FT), one(FT))
-        return longwave_reflectance_transmittance_sources(FT, τ, ω, asymmetry, top, bottom)
+        τ_scattering = τ_clear * ω_clear + max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy - τ_clear * ω_clear)
+        ĝτ_scattering = τ_clear * ω_clear * ĝ_clear +
+                        max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy * ĝ_cloudy - τ_clear * ω_clear * ĝ_clear)
+        ω = τ <= 0 ? zero(FT) : clamp(τ_scattering / τ, zero(FT), one(FT))
+        ĝ = τ_scattering <= 0 ? zero(FT) :
+            clamp(ĝτ_scattering / τ_scattering, -one(FT), one(FT))
+        return longwave_reflectance_transmittance_sources(FT, τ, ω, ĝ, B_top, B_bottom)
     elseif has_interface_sources(clear)
-        transmittance, source_up, source_down = no_scattering_longwave_sources(FT, τ, top, bottom)
-        return zero(FT), transmittance, source_up, source_down
+        𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
+        return zero(FT), 𝒯, Sꜛ, Sꜜ
     end
-    transmittance = exp(-τ)
-    source = FT(source_at(clear, gpoint, k)) * (one(FT) - transmittance)
-    return zero(FT), transmittance, source, source
+    𝒯 = exp(-τ)
+    S = FT(source_at(clear, gpoint, k)) * (one(FT) - 𝒯)
+    return zero(FT), 𝒯, S, S
 end
 
 function adding_longwave_column!(up::AbstractVector{FT},

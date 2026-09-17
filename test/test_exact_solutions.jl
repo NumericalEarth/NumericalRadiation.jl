@@ -98,8 +98,8 @@ end
 
 @inline (optics::PlanckProfileLayerOptics)(gpoint, k) = (optics.optical_depth[k], optics.source_top[k], optics.source_bottom[k])
 
-# `(gpoint, k) -> (τ_absorption, τ_scattering, asymmetry)` from the gray model:
-# pure absorption `τ = κₛ n[k]`, no Rayleigh scattering, `g = 0`.
+# `(gpoint, k) -> (τ_absorption, τ_scattering, ĝ)` from the gray model:
+# pure absorption `τ = κₛ n[k]`, no Rayleigh scattering, `ĝ = 0`.
 struct GrayShortwaveLayerOptics{M, V}
     model :: M
     amounts :: V
@@ -112,7 +112,7 @@ end
     return (τ_absorption, τ_scattering, zero(τ_absorption))
 end
 
-# `(gpoint, k) -> (τ_absorption, τ_scattering, asymmetry)` prescribed per layer.
+# `(gpoint, k) -> (τ_absorption, τ_scattering, ĝ)` prescribed per layer.
 struct ScatteringLayerOptics{V}
     absorption :: V
     scattering :: V
@@ -445,8 +445,8 @@ end
             scattering = FT[0.3, 1.0, 0.5, 2.0]
             absorption = zeros(FT, Nz)
             tol = tolerances(FT, 1e-10, S₀ * μ₀)
-            for g in (-0.5, 0.0, 0.5, 0.85, 0.95)
-                asymmetry = fill(FT(g), Nz)
+            for ĝ in (-0.5, 0.0, 0.5, 0.85, 0.95)
+                asymmetry = fill(FT(ĝ), Nz)
                 optics = ScatteringLayerOptics(absorption, scattering, asymmetry)
                 up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, Nz)
                 net = down .- up
@@ -462,10 +462,10 @@ end
             μ₀, S₀ = 0.7, 1000.0
             τ = [draw!(rng, 0.05, 1.0) for _ in 1:Nz]
             ω = [draw!(rng, 0.3, 0.95) for _ in 1:Nz]
-            g = [draw!(rng, -0.3, 0.85) for _ in 1:Nz]
+            ĝ = [draw!(rng, -0.3, 0.85) for _ in 1:Nz]
             absorption = FT.((1 .- ω) .* τ)
             scattering = FT.(ω .* τ)
-            asymmetry = FT.(g)
+            asymmetry = FT.(ĝ)
 
             function transmittance_from_below(order)
                 optics = ScatteringLayerOptics(absorption[order], scattering[order], asymmetry[order])

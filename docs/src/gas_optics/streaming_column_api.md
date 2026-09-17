@@ -101,13 +101,13 @@ relative-linear gases may contribute negative optical depth individually).
 [`rayleigh_optical_depth`](@ref) is the model's molar Rayleigh coefficient
 times the layer's molar amount of air. Clouds enter through
 [`SpectralCloudOptics`](@ref): [`effective_radius_bracket`](@ref) once per
-layer and phase, then [`cloud_layer_optics`](@ref) gives `(κ, ω, g)` per g
+layer and phase, then [`cloud_layer_optics`](@ref) gives `(κ, ω, ĝ)` per g
 point, which [`add_scattering_layer`](@ref) folds into the layer's
-`(τ_absorption, τ_scattering, asymmetry)` for the shortwave and
+`(τ_absorption, τ_scattering, ĝ)` for the shortwave and
 [`cloud_absorption_optical_depth`](@ref) adds as pure absorption for the
 longwave; [`add_cloud_scattering_layer`](@ref) is the shortwave pair of calls
 in one. A `Nothing` phase dispatches to no-ops in every one of these
-functions (a zero-extinction `(κ, ω, g)`, an unchanged layer, zero
+functions (a zero-extinction `(κ, ω, ĝ)`, an unchanged layer, zero
 absorption), so the clear-sky and all-sky kernels are the same code.
 
 The kernel packages these calls into two *layer-optics functors* the solvers

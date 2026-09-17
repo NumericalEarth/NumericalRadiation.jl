@@ -160,33 +160,34 @@ $(TYPEDSIGNATURES)
 Delta-Eddington scaling (Joseph, Wiscombe and Weinman 1976) of a layer's optical
 depth, single-scattering albedo and asymmetry factor.
 
-A fraction `f = g²` of the phase function is treated as an unscattered forward
+A fraction `f = ĝ²` of the phase function is treated as an unscattered forward
 peak and removed, and the remaining optics are rescaled so that the transported
-energy is unchanged. Two-stream solutions only resolve weakly anisotropic phase
-functions, so without this the strongly forward-scattering layers that clouds
-produce (`g ≈ 0.85`) are not just inaccurate but non-conservative: the two-stream
-layer solution then creates energy, by as much as 13% of the incident beam at
-`g = 0.95`.
+energy is unchanged,
 
-Backscattering layers have no forward peak to remove, so `g ≤ 0` — including the
-`g = 0` Rayleigh case — passes through unscaled.
+```text
+τ′ = (1 - ω f) τ,    ω′ = (1 - f) ω / (1 - ω f),    ĝ′ = (ĝ - f) / (1 - f).
+```
+
+Two-stream solutions only resolve weakly anisotropic phase
+functions, so without this the strongly forward-scattering layers that clouds
+produce (`ĝ ≈ 0.85`) are not just inaccurate but non-conservative: the two-stream
+layer solution then creates energy, by as much as 13% of the incident beam at
+`ĝ = 0.95`.
+
+Backscattering layers have no forward peak to remove, so `ĝ ≤ 0` — including the
+`ĝ = 0` Rayleigh case — passes through unscaled.
 """
-@inline function shortwave_delta_eddington(::Type{FT},
-                                           optical_depth,
-                                           single_scattering_albedo,
-                                           asymmetry) where FT
-    τ = FT(optical_depth)
-    ω = FT(single_scattering_albedo)
-    g = FT(asymmetry)
-    forward_peak = max(g, zero(FT))^2
+@inline function shortwave_delta_eddington(::Type{FT}, τ, ω, ĝ) where FT
+    τ = FT(τ)
+    ω = FT(ω)
+    ĝ = FT(ĝ)
+    f = max(ĝ, zero(FT))^2
     # A pure forward peak scatters nothing back into either stream, leaving a
-    # purely absorbing layer. Taking it separately also keeps the ω = g = 1
+    # purely absorbing layer. Taking it separately also keeps the ω = ĝ = 1
     # corner, where the rescaling below is 0/0, finite.
-    forward_peak >= one(FT) && return (one(FT) - ω) * τ, zero(FT), zero(FT)
-    scale = one(FT) - ω * forward_peak
-    return scale * τ,
-           (one(FT) - forward_peak) * ω / scale,
-           (g - forward_peak) / (one(FT) - forward_peak)
+    f >= one(FT) && return (one(FT) - ω) * τ, zero(FT), zero(FT)
+    scale = one(FT) - ω * f
+    return scale * τ, (one(FT) - f) * ω / scale, (ĝ - f) / (one(FT) - f)
 end
 
 """
@@ -196,97 +197,85 @@ Delta-Eddington-scale a layer and return its two-stream reflectance and
 transmittance. This is the single entry point every shortwave two-stream path
 uses, so the scaling cannot be skipped by one caller and applied by another.
 """
-@inline function shortwave_two_stream_layer(::Type{FT},
-                                            μ₀,
-                                            optical_depth,
-                                            single_scattering_albedo,
-                                            asymmetry,
-                                            direct_source_limit = Val(:unit)) where FT
-    τ, ω, g = shortwave_delta_eddington(FT, optical_depth, single_scattering_albedo, asymmetry)
-    γ₁, γ₂, γ₃ = shortwave_two_stream_coefficients(FT, μ₀, ω, g)
-    return shortwave_reflectance_transmittance(FT, μ₀, τ, ω,
-                                               γ₁, γ₂, γ₃,
-                                               direct_source_limit)
+@inline function shortwave_two_stream_layer(::Type{FT}, μ₀, τ, ω, ĝ, direct_source_limit = Val(:unit)) where FT
+    τ, ω, ĝ = shortwave_delta_eddington(FT, τ, ω, ĝ)
+    γ₁, γ₂, γ₃ = shortwave_two_stream_coefficients(FT, μ₀, ω, ĝ)
+    return shortwave_reflectance_transmittance(FT, μ₀, τ, ω, γ₁, γ₂, γ₃, direct_source_limit)
 end
 
-@inline function shortwave_two_stream_coefficients(::Type{FT}, μ₀, single_scattering_albedo, asymmetry) where FT
-    factor = FT(0.75) * FT(asymmetry)
-    γ₁ = FT(2) - FT(single_scattering_albedo) * (FT(1.25) + factor)
-    γ₂ = FT(single_scattering_albedo) * (FT(0.75) - factor)
+# Practical-improved-flux-method (Zdunkowski et al. 1980) two-stream
+# coefficients of a layer with single-scattering albedo ω and asymmetry
+# factor ĝ for cosine zenith μ₀:
+#     γ₁ = 2 - ω (1.25 + 0.75 ĝ),   γ₂ = ω (0.75 - 0.75 ĝ),   γ₃ = 0.5 - 0.75 μ₀ ĝ.
+@inline function shortwave_two_stream_coefficients(::Type{FT}, μ₀, ω, ĝ) where FT
+    factor = FT(0.75) * FT(ĝ)
+    γ₁ = FT(2) - FT(ω) * (FT(1.25) + factor)
+    γ₂ = FT(ω) * (FT(0.75) - factor)
     γ₃ = FT(0.5) - FT(μ₀) * factor
     return γ₁, γ₂, γ₃
 end
 
-@inline function shortwave_reflectance_transmittance(::Type{FT},
-                                                     μ₀,
-                                                     optical_depth,
-                                                     single_scattering_albedo,
-                                                     γ₁,
-                                                     γ₂,
-                                                     γ₃,
+# Diffuse reflectance ℛ and transmittance 𝒯, direct-beam reflectance ℛ⁰ and
+# direct-to-diffuse transmittance 𝒯⁰, and direct transmittance 𝒟 = e^{-τ/μ₀}
+# of one layer (Meador and Weaver 1980, as written in ecRad), with
+# λ = √((γ₁ - γ₂)(γ₁ + γ₂)) the two-stream eigenvalue.
+@inline function shortwave_reflectance_transmittance(::Type{FT}, μ₀, τ, ω, γ₁, γ₂, γ₃,
                                                      direct_source_limit = Val(:unit)) where FT
     γ₄ = one(FT) - γ₃
     α₁ = γ₁ * γ₄ + γ₂ * γ₃
     α₂ = γ₁ * γ₃ + γ₂ * γ₄
-    k_exponent = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
-    μ₀_local = FT(μ₀)
-    if abs(one(FT) - k_exponent * μ₀_local) < FT(1000) * eps(FT)
-        μ₀_local *= one(FT) - FT(10) * eps(FT)
+    λ = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+    μ₀ = FT(μ₀)
+    if abs(one(FT) - λ * μ₀) < FT(1000) * eps(FT)
+        μ₀ *= one(FT) - FT(10) * eps(FT)
     end
 
-    τ = max(FT(optical_depth), zero(FT))
-    τ_over_μ₀ = max(τ / μ₀_local, zero(FT))
-    direct = exp(-τ_over_μ₀)
-    exponential = exp(-k_exponent * τ)
-    exponential2 = exponential * exponential
-    two_k_exponential = FT(2) * k_exponent * exponential
+    τ = max(FT(τ), zero(FT))
+    τ_over_μ₀ = max(τ / μ₀, zero(FT))
+    𝒟 = exp(-τ_over_μ₀)
+    e = exp(-λ * τ)
+    e₂ = e * e
 
     # In the conservative limit ω → 1 the two-stream coefficients satisfy
-    # γ₁ → γ₂, so k → 0 (held at √1e-12 above) and every reflectance and
-    # transmittance below is an O(k) result. Written as ecRad does, with
-    # `1 - e^{-2kτ}` and `k + γ₁ + (k - γ₁) e^{-2kτ}`, each is the difference
-    # of O(1) terms, and the relative rounding error `eps / (2kτ)` reaches 1e-10
+    # γ₁ → γ₂, so λ → 0 (held at √1e-12 above) and every reflectance and
+    # transmittance below is an O(λ) result. Written as ecRad does, with
+    # `1 - e^{-2λτ}` and `λ + γ₁ + (λ - γ₁) e^{-2λτ}`, each is the difference
+    # of O(1) terms, and the relative rounding error `eps / (2λτ)` reaches 1e-10
     # in Float64 and a few percent in Float32, breaking energy conservation of
     # non-absorbing layers. The same expressions rearranged so that only the
     # accurately computable small differences
-    #     m₁ = 1 - e^{-kτ},   m₂ = 1 - e^{-2kτ},   d = 1 - e^{-τ/μ₀}
+    #     m₁ = 1 - e^{-λτ},   m₂ = 1 - e^{-2λτ},   d = 1 - e^{-τ/μ₀}
     # (from `expm1`) and sums of like-signed terms appear are the same algebra:
-    #     k + γ₁ + (k - γ₁) e²      = k (1 + e²) + γ₁ m₂,
-    #     (1 - kμ₀)(α₂ + kγ₃) - (1 + kμ₀)(α₂ - kγ₃) e² - 2ke(γ₃ - α₂μ₀) D
-    #                               = (α₂ - k²μ₀γ₃) m₂ + k(γ₃ - μ₀α₂)(m₁² + 2e d),
-    #     2ke(γ₄ + α₁μ₀) - D[(1 + kμ₀)(α₁ + kγ₄) - (1 - kμ₀)(α₁ - kγ₄) e²]
-    #                               = k(γ₄ + μ₀α₁)(d (1 + e²) - m₁²) - D(α₁ + k²μ₀γ₄) m₂,
-    # with e = e^{-kτ} and D = e^{-τ/μ₀}, using 1 + e² - 2eD = m₁² + 2e d and
-    # 2e - D(1 + e²) = d(1 + e²) - m₁².
-    one_minus_exponential = -expm1(-k_exponent * τ)
-    one_minus_exponential2 = -expm1(-FT(2) * k_exponent * τ)
-    one_minus_direct = -expm1(-τ_over_μ₀)
-    one_plus_exponential2 = one(FT) + exponential2
-    inverse_denominator = inv(k_exponent * one_plus_exponential2 + γ₁ * one_minus_exponential2)
+    #     λ + γ₁ + (λ - γ₁) e²      = λ (1 + e²) + γ₁ m₂,
+    #     (1 - λμ₀)(α₂ + λγ₃) - (1 + λμ₀)(α₂ - λγ₃) e² - 2λe(γ₃ - α₂μ₀) 𝒟
+    #                               = (α₂ - λ²μ₀γ₃) m₂ + λ(γ₃ - μ₀α₂)(m₁² + 2e d),
+    #     2λe(γ₄ + α₁μ₀) - 𝒟[(1 + λμ₀)(α₁ + λγ₄) - (1 - λμ₀)(α₁ - λγ₄) e²]
+    #                               = λ(γ₄ + μ₀α₁)(d (1 + e²) - m₁²) - 𝒟(α₁ + λ²μ₀γ₄) m₂,
+    # with e = e^{-λτ} and 𝒟 = e^{-τ/μ₀}, using 1 + e² - 2e𝒟 = m₁² + 2e d and
+    # 2e - 𝒟(1 + e²) = d(1 + e²) - m₁².
+    m₁ = -expm1(-λ * τ)
+    m₂ = -expm1(-FT(2) * λ * τ)
+    d = -expm1(-τ_over_μ₀)
+    one_plus_e₂ = one(FT) + e₂
+    inverse_denominator = inv(λ * one_plus_e₂ + γ₁ * m₂)
 
-    reflectance = γ₂ * one_minus_exponential2 * inverse_denominator
-    transmittance = two_k_exponential * inverse_denominator
+    ℛ = γ₂ * m₂ * inverse_denominator
+    𝒯 = FT(2) * λ * e * inverse_denominator
 
-    kμ₀ = k_exponent * μ₀_local
-    direct_factor = μ₀_local * FT(single_scattering_albedo) * inverse_denominator /
-        (one(FT) - kμ₀ * kμ₀)
+    λμ₀ = λ * μ₀
+    direct_factor = μ₀ * FT(ω) * inverse_denominator / (one(FT) - λμ₀ * λμ₀)
 
-    direct_reflectance = direct_factor *
-        ((α₂ - kμ₀ * k_exponent * γ₃) * one_minus_exponential2 +
-         k_exponent * (γ₃ - μ₀_local * α₂) *
-         (one_minus_exponential * one_minus_exponential +
-          FT(2) * exponential * one_minus_direct))
-    direct_diffuse_transmittance = direct_factor *
-        (k_exponent * (γ₄ + μ₀_local * α₁) *
-         (one_minus_direct * one_plus_exponential2 -
-          one_minus_exponential * one_minus_exponential) -
-         direct * (α₁ + kμ₀ * k_exponent * γ₄) * one_minus_exponential2)
+    ℛ⁰ = direct_factor *
+        ((α₂ - λμ₀ * λ * γ₃) * m₂ +
+         λ * (γ₃ - μ₀ * α₂) * (m₁ * m₁ + FT(2) * e * d))
+    𝒯⁰ = direct_factor *
+        (λ * (γ₄ + μ₀ * α₁) * (d * one_plus_e₂ - m₁ * m₁) -
+         𝒟 * (α₁ + λμ₀ * λ * γ₄) * m₂)
 
-    direct_scattering_limit = direct_source_limit isa Val{:horizontal} ?
-        μ₀_local * (one(FT) - direct) : one(FT)
-    direct_reflectance = clamp(direct_reflectance, zero(FT), direct_scattering_limit)
-    direct_diffuse_transmittance = clamp(direct_diffuse_transmittance, zero(FT), direct_scattering_limit - direct_reflectance)
-    return reflectance, transmittance, direct_reflectance, direct_diffuse_transmittance, direct
+    direct_scattering_limit = direct_source_limit isa Val{:horizontal} ? μ₀ * (one(FT) - 𝒟) : one(FT)
+    ℛ⁰ = clamp(ℛ⁰, zero(FT), direct_scattering_limit)
+    𝒯⁰ = clamp(𝒯⁰, zero(FT), direct_scattering_limit - ℛ⁰)
+    return ℛ, 𝒯, ℛ⁰, 𝒯⁰, 𝒟
 end
 
 """
@@ -294,7 +283,7 @@ $(TYPEDEF)
 
 Layer-optics functor over precomputed [`ShortwaveOptics`](@ref) arrays for
 [`streaming_shortwave_fluxes!`](@ref): `(gpoint, k)` returns the tuple
-`(τ_absorption, τ_scattering, asymmetry)` of layer `k`. With `gpoint::Int` the
+`(τ_absorption, τ_scattering, ĝ)` of layer `k`. With `gpoint::Int` the
 functor ignores the g index it is called with and always reads that g point,
 so a single g point can be streamed with `Ngpoints = 1`.
 """
@@ -346,7 +335,7 @@ end
 Compute clear-sky shortwave interface fluxes from precomputed optical depth.
 Arrays in `fluxes.shortwave_up` and `fluxes.shortwave_down` are overwritten.
 When `atmosphere.geometry.cos_zenith` is present, optical depths are scaled by
-the direct-beam path length `1 / cos_zenith`; otherwise the solver preserves the
+the direct-beam path length `1 / μ₀`; otherwise the solver preserves the
 historical vertical-path convention.
 
 Every g point with scattering runs the two-stream adding method of
@@ -354,10 +343,10 @@ Every g point with scattering runs the two-stream adding method of
 path bit for bit. A g point with no scattering at all takes a closed-form
 Beer–Lambert branch instead: the direct beam down the slant path, one
 Lambertian reflection, and the reflected flux attenuated back up along the
-same slant path, `e^{-τ / cos_zenith}`. The adding method treats the reflected
+same slant path, `e^{-τ/μ₀}`. The adding method treats the reflected
 flux as diffuse and attenuates it with the two-stream diffusivity factor 2,
 `e^{-2τ}`, so for such a g point the two paths agree on the downwelling flux
-but differ in the reflected flux except at `cos_zenith = 1/2`, where the two
+but differ in the reflected flux except at `μ₀ = 1/2`, where the two
 attenuations coincide.
 """
 function radiative_fluxes!(fluxes::RadiativeFluxes,

@@ -98,14 +98,14 @@ all-sky solvers keep cloud-region optical properties separate from
   the shortwave adding pass.
 - `:matrix_maximum`: clear and cloudy region fluxes are propagated with a
   two-region maximum-overlap matrix.
-- `:matrix_alpha`: the two-region matrix uses the supplied ecRad-style alpha
+- `:matrix_alpha`: the two-region matrix uses the supplied ecRad-style ``α``
   overlap parameter between adjacent layers.
 - `:tripleclouds_alpha`: cloudy regions are split into optically thinner and
-  thicker Tripleclouds regions, with alpha overlap applied to the matrix pass.
+  thicker Tripleclouds regions, with ``α`` overlap applied to the matrix pass.
 
 [`CloudOverlapLongwave`](@ref) currently supports two overlap modes:
 
 - `:adding`: clear/cloudy longwave reflectance, transmittance, and source terms
   are mixed before the scalar adding pass.
-- `:tripleclouds_alpha`: cloudy longwave regions use the same alpha-overlap
+- `:tripleclouds_alpha`: cloudy longwave regions use the same ``α``-overlap
   Tripleclouds split as the shortwave all-sky path.

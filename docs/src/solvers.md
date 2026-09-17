@@ -59,8 +59,8 @@ The solver has two paths:
 - **Longwave scattering** (opt-in). Supplying `single_scattering_albedo` and
   `scattering_asymmetry` (both, and interface sources are then required)
   activates an ecRad-style two-stream adding path: per-layer reflectance and
-  transmittance from ``\gamma_1 = D - \tfrac{D}{2}\omega(1+g)``,
-  ``\gamma_2 = \tfrac{D}{2}\omega(1-g)``, a downward sweep accumulating the
+  transmittance from ``\gamma_1 = D - \tfrac{D}{2}\omega(1+\hat g)``,
+  ``\gamma_2 = \tfrac{D}{2}\omega(1-\hat g)``, a downward sweep accumulating the
   albedo and source of the stack below each interface, then a downward flux
   pass.
 
@@ -83,9 +83,9 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   albedo, and upward transmission of the reflected beam through the same slant
   optical depths.
 - **With scattering**: an ecRad-compatible two-stream with
-  ``\gamma_1 = 2 - \omega(1.25 + 0.75 g)``,
-  ``\gamma_2 = \omega(0.75 - 0.75 g)``, and
-  ``\gamma_3 = 0.5 - 0.75\,\mu_0 g``, separate direct and diffuse streams, and
+  ``\gamma_1 = 2 - \omega(1.25 + 0.75 \hat g)``,
+  ``\gamma_2 = \omega(0.75 - 0.75 \hat g)``, and
+  ``\gamma_3 = 0.5 - 0.75\,\mu_0 \hat g``, separate direct and diffuse streams, and
   the same adding method as the longwave scattering path. The single-scattering
   albedo and asymmetry of each layer are formed from the absorption and
   scattering optical-depth channels, so cloud and aerosol scattering added to
@@ -93,20 +93,20 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   transported without solver changes.
 
 Every layer is delta-Eddington scaled (Joseph, Wiscombe and Weinman 1976) before
-the two-stream coefficients are formed. A fraction ``f = g^2`` of the phase
+the two-stream coefficients are formed. A fraction ``f = \hat g^2`` of the phase
 function is treated as an unscattered forward peak and removed,
 
 ```math
 \tau' = (1 - \omega f)\,\tau, \qquad
 \omega' = \frac{(1 - f)\,\omega}{1 - \omega f}, \qquad
-g' = \frac{g - f}{1 - f}.
+\hat g' = \frac{\hat g - f}{1 - f}.
 ```
 
 This is not only an accuracy refinement. A two-stream solution resolves the
 phase function too coarsely to stay conservative at cloud-like asymmetries, so
 without the scaling a non-absorbing layer returns more energy than it received —
-by as much as 13 % of the incident beam at ``g = 0.95``. Rayleigh scattering has
-``g = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
+by as much as 13 % of the incident beam at ``\hat g = 0.95``. Rayleigh scattering has
+``\hat g = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
 
 The scaling is applied to the combined gas, cloud, and aerosol optics of a
 layer, as RRTMGP does. ecRad instead defaults to scaling cloud and aerosol

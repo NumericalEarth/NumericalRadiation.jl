@@ -24,8 +24,8 @@ This keeps gas optics, cloud optics, and solvers independently testable.
 
 ```math
 \tau^\mathrm{lw} = \kappa^\mathrm{lw}\,\mathrm{CWP}, \qquad
-\tau^\mathrm{sw}_\mathrm{absorption} = (1 - \omega_0)\,\kappa^\mathrm{sw}\,\mathrm{CWP}, \qquad
-\tau^\mathrm{sw}_\mathrm{scattering} = \omega_0\,\kappa^\mathrm{sw}\,\mathrm{CWP}.
+\tau^\mathrm{sw}_\mathrm{absorption} = (1 - \omega)\,\kappa^\mathrm{sw}\,\mathrm{CWP}, \qquad
+\tau^\mathrm{sw}_\mathrm{scattering} = \omega\,\kappa^\mathrm{sw}\,\mathrm{CWP}.
 ```
 
 [`LayerLiquidIceCloudOpticsModel`](@ref) keeps liquid water path, ice water

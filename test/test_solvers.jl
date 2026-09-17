@@ -1073,7 +1073,7 @@ end
     # makes the two-stream layer solution satisfy it at cloud-like asymmetries —
     # unscaled, it creates energy, and did so silently until this was pinned.
     for τ in (0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 20.0),
-        g in (0.0, 0.4, 0.8, 0.85, 0.95)
+        ĝ in (0.0, 0.4, 0.8, 0.85, 0.95)
 
         fluxes = RadiativeFluxes(
             longwave_up = zeros(2),
@@ -1083,7 +1083,7 @@ end
         )
         optics = ShortwaveOptics([0.0];
                                  scattering_optical_depth = [τ],
-                                 scattering_asymmetry = [g])
+                                 scattering_asymmetry = [ĝ])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 400.0,
                                                surface_albedo = 0.0)
         radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
@@ -1096,34 +1096,34 @@ end
 end
 
 @testset "delta-Eddington scaling" begin
-    scale(τ, ω, g) = NumericalRadiation.shortwave_delta_eddington(Float64, τ, ω, g)
+    scale(τ, ω, ĝ) = NumericalRadiation.shortwave_delta_eddington(Float64, τ, ω, ĝ)
 
-    # Rayleigh (g = 0) and backscattering layers have no forward peak to remove.
+    # Rayleigh (ĝ = 0) and backscattering layers have no forward peak to remove.
     @test scale(1.5, 0.9, 0.0) == (1.5, 0.9, 0.0)
     @test scale(1.5, 0.9, -0.3) == (1.5, 0.9, -0.3)
 
-    # Joseph, Wiscombe and Weinman (1976): f = g², τ' = (1 - ωf)τ,
-    # ω' = (1 - f)ω / (1 - ωf), g' = (g - f) / (1 - f).
-    τ, ω, g = 2.0, 0.99, 0.85
-    f = g^2
-    τd, ωd, gd = scale(τ, ω, g)
-    @test τd ≈ (1 - ω * f) * τ
-    @test ωd ≈ (1 - f) * ω / (1 - ω * f)
-    @test gd ≈ (g - f) / (1 - f)
-    @test 0 <= ωd <= 1
-    @test gd < g
+    # Joseph, Wiscombe and Weinman (1976): f = ĝ², τ′ = (1 - ωf)τ,
+    # ω′ = (1 - f)ω / (1 - ωf), ĝ′ = (ĝ - f) / (1 - f).
+    τ, ω, ĝ = 2.0, 0.99, 0.85
+    f = ĝ^2
+    τ′, ω′, ĝ′ = scale(τ, ω, ĝ)
+    @test τ′ ≈ (1 - ω * f) * τ
+    @test ω′ ≈ (1 - f) * ω / (1 - ω * f)
+    @test ĝ′ ≈ (ĝ - f) / (1 - f)
+    @test 0 <= ω′ <= 1
+    @test ĝ′ < ĝ
 
     # A pure forward peak scatters nothing into either stream, so what remains is
     # absorption only. This is the corner where the rescaling is 0/0.
     @test scale(3.0, 1.0, 1.0) == (0.0, 0.0, 0.0)
     @test scale(3.0, 0.25, 1.0) == (3.0 * 0.75, 0.0, 0.0)
 
-    # Scaling never increases optical depth and never leaves ω or g out of range.
-    for τ in (0.01, 1.0, 30.0), ω in (0.0, 0.5, 0.999, 1.0), g in (0.0, 0.5, 0.9, 1.0)
-        τd, ωd, gd = scale(τ, ω, g)
-        @test 0 <= τd <= τ
-        @test 0 <= ωd <= 1
-        @test 0 <= gd <= g
+    # Scaling never increases optical depth and never leaves ω or ĝ out of range.
+    for τ in (0.01, 1.0, 30.0), ω in (0.0, 0.5, 0.999, 1.0), ĝ in (0.0, 0.5, 0.9, 1.0)
+        τ′, ω′, ĝ′ = scale(τ, ω, ĝ)
+        @test 0 <= τ′ <= τ
+        @test 0 <= ω′ <= 1
+        @test 0 <= ĝ′ <= ĝ
     end
 end
 
@@ -1680,10 +1680,10 @@ end
         defDim(dataset, "wavenumber", 2)
         defDim(dataset, "g_point", 3)
         wavenumber1 = defVar(dataset, "wavenumber1", Float64, ("wavenumber",))
-        w2 = defVar(dataset, "wavenumber2", Float64, ("wavenumber",))
+        wavenumber2 = defVar(dataset, "wavenumber2", Float64, ("wavenumber",))
         gpoint_fraction = defVar(dataset, "gpoint_fraction", Float64, ("wavenumber", "g_point"))
         wavenumber1[:] = [100.0, 200.0]
-        w2[:] = [150.0, 250.0]
+        wavenumber2[:] = [150.0, 250.0]
         gpoint_fraction[:, :] = [1.0 0.0 0.0; 0.0 0.25 0.75]
     end
 

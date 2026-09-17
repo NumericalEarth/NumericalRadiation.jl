@@ -76,7 +76,7 @@ than averaging. `overlap=:average` uses the arithmetic mean. `overlap=:adding`
 mixes clear/cloudy layer reflectance and transmittance before the adding pass.
 `overlap=:matrix_maximum` carries separate clear/cloudy region fluxes through
 a two-region maximum-overlap matrix during the adding pass. `overlap=:matrix_alpha`
-uses the supplied ecRad/Hogan-Illingworth alpha overlap parameter between
+uses the supplied ecRad/Hogan-Illingworth ``α`` overlap parameter between
 adjacent layers. `overlap=:tripleclouds_alpha` additionally splits the cloudy
 region into thin and thick regions using ecRad's gamma optical-depth scaling.
 These latter modes are diagnostics between final-flux blending and a full
@@ -87,7 +87,7 @@ Fields:
 - `overlap`: Cloud-fraction overlap rule, `:maximum` or `:average`
 - `cloud_fraction_exponent`: Exponent applied to layer cloud fraction before interface
   blending
-- `inhomogeneity_overlap_exponent`: Exponent applied to alpha overlap inside the
+- `inhomogeneity_overlap_exponent`: Exponent applied to the ``α`` overlap inside the
   Tripleclouds inhomogeneity split
 """
 struct CloudOverlapShortwave{FT, S} <: AbstractRadiativeTransferSolver
@@ -122,12 +122,12 @@ end
 end
 
 function v_overlap_matrix_alpha!(v::AbstractMatrix{FT},
-                                 alpha,
+                                 α,
                                  upper_clear,
                                  upper_cloud,
                                  lower_clear,
                                  lower_cloud) where FT
-    overlap = clamp(FT(alpha), zero(FT), one(FT))
+    overlap = clamp(FT(α), zero(FT), one(FT))
     pair_cloud_cover = overlap * max(upper_cloud, lower_cloud) +
         (one(FT) - overlap) *
         (upper_cloud + lower_cloud - upper_cloud * lower_cloud)
@@ -179,8 +179,8 @@ end
     τ_scattering = max(FT(rayleigh_optical_depth_at(optics, gpoint, k)), zero(FT))
     τ_total = τ_absorption + τ_scattering
     ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
-    asymmetry = clamp(FT(scattering_asymmetry_at(optics, gpoint, k)), -one(FT), one(FT))
-    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, asymmetry, direct_source_limit)
+    ĝ = clamp(FT(scattering_asymmetry_at(optics, gpoint, k)), -one(FT), one(FT))
+    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, ĝ, direct_source_limit)
 end
 
 @inline function shortwave_layer_reflectance_transmittance_scaled(::Type{FT},
@@ -191,24 +191,24 @@ end
                                                                   k,
                                                                   μ₀,
                                                                   direct_source_limit = Val(:unit)) where FT
-    clear_absorption = max(FT(optical_depth_at(clear, gpoint, k)), zero(FT))
-    cloudy_absorption = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
-    clear_scattering = max(FT(rayleigh_optical_depth_at(clear, gpoint, k)), zero(FT))
-    cloudy_scattering = max(FT(rayleigh_optical_depth_at(cloudy, gpoint, k)), zero(FT))
-    g_clear = clamp(FT(scattering_asymmetry_at(clear, gpoint, k)), -one(FT), one(FT))
-    g_cloudy = clamp(FT(scattering_asymmetry_at(cloudy, gpoint, k)), -one(FT), one(FT))
-    factor = max(FT(scale), zero(FT))
+    τ_absorption_clear = max(FT(optical_depth_at(clear, gpoint, k)), zero(FT))
+    τ_absorption_cloudy = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
+    τ_scattering_clear = max(FT(rayleigh_optical_depth_at(clear, gpoint, k)), zero(FT))
+    τ_scattering_cloudy = max(FT(rayleigh_optical_depth_at(cloudy, gpoint, k)), zero(FT))
+    ĝ_clear = clamp(FT(scattering_asymmetry_at(clear, gpoint, k)), -one(FT), one(FT))
+    ĝ_cloudy = clamp(FT(scattering_asymmetry_at(cloudy, gpoint, k)), -one(FT), one(FT))
+    scale = max(FT(scale), zero(FT))
 
-    τ_absorption = max(clear_absorption + factor * (cloudy_absorption - clear_absorption),
+    τ_absorption = max(τ_absorption_clear + scale * (τ_absorption_cloudy - τ_absorption_clear),
                        zero(FT))
-    τ_scattering = max(clear_scattering + factor * (cloudy_scattering - clear_scattering),
+    τ_scattering = max(τ_scattering_clear + scale * (τ_scattering_cloudy - τ_scattering_clear),
                        zero(FT))
-    scattering_moment = clear_scattering * g_clear + factor * (cloudy_scattering * g_cloudy - clear_scattering * g_clear)
-    asymmetry = τ_scattering == zero(FT) ? zero(FT) :
-        clamp(scattering_moment / τ_scattering, -one(FT), one(FT))
+    ĝτ_scattering = τ_scattering_clear * ĝ_clear + scale * (τ_scattering_cloudy * ĝ_cloudy - τ_scattering_clear * ĝ_clear)
+    ĝ = τ_scattering == zero(FT) ? zero(FT) :
+        clamp(ĝτ_scattering / τ_scattering, -one(FT), one(FT))
     τ_total = τ_absorption + τ_scattering
     ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
-    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, asymmetry, direct_source_limit)
+    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, ĝ, direct_source_limit)
 end
 
 @inline function gamma_tripleclouds_regions(::Type{FT}, cloud_fraction, fractional_standard_deviation) where FT
@@ -237,7 +237,7 @@ end
 end
 
 function v_overlap_matrix_tripleclouds_alpha!(v::AbstractMatrix{FT},
-                                              alpha,
+                                              α,
                                               inhomogeneity_exponent,
                                               upper_fraction::AbstractVector{FT},
                                               lower_fraction::AbstractVector{FT}) where FT
@@ -246,7 +246,7 @@ function v_overlap_matrix_tripleclouds_alpha!(v::AbstractMatrix{FT},
     upper_clear = upper_fraction[1]
     upper_cloud = upper_fraction[2] + upper_fraction[3]
     lower_cloud = lower_fraction[2] + lower_fraction[3]
-    overlap = clamp(FT(alpha), zero(FT), one(FT))
+    overlap = clamp(FT(α), zero(FT), one(FT))
     pair_cloud_cover = overlap * max(upper_cloud, lower_cloud) +
         (one(FT) - overlap) *
         (upper_cloud + lower_cloud - upper_cloud * lower_cloud)

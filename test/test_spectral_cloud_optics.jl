@@ -148,8 +148,8 @@ const CLOUD_FRACTION = [1.0, 0.5, 0.25, 0.0]
 Base.@noinline measure_bracket(cloud, radius) = @allocated effective_radius_bracket(cloud, radius)
 Base.@noinline measure_layer_optics(cloud, b) = @allocated cloud_layer_optics(cloud, 1, b)
 Base.@noinline measure_absorption(cloud, b, water_path) = @allocated cloud_absorption_optical_depth(cloud, 1, b, water_path)
-Base.@noinline measure_add_scattering(κ, ω, g, water_path) =
-    @allocated add_scattering_layer(water_path, water_path, water_path, κ, ω, g, water_path)
+Base.@noinline measure_add_scattering(κ, ω, ĝ, water_path) =
+    @allocated add_scattering_layer(water_path, water_path, water_path, κ, ω, ĝ, water_path)
 Base.@noinline measure_add_cloud(cloud, b, water_path) =
     @allocated add_cloud_scattering_layer(water_path, water_path, water_path, cloud, 1, b, water_path)
 
@@ -204,16 +204,16 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         radius = [1.0e-6, 5.0e-6, 20.0e-6]
         κ = [1.0 2.0 3.0; 4.0 5.0 6.0]
         ω = fill(0.5, 2, 3)
-        g = fill(0.7, 2, 3)
-        cloud = SpectralCloudOptics(radius, κ, ω, g)
+        ĝ = fill(0.7, 2, 3)
+        cloud = SpectralCloudOptics(radius, κ, ω, ĝ)
         @test cloud isa SpectralCloudOptics{Float64}
         @test cloud.effective_radius == radius
         @test cloud.mass_extinction_coefficient == κ
-        @test_throws DimensionMismatch SpectralCloudOptics(radius, κ[:, 1:2], ω, g)
-        @test_throws DimensionMismatch SpectralCloudOptics(radius, κ, ω, g[:, 1:2])
-        @test_throws ArgumentError SpectralCloudOptics(radius[[3, 2, 1]], κ, ω, g)
-        @test_throws ArgumentError SpectralCloudOptics(Float64[], κ[:, 1:0], ω[:, 1:0], g[:, 1:0])
-        mixed = SpectralCloudOptics(Float32.(radius), κ, ω, g)
+        @test_throws DimensionMismatch SpectralCloudOptics(radius, κ[:, 1:2], ω, ĝ)
+        @test_throws DimensionMismatch SpectralCloudOptics(radius, κ, ω, ĝ[:, 1:2])
+        @test_throws ArgumentError SpectralCloudOptics(radius[[3, 2, 1]], κ, ω, ĝ)
+        @test_throws ArgumentError SpectralCloudOptics(Float64[], κ[:, 1:0], ω[:, 1:0], ĝ[:, 1:0])
+        mixed = SpectralCloudOptics(Float32.(radius), κ, ω, ĝ)
         @test mixed isa SpectralCloudOptics{Float64}
         @test occursin("3 effective-radius nodes", sprint(show, cloud))
     end
@@ -271,29 +271,29 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         radius = [1.0e-6, 5.0e-6, 20.0e-6]
         κ = [1.0 2.0 3.0; 4.0 5.0 6.0]
         ω = [0.9 0.8 0.7; 0.6 0.5 0.4]
-        g = [0.1 0.2 0.3; 0.4 0.5 0.6]
-        three = SpectralCloudOptics(radius, κ, ω, g)
+        ĝ = [0.1 0.2 0.3; 0.4 0.5 0.6]
+        three = SpectralCloudOptics(radius, κ, ω, ĝ)
         @test cloud_layer_optics(three, 2, effective_radius_bracket(three, 5.0e-6)) == (5.0, 0.5, 0.5)
-        κ_mid, ω_mid, g_mid = cloud_layer_optics(three, 1, effective_radius_bracket(three, 3.0e-6))
-        @test κ_mid ≈ 1.5
-        @test ω_mid ≈ 0.85
-        @test g_mid ≈ 0.15
+        κ_midpoint, ω_midpoint, ĝ_midpoint = cloud_layer_optics(three, 1, effective_radius_bracket(three, 3.0e-6))
+        @test κ_midpoint ≈ 1.5
+        @test ω_midpoint ≈ 0.85
+        @test ĝ_midpoint ≈ 0.15
         @test cloud_layer_optics(three, 1, effective_radius_bracket(three, 1.0e-3)) == (3.0, 0.7, 0.3)
     end
 
     @testset "add_scattering_layer" begin
-        τa, τs, g = add_scattering_layer(0.1, 0.2, 0.3, 10.0, 0.8, 0.7, 0.05)
-        @test τa ≈ 0.1 + 10.0 * 0.2 * 0.05
-        @test τs ≈ 0.2 + 10.0 * 0.8 * 0.05
-        @test g ≈ (0.3 * 0.2 + 0.7 * 10.0 * 0.8 * 0.05) / τs
+        τ_absorption, τ_scattering, ĝ = add_scattering_layer(0.1, 0.2, 0.3, 10.0, 0.8, 0.7, 0.05)
+        @test τ_absorption ≈ 0.1 + 10.0 * 0.2 * 0.05
+        @test τ_scattering ≈ 0.2 + 10.0 * 0.8 * 0.05
+        @test ĝ ≈ (0.3 * 0.2 + 0.7 * 10.0 * 0.8 * 0.05) / τ_scattering
 
         # Zero scattering leaves the asymmetry at zero, not NaN.
         @test add_scattering_layer(0.0, 0.0, 0.0, 10.0, 0.0, 0.7, 0.05) === (0.5, 0.0, 0.0)
         @test add_scattering_layer(0.0, 0.0, 0.0, 10.0, 0.8, 0.7, 0.0) === (0.0, 0.0, 0.0)
 
         # Zero water path is a bit-exact no-op on a layer with existing scattering.
-        for (τa₀, τs₀, g₀) in ((0.1, 0.3, 0.1), (1.0e-3, 0.7, 0.55), (2.0, 1.0e-4, -0.2))
-            @test add_scattering_layer(τa₀, τs₀, g₀, 10.0, 0.8, 0.7, 0.0) === (τa₀, τs₀, g₀)
+        for (τ_absorption₀, τ_scattering₀, ĝ₀) in ((0.1, 0.3, 0.1), (1.0e-3, 0.7, 0.55), (2.0, 1.0e-4, -0.2))
+            @test add_scattering_layer(τ_absorption₀, τ_scattering₀, ĝ₀, 10.0, 0.8, 0.7, 0.0) === (τ_absorption₀, τ_scattering₀, ĝ₀)
         end
 
         # A first constituent on an empty layer takes its own asymmetry exactly.
@@ -390,19 +390,19 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
             ice_bracket = effective_radius_bracket(ice, ice_radius)
             for k in 1:Nz
                 weight = clamp(FT(fraction[k]), 0, 1)^FT(exponent)
-                liquid_pathₖ = weight * FT(liquid_path[k])
-                ice_pathₖ = weight * FT(ice_path[k])
+                liquid_path_k = weight * FT(liquid_path[k])
+                ice_path_k = weight * FT(ice_path[k])
                 for gpoint in 1:Ngpoints
-                    τa = kernel.optical_depth[gpoint, k]
-                    τs = kernel.rayleigh_optical_depth[gpoint, k]
-                    g = kernel.scattering_asymmetry[gpoint, k]
-                    κ, ω, gᶜ = cloud_layer_optics(liquid, gpoint, liquid_bracket)
-                    τa, τs, g = add_scattering_layer(τa, τs, g, κ, ω, gᶜ, liquid_pathₖ)
-                    κ, ω, gᶜ = cloud_layer_optics(ice, gpoint, ice_bracket)
-                    τa, τs, g = add_scattering_layer(τa, τs, g, κ, ω, gᶜ, ice_pathₖ)
-                    kernel.optical_depth[gpoint, k] = τa
-                    kernel.rayleigh_optical_depth[gpoint, k] = τs
-                    kernel.scattering_asymmetry[gpoint, k] = g
+                    τ_absorption = kernel.optical_depth[gpoint, k]
+                    τ_scattering = kernel.rayleigh_optical_depth[gpoint, k]
+                    ĝ = kernel.scattering_asymmetry[gpoint, k]
+                    κ, ω, ĝᶜ = cloud_layer_optics(liquid, gpoint, liquid_bracket)
+                    τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, κ, ω, ĝᶜ, liquid_path_k)
+                    κ, ω, ĝᶜ = cloud_layer_optics(ice, gpoint, ice_bracket)
+                    τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, κ, ω, ĝᶜ, ice_path_k)
+                    kernel.optical_depth[gpoint, k] = τ_absorption
+                    kernel.rayleigh_optical_depth[gpoint, k] = τ_scattering
+                    kernel.scattering_asymmetry[gpoint, k] = ĝ
                 end
             end
             rtol = FT === Float64 ? 1e-12 : 1e-5
@@ -416,9 +416,9 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         # absorption update adds.
         bracket = effective_radius_bracket(liquid, liquid_radius)
         for gpoint in 1:Ngpoints
-            κ, ω, gᶜ = cloud_layer_optics(liquid, gpoint, bracket)
-            τa, τs, g = add_scattering_layer(0.0, 0.0, 0.0, κ, ω, gᶜ, 0.1)
-            @test cloud_absorption_optical_depth(liquid, gpoint, bracket, 0.1) == τa
+            κ, ω, ĝᶜ = cloud_layer_optics(liquid, gpoint, bracket)
+            τ_absorption, τ_scattering, ĝ = add_scattering_layer(0.0, 0.0, 0.0, κ, ω, ĝᶜ, 0.1)
+            @test cloud_absorption_optical_depth(liquid, gpoint, bracket, 0.1) == τ_absorption
         end
     end
 
@@ -436,13 +436,13 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
                 @test properties isa Tuple{FT, FT, FT}
                 τ = @inferred cloud_absorption_optical_depth(cloud, 1, b, water_path)
                 @test τ isa FT
-                κ, ω, g = properties
-                updated = @inferred add_scattering_layer(water_path, water_path, water_path, κ, ω, g, water_path)
+                κ, ω, ĝ = properties
+                updated = @inferred add_scattering_layer(water_path, water_path, water_path, κ, ω, ĝ, water_path)
                 @test updated isa Tuple{FT, FT, FT}
                 @test measure_bracket(cloud, radius) == 0
                 @test measure_layer_optics(cloud, b) == 0
                 @test measure_absorption(cloud, b, water_path) == 0
-                @test measure_add_scattering(κ, ω, g, water_path) == 0
+                @test measure_add_scattering(κ, ω, ĝ, water_path) == 0
             end
             @test (@inferred effective_radius_bracket(nothing, radius)) === (1, 1, 0)
             @test (@inferred cloud_absorption_optical_depth(nothing, 1, (1, 1, 0), water_path)) === zero(FT)
