@@ -202,7 +202,7 @@ with `f = cloud_fraction^cloud_fraction_exponent` (1 for the cloudy-region
 variant), `κˡ_longwave`, `κⁱ_longwave` the `liquid_longwave_mass_absorption`
 and `ice_longwave_mass_absorption`, `κˡ`, `κⁱ` the shortwave mass extinctions
 and `ωˡ`, `ωⁱ` the shortwave single-scattering albedos of the two phases; the
-layer asymmetry factor is the scattering-weighted mean of `ĝˡ` and `ĝⁱ`.
+layer asymmetry factor is the scattering-weighted mean of `𝒢ˡ` and `𝒢ⁱ`.
 
 Fields:
 - `liquid_water_path`: Layer liquid water path, or fallback value when the atmosphere does
@@ -347,8 +347,8 @@ function fill_liquid_ice_cloud_optics!(cloud::CloudOptics{FT},
         τⁱ_extinction = FT(model.ice_shortwave_mass_extinction) * ice_water_path
         ωˡ = clamp(FT(model.liquid_shortwave_single_scattering_albedo), zero(FT), one(FT))
         ωⁱ = clamp(FT(model.ice_shortwave_single_scattering_albedo), zero(FT), one(FT))
-        ĝˡ = clamp(FT(model.liquid_shortwave_scattering_asymmetry), -one(FT), one(FT))
-        ĝⁱ = clamp(FT(model.ice_shortwave_scattering_asymmetry), -one(FT), one(FT))
+        𝒢ˡ = clamp(FT(model.liquid_shortwave_scattering_asymmetry), -one(FT), one(FT))
+        𝒢ⁱ = clamp(FT(model.ice_shortwave_scattering_asymmetry), -one(FT), one(FT))
         τˡ_scattering = ωˡ * τˡ_extinction
         τⁱ_scattering = ωⁱ * τⁱ_extinction
         τ_scattering = τˡ_scattering + τⁱ_scattering
@@ -361,7 +361,7 @@ function fill_liquid_ice_cloud_optics!(cloud::CloudOptics{FT},
         cloud.shortwave_scattering_optical_depth[k] = fraction_scale * τ_scattering
         cloud.shortwave_scattering_asymmetry[k] = τ_scattering == zero(FT) ?
             zero(FT) :
-            (ĝˡ * τˡ_scattering + ĝⁱ * τⁱ_scattering) / τ_scattering
+            (𝒢ˡ * τˡ_scattering + 𝒢ⁱ * τⁱ_scattering) / τ_scattering
     end
 
     return cloud
@@ -497,8 +497,8 @@ end
 @inline add_cloud_optical_depth!(optical_depth::AbstractVector, τ_cloud, k) = optical_depth[k] += τ_cloud[k]
 
 function add_cloud_optical_depth!(optical_depth::AbstractMatrix, τ_cloud, k)
-    for gpoint in axes(optical_depth, 1)
-        optical_depth[gpoint, k] += τ_cloud[k]
+    for g in axes(optical_depth, 1)
+        optical_depth[g, k] += τ_cloud[k]
     end
     return nothing
 end
@@ -518,13 +518,13 @@ end
 end
 
 function add_cloud_scattering!(optical_depth::AbstractMatrix, asymmetry::AbstractMatrix, τ_cloud, cloud_asymmetry, k)
-    for gpoint in axes(optical_depth, 1)
-        τ_existing = optical_depth[gpoint, k]
+    for g in axes(optical_depth, 1)
+        τ_existing = optical_depth[g, k]
         τ_incoming = τ_cloud[k]
         τ_total = τ_existing + τ_incoming
-        asymmetry[gpoint, k] = τ_total == zero(τ_total) ? zero(τ_total) :
-            (asymmetry[gpoint, k] * τ_existing + cloud_asymmetry[k] * τ_incoming) / τ_total
-        optical_depth[gpoint, k] = τ_total
+        asymmetry[g, k] = τ_total == zero(τ_total) ? zero(τ_total) :
+            (asymmetry[g, k] * τ_existing + cloud_asymmetry[k] * τ_incoming) / τ_total
+        optical_depth[g, k] = τ_total
     end
     return nothing
 end
@@ -579,7 +579,7 @@ weight `cloud_fraction^cloud_fraction_exponent` multiplies both water paths;
 (clamped to `[0, 1]`); and `delta_eddington_scale` removes the
 forward-scattering peak of the combined liquid+ice mixture once with
 `delta_eddington`, after the phases are mixed and before the mixture is
-folded into the layer, as ecRad does (`f = ĝ²` is nonlinear, so scaling the
+folded into the layer, as ecRad does (`f = 𝒢²` is nonlinear, so scaling the
 phases separately would differ whenever their asymmetries differ).
 """
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:AbstractMatrix},
@@ -593,10 +593,10 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
                                       ice_extinction_scale = 1,
                                       shortwave_scattering_scale = 1,
                                       delta_eddington_scale = false)
-    Ngpoints, Nz = size(shortwave.optical_depth)
-    length(liquid_properties.mass_extinction_coefficient) == Ngpoints ||
+    Ng, Nz = size(shortwave.optical_depth)
+    length(liquid_properties.mass_extinction_coefficient) == Ng ||
         throw(DimensionMismatch("liquid cloud g-point properties must match shortwave g-points"))
-    length(ice_properties.mass_extinction_coefficient) == Ngpoints ||
+    length(ice_properties.mass_extinction_coefficient) == Ng ||
         throw(DimensionMismatch("ice cloud g-point properties must match shortwave g-points"))
     length(liquid_water_path) == Nz || throw(DimensionMismatch("liquid_water_path must match shortwave layers"))
     length(ice_water_path) == Nz || throw(DimensionMismatch("ice_water_path must match shortwave layers"))
@@ -611,48 +611,48 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
         liquid_path = fraction_scale * max(FT(liquid_water_path[k]), zero(FT))
         ice_path = fraction_scale * max(FT(ice_water_path[k]), zero(FT))
-        for gpoint in 1:Ngpoints
-            τ_absorption = shortwave.optical_depth[gpoint, k]
-            τ_scattering = shortwave.rayleigh_optical_depth[gpoint, k]
-            ĝ = shortwave.scattering_asymmetry[gpoint, k]
+        for g in 1:Ng
+            τ_absorption = shortwave.optical_depth[g, k]
+            τ_scattering = shortwave.rayleigh_optical_depth[g, k]
+            𝒢 = shortwave.scattering_asymmetry[g, k]
 
-            κˡ, ωˡ, ĝˡ = scaled_phase_optics(liquid_properties, gpoint, liquid_scale, scattering_scale, FT)
-            κⁱ, ωⁱ, ĝⁱ = scaled_phase_optics(ice_properties, gpoint, ice_scale, scattering_scale, FT)
+            κˡ, ωˡ, 𝒢ˡ = scaled_phase_optics(liquid_properties, g, liquid_scale, scattering_scale, FT)
+            κⁱ, ωⁱ, 𝒢ⁱ = scaled_phase_optics(ice_properties, g, ice_scale, scattering_scale, FT)
 
             if delta_eddington_scale
                 # ecRad removes the forward peak of the whole cloud after every
                 # constituent has been added, so compose the liquid+ice mixture
                 # on its own, scale it once, and fold it into the layer as one
                 # constituent of unit mass path.
-                τᶜ_absorption, τᶜ_scattering, ĝᶜ = add_scattering_layer(zero(FT), zero(FT), zero(FT), κˡ, ωˡ, ĝˡ, liquid_path)
-                τᶜ_absorption, τᶜ_scattering, ĝᶜ = add_scattering_layer(τᶜ_absorption, τᶜ_scattering, ĝᶜ, κⁱ, ωⁱ, ĝⁱ, ice_path)
+                τᶜ_absorption, τᶜ_scattering, 𝒢ᶜ = add_scattering_layer(zero(FT), zero(FT), zero(FT), κˡ, ωˡ, 𝒢ˡ, liquid_path)
+                τᶜ_absorption, τᶜ_scattering, 𝒢ᶜ = add_scattering_layer(τᶜ_absorption, τᶜ_scattering, 𝒢ᶜ, κⁱ, ωⁱ, 𝒢ⁱ, ice_path)
                 τᶜ = τᶜ_absorption + τᶜ_scattering
                 ωᶜ = ifelse(τᶜ == 0, zero(FT), τᶜ_scattering / τᶜ)
-                τᶜ, ωᶜ, ĝᶜ = delta_eddington(τᶜ, ωᶜ, ĝᶜ)
-                τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, τᶜ, ωᶜ, ĝᶜ, one(FT))
+                τᶜ, ωᶜ, 𝒢ᶜ = delta_eddington(τᶜ, ωᶜ, 𝒢ᶜ)
+                τ_absorption, τ_scattering, 𝒢 = add_scattering_layer(τ_absorption, τ_scattering, 𝒢, τᶜ, ωᶜ, 𝒢ᶜ, one(FT))
             else
-                τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, κˡ, ωˡ, ĝˡ, liquid_path)
-                τ_absorption, τ_scattering, ĝ = add_scattering_layer(τ_absorption, τ_scattering, ĝ, κⁱ, ωⁱ, ĝⁱ, ice_path)
+                τ_absorption, τ_scattering, 𝒢 = add_scattering_layer(τ_absorption, τ_scattering, 𝒢, κˡ, ωˡ, 𝒢ˡ, liquid_path)
+                τ_absorption, τ_scattering, 𝒢 = add_scattering_layer(τ_absorption, τ_scattering, 𝒢, κⁱ, ωⁱ, 𝒢ⁱ, ice_path)
             end
 
-            shortwave.optical_depth[gpoint, k] = τ_absorption
-            shortwave.rayleigh_optical_depth[gpoint, k] = τ_scattering
-            shortwave.scattering_asymmetry[gpoint, k] = ĝ
+            shortwave.optical_depth[g, k] = τ_absorption
+            shortwave.rayleigh_optical_depth[g, k] = τ_scattering
+            shortwave.scattering_asymmetry[g, k] = 𝒢
         end
     end
     return shortwave
 end
 
-# Clamped and scaled (κ, ω, ĝ) of one phase at g point `gpoint` for the mapped
-# scattering loop: κ scaled by the phase's extinction scale, ω and ĝ clamped to
+# Clamped and scaled (κ, ω, 𝒢) of one phase at g point `g` for the mapped
+# scattering loop: κ scaled by the phase's extinction scale, ω and 𝒢 clamped to
 # their physical ranges, and then the scattering scale on ω (clamped so
 # scattering never exceeds extinction).
-@inline function scaled_phase_optics(properties, gpoint, extinction_scale, scattering_scale, ::Type{FT}) where FT
-    κ = extinction_scale * FT(properties.mass_extinction_coefficient[gpoint])
-    ω = clamp(FT(properties.single_scattering_albedo[gpoint]), zero(FT), one(FT))
-    ĝ = clamp(FT(properties.asymmetry_factor[gpoint]), -one(FT), one(FT))
+@inline function scaled_phase_optics(properties, g, extinction_scale, scattering_scale, ::Type{FT}) where FT
+    κ = extinction_scale * FT(properties.mass_extinction_coefficient[g])
+    ω = clamp(FT(properties.single_scattering_albedo[g]), zero(FT), one(FT))
+    𝒢 = clamp(FT(properties.asymmetry_factor[g]), -one(FT), one(FT))
     ω = clamp(ω * scattering_scale, zero(FT), one(FT))
-    return κ, ω, ĝ
+    return κ, ω, 𝒢
 end
 
 function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:AbstractVector}, args...; kwargs...)

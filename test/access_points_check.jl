@@ -76,24 +76,24 @@ function exported_symbol_status(name)
     return (name=string(name), exported=name in names, defined=isdefined(NumericalRadiation, name))
 end
 
-# Layer-optics functors over precomputed `(Ngpoints, Nz)` matrices, in the
-# `(gpoint, k)` form a host kernel hands to the streaming solvers: longwave
+# Layer-optics functors over precomputed `(Ng, Nz)` matrices, in the
+# `(g, k)` form a host kernel hands to the streaming solvers: longwave
 # `(τ, B_top, B_bottom)` and shortwave `(τ_absorption, τ_scattering, asymmetry)`.
 struct LongwaveMatrixOptics{L}
     optics :: L
 end
 
-(layer::LongwaveMatrixOptics)(gpoint, k) = (layer.optics.optical_depth[gpoint, k],
-                                            layer.optics.source_top[gpoint, k],
-                                            layer.optics.source_bottom[gpoint, k])
+(layer::LongwaveMatrixOptics)(g, k) = (layer.optics.optical_depth[g, k],
+                                       layer.optics.source_top[g, k],
+                                       layer.optics.source_bottom[g, k])
 
 struct ShortwaveMatrixOptics{S}
     optics :: S
 end
 
-(layer::ShortwaveMatrixOptics)(gpoint, k) = (layer.optics.optical_depth[gpoint, k],
-                                             layer.optics.rayleigh_optical_depth[gpoint, k],
-                                             layer.optics.scattering_asymmetry[gpoint, k])
+(layer::ShortwaveMatrixOptics)(g, k) = (layer.optics.optical_depth[g, k],
+                                        layer.optics.rayleigh_optical_depth[g, k],
+                                        layer.optics.scattering_asymmetry[g, k])
 
 # The streaming (kernel-facing) solvers against the array solvers on the same
 # optics. The array longwave solver streams each g point through
@@ -103,12 +103,12 @@ end
 # comparisons are bitwise.
 function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
     Nz = length(atmosphere.temperature_layers)
-    Nlongwave_gpoints, Nshortwave_gpoints = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
-    longwave = LongwaveOptics(zeros(Nlongwave_gpoints, Nz), zeros(Nlongwave_gpoints, Nz);
-                              source_top = zeros(Nlongwave_gpoints, Nz),
-                              source_bottom = zeros(Nlongwave_gpoints, Nz),
-                              weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights=zeros(Nshortwave_gpoints))
+    Ngˡʷ, Ngˢʷ = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Ngˡʷ, Nz), zeros(Ngˡʷ, Nz);
+                              source_top = zeros(Ngˡʷ, Nz),
+                              source_bottom = zeros(Ngˡʷ, Nz),
+                              weights = zeros(Ngˡʷ))
+    shortwave = ShortwaveOptics(zeros(Ngˢʷ, Nz); weights=zeros(Ngˢʷ))
     optical_properties!(longwave, shortwave, gas_model, atmosphere)
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
@@ -131,11 +131,11 @@ function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
     longwave_up, longwave_down = zeros(Nz + 1), zeros(Nz + 1)
     streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveMatrixOptics(longwave),
                                surface_emission, longwave_albedo, 0.0,
-                               longwave.weights, Nlongwave_gpoints, Nz, zeros(Nz), zeros(Nz))
+                               longwave.weights, Ngˡʷ, Nz, zeros(Nz), zeros(Nz))
     shortwave_up, shortwave_down = zeros(Nz + 1), zeros(Nz + 1)
     streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveMatrixOptics(shortwave),
                                 μ₀, toa_irradiance, shortwave_albedo, shortwave_albedo,
-                                shortwave.weights, Nshortwave_gpoints, Nz, ShortwaveColumnScratch(Float64, Nz))
+                                shortwave.weights, Ngˢʷ, Nz, ShortwaveColumnScratch(Float64, Nz))
 
     return (
         streaming_longwave_matches_array = all(isfinite, longwave_up) &&

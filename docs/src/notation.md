@@ -19,13 +19,13 @@ The conventions the table relies on:
   `mu0`, `gamma1`, `c00`, `ip0`, `Ts`, `kappa_l`.
 * **One register per function.** Within a function or struct a quantity is
   named either by the unicode symbol of the equation in its docstring — with
-  an optional English descriptor after `_` (`τ_absorption`, `ĝ_cloud`,
+  an optional English descriptor after `_` (`τ_absorption`, `𝒢_cloud`,
   `ε_ocean`) or a phase or region label as a superscript (`ωˡ`, `κⁱ`,
   `τᶜ_scattering`), and index suffixes `_k`, `_top`, `_bottom` — or by whole
   English words (`optical_depth`, `water_path`, `cloud_fraction`); the two
   are never mixed in one expression. Struct fields and caller-owned arrays are
   descriptive snake_case (public storage, matching Breeze); reading
-  `optics.single_scattering_albedo[gpoint, k]` into a local `ω` is the
+  `optics.single_scattering_albedo[g, k]` into a local `ω` is the
   boundary between the registers. Where a docstring writes an equation, the
   code below it uses those exact symbols.
 * **Reference quantities** take a subscript ``r`` (`p_ref`, `T_ref` are the
@@ -35,11 +35,13 @@ The conventions the table relies on:
   `ˢʷ` shortwave, and `ˢ` is reserved for the *surface* (`Tˢ`, `pˢ`, `Bˢ`),
   as in Breeze. A subscript `i` (`pᵢ`, `Tᵢ`) is an interface value, which
   never collides with the ice superscript.
-* **Counts** use the Oceananigans capital-`N` form: `Nz` layers in a column
-  (interfaces are `Nz + 1`), `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`,
-  `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`,
-  `Nnodes`, `Nprofiles`, `Nsites`, `Nlongwave_gpoints`, `Nshortwave_gpoints`,
-  `Nlongwave_bands`, `Nshortwave_bands`.
+* **Counts** use the Oceananigans capital-`N` form, short where the indexed
+  quantity has a one-letter symbol: `Nz` layers in a column (interfaces are
+  `Nz + 1`), `Ng` g points (`Ngˡʷ`, `Ngˢʷ` for the longwave and shortwave
+  sets), `Nr` effective-radius nodes, and otherwise an English word: `Ngases`,
+  `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`,
+  `Nintervals`, `Nnodes`, `Nprofiles`, `Nsites`, `Nlongwave_bands`,
+  `Nshortwave_bands`.
 * **Columns are top-down**: layer `k = 1` is at the top of the atmosphere,
   interfaces run `k = 1:Nz + 1` with interface `1` at the top and `Nz + 1`
   at the surface, and pressure increases with `k`.
@@ -59,17 +61,22 @@ The conventions the table relies on:
   once at the top of a file (`constants = PhysicalConstants()`, then
   `g = constants.gravity`).
 
-Two symbols would otherwise clash with Breeze, and the table records the
-decision: the scattering **asymmetry factor is `ĝ`** because `g` is gravity
-(both appear in this package), and bare **`σ` is the Stefan–Boltzmann
-constant** while the sigma coordinate is never bound to bare `σ` (it lives in
-the `ColumnGrid.σ_full`, `σ_half`, `σ_thick` fields inherited from
-SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
+The letter `g` is spoken for twice, and the table records how the package
+keeps the two apart. **`g` is the g-point index** — the cumulative-probability
+coordinate of the correlated-*k* method is literally `g`, so loops read
+`for g in 1:Ng` and a layer-optics functor is called as `layer_optics(g, k)` —
+and `g` is also **gravity** in the hydrostatic and heating-rate functions
+(`hydrostatic_air_moles`, `heating_rates!`); no function has both in scope. The
+scattering **asymmetry factor is therefore `𝒢`** (U+1D4A2, `\mathcal{G}`):
+`g` is taken, and `γ` is the two-stream coefficient family `γ₁ … γ₄`. Bare
+**`σ` is the Stefan–Boltzmann constant** while the sigma coordinate is never
+bound to bare `σ` (it lives in the `ColumnGrid.σ_full`, `σ_half`, `σ_thick`
+fields inherited from SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 
 | LaTeX math | Unicode code form | Accessor or field | Description |
 |:-----------|:------------------|:------------------|:------------|
 | **Constants** | | | |
-| ``g`` | `g` | `constants.gravity` | Gravitational acceleration, m s⁻² (Breeze). Never the asymmetry factor, which is `ĝ` |
+| ``g`` | `g` | `constants.gravity` | Gravitational acceleration, m s⁻² (Breeze), in the hydrostatic and heating-rate functions only; elsewhere `g` is the g-point index (below). Never the asymmetry factor, which is `𝒢` |
 | ``c^p`` | `cᵖ` | `constants.heat_capacity` | Isobaric specific heat of dry air, J kg⁻¹ K⁻¹ (Breeze) |
 | ``\sigma`` | `σ` | `constants.stefan_boltzmann`, `model.stefan_boltzmann` | Stefan–Boltzmann constant, W m⁻² K⁻⁴ (Breeze). Also the sigma coordinate of `ColumnGrid`, which is never bound to bare `σ` |
 | ``S_0`` | `S₀` | `constants.solar_constant` | Solar constant, W m⁻²; the horizontal TOA flux is `ℐꜜ_toa = S₀ μ₀` |
@@ -113,15 +120,15 @@ SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``B`` | `B`, `B_k`, `B_top`, `B_bottom`, `B_surface_ocean` | [`longwave_source`](@ref), `LongwaveOptics.source`, `source_top`, `source_bottom`, [`planck_wavenumber`](@ref) | Planck source in flux units at a layer or interface; `σT⁴` is the gray fallback; `πB(T, ν̃)` the hemispheric spectral flux |
 | ``\partial B`` | `∂B` | | Planck gradient along optical depth in a layer, `(B_bottom - B_top) / (Dτ)` |
 | ``w_g`` | `w`, `weights` | `model.longwave_weights`, `shortwave_weights`, `optics.weights` | Spectral quadrature weight of a g point |
-| ``g``-point | `gpoint`, `Ngpoints` | [`gas_names`](@ref), `number_of_gpoints(optics)` | Index and count of correlated-*k* quadrature points (never `g`) |
+| ``g`` | `g`, `Ng`, `Ngˡʷ`, `Ngˢʷ` | [`gas_names`](@ref), `number_of_gpoints(optics)` | Index and count of correlated-*k* quadrature points: `g` is the cumulative-probability coordinate of the correlated-*k* method, so the g-point index is literally `g` (`for g in 1:Ng`, `layer_optics(g, k)`); never in scope together with gravity |
 | ``\tilde\nu`` | `ν̃`, `ν̃ₘ`, `Δν̃`, `ν̃₀`, `ν̃₁`, `ν̃₂` | `wavenumber1`, `wavenumber2`, `wavenumber_min`, `wavenumber_max` | Wavenumber, cm⁻¹ (`ν̃ₘ` in m⁻¹), spectral step, and the bounds of neighbouring spectral intervals `interval₀`, `interval₁`, `interval₂` |
 | ``\tau_\mathrm{Rayleigh}`` | `τ_scattering`, `τ_rayleigh` | [`rayleigh_optical_depth`](@ref), `ShortwaveOptics.rayleigh_optical_depth` | Rayleigh (clear-sky) scattering optical depth |
 | ``\kappa_\mathrm{rot}, l_\mathrm{rot}, \ldots`` | `κ_rot l_rot κ_vr l_vr1 l_vr2 κ_cnt1 κ_cnt2 κ_CO₂ l_CO₂ ν̃_CO₂ p_ref pv_ref T_ref σ_cont` | [`AnalyticBandLongwave`](@ref) fields | Williams (2026) Table 1 parameters, spelled as in the paper and documented field by field |
 | **Radiative transfer and two-stream coefficients** | | | |
 | ``\mu_0`` | `μ₀` | `geometry.cos_zenith`, `SurfaceState.cos_zenith`, [`cosine_solar_zenith`](@ref) | Cosine of the solar zenith angle (Breeze); `1/μ₀` is the direct-beam slant-path factor |
 | ``\omega`` | `ω`, `ωˡ`, `ωⁱ`, `ωᶜ`, `ω_clear`, `ω_cloudy` | `single_scattering_albedo`, `shortwave_single_scattering_albedo` | Single-scattering albedo, `τ_scattering / (τ_absorption + τ_scattering)`; one symbol, never `ω₀` |
-| ``\hat g`` | `ĝ`, `ĝˡ`, `ĝⁱ`, `ĝᶜ`, `ĝ_cloud`, `ĝ_clear`, `ĝ_cloudy` | `asymmetry_factor`, `scattering_asymmetry`, `shortwave_scattering_asymmetry` | Scattering asymmetry factor; `ĝ` because `g` is gravity. `ĝτ_scattering` is the scattering-weighted moment `Σ ĝ τ_scattering` |
-| ``f`` | `f` | | Delta-Eddington forward-peak fraction `f = ĝ²`; scaled optics are `τ′ ω′ ĝ′` |
+| ``\mathcal{G}`` | `𝒢`, `𝒢ˡ`, `𝒢ⁱ`, `𝒢ᶜ`, `𝒢_cloud`, `𝒢_clear`, `𝒢_cloudy` | `asymmetry_factor`, `scattering_asymmetry`, `shortwave_scattering_asymmetry` | Scattering asymmetry factor; `𝒢` because `g` is the g-point index (and gravity) and `γ` is the two-stream coefficient family. `𝒢τ_scattering` is the scattering-weighted moment `Σ 𝒢 τ_scattering` |
+| ``f`` | `f` | | Delta-Eddington forward-peak fraction `f = 𝒢²`; scaled optics are `τ′ ω′ 𝒢′` |
 | ``\gamma_1, \gamma_2, \gamma_3, \gamma_4`` | `γ₁`, `γ₂`, `γ₃`, `γ₄` | | Two-stream coefficients (practical improved flux method in the shortwave, hemispheric mean with `D` in the longwave) |
 | ``\alpha_1, \alpha_2`` | `α₁`, `α₂` | | Meador–Weaver direct-beam coefficients `γ₁γ₄ + γ₂γ₃`, `γ₁γ₃ + γ₂γ₄` |
 | ``\lambda`` | `λ`, `λμ₀` | | Two-stream eigenvalue `√((γ₁ - γ₂)(γ₁ + γ₂))` (`k` is the layer index) |
@@ -132,13 +139,13 @@ SpeedyWeather, in `σ_level` arguments, and in `Δσ_k`).
 | ``e, e^2, m_1, m_2, d`` | `e`, `e₂`, `m₁`, `m₂`, `d` | | `e^{-λτ}`, `e^{-2λτ}`, `1 - e^{-λτ}`, `1 - e^{-2λτ}`, `1 - e^{-τ/μ₀}` (the conservative-limit rearrangement of the shortwave layer solution) |
 | ``\alpha`` | `α` | `overlap_parameter` | ecRad/Hogan–Illingworth cloud-overlap parameter between adjacent layers (also the surface albedo, below; the two never meet in one function) |
 | ``\mathcal{R}_\infty`` | `ℛ∞`, `Σℛ∞` | | Reflectance of a semi-infinite layer used by ecRad's thick averaging, and its weighted sum |
-| ``\Sigma`` | `Σκ`, `Σκ_scattering`, `Σκ_scattering_ĝ`, `Σw` | | Weighted sums over spectral intervals when mapping cloud properties onto g points |
+| ``\Sigma`` | `Σκ`, `Σκ_scattering`, `Σκ_scattering_𝒢`, `Σw` | | Weighted sums over spectral intervals when mapping cloud properties onto g points |
 | **Cloud and aerosol optics** | | | |
 | ``\kappa^l``, ``\kappa^i`` | `κˡ`, `κⁱ` | `liquid_shortwave_mass_extinction`, `ice_shortwave_mass_extinction`, `mass_extinction_coefficient` | Liquid and ice mass-extinction coefficients, m² kg⁻¹ |
 | ``\tau_\mathrm{absorption}``, ``\tau_\mathrm{scattering}``, ``\tau_\mathrm{extinction}`` | `τ_absorption`, `τ_scattering`, `τ_extinction`, `τˡ_extinction`, `τⁱ_scattering`, `τᶜ_absorption`, `τᶜ_scattering`, `τ_absorption′` | `optical_depth`, `rayleigh_optical_depth` | Absorption, scattering and extinction optical depths of a layer, a phase or the cloud mixture; a prime marks the value after folding in a constituent |
-| ``\tau^c``, ``\omega^c``, ``\hat g^c`` | `τᶜ`, `ωᶜ`, `ĝᶜ` | | Optics of the combined liquid + ice cloud |
+| ``\tau^c``, ``\omega^c``, ``\mathcal{G}^c`` | `τᶜ`, `ωᶜ`, `𝒢ᶜ` | | Optics of the combined liquid + ice cloud |
 | ``\mathrm{WP}`` | `water_path`, `liquid_water_path`, `ice_water_path`, `cloud_water_path`, `aerosol_path`, `liquid_path_k` | `liquid_water_path`, `ice_water_path`, `cloud_water_path`, `aerosol_path` | Condensed-water or aerosol mass path of a layer, kg m⁻² |
-| ``r_e`` | `effective_radius`, `radius_bracket` | `SpectralCloudOptics.effective_radius`, [`effective_radius_bracket`](@ref) | Effective radius, m, and its node bracket |
+| ``r_e`` | `effective_radius`, `radius_bracket`, `Nr` | `SpectralCloudOptics.effective_radius`, [`effective_radius_bracket`](@ref) | Effective radius, m, its node bracket, and the count `Nr` of tabulated effective-radius nodes |
 | ``c`` | `cloud_fraction`, `cloud_cover` | `cloud_fraction`, `ShortwaveDiagnostics.cloud_cover` | Layer cloud fraction and column cloud cover |
 | ``f_\mathrm{sd}`` | `fractional_standard_deviation` | `fractional_standard_deviation` | In-cloud optical-depth variability of the Tripleclouds split |
 | **Fluxes and heating rates** | | | |

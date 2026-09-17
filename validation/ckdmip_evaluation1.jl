@@ -257,8 +257,8 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention=:dry)
     ]
 
     return (; model_name = String(model_name),
-              Nlongwave_gpoints = length(model.longwave_weights),
-              Nshortwave_gpoints = length(model.shortwave_weights),
+              Ngˡʷ = length(model.longwave_weights),
+              Ngˢʷ = length(model.shortwave_weights),
               Nprofiles, Nz, μ₀, solar_constant, albedo, column_amount_convention,
               elapsed_seconds = elapsed,
               microseconds_per_column = 1e6 * elapsed / Nprofiles,
@@ -284,7 +284,7 @@ function ckdmip_markdown(results, benchmark, paths)
     for r in results
         s = r.statistics
         push!(lines, "")
-        push!(lines, "## $(r.model_name) ($(r.Nlongwave_gpoints) LW × $(r.Nshortwave_gpoints) SW g-points)")
+        push!(lines, "## $(r.model_name) ($(r.Ngˡʷ) LW × $(r.Ngˢʷ) SW g-points)")
         push!(lines, "")
         push!(lines, "$(round(r.microseconds_per_column; digits = 1)) μs per column (optics + LW + $(length(r.μ₀)) SW solves), " *
                      "$(round(r.elapsed_seconds; digits = 3)) s total.")
@@ -356,8 +356,8 @@ function run_ckdmip_evaluation1(; models=(:climate_32x32, :climate_64x64))
             record = (; benchmark = "CKDMIP evaluation1 present-day", generated = string(now()),
                         input_files = collect(basename.(paths)),
                         model = result.model_name,
-                        Nlongwave_gpoints = result.Nlongwave_gpoints,
-                        Nshortwave_gpoints = result.Nshortwave_gpoints,
+                        Ngˡʷ = result.Ngˡʷ,
+                        Ngˢʷ = result.Ngˢʷ,
                         Nprofiles = result.Nprofiles, Nz = result.Nz,
                         μ₀ = result.μ₀, solar_constant = result.solar_constant, albedo = result.albedo,
                         surface_emissivity = 1.0,

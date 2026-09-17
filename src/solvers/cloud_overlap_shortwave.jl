@@ -160,39 +160,39 @@ end
     return clamp(FT(optics.overlap_parameter[interface_index]), zero(FT), one(FT))
 end
 
-@inline function shortwave_layer_reflectance_transmittance(::Type{FT}, optics, gpoint, k, μ₀,
+@inline function shortwave_layer_reflectance_transmittance(::Type{FT}, optics, g, k, μ₀,
                                                            direct_source_limit = Val(:unit)) where FT
-    τ_absorption = max(FT(optical_depth_at(optics, gpoint, k)), zero(FT))
-    τ_scattering = max(FT(rayleigh_optical_depth_at(optics, gpoint, k)), zero(FT))
+    τ_absorption = max(FT(optical_depth_at(optics, g, k)), zero(FT))
+    τ_scattering = max(FT(rayleigh_optical_depth_at(optics, g, k)), zero(FT))
     τ_total = τ_absorption + τ_scattering
     ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
-    ĝ = clamp(FT(scattering_asymmetry_at(optics, gpoint, k)), -one(FT), one(FT))
-    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, ĝ, direct_source_limit)
+    𝒢 = clamp(FT(scattering_asymmetry_at(optics, g, k)), -one(FT), one(FT))
+    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, 𝒢, direct_source_limit)
 end
 
 @inline function shortwave_layer_reflectance_transmittance_scaled(::Type{FT},
                                                                   clear,
                                                                   cloudy,
                                                                   scale,
-                                                                  gpoint,
+                                                                  g,
                                                                   k,
                                                                   μ₀,
                                                                   direct_source_limit = Val(:unit)) where FT
-    τ_absorption_clear = max(FT(optical_depth_at(clear, gpoint, k)), zero(FT))
-    τ_absorption_cloudy = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
-    τ_scattering_clear = max(FT(rayleigh_optical_depth_at(clear, gpoint, k)), zero(FT))
-    τ_scattering_cloudy = max(FT(rayleigh_optical_depth_at(cloudy, gpoint, k)), zero(FT))
-    ĝ_clear = clamp(FT(scattering_asymmetry_at(clear, gpoint, k)), -one(FT), one(FT))
-    ĝ_cloudy = clamp(FT(scattering_asymmetry_at(cloudy, gpoint, k)), -one(FT), one(FT))
+    τ_absorption_clear = max(FT(optical_depth_at(clear, g, k)), zero(FT))
+    τ_absorption_cloudy = max(FT(optical_depth_at(cloudy, g, k)), zero(FT))
+    τ_scattering_clear = max(FT(rayleigh_optical_depth_at(clear, g, k)), zero(FT))
+    τ_scattering_cloudy = max(FT(rayleigh_optical_depth_at(cloudy, g, k)), zero(FT))
+    𝒢_clear = clamp(FT(scattering_asymmetry_at(clear, g, k)), -one(FT), one(FT))
+    𝒢_cloudy = clamp(FT(scattering_asymmetry_at(cloudy, g, k)), -one(FT), one(FT))
     scale = max(FT(scale), zero(FT))
 
     τ_absorption = max(τ_absorption_clear + scale * (τ_absorption_cloudy - τ_absorption_clear), zero(FT))
     τ_scattering = max(τ_scattering_clear + scale * (τ_scattering_cloudy - τ_scattering_clear), zero(FT))
-    ĝτ_scattering = τ_scattering_clear * ĝ_clear + scale * (τ_scattering_cloudy * ĝ_cloudy - τ_scattering_clear * ĝ_clear)
-    ĝ = τ_scattering == zero(FT) ? zero(FT) : clamp(ĝτ_scattering / τ_scattering, -one(FT), one(FT))
+    𝒢τ_scattering = τ_scattering_clear * 𝒢_clear + scale * (τ_scattering_cloudy * 𝒢_cloudy - τ_scattering_clear * 𝒢_clear)
+    𝒢 = τ_scattering == zero(FT) ? zero(FT) : clamp(𝒢τ_scattering / τ_scattering, -one(FT), one(FT))
     τ_total = τ_absorption + τ_scattering
     ω = τ_total == zero(FT) ? zero(FT) : τ_scattering / τ_total
-    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, ĝ, direct_source_limit)
+    return shortwave_two_stream_layer(FT, μ₀, τ_total, ω, 𝒢, direct_source_limit)
 end
 
 @inline function gamma_tripleclouds_regions(::Type{FT}, cloud_fraction, fractional_standard_deviation) where FT
@@ -269,7 +269,7 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
                                         down::AbstractVector{FT},
                                         solver::CloudOverlapShortwave,
                                         optics::ShortwaveCloudOverlapOptics,
-                                        gpoint,
+                                        g,
                                         μ₀,
                                         incoming_horizontal,
                                         surface_albedo,
@@ -295,13 +295,13 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
     for k in 1:Nz
         reflectance[1, k], transmittance[1, k], direct_reflectance[1, k],
             direct_diffuse_transmittance[1, k], direct_transmittance[1, k] =
-            shortwave_layer_reflectance_transmittance(FT, optics.clear, gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance(FT, optics.clear, g, k, μ₀)
         reflectance[2, k], transmittance[2, k], direct_reflectance[2, k],
             direct_diffuse_transmittance[2, k], direct_transmittance[2, k] =
-            shortwave_layer_reflectance_transmittance_scaled(FT, optics.clear, optics.cloudy, thin_scaling[k], gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance_scaled(FT, optics.clear, optics.cloudy, thin_scaling[k], g, k, μ₀)
         reflectance[3, k], transmittance[3, k], direct_reflectance[3, k],
             direct_diffuse_transmittance[3, k], direct_transmittance[3, k] =
-            shortwave_layer_reflectance_transmittance_scaled(FT, optics.clear, optics.cloudy, thick_scaling[k], gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance_scaled(FT, optics.clear, optics.cloudy, thick_scaling[k], g, k, μ₀)
     end
 
     total_albedo = zeros(FT, 3, Nz + 1)
@@ -389,7 +389,7 @@ function adding_shortwave_column!(up::AbstractVector{FT},
                                   down::AbstractVector{FT},
                                   solver::CloudOverlapShortwave,
                                   optics::ShortwaveCloudOverlapOptics,
-                                  gpoint,
+                                  g,
                                   μ₀,
                                   incoming_horizontal,
                                   surface_albedo,
@@ -406,9 +406,9 @@ function adding_shortwave_column!(up::AbstractVector{FT},
 
     for k in 1:Nz
         clear_reflectance, clear_transmittance, clear_direct_reflectance, clear_direct_diffuse_transmittance, clear_direct_transmittance =
-            shortwave_layer_reflectance_transmittance(FT, optics.clear, gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance(FT, optics.clear, g, k, μ₀)
         cloudy_reflectance, cloudy_transmittance, cloudy_direct_reflectance, cloudy_direct_diffuse_transmittance, cloudy_direct_transmittance =
-            shortwave_layer_reflectance_transmittance(FT, optics.cloudy, gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance(FT, optics.cloudy, g, k, μ₀)
         cloud_weight = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
         clear_weight = one(FT) - cloud_weight
         reflectance[k] = clear_weight * clear_reflectance + cloud_weight * cloudy_reflectance
@@ -459,7 +459,7 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
                                           down::AbstractVector{FT},
                                           solver::CloudOverlapShortwave,
                                           optics::ShortwaveCloudOverlapOptics,
-                                          gpoint,
+                                          g,
                                           μ₀,
                                           incoming_horizontal,
                                           surface_albedo,
@@ -484,10 +484,10 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
     for k in 1:Nz
         reflectance[1, k], transmittance[1, k], direct_reflectance[1, k],
             direct_diffuse_transmittance[1, k], direct_transmittance[1, k] =
-            shortwave_layer_reflectance_transmittance(FT, optics.clear, gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance(FT, optics.clear, g, k, μ₀)
         reflectance[2, k], transmittance[2, k], direct_reflectance[2, k],
             direct_diffuse_transmittance[2, k], direct_transmittance[2, k] =
-            shortwave_layer_reflectance_transmittance(FT, optics.cloudy, gpoint, k, μ₀)
+            shortwave_layer_reflectance_transmittance(FT, optics.cloudy, g, k, μ₀)
     end
 
     total_albedo = zeros(FT, 2, Nz + 1)
@@ -607,16 +607,16 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     Nz = number_of_layers(optics.clear)
     if boundary_conditions.surface_albedo isa AbstractArray
         length(boundary_conditions.surface_albedo) == number_of_gpoints(optics.clear) ||
-            throw(DimensionMismatch("surface_albedo vector must have length Ngpoints"))
+            throw(DimensionMismatch("surface_albedo vector must have length Ng"))
     end
     if boundary_conditions.surface_albedo_direct isa AbstractArray
         length(boundary_conditions.surface_albedo_direct) == number_of_gpoints(optics.clear) ||
-            throw(DimensionMismatch("surface_albedo_direct vector must have length Ngpoints"))
+            throw(DimensionMismatch("surface_albedo_direct vector must have length Ng"))
     end
     if solver.overlap in (:adding, :matrix_maximum, :matrix_alpha, :tripleclouds_alpha)
         fluxes.shortwave_up .= zero(FT)
         fluxes.shortwave_down .= zero(FT)
-        for gpoint in 1:number_of_gpoints(optics.clear)
+        for g in 1:number_of_gpoints(optics.clear)
             scratch_up = zeros(FT, Nz + 1)
             scratch_down = zeros(FT, Nz + 1)
             path_factor = shortwave_path_factor(FT, atmosphere)
@@ -627,11 +627,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                     scratch_down,
                     solver,
                     optics,
-                    gpoint,
+                    g,
                     μ₀,
                     boundary_conditions.toa_shortwave_down,
-                    surface_albedo_at(boundary_conditions, gpoint),
-                    surface_albedo_direct_at(boundary_conditions, gpoint),
+                    surface_albedo_at(boundary_conditions, g),
+                    surface_albedo_direct_at(boundary_conditions, g),
                 )
             elseif solver.overlap in (:matrix_maximum, :matrix_alpha)
                 matrix_maximum_shortwave_column!(
@@ -639,11 +639,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                     scratch_down,
                     solver,
                     optics,
-                    gpoint,
+                    g,
                     μ₀,
                     boundary_conditions.toa_shortwave_down,
-                    surface_albedo_at(boundary_conditions, gpoint),
-                    surface_albedo_direct_at(boundary_conditions, gpoint),
+                    surface_albedo_at(boundary_conditions, g),
+                    surface_albedo_direct_at(boundary_conditions, g),
                 )
             else
                 adding_shortwave_column!(
@@ -651,14 +651,14 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                     scratch_down,
                     solver,
                     optics,
-                    gpoint,
+                    g,
                     μ₀,
                     boundary_conditions.toa_shortwave_down,
-                    surface_albedo_at(boundary_conditions, gpoint),
-                    surface_albedo_direct_at(boundary_conditions, gpoint),
+                    surface_albedo_at(boundary_conditions, g),
+                    surface_albedo_direct_at(boundary_conditions, g),
                 )
             end
-            w = FT(optics.clear.weights[gpoint])
+            w = FT(optics.clear.weights[g])
             fluxes.shortwave_up .+= w .* scratch_up
             fluxes.shortwave_down .+= w .* scratch_down
         end

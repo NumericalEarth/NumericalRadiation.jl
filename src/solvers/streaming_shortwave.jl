@@ -62,19 +62,19 @@ ShortwaveColumnScratch(Nz::Integer) = ShortwaveColumnScratch(Float64, Nz)
 
 Base.eltype(::ShortwaveColumnScratch{V}) where V = eltype(V)
 
-@inline gpoint_albedo(albedo::Number, gpoint) = albedo
-@inline gpoint_albedo(albedo, gpoint) = @inbounds albedo[gpoint]
+@inline gpoint_albedo(albedo::Number, g) = albedo
+@inline gpoint_albedo(albedo, g) = @inbounds albedo[g]
 
 """
 $(TYPEDSIGNATURES)
 
-Add the `weight`-scaled fluxes of g point `gpoint` to `flux_up` and `flux_down`
+Add the `weight`-scaled fluxes of g point `g` to `flux_up` and `flux_down`
 (length `Nz + 1`, top down), by the two-stream adding method of
 [`streaming_shortwave_fluxes!`](@ref) with scalar `direct_albedo` and
 `diffuse_albedo`. This is the single g-point body that every clear-sky
 shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
 """
-@inline function add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, gpoint, weight,
+@inline function add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, g, weight,
                                               μ₀, toa_irradiance, direct_albedo, diffuse_albedo,
                                               Nz, scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
@@ -94,14 +94,14 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     # direct beam, attenuated by the direct transmittance of every layer above.
     direct_above = incoming_normal
     @inbounds for k in 1:Nz
-        τ_absorption, τ_scattering, ĝ = layer_optics(gpoint, k)
+        τ_absorption, τ_scattering, 𝒢 = layer_optics(g, k)
         τ_absorption = max(FT(τ_absorption), zero(FT))
         τ_scattering = max(FT(τ_scattering), zero(FT))
         τ_total = τ_absorption + τ_scattering
         ω = ifelse(τ_total == zero(FT), zero(FT), τ_scattering / τ_total)
-        ĝ = clamp(FT(ĝ), -one(FT), one(FT))
+        𝒢 = clamp(FT(𝒢), -one(FT), one(FT))
         reflectance[k], transmittance[k], direct_reflectance[k], direct_diffuse_transmittance[k],
-            direct_transmittance = shortwave_two_stream_layer(FT, μ₀, τ_total, ω, ĝ)
+            direct_transmittance = shortwave_two_stream_layer(FT, μ₀, τ_total, ω, 𝒢)
         direct_above *= direct_transmittance
         direct_flux[k] = direct_above
     end
@@ -152,12 +152,12 @@ method of ecRad, with every g point streamed through one
 `flux_down` have length `Nz + 1`, are ordered top down (index 1 at the
 top of the atmosphere), and are zeroed here; `FT = eltype(flux_up)`.
 
-`layer_optics(gpoint, k)` returns the tuple `(τ_absorption, τ_scattering, ĝ)`
-of layer `k` for g point `gpoint`; the single-scattering albedo
+`layer_optics(g, k)` returns the tuple `(τ_absorption, τ_scattering, 𝒢)`
+of layer `k` for g point `g`; the single-scattering albedo
 `ω = τ_scattering / (τ_absorption + τ_scattering)` and the total optical depth
 are formed here, and every layer passes through
 [`shortwave_two_stream_layer`](@ref), which applies delta-Eddington scaling.
-`weights[gpoint]` scales the g point's contribution. `direct_albedo` and
+`weights[g]` scales the g point's contribution. `direct_albedo` and
 `diffuse_albedo` are broadband numbers or per-g-point indexables.
 
 `toa_irradiance` is the downwelling shortwave flux through a horizontal
@@ -171,18 +171,18 @@ night (`μ₀ ≤ 0`).
 Allocation-free; `scratch` may hold views into a host's own arrays.
 """
 @inline function streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, μ₀, toa_irradiance,
-                                             direct_albedo, diffuse_albedo, weights, Ngpoints, Nz,
+                                             direct_albedo, diffuse_albedo, weights, Ng, Nz,
                                              scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
     @inbounds for k in 1:Nz + 1
         flux_up[k] = zero(FT)
         flux_down[k] = zero(FT)
     end
-    for gpoint in 1:Ngpoints
-        add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, gpoint,
-                                     @inbounds(weights[gpoint]), μ₀, toa_irradiance,
-                                     gpoint_albedo(direct_albedo, gpoint),
-                                     gpoint_albedo(diffuse_albedo, gpoint),
+    for g in 1:Ng
+        add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, g,
+                                     @inbounds(weights[g]), μ₀, toa_irradiance,
+                                     gpoint_albedo(direct_albedo, g),
+                                     gpoint_albedo(diffuse_albedo, g),
                                      Nz, scratch)
     end
     return nothing

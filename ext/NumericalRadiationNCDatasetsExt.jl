@@ -197,8 +197,8 @@ function read_shortwave_weights(dataset)
         total = sum(weights)
         total > 0 && return weights ./ total
     end
-    Ngpoints = size(dataset["band_number"], 1)
-    return fill(inv(Float64(Ngpoints)), Ngpoints)
+    Ng = size(dataset["band_number"], 1)
+    return fill(inv(Float64(Ng)), Ng)
 end
 
 function read_longwave_source_table(dataset, longwave_weights)
@@ -207,8 +207,8 @@ function read_longwave_source_table(dataset, longwave_weights)
     size(planck, 1) == length(longwave_weights) ||
         throw(DimensionMismatch("planck_function g-point dimension must match longwave weights"))
     source = similar(planck)
-    for gpoint in axes(planck, 1)
-        source[gpoint, :] .= planck[gpoint, :] ./ longwave_weights[gpoint]
+    for g in axes(planck, 1)
+        source[g, :] .= planck[g, :] ./ longwave_weights[g]
     end
     return temperature_grid, source
 end

@@ -679,13 +679,13 @@ end
 
     longwave_table = zeros(2, 2, 2, 2)
     shortwave_table = zeros(1, 2, 2, 2)
-    for gpoint in axes(longwave_table, 1), j in axes(longwave_table, 2),
+    for g in axes(longwave_table, 1), j in axes(longwave_table, 2),
         iᵖ in axes(longwave_table, 3), iᵀ in axes(longwave_table, 4)
-        longwave_table[gpoint, j, iᵖ, iᵀ] = 100gpoint + 10j + 0.001pressure_grid[iᵖ] + 0.01temperature_grid[iᵀ]
+        longwave_table[g, j, iᵖ, iᵀ] = 100g + 10j + 0.001pressure_grid[iᵖ] + 0.01temperature_grid[iᵀ]
     end
-    for gpoint in axes(shortwave_table, 1), j in axes(shortwave_table, 2),
+    for g in axes(shortwave_table, 1), j in axes(shortwave_table, 2),
         iᵖ in axes(shortwave_table, 3), iᵀ in axes(shortwave_table, 4)
-        shortwave_table[gpoint, j, iᵖ, iᵀ] = 10gpoint + j + 0.0001pressure_grid[iᵖ] + 0.001temperature_grid[iᵀ]
+        shortwave_table[g, j, iᵖ, iᵀ] = 10g + j + 0.0001pressure_grid[iᵖ] + 0.001temperature_grid[iᵀ]
     end
 
     atmosphere = ColumnAtmosphere(
@@ -717,8 +717,8 @@ end
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
-    longwave_coefficient(gpoint, j, p, t) = 100gpoint + 10j + 0.001p + 0.01t
-    shortwave_coefficient(gpoint, j, p, t) = 10gpoint + j + 0.0001p + 0.001t
+    longwave_coefficient(g, j, p, t) = 100g + 10j + 0.001p + 0.01t
+    shortwave_coefficient(g, j, p, t) = 10g + j + 0.0001p + 0.001t
     interpolated_pressure(p) = let (i₀ᵖ, i₁ᵖ, weight) = NumericalRadiation.pressure_axis_bracket(pressure_grid, p)
         pressure_grid[i₀ᵖ] + weight * (pressure_grid[i₁ᵖ] - pressure_grid[i₀ᵖ])
     end
@@ -883,7 +883,7 @@ end
 @testset "ecCKD tabulated interpolation is bit-exact" begin
     Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
     pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length=Npressures))
-    Nlongwave_gpoints, Nshortwave_gpoints = 3, 2
+    Ngˡʷ, Ngˢʷ = 3, 2
 
     make_atmosphere(gases) = ColumnAtmosphere(
         pressure_layers = [7_500.0, 33_000.0, 88_000.0],
@@ -895,8 +895,8 @@ end
         geometry = (;),
     )
 
-    longwave_entry(gpoint, j, p, t) = 1e-4 * (7gpoint + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
-    shortwave_entry(gpoint, j, p, t) = 1e-5 * (5gpoint + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
+    longwave_entry(g, j, p, t) = 1e-4 * (7g + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
+    shortwave_entry(g, j, p, t) = 1e-5 * (5g + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
 
     @testset "vector temperature grid" begin
         temperature_grid = [200.0, 250.0, 300.0]
@@ -905,18 +905,18 @@ end
             names = (:h2o, :co2),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
-            longwave_absorption = [longwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
-                                   for gpoint in 1:Nlongwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
-            shortwave_absorption = [shortwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
-                                    for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            longwave_absorption = [longwave_entry(g, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
+                                   for g in 1:Ngˡʷ, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            shortwave_absorption = [shortwave_entry(g, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
+                                    for g in 1:Ngˢʷ, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             longwave_source_scale = [0.7, 1.0, 1.3],
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
         atmosphere = make_atmosphere((h2o=[3.1, 12.7, 41.9], co2=8.3))
-        longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
-                                  weights = zeros(Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights=zeros(Nshortwave_gpoints))
+        longwave = LongwaveOptics(zeros(Ngˡʷ, 3), zeros(Ngˡʷ, 3);
+                                  weights = zeros(Ngˡʷ))
+        shortwave = ShortwaveOptics(zeros(Ngˢʷ, 3); weights=zeros(Ngˢʷ))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
@@ -952,31 +952,31 @@ end
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = water_vapor_grid,
             gas_reference_mole_fractions = [0.0, 4.0e-4, 0.0],
-            longwave_absorption = [longwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
-                                   for gpoint in 1:Nlongwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
-            shortwave_absorption = [shortwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
-                                    for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
-            longwave_water_vapor_absorption = [1e-3 * gpoint * (1 + 1e-5 * pressure_grid[iᵖ]) *
+            longwave_absorption = [longwave_entry(g, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
+                                   for g in 1:Ngˡʷ, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            shortwave_absorption = [shortwave_entry(g, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
+                                    for g in 1:Ngˢʷ, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            longwave_water_vapor_absorption = [1e-3 * g * (1 + 1e-5 * pressure_grid[iᵖ]) *
                                                (1 + 1e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 10iᴴ)
-                                               for gpoint in 1:Nlongwave_gpoints, iᵖ in 1:Npressures,
+                                               for g in 1:Ngˡʷ, iᵖ in 1:Npressures,
                                                iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
-            shortwave_water_vapor_absorption = [1e-4 * gpoint * (1 + 2e-5 * pressure_grid[iᵖ]) *
+            shortwave_water_vapor_absorption = [1e-4 * g * (1 + 2e-5 * pressure_grid[iᵖ]) *
                                                 (1 + 2e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 5iᴴ)
-                                                for gpoint in 1:Nshortwave_gpoints, iᵖ in 1:Npressures,
+                                                for g in 1:Ngˢʷ, iᵖ in 1:Npressures,
                                                 iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
-            longwave_source_table = [1.0 * (gpoint + 2) * st^2
-                                     for gpoint in 1:Nlongwave_gpoints, st in source_temperature_grid],
+            longwave_source_table = [1.0 * (g + 2) * st^2
+                                     for g in 1:Ngˡʷ, st in source_temperature_grid],
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
         atmosphere = make_atmosphere((h2o=[3.1, 12.7, 41.9], co2=8.3, composite=[4.2e2, 1.1e3, 2.6e3]))
-        longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
-                                  source_top = zeros(Nlongwave_gpoints, 3),
-                                  source_bottom = zeros(Nlongwave_gpoints, 3),
-                                  weights = zeros(Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights=zeros(Nshortwave_gpoints))
+        longwave = LongwaveOptics(zeros(Ngˡʷ, 3), zeros(Ngˡʷ, 3);
+                                  source_top = zeros(Ngˡʷ, 3),
+                                  source_bottom = zeros(Ngˡʷ, 3),
+                                  weights = zeros(Ngˡʷ))
+        shortwave = ShortwaveOptics(zeros(Ngˢʷ, 3); weights=zeros(Ngˢʷ))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
@@ -1016,7 +1016,7 @@ end
 @testset "tabulated gas optics is inferrable, Float32-clean, and Adapt-stable" begin
     function tabulated_fixture(FT, matrix_temperature_grid::Bool)
         Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
-        Nlongwave_gpoints, Nshortwave_gpoints, Ngases, Nz = 3, 2, 3, 3
+        Ngˡʷ, Ngˢʷ, Ngases, Nz = 3, 2, 3, 3
         pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length=Npressures)))
         temperature_grid = matrix_temperature_grid ?
             FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures] :
@@ -1031,23 +1031,23 @@ end
             water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
             gas_reference_mole_fractions = FT[0, 4e-4, 0],
             longwave_absorption =
-                FT[1e-4 * (7gpoint + 3j) * (1 + 1e-5 * pressure_grid[iᵖ]) *
+                FT[1e-4 * (7g + 3j) * (1 + 1e-5 * pressure_grid[iᵖ]) *
                    (1 + 1e-3 * gridded(iᵖ, iᵀ))
-                   for gpoint in 1:Nlongwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+                   for g in 1:Ngˡʷ, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             shortwave_absorption =
-                FT[1e-5 * (5gpoint + 2j) * (1 + 2e-5 * pressure_grid[iᵖ]) *
+                FT[1e-5 * (5g + 2j) * (1 + 2e-5 * pressure_grid[iᵖ]) *
                    (1 + 2e-3 * gridded(iᵖ, iᵀ))
-                   for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+                   for g in 1:Ngˢʷ, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             longwave_water_vapor_absorption =
-                FT[1e-3 * gpoint * (1 + 10iᴴ)
-                   for gpoint in 1:Nlongwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
+                FT[1e-3 * g * (1 + 10iᴴ)
+                   for g in 1:Ngˡʷ, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_water_vapor_absorption =
-                FT[1e-4 * gpoint * (1 + 5iᴴ)
-                   for gpoint in 1:Nshortwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
+                FT[1e-4 * g * (1 + 5iᴴ)
+                   for g in 1:Ngˢʷ, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_rayleigh_molar_scattering = FT[1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
-            longwave_source_table = FT[(gpoint + 2) * st^2
-                                       for gpoint in 1:Nlongwave_gpoints, st in source_temperature_grid],
+            longwave_source_table = FT[(g + 2) * st^2
+                                       for g in 1:Ngˡʷ, st in source_temperature_grid],
             longwave_weights = FT[0.2, 0.3, 0.5],
             shortwave_weights = FT[0.45, 0.55],
         )
@@ -1061,12 +1061,12 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, Nz),
-                                  zeros(FT, Nlongwave_gpoints, Nz);
-                                  source_top = zeros(FT, Nlongwave_gpoints, Nz),
-                                  source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
-                                  weights = zeros(FT, Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights=zeros(FT, Nshortwave_gpoints))
+        longwave = LongwaveOptics(zeros(FT, Ngˡʷ, Nz),
+                                  zeros(FT, Ngˡʷ, Nz);
+                                  source_top = zeros(FT, Ngˡʷ, Nz),
+                                  source_bottom = zeros(FT, Ngˡʷ, Nz),
+                                  weights = zeros(FT, Ngˡʷ))
+        shortwave = ShortwaveOptics(zeros(FT, Ngˢʷ, Nz); weights=zeros(FT, Ngˢʷ))
         return model, atmosphere, longwave, shortwave
     end
 

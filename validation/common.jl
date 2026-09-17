@@ -99,21 +99,21 @@ end
 ##### One column through the optics and the streaming solvers
 #####
 
-# Layer-optics functors over the `(Ngpoints, Nz)` arrays `optical_properties!`
+# Layer-optics functors over the `(Ng, Nz)` arrays `optical_properties!`
 # fills, in the form the streaming solvers take.
 struct LongwaveLayerOptics{L}
     longwave :: L
 end
-@inline (o::LongwaveLayerOptics)(gpoint, k) = (o.longwave.optical_depth[gpoint, k],
-                                               o.longwave.source_top[gpoint, k],
-                                               o.longwave.source_bottom[gpoint, k])
+@inline (o::LongwaveLayerOptics)(g, k) = (o.longwave.optical_depth[g, k],
+                                          o.longwave.source_top[g, k],
+                                          o.longwave.source_bottom[g, k])
 
 struct ShortwaveLayerOptics{S}
     shortwave :: S
 end
-@inline (o::ShortwaveLayerOptics)(gpoint, k) = (o.shortwave.optical_depth[gpoint, k],
-                                                o.shortwave.rayleigh_optical_depth[gpoint, k],
-                                                o.shortwave.scattering_asymmetry[gpoint, k])
+@inline (o::ShortwaveLayerOptics)(g, k) = (o.shortwave.optical_depth[g, k],
+                                           o.shortwave.rayleigh_optical_depth[g, k],
+                                           o.shortwave.scattering_asymmetry[g, k])
 
 # Optics arrays and solver scratch for a model and layer count, allocated once
 # and reused for every profile of a benchmark.
@@ -127,12 +127,12 @@ end
 
 function ColumnWorkspace(model, Nz)
     FT = eltype(model)
-    Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, Nz), zeros(FT, Nlongwave_gpoints, Nz);
-                              source_top = zeros(FT, Nlongwave_gpoints, Nz),
-                              source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
-                              weights = zeros(FT, Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights=zeros(FT, Nshortwave_gpoints))
+    Ngˡʷ, Ngˢʷ = length(model.longwave_weights), length(model.shortwave_weights)
+    longwave = LongwaveOptics(zeros(FT, Ngˡʷ, Nz), zeros(FT, Ngˡʷ, Nz);
+                              source_top = zeros(FT, Ngˡʷ, Nz),
+                              source_bottom = zeros(FT, Ngˡʷ, Nz),
+                              weights = zeros(FT, Ngˡʷ))
+    shortwave = ShortwaveOptics(zeros(FT, Ngˢʷ, Nz); weights=zeros(FT, Ngˢʷ))
     return ColumnWorkspace(longwave, shortwave, zeros(FT, Nz), zeros(FT, Nz), ShortwaveColumnScratch(FT, Nz))
 end
 
@@ -216,7 +216,7 @@ function gauss_legendre_flux_nodes(Nnodes)
 end
 
 """
-    longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz,
+    longwave_quadrature_fluxes!(up, down, longwave, weights, Ng, Nz,
                                 surface_emission, surface_albedo, nodes)
 
 No-scattering longwave fluxes of one column with the layer transfer of
@@ -228,22 +228,22 @@ Lambertian surface reflection of the angle-integrated downwelling flux. With
 [`gauss_legendre_flux_nodes`](@ref) it isolates the angular-integration part
 of a difference to a line-by-line reference.
 """
-function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz, surface_emission, surface_albedo, nodes)
+function longwave_quadrature_fluxes!(up, down, longwave, weights, Ng, Nz, surface_emission, surface_albedo, nodes)
     fill!(up, 0)
     fill!(down, 0)
     Nnodes = length(nodes)
     transmittance = zeros(Nz, Nnodes)
     source_up = zeros(Nz, Nnodes)
-    for gpoint in 1:Ngpoints
+    for g in 1:Ng
         # Downward sweeps at every node; the reflected part of the total
         # downwelling flux at the surface is isotropic.
         down_surface = 0.0
         for (a, (secant, weight)) in enumerate(nodes)
-            w = weights[gpoint] * weight
+            w = weights[g] * weight
             d = 0.0
             for k in 1:Nz
-                τ = longwave.optical_depth[gpoint, k]
-                B_top, B_bottom = longwave.source_top[gpoint, k], longwave.source_bottom[gpoint, k]
+                τ = longwave.optical_depth[g, k]
+                B_top, B_bottom = longwave.source_top[g, k], longwave.source_bottom[g, k]
                 coefficient = secant * τ
                 layer_transmittance = exp(-coefficient)
                 if τ > 1e-3
@@ -261,9 +261,9 @@ function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, Nz, 
             end
             down_surface += weight * d
         end
-        surface_up = surface_emission[gpoint] + surface_albedo * down_surface
+        surface_up = surface_emission[g] + surface_albedo * down_surface
         for (a, (_, weight)) in enumerate(nodes)
-            w = weights[gpoint] * weight
+            w = weights[g] * weight
             u = surface_up
             up[Nz + 1] += w * u
             for k in Nz:-1:1

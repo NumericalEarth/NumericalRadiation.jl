@@ -125,17 +125,17 @@ nothing #hide
 # properties for each band, and broadband fluxes on the interfaces.
 
 function radiation_work_arrays(gas_optics, Nz)
-    Nlongwave_gpoints = length(gas_optics.longwave_weights)
-    Nshortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(Nlongwave_gpoints, Nz),
-                              zeros(Nlongwave_gpoints, Nz);
-                              source_top = zeros(Nlongwave_gpoints, Nz),
-                              source_bottom = zeros(Nlongwave_gpoints, Nz),
-                              weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz);
-                                rayleigh_optical_depth = zeros(Nshortwave_gpoints, Nz),
-                                scattering_asymmetry = zeros(Nshortwave_gpoints, Nz),
-                                weights = zeros(Nshortwave_gpoints))
+    Ngˡʷ = length(gas_optics.longwave_weights)
+    Ngˢʷ = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Ngˡʷ, Nz),
+                              zeros(Ngˡʷ, Nz);
+                              source_top = zeros(Ngˡʷ, Nz),
+                              source_bottom = zeros(Ngˡʷ, Nz),
+                              weights = zeros(Ngˡʷ))
+    shortwave = ShortwaveOptics(zeros(Ngˢʷ, Nz);
+                                rayleigh_optical_depth = zeros(Ngˢʷ, Nz),
+                                scattering_asymmetry = zeros(Ngˢʷ, Nz),
+                                weights = zeros(Ngˢʷ))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),

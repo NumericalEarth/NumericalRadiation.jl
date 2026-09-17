@@ -38,13 +38,13 @@ $(TYPEDEF)
 Spectral mapping from ecCKD resolved wavenumber intervals to g-points.
 
 `wavenumber1` and `wavenumber2` describe the resolved spectral intervals in
-cm^-1. `gpoint_fraction` has shape `(wavenumber, gpoint)` and gives the
+cm^-1. `gpoint_fraction` has shape `(wavenumber, g)` and gives the
 fractional contribution of each interval to each gas-optics g-point.
 
 Fields:
 - `wavenumber1`: Lower wavenumber edge for each resolved spectral interval in cm^-1
 - `wavenumber2`: Upper wavenumber edge for each resolved spectral interval in cm^-1
-- `gpoint_fraction`: Fractional contribution with shape `(wavenumber, gpoint)`
+- `gpoint_fraction`: Fractional contribution with shape `(wavenumber, g)`
 - `interval_weight`: Spectral interval weights, e.g. solar irradiance or Planck weights
 """
 struct EcCKDSpectralMapping{FT, V, M}
@@ -205,13 +205,13 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
     end
 
     FT = promote_type(eltype(table), eltype(mapping), typeof(float(effective_radius)))
-    Ngpoints = size(mapping.gpoint_fraction, 2)
+    Ng = size(mapping.gpoint_fraction, 2)
     # Weighted sums over the intervals of each g point: Σw κ, Σw κω (the
-    # scattering extinction) and Σw κω ĝ, plus the weights Σw.
-    Σκ = zeros(FT, Ngpoints)
-    Σκ_scattering = zeros(FT, Ngpoints)
-    Σκ_scattering_ĝ = zeros(FT, Ngpoints)
-    Σw = zeros(FT, Ngpoints)
+    # scattering extinction) and Σw κω 𝒢, plus the weights Σw.
+    Σκ = zeros(FT, Ng)
+    Σκ_scattering = zeros(FT, Ng)
+    Σκ_scattering_𝒢 = zeros(FT, Ng)
+    Σw = zeros(FT, Ng)
 
     for interval in axes(mapping.gpoint_fraction, 1)
         width = abs(FT(mapping.wavenumber2[interval]) - FT(mapping.wavenumber1[interval]))
@@ -220,39 +220,39 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
         properties = cloud_scattering_properties(table, table_index, effective_radius)
         κ = FT(properties.mass_extinction_coefficient)
         ω = FT(properties.single_scattering_albedo)
-        ĝ = FT(properties.asymmetry_factor)
+        𝒢 = FT(properties.asymmetry_factor)
         if delta_eddington_average
-            κ, ω, ĝ = delta_eddington(κ, ω, ĝ)
+            κ, ω, 𝒢 = delta_eddington(κ, ω, 𝒢)
         end
-        for gpoint in 1:Ngpoints
-            w = width * FT(mapping.interval_weight[interval]) * FT(mapping.gpoint_fraction[interval, gpoint])
+        for g in 1:Ng
+            w = width * FT(mapping.interval_weight[interval]) * FT(mapping.gpoint_fraction[interval, g])
             w == 0 && continue
             κ_scattering = κ * ω
-            Σκ[gpoint] += w * κ
-            Σκ_scattering[gpoint] += w * κ_scattering
-            Σκ_scattering_ĝ[gpoint] += w * κ_scattering * ĝ
-            Σw[gpoint] += w
+            Σκ[g] += w * κ
+            Σκ_scattering[g] += w * κ_scattering
+            Σκ_scattering_𝒢[g] += w * κ_scattering * 𝒢
+            Σw[g] += w
         end
     end
 
-    ω = zeros(FT, Ngpoints)
-    ĝ = zeros(FT, Ngpoints)
-    for gpoint in 1:Ngpoints
-        if Σw[gpoint] > 0
-            Σκ[gpoint] /= Σw[gpoint]
-            Σκ_scattering[gpoint] /= Σw[gpoint]
+    ω = zeros(FT, Ng)
+    𝒢 = zeros(FT, Ng)
+    for g in 1:Ng
+        if Σw[g] > 0
+            Σκ[g] /= Σw[g]
+            Σκ_scattering[g] /= Σw[g]
         end
-        if Σκ[gpoint] > 0
-            ω[gpoint] = clamp(Σκ_scattering[gpoint] / Σκ[gpoint], zero(FT), one(FT))
+        if Σκ[g] > 0
+            ω[g] = clamp(Σκ_scattering[g] / Σκ[g], zero(FT), one(FT))
         end
-        if Σκ_scattering[gpoint] > 0
-            ĝ[gpoint] = clamp(Σκ_scattering_ĝ[gpoint] / (Σκ_scattering[gpoint] * Σw[gpoint]), -one(FT), one(FT))
+        if Σκ_scattering[g] > 0
+            𝒢[g] = clamp(Σκ_scattering_𝒢[g] / (Σκ_scattering[g] * Σw[g]), -one(FT), one(FT))
         end
         if delta_eddington_average
-            Σκ[gpoint], ω[gpoint], ĝ[gpoint] = revert_delta_eddington(Σκ[gpoint], ω[gpoint], ĝ[gpoint])
+            Σκ[g], ω[g], 𝒢[g] = revert_delta_eddington(Σκ[g], ω[g], 𝒢[g])
         end
     end
-    return (mass_extinction_coefficient=Σκ, single_scattering_albedo=ω, asymmetry_factor=ĝ)
+    return (mass_extinction_coefficient=Σκ, single_scattering_albedo=ω, asymmetry_factor=𝒢)
 end
 
 @inline function find_spectral_interval(mapping::EcCKDSpectralMapping, wavenumber)
@@ -268,8 +268,8 @@ function ecrad_cloud_mapping_matrix(table::CloudScatteringTable, mapping::EcCKDS
     FT = promote_type(eltype(table), eltype(mapping))
     Nwavenumbers = length(table.wavenumber)
     Nintervals = length(mapping.wavenumber1)
-    Ngpoints = size(mapping.gpoint_fraction, 2)
-    matrix = zeros(FT, Ngpoints, Nwavenumbers)
+    Ng = size(mapping.gpoint_fraction, 2)
+    matrix = zeros(FT, Ng, Nwavenumbers)
     interval_weight = zeros(FT, Nintervals)
 
     for wavenumber_index in 1:Nwavenumbers
@@ -343,33 +343,33 @@ function ecrad_cloud_mapping_matrix(table::CloudScatteringTable, mapping::EcCKDS
         end
 
         interval_weight .*= FT.(mapping.interval_weight)
-        for gpoint in 1:Ngpoints
-            matrix[gpoint, wavenumber_index] = sum(interval_weight .* view(mapping.gpoint_fraction, :, gpoint))
+        for g in 1:Ng
+            matrix[g, wavenumber_index] = sum(interval_weight .* view(mapping.gpoint_fraction, :, g))
         end
     end
 
-    for gpoint in 1:Ngpoints
-        total = sum(view(matrix, gpoint, :))
-        total > 0 && (matrix[gpoint, :] ./= total)
+    for g in 1:Ng
+        total = sum(view(matrix, g, :))
+        total > 0 && (matrix[g, :] ./= total)
     end
     return matrix
 end
 
-# Delta-Eddington scaling `(τ, ω, ĝ) -> (τ′, ω′, ĝ′)` with forward peak `f = ĝ²`,
-#     τ′ = (1 - ω f) τ,   ω′ = (1 - f) ω / (1 - ω f),   ĝ′ = ĝ / (1 + ĝ),
+# Delta-Eddington scaling `(τ, ω, 𝒢) -> (τ′, ω′, 𝒢′)` with forward peak `f = 𝒢²`,
+#     τ′ = (1 - ω f) τ,   ω′ = (1 - f) ω / (1 - ω f),   𝒢′ = 𝒢 / (1 + 𝒢),
 # and its inverse, used to average cloud properties in the scaled space.
-@inline function delta_eddington(τ, ω, ĝ)
-    f = ĝ * ĝ
+@inline function delta_eddington(τ, ω, 𝒢)
+    f = 𝒢 * 𝒢
     denominator = one(τ) - ω * f
-    return (τ * denominator, ω * (one(ω) - f) / denominator, ĝ / (one(ĝ) + ĝ))
+    return (τ * denominator, ω * (one(ω) - f) / denominator, 𝒢 / (one(𝒢) + 𝒢))
 end
 
-@inline function revert_delta_eddington(τ′, ω′, ĝ′)
-    ĝ = ĝ′ / (one(ĝ′) - ĝ′)
-    f = ĝ * ĝ
+@inline function revert_delta_eddington(τ′, ω′, 𝒢′)
+    𝒢 = 𝒢′ / (one(𝒢′) - 𝒢′)
+    f = 𝒢 * 𝒢
     ω = ω′ / (one(ω′) - f + f * ω′)
     τ = τ′ / (one(τ′) - ω * f)
-    return τ, ω, ĝ
+    return τ, ω, 𝒢
 end
 
 function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
@@ -379,56 +379,56 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
                                                   thick_averaging::Bool)
     FT = promote_type(eltype(table), eltype(mapping), typeof(float(effective_radius)))
     weights = ecrad_cloud_mapping_matrix(table, mapping)
-    Ngpoints = size(weights, 1)
+    Ng = size(weights, 1)
     # Weighted sums over the table wavenumbers of each g point (the weights of
-    # each g point sum to one): Σw κ, Σw κω, Σw κω ĝ and Σw ℛ∞, the latter the
+    # each g point sum to one): Σw κ, Σw κω, Σw κω 𝒢 and Σw ℛ∞, the latter the
     # reflectance of a semi-infinite layer used by ecRad's thick averaging.
-    Σκ = zeros(FT, Ngpoints)
-    Σκ_scattering = zeros(FT, Ngpoints)
-    Σκ_scattering_ĝ = zeros(FT, Ngpoints)
-    Σℛ∞ = zeros(FT, Ngpoints)
+    Σκ = zeros(FT, Ng)
+    Σκ_scattering = zeros(FT, Ng)
+    Σκ_scattering_𝒢 = zeros(FT, Ng)
+    Σℛ∞ = zeros(FT, Ng)
 
     for wavenumber_index in axes(weights, 2)
         properties = cloud_scattering_properties(table, wavenumber_index, effective_radius)
         κ = FT(properties.mass_extinction_coefficient)
         ω = FT(properties.single_scattering_albedo)
-        ĝ = FT(properties.asymmetry_factor)
+        𝒢 = FT(properties.asymmetry_factor)
         if delta_eddington_average
-            κ, ω, ĝ = delta_eddington(κ, ω, ĝ)
+            κ, ω, 𝒢 = delta_eddington(κ, ω, 𝒢)
         end
         κ_scattering = κ * ω
         ℛ∞ = zero(FT)
         if thick_averaging
-            denominator = max(one(FT) - ω * ĝ, eps(FT))
+            denominator = max(one(FT) - ω * 𝒢, eps(FT))
             root = sqrt(max((one(FT) - ω) / denominator, zero(FT)))
             ℛ∞ = (one(FT) - root) / (one(FT) + root)
         end
-        for gpoint in 1:Ngpoints
-            w = FT(weights[gpoint, wavenumber_index])
+        for g in 1:Ng
+            w = FT(weights[g, wavenumber_index])
             w == 0 && continue
-            Σκ[gpoint] += w * κ
-            Σκ_scattering[gpoint] += w * κ_scattering
-            Σκ_scattering_ĝ[gpoint] += w * κ_scattering * ĝ
-            Σℛ∞[gpoint] += w * ℛ∞
+            Σκ[g] += w * κ
+            Σκ_scattering[g] += w * κ_scattering
+            Σκ_scattering_𝒢[g] += w * κ_scattering * 𝒢
+            Σℛ∞[g] += w * ℛ∞
         end
     end
 
-    ω = zeros(FT, Ngpoints)
-    ĝ = zeros(FT, Ngpoints)
-    for gpoint in 1:Ngpoints
-        Σκ[gpoint] > 0 && (ω[gpoint] = clamp(Σκ_scattering[gpoint] / Σκ[gpoint], zero(FT), one(FT)))
-        Σκ_scattering[gpoint] > 0 &&
-            (ĝ[gpoint] = clamp(Σκ_scattering_ĝ[gpoint] / Σκ_scattering[gpoint],
-                               -one(FT), one(FT)))
+    ω = zeros(FT, Ng)
+    𝒢 = zeros(FT, Ng)
+    for g in 1:Ng
+        Σκ[g] > 0 && (ω[g] = clamp(Σκ_scattering[g] / Σκ[g], zero(FT), one(FT)))
+        Σκ_scattering[g] > 0 &&
+            (𝒢[g] = clamp(Σκ_scattering_𝒢[g] / Σκ_scattering[g],
+                          -one(FT), one(FT)))
         if thick_averaging
-            ℛ∞ = clamp(Σℛ∞[gpoint], zero(FT), one(FT))
-            denominator = (one(FT) + ℛ∞)^2 - ĝ[gpoint] * (one(FT) - ℛ∞)^2
-            ω[gpoint] = denominator > 0 ? clamp(FT(4) * ℛ∞ / denominator, zero(FT), one(FT)) : zero(FT)
+            ℛ∞ = clamp(Σℛ∞[g], zero(FT), one(FT))
+            denominator = (one(FT) + ℛ∞)^2 - 𝒢[g] * (one(FT) - ℛ∞)^2
+            ω[g] = denominator > 0 ? clamp(FT(4) * ℛ∞ / denominator, zero(FT), one(FT)) : zero(FT)
         end
         if delta_eddington_average
-            Σκ[gpoint], ω[gpoint], ĝ[gpoint] = revert_delta_eddington(Σκ[gpoint], ω[gpoint], ĝ[gpoint])
+            Σκ[g], ω[g], 𝒢[g] = revert_delta_eddington(Σκ[g], ω[g], 𝒢[g])
         end
     end
 
-    return (mass_extinction_coefficient=Σκ, single_scattering_albedo=ω, asymmetry_factor=ĝ)
+    return (mass_extinction_coefficient=Σκ, single_scattering_albedo=ω, asymmetry_factor=𝒢)
 end

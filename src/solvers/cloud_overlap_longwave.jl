@@ -113,53 +113,53 @@ function u_overlap_matrix_tripleclouds_alpha!(u::AbstractMatrix{FT},
 end
 
 # Reflectance, transmittance and upward and downward sources `(ℛ, 𝒯, Sꜛ, Sꜜ)`
-# of layer `k` at g point `gpoint`: the scattering two-stream solution when
-# the optics carry `ω` and `ĝ`, the linear-in-τ Planck path when they carry
+# of layer `k` at g point `g`: the scattering two-stream solution when
+# the optics carry `ω` and `𝒢`, the linear-in-τ Planck path when they carry
 # interface sources, and otherwise the isothermal layer `𝒯 = e^{-τ}`,
 # `S = B (1 - 𝒯)`.
-@inline function longwave_layer_terms(::Type{FT}, optics, gpoint, k) where FT
-    τ = optical_depth_at(optics, gpoint, k)
-    B_top, B_bottom = longwave_fallback_planck_sources(FT, optics, gpoint, k)
+@inline function longwave_layer_terms(::Type{FT}, optics, g, k) where FT
+    τ = optical_depth_at(optics, g, k)
+    B_top, B_bottom = longwave_fallback_planck_sources(FT, optics, g, k)
     if has_longwave_scattering(optics)
         return longwave_reflectance_transmittance_sources(
-            FT, τ, single_scattering_albedo_at(optics, gpoint, k), scattering_asymmetry_at(optics, gpoint, k),
+            FT, τ, single_scattering_albedo_at(optics, g, k), scattering_asymmetry_at(optics, g, k),
             B_top, B_bottom)
     elseif has_interface_sources(optics)
         𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
         return zero(FT), 𝒯, Sꜛ, Sꜜ
     end
     𝒯 = exp(-FT(τ))
-    S = FT(source_at(optics, gpoint, k)) * (one(FT) - 𝒯)
+    S = FT(source_at(optics, g, k)) * (one(FT) - 𝒯)
     return zero(FT), 𝒯, S, S
 end
 
-@inline function longwave_layer_terms_scaled(::Type{FT}, clear, cloudy, scale, gpoint, k) where FT
-    τ_clear = max(FT(optical_depth_at(clear, gpoint, k)), zero(FT))
-    τ_cloudy = max(FT(optical_depth_at(cloudy, gpoint, k)), zero(FT))
+@inline function longwave_layer_terms_scaled(::Type{FT}, clear, cloudy, scale, g, k) where FT
+    τ_clear = max(FT(optical_depth_at(clear, g, k)), zero(FT))
+    τ_cloudy = max(FT(optical_depth_at(cloudy, g, k)), zero(FT))
     τ = max(τ_clear + max(FT(scale), zero(FT)) * (τ_cloudy - τ_clear), zero(FT))
-    B_top, B_bottom = longwave_fallback_planck_sources(FT, clear, gpoint, k)
+    B_top, B_bottom = longwave_fallback_planck_sources(FT, clear, g, k)
 
     if has_longwave_scattering(clear) || has_longwave_scattering(cloudy)
         ω_clear = has_longwave_scattering(clear) ?
-            clamp(FT(single_scattering_albedo_at(clear, gpoint, k)), zero(FT), one(FT)) : zero(FT)
+            clamp(FT(single_scattering_albedo_at(clear, g, k)), zero(FT), one(FT)) : zero(FT)
         ω_cloudy = has_longwave_scattering(cloudy) ?
-            clamp(FT(single_scattering_albedo_at(cloudy, gpoint, k)), zero(FT), one(FT)) : zero(FT)
-        ĝ_clear = has_longwave_scattering(clear) ?
-            clamp(FT(scattering_asymmetry_at(clear, gpoint, k)), -one(FT), one(FT)) : zero(FT)
-        ĝ_cloudy = has_longwave_scattering(cloudy) ?
-            clamp(FT(scattering_asymmetry_at(cloudy, gpoint, k)), -one(FT), one(FT)) : zero(FT)
+            clamp(FT(single_scattering_albedo_at(cloudy, g, k)), zero(FT), one(FT)) : zero(FT)
+        𝒢_clear = has_longwave_scattering(clear) ?
+            clamp(FT(scattering_asymmetry_at(clear, g, k)), -one(FT), one(FT)) : zero(FT)
+        𝒢_cloudy = has_longwave_scattering(cloudy) ?
+            clamp(FT(scattering_asymmetry_at(cloudy, g, k)), -one(FT), one(FT)) : zero(FT)
         τ_scattering = τ_clear * ω_clear + max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy - τ_clear * ω_clear)
-        ĝτ_scattering = τ_clear * ω_clear * ĝ_clear +
-                        max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy * ĝ_cloudy - τ_clear * ω_clear * ĝ_clear)
+        𝒢τ_scattering = τ_clear * ω_clear * 𝒢_clear +
+                        max(FT(scale), zero(FT)) * (τ_cloudy * ω_cloudy * 𝒢_cloudy - τ_clear * ω_clear * 𝒢_clear)
         ω = τ <= 0 ? zero(FT) : clamp(τ_scattering / τ, zero(FT), one(FT))
-        ĝ = τ_scattering <= 0 ? zero(FT) : clamp(ĝτ_scattering / τ_scattering, -one(FT), one(FT))
-        return longwave_reflectance_transmittance_sources(FT, τ, ω, ĝ, B_top, B_bottom)
+        𝒢 = τ_scattering <= 0 ? zero(FT) : clamp(𝒢τ_scattering / τ_scattering, -one(FT), one(FT))
+        return longwave_reflectance_transmittance_sources(FT, τ, ω, 𝒢, B_top, B_bottom)
     elseif has_interface_sources(clear)
         𝒯, Sꜛ, Sꜜ = no_scattering_longwave_sources(FT, τ, B_top, B_bottom)
         return zero(FT), 𝒯, Sꜛ, Sꜜ
     end
     𝒯 = exp(-τ)
-    S = FT(source_at(clear, gpoint, k)) * (one(FT) - 𝒯)
+    S = FT(source_at(clear, g, k)) * (one(FT) - 𝒯)
     return zero(FT), 𝒯, S, S
 end
 
@@ -167,7 +167,7 @@ function adding_longwave_column!(up::AbstractVector{FT},
                                  down::AbstractVector{FT},
                                  solver::CloudOverlapLongwave,
                                  optics::LongwaveCloudOverlapOptics,
-                                 gpoint,
+                                 g,
                                  surface_up,
                                  surface_albedo,
                                  toa_down) where FT
@@ -179,8 +179,8 @@ function adding_longwave_column!(up::AbstractVector{FT},
     source_down = Vector{FT}(undef, Nz)
 
     for k in 1:Nz
-        clear_reflectance, clear_transmittance, clear_up, clear_down = longwave_layer_terms(FT, optics.clear, gpoint, k)
-        cloudy_reflectance, cloudy_transmittance, cloudy_up, cloudy_down = longwave_layer_terms(FT, optics.cloudy, gpoint, k)
+        clear_reflectance, clear_transmittance, clear_up, clear_down = longwave_layer_terms(FT, optics.clear, g, k)
+        cloudy_reflectance, cloudy_transmittance, cloudy_up, cloudy_down = longwave_layer_terms(FT, optics.cloudy, g, k)
         cloud_weight = clamp(FT(optics.cloud_fraction[k]), zero(FT), one(FT))^exponent
         clear_weight = one(FT) - cloud_weight
         reflectance[k] = clear_weight * clear_reflectance + cloud_weight * cloudy_reflectance
@@ -220,7 +220,7 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
                                        down::AbstractVector{FT},
                                        solver::CloudOverlapLongwave,
                                        optics::LongwaveCloudOverlapOptics,
-                                       gpoint,
+                                       g,
                                        surface_up,
                                        surface_albedo,
                                        toa_down) where FT
@@ -242,11 +242,11 @@ function tripleclouds_longwave_column!(up::AbstractVector{FT},
     source_down = Matrix{FT}(undef, 3, Nz)
     for k in 1:Nz
         reflectance[1, k], transmittance[1, k], source_up[1, k],
-            source_down[1, k] = longwave_layer_terms(FT, optics.clear, gpoint, k)
+            source_down[1, k] = longwave_layer_terms(FT, optics.clear, g, k)
         reflectance[2, k], transmittance[2, k], source_up[2, k], source_down[2, k] =
-            longwave_layer_terms_scaled(FT, optics.clear, optics.cloudy, thin_scaling[k], gpoint, k)
+            longwave_layer_terms_scaled(FT, optics.clear, optics.cloudy, thin_scaling[k], g, k)
         reflectance[3, k], transmittance[3, k], source_up[3, k], source_down[3, k] =
-            longwave_layer_terms_scaled(FT, optics.clear, optics.cloudy, thick_scaling[k], gpoint, k)
+            longwave_layer_terms_scaled(FT, optics.clear, optics.cloudy, thick_scaling[k], g, k)
         for region in 1:3
             source_up[region, k] *= region_fraction[region, k]
             source_down[region, k] *= region_fraction[region, k]
@@ -349,8 +349,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     fluxes.longwave_up .= zero(FT)
     fluxes.longwave_down .= zero(FT)
 
-    for gpoint in 1:number_of_gpoints(optics.clear)
-        w = FT(optics.clear.weights[gpoint])
+    for g in 1:number_of_gpoints(optics.clear)
+        w = FT(optics.clear.weights[g])
         spectral_up = zeros(FT, Nz + 1)
         spectral_down = zeros(FT, Nz + 1)
         if solver.overlap == :tripleclouds_alpha
@@ -359,9 +359,9 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                 spectral_down,
                 solver,
                 optics,
-                gpoint,
-                surface_longwave_up_at(boundary_conditions, gpoint),
-                surface_longwave_albedo(boundary_conditions, gpoint),
+                g,
+                surface_longwave_up_at(boundary_conditions, g),
+                surface_longwave_albedo(boundary_conditions, g),
                 boundary_conditions.toa_longwave_down,
             )
         else
@@ -370,9 +370,9 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                 spectral_down,
                 solver,
                 optics,
-                gpoint,
-                surface_longwave_up_at(boundary_conditions, gpoint),
-                surface_longwave_albedo(boundary_conditions, gpoint),
+                g,
+                surface_longwave_up_at(boundary_conditions, g),
+                surface_longwave_albedo(boundary_conditions, g),
                 boundary_conditions.toa_longwave_down,
             )
         end

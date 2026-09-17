@@ -1,8 +1,8 @@
 # Streaming column API for host kernels
 
-The [staged runtime](../solvers.md) fills `(Ngpoints, Nz)` optics arrays for a
+The [staged runtime](../solvers.md) fills `(Ng, Nz)` optics arrays for a
 whole column and then solves them. A host model that runs radiation inside its
-own kernels — one thread per column, no allocation, no intermediate `(Ngpoints, Nz)`
+own kernels — one thread per column, no allocation, no intermediate `(Ng, Nz)`
 matrices — needs the same physics as scalar, per-layer, per-g-point functions.
 This page documents that *streaming* form of the API: the loop a host kernel
 runs, the conventions its arguments follow, and the guarantee that it
@@ -65,11 +65,11 @@ One column is three sweeps of scalar calls:
 per layer k:      s = gas_optics_stencil(model, p, T, χ)          # once per layer
                   b = source_table_bracket(model, T_interface)     # once per interface
 
-per g point:      longwave_optical_depth(model, gpoint, gases, s)      # LW  τ
-                  longwave_source(model, gpoint, T_interface, b)       # LW  B at each interface
-                  shortwave_optical_depth(model, gpoint, gases, s)     # SW  τ_absorption
-                  rayleigh_optical_depth(model, gpoint, air_moles)     # SW  τ_scattering
-                  add_cloud_scattering_layer(…, cloud, gpoint, b, water_path)  # clouds, per phase
+per g point:      longwave_optical_depth(model, g, gases, s)      # LW  τ
+                  longwave_source(model, g, T_interface, b)       # LW  B at each interface
+                  shortwave_optical_depth(model, g, gases, s)     # SW  τ_absorption
+                  rayleigh_optical_depth(model, g, air_moles)     # SW  τ_scattering
+                  add_cloud_scattering_layer(…, cloud, g, b, water_path)  # clouds, per phase
 
 per column:       streaming_longwave_fluxes!(…)
                   streaming_shortwave_fluxes!(…)
@@ -90,7 +90,7 @@ host that stages columns in a separate kernel stores the six scalars
 [`source_table_bracket`](@ref) does the same for the Planck source table at an
 interface temperature; [`longwave_source`](@ref) then interpolates the source
 of each g point. Without a source table the source is the gray
-`longwave_source_scale[gpoint] σT⁴`.
+`longwave_source_scale[g] σT⁴`.
 
 ### Per-g-point optics
 
@@ -101,19 +101,19 @@ relative-linear gases may contribute negative optical depth individually).
 [`rayleigh_optical_depth`](@ref) is the model's molar Rayleigh coefficient
 times the layer's molar amount of air. Clouds enter through
 [`SpectralCloudOptics`](@ref): [`effective_radius_bracket`](@ref) once per
-layer and phase, then [`cloud_layer_optics`](@ref) gives `(κ, ω, ĝ)` per g
+layer and phase, then [`cloud_layer_optics`](@ref) gives `(κ, ω, 𝒢)` per g
 point, which [`add_scattering_layer`](@ref) folds into the layer's
-`(τ_absorption, τ_scattering, ĝ)` for the shortwave and
+`(τ_absorption, τ_scattering, 𝒢)` for the shortwave and
 [`cloud_absorption_optical_depth`](@ref) adds as pure absorption for the
 longwave; [`add_cloud_scattering_layer`](@ref) is the shortwave pair of calls
 in one. A `Nothing` phase dispatches to no-ops in every one of these
-functions (a zero-extinction `(κ, ω, ĝ)`, an unchanged layer, zero
+functions (a zero-extinction `(κ, ω, 𝒢)`, an unchanged layer, zero
 absorption), so the clear-sky and all-sky kernels are the same code.
 
 The kernel packages these calls into two *layer-optics functors* the solvers
-call back into, each `(gpoint, k)` returning the layer's tuple:
+call back into, each `(g, k)` returning the layer's tuple:
 
-| Solver | `layer_optics(gpoint, k)` returns |
+| Solver | `layer_optics(g, k)` returns |
 |:-------|:------------------------------|
 | [`streaming_longwave_fluxes!`](@ref) | `(τ, B_top, B_bottom)` — optical depth and the Planck source at the layer's two interfaces |
 | [`streaming_shortwave_fluxes!`](@ref) | `(τ_absorption, τ_scattering, asymmetry)` — the single-scattering albedo and total optical depth are formed inside the solver |
@@ -123,7 +123,7 @@ call back into, each `(gpoint, k)` returning the layer's tuple:
 [`streaming_longwave_fluxes!`](@ref) is the no-scattering longwave of
 [`CloudlessLongwave`](@ref) with g points streamed: the ecRad half-level
 Planck path with diffusivity `D = 1.66`, swept down from `toa_down` and then up
-from the surface, where `up = surface_emission[gpoint] + surface_albedo * down`.
+from the surface, where `up = surface_emission[g] + surface_albedo * down`.
 The surface source is a [`TabulatedSurfaceEmission`](@ref), which brackets the
 surface temperature once and evaluates `ε B(Tˢ)` lazily per g point. Two
 caller-owned scratch vectors of length `Nz` carry the layer transmittance
@@ -187,7 +187,7 @@ The column carries the host's physical constants; nothing on this path has a
 constant of its own (the model's `stefan_boltzmann` is set at construction).
 
 The longwave functor builds the stencil, the optical depth and the two
-interface Planck sources of layer `k` for g point `gpoint`:
+interface Planck sources of layer `k` for g point `g`:
 
 ```jldoctest streaming
 julia> struct LongwaveLayers{M, C}
@@ -195,14 +195,14 @@ julia> struct LongwaveLayers{M, C}
            column :: C
        end
 
-julia> function (layers::LongwaveLayers)(gpoint, k)
+julia> function (layers::LongwaveLayers)(g, k)
            (; model, column) = layers
            gases = (h2o = column.h2o[k], co2 = column.co2)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
-           τ = longwave_optical_depth(model, gpoint, gases, stencil)
+           τ = longwave_optical_depth(model, g, gases, stencil)
            T_top, T_bottom = column.temperature_interfaces[k], column.temperature_interfaces[k + 1]
-           B_top = longwave_source(model, gpoint, T_top, source_table_bracket(model, T_top))
-           B_bottom = longwave_source(model, gpoint, T_bottom, source_table_bracket(model, T_bottom))
+           B_top = longwave_source(model, g, T_top, source_table_bracket(model, T_top))
+           B_bottom = longwave_source(model, g, T_bottom, source_table_bracket(model, T_bottom))
            return τ, B_top, B_bottom
        end;
 
@@ -235,15 +235,15 @@ julia> struct ShortwaveLayers{M, C}
            column :: C
        end
 
-julia> function (layers::ShortwaveLayers)(gpoint, k)
+julia> function (layers::ShortwaveLayers)(g, k)
            (; model, column) = layers
            gases = (h2o = column.h2o[k], co2 = column.co2)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
-           τ = shortwave_optical_depth(model, gpoint, gases, stencil)
+           τ = shortwave_optical_depth(model, g, gases, stencil)
            Δp = column.pressure_interfaces[k + 1] - column.pressure_interfaces[k]
            (; gravity, dry_air_molar_mass) = column.constants
            air_moles = hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass)
-           return τ, rayleigh_optical_depth(model, gpoint, air_moles), 0.0
+           return τ, rayleigh_optical_depth(model, g, air_moles), 0.0
        end;
 
 julia> μ₀, S₀, albedo = 0.5, column.constants.solar_constant, 0.1;
@@ -262,7 +262,7 @@ julia> round.(shortwave_down; digits=2)
 ```
 
 The same column through the array path — `optical_properties!` into
-`(Ngpoints, Nz)` work arrays with interface Planck sources, then
+`(Ng, Nz)` work arrays with interface Planck sources, then
 `radiative_fluxes!` — gives the same longwave fluxes bit for bit, and at this
 `μ₀ = 0.5` the same shortwave fluxes to rounding (this toy model has no
 Rayleigh table, so its single shortwave g point takes the Beer–Lambert branch

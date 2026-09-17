@@ -79,7 +79,7 @@ end
 
 @inline gas_optics_stencil(::EcCKDGasOpticsModel, pressure, temperature, water_vapor_mole_fraction) = nothing
 
-# The absorption tables index `(gpoint, gas, pressure, temperature)` with the pressure and
+# The absorption tables index `(g, gas, pressure, temperature)` with the pressure and
 # temperature brackets; the H₂O tables add the mole-fraction bracket.
 @inline table_brackets(s::GasOpticsStencil) = (s.pressure, s.temperature)
 
@@ -111,87 +111,87 @@ $(TYPEDSIGNATURES)
 
 Contribution of the H₂O-mole-fraction-dependent `table`
 (`longwave_water_vapor_absorption` or `shortwave_water_vapor_absorption`) to a
-layer's optical depth for g point `gpoint`: the trilinearly interpolated
+layer's optical depth for g point `g`: the trilinearly interpolated
 coefficient times the layer's H₂O amount `water_vapor_moles` (mol m⁻²). Zero
 when the model has no H₂O grid or the table is empty.
 """
 @inline function water_vapor_table_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
                                                  table,
                                                  water_vapor_moles,
-                                                 gpoint,
+                                                 g,
                                                  s::GasOpticsStencil) where FT
     length(model.water_vapor_mole_fraction_grid) == 0 && return zero(FT)
     length(table) == 0 && return zero(FT)
-    coefficient = interpolate_water_vapor_table(table, gpoint, table_brackets(s), s.water_vapor)
+    coefficient = interpolate_water_vapor_table(table, g, table_brackets(s), s.water_vapor)
     return coefficient * FT(water_vapor_moles)
 end
 
 # Shared body of the longwave and shortwave tabulated optical depths: the
-# relative-linear gas sum over the `(Ngpoints, Ngases, Npressures, Ntemperatures)` table, plus the H₂O
+# relative-linear gas sum over the `(Ng, Ngases, Npressures, Ntemperatures)` table, plus the H₂O
 # table, clamped as a total. Relative-linear gases legitimately contribute
 # negative optical depth below their reference mole fraction; only the summed
 # total is clamped, matching upstream run_ckd.
 @inline function tabulated_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
                                          table,
                                          water_vapor_table,
-                                         gpoint,
+                                         g,
                                          gases::NamedTuple,
                                          s::GasOpticsStencil) where FT
     τ = accumulate_tabulated_optical_depth(gases, table, model.gas_reference_mole_fractions,
-                                           Val(gas_names(model)), gpoint, 1, table_brackets(s))
+                                           Val(gas_names(model)), g, 1, table_brackets(s))
     water_vapor_moles = water_vapor_layer_amount(FT, gases)
-    τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, gpoint, s)
+    τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, g, s)
     return max(τ, 0)
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Longwave gas optical depth of one layer for g point `gpoint`. `gases` is a
+Longwave gas optical depth of one layer for g point `g`. `gases` is a
 `NamedTuple` of scalar layer amounts (mol m⁻²) keyed by the model's gas names,
 plus `composite` (dry air) when the model applies the ecCKD relative-linear
 convention; `s` is the layer's [`gas_optics_stencil`](@ref). The total is
 clamped at zero.
 """
 @inline longwave_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
-                               gpoint,
+                               g,
                                gases::NamedTuple,
                                s::GasOpticsStencil) where FT =
-    tabulated_optical_depth(model, model.longwave_absorption, model.longwave_water_vapor_absorption, gpoint, gases, s)
+    tabulated_optical_depth(model, model.longwave_absorption, model.longwave_water_vapor_absorption, g, gases, s)
 
 """
 $(TYPEDSIGNATURES)
 
-Shortwave gas optical depth of one layer for g point `gpoint`, with the same
+Shortwave gas optical depth of one layer for g point `g`, with the same
 arguments as the longwave method.
 """
 @inline shortwave_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
-                                gpoint,
+                                g,
                                 gases::NamedTuple,
                                 s::GasOpticsStencil) where FT =
-    tabulated_optical_depth(model, model.shortwave_absorption, model.shortwave_water_vapor_absorption, gpoint, gases, s)
+    tabulated_optical_depth(model, model.shortwave_absorption, model.shortwave_water_vapor_absorption, g, gases, s)
 
-@inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT}, gpoint, gases::NamedTuple, ::Nothing) where FT =
-    accumulate_optical_depth(gases, model.longwave_absorption, Val(gas_names(model)), gpoint, 1)
+@inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT}, g, gases::NamedTuple, ::Nothing) where FT =
+    accumulate_optical_depth(gases, model.longwave_absorption, Val(gas_names(model)), g, 1)
 
-@inline shortwave_optical_depth(model::EcCKDGasOpticsModel{FT}, gpoint, gases::NamedTuple, ::Nothing) where FT =
-    accumulate_optical_depth(gases, model.shortwave_absorption, Val(gas_names(model)), gpoint, 1)
+@inline shortwave_optical_depth(model::EcCKDGasOpticsModel{FT}, g, gases::NamedTuple, ::Nothing) where FT =
+    accumulate_optical_depth(gases, model.shortwave_absorption, Val(gas_names(model)), g, 1)
 
 """
 $(TYPEDSIGNATURES)
 
-Rayleigh scattering optical depth of one layer for shortwave g point `gpoint`:
+Rayleigh scattering optical depth of one layer for shortwave g point `g`:
 the model's molar scattering coefficient times the layer's molar amount of
 air `air_moles` (mol m⁻²; `Δp / (g mᵈ)` for a hydrostatic layer). Zero when the
 model carries no Rayleigh table, and always zero for an
 [`EcCKDGasOpticsModel`](@ref).
 """
-@inline function rayleigh_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT}, gpoint, air_moles) where FT
+@inline function rayleigh_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT}, g, air_moles) where FT
     length(model.shortwave_rayleigh_molar_scattering) == 0 && return zero(FT)
-    return FT(model.shortwave_rayleigh_molar_scattering[gpoint]) * FT(air_moles)
+    return FT(model.shortwave_rayleigh_molar_scattering[g]) * FT(air_moles)
 end
 
-@inline rayleigh_optical_depth(::EcCKDGasOpticsModel{FT}, gpoint, air_moles) where FT = zero(FT)
+@inline rayleigh_optical_depth(::EcCKDGasOpticsModel{FT}, g, air_moles) where FT = zero(FT)
 
 """
 $(TYPEDSIGNATURES)
@@ -209,15 +209,15 @@ it is scaled linearly to zero.
 """
 $(TYPEDSIGNATURES)
 
-Longwave Planck source of g point `gpoint` at `temperature`, in the model's
+Longwave Planck source of g point `g` at `temperature`, in the model's
 per-unit-weight flux convention: the tabulated source interpolated with
 `source_bracket` from [`source_table_bracket`](@ref), or
-`longwave_source_scale[gpoint] σT⁴` without a table, with `σ` the model's
+`longwave_source_scale[g] σT⁴` without a table, with `σ` the model's
 `stefan_boltzmann` field (set at construction, [`PhysicalConstants`](@ref)
 default).
 """
-@inline function longwave_source(model::EcCKDGasOpticsModel{FT}, gpoint, temperature, ::Nothing) where FT
-    return model.longwave_source_scale[gpoint] * (model.stefan_boltzmann * FT(temperature)^4)
+@inline function longwave_source(model::EcCKDGasOpticsModel{FT}, g, temperature, ::Nothing) where FT
+    return model.longwave_source_scale[g] * (model.stefan_boltzmann * FT(temperature)^4)
 end
 
 """

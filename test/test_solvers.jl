@@ -1027,7 +1027,7 @@ end
     # reflected plus transmitted equals incident. Delta-Eddington scaling is what
     # makes the two-stream layer solution satisfy it at cloud-like asymmetries —
     # unscaled, it creates energy, and did so silently until this was pinned.
-    for τ in (0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 20.0), ĝ in (0.0, 0.4, 0.8, 0.85, 0.95)
+    for τ in (0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 20.0), 𝒢 in (0.0, 0.4, 0.8, 0.85, 0.95)
 
         fluxes = RadiativeFluxes(
             longwave_up = zeros(2),
@@ -1035,7 +1035,7 @@ end
             shortwave_up = zeros(2),
             shortwave_down = zeros(2),
         )
-        optics = ShortwaveOptics([0.0]; scattering_optical_depth=[τ], scattering_asymmetry=[ĝ])
+        optics = ShortwaveOptics([0.0]; scattering_optical_depth=[τ], scattering_asymmetry=[𝒢])
         boundary = ShortwaveBoundaryConditions(toa_shortwave_down=400.0, surface_albedo=0.0)
         radiative_fluxes!(fluxes, CloudlessShortwave(), optics, nothing, boundary)
 
@@ -1047,34 +1047,34 @@ end
 end
 
 @testset "delta-Eddington scaling" begin
-    scale(τ, ω, ĝ) = NumericalRadiation.shortwave_delta_eddington(Float64, τ, ω, ĝ)
+    scale(τ, ω, 𝒢) = NumericalRadiation.shortwave_delta_eddington(Float64, τ, ω, 𝒢)
 
-    # Rayleigh (ĝ = 0) and backscattering layers have no forward peak to remove.
+    # Rayleigh (𝒢 = 0) and backscattering layers have no forward peak to remove.
     @test scale(1.5, 0.9, 0.0) == (1.5, 0.9, 0.0)
     @test scale(1.5, 0.9, -0.3) == (1.5, 0.9, -0.3)
 
-    # Joseph, Wiscombe and Weinman (1976): f = ĝ², τ′ = (1 - ωf)τ,
-    # ω′ = (1 - f)ω / (1 - ωf), ĝ′ = (ĝ - f) / (1 - f).
-    τ, ω, ĝ = 2.0, 0.99, 0.85
-    f = ĝ^2
-    τ′, ω′, ĝ′ = scale(τ, ω, ĝ)
+    # Joseph, Wiscombe and Weinman (1976): f = 𝒢², τ′ = (1 - ωf)τ,
+    # ω′ = (1 - f)ω / (1 - ωf), 𝒢′ = (𝒢 - f) / (1 - f).
+    τ, ω, 𝒢 = 2.0, 0.99, 0.85
+    f = 𝒢^2
+    τ′, ω′, 𝒢′ = scale(τ, ω, 𝒢)
     @test τ′ ≈ (1 - ω * f) * τ
     @test ω′ ≈ (1 - f) * ω / (1 - ω * f)
-    @test ĝ′ ≈ (ĝ - f) / (1 - f)
+    @test 𝒢′ ≈ (𝒢 - f) / (1 - f)
     @test 0 <= ω′ <= 1
-    @test ĝ′ < ĝ
+    @test 𝒢′ < 𝒢
 
     # A pure forward peak scatters nothing into either stream, so what remains is
     # absorption only. This is the corner where the rescaling is 0/0.
     @test scale(3.0, 1.0, 1.0) == (0.0, 0.0, 0.0)
     @test scale(3.0, 0.25, 1.0) == (3.0 * 0.75, 0.0, 0.0)
 
-    # Scaling never increases optical depth and never leaves ω or ĝ out of range.
-    for τ in (0.01, 1.0, 30.0), ω in (0.0, 0.5, 0.999, 1.0), ĝ in (0.0, 0.5, 0.9, 1.0)
-        τ′, ω′, ĝ′ = scale(τ, ω, ĝ)
+    # Scaling never increases optical depth and never leaves ω or 𝒢 out of range.
+    for τ in (0.01, 1.0, 30.0), ω in (0.0, 0.5, 0.999, 1.0), 𝒢 in (0.0, 0.5, 0.9, 1.0)
+        τ′, ω′, 𝒢′ = scale(τ, ω, 𝒢)
         @test 0 <= τ′ <= τ
         @test 0 <= ω′ <= 1
-        @test 0 <= ĝ′ <= ĝ
+        @test 0 <= 𝒢′ <= 𝒢
     end
 end
 

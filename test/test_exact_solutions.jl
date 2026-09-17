@@ -71,7 +71,7 @@ function gray_model(::Type{FT}, κ_longwave::AbstractVector, κ_shortwave::Abstr
                                                   FT.(longwave_weights))
 end
 
-# `(gpoint, k) -> (τ, B_top, B_bottomtom)` from the gray model: layer amounts `n[k]`
+# `(g, k) -> (τ, B_top, B_bottomtom)` from the gray model: layer amounts `n[k]`
 # (mol m⁻², so `τ = κ_ig n[k]`) and Planck temperatures at the layer top and
 # bottom. Isothermal layers pass the same vector twice.
 struct GrayLongwaveLayerOptics{M, V, T}
@@ -81,14 +81,14 @@ struct GrayLongwaveLayerOptics{M, V, T}
     temperature_bottom :: T
 end
 
-@inline function (optics::GrayLongwaveLayerOptics)(gpoint, k)
-    τ = longwave_optical_depth(optics.model, gpoint, (composite=optics.amounts[k],), nothing)
-    B_top = longwave_source(optics.model, gpoint, optics.temperature_top[k], nothing)
-    B_bottomtom = longwave_source(optics.model, gpoint, optics.temperature_bottom[k], nothing)
+@inline function (optics::GrayLongwaveLayerOptics)(g, k)
+    τ = longwave_optical_depth(optics.model, g, (composite=optics.amounts[k],), nothing)
+    B_top = longwave_source(optics.model, g, optics.temperature_top[k], nothing)
+    B_bottomtom = longwave_source(optics.model, g, optics.temperature_bottom[k], nothing)
     return (τ, B_top, B_bottomtom)
 end
 
-# `(gpoint, k) -> (τ, B_top, B_bottomtom)` with the Planck function prescribed
+# `(g, k) -> (τ, B_top, B_bottomtom)` with the Planck function prescribed
 # directly at the layer interfaces, for the linear-in-τ profile.
 struct PlanckProfileLayerOptics{V}
     optical_depth :: V
@@ -96,30 +96,30 @@ struct PlanckProfileLayerOptics{V}
     source_bottom :: V
 end
 
-@inline (optics::PlanckProfileLayerOptics)(gpoint, k) = (optics.optical_depth[k], optics.source_top[k], optics.source_bottom[k])
+@inline (optics::PlanckProfileLayerOptics)(g, k) = (optics.optical_depth[k], optics.source_top[k], optics.source_bottom[k])
 
-# `(gpoint, k) -> (τ_absorption, τ_scattering, ĝ)` from the gray model:
-# pure absorption `τ = κₛ n[k]`, no Rayleigh scattering, `ĝ = 0`.
+# `(g, k) -> (τ_absorption, τ_scattering, 𝒢)` from the gray model:
+# pure absorption `τ = κₛ n[k]`, no Rayleigh scattering, `𝒢 = 0`.
 struct GrayShortwaveLayerOptics{M, V}
     model :: M
     amounts :: V
 end
 
-@inline function (optics::GrayShortwaveLayerOptics)(gpoint, k)
+@inline function (optics::GrayShortwaveLayerOptics)(g, k)
     n = optics.amounts[k]
-    τ_absorption = shortwave_optical_depth(optics.model, gpoint, (composite=n,), nothing)
-    τ_scattering = rayleigh_optical_depth(optics.model, gpoint, n)
+    τ_absorption = shortwave_optical_depth(optics.model, g, (composite=n,), nothing)
+    τ_scattering = rayleigh_optical_depth(optics.model, g, n)
     return (τ_absorption, τ_scattering, zero(τ_absorption))
 end
 
-# `(gpoint, k) -> (τ_absorption, τ_scattering, ĝ)` prescribed per layer.
+# `(g, k) -> (τ_absorption, τ_scattering, 𝒢)` prescribed per layer.
 struct ScatteringLayerOptics{V}
     absorption :: V
     scattering :: V
     asymmetry :: V
 end
 
-@inline (optics::ScatteringLayerOptics)(gpoint, k) = (optics.absorption[k], optics.scattering[k], optics.asymmetry[k])
+@inline (optics::ScatteringLayerOptics)(g, k) = (optics.absorption[k], optics.scattering[k], optics.asymmetry[k])
 
 #####
 ##### Solver drivers
@@ -148,9 +148,9 @@ function shortwave_fluxes(::Type{FT}, layer_optics, μ₀, toa_irradiance, direc
 end
 
 # Optical depths of every layer as the solver saw them, in Float64, for
-# g point `gpoint`, and their cumulative sum at the interfaces (0 at the top).
-function layer_optical_depths(layer_optics, Nz, gpoint=1)
-    τ = [Float64(layer_optics(gpoint, k)[1]) for k in 1:Nz]
+# g point `g`, and their cumulative sum at the interfaces (0 at the top).
+function layer_optical_depths(layer_optics, Nz, g=1)
+    τ = [Float64(layer_optics(g, k)[1]) for k in 1:Nz]
     return τ, vcat(0.0, cumsum(τ))
 end
 
@@ -213,8 +213,8 @@ end
             up, down = longwave_fluxes(FT, optics, surface, 0, 0, model.longwave_weights, Nz)
 
             B = σ * T^4
-            τ_cumulative = [layer_optical_depths(optics, Nz, gpoint)[2] for gpoint in 1:2]
-            down_exact = [B * sum(weights[gpoint] * (1 - exp(-D * τ_cumulative[gpoint][k])) for gpoint in 1:2)
+            τ_cumulative = [layer_optical_depths(optics, Nz, g)[2] for g in 1:2]
+            down_exact = [B * sum(weights[g] * (1 - exp(-D * τ_cumulative[g][k])) for g in 1:2)
                           for k in 1:Nz + 1]
 
             tol_up = tolerances(FT, 1e-13, B)
@@ -441,8 +441,8 @@ end
             scattering = FT[0.3, 1.0, 0.5, 2.0]
             absorption = zeros(FT, Nz)
             tol = tolerances(FT, 1e-10, S₀ * μ₀)
-            for ĝ in (-0.5, 0.0, 0.5, 0.85, 0.95)
-                asymmetry = fill(FT(ĝ), Nz)
+            for 𝒢 in (-0.5, 0.0, 0.5, 0.85, 0.95)
+                asymmetry = fill(FT(𝒢), Nz)
                 optics = ScatteringLayerOptics(absorption, scattering, asymmetry)
                 up, down = shortwave_fluxes(FT, optics, μ₀, S₀ * μ₀, 0, 0, Nz)
                 net = down .- up
@@ -458,10 +458,10 @@ end
             μ₀, S₀ = 0.7, 1000.0
             τ = [draw!(rng, 0.05, 1.0) for _ in 1:Nz]
             ω = [draw!(rng, 0.3, 0.95) for _ in 1:Nz]
-            ĝ = [draw!(rng, -0.3, 0.85) for _ in 1:Nz]
+            𝒢 = [draw!(rng, -0.3, 0.85) for _ in 1:Nz]
             absorption = FT.((1 .- ω) .* τ)
             scattering = FT.(ω .* τ)
-            asymmetry = FT.(ĝ)
+            asymmetry = FT.(𝒢)
 
             function transmittance_from_below(order)
                 optics = ScatteringLayerOptics(absorption[order], scattering[order], asymmetry[order])

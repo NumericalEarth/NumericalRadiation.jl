@@ -41,7 +41,7 @@ the same workflow against reference model files.
 
 [`CloudlessLongwave`](@ref) is a plane-parallel clear-sky solver for
 [`LongwaveOptics`](@ref). Optical depth and source arrays may be
-vectors of length `Nz` (broadband) or matrices shaped `(Ngpoints, Nz)`;
+vectors of length `Nz` (broadband) or matrices shaped `(Ng, Nz)`;
 `source` is the layer Planck source in flux units (``\pi B``, W m⁻²). The
 atmosphere argument is accepted for interface consistency and is not inspected.
 
@@ -59,8 +59,8 @@ The solver has two paths:
 - **Longwave scattering** (opt-in). Supplying `single_scattering_albedo` and
   `scattering_asymmetry` (both, and interface sources are then required)
   activates an ecRad-style two-stream adding path: per-layer reflectance and
-  transmittance from ``\gamma_1 = D - \tfrac{D}{2}\omega(1+\hat g)``,
-  ``\gamma_2 = \tfrac{D}{2}\omega(1-\hat g)``, a downward sweep accumulating the
+  transmittance from ``\gamma_1 = D - \tfrac{D}{2}\omega(1+\mathcal{G})``,
+  ``\gamma_2 = \tfrac{D}{2}\omega(1-\mathcal{G})``, a downward sweep accumulating the
   albedo and source of the stack below each interface, then a downward flux
   pass.
 
@@ -83,9 +83,9 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   albedo, and upward transmission of the reflected beam through the same slant
   optical depths.
 - **With scattering**: an ecRad-compatible two-stream with
-  ``\gamma_1 = 2 - \omega(1.25 + 0.75 \hat g)``,
-  ``\gamma_2 = \omega(0.75 - 0.75 \hat g)``, and
-  ``\gamma_3 = 0.5 - 0.75\,\mu_0 \hat g``, separate direct and diffuse streams, and
+  ``\gamma_1 = 2 - \omega(1.25 + 0.75 \mathcal{G})``,
+  ``\gamma_2 = \omega(0.75 - 0.75 \mathcal{G})``, and
+  ``\gamma_3 = 0.5 - 0.75\,\mu_0 \mathcal{G}``, separate direct and diffuse streams, and
   the same adding method as the longwave scattering path. The single-scattering
   albedo and asymmetry of each layer are formed from the absorption and
   scattering optical-depth channels, so cloud and aerosol scattering added to
@@ -93,20 +93,20 @@ at TOA (so ``S_0 \mu_0`` for solar constant ``S_0``).
   transported without solver changes.
 
 Every layer is delta-Eddington scaled (Joseph, Wiscombe and Weinman 1976) before
-the two-stream coefficients are formed. A fraction ``f = \hat g^2`` of the phase
+the two-stream coefficients are formed. A fraction ``f = \mathcal{G}^2`` of the phase
 function is treated as an unscattered forward peak and removed,
 
 ```math
 \tau' = (1 - \omega f)\,\tau, \qquad
 \omega' = \frac{(1 - f)\,\omega}{1 - \omega f}, \qquad
-\hat g' = \frac{\hat g - f}{1 - f}.
+\mathcal{G}' = \frac{\mathcal{G} - f}{1 - f}.
 ```
 
 This is not only an accuracy refinement. A two-stream solution resolves the
 phase function too coarsely to stay conservative at cloud-like asymmetries, so
 without the scaling a non-absorbing layer returns more energy than it received —
-by as much as 13 % of the incident beam at ``\hat g = 0.95``. Rayleigh scattering has
-``\hat g = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
+by as much as 13 % of the incident beam at ``\mathcal{G} = 0.95``. Rayleigh scattering has
+``\mathcal{G} = 0``, which makes ``f = 0`` and leaves clear-sky results unchanged.
 
 The scaling is applied to the combined gas, cloud, and aerosol optics of a
 layer, as RRTMGP does. ecRad instead defaults to scaling cloud and aerosol
@@ -122,7 +122,7 @@ broadband scalars or per-g-point vectors.
 The all-sky solvers operate on two-region optical properties:
 [`LongwaveCloudOverlapOptics`](@ref) and
 [`ShortwaveCloudOverlapOptics`](@ref) hold *clear* and *cloudy*
-optics with the same `(Ngpoints, Nz)` shape, plus three layer fields that stay
+optics with the same `(Ng, Nz)` shape, plus three layer fields that stay
 separate from the optical depths:
 
 - `cloud_fraction` — one value per layer; never used to weaken cloudy-region
@@ -171,10 +171,10 @@ optical properties; see [Validation](validation.md).
 
 Two runtime gas-optics models implement [`optical_properties!`](@ref):
 
-- [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(Ngpoints, Ngases)`
+- [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(Ng, Ngases)`
   coefficients — the path used by unit tests and teacher–student training.
 - [`EcCKDTabulatedGasOpticsModel`](@ref) holds reference
-  `(Ngpoints, Ngases, Npressures, Ntemperatures)` look-up tables. Per layer it brackets pressure on a
+  `(Ng, Ngases, Npressures, Ntemperatures)` look-up tables. Per layer it brackets pressure on a
   logarithmic grid, interpolates bilinearly in pressure and temperature
   (supporting ecCKD's pressure-dependent temperature grids), and accumulates
   ``\tau_g = \sum_j \kappa_{g,j}(p, T)\, u_j`` over the gases with an unrolled,
@@ -188,10 +188,10 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
   source table at layer and interface temperatures.
 
 The evaluation is *streaming*: the only spectral intermediates are the
-caller-owned `(Ngpoints, Nz)` optical-depth and source arrays. Solvers then
+caller-owned `(Ng, Nz)` optical-depth and source arrays. Solvers then
 loop over g-points, carry running fluxes through the column, and accumulate
-`weights[gpoint] * flux` directly into the broadband interface arrays — spectral
-fluxes are never stored with shape `(Ngpoints, Nz + 1)`, and there are no
+`weights[g] * flux` directly into the broadband interface arrays — spectral
+fluxes are never stored with shape `(Ng, Nz + 1)`, and there are no
 four-dimensional intermediates. Host models can fuse the same per-g-point
 recurrences into
 their own column kernels; the model types are `Adapt.jl`-aware so tables can
