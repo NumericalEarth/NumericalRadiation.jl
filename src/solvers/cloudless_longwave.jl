@@ -5,12 +5,12 @@ Precomputed longwave optical properties for clear-sky solver tests and future
 ecCKD gas-optics outputs.
 
 `optical_depth` and `source` may be vectors of length `nlayers` or matrices
-with shape `(ng, nlayers)`. `source` is the layer source function in flux units
+with shape `(Ngpoints, nlayers)`. `source` is the layer source function in flux units
 for each spectral point. Optional `source_top` and `source_bottom` arrays with
 the same shape enable ecRad-style no-scattering longwave emission from
 half-level Planck functions. Optional `single_scattering_albedo` and
 `scattering_asymmetry` arrays activate the ecRad-style longwave scattering
-adding path. `weights` has length `ng` and is applied while accumulating
+adding path. `weights` has length `Ngpoints` and is applied while accumulating
 broadband fluxes.
 
 Fields are
@@ -83,7 +83,7 @@ function LongwaveOptics(optical_depth::AbstractMatrix{FT},
     (single_scattering_albedo === nothing) == (scattering_asymmetry === nothing) ||
         throw(ArgumentError("single_scattering_albedo and scattering_asymmetry must both be provided or both be nothing"))
     length(weights) == size(optical_depth, 1) ||
-        throw(DimensionMismatch("weights must have length ng"))
+        throw(DimensionMismatch("weights must have length Ngpoints"))
     return LongwaveOptics{FT, typeof(optical_depth),
                                      typeof(source_top), typeof(source_bottom),
                                      typeof(single_scattering_albedo),
@@ -112,7 +112,7 @@ $(TYPEDEF)
 Longwave boundary fluxes for [`CloudlessLongwave`](@ref).
 
 For spectral (multi-g) optics such as the tabulated ecCKD models,
-`surface_longwave_up` must be a length-`ng` vector in the same
+`surface_longwave_up` must be a length-`Ngpoints` vector in the same
 per-unit-weight convention as the optics' Planck sources — build it with
 [`surface_longwave_emission`](@ref). A scalar is interpreted as
 spectrally-gray emission (every g point emits the same flux), a gray

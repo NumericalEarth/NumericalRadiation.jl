@@ -1,11 +1,11 @@
 # Streaming column API for host kernels
 
-The [staged runtime](../solvers.md) fills `(ng, nlayers)` optics arrays for a
+The [staged runtime](../solvers.md) fills `(Ngpoints, nlayers)` optics arrays for a
 whole column and then solves them. A host model that runs radiation inside its
-own kernels — one thread per column, no allocation, no intermediate `(ng, nlayers)`
+own kernels — one thread per column, no allocation, no intermediate `(Ngpoints, nlayers)`
 matrices — needs the same physics as scalar, per-layer, per-g-point functions.
 This page documents that *streaming* form of the API: the loop a host kernel
-runs, the conventions its arguments follow, and the guarantee that it
+runs, the conventions its arguments follow, and the guarantee that i₀ᵀ
 reproduces the array path bit for bit. It is the layer the
 `NumericalRadiation` extension of
 [Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) (in progress) is
@@ -17,14 +17,14 @@ The streaming functions share the package conventions of the array path:
 
 - **Ordering.** Layers are indexed `k = 1:nlayers` from the top of the
   atmosphere down; interface arrays have `nlayers + 1` entries with index 1 at
-  the top. A host whose own columns run bottom-up flips the index when it
+  the top. A host whose own columns run bottom-up flips the index when i₀ᵀ
   stages the column.
 - **Gases.** A layer's gas amounts are a `NamedTuple` of scalars in mol m⁻²
   keyed by the model's gas names ([`gas_names`](@ref)), plus `composite` (dry
   air) whenever the model applies the ecCKD relative-linear convention. The
   gas keys (`h2o`, `co2`, `o3`, `ch4`, `n2o`, `cfc11`, `cfc12`, `composite`)
   mirror the ecCKD NetCDF variable prefixes and are the one place the package
-  abbreviates a species; every other identifier spells it out
+  abbreviates a species; every other identifier spells i₀ᵀ out
   (`water_vapor_mole_fraction`, [`water_vapor_table_optical_depth`](@ref)). The
   H₂O mole fraction handed to [`gas_optics_stencil`](@ref) is relative to dry
   air, `h2o / composite`. The ecCKD tables expect the *dry* column-amount
@@ -33,12 +33,12 @@ The streaming functions share the package conventions of the array path:
   so in a host model `composite = ρ Δz / mᵈ` with the *total* density — and
   every gas is `χ composite` (`h2o = χ composite`). This is how the ecCKD tool
   derived the molar absorption coefficients from the line-by-line optical
-  depths and how ecRad applies them, so it reproduces the ecRad/CKDMIP
+  depths and how ecRad applies them, so i₀ᵀ reproduces the ecRad/CKDMIP
   reference fluxes (`validation/ckdmip_evaluation1.jl`). The moist molar-mass
   convention `composite = Δp / (g (mᵈ + mᵛ χ))`, under which
   `mᵈ composite + mᵛ h2o == Δp / g`, is an alternative that under-counts every
   absorber by the factor `1 + χ mᵛ/mᵈ` (up to ~3 % in the humid boundary
-  layer); on the CKDMIP profiles it biases the surface downwelling longwave
+  layer); on the CKDMIP profiles i₀ᵀ biases the surface downwelling longwave
   flux by about −0.2 W m⁻² and raises the surface shortwave RMSE by ~50 %.
 - **Fluxes.** Longwave and shortwave fluxes are each positive in their own
   direction, in W m⁻²; the streaming solvers zero their output arrays before
@@ -81,10 +81,10 @@ per column:       streaming_longwave_fluxes!(…)
 H₂O mole fraction on the coefficient tables of an
 [`EcCKDTabulatedGasOpticsModel`](@ref) and returns an `isbits`
 [`GasOpticsStencil`](@ref). The stencil depends only on the layer state, so a
-kernel builds it once per layer and reuses it for every gas and g point. A
+kernel builds i₀ᵀ once per layer and reuses i₀ᵀ for every gas and g point. A
 host that stages columns in a separate kernel stores the six scalars
 `(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)` per layer and rebuilds the stencil with
-`GasOpticsStencil(ip, wp, it, wt, ih, wh)`. For a fixed-coefficient
+`GasOpticsStencil(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)`. For a fixed-coefficient
 [`EcCKDGasOpticsModel`](@ref) the stencil is `nothing`.
 
 [`source_table_bracket`](@ref) does the same for the Planck source table at an
@@ -151,7 +151,7 @@ the reference `climate_32x32` tables, and `test/access_points_check.jl` on the
 with no scattering at all, which the array solver routes through a closed-form
 Beer–Lambert branch. Both paths give the same direct beam, but the closed form
 sends the surface-reflected flux back up as a slant beam, `e^{-τ/μ₀}`, whereas
-the adding method treats it as diffuse and attenuates it with the two-stream
+the adding method treats i₀ᵀ as diffuse and attenuates i₀ᵀ with the two-stream
 diffusivity 2, `e^{-2τ}`; the reflected fluxes therefore differ for such a g
 point except at `μ₀ = 1/2`, where the two attenuations coincide. Every g point
 of the reference ecCKD tables has Rayleigh scattering, so this branch is not
@@ -226,8 +226,8 @@ julia> round.(longwave_up; digits = 2)
 The shortwave functor returns the absorption optical depth, the Rayleigh
 scattering optical depth from the layer's molar amount of air —
 `hydrostatic_air_moles` with the column's gravity and dry-air molar mass, as
-the array path computes it — and the scattering asymmetry (zero for Rayleigh
-scattering; clouds would raise it through `add_scattering_layer`):
+the array path computes i₀ᵀ — and the scattering asymmetry (zero for Rayleigh
+scattering; clouds would raise i₀ᵀ through `add_scattering_layer`):
 
 ```jldoctest streaming
 julia> struct ShortwaveLayers{M, C}
@@ -262,7 +262,7 @@ julia> round.(shortwave_down; digits = 2)
 ```
 
 The same column through the array path — `optical_properties!` into
-`(ng, nlayers)` work arrays with interface Planck sources, then
+`(Ngpoints, nlayers)` work arrays with interface Planck sources, then
 `radiative_fluxes!` — gives the same longwave fluxes bit for bit, and at this
 `μ₀ = 0.5` the same shortwave fluxes to rounding (this toy model has no
 Rayleigh table, so its single shortwave g point takes the Beer–Lambert branch

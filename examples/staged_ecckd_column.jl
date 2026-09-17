@@ -56,12 +56,12 @@ pressure_grid = FT[10_000, 100_000]
 temperature_grid = FT[220, 300]
 names = (:h2o, :co2)
 
-function synthetic_absorption(ng, ngas, pressure_grid, temperature_grid; scale)
-    table = zeros(FT, ng, ngas, length(pressure_grid), length(temperature_grid))
-    for gpoint in 1:ng, j in 1:ngas, ip in eachindex(pressure_grid), it in eachindex(temperature_grid)
-        pressure_factor = pressure_grid[ip] / maximum(pressure_grid)
-        temperature_factor = temperature_grid[it] / maximum(temperature_grid)
-        table[gpoint, j, ip, it] =
+function synthetic_absorption(Ngpoints, Ngases, pressure_grid, temperature_grid; scale)
+    table = zeros(FT, Ngpoints, Ngases, length(pressure_grid), length(temperature_grid))
+    for gpoint in 1:Ngpoints, j in 1:Ngases, iᵖ in eachindex(pressure_grid), iᵀ in eachindex(temperature_grid)
+        pressure_factor = pressure_grid[iᵖ] / maximum(pressure_grid)
+        temperature_factor = temperature_grid[iᵀ] / maximum(temperature_grid)
+        table[gpoint, j, iᵖ, iᵀ] =
             scale * gpoint * (0.7 + 0.5 * j) * (0.4 + pressure_factor) *
             (0.8 + 0.3 * temperature_factor)
     end

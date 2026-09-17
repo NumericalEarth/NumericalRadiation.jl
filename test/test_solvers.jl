@@ -9,13 +9,13 @@ using Dates
 
 # --- begin content of test_planck.jl ---
 @testset "planck: Stefan-Boltzmann recovery" begin
-    # π ∫ B(T, ν̃) dν̃ from 10 to 2510 cm⁻¹ must be within ~1% of σ T⁴ at 300 K.
+    # π ∫ B(T, ν̃) Δν̃ from 10 to 2510 cm⁻¹ must be within ~1% of σ T⁴ at 300 K.
     T = 300.0f0
-    lw = AnalyticBandLongwave(Float32)
-    nν = lw.nwavenumber
-    dν̃ = (lw.wavenumber_max - lw.wavenumber_min) / (nν - 1)
-    pi_B = sum(Float32(π) * planck_wavenumber(T, lw.wavenumber_min + (iv-1)*dν̃) * dν̃
-               for iv in 1:nν)
+    longwave = AnalyticBandLongwave(Float32)
+    Nwavenumbers = longwave.nwavenumber
+    Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (Nwavenumbers - 1)
+    pi_B = sum(Float32(π) * planck_wavenumber(T, longwave.wavenumber_min + (i-1)*Δν̃) * Δν̃
+               for i in 1:Nwavenumbers)
     σ_SB = 5.670374419f-8
     @test pi_B ≈ σ_SB * T^4 rtol = 0.01
 end
@@ -36,33 +36,33 @@ using Dates
 
 # --- begin content of test_absorption.jl ---
 @testset "water_vapor_line_kappa_ref: band structure" begin
-    lw = AnalyticBandLongwave(Float32)
-    @test water_vapor_line_kappa_ref(100f0, lw) ≈ lw.κ_rot
-    @test water_vapor_line_kappa_ref(200f0, lw) ≈ lw.κ_rot
-    @test water_vapor_line_kappa_ref(600f0, lw) < lw.κ_rot
-    @test water_vapor_line_kappa_ref(600f0, lw) ≈ lw.κ_rot * exp(-(600f0 - 200f0) / lw.l_rot) rtol = 1f-5
-    @test water_vapor_line_kappa_ref(1450f0, lw) ≈ lw.κ_vr
-    @test water_vapor_line_kappa_ref(1600f0, lw) ≈ lw.κ_vr
-    @test water_vapor_line_kappa_ref(2000f0, lw) < lw.κ_vr
-    @test water_vapor_line_kappa_ref(3000f0, lw) == 0f0
+    longwave = AnalyticBandLongwave(Float32)
+    @test water_vapor_line_kappa_ref(100f0, longwave) ≈ longwave.κ_rot
+    @test water_vapor_line_kappa_ref(200f0, longwave) ≈ longwave.κ_rot
+    @test water_vapor_line_kappa_ref(600f0, longwave) < longwave.κ_rot
+    @test water_vapor_line_kappa_ref(600f0, longwave) ≈ longwave.κ_rot * exp(-(600f0 - 200f0) / longwave.l_rot) rtol = 1f-5
+    @test water_vapor_line_kappa_ref(1450f0, longwave) ≈ longwave.κ_vr
+    @test water_vapor_line_kappa_ref(1600f0, longwave) ≈ longwave.κ_vr
+    @test water_vapor_line_kappa_ref(2000f0, longwave) < longwave.κ_vr
+    @test water_vapor_line_kappa_ref(3000f0, longwave) == 0f0
 end
 
 @testset "carbon_dioxide_kappa_ref: peak + e-folding" begin
-    lw = AnalyticBandLongwave(Float32)
-    @test carbon_dioxide_kappa_ref(667f0, lw) ≈ lw.κ_CO₂
-    @test carbon_dioxide_kappa_ref(667f0 + lw.l_CO₂, lw) ≈ lw.κ_CO₂ / Float32(ℯ) rtol = 1f-4
-    @test carbon_dioxide_kappa_ref(400f0, lw) == 0f0
-    @test carbon_dioxide_kappa_ref(900f0, lw) == 0f0
+    longwave = AnalyticBandLongwave(Float32)
+    @test carbon_dioxide_kappa_ref(667f0, longwave) ≈ longwave.κ_CO₂
+    @test carbon_dioxide_kappa_ref(667f0 + longwave.l_CO₂, longwave) ≈ longwave.κ_CO₂ / Float32(ℯ) rtol = 1f-4
+    @test carbon_dioxide_kappa_ref(400f0, longwave) == 0f0
+    @test carbon_dioxide_kappa_ref(900f0, longwave) == 0f0
 end
 
 @testset "water_vapor_continuum_kappa_ref: two-band split" begin
-    lw = AnalyticBandLongwave(Float32)
-    @test water_vapor_continuum_kappa_ref(1000f0, lw) == lw.κ_cnt1
-    @test water_vapor_continuum_kappa_ref(2000f0, lw) == lw.κ_cnt2
+    longwave = AnalyticBandLongwave(Float32)
+    @test water_vapor_continuum_kappa_ref(1000f0, longwave) == longwave.κ_cnt1
+    @test water_vapor_continuum_kappa_ref(2000f0, longwave) == longwave.κ_cnt2
     # Paper convention: 1700 cm⁻¹ belongs to the upper (weaker) band.
-    @test water_vapor_continuum_kappa_ref(1700f0, lw) == lw.κ_cnt2
-    @test water_vapor_continuum_kappa_ref(1699f0, lw) == lw.κ_cnt1
-    @test lw.κ_cnt1 > lw.κ_cnt2
+    @test water_vapor_continuum_kappa_ref(1700f0, longwave) == longwave.κ_cnt2
+    @test water_vapor_continuum_kappa_ref(1699f0, longwave) == longwave.κ_cnt1
+    @test longwave.κ_cnt1 > longwave.κ_cnt2
 end
 
 @testset "williams_delta_tau: positivity + rotation-band dominance" begin
@@ -75,23 +75,23 @@ end
     pₛ = NF(100_000)
     g  = PhysicalConstants(NF).gravity
 
-    lw = AnalyticBandLongwave(NF)
+    longwave = AnalyticBandLongwave(NF)
 
-    dν̃ = (lw.wavenumber_max - lw.wavenumber_min) / (lw.nwavenumber - 1)
+    Δν̃ = (longwave.wavenumber_max - longwave.wavenumber_min) / (longwave.nwavenumber - 1)
 
     for k in 1:nlayers
-        Δτ_win      = NumericalRadiation.williams_delta_tau(k, NF(1000), NF(0),   T, q, pₛ, geom, lw, g)
-        Δτ_rot      = NumericalRadiation.williams_delta_tau(k, NF(400),  NF(0),   T, q, pₛ, geom, lw, g)
-        Δτ_no_CO₂   = NumericalRadiation.williams_delta_tau(k, NF(667),  NF(0),   T, q, pₛ, geom, lw, g)
-        Δτ_with_CO₂ = NumericalRadiation.williams_delta_tau(k, NF(667),  NF(280), T, q, pₛ, geom, lw, g)
+        Δτ_win      = NumericalRadiation.williams_delta_tau(k, NF(1000), NF(0),   T, q, pₛ, geom, longwave, g)
+        Δτ_rot      = NumericalRadiation.williams_delta_tau(k, NF(400),  NF(0),   T, q, pₛ, geom, longwave, g)
+        Δτ_no_CO₂   = NumericalRadiation.williams_delta_tau(k, NF(667),  NF(0),   T, q, pₛ, geom, longwave, g)
+        Δτ_with_CO₂ = NumericalRadiation.williams_delta_tau(k, NF(667),  NF(280), T, q, pₛ, geom, longwave, g)
 
         @test Δτ_win > 0
         @test Δτ_rot > Δτ_win
         @test Δτ_with_CO₂ > Δτ_no_CO₂
 
-        for iv in 1:lw.nwavenumber
-            ν̃ = lw.wavenumber_min + (iv - 1) * dν̃
-            @test NumericalRadiation.williams_delta_tau(k, NF(ν̃), NF(0), T, q, pₛ, geom, lw, g) >= 0
+        for i in 1:longwave.nwavenumber
+            ν̃ = longwave.wavenumber_min + (i - 1) * Δν̃
+            @test NumericalRadiation.williams_delta_tau(k, NF(ν̃), NF(0), T, q, pₛ, geom, longwave, g) >= 0
         end
     end
 end
@@ -121,7 +121,7 @@ end
 @testset "AnalyticBandLongwave: parameterization smoke test" begin
     NF = Float32
     nlayers = 8
-    lw = AnalyticBandLongwave(NF)
+    longwave = AnalyticBandLongwave(NF)
     profile, geom = _test_column(NF, nlayers)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                 land_surface_temperature = NF(285),
@@ -129,7 +129,7 @@ end
     constants = PhysicalConstants{NF}()
     dTdt = zeros(NF, nlayers)
     diag = LongwaveDiagnostics{NF}()
-    solve_longwave!(dTdt, diag, lw, profile, geom, surface, constants)
+    solve_longwave!(dTdt, diag, longwave, profile, geom, surface, constants)
     @test any(!=(0), dTdt)
     @test isfinite(diag.outgoing_longwave)
     @test diag.outgoing_longwave > 0
@@ -138,7 +138,7 @@ end
 @testset "AnalyticBandLongwave: energy conservation sanity" begin
     NF = Float32
     nlayers = 8
-    lw = AnalyticBandLongwave(NF)
+    longwave = AnalyticBandLongwave(NF)
     profile, geom = _test_column(NF, nlayers)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                 land_surface_temperature = NF(285),
@@ -146,7 +146,7 @@ end
     constants = PhysicalConstants{NF}()
     dTdt = zeros(NF, nlayers)
     diag = LongwaveDiagnostics{NF}()
-    solve_longwave!(dTdt, diag, lw, profile, geom, surface, constants)
+    solve_longwave!(dTdt, diag, longwave, profile, geom, surface, constants)
 
     @test all(isfinite, dTdt)
     @test diag.outgoing_longwave > 0
@@ -157,7 +157,7 @@ end
 @testset "AnalyticBandLongwave: CO₂ forcing" begin
     NF = Float32
     nlayers = 8
-    lw = AnalyticBandLongwave(NF)
+    longwave = AnalyticBandLongwave(NF)
 
     function _olr(CO₂)
         profile, geom = _test_column(NF, nlayers)
@@ -172,7 +172,7 @@ end
         constants = PhysicalConstants{NF}()
         dTdt = zeros(NF, nlayers)
         diag = LongwaveDiagnostics{NF}()
-        solve_longwave!(dTdt, diag, lw, profile, geom, surface, constants)
+        solve_longwave!(dTdt, diag, longwave, profile, geom, surface, constants)
         return diag.outgoing_longwave
     end
     olr_280 = _olr(280)
@@ -185,7 +185,7 @@ end
 @testset "AnalyticBandLongwave: Float32 vs Float64 compatibility" begin
     for NF in (Float32, Float64)
         nlayers = 4
-        lw = AnalyticBandLongwave(NF)
+        longwave = AnalyticBandLongwave(NF)
         profile, geom = _test_column(NF, nlayers)
         surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                     land_surface_temperature = NF(285),
@@ -193,7 +193,7 @@ end
         constants = PhysicalConstants{NF}()
         dTdt = zeros(NF, nlayers)
         diag = LongwaveDiagnostics{NF}()
-        solve_longwave!(dTdt, diag, lw, profile, geom, surface, constants)
+        solve_longwave!(dTdt, diag, longwave, profile, geom, surface, constants)
         @test all(isfinite, dTdt)
     end
 end
@@ -1648,18 +1648,18 @@ end
 
 @testset "NCDatasets cloud scattering table reader" begin
     path = tempname() * ".nc"
-    NCDataset(path, "c") do ds
-        defDim(ds, "wavenumber", 2)
-        defDim(ds, "effective_radius", 3)
-        ds.attrib["medium"] = "ice"
-        ds.attrib["particle_type"] = "cloud-ice"
-        wavenumber = defVar(ds, "wavenumber", Float64, ("wavenumber",))
-        radius = defVar(ds, "effective_radius", Float64, ("effective_radius",))
-        mass_ext = defVar(ds, "mass_extinction_coefficient", Float64,
+    NCDataset(path, "c") do dataset
+        defDim(dataset, "wavenumber", 2)
+        defDim(dataset, "effective_radius", 3)
+        dataset.attrib["medium"] = "ice"
+        dataset.attrib["particle_type"] = "cloud-ice"
+        wavenumber = defVar(dataset, "wavenumber", Float64, ("wavenumber",))
+        radius = defVar(dataset, "effective_radius", Float64, ("effective_radius",))
+        mass_ext = defVar(dataset, "mass_extinction_coefficient", Float64,
                           ("wavenumber", "effective_radius"))
-        ω = defVar(ds, "single_scattering_albedo", Float64,
+        ω = defVar(dataset, "single_scattering_albedo", Float64,
                      ("wavenumber", "effective_radius"))
-        asymmetry = defVar(ds, "asymmetry_factor", Float64,
+        asymmetry = defVar(dataset, "asymmetry_factor", Float64,
                            ("wavenumber", "effective_radius"))
         wavenumber[:] = [100.0, 200.0]
         radius[:] = [1.0e-6, 2.0e-6, 3.0e-6]
@@ -1679,12 +1679,12 @@ end
 
 @testset "NCDatasets ecCKD spectral mapping reader" begin
     path = tempname() * ".nc"
-    NCDataset(path, "c") do ds
-        defDim(ds, "wavenumber", 2)
-        defDim(ds, "g_point", 3)
-        w1 = defVar(ds, "wavenumber1", Float64, ("wavenumber",))
-        w2 = defVar(ds, "wavenumber2", Float64, ("wavenumber",))
-        frac = defVar(ds, "gpoint_fraction", Float64, ("wavenumber", "g_point"))
+    NCDataset(path, "c") do dataset
+        defDim(dataset, "wavenumber", 2)
+        defDim(dataset, "g_point", 3)
+        w1 = defVar(dataset, "wavenumber1", Float64, ("wavenumber",))
+        w2 = defVar(dataset, "wavenumber2", Float64, ("wavenumber",))
+        frac = defVar(dataset, "gpoint_fraction", Float64, ("wavenumber", "g_point"))
         w1[:] = [100.0, 200.0]
         w2[:] = [150.0, 250.0]
         frac[:, :] = [1.0 0.0 0.0; 0.0 0.25 0.75]

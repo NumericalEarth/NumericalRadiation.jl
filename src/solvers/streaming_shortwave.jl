@@ -164,14 +164,14 @@ night (`μ₀ ≤ 0`).
 Allocation-free; `scratch` may hold views into a host's own arrays.
 """
 @inline function streaming_shortwave_fluxes!(flux_up, flux_down, layer_optics, μ₀, toa_irradiance,
-                                             direct_albedo, diffuse_albedo, weights, ng, nlayers,
+                                             direct_albedo, diffuse_albedo, weights, Ngpoints, nlayers,
                                              scratch::ShortwaveColumnScratch)
     FT = eltype(flux_up)
     @inbounds for k in 1:nlayers + 1
         flux_up[k] = zero(FT)
         flux_down[k] = zero(FT)
     end
-    for gpoint in 1:ng
+    for gpoint in 1:Ngpoints
         add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, gpoint,
                                      @inbounds(weights[gpoint]), μ₀, toa_irradiance,
                                      gpoint_albedo(direct_albedo, gpoint),

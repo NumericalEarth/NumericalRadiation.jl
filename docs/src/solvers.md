@@ -41,7 +41,7 @@ the same workflow against reference model files.
 
 [`CloudlessLongwave`](@ref) is a plane-parallel clear-sky solver for
 [`LongwaveOptics`](@ref). Optical depth and source arrays may be
-vectors of length `nlayers` (broadband) or matrices shaped `(ng, nlayers)`;
+vectors of length `nlayers` (broadband) or matrices shaped `(Ngpoints, nlayers)`;
 `source` is the layer Planck source in flux units (``\pi B``, W m⁻²). The
 atmosphere argument is accepted for interface consistency and is not inspected.
 
@@ -122,7 +122,7 @@ broadband scalars or per-g-point vectors.
 The all-sky solvers operate on two-region optical properties:
 [`LongwaveCloudOverlapOptics`](@ref) and
 [`ShortwaveCloudOverlapOptics`](@ref) hold *clear* and *cloudy*
-optics with the same `(ng, nlayers)` shape, plus three layer fields that stay
+optics with the same `(Ngpoints, nlayers)` shape, plus three layer fields that stay
 separate from the optical depths:
 
 - `cloud_fraction` — one value per layer; never used to weaken cloudy-region
@@ -171,10 +171,10 @@ optical properties; see [Validation](validation.md).
 
 Two runtime gas-optics models implement [`optical_properties!`](@ref):
 
-- [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(ng, ngas)`
+- [`EcCKDGasOpticsModel`](@ref) holds fixed, already-interpolated `(Ngpoints, Ngases)`
   coefficients — the path used by unit tests and teacher–student training.
 - [`EcCKDTabulatedGasOpticsModel`](@ref) holds reference
-  `(ng, ngas, np, nt)` look-up tables. Per layer it brackets pressure on a
+  `(Ngpoints, Ngases, Npressures, Ntemperatures)` look-up tables. Per layer it brackets pressure on a
   logarithmic grid, interpolates bilinearly in pressure and temperature
   (supporting ecCKD's pressure-dependent temperature grids), and accumulates
   ``\tau_g = \sum_j \kappa_{g,j}(p, T)\, u_j`` over the gases with an unrolled,
@@ -188,10 +188,10 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
   source table at layer and interface temperatures.
 
 The evaluation is *streaming*: the only spectral intermediates are the
-caller-owned `(ng, nlayers)` optical-depth and source arrays. Solvers then
+caller-owned `(Ngpoints, nlayers)` optical-depth and source arrays. Solvers then
 loop over g-points, carry running fluxes through the column, and accumulate
 `weights[gpoint] * flux` directly into the broadband interface arrays — spectral
-fluxes are never stored with shape `(ng, ninterfaces)`, and there are no
+fluxes are never stored with shape `(Ngpoints, ninterfaces)`, and there are no
 four-dimensional intermediates. Host models can fuse the same per-g-point
 recurrences into
 their own column kernels; the model types are `Adapt.jl`-aware so tables can

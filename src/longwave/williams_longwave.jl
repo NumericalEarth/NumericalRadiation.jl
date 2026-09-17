@@ -152,21 +152,21 @@ function solve_longwave!(dTdt::AbstractVector,
     U_sfc_bb    = (1 - land_fraction) * U_sfc_ocean + land_fraction * U_sfc_land
 
     # Wavenumber quadrature.
-    nν = scheme.nwavenumber
-    dν̃ = (scheme.wavenumber_max - scheme.wavenumber_min) / NF(nν - 1)
+    Nwavenumbers = scheme.nwavenumber
+    Δν̃ = (scheme.wavenumber_max - scheme.wavenumber_min) / NF(Nwavenumbers - 1)
 
     olr_sum::NF    = zero(NF)
     D_surf_sum::NF = zero(NF)
 
-    for iv in 1:nν
-        ν̃ = scheme.wavenumber_min + NF(iv - 1) * dν̃
+    for i in 1:Nwavenumbers
+        ν̃ = scheme.wavenumber_min + NF(i - 1) * Δν̃
 
         B_sfc_ocean = ifelse(isfinite(sst), planck_wavenumber(sst, ν̃), zero(NF))
         B_sfc_land  = ifelse(isfinite(lst), planck_wavenumber(lst, ν̃), zero(NF))
 
         # Hemispherical surface flux πB(T_sfc), land–sea weighted by emissivity ϵ.
         # ℐꜛˡʷ (surface, spectral bin) [W m⁻²]:
-        U_spec::NF = dν̃ * NF(π) * (
+        U_spec::NF = Δν̃ * NF(π) * (
             (1 - land_fraction) * ϵ_ocean * B_sfc_ocean +
              land_fraction      * ϵ_land  * B_sfc_land
         )
@@ -180,7 +180,7 @@ function solve_longwave!(dTdt::AbstractVector,
             Δτ_k  = williams_delta_tau(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
             transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
-            U_new::NF = U * transmittance_k + dν̃ * NF(π) * B_k * (1 - transmittance_k)
+            U_new::NF = U * transmittance_k + Δν̃ * NF(π) * B_k * (1 - transmittance_k)
 
             if k > 1
                 # U_new leaves layer k at the top and enters layer k-1 at the bottom.
@@ -202,7 +202,7 @@ function solve_longwave!(dTdt::AbstractVector,
             Δτ_k  = williams_delta_tau(k, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
             transmittance_k  = exp(-Δτ_k)
             B_k   = planck_wavenumber(T[k], ν̃)
-            D_new::NF = D * transmittance_k + dν̃ * NF(π) * B_k * (1 - transmittance_k)
+            D_new::NF = D * transmittance_k + Δν̃ * NF(π) * B_k * (1 - transmittance_k)
 
             dTdt[k]     -= flux_to_tendency(D_new / cₚ, profile, geometry, constants, k)
             dTdt[k + 1] += flux_to_tendency(D_new / cₚ, profile, geometry, constants, k + 1)
@@ -213,7 +213,7 @@ function solve_longwave!(dTdt::AbstractVector,
         Δτ_bottom = williams_delta_tau(nlayers, ν̃, CO₂, T, q, pₛ, geometry, scheme, g)
         transmittance_bottom = exp(-Δτ_bottom)
         B_bottom  = planck_wavenumber(T[nlayers], ν̃)
-        D_surf::NF = D * transmittance_bottom + dν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
+        D_surf::NF = D * transmittance_bottom + Δν̃ * NF(π) * B_bottom * (1 - transmittance_bottom)
 
         dTdt[nlayers] -= surface_flux_to_tendency(D_surf / cₚ, profile, geometry, constants)
         D_surf_sum    += D_surf

@@ -38,7 +38,7 @@ function draw!(rng::LinearCongruentialDraws)
     return Float64(rng.state >> 11) / 2.0^53
 end
 
-draw!(rng::LinearCongruentialDraws, lo, hi) = lo + (hi - lo) * draw!(rng)
+draw!(rng::LinearCongruentialDraws, lower, upper) = lower + (upper - lower) * draw!(rng)
 
 #####
 ##### Tolerances

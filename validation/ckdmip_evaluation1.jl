@@ -122,24 +122,24 @@ end
 # Everything the benchmark reads: profiles, line-by-line fluxes and the
 # shortwave configuration inferred from the reference file.
 function load_ckdmip(paths)
-    concentrations, lw_path, sw_path = paths
-    data = NCDataset(concentrations) do ds
-        (; pressure_hl = dense(ds["pressure_hl"][:, :]),
-           temperature_hl = dense(ds["temperature_hl"][:, :]),
-           mole_fractions = NamedTuple{CKDMIP_GASES}(map(gas -> dense(ds["$(gas)_mole_fraction_fl"][:, :]), CKDMIP_GASES)))
+    concentrations, longwave_path, shortwave_path = paths
+    data = NCDataset(concentrations) do dataset
+        (; pressure_hl = dense(dataset["pressure_hl"][:, :]),
+           temperature_hl = dense(dataset["temperature_hl"][:, :]),
+           mole_fractions = NamedTuple{CKDMIP_GASES}(map(gas -> dense(dataset["$(gas)_mole_fraction_fl"][:, :]), CKDMIP_GASES)))
     end
-    longwave = NCDataset(lw_path) do ds
-        (; up = dense(ds["flux_up_lw"][:, :]), down = dense(ds["flux_dn_lw"][:, :]))
+    longwave = NCDataset(longwave_path) do dataset
+        (; up = dense(dataset["flux_up_lw"][:, :]), down = dense(dataset["flux_dn_lw"][:, :]))
     end
-    shortwave = NCDataset(sw_path) do ds
+    shortwave = NCDataset(shortwave_path) do dataset
         # The zenith dimension is read, not assumed: `mu0` is a coordinate of
         # the flux arrays `(half_level, mu0, column)`.
-        haskey(ds, "mu0") || throw(ArgumentError("shortwave reference file has no mu0 coordinate"))
-        μ₀ = round.(dense(ds["mu0"][:]); digits = 6)   # stored in single precision
-        up = dense(ds["flux_up_sw"][:, :, :])
-        down = dense(ds["flux_dn_sw"][:, :, :])
-        dimnames(ds["flux_up_sw"]) == ("half_level", "mu0", "column") ||
-            throw(ArgumentError("unexpected shortwave flux dimensions $(dimnames(ds["flux_up_sw"]))"))
+        haskey(dataset, "mu0") || throw(ArgumentError("shortwave reference file has no mu0 coordinate"))
+        μ₀ = round.(dense(dataset["mu0"][:]); digits = 6)   # stored in single precision
+        up = dense(dataset["flux_up_sw"][:, :, :])
+        down = dense(dataset["flux_dn_sw"][:, :, :])
+        dimnames(dataset["flux_up_sw"]) == ("half_level", "mu0", "column") ||
+            throw(ArgumentError("unexpected shortwave flux dimensions $(dimnames(dataset["flux_up_sw"]))"))
         (; μ₀, up, down)
     end
 
@@ -173,13 +173,13 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, nlayers)
 
-    lw_up = zeros(nlayers + 1, nprofiles)
-    lw_down = zeros(nlayers + 1, nprofiles)
-    sw_up = zeros(nlayers + 1, nzenith, nprofiles)
-    sw_down = zeros(nlayers + 1, nzenith, nprofiles)
-    lw_heating = zeros(nlayers, nprofiles)
+    longwave_up = zeros(nlayers + 1, nprofiles)
+    longwave_down = zeros(nlayers + 1, nprofiles)
+    shortwave_up = zeros(nlayers + 1, nzenith, nprofiles)
+    shortwave_down = zeros(nlayers + 1, nzenith, nprofiles)
+    longwave_heating = zeros(nlayers, nprofiles)
     lw_heating_reference = zeros(nlayers, nprofiles)
-    sw_heating = zeros(nlayers, nzenith, nprofiles)
+    shortwave_heating = zeros(nlayers, nzenith, nprofiles)
     sw_heating_reference = zeros(nlayers, nzenith, nprofiles)
 
     profile_column(i) = benchmark_column(pressure_hl[:, i], temperature_hl[:, i], map(mf -> mf[:, i], mole_fractions);
@@ -196,14 +196,14 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
         atmosphere = profile_column(i)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity = 1.0,
                                                    albedo, cos_zeniths = μ₀, solar_constant)
-        lw_up[:, i] = fluxes.longwave_up
-        lw_down[:, i] = fluxes.longwave_down
-        sw_up[:, :, i] = fluxes.shortwave_up
-        sw_down[:, :, i] = fluxes.shortwave_down
-        lw_heating[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
+        longwave_up[:, i] = fluxes.longwave_up
+        longwave_down[:, i] = fluxes.longwave_down
+        shortwave_up[:, :, i] = fluxes.shortwave_up
+        shortwave_down[:, :, i] = fluxes.shortwave_down
+        longwave_heating[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
         lw_heating_reference[:, i] = heating_rate_per_day(longwave.up[:, i], longwave.down[:, i], atmosphere)
         for j in 1:nzenith
-            sw_heating[:, j, i] = heating_rate_per_day(fluxes.shortwave_up[:, j], fluxes.shortwave_down[:, j], atmosphere)
+            shortwave_heating[:, j, i] = heating_rate_per_day(fluxes.shortwave_up[:, j], fluxes.shortwave_down[:, j], atmosphere)
             sw_heating_reference[:, j, i] = heating_rate_per_day(shortwave.up[:, j, i], shortwave.down[:, j, i], atmosphere)
         end
     end
@@ -217,21 +217,21 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
 
     statistics = (;
-        lw_toa_up = (bias = bias(lw_up[1, :], longwave.up[1, :]), rmse = rmse(lw_up[1, :], longwave.up[1, :])),
-        lw_surface_down = (bias = bias(lw_down[end, :], longwave.down[end, :]), rmse = rmse(lw_down[end, :], longwave.down[end, :])),
-        lw_profile_rmse = (up = rmse(lw_up, longwave.up), down = rmse(lw_down, longwave.down)),
-        lw_heating_rate = heating_ranges(pressure_hl, lw_heating, lw_heating_reference),
-        sw_toa_up = (bias = bias(sw_up[1, :, :], shortwave.up[1, :, :]), rmse = rmse(sw_up[1, :, :], shortwave.up[1, :, :])),
-        sw_surface_down = (bias = bias(sw_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
-                           rmse = rmse(sw_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
-                           rmse_all_zenith_angles = rmse(sw_down[end, :, :], shortwave.down[end, :, :])),
-        sw_profile_rmse = (up = rmse(sw_up, shortwave.up), down = rmse(sw_down, shortwave.down)),
-        sw_heating_rate = heating_ranges(pressure_sw, flat(sw_heating), flat(sw_heating_reference)),
+        lw_toa_up = (bias = bias(longwave_up[1, :], longwave.up[1, :]), rmse = rmse(longwave_up[1, :], longwave.up[1, :])),
+        lw_surface_down = (bias = bias(longwave_down[end, :], longwave.down[end, :]), rmse = rmse(longwave_down[end, :], longwave.down[end, :])),
+        lw_profile_rmse = (up = rmse(longwave_up, longwave.up), down = rmse(longwave_down, longwave.down)),
+        lw_heating_rate = heating_ranges(pressure_hl, longwave_heating, lw_heating_reference),
+        sw_toa_up = (bias = bias(shortwave_up[1, :, :], shortwave.up[1, :, :]), rmse = rmse(shortwave_up[1, :, :], shortwave.up[1, :, :])),
+        sw_surface_down = (bias = bias(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
+                           rmse = rmse(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
+                           rmse_all_zenith_angles = rmse(shortwave_down[end, :, :], shortwave.down[end, :, :])),
+        sw_profile_rmse = (up = rmse(shortwave_up, shortwave.up), down = rmse(shortwave_down, shortwave.down)),
+        sw_heating_rate = heating_ranges(pressure_sw, flat(shortwave_heating), flat(sw_heating_reference)),
         sw_by_zenith_angle = [(; mu0 = μ₀[j],
-                                 toa_up_rmse = rmse(sw_up[1, j, :], shortwave.up[1, j, :]),
-                                 surface_down_rmse = rmse(sw_down[end, j, :], shortwave.down[end, j, :]),
+                                 toa_up_rmse = rmse(shortwave_up[1, j, :], shortwave.up[1, j, :]),
+                                 surface_down_rmse = rmse(shortwave_down[end, j, :], shortwave.down[end, j, :]),
                                  heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
-                                     pressure_hl, sw_heating[:, j, :], sw_heating_reference[:, j, :],
+                                     pressure_hl, shortwave_heating[:, j, :], sw_heating_reference[:, j, :],
                                      HEATING_RATE_RANGES.troposphere))
                               for j in 1:nzenith],
     )

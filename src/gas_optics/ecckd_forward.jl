@@ -7,7 +7,7 @@ This type is intentionally limited to fixed, already-interpolated coefficient
 tables. It gives host models an allocation-free runtime path from gas columns
 to longwave and shortwave optical properties.
 
-`longwave_absorption` and `shortwave_absorption` are shaped `(ng, ngas)`.
+`longwave_absorption` and `shortwave_absorption` are shaped `(Ngpoints, Ngases)`.
 Gas values in [`ColumnAtmosphere`](@ref) are interpreted as layer absorber
 amounts. A gas value may be a scalar, in which case it is applied to every
 layer, or a vector with one entry per layer. The gray longwave source is
@@ -16,8 +16,8 @@ layer, or a vector with one entry per layer. The gray longwave source is
 
 """
 struct EcCKDGasOpticsModel{FT, GasNames, LWA, SWA, LWS, LWW, SWW} <: AbstractGasOpticsModel
-    longwave_absorption::LWA   # Longwave absorption coefficients with shape `(ng_lw, ngas)`.
-    shortwave_absorption::SWA   # Shortwave absorption coefficients with shape `(ng_sw, ngas)`.
+    longwave_absorption::LWA   # Longwave absorption coefficients with shape `(Nlongwave_gpoints, Ngases)`.
+    shortwave_absorption::SWA   # Shortwave absorption coefficients with shape `(Nshortwave_gpoints, Ngases)`.
     longwave_source_scale::LWS   # Longwave source scaling per g-point.
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
@@ -48,30 +48,30 @@ function EcCKDGasOpticsModel(; names,
                              shortwave_weights = nothing,
                              stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     FT = promote_type(eltype(longwave_absorption), eltype(shortwave_absorption))
-    lw_source = longwave_source_scale === nothing ?
+    longwave_source_scale = longwave_source_scale === nothing ?
         ones(FT, size(longwave_absorption, 1)) : longwave_source_scale
-    lw_weights = longwave_weights === nothing ?
+    longwave_weights = longwave_weights === nothing ?
         fill(inv(FT(size(longwave_absorption, 1))), size(longwave_absorption, 1)) :
         longwave_weights
-    sw_weights = shortwave_weights === nothing ?
+    shortwave_weights = shortwave_weights === nothing ?
         fill(inv(FT(size(shortwave_absorption, 1))), size(shortwave_absorption, 1)) :
         shortwave_weights
 
-    ngas = length(names)
-    size(longwave_absorption, 2) == ngas ||
+    Ngases = length(names)
+    size(longwave_absorption, 2) == Ngases ||
         throw(DimensionMismatch("longwave_absorption gas dimension must match names"))
-    size(shortwave_absorption, 2) == ngas ||
+    size(shortwave_absorption, 2) == Ngases ||
         throw(DimensionMismatch("shortwave_absorption gas dimension must match names"))
-    length(lw_source) == size(longwave_absorption, 1) ||
-        throw(DimensionMismatch("longwave_source_scale must have length ng_lw"))
-    length(lw_weights) == size(longwave_absorption, 1) ||
-        throw(DimensionMismatch("longwave_weights must have length ng_lw"))
-    length(sw_weights) == size(shortwave_absorption, 1) ||
-        throw(DimensionMismatch("shortwave_weights must have length ng_sw"))
+    length(longwave_source_scale) == size(longwave_absorption, 1) ||
+        throw(DimensionMismatch("longwave_source_scale must have length Nlongwave_gpoints"))
+    length(longwave_weights) == size(longwave_absorption, 1) ||
+        throw(DimensionMismatch("longwave_weights must have length Nlongwave_gpoints"))
+    length(shortwave_weights) == size(shortwave_absorption, 1) ||
+        throw(DimensionMismatch("shortwave_weights must have length Nshortwave_gpoints"))
 
     gas_name_tuple = Tuple(Symbol.(names))
-    fields = (longwave_absorption, shortwave_absorption, lw_source,
-              lw_weights, sw_weights)
+    fields = (longwave_absorption, shortwave_absorption, longwave_source_scale,
+              longwave_weights, shortwave_weights)
     return EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...,
                                                                           FT(stefan_boltzmann))
 end
@@ -94,7 +94,7 @@ ecCKD-style tabulated gas-optics model with bilinear pressure/temperature
 interpolation.
 
 `longwave_absorption` and `shortwave_absorption` are shaped
-`(ng, ngas, npressure, ntemperature)`. The runtime method interpolates
+`(Ngpoints, Ngases, npressure, ntemperature)`. The runtime method interpolates
 coefficients for each layer, multiplies them by layer absorber amounts from
 [`ColumnAtmosphere`](@ref), and writes caller-owned optical-property arrays.
 The pressure and optional H₂O grids must be positive and uniformly spaced in
@@ -111,14 +111,14 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     temperature_grid::TG   # Increasing temperature grid, or pressure-dependent matrix with one common increment.
     water_vapor_mole_fraction_grid::HG   # Optional positive, increasing, log-uniform H₂O mole-fraction grid.
     gas_reference_mole_fractions::GREF   # Reference mole fractions for relative-linear gases, aligned with names.
-    longwave_absorption::LWA   # Longwave absorption coefficients with shape `(ng_lw, ngas, np, nt)`.
-    shortwave_absorption::SWA   # Shortwave absorption coefficients with shape `(ng_sw, ngas, np, nt)`.
-    longwave_water_vapor_absorption::LHWA   # Optional longwave H₂O absorption coefficients with shape `(ng_lw, np, nt, n_water_vapor)`.
-    shortwave_water_vapor_absorption::SHWA   # Optional shortwave H₂O absorption coefficients with shape `(ng_sw, np, nt, n_water_vapor)`.
-    shortwave_rayleigh_molar_scattering::SWR   # Optional shortwave Rayleigh molar scattering coefficients with length `ng_sw`.
+    longwave_absorption::LWA   # Longwave absorption coefficients with shape `(Nlongwave_gpoints, Ngases, Npressures, Ntemperatures)`.
+    shortwave_absorption::SWA   # Shortwave absorption coefficients with shape `(Nshortwave_gpoints, Ngases, Npressures, Ntemperatures)`.
+    longwave_water_vapor_absorption::LHWA   # Optional longwave H₂O absorption coefficients with shape `(Nlongwave_gpoints, Npressures, Ntemperatures, Nwater_vapor)`.
+    shortwave_water_vapor_absorption::SHWA   # Optional shortwave H₂O absorption coefficients with shape `(Nshortwave_gpoints, Npressures, Ntemperatures, Nwater_vapor)`.
+    shortwave_rayleigh_molar_scattering::SWR   # Optional shortwave Rayleigh molar scattering coefficients with length `Nshortwave_gpoints`.
     longwave_source_scale::LWS   # Longwave source scaling per g-point.
     longwave_source_temperature_grid::LST   # Optional longwave source temperature grid.
-    longwave_source_table::LSTB   # Optional longwave source table with shape `(ng_lw, ntemperature)`.
+    longwave_source_table::LSTB   # Optional longwave source table with shape `(Nlongwave_gpoints, ntemperature)`.
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
     stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source fallback, W m⁻² K⁻⁴.
@@ -205,31 +205,31 @@ function EcCKDTabulatedGasOpticsModel(; names,
         zeros(FT, 0, 0, 0, 0) : FT.(longwave_water_vapor_absorption)
     shortwave_water_vapor = shortwave_water_vapor_absorption === nothing ?
         zeros(FT, 0, 0, 0, 0) : FT.(shortwave_water_vapor_absorption)
-    lw_source = longwave_source_scale === nothing ?
+    longwave_source_scale = longwave_source_scale === nothing ?
         ones(FT, size(longwave_absorption, 1)) : longwave_source_scale
-    lw_weights = longwave_weights === nothing ?
+    longwave_weights = longwave_weights === nothing ?
         fill(inv(FT(size(longwave_absorption, 1))), size(longwave_absorption, 1)) :
         longwave_weights
-    sw_weights = shortwave_weights === nothing ?
+    shortwave_weights = shortwave_weights === nothing ?
         fill(inv(FT(size(shortwave_absorption, 1))), size(shortwave_absorption, 1)) :
         shortwave_weights
-    sw_rayleigh = shortwave_rayleigh_molar_scattering === nothing ?
+    shortwave_rayleigh_molar_scattering = shortwave_rayleigh_molar_scattering === nothing ?
         zeros(FT, size(shortwave_absorption, 1)) :
         shortwave_rayleigh_molar_scattering
-    gas_refs = gas_reference_mole_fractions === nothing ?
+    gas_reference_mole_fractions = gas_reference_mole_fractions === nothing ?
         zeros(FT, length(names)) : FT.(gas_reference_mole_fractions)
 
     gas_name_tuple = Tuple(Symbol.(names))
-    ngas = length(names)
+    Ngases = length(names)
     length(pressure_grid) >= 2 ||
         throw(DimensionMismatch("pressure_grid must contain at least two points"))
     temperature_grid_length(temperature_grid) >= 2 ||
         throw(DimensionMismatch("temperature_grid must contain at least two points"))
     validate_log_uniform_grid(pressure_grid, "pressure_grid")
     validate_temperature_grid(temperature_grid, length(pressure_grid))
-    size(longwave_absorption, 2) == ngas ||
+    size(longwave_absorption, 2) == Ngases ||
         throw(DimensionMismatch("longwave_absorption gas dimension must match names"))
-    size(shortwave_absorption, 2) == ngas ||
+    size(shortwave_absorption, 2) == Ngases ||
         throw(DimensionMismatch("shortwave_absorption gas dimension must match names"))
     size(longwave_absorption, 3) == length(pressure_grid) ||
         throw(DimensionMismatch("longwave_absorption pressure dimension must match pressure_grid"))
@@ -247,36 +247,36 @@ function EcCKDTabulatedGasOpticsModel(; names,
         validate_log_uniform_grid(water_vapor_grid, "water_vapor_mole_fraction_grid")
         size(longwave_water_vapor) == (size(longwave_absorption, 1), length(pressure_grid),
                                        temperature_grid_length(temperature_grid), length(water_vapor_grid)) ||
-            throw(DimensionMismatch("longwave_water_vapor_absorption must have shape (ng_lw, np, nt, n_water_vapor)"))
+            throw(DimensionMismatch("longwave_water_vapor_absorption must have shape (Nlongwave_gpoints, Npressures, Ntemperatures, Nwater_vapor)"))
         size(shortwave_water_vapor) == (size(shortwave_absorption, 1), length(pressure_grid),
                                         temperature_grid_length(temperature_grid), length(water_vapor_grid)) ||
-            throw(DimensionMismatch("shortwave_water_vapor_absorption must have shape (ng_sw, np, nt, n_water_vapor)"))
+            throw(DimensionMismatch("shortwave_water_vapor_absorption must have shape (Nshortwave_gpoints, Npressures, Ntemperatures, Nwater_vapor)"))
     end
-    length(lw_source) == size(longwave_absorption, 1) ||
-        throw(DimensionMismatch("longwave_source_scale must have length ng_lw"))
+    length(longwave_source_scale) == size(longwave_absorption, 1) ||
+        throw(DimensionMismatch("longwave_source_scale must have length Nlongwave_gpoints"))
     if longwave_source_table !== nothing
         longwave_source_temperature_grid === nothing &&
             throw(DimensionMismatch("longwave_source_temperature_grid is required with longwave_source_table"))
         size(longwave_source_table, 1) == size(longwave_absorption, 1) ||
-            throw(DimensionMismatch("longwave_source_table first dimension must match ng_lw"))
+            throw(DimensionMismatch("longwave_source_table first dimension must match Nlongwave_gpoints"))
         size(longwave_source_table, 2) == length(longwave_source_temperature_grid) ||
             throw(DimensionMismatch("longwave_source_table temperature dimension must match longwave_source_temperature_grid"))
         validate_increasing_grid(longwave_source_temperature_grid,
                                   "longwave_source_temperature_grid")
     end
-    length(lw_weights) == size(longwave_absorption, 1) ||
-        throw(DimensionMismatch("longwave_weights must have length ng_lw"))
-    length(sw_weights) == size(shortwave_absorption, 1) ||
-        throw(DimensionMismatch("shortwave_weights must have length ng_sw"))
-    length(sw_rayleigh) == size(shortwave_absorption, 1) ||
-        throw(DimensionMismatch("shortwave_rayleigh_molar_scattering must have length ng_sw"))
-    length(gas_refs) == ngas ||
+    length(longwave_weights) == size(longwave_absorption, 1) ||
+        throw(DimensionMismatch("longwave_weights must have length Nlongwave_gpoints"))
+    length(shortwave_weights) == size(shortwave_absorption, 1) ||
+        throw(DimensionMismatch("shortwave_weights must have length Nshortwave_gpoints"))
+    length(shortwave_rayleigh_molar_scattering) == size(shortwave_absorption, 1) ||
+        throw(DimensionMismatch("shortwave_rayleigh_molar_scattering must have length Nshortwave_gpoints"))
+    length(gas_reference_mole_fractions) == Ngases ||
         throw(DimensionMismatch("gas_reference_mole_fractions must match names length"))
 
-    fields = (pressure_grid, temperature_grid, water_vapor_grid, gas_refs,
+    fields = (pressure_grid, temperature_grid, water_vapor_grid, gas_reference_mole_fractions,
               longwave_absorption, shortwave_absorption,
-              longwave_water_vapor, shortwave_water_vapor, sw_rayleigh, lw_source, longwave_source_temperature_grid,
-              longwave_source_table, lw_weights, sw_weights)
+              longwave_water_vapor, shortwave_water_vapor, shortwave_rayleigh_molar_scattering, longwave_source_scale, longwave_source_temperature_grid,
+              longwave_source_table, longwave_weights, shortwave_weights)
     return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...,
                                                                                    FT(stefan_boltzmann))
 end
@@ -297,7 +297,7 @@ end
     return value isa Number ? value : value[k]
 end
 
-@inline gas_value(gases::AbstractMatrix, igas::Integer, k) = gases[igas, k]
+@inline gas_value(gases::AbstractMatrix, gas_index::Integer, k) = gases[gas_index, k]
 
 @inline gas_value(gases, name::Symbol, k) = begin
     value = getproperty(gases, name)
@@ -370,18 +370,18 @@ end
     last = lastindex(grid)
     x >= grid[last] && return last - 1, last, one(eltype(grid))
 
-    lo = firstindex(grid)
-    hi = last
-    while hi - lo > 1
-        mid = (lo + hi) >>> 1
+    lower = firstindex(grid)
+    upper = last
+    while upper - lower > 1
+        mid = (lower + upper) >>> 1
         if x < grid[mid]
-            hi = mid
+            upper = mid
         else
-            lo = mid
+            lower = mid
         end
     end
-    weight = (x - grid[lo]) / (grid[hi] - grid[lo])
-    return lo, hi, weight
+    weight = (x - grid[lower]) / (grid[upper] - grid[lower])
+    return lower, upper, weight
 end
 
 @inline function log_bracket(grid, x)
@@ -389,9 +389,9 @@ end
     # inputs interpolate exactly to the edge nodes.
     step = log(grid[begin + 1]) - log(grid[begin])
     offset = (log(max(x, grid[begin])) - log(grid[begin])) / step
-    lo = clamped_lower_index(offset, length(grid) - 2)
-    weight = clamp(offset - lo, zero(offset), one(offset))
-    return firstindex(grid) + lo, firstindex(grid) + lo + 1, weight
+    lower = clamped_lower_index(offset, length(grid) - 2)
+    weight = clamp(offset - lower, zero(offset), one(offset))
+    return firstindex(grid) + lower, firstindex(grid) + lower + 1, weight
 end
 
 # Integer part of a nonnegative interpolation coordinate `x`, clamped to
@@ -446,8 +446,8 @@ function validate_temperature_grid(grid::AbstractMatrix, pressure_count)
         throw(ArgumentError("temperature_grid rows must be strictly increasing"))
     # The reference kernel likewise carries one temperature increment for the
     # whole pressure-dependent table.
-    for ip in axes(grid, 1), it in 2:size(grid, 2)
-        step = grid[ip, it] - grid[ip, it - 1]
+    for iᵖ in axes(grid, 1), iᵀ in 2:size(grid, 2)
+        step = grid[iᵖ, iᵀ] - grid[iᵖ, iᵀ - 1]
         step > 0 ||
             throw(ArgumentError("temperature_grid rows must be strictly increasing"))
         isapprox(step, expected_step; rtol = 1.0e-5, atol = 0.0) ||
@@ -490,55 +490,55 @@ end
                                 pressure,
                                 temperature) where FT
     pressure_bracket = pressure_axis_bracket(pressure_grid, pressure)
-    ip0, ip1, wp = pressure_bracket
-    temperature_origin = (one(FT) - wp) * temperature_grid[ip0, 1] +
-                         wp * temperature_grid[ip1, 1]
+    i₀ᵖ, i₁ᵖ, wᵖ = pressure_bracket
+    temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] +
+                         wᵖ * temperature_grid[i₁ᵖ, 1]
     temperature_step = temperature_grid[1, 2] - temperature_grid[1, 1]
     temperature_index = one(FT) + clamp((temperature - temperature_origin) / temperature_step,
                                         zero(FT),
                                         FT(size(temperature_grid, 2)) - FT(1.0001))
     # `temperature_index` is at least 1 unless the state is `NaN`; see
     # `clamped_lower_index` for why the conversion must not throw.
-    it0 = 1 + clamped_lower_index(temperature_index - one(FT), size(temperature_grid, 2) - 2)
-    return pressure_bracket, (it0, it0 + 1, temperature_index - it0)
+    i₀ᵀ = 1 + clamped_lower_index(temperature_index - one(FT), size(temperature_grid, 2) - 2)
+    return pressure_bracket, (i₀ᵀ, i₀ᵀ + 1, temperature_index - i₀ᵀ)
 end
 
-@inline function interp_table(table::AbstractArray{<:Any, 4}, gpoint, j, stencil)
-    (ip0, ip1, wp), (it0, it1, wt) = stencil
-    c00 = table[gpoint, j, ip0, it0]
-    c10 = table[gpoint, j, ip1, it0]
-    c01 = table[gpoint, j, ip0, it1]
-    c11 = table[gpoint, j, ip1, it1]
-    cp0 = c00 + wp * (c10 - c00)
-    cp1 = c01 + wp * (c11 - c01)
-    return cp0 + wt * (cp1 - cp0)
+@inline function interpolate_table(table::AbstractArray{<:Any, 4}, gpoint, j, stencil)
+    (i₀ᵖ, i₁ᵖ, wᵖ), (i₀ᵀ, i₁ᵀ, wᵀ) = stencil
+    c00 = table[gpoint, j, i₀ᵖ, i₀ᵀ]
+    c10 = table[gpoint, j, i₁ᵖ, i₀ᵀ]
+    c01 = table[gpoint, j, i₀ᵖ, i₁ᵀ]
+    c11 = table[gpoint, j, i₁ᵖ, i₁ᵀ]
+    cp0 = c00 + wᵖ * (c10 - c00)
+    cp1 = c01 + wᵖ * (c11 - c01)
+    return cp0 + wᵀ * (cp1 - cp0)
 end
 
-@inline function interp_source_table(table::AbstractMatrix, gpoint, temperature_bracket)
-    it0, it1, wt = temperature_bracket
-    return table[gpoint, it0] + wt * (table[gpoint, it1] - table[gpoint, it0])
+@inline function interpolate_source_table(table::AbstractMatrix, gpoint, temperature_bracket)
+    i₀ᵀ, i₁ᵀ, wᵀ = temperature_bracket
+    return table[gpoint, i₀ᵀ] + wᵀ * (table[gpoint, i₁ᵀ] - table[gpoint, i₀ᵀ])
 end
 
-@inline function interp_water_vapor_table(table::AbstractArray{<:Any, 4}, gpoint, stencil, water_vapor_bracket)
-    (ip0, ip1, wp), (it0, it1, wt) = stencil
-    ih0, ih1, wh = water_vapor_bracket
+@inline function interpolate_water_vapor_table(table::AbstractArray{<:Any, 4}, gpoint, stencil, water_vapor_bracket)
+    (i₀ᵖ, i₁ᵖ, wᵖ), (i₀ᵀ, i₁ᵀ, wᵀ) = stencil
+    i₀ᴴ, i₁ᴴ, wᴴ = water_vapor_bracket
 
-    c000 = table[gpoint, ip0, it0, ih0]
-    c100 = table[gpoint, ip1, it0, ih0]
-    c010 = table[gpoint, ip0, it1, ih0]
-    c110 = table[gpoint, ip1, it1, ih0]
-    c001 = table[gpoint, ip0, it0, ih1]
-    c101 = table[gpoint, ip1, it0, ih1]
-    c011 = table[gpoint, ip0, it1, ih1]
-    c111 = table[gpoint, ip1, it1, ih1]
+    c000 = table[gpoint, i₀ᵖ, i₀ᵀ, i₀ᴴ]
+    c100 = table[gpoint, i₁ᵖ, i₀ᵀ, i₀ᴴ]
+    c010 = table[gpoint, i₀ᵖ, i₁ᵀ, i₀ᴴ]
+    c110 = table[gpoint, i₁ᵖ, i₁ᵀ, i₀ᴴ]
+    c001 = table[gpoint, i₀ᵖ, i₀ᵀ, i₁ᴴ]
+    c101 = table[gpoint, i₁ᵖ, i₀ᵀ, i₁ᴴ]
+    c011 = table[gpoint, i₀ᵖ, i₁ᵀ, i₁ᴴ]
+    c111 = table[gpoint, i₁ᵖ, i₁ᵀ, i₁ᴴ]
 
-    c00 = c000 + wp * (c100 - c000)
-    c10 = c010 + wp * (c110 - c010)
-    c01 = c001 + wp * (c101 - c001)
-    c11 = c011 + wp * (c111 - c011)
-    ct0 = c00 + wt * (c10 - c00)
-    ct1 = c01 + wt * (c11 - c01)
-    return ct0 + wh * (ct1 - ct0)
+    c00 = c000 + wᵖ * (c100 - c000)
+    c10 = c010 + wᵖ * (c110 - c010)
+    c01 = c001 + wᵖ * (c101 - c001)
+    c11 = c011 + wᵖ * (c111 - c011)
+    ct0 = c00 + wᵀ * (c10 - c00)
+    ct1 = c01 + wᵀ * (c11 - c01)
+    return ct0 + wᴴ * (ct1 - ct0)
 end
 
 # The temperature is converted to the model precision before bracketing, as
@@ -567,7 +567,7 @@ end
                                   source_bracket) where FT
     source_bracket === nothing &&
         return model.longwave_source_scale[gpoint] * model.stefan_boltzmann * FT(temperature)^4
-    source = interp_source_table(model.longwave_source_table, gpoint, source_bracket)
+    source = interpolate_source_table(model.longwave_source_table, gpoint, source_bracket)
     # Linear to zero below the first node, as in ecRad; the factor is exactly
     # one on and above the table, so in-range sources are untouched.
     T₁ = model.longwave_source_temperature_grid[begin]
@@ -623,7 +623,7 @@ end
                        FT(gas_reference_mole_fractions[$j]) *
                        FT(gas_value(gases, :composite, k)))
         end
-        push!(terms, :(interp_table(coefficients, gpoint, $j, stencil) * $amount))
+        push!(terms, :(interpolate_table(coefficients, gpoint, $j, stencil) * $amount))
     end
     isempty(terms) && return :(zero(FT))
     return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
@@ -643,7 +643,7 @@ end
         if reference != zero(FT) && has_gas(gases, :composite)
             amount -= reference * FT(gas_value(gases, :composite, k))
         end
-        τ += interp_table(coefficients, gpoint, j, stencil) * amount
+        τ += interpolate_table(coefficients, gpoint, j, stencil) * amount
     end
     return τ
 end
@@ -672,21 +672,21 @@ function check_ecckd_optics_shapes(longwave::LongwaveOptics,
             throw(DimensionMismatch("temperature_interfaces must contain nlayers + 1 values"))
     end
     size(longwave.optical_depth) == (size(model.longwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("longwave optical_depth must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave optical_depth must have shape (Nlongwave_gpoints, nlayers)"))
     size(longwave.source) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave source must have shape (Nlongwave_gpoints, nlayers)"))
     longwave.source_top === nothing || size(longwave.source_top) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_top must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave source_top must have shape (Nlongwave_gpoints, nlayers)"))
     longwave.source_bottom === nothing || size(longwave.source_bottom) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_bottom must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave source_bottom must have shape (Nlongwave_gpoints, nlayers)"))
     size(shortwave.optical_depth) == (size(model.shortwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("shortwave optical_depth must have shape (ng_sw, nlayers)"))
+        throw(DimensionMismatch("shortwave optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
     size(shortwave.rayleigh_optical_depth) == size(shortwave.optical_depth) ||
-        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (ng_sw, nlayers)"))
+        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
     length(longwave.weights) == size(model.longwave_absorption, 1) ||
-        throw(DimensionMismatch("longwave weights must have length ng_lw"))
+        throw(DimensionMismatch("longwave weights must have length Nlongwave_gpoints"))
     length(shortwave.weights) == size(model.shortwave_absorption, 1) ||
-        throw(DimensionMismatch("shortwave weights must have length ng_sw"))
+        throw(DimensionMismatch("shortwave weights must have length Nshortwave_gpoints"))
     return nothing
 end
 
@@ -708,21 +708,21 @@ function check_ecckd_optics_shapes(longwave::LongwaveOptics,
             throw(DimensionMismatch("temperature_interfaces must contain nlayers + 1 values"))
     end
     size(longwave.optical_depth) == (size(model.longwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("longwave optical_depth must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave optical_depth must have shape (Nlongwave_gpoints, nlayers)"))
     size(longwave.source) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave source must have shape (Nlongwave_gpoints, nlayers)"))
     longwave.source_top === nothing || size(longwave.source_top) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_top must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave source_top must have shape (Nlongwave_gpoints, nlayers)"))
     longwave.source_bottom === nothing || size(longwave.source_bottom) == size(longwave.optical_depth) ||
-        throw(DimensionMismatch("longwave source_bottom must have shape (ng_lw, nlayers)"))
+        throw(DimensionMismatch("longwave source_bottom must have shape (Nlongwave_gpoints, nlayers)"))
     size(shortwave.optical_depth) == (size(model.shortwave_absorption, 1), nlayers) ||
-        throw(DimensionMismatch("shortwave optical_depth must have shape (ng_sw, nlayers)"))
+        throw(DimensionMismatch("shortwave optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
     size(shortwave.rayleigh_optical_depth) == size(shortwave.optical_depth) ||
-        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (ng_sw, nlayers)"))
+        throw(DimensionMismatch("shortwave rayleigh_optical_depth must have shape (Nshortwave_gpoints, nlayers)"))
     length(longwave.weights) == size(model.longwave_absorption, 1) ||
-        throw(DimensionMismatch("longwave weights must have length ng_lw"))
+        throw(DimensionMismatch("longwave weights must have length Nlongwave_gpoints"))
     length(shortwave.weights) == size(model.shortwave_absorption, 1) ||
-        throw(DimensionMismatch("shortwave weights must have length ng_sw"))
+        throw(DimensionMismatch("shortwave weights must have length Nshortwave_gpoints"))
     return nothing
 end
 

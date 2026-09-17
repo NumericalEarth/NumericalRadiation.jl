@@ -20,9 +20,9 @@
 $(TYPEDEF)
 
 Cloud scattering properties of one hydrometeor phase mapped onto the g points
-of one [`EcCKDSpectralMapping`](@ref), tabulated on `nr` effective-radius
+of one [`EcCKDSpectralMapping`](@ref), tabulated on `Nradii` effective-radius
 nodes. The mass-extinction coefficient `κ` (m² kg⁻¹), single-scattering albedo
-`ω`, and asymmetry factor `g` have shape `(ng, nr)`; a layer's values are
+`ω`, and asymmetry factor `g` have shape `(Ngpoints, Nradii)`; a layer's values are
 read by bracketing its effective radius with [`effective_radius_bracket`](@ref)
 and interpolating with [`cloud_layer_optics`](@ref). The element type `FT`
 follows the stored arrays, so `Adapt.adapt(Array{Float32}, cloud)` yields a
@@ -33,13 +33,13 @@ Fields are
 $(TYPEDFIELDS)
 """
 struct SpectralCloudOptics{FT, V, M}
-    "Effective-radius nodes in m, strictly increasing, shape `(nr,)`."
+    "Effective-radius nodes in m, strictly increasing, shape `(Nradii,)`."
     effective_radius :: V
-    "Mass-extinction coefficient in m² kg⁻¹, shape `(ng, nr)`."
+    "Mass-extinction coefficient in m² kg⁻¹, shape `(Ngpoints, Nradii)`."
     mass_extinction_coefficient :: M
-    "Single-scattering albedo, shape `(ng, nr)`."
+    "Single-scattering albedo, shape `(Ngpoints, Nradii)`."
     single_scattering_albedo :: M
-    "Scattering asymmetry factor, shape `(ng, nr)`."
+    "Scattering asymmetry factor, shape `(Ngpoints, Nradii)`."
     asymmetry_factor :: M
 end
 
@@ -49,7 +49,7 @@ Base.eltype(::SpectralCloudOptics{FT}) where FT = FT
 $(TYPEDSIGNATURES)
 
 Build a [`SpectralCloudOptics`](@ref) from per-node arrays: `effective_radius`
-of shape `(nr,)` and the three property matrices of shape `(ng, nr)`. The
+of shape `(Nradii,)` and the three property matrices of shape `(Ngpoints, Nradii)`. The
 element type `FT` is passed as the first positional argument; the arrays are
 converted to `Vector{FT}` and `Matrix{FT}`.
 """
@@ -58,15 +58,15 @@ function SpectralCloudOptics(FT::DataType,
                              mass_extinction_coefficient::AbstractMatrix,
                              single_scattering_albedo::AbstractMatrix,
                              asymmetry_factor::AbstractMatrix)
-    nr = length(effective_radius)
-    nr >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
+    Nradii = length(effective_radius)
+    Nradii >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
     validate_increasing_grid(effective_radius, "effective_radius")
-    ng = size(mass_extinction_coefficient, 1)
+    Ngpoints = size(mass_extinction_coefficient, 1)
     for (name, array) in (("mass_extinction_coefficient", mass_extinction_coefficient),
                           ("single_scattering_albedo", single_scattering_albedo),
                           ("asymmetry_factor", asymmetry_factor))
-        size(array) == (ng, nr) ||
-            throw(DimensionMismatch("$name must have shape (ng, nr) = ($ng, $nr)"))
+        size(array) == (Ngpoints, Nradii) ||
+            throw(DimensionMismatch("$name must have shape (Ngpoints, Nradii) = ($Ngpoints, $Nradii)"))
     end
     radius = Vector{FT}(effective_radius)
     κ = Matrix{FT}(mass_extinction_coefficient)
@@ -116,11 +116,11 @@ function SpectralCloudOptics(FT::DataType,
                                                     mapping_method,
                                                     delta_eddington_average,
                                                     thick_averaging)
-    ng = length(properties.mass_extinction_coefficient)
+    Ngpoints = length(properties.mass_extinction_coefficient)
     radius = [effective_radius]
-    κ = reshape(properties.mass_extinction_coefficient, ng, 1)
-    ω = reshape(properties.single_scattering_albedo, ng, 1)
-    g = reshape(properties.asymmetry_factor, ng, 1)
+    κ = reshape(properties.mass_extinction_coefficient, Ngpoints, 1)
+    ω = reshape(properties.single_scattering_albedo, Ngpoints, 1)
+    g = reshape(properties.asymmetry_factor, Ngpoints, 1)
     return SpectralCloudOptics(FT, radius, κ, ω, g)
 end
 
@@ -146,10 +146,10 @@ function Adapt.adapt_structure(to, cloud::SpectralCloudOptics)
 end
 
 function Base.show(io::IO, cloud::SpectralCloudOptics{FT}) where FT
-    ng, nr = size(cloud.mass_extinction_coefficient)
-    print(io, "SpectralCloudOptics{", FT, "} with ", ng, " g points on ", nr,
-          " effective-radius node", nr == 1 ? "" : "s")
-    nr == 1 && print(io, " at ", cloud.effective_radius[1] * 1e6, " μm")
+    Ngpoints, Nradii = size(cloud.mass_extinction_coefficient)
+    print(io, "SpectralCloudOptics{", FT, "} with ", Ngpoints, " g points on ", Nradii,
+          " effective-radius node", Nradii == 1 ? "" : "s")
+    Nradii == 1 && print(io, " at ", cloud.effective_radius[1] * 1e6, " μm")
     return nothing
 end
 

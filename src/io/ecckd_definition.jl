@@ -46,10 +46,10 @@ $(TYPEDFIELDS)
 struct EcCKDSchemaSummary
     model_name::String
     version::String
-    lw_bands::Int
-    sw_bands::Int
-    lw_gpoints::Int
-    sw_gpoints::Int
+    longwave_bands::Int
+    shortwave_bands::Int
+    longwave_gpoints::Int
+    shortwave_gpoints::Int
     gases::Vector{String}
     pressure_grid_size::Int
     temperature_grid_size::Int
@@ -606,10 +606,10 @@ function Base.show(io::IO, summary::EcCKDSchemaSummary)
         "EcCKDSchemaSummary(",
         "model_name=$(summary.model_name), ",
         "version=$(summary.version), ",
-        "LW bands=$(summary.lw_bands), ",
-        "SW bands=$(summary.sw_bands), ",
-        "LW g-points=$(summary.lw_gpoints), ",
-        "SW g-points=$(summary.sw_gpoints), ",
+        "LW bands=$(summary.longwave_bands), ",
+        "SW bands=$(summary.shortwave_bands), ",
+        "LW g-points=$(summary.longwave_gpoints), ",
+        "SW g-points=$(summary.shortwave_gpoints), ",
         "gases=$(summary.gases), ",
         "pressure=$(summary.pressure_grid_size), ",
         "temperature=$(summary.temperature_grid_size), ",

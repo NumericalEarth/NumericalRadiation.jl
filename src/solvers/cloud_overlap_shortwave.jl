@@ -653,11 +653,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
     nlayers = number_of_layers(optics.clear)
     if boundary_conditions.surface_albedo isa AbstractArray
         length(boundary_conditions.surface_albedo) == number_of_gpoints(optics.clear) ||
-            throw(DimensionMismatch("surface_albedo vector must have length ng"))
+            throw(DimensionMismatch("surface_albedo vector must have length Ngpoints"))
     end
     if boundary_conditions.surface_albedo_direct isa AbstractArray
         length(boundary_conditions.surface_albedo_direct) == number_of_gpoints(optics.clear) ||
-            throw(DimensionMismatch("surface_albedo_direct vector must have length ng"))
+            throw(DimensionMismatch("surface_albedo_direct vector must have length Ngpoints"))
     end
     if solver.overlap in (:adding, :matrix_maximum, :matrix_alpha,
                           :tripleclouds_alpha)

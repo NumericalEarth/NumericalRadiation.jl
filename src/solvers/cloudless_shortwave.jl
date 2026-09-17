@@ -5,7 +5,7 @@ Precomputed shortwave optical properties for clear-sky solver tests and future
 ecCKD gas-optics outputs.
 
 `optical_depth` may be a vector of length `nlayers` or a matrix with shape
-`(ng, nlayers)`. `weights` has length `ng` and is applied while accumulating
+`(Ngpoints, nlayers)`. `weights` has length `Ngpoints` and is applied while accumulating
 broadband fluxes.
 
 Fields are
@@ -49,7 +49,7 @@ function ShortwaveOptics(optical_depth::AbstractMatrix{FT};
     size(scattering_asymmetry) == size(optical_depth) ||
         throw(DimensionMismatch("scattering_asymmetry must match optical_depth shape"))
     length(weights) == size(optical_depth, 1) ||
-        throw(DimensionMismatch("weights must have length ng"))
+        throw(DimensionMismatch("weights must have length Ngpoints"))
     return ShortwaveOptics{FT, typeof(optical_depth),
                                       typeof(scattering_optical_depth),
                                       typeof(scattering_asymmetry), typeof(weights)}(
@@ -305,7 +305,7 @@ Layer-optics functor over precomputed [`ShortwaveOptics`](@ref) arrays for
 [`streaming_shortwave_fluxes!`](@ref): `(gpoint, k)` returns the tuple
 `(τ_absorption, τ_scattering, asymmetry)` of layer `k`. With `gpoint::Int` the
 functor ignores the g index it is called with and always reads that g point,
-so a single g point can be streamed with `ng = 1`.
+so a single g point can be streamed with `Ngpoints = 1`.
 """
 struct PrecomputedShortwaveLayerOptics{O, G}
     optics::O
@@ -331,7 +331,7 @@ Two-stream adding fluxes of g point `gpoint` of `optics` for cosine zenith `μ�
 written into `up` and `down` (length `nlayers + 1`, top down, zeroed here).
 `incoming_horizontal` is the downwelling flux through a horizontal surface at
 the top of the atmosphere. A wrapper over
-[`streaming_shortwave_fluxes!`](@ref) with `ng = 1` that allocates its own
+[`streaming_shortwave_fluxes!`](@ref) with `Ngpoints = 1` that allocates its own
 [`ShortwaveColumnScratch`](@ref).
 """
 function ecrad_shortwave_column!(up::AbstractVector{FT},
@@ -382,11 +382,11 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         throw(DimensionMismatch("shortwave_down must have length nlayers + 1"))
     if boundary_conditions.surface_albedo isa AbstractArray
         length(boundary_conditions.surface_albedo) == number_of_gpoints(optics) ||
-            throw(DimensionMismatch("surface_albedo vector must have length ng"))
+            throw(DimensionMismatch("surface_albedo vector must have length Ngpoints"))
     end
     if boundary_conditions.surface_albedo_direct isa AbstractArray
         length(boundary_conditions.surface_albedo_direct) == number_of_gpoints(optics) ||
-            throw(DimensionMismatch("surface_albedo_direct vector must have length ng"))
+            throw(DimensionMismatch("surface_albedo_direct vector must have length Ngpoints"))
     end
 
     fluxes.shortwave_up .= zero(FT)

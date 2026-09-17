@@ -80,7 +80,7 @@ function exported_symbol_status(name)
     )
 end
 
-# Layer-optics functors over precomputed `(ng, nlayers)` matrices, in the
+# Layer-optics functors over precomputed `(Ngpoints, nlayers)` matrices, in the
 # `(gpoint, k)` form a host kernel hands to the streaming solvers: longwave
 # `(τ, B_top, B_bottom)` and shortwave `(τ_absorption, τ_scattering, asymmetry)`.
 struct LongwaveMatrixOptics{L}
@@ -107,12 +107,12 @@ end
 # comparisons are bitwise.
 function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
     nlayers = length(atmosphere.temperature_layers)
-    ng_lw, ng_sw = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
-    longwave = LongwaveOptics(zeros(ng_lw, nlayers), zeros(ng_lw, nlayers);
-                              source_top = zeros(ng_lw, nlayers),
-                              source_bottom = zeros(ng_lw, nlayers),
-                              weights = zeros(ng_lw))
-    shortwave = ShortwaveOptics(zeros(ng_sw, nlayers); weights = zeros(ng_sw))
+    Nlongwave_gpoints, Nshortwave_gpoints = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Nlongwave_gpoints, nlayers), zeros(Nlongwave_gpoints, nlayers);
+                              source_top = zeros(Nlongwave_gpoints, nlayers),
+                              source_bottom = zeros(Nlongwave_gpoints, nlayers),
+                              weights = zeros(Nlongwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, nlayers); weights = zeros(Nshortwave_gpoints))
     optical_properties!(longwave, shortwave, gas_model, atmosphere)
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
@@ -135,11 +135,11 @@ function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
     longwave_up, longwave_down = zeros(nlayers + 1), zeros(nlayers + 1)
     streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveMatrixOptics(longwave),
                                surface_emission, longwave_albedo, 0.0,
-                               longwave.weights, ng_lw, nlayers, zeros(nlayers), zeros(nlayers))
+                               longwave.weights, Nlongwave_gpoints, nlayers, zeros(nlayers), zeros(nlayers))
     shortwave_up, shortwave_down = zeros(nlayers + 1), zeros(nlayers + 1)
     streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveMatrixOptics(shortwave),
                                 μ₀, toa_irradiance, shortwave_albedo, shortwave_albedo,
-                                shortwave.weights, ng_sw, nlayers, ShortwaveColumnScratch(Float64, nlayers))
+                                shortwave.weights, Nshortwave_gpoints, nlayers, ShortwaveColumnScratch(Float64, nlayers))
 
     return (
         streaming_longwave_matches_array = all(isfinite, longwave_up) &&

@@ -98,12 +98,12 @@ the surface, where `up = surface_emission[gpoint] + surface_albedo * down`:
 `surface_emission` is indexable per g point with the emissivity already
 included (a [`TabulatedSurfaceEmission`](@ref)) and `surface_albedo` is the
 diffuse longwave surface albedo. Each g point's fluxes are added with
-`weights[gpoint]` for `gpoint in 1:ng`. `transmittance` and `source_up` are caller
+`weights[gpoint]` for `gpoint in 1:Ngpoints`. `transmittance` and `source_up` are caller
 scratch of length `nlayers` that carry the layer coefficients from the
 downward sweep to the upward one. Allocation-free.
 """
 @inline function streaming_longwave_fluxes!(flux_up, flux_down, layer_optics, surface_emission, surface_albedo, toa_down,
-                                            weights, ng, nlayers, transmittance, source_up)
+                                            weights, Ngpoints, nlayers, transmittance, source_up)
     FT = eltype(flux_up)
 
     @inbounds for k in 1:nlayers + 1
@@ -111,7 +111,7 @@ downward sweep to the upward one. Allocation-free.
         flux_down[k] = zero(FT)
     end
 
-    @inbounds for gpoint in 1:ng
+    @inbounds for gpoint in 1:Ngpoints
         w = FT(weights[gpoint])
 
         # Downward sweep from the top of the atmosphere, keeping each layer's

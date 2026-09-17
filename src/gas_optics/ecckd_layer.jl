@@ -3,7 +3,7 @@
 #####
 #
 # Everything in this file is the per-layer, per-g-point core of the ecCKD
-# forward models, written so that a host kernel can call it with scalar layer
+# forward models, written so that a host kernel can call i₀ᵀ with scalar layer
 # state: an interpolation stencil built once per layer, then one optical depth
 # per g point from a `NamedTuple` of scalar layer gas amounts (mol m⁻²). The
 # array methods of `optical_properties!` in `ecckd_forward.jl` are loops over
@@ -20,12 +20,12 @@ Per-layer interpolation stencil for the coefficient tables of an
 [`EcCKDTabulatedGasOpticsModel`](@ref): the `(i₀, i₁, w)` brackets on the
 log-pressure axis, the temperature axis (vector or pressure-dependent matrix
 grid) and the optional H₂O mole-fraction axis. The stencil depends only on the
-layer state, so a host builds it once per layer with
-[`gas_optics_stencil`](@ref) and reuses it across every g point and gas.
+layer state, so a host builds i₀ᵀ once per layer with
+[`gas_optics_stencil`](@ref) and reuses i₀ᵀ across every g point and gas.
 
 `FT` is the model's element type; the struct is `isbits`, and the six stored
-scalars `(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)` rebuild it through
-`GasOpticsStencil(ip, wp, it, wt, ih, wh)`. Without an H₂O table the H₂O
+scalars `(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)` rebuild i₀ᵀ through
+`GasOpticsStencil(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)`. Without an H₂O table the H₂O
 bracket is a placeholder that is never indexed.
 """
 struct GasOpticsStencil{FT}
@@ -48,11 +48,11 @@ brackets. The upper index of each bracket is the lower one plus one, which is
 what `gas_optics_stencil` produces whenever the bracket is used; integer
 inputs may be any `Integer` type (`Int32` storage is fine).
 """
-@inline function GasOpticsStencil(ip::Integer, wp, it::Integer, wt, ih::Integer, wh)
-    FT = promote_type(typeof(wp), typeof(wt), typeof(wh))
-    pressure = (Int(ip), Int(ip) + 1, FT(wp))
-    temperature = (Int(it), Int(it) + 1, FT(wt))
-    water_vapor = (Int(ih), Int(ih) + 1, FT(wh))
+@inline function GasOpticsStencil(i₀ᵖ::Integer, wᵖ, i₀ᵀ::Integer, wᵀ, i₀ᴴ::Integer, wᴴ)
+    FT = promote_type(typeof(wᵖ), typeof(wᵀ), typeof(wᴴ))
+    pressure = (Int(i₀ᵖ), Int(i₀ᵖ) + 1, FT(wᵖ))
+    temperature = (Int(i₀ᵀ), Int(i₀ᵀ) + 1, FT(wᵀ))
+    water_vapor = (Int(i₀ᴴ), Int(i₀ᴴ) + 1, FT(wᴴ))
     return GasOpticsStencil{FT}(pressure, temperature, water_vapor)
 end
 
@@ -63,7 +63,7 @@ Interpolation stencil of `model` for one layer at `pressure` (Pa),
 `temperature` (K) and H₂O mole fraction `water_vapor_mole_fraction` (mol mol⁻¹,
 relative to dry air; ignored by models without an H₂O table). Off-table inputs
 clamp to the table edges. The stencil is built in the model's element type,
-so the coefficient tables are expected to share it.
+so the coefficient tables are expected to share i₀ᵀ.
 
 Returns `nothing` for an [`EcCKDGasOpticsModel`](@ref), whose coefficients
 are not interpolated.
@@ -81,7 +81,7 @@ end
 
 @inline gas_optics_stencil(::EcCKDGasOpticsModel, pressure, temperature, water_vapor_mole_fraction) = nothing
 
-# The absorption tables index `(gpoint, gas, ip, it)` with the pressure and
+# The absorption tables index `(gpoint, gas, pressure, temperature)` with the pressure and
 # temperature brackets; the H₂O tables add the mole-fraction bracket.
 @inline table_brackets(s::GasOpticsStencil) = (s.pressure, s.temperature)
 
@@ -103,7 +103,7 @@ in the model's element type.
 
 # Scalar H₂O amount of a layer for the H₂O tables, `0` when the gas container
 # carries no `h2o` key (only legal for models without an H₂O table, which never
-# index it). Resolved at compile time from the `NamedTuple` keys.
+# index i₀ᵀ). Resolved at compile time from the `NamedTuple` keys.
 @generated function water_vapor_layer_amount(::Type{FT}, gases::NamedTuple{Names}) where {FT, Names}
     return :h2o in Names ? :(FT(gases.h2o)) : :(zero(FT))
 end
@@ -124,12 +124,12 @@ when the model has no H₂O grid or the table is empty.
                                                  s::GasOpticsStencil) where FT
     length(model.water_vapor_mole_fraction_grid) == 0 && return zero(FT)
     length(table) == 0 && return zero(FT)
-    coefficient = interp_water_vapor_table(table, gpoint, table_brackets(s), s.water_vapor)
+    coefficient = interpolate_water_vapor_table(table, gpoint, table_brackets(s), s.water_vapor)
     return coefficient * FT(water_vapor_moles)
 end
 
 # Shared body of the longwave and shortwave tabulated optical depths: the
-# relative-linear gas sum over the `(ng, ngas, np, nt)` table, plus the H₂O
+# relative-linear gas sum over the `(Ngpoints, Ngases, Npressures, Ntemperatures)` table, plus the H₂O
 # table, clamped as a total. Relative-linear gases legitimately contribute
 # negative optical depth below their reference mole fraction; only the summed
 # total is clamped, matching upstream run_ckd.
@@ -212,9 +212,9 @@ Bracket of `temperature` on the model's Planck source-table temperature grid,
 to pass to [`longwave_source`](@ref); `nothing` when the model has no source
 table (an [`EcCKDGasOpticsModel`](@ref), or a tabulated model without one),
 in which case the source is the scaled gray `σT⁴`. Off the table the source
-follows ecRad: above the last node (350 K in the reference tables) it is
+follows ecRad: above the last node (350 K in the reference tables) i₀ᵀ is
 extrapolated linearly from the last interval, below the first node (120 K)
-it is scaled linearly to zero.
+i₀ᵀ is scaled linearly to zero.
 """
 @inline source_table_bracket(::EcCKDGasOpticsModel, temperature) = nothing
 
@@ -242,7 +242,7 @@ Scalar gas amounts of layer `k` as a `NamedTuple` keyed by `Names` (the
 model's gas names), picked from a column gas container whose entries are
 per-layer vectors or column-wide scalars. A `composite` (dry air) entry the
 container carries outside `Names` is kept, since the relative-linear
-convention reads it. This is how the array `optical_properties!` methods feed
+convention reads i₀ᵀ. This is how the array `optical_properties!` methods feed
 [`longwave_optical_depth`](@ref) and [`shortwave_optical_depth`](@ref).
 """
 @generated function layer_gases(gases::NamedTuple{Keys}, ::Val{Names}, k) where {Keys, Names}

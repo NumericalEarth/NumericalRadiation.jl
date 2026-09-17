@@ -251,26 +251,26 @@ nothing #hide
 
 function bracketed_secant(toa_imbalance, guesses; imbalance_tolerance = 0.1,
                           max_expansions = 8, max_iterations = 12)
-    lo, hi = min(guesses...), max(guesses...)
-    ΔF_lo, state_lo = toa_imbalance(lo)
-    ΔF_hi, state_hi = toa_imbalance(hi)
+    lower, upper = min(guesses...), max(guesses...)
+    ΔF_lower, state_lower = toa_imbalance(lower)
+    ΔF_upper, state_upper = toa_imbalance(upper)
     expansion = 8
     expansions = 0
-    while sign(ΔF_lo) == sign(ΔF_hi)
+    while sign(ΔF_lower) == sign(ΔF_upper)
         expansions < max_expansions ||
             error("no sign-changing Tₛ bracket after $max_expansions expansions")
-        saturated = lo == 150 && hi == 350
+        saturated = lower == 150 && upper == 350
         saturated &&
             error("Tₛ bracket saturated the [150, 350] K domain without a sign change")
-        lo = max(lo - expansion, 150)
-        hi = min(hi + expansion, 350)
+        lower = max(lower - expansion, 150)
+        upper = min(upper + expansion, 350)
         expansion *= 2
         expansions += 1
-        ΔF_lo, state_lo = toa_imbalance(lo)
-        ΔF_hi, state_hi = toa_imbalance(hi)
+        ΔF_lower, state_lower = toa_imbalance(lower)
+        ΔF_upper, state_upper = toa_imbalance(upper)
     end
-    Tₛ, ΔF, state = abs(ΔF_lo) < abs(ΔF_hi) ? (lo, ΔF_lo, state_lo) : (hi, ΔF_hi, state_hi)
-    a, b, ΔF_a, ΔF_b = lo, hi, ΔF_lo, ΔF_hi
+    Tₛ, ΔF, state = abs(ΔF_lower) < abs(ΔF_upper) ? (lower, ΔF_lower, state_lower) : (upper, ΔF_upper, state_upper)
+    a, b, ΔF_a, ΔF_b = lower, upper, ΔF_lower, ΔF_upper
     iterations = 0
     step_size = Inf
     while abs(ΔF) > imbalance_tolerance || step_size > 0.01

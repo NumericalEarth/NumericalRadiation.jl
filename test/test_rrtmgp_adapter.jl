@@ -74,28 +74,28 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         @test state.t_lev[end, 1] == 210.0
         # Layer arrays: our layer k lands at RRTMGP layer nlayers - k + 1.
         for k in 1:nlayers
-            kr = nlayers - k + 1
-            @test state.layerdata[2, kr, 1] == pressure_layers[k]
-            @test state.layerdata[3, kr, 1] == temperature_layers[k]
-            @test state.vmr.vmr_h2o[kr, 1] == water_vapor[k]
-            @test state.vmr.vmr_o3[kr, 1] == atmosphere.gases.o3[k]
+            k_reversed = nlayers - k + 1
+            @test state.layerdata[2, k_reversed, 1] == pressure_layers[k]
+            @test state.layerdata[3, k_reversed, 1] == temperature_layers[k]
+            @test state.vmr.vmr_h2o[k_reversed, 1] == water_vapor[k]
+            @test state.vmr.vmr_o3[k_reversed, 1] == atmosphere.gases.o3[k]
         end
     end
 
     @testset "column amounts: RRTMGP dry-air mole-fraction convention" begin
         params = model.parameters
         for k in 1:nlayers
-            kr = nlayers - k + 1
+            k_reversed = nlayers - k + 1
             Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             expected = Δp * params.avogad / (1e4 * m_air * params.grav)
-            @test state.layerdata[1, kr, 1] ≈ expected rtol = 1e-12
+            @test state.layerdata[1, k_reversed, 1] ≈ expected rtol = 1e-12
             # Guard against regressing to the (1 - χ_H₂O) mass-fraction form:
             # for the humid bottom layer the two formulas differ materially.
             wrong = (Δp / params.grav) * (1 - water_vapor[k]) /
                     params.molmass_dryair * params.avogad / 1e4
             if water_vapor[k] >= 1e-2
-                @test abs(state.layerdata[1, kr, 1] - wrong) / expected > 5e-3
+                @test abs(state.layerdata[1, k_reversed, 1] - wrong) / expected > 5e-3
             end
         end
     end
@@ -115,27 +115,27 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         # reversal. This is the like-for-like acceptance the finiteness
         # test cannot provide.
         canonical = radiation_workspace(model, atmosphere)
-        cstate = canonical.atmospheric_state
+        canonical_state = canonical.atmospheric_state
         params = model.parameters
-        for kr in 1:nlayers                       # kr: 1 = bottom (canonical)
-            k = nlayers - kr + 1                  # our top-down index
-            cstate.layerdata[2, kr, 1] = pressure_layers[k]
-            cstate.layerdata[3, kr, 1] = temperature_layers[k]
-            cstate.layerdata[4, kr, 1] = 0.0
-            cstate.vmr.vmr_h2o[kr, 1] = water_vapor[k]
-            cstate.vmr.vmr_o3[kr, 1] = atmosphere.gases.o3[k]
+        for k_reversed in 1:nlayers                       # k_reversed: 1 = bottom (canonical)
+            k = nlayers - k_reversed + 1                  # our top-down index
+            canonical_state.layerdata[2, k_reversed, 1] = pressure_layers[k]
+            canonical_state.layerdata[3, k_reversed, 1] = temperature_layers[k]
+            canonical_state.layerdata[4, k_reversed, 1] = 0.0
+            canonical_state.vmr.vmr_h2o[k_reversed, 1] = water_vapor[k]
+            canonical_state.vmr.vmr_o3[k_reversed, 1] = atmosphere.gases.o3[k]
             Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
-            cstate.layerdata[1, kr, 1] = Δp * params.avogad /
+            canonical_state.layerdata[1, k_reversed, 1] = Δp * params.avogad /
                                          (1e4 * m_air * params.grav)
         end
-        for kr in 1:(nlayers + 1)
-            k = nlayers + 2 - kr
-            cstate.p_lev[kr, 1] = pressure_interfaces[k]
-            cstate.t_lev[kr, 1] = temperature_interfaces[k]
+        for k_reversed in 1:(nlayers + 1)
+            k = nlayers + 2 - k_reversed
+            canonical_state.p_lev[k_reversed, 1] = pressure_interfaces[k]
+            canonical_state.t_lev[k_reversed, 1] = temperature_interfaces[k]
         end
-        cstate.t_sfc[1] = 300.0
-        mole_fractions = cstate.vmr.vmr
+        canonical_state.t_sfc[1] = 300.0
+        mole_fractions = canonical_state.vmr.vmr
         fill!(mole_fractions, 0.0)
         gas_indices = canonical.solver.lookups.idx_gases_sw
         haskey(gas_indices, "co2") && (mole_fractions[gas_indices["co2"]] = 400e-6)
@@ -157,11 +157,11 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         canonical_sw_dn = RRTMGP.sw_flux_dn(canonical.solver)
 
         for k in 1:(nlayers + 1)
-            kr = nlayers + 2 - k
-            @test adapter_fluxes.longwave_up[k] ≈ canonical_lw_up[kr, 1] rtol = 1e-10
-            @test adapter_fluxes.longwave_down[k] ≈ canonical_lw_dn[kr, 1] rtol = 1e-10
-            @test adapter_fluxes.shortwave_up[k] ≈ canonical_sw_up[kr, 1] rtol = 1e-10
-            @test adapter_fluxes.shortwave_down[k] ≈ canonical_sw_dn[kr, 1] rtol = 1e-10
+            k_reversed = nlayers + 2 - k
+            @test adapter_fluxes.longwave_up[k] ≈ canonical_lw_up[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.longwave_down[k] ≈ canonical_lw_dn[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.shortwave_up[k] ≈ canonical_sw_up[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.shortwave_down[k] ≈ canonical_sw_dn[k_reversed, 1] rtol = 1e-10
         end
     end
 

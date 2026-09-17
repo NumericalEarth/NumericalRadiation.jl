@@ -215,26 +215,26 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
     end
 
     FT = promote_type(eltype(table), eltype(mapping), typeof(float(effective_radius)))
-    ng = size(mapping.gpoint_fraction, 2)
-    mass_extinction = zeros(FT, ng)
-    scattering_extinction = zeros(FT, ng)
-    asymmetry_numerator = zeros(FT, ng)
-    weight_sum = zeros(FT, ng)
+    Ngpoints = size(mapping.gpoint_fraction, 2)
+    mass_extinction = zeros(FT, Ngpoints)
+    scattering_extinction = zeros(FT, Ngpoints)
+    asymmetry_numerator = zeros(FT, Ngpoints)
+    weight_sum = zeros(FT, Ngpoints)
 
-    for iw in axes(mapping.gpoint_fraction, 1)
-        width = abs(FT(mapping.wavenumber2[iw]) - FT(mapping.wavenumber1[iw]))
-        midpoint = (FT(mapping.wavenumber1[iw]) + FT(mapping.wavenumber2[iw])) / FT(2)
-        itable = nearest_wavenumber_index(table, midpoint)
-        properties = cloud_scattering_properties(table, itable, effective_radius)
+    for interval in axes(mapping.gpoint_fraction, 1)
+        width = abs(FT(mapping.wavenumber2[interval]) - FT(mapping.wavenumber1[interval]))
+        midpoint = (FT(mapping.wavenumber1[interval]) + FT(mapping.wavenumber2[interval])) / FT(2)
+        table_index = nearest_wavenumber_index(table, midpoint)
+        properties = cloud_scattering_properties(table, table_index, effective_radius)
         κ = FT(properties.mass_extinction_coefficient)
         ω = FT(properties.single_scattering_albedo)
         g = FT(properties.asymmetry_factor)
         if delta_eddington_average
             κ, ω, g = delta_eddington(κ, ω, g)
         end
-        for gpoint in 1:ng
-            weight = width * FT(mapping.interval_weight[iw]) *
-                FT(mapping.gpoint_fraction[iw, gpoint])
+        for gpoint in 1:Ngpoints
+            weight = width * FT(mapping.interval_weight[interval]) *
+                FT(mapping.gpoint_fraction[interval, gpoint])
             weight == 0 && continue
             κ_scattering = κ * ω
             mass_extinction[gpoint] += weight * κ
@@ -244,9 +244,9 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
         end
     end
 
-    single_scattering_albedo = zeros(FT, ng)
-    asymmetry = zeros(FT, ng)
-    for gpoint in 1:ng
+    single_scattering_albedo = zeros(FT, Ngpoints)
+    asymmetry = zeros(FT, Ngpoints)
+    for gpoint in 1:Ngpoints
         if weight_sum[gpoint] > 0
             mass_extinction[gpoint] /= weight_sum[gpoint]
             scattering_extinction[gpoint] /= weight_sum[gpoint]
@@ -282,91 +282,91 @@ end
 function ecrad_cloud_mapping_matrix(table::CloudScatteringTable,
                                      mapping::EcCKDSpectralMapping)
     FT = promote_type(eltype(table), eltype(mapping))
-    nwav = length(table.wavenumber)
-    nspectral = length(mapping.wavenumber1)
-    ng = size(mapping.gpoint_fraction, 2)
-    matrix = zeros(FT, ng, nwav)
-    interval_weight = zeros(FT, nspectral)
+    Nwavenumbers = length(table.wavenumber)
+    Nintervals = length(mapping.wavenumber1)
+    Ngpoints = size(mapping.gpoint_fraction, 2)
+    matrix = zeros(FT, Ngpoints, Nwavenumbers)
+    interval_weight = zeros(FT, Nintervals)
 
-    for jwav in 1:nwav
+    for wavenumber_index in 1:Nwavenumbers
         fill!(interval_weight, zero(FT))
-        wavenum1 = FT(table.wavenumber[jwav])
-        isd1 = find_spectral_interval(mapping, wavenum1)
-        isd1 < 1 && continue
+        ν̃₁ = FT(table.wavenumber[wavenumber_index])
+        interval₁ = find_spectral_interval(mapping, ν̃₁)
+        interval₁ < 1 && continue
 
-        if jwav > 1
-            wavenum0 = FT(table.wavenumber[jwav - 1])
-            isd0 = find_spectral_interval(mapping, wavenum0)
-            if isd0 == isd1
-                interval_weight[isd0] = FT(0.5) * (wavenum1 - wavenum0) /
-                    (FT(mapping.wavenumber2[isd0]) - FT(mapping.wavenumber1[isd0]))
+        if wavenumber_index > 1
+            ν̃₀ = FT(table.wavenumber[wavenumber_index - 1])
+            interval₀ = find_spectral_interval(mapping, ν̃₀)
+            if interval₀ == interval₁
+                interval_weight[interval₀] = FT(0.5) * (ν̃₁ - ν̃₀) /
+                    (FT(mapping.wavenumber2[interval₀]) - FT(mapping.wavenumber1[interval₀]))
             else
-                if isd0 >= 1
-                    interval_weight[isd0] = FT(0.5) *
-                        (FT(mapping.wavenumber2[isd0]) - wavenum0)^2 /
-                        ((FT(mapping.wavenumber2[isd0]) - FT(mapping.wavenumber1[isd0])) *
-                         (wavenum1 - wavenum0))
+                if interval₀ >= 1
+                    interval_weight[interval₀] = FT(0.5) *
+                        (FT(mapping.wavenumber2[interval₀]) - ν̃₀)^2 /
+                        ((FT(mapping.wavenumber2[interval₀]) - FT(mapping.wavenumber1[interval₀])) *
+                         (ν̃₁ - ν̃₀))
                 end
-                interval_weight[isd1] = FT(0.5) *
-                    (one(FT) + (FT(mapping.wavenumber1[isd1]) - wavenum1) /
-                     (wavenum1 - wavenum0)) *
-                    (wavenum1 - FT(mapping.wavenumber1[isd1])) /
-                    (FT(mapping.wavenumber2[isd1]) - FT(mapping.wavenumber1[isd1]))
-                if isd0 >= 1 && isd1 - isd0 > 1
-                    for isd in (isd0 + 1):(isd1 - 1)
-                        interval_weight[isd] = FT(0.5) *
-                            (FT(mapping.wavenumber1[isd]) + FT(mapping.wavenumber2[isd]) -
-                             FT(2) * wavenum0) / (wavenum1 - wavenum0)
+                interval_weight[interval₁] = FT(0.5) *
+                    (one(FT) + (FT(mapping.wavenumber1[interval₁]) - ν̃₁) /
+                     (ν̃₁ - ν̃₀)) *
+                    (ν̃₁ - FT(mapping.wavenumber1[interval₁])) /
+                    (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
+                if interval₀ >= 1 && interval₁ - interval₀ > 1
+                    for interval in (interval₀ + 1):(interval₁ - 1)
+                        interval_weight[interval] = FT(0.5) *
+                            (FT(mapping.wavenumber1[interval]) + FT(mapping.wavenumber2[interval]) -
+                             FT(2) * ν̃₀) / (ν̃₁ - ν̃₀)
                     end
                 end
             end
         else
-            isd1 > 1 && (interval_weight[1:(isd1 - 1)] .= one(FT))
-            interval_weight[isd1] =
-                (wavenum1 - FT(mapping.wavenumber1[isd1])) /
-                (FT(mapping.wavenumber2[isd1]) - FT(mapping.wavenumber1[isd1]))
+            interval₁ > 1 && (interval_weight[1:(interval₁ - 1)] .= one(FT))
+            interval_weight[interval₁] =
+                (ν̃₁ - FT(mapping.wavenumber1[interval₁])) /
+                (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
         end
 
-        if jwav < nwav
-            wavenum2 = FT(table.wavenumber[jwav + 1])
-            isd2 = find_spectral_interval(mapping, wavenum2)
-            if isd1 == isd2
-                interval_weight[isd1] += FT(0.5) * (wavenum2 - wavenum1) /
-                    (FT(mapping.wavenumber2[isd1]) - FT(mapping.wavenumber1[isd1]))
+        if wavenumber_index < Nwavenumbers
+            ν̃₂ = FT(table.wavenumber[wavenumber_index + 1])
+            interval₂ = find_spectral_interval(mapping, ν̃₂)
+            if interval₁ == interval₂
+                interval_weight[interval₁] += FT(0.5) * (ν̃₂ - ν̃₁) /
+                    (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
             else
-                if 1 <= isd2 <= nspectral
-                    interval_weight[isd2] += FT(0.5) *
-                        (wavenum2 - FT(mapping.wavenumber1[isd2]))^2 /
-                        ((FT(mapping.wavenumber2[isd2]) - FT(mapping.wavenumber1[isd2])) *
-                         (wavenum2 - wavenum1))
+                if 1 <= interval₂ <= Nintervals
+                    interval_weight[interval₂] += FT(0.5) *
+                        (ν̃₂ - FT(mapping.wavenumber1[interval₂]))^2 /
+                        ((FT(mapping.wavenumber2[interval₂]) - FT(mapping.wavenumber1[interval₂])) *
+                         (ν̃₂ - ν̃₁))
                 end
-                interval_weight[isd1] += FT(0.5) *
-                    (one(FT) + (wavenum2 - FT(mapping.wavenumber2[isd1])) /
-                     (wavenum2 - wavenum1)) *
-                    (FT(mapping.wavenumber2[isd1]) - wavenum1) /
-                    (FT(mapping.wavenumber2[isd1]) - FT(mapping.wavenumber1[isd1]))
-                if isd2 >= 1 && isd2 - isd1 > 1
-                    for isd in (isd1 + 1):(isd2 - 1)
-                        interval_weight[isd] += FT(0.5) *
-                            (FT(2) * wavenum2 - FT(mapping.wavenumber1[isd]) -
-                             FT(mapping.wavenumber2[isd])) / (wavenum2 - wavenum1)
+                interval_weight[interval₁] += FT(0.5) *
+                    (one(FT) + (ν̃₂ - FT(mapping.wavenumber2[interval₁])) /
+                     (ν̃₂ - ν̃₁)) *
+                    (FT(mapping.wavenumber2[interval₁]) - ν̃₁) /
+                    (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
+                if interval₂ >= 1 && interval₂ - interval₁ > 1
+                    for interval in (interval₁ + 1):(interval₂ - 1)
+                        interval_weight[interval] += FT(0.5) *
+                            (FT(2) * ν̃₂ - FT(mapping.wavenumber1[interval]) -
+                             FT(mapping.wavenumber2[interval])) / (ν̃₂ - ν̃₁)
                     end
                 end
             end
         else
-            isd1 < nspectral && (interval_weight[(isd1 + 1):nspectral] .= one(FT))
-            interval_weight[isd1] =
-                (FT(mapping.wavenumber2[isd1]) - wavenum1) /
-                (FT(mapping.wavenumber2[isd1]) - FT(mapping.wavenumber1[isd1]))
+            interval₁ < Nintervals && (interval_weight[(interval₁ + 1):Nintervals] .= one(FT))
+            interval_weight[interval₁] =
+                (FT(mapping.wavenumber2[interval₁]) - ν̃₁) /
+                (FT(mapping.wavenumber2[interval₁]) - FT(mapping.wavenumber1[interval₁]))
         end
 
         interval_weight .*= FT.(mapping.interval_weight)
-        for gpoint in 1:ng
-            matrix[gpoint, jwav] = sum(interval_weight .* view(mapping.gpoint_fraction, :, gpoint))
+        for gpoint in 1:Ngpoints
+            matrix[gpoint, wavenumber_index] = sum(interval_weight .* view(mapping.gpoint_fraction, :, gpoint))
         end
     end
 
-    for gpoint in 1:ng
+    for gpoint in 1:Ngpoints
         total = sum(view(matrix, gpoint, :))
         total > 0 && (matrix[gpoint, :] ./= total)
     end
@@ -398,14 +398,14 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
                                                    thick_averaging::Bool)
     FT = promote_type(eltype(table), eltype(mapping), typeof(float(effective_radius)))
     weights = ecrad_cloud_mapping_matrix(table, mapping)
-    ng = size(weights, 1)
-    mass_extinction = zeros(FT, ng)
-    scattering_extinction = zeros(FT, ng)
-    asymmetry_numerator = zeros(FT, ng)
-    thick_reflectance = zeros(FT, ng)
+    Ngpoints = size(weights, 1)
+    mass_extinction = zeros(FT, Ngpoints)
+    scattering_extinction = zeros(FT, Ngpoints)
+    asymmetry_numerator = zeros(FT, Ngpoints)
+    thick_reflectance = zeros(FT, Ngpoints)
 
-    for iw in axes(weights, 2)
-        properties = cloud_scattering_properties(table, iw, effective_radius)
+    for wavenumber_index in axes(weights, 2)
+        properties = cloud_scattering_properties(table, wavenumber_index, effective_radius)
         κ = FT(properties.mass_extinction_coefficient)
         ω = FT(properties.single_scattering_albedo)
         g = FT(properties.asymmetry_factor)
@@ -419,8 +419,8 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
             root = sqrt(max((one(FT) - ω) / denominator, zero(FT)))
             reflectance_semi_infinite = (one(FT) - root) / (one(FT) + root)
         end
-        for gpoint in 1:ng
-            weight = FT(weights[gpoint, iw])
+        for gpoint in 1:Ngpoints
+            weight = FT(weights[gpoint, wavenumber_index])
             weight == 0 && continue
             mass_extinction[gpoint] += weight * κ
             scattering_extinction[gpoint] += weight * κ_scattering
@@ -429,9 +429,9 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
         end
     end
 
-    single_scattering_albedo = zeros(FT, ng)
-    asymmetry = zeros(FT, ng)
-    for gpoint in 1:ng
+    single_scattering_albedo = zeros(FT, Ngpoints)
+    asymmetry = zeros(FT, Ngpoints)
+    for gpoint in 1:Ngpoints
         mass_extinction[gpoint] > 0 &&
             (single_scattering_albedo[gpoint] = clamp(scattering_extinction[gpoint] / mass_extinction[gpoint], zero(FT), one(FT)))
         scattering_extinction[gpoint] > 0 &&

@@ -44,22 +44,22 @@ atmosphere = ColumnAtmosphere(
     constants,
 )
 
-ng_lw = length(gas_optics.longwave_weights)
-ng_sw = length(gas_optics.shortwave_weights)
+Nlongwave_gpoints = length(gas_optics.longwave_weights)
+Nshortwave_gpoints = length(gas_optics.shortwave_weights)
 
 longwave = LongwaveOptics(
-    zeros(ng_lw, nlayers),
-    zeros(ng_lw, nlayers);
-    source_top = zeros(ng_lw, nlayers),
-    source_bottom = zeros(ng_lw, nlayers),
-    weights = zeros(ng_lw),
+    zeros(Nlongwave_gpoints, nlayers),
+    zeros(Nlongwave_gpoints, nlayers);
+    source_top = zeros(Nlongwave_gpoints, nlayers),
+    source_bottom = zeros(Nlongwave_gpoints, nlayers),
+    weights = zeros(Nlongwave_gpoints),
 )
 
 shortwave = ShortwaveOptics(
-    zeros(ng_sw, nlayers);
-    rayleigh_optical_depth = zeros(ng_sw, nlayers),
-    scattering_asymmetry = zeros(ng_sw, nlayers),
-    weights = zeros(ng_sw),
+    zeros(Nshortwave_gpoints, nlayers);
+    rayleigh_optical_depth = zeros(Nshortwave_gpoints, nlayers),
+    scattering_asymmetry = zeros(Nshortwave_gpoints, nlayers),
+    weights = zeros(Nshortwave_gpoints),
 )
 
 optical_properties!(longwave, shortwave, gas_optics, atmosphere)
@@ -98,7 +98,7 @@ heating_rates!(heating, fluxes, atmosphere)
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
            fluxes.shortwave_down .- fluxes.shortwave_up
 
-println("Runtime g-points: ", ng_lw, " LW, ", ng_sw, " SW")
+println("Runtime g-points: ", Nlongwave_gpoints, " LW, ", Nshortwave_gpoints, " SW")
 println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m^-2")
 println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m^-2")
 println("Heating range:    ",

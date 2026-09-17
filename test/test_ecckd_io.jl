@@ -40,10 +40,10 @@ using Dates
     @test summary isa EcCKDSchemaSummary
     @test summary.model_name == "toy-ecCKD"
     @test summary.version == "0.1"
-    @test summary.lw_bands == 16
-    @test summary.sw_bands == 14
-    @test summary.lw_gpoints == 32
-    @test summary.sw_gpoints == 16
+    @test summary.longwave_bands == 16
+    @test summary.shortwave_bands == 14
+    @test summary.longwave_gpoints == 32
+    @test summary.shortwave_gpoints == 16
     @test summary.gases == ["h2o", "co2", "o3"]
     @test summary.pressure_grid_size == 10
     @test summary.temperature_grid_size == 8
@@ -232,8 +232,8 @@ using NCDatasets
         @test err !== nothing
         @test !occursin("load NCDatasets.jl", sprint(showerror, err))
     end
-    for reader in ((lw, sw) -> read_ecckd_tabulated_gas_optics(lw, sw),
-                   (lw, sw) -> read_ecckd_tabulated_gas_optics(Float32, lw, sw))
+    for reader in ((longwave, shortwave) -> read_ecckd_tabulated_gas_optics(longwave, shortwave),
+                   (longwave, shortwave) -> read_ecckd_tabulated_gas_optics(Float32, longwave, shortwave))
         err = try
             reader(missing_substring, missing_substring)
             nothing
@@ -248,25 +248,25 @@ end
 @testset "NCDatasets ecCKD reader extension" begin
     path = tempname() * ".nc"
 
-    NCDataset(path, "c") do ds
-        defDim(ds, "lw_bands", 2)
-        defDim(ds, "sw_bands", 3)
-        defDim(ds, "lw_gpoints", 4)
-        defDim(ds, "sw_gpoints", 5)
-        defDim(ds, "gases", 2)
-        defDim(ds, "pressure", 6)
-        defDim(ds, "temperature", 7)
+    NCDataset(path, "c") do dataset
+        defDim(dataset, "lw_bands", 2)
+        defDim(dataset, "sw_bands", 3)
+        defDim(dataset, "lw_gpoints", 4)
+        defDim(dataset, "sw_gpoints", 5)
+        defDim(dataset, "gases", 2)
+        defDim(dataset, "pressure", 6)
+        defDim(dataset, "temperature", 7)
 
-        defVar(ds, "lw_absorption", Float64,
+        defVar(dataset, "lw_absorption", Float64,
                ("gases", "lw_gpoints", "pressure", "temperature"))
-        defVar(ds, "sw_absorption", Float64,
+        defVar(dataset, "sw_absorption", Float64,
                ("gases", "sw_gpoints", "pressure", "temperature"))
-        defVar(ds, "lw_source", Float64, ("lw_gpoints", "temperature"))
-        defVar(ds, "sw_rayleigh", Float64, ("sw_gpoints", "pressure"))
+        defVar(dataset, "lw_source", Float64, ("lw_gpoints", "temperature"))
+        defVar(dataset, "sw_rayleigh", Float64, ("sw_gpoints", "pressure"))
 
-        ds.attrib["model_name"] = "toy-netcdf-ecCKD"
-        ds.attrib["version"] = "0.2"
-        ds.attrib["gas_names"] = ["h2o", "co2"]
+        dataset.attrib["model_name"] = "toy-netcdf-ecCKD"
+        dataset.attrib["version"] = "0.2"
+        dataset.attrib["gas_names"] = ["h2o", "co2"]
     end
 
     definition = read_ecckd_definition(path)
@@ -276,10 +276,10 @@ end
     summary = summarize_ecckd_definition(definition)
     @test summary.model_name == "toy-netcdf-ecCKD"
     @test summary.version == "0.2"
-    @test summary.lw_bands == 2
-    @test summary.sw_bands == 3
-    @test summary.lw_gpoints == 4
-    @test summary.sw_gpoints == 5
+    @test summary.longwave_bands == 2
+    @test summary.shortwave_bands == 3
+    @test summary.longwave_gpoints == 4
+    @test summary.shortwave_gpoints == 5
     @test summary.gases == ["h2o", "co2"]
     @test summary.pressure_grid_size == 6
     @test summary.temperature_grid_size == 7
@@ -293,23 +293,23 @@ end
     # that disagrees has to be rejected rather than silently mis-interpolated.
     # Every reference pair agrees, so perturb a copy to prove the check fires.
     paths = reference_ecckd_definition_paths(require = false)
-    lw_path, sw_path = paths.longwave, paths.shortwave
+    longwave_path, shortwave_path = paths.longwave, paths.shortwave
 
-    if lw_path !== nothing && sw_path !== nothing && isfile(lw_path) && isfile(sw_path)
-        @test read_ecckd_tabulated_gas_optics(lw_path, sw_path) isa
+    if longwave_path !== nothing && shortwave_path !== nothing && isfile(longwave_path) && isfile(shortwave_path)
+        @test read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path) isa
               EcCKDTabulatedGasOpticsModel
 
         # The element type is the first positional argument (Oceananigans
         # style), defaulting to Float64; both readers accept it.
-        model64 = read_ecckd_tabulated_gas_optics(lw_path, sw_path)
+        model64 = read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path)
         @test model64 isa EcCKDTabulatedGasOpticsModel{Float64}
-        @test read_ecckd_tabulated_gas_optics(Float64, lw_path, sw_path) isa
+        @test read_ecckd_tabulated_gas_optics(Float64, longwave_path, shortwave_path) isa
               EcCKDTabulatedGasOpticsModel{Float64}
-        model32 = read_ecckd_tabulated_gas_optics(Float32, lw_path, sw_path)
+        model32 = read_ecckd_tabulated_gas_optics(Float32, longwave_path, shortwave_path)
         @test model32 isa EcCKDTabulatedGasOpticsModel{Float32}
         @test model32.longwave_absorption == Float32.(model64.longwave_absorption)
-        @test read_ecckd_tabulated_gas_optics(Float32, strip(" " * lw_path * " "),
-                                              strip(" " * sw_path * " ")) isa
+        @test read_ecckd_tabulated_gas_optics(Float32, strip(" " * longwave_path * " "),
+                                              strip(" " * shortwave_path * " ")) isa
               EcCKDTabulatedGasOpticsModel{Float32}
         @test read_reference_ecckd_gas_optics(Float32, :climate_64x32) isa
               EcCKDTabulatedGasOpticsModel{Float32}
@@ -320,26 +320,26 @@ end
 
         mktempdir() do dir
             for (label, perturb!) in (
-                    ("temperature", ds -> (ds["temperature"][1, 1] += 5.0)),
-                    ("h2o_mole_fraction", ds -> (ds["h2o_mole_fraction"][1] *= 2)),
+                    ("temperature", dataset -> (dataset["temperature"][1, 1] += 5.0)),
+                    ("h2o_mole_fraction", dataset -> (dataset["h2o_mole_fraction"][1] *= 2)),
                 )
-                copied = joinpath(dir, label * "-" * basename(sw_path))
-                cp(sw_path, copied)
+                copied = joinpath(dir, label * "-" * basename(shortwave_path))
+                cp(shortwave_path, copied)
                 chmod(copied, 0o644)
-                NCDataset(copied, "a") do ds
-                    perturb!(ds)
+                NCDataset(copied, "a") do dataset
+                    perturb!(dataset)
                 end
-                @test_throws ArgumentError read_ecckd_tabulated_gas_optics(lw_path, copied)
+                @test_throws ArgumentError read_ecckd_tabulated_gas_optics(longwave_path, copied)
             end
 
-            copied = joinpath(dir, "reference-" * basename(sw_path))
-            cp(sw_path, copied)
+            copied = joinpath(dir, "reference-" * basename(shortwave_path))
+            cp(shortwave_path, copied)
             chmod(copied, 0o644)
-            NCDataset(copied, "a") do ds
-                ds["ch4_reference_mole_fraction"][] *= 2
+            NCDataset(copied, "a") do dataset
+                dataset["ch4_reference_mole_fraction"][] *= 2
             end
             @test_throws ArgumentError read_ecckd_tabulated_gas_optics(
-                lw_path, copied; names = (:ch4, :n2o))
+                longwave_path, copied; names = (:ch4, :n2o))
         end
     else
         @info "Skipping paired ecCKD axis check; ecRad data files are not present"
@@ -348,11 +348,11 @@ end
 
 @testset "reference ecCKD runtime LUT ingestion" begin
     paths = reference_ecckd_definition_paths(require = false)
-    lw_path = paths.longwave
-    sw_path = paths.shortwave
+    longwave_path = paths.longwave
+    shortwave_path = paths.shortwave
 
-    if lw_path !== nothing && sw_path !== nothing && isfile(lw_path) && isfile(sw_path)
-        model = read_ecckd_tabulated_gas_optics(lw_path, sw_path;
+    if longwave_path !== nothing && shortwave_path !== nothing && isfile(longwave_path) && isfile(shortwave_path)
+        model = read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path;
                                                 names = (:h2o, :co2),
                                                 water_vapor_mole_fraction = 0.005)
         @test model isa EcCKDTabulatedGasOpticsModel
@@ -398,41 +398,41 @@ end
         @test all(shortwave.rayleigh_optical_depth .>= 0)
         @test maximum(shortwave.rayleigh_optical_depth) > 0
     else
-        @info "Skipping reference ecCKD runtime LUT ingestion check; ecRad data files are not present" lw_path sw_path
+        @info "Skipping reference ecCKD runtime LUT ingestion check; ecRad data files are not present" longwave_path shortwave_path
         @test_skip "reference ecCKD runtime LUT files are not present"
     end
 end
 
 @testset "reference ecCKD definition files" begin
     paths = reference_ecckd_definition_paths(require = false)
-    lw_path = paths.longwave
-    sw_path = paths.shortwave
+    longwave_path = paths.longwave
+    shortwave_path = paths.shortwave
 
-    if lw_path !== nothing && sw_path !== nothing && isfile(lw_path) && isfile(sw_path)
-        lw = read_ecckd_definition(lw_path)
-        sw = read_ecckd_definition(sw_path)
+    if longwave_path !== nothing && shortwave_path !== nothing && isfile(longwave_path) && isfile(shortwave_path)
+        longwave = read_ecckd_definition(longwave_path)
+        shortwave = read_ecckd_definition(shortwave_path)
 
-        @test validate_ecckd_definition(lw)
-        @test validate_ecckd_definition(sw)
+        @test validate_ecckd_definition(longwave)
+        @test validate_ecckd_definition(shortwave)
 
-        lw_summary = summarize_ecckd_definition(lw)
-        sw_summary = summarize_ecckd_definition(sw)
+        longwave_summary = summarize_ecckd_definition(longwave)
+        shortwave_summary = summarize_ecckd_definition(shortwave)
 
-        @test lw_summary.lw_gpoints == 64
-        @test lw_summary.lw_bands == 13
-        @test lw_summary.sw_gpoints == 0
-        @test lw_summary.source_tables_present
-        @test "h2o" in lw_summary.gases
-        @test "co2" in lw_summary.gases
+        @test longwave_summary.longwave_gpoints == 64
+        @test longwave_summary.longwave_bands == 13
+        @test longwave_summary.shortwave_gpoints == 0
+        @test longwave_summary.source_tables_present
+        @test "h2o" in longwave_summary.gases
+        @test "co2" in longwave_summary.gases
 
-        @test sw_summary.sw_gpoints == 32
-        @test sw_summary.sw_bands == 5
-        @test sw_summary.lw_gpoints == 0
-        @test sw_summary.rayleigh_tables_present
-        @test "h2o" in sw_summary.gases
-        @test "co2" in sw_summary.gases
+        @test shortwave_summary.shortwave_gpoints == 32
+        @test shortwave_summary.shortwave_bands == 5
+        @test shortwave_summary.longwave_gpoints == 0
+        @test shortwave_summary.rayleigh_tables_present
+        @test "h2o" in shortwave_summary.gases
+        @test "co2" in shortwave_summary.gases
     else
-        @info "Skipping reference ecCKD definition file checks; ecRad data files are not present" lw_path sw_path
+        @info "Skipping reference ecCKD definition file checks; ecRad data files are not present" longwave_path shortwave_path
         @test_skip "reference ecCKD definition files are not present"
     end
 end
@@ -690,14 +690,14 @@ end
     longwave_table = zeros(2, 2, 2, 2)
     shortwave_table = zeros(1, 2, 2, 2)
     for gpoint in axes(longwave_table, 1), j in axes(longwave_table, 2),
-        ip in axes(longwave_table, 3), it in axes(longwave_table, 4)
-        longwave_table[gpoint, j, ip, it] =
-            100gpoint + 10j + 0.001pressure_grid[ip] + 0.01temperature_grid[it]
+        iᵖ in axes(longwave_table, 3), iᵀ in axes(longwave_table, 4)
+        longwave_table[gpoint, j, iᵖ, iᵀ] =
+            100gpoint + 10j + 0.001pressure_grid[iᵖ] + 0.01temperature_grid[iᵀ]
     end
     for gpoint in axes(shortwave_table, 1), j in axes(shortwave_table, 2),
-        ip in axes(shortwave_table, 3), it in axes(shortwave_table, 4)
-        shortwave_table[gpoint, j, ip, it] =
-            10gpoint + j + 0.0001pressure_grid[ip] + 0.001temperature_grid[it]
+        iᵖ in axes(shortwave_table, 3), iᵀ in axes(shortwave_table, 4)
+        shortwave_table[gpoint, j, iᵖ, iᵀ] =
+            10gpoint + j + 0.0001pressure_grid[iᵖ] + 0.001temperature_grid[iᵀ]
     end
 
     atmosphere = ColumnAtmosphere(
@@ -732,9 +732,9 @@ end
 
     lw_coeff(gpoint, j, p, t) = 100gpoint + 10j + 0.001p + 0.01t
     sw_coeff(gpoint, j, p, t) = 10gpoint + j + 0.0001p + 0.001t
-    interpolated_pressure(p) = let (ip0, ip1, weight) =
+    interpolated_pressure(p) = let (i₀ᵖ, i₁ᵖ, weight) =
             NumericalRadiation.pressure_axis_bracket(pressure_grid, p)
-        pressure_grid[ip0] + weight * (pressure_grid[ip1] - pressure_grid[ip0])
+        pressure_grid[i₀ᵖ] + weight * (pressure_grid[i₁ᵖ] - pressure_grid[i₀ᵖ])
     end
     @test longwave.optical_depth[1, 1] ≈
           lw_coeff(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
@@ -775,17 +775,17 @@ end
     function contract_model(; pressure_grid = [100.0, 1_000.0],
                             temperature_grid = [200.0, 300.0],
                             water_vapor_grid = Float64[])
-        np = length(pressure_grid)
-        nt = NumericalRadiation.temperature_grid_length(temperature_grid)
-        n_water_vapor = length(water_vapor_grid)
-        water_vapor_table = n_water_vapor == 0 ? nothing : zeros(1, np, nt, n_water_vapor)
+        Npressures = length(pressure_grid)
+        Ntemperatures = NumericalRadiation.temperature_grid_length(temperature_grid)
+        Nwater_vapor = length(water_vapor_grid)
+        water_vapor_table = Nwater_vapor == 0 ? nothing : zeros(1, Npressures, Ntemperatures, Nwater_vapor)
         return EcCKDTabulatedGasOpticsModel(
             names = (:h2o,),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = water_vapor_grid,
-            longwave_absorption = zeros(1, 1, np, nt),
-            shortwave_absorption = zeros(1, 1, np, nt),
+            longwave_absorption = zeros(1, 1, Npressures, Ntemperatures),
+            shortwave_absorption = zeros(1, 1, Npressures, Ntemperatures),
             longwave_water_vapor_absorption = water_vapor_table,
             shortwave_water_vapor_absorption = water_vapor_table,
         )
@@ -901,9 +901,9 @@ end
 # with ecCKD's log-pressure interpolation. Regenerate them deliberately (and
 # say so) if the interpolation itself is ever meant to change again.
 @testset "ecCKD tabulated interpolation is bit-exact" begin
-    np, nt, n_water_vapor = 4, 3, 3
-    pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length = np))
-    ng_lw, ng_sw = 3, 2
+    Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
+    pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length = Npressures))
+    Nlongwave_gpoints, Nshortwave_gpoints = 3, 2
 
     make_atmosphere(gases) = ColumnAtmosphere(
         pressure_layers = [7_500.0, 33_000.0, 88_000.0],
@@ -915,28 +915,28 @@ end
         geometry = (;),
     )
 
-    lw_entry(gpoint, j, p, t) = 1e-4 * (7gpoint + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
-    sw_entry(gpoint, j, p, t) = 1e-5 * (5gpoint + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
+    longwave_entry(gpoint, j, p, t) = 1e-4 * (7gpoint + 3j) * (1 + 1e-5 * p) * (1 + 1e-3 * t)
+    shortwave_entry(gpoint, j, p, t) = 1e-5 * (5gpoint + 2j) * (1 + 2e-5 * p) * (1 + 2e-3 * t)
 
     @testset "vector temperature grid" begin
         temperature_grid = [200.0, 250.0, 300.0]
-        ngas = 2
+        Ngases = 2
         model = EcCKDTabulatedGasOpticsModel(
             names = (:h2o, :co2),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
-            longwave_absorption = [lw_entry(gpoint, j, pressure_grid[ip], temperature_grid[it])
-                                   for gpoint in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            shortwave_absorption = [sw_entry(gpoint, j, pressure_grid[ip], temperature_grid[it])
-                                    for gpoint in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+            longwave_absorption = [longwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
+                                   for gpoint in 1:Nlongwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            shortwave_absorption = [shortwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
+                                    for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             longwave_source_scale = [0.7, 1.0, 1.3],
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
         atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3))
-        longwave = LongwaveOptics(zeros(ng_lw, 3), zeros(ng_lw, 3);
-                                             weights = zeros(ng_lw))
-        shortwave = ShortwaveOptics(zeros(ng_sw, 3); weights = zeros(ng_sw))
+        longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
+                                             weights = zeros(Nlongwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights = zeros(Nshortwave_gpoints))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
@@ -961,41 +961,41 @@ end
     @testset "matrix temperature grid with dynamic H₂O" begin
         # Pressure-dependent temperature grid: origin shifts with pressure,
         # uniform step, which is the layout the reference ecCKD LUTs use.
-        temperature_grid = [180.0 + 30.0 * (ip - 1) + 40.0 * (it - 1)
-                            for ip in 1:np, it in 1:nt]
+        temperature_grid = [180.0 + 30.0 * (iᵖ - 1) + 40.0 * (iᵀ - 1)
+                            for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures]
         water_vapor_grid = [1e-6, 1e-4, 1e-2]
         source_temperature_grid = [180.0, 240.0, 300.0]
-        ngas = 3
+        Ngases = 3
         model = EcCKDTabulatedGasOpticsModel(
             names = (:h2o, :co2, :composite),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = water_vapor_grid,
             gas_reference_mole_fractions = [0.0, 4.0e-4, 0.0],
-            longwave_absorption = [lw_entry(gpoint, j, pressure_grid[ip], temperature_grid[ip, it])
-                                   for gpoint in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            shortwave_absorption = [sw_entry(gpoint, j, pressure_grid[ip], temperature_grid[ip, it])
-                                    for gpoint in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            longwave_water_vapor_absorption = [1e-3 * gpoint * (1 + 1e-5 * pressure_grid[ip]) *
-                                       (1 + 1e-3 * temperature_grid[ip, it]) * (1 + 10ih)
-                                       for gpoint in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
-            shortwave_water_vapor_absorption = [1e-4 * gpoint * (1 + 2e-5 * pressure_grid[ip]) *
-                                        (1 + 2e-3 * temperature_grid[ip, it]) * (1 + 5ih)
-                                        for gpoint in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+            longwave_absorption = [longwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
+                                   for gpoint in 1:Nlongwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            shortwave_absorption = [shortwave_entry(gpoint, j, pressure_grid[iᵖ], temperature_grid[iᵖ, iᵀ])
+                                    for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
+            longwave_water_vapor_absorption = [1e-3 * gpoint * (1 + 1e-5 * pressure_grid[iᵖ]) *
+                                       (1 + 1e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 10iᴴ)
+                                       for gpoint in 1:Nlongwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
+            shortwave_water_vapor_absorption = [1e-4 * gpoint * (1 + 2e-5 * pressure_grid[iᵖ]) *
+                                        (1 + 2e-3 * temperature_grid[iᵖ, iᵀ]) * (1 + 5iᴴ)
+                                        for gpoint in 1:Nshortwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
             longwave_source_table = [1.0 * (gpoint + 2) * st^2
-                                     for gpoint in 1:ng_lw, st in source_temperature_grid],
+                                     for gpoint in 1:Nlongwave_gpoints, st in source_temperature_grid],
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
         atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3,
                                       composite = [4.2e2, 1.1e3, 2.6e3]))
-        longwave = LongwaveOptics(zeros(ng_lw, 3), zeros(ng_lw, 3);
-                                             source_top = zeros(ng_lw, 3),
-                                             source_bottom = zeros(ng_lw, 3),
-                                             weights = zeros(ng_lw))
-        shortwave = ShortwaveOptics(zeros(ng_sw, 3); weights = zeros(ng_sw))
+        longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
+                                             source_top = zeros(Nlongwave_gpoints, 3),
+                                             source_bottom = zeros(Nlongwave_gpoints, 3),
+                                             weights = zeros(Nlongwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights = zeros(Nshortwave_gpoints))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
@@ -1034,14 +1034,14 @@ end
 # fields across in the right order for a device model to agree with a host one.
 @testset "tabulated gas optics is inferrable, Float32-clean, and Adapt-stable" begin
     function tabulated_fixture(FT, matrix_temperature_grid::Bool)
-        np, nt, n_water_vapor = 4, 3, 3
-        ng_lw, ng_sw, ngas, nlayers = 3, 2, 3, 3
-        pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = np)))
+        Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
+        Nlongwave_gpoints, Nshortwave_gpoints, Ngases, nlayers = 3, 2, 3, 3
+        pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = Npressures)))
         temperature_grid = matrix_temperature_grid ?
-            FT[180 + 30 * (ip - 1) + 40 * (it - 1) for ip in 1:np, it in 1:nt] :
+            FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures] :
             FT[200, 250, 300]
-        gridded(ip, it) = matrix_temperature_grid ?
-            temperature_grid[ip, it] : temperature_grid[it]
+        gridded(iᵖ, iᵀ) = matrix_temperature_grid ?
+            temperature_grid[iᵖ, iᵀ] : temperature_grid[iᵀ]
         source_temperature_grid = FT[180, 240, 300]
 
         model = EcCKDTabulatedGasOpticsModel(
@@ -1051,23 +1051,23 @@ end
             water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
             gas_reference_mole_fractions = FT[0, 4e-4, 0],
             longwave_absorption =
-                FT[1e-4 * (7gpoint + 3j) * (1 + 1e-5 * pressure_grid[ip]) *
-                   (1 + 1e-3 * gridded(ip, it))
-                   for gpoint in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
+                FT[1e-4 * (7gpoint + 3j) * (1 + 1e-5 * pressure_grid[iᵖ]) *
+                   (1 + 1e-3 * gridded(iᵖ, iᵀ))
+                   for gpoint in 1:Nlongwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             shortwave_absorption =
-                FT[1e-5 * (5gpoint + 2j) * (1 + 2e-5 * pressure_grid[ip]) *
-                   (1 + 2e-3 * gridded(ip, it))
-                   for gpoint in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
+                FT[1e-5 * (5gpoint + 2j) * (1 + 2e-5 * pressure_grid[iᵖ]) *
+                   (1 + 2e-3 * gridded(iᵖ, iᵀ))
+                   for gpoint in 1:Nshortwave_gpoints, j in 1:Ngases, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures],
             longwave_water_vapor_absorption =
-                FT[1e-3 * gpoint * (1 + 10ih)
-                   for gpoint in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+                FT[1e-3 * gpoint * (1 + 10iᴴ)
+                   for gpoint in 1:Nlongwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_water_vapor_absorption =
-                FT[1e-4 * gpoint * (1 + 5ih)
-                   for gpoint in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+                FT[1e-4 * gpoint * (1 + 5iᴴ)
+                   for gpoint in 1:Nshortwave_gpoints, iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures, iᴴ in 1:Nwater_vapor],
             shortwave_rayleigh_molar_scattering = FT[1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
             longwave_source_table = FT[(gpoint + 2) * st^2
-                                       for gpoint in 1:ng_lw, st in source_temperature_grid],
+                                       for gpoint in 1:Nlongwave_gpoints, st in source_temperature_grid],
             longwave_weights = FT[0.2, 0.3, 0.5],
             shortwave_weights = FT[0.45, 0.55],
         )
@@ -1081,13 +1081,13 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(FT, ng_lw, nlayers),
-                                             zeros(FT, ng_lw, nlayers);
-                                             source_top = zeros(FT, ng_lw, nlayers),
-                                             source_bottom = zeros(FT, ng_lw, nlayers),
-                                             weights = zeros(FT, ng_lw))
-        shortwave = ShortwaveOptics(zeros(FT, ng_sw, nlayers);
-                                               weights = zeros(FT, ng_sw))
+        longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, nlayers),
+                                             zeros(FT, Nlongwave_gpoints, nlayers);
+                                             source_top = zeros(FT, Nlongwave_gpoints, nlayers),
+                                             source_bottom = zeros(FT, Nlongwave_gpoints, nlayers),
+                                             weights = zeros(FT, Nlongwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, nlayers);
+                                               weights = zeros(FT, Nshortwave_gpoints))
         return model, atmosphere, longwave, shortwave
     end
 

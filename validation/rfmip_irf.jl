@@ -150,36 +150,36 @@ function rfmip_files()
 end
 
 # Scale a `*_GM` well-mixed-gas value by its units attribute ("1.e-6" etc.).
-function scaled_global_mean(ds, name, experiment)
-    variable = ds[name]
+function scaled_global_mean(dataset, name, experiment)
+    variable = dataset[name]
     scale = parse(Float64, replace(get(variable.attrib, "units", "1"), " " => ""))
     return Float64(variable[experiment]) * scale
 end
 
 function load_rfmip(paths; experiment = RFMIP_EXPERIMENT)
-    sites = NCDataset(paths.input) do ds
-        (; pressure_layers = dense(ds["pres_layer"][:, :]),
-           pressure_interfaces = dense(ds["pres_level"][:, :]),
-           temperature_layers = dense(ds["temp_layer"][:, :, experiment]),
-           temperature_interfaces = dense(ds["temp_level"][:, :, experiment]),
-           surface_temperature = dense(ds["surface_temperature"][:, experiment]),
-           surface_emissivity = dense(ds["surface_emissivity"][:]),
-           surface_albedo = dense(ds["surface_albedo"][:]),
-           solar_zenith_angle = dense(ds["solar_zenith_angle"][:]),
-           total_solar_irradiance = dense(ds["total_solar_irradiance"][:]),
-           h2o = dense(ds["water_vapor"][:, :, experiment]),
-           o3 = dense(ds["ozone"][:, :, experiment]),
-           co2 = scaled_global_mean(ds, "carbon_dioxide_GM", experiment),
-           ch4 = scaled_global_mean(ds, "methane_GM", experiment),
-           n2o = scaled_global_mean(ds, "nitrous_oxide_GM", experiment),
-           cfc11 = scaled_global_mean(ds, "cfc11eq_GM", experiment),
-           cfc12 = scaled_global_mean(ds, "cfc12_GM", experiment),
-           experiment_label = String(ds["expt_label"][experiment]))
+    sites = NCDataset(paths.input) do dataset
+        (; pressure_layers = dense(dataset["pres_layer"][:, :]),
+           pressure_interfaces = dense(dataset["pres_level"][:, :]),
+           temperature_layers = dense(dataset["temp_layer"][:, :, experiment]),
+           temperature_interfaces = dense(dataset["temp_level"][:, :, experiment]),
+           surface_temperature = dense(dataset["surface_temperature"][:, experiment]),
+           surface_emissivity = dense(dataset["surface_emissivity"][:]),
+           surface_albedo = dense(dataset["surface_albedo"][:]),
+           solar_zenith_angle = dense(dataset["solar_zenith_angle"][:]),
+           total_solar_irradiance = dense(dataset["total_solar_irradiance"][:]),
+           h2o = dense(dataset["water_vapor"][:, :, experiment]),
+           o3 = dense(dataset["ozone"][:, :, experiment]),
+           co2 = scaled_global_mean(dataset, "carbon_dioxide_GM", experiment),
+           ch4 = scaled_global_mean(dataset, "methane_GM", experiment),
+           n2o = scaled_global_mean(dataset, "nitrous_oxide_GM", experiment),
+           cfc11 = scaled_global_mean(dataset, "cfc11eq_GM", experiment),
+           cfc12 = scaled_global_mean(dataset, "cfc12_GM", experiment),
+           experiment_label = String(dataset["expt_label"][experiment]))
     end
     reference = map(paths.fluxes) do path
-        NCDataset(path) do ds
-            variable = first(v for v in RFMIP_FLUX_VARIABLES if haskey(ds, v))
-            dense(ds[variable][:, :, experiment])
+        NCDataset(path) do dataset
+            variable = first(v for v in RFMIP_FLUX_VARIABLES if haskey(dataset, v))
+            dense(dataset[variable][:, :, experiment])
         end
     end
     nsites = size(sites.pressure_interfaces, 2)
@@ -202,10 +202,10 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
     model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, nlayers)
 
-    lw_up = zeros(nlayers + 1, nsites)
-    lw_down = zeros(nlayers + 1, nsites)
-    sw_up = zeros(nlayers + 1, nsites)
-    sw_down = zeros(nlayers + 1, nsites)
+    longwave_up = zeros(nlayers + 1, nsites)
+    longwave_down = zeros(nlayers + 1, nsites)
+    shortwave_up = zeros(nlayers + 1, nsites)
+    shortwave_down = zeros(nlayers + 1, nsites)
     heating = (lw = zeros(nlayers, nsites), lw_reference = zeros(nlayers, nsites),
                sw = zeros(nlayers, nsites), sw_reference = zeros(nlayers, nsites),
                lw_quadrature = zeros(nlayers, nsites))
@@ -241,13 +241,13 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         elapsed += @elapsed fluxes = column_fluxes!(workspace, model, atmosphere; surface_temperature, emissivity,
                                                    albedo = benchmark.surface_albedo[i], cos_zeniths = (cos_zenith[i],),
                                                    solar_constant = benchmark.total_solar_irradiance[i])
-        lw_up[:, i] = fluxes.longwave_up
-        lw_down[:, i] = fluxes.longwave_down
-        sw_up[:, i] = fluxes.shortwave_up[:, 1]
-        sw_down[:, i] = fluxes.shortwave_down[:, 1]
+        longwave_up[:, i] = fluxes.longwave_up
+        longwave_down[:, i] = fluxes.longwave_down
+        shortwave_up[:, i] = fluxes.shortwave_up[:, 1]
+        shortwave_down[:, i] = fluxes.shortwave_down[:, 1]
         heating.lw[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
         heating.lw_reference[:, i] = heating_rate_per_day(reference.rlu[:, i], reference.rld[:, i], atmosphere)
-        heating.sw[:, i] = heating_rate_per_day(sw_up[:, i], sw_down[:, i], atmosphere)
+        heating.sw[:, i] = heating_rate_per_day(shortwave_up[:, i], shortwave_down[:, i], atmosphere)
         heating.sw_reference[:, i] = heating_rate_per_day(reference.rsu[:, i], reference.rsd[:, i], atmosphere)
         longwave_quadrature_fluxes!(view(lw_up_quadrature, :, i), view(lw_down_quadrature, :, i), workspace.longwave,
                                     model.longwave_weights, length(model.longwave_weights), nlayers,
@@ -260,17 +260,17 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
     night = findall(<=(0), cos_zenith)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
     statistics = (;
-        lw_toa_up = (bias = bias(lw_up[1, :], reference.rlu[1, :]), rmse = rmse(lw_up[1, :], reference.rlu[1, :])),
-        lw_surface_down = (bias = bias(lw_down[end, :], reference.rld[end, :]), rmse = rmse(lw_down[end, :], reference.rld[end, :])),
-        lw_surface_up = (bias = bias(lw_up[end, :], reference.rlu[end, :]), rmse = rmse(lw_up[end, :], reference.rlu[end, :])),
-        lw_profile_rmse = (up = rmse(lw_up, reference.rlu), down = rmse(lw_down, reference.rld)),
+        lw_toa_up = (bias = bias(longwave_up[1, :], reference.rlu[1, :]), rmse = rmse(longwave_up[1, :], reference.rlu[1, :])),
+        lw_surface_down = (bias = bias(longwave_down[end, :], reference.rld[end, :]), rmse = rmse(longwave_down[end, :], reference.rld[end, :])),
+        lw_surface_up = (bias = bias(longwave_up[end, :], reference.rlu[end, :]), rmse = rmse(longwave_up[end, :], reference.rlu[end, :])),
+        lw_profile_rmse = (up = rmse(longwave_up, reference.rlu), down = rmse(longwave_down, reference.rld)),
         lw_heating_rate = heating_ranges(p_hl, heating.lw, heating.lw_reference),
-        sw_toa_up = (bias = bias(sw_up[1, day], reference.rsu[1, day]), rmse = rmse(sw_up[1, day], reference.rsu[1, day])),
-        sw_surface_down = (bias = bias(sw_down[end, day], reference.rsd[end, day]), rmse = rmse(sw_down[end, day], reference.rsd[end, day])),
-        sw_toa_down_max_relative_error = maximum(abs, sw_down[1, day] ./ reference.rsd[1, day] .- 1),
-        sw_profile_rmse = (up = rmse(sw_up[:, day], reference.rsu[:, day]), down = rmse(sw_down[:, day], reference.rsd[:, day])),
+        sw_toa_up = (bias = bias(shortwave_up[1, day], reference.rsu[1, day]), rmse = rmse(shortwave_up[1, day], reference.rsu[1, day])),
+        sw_surface_down = (bias = bias(shortwave_down[end, day], reference.rsd[end, day]), rmse = rmse(shortwave_down[end, day], reference.rsd[end, day])),
+        sw_toa_down_max_relative_error = maximum(abs, shortwave_down[1, day] ./ reference.rsd[1, day] .- 1),
+        sw_profile_rmse = (up = rmse(shortwave_up[:, day], reference.rsu[:, day]), down = rmse(shortwave_down[:, day], reference.rsd[:, day])),
         sw_heating_rate = heating_ranges(p_hl[:, day], heating.sw[:, day], heating.sw_reference[:, day]),
-        night_sites_max_flux = maximum(abs, [sw_up[:, night]; sw_down[:, night]]),
+        night_sites_max_flux = maximum(abs, [shortwave_up[:, night]; shortwave_down[:, night]]),
         lw_heating_rate_troposphere_above_lowest_two_layers =
             weighted_heating_rate_rmse(p_hl, heating.lw, heating.lw_reference, HEATING_RATE_RANGES.troposphere;
                                        exclude_lowest = 2),

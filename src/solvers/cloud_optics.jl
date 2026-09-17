@@ -618,10 +618,10 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
                                       ice_extinction_scale = 1,
                                       shortwave_scattering_scale = 1,
                                       delta_eddington_scale = false)
-    ng, nlayers = size(shortwave.optical_depth)
-    length(liquid_properties.mass_extinction_coefficient) == ng ||
+    Ngpoints, nlayers = size(shortwave.optical_depth)
+    length(liquid_properties.mass_extinction_coefficient) == Ngpoints ||
         throw(DimensionMismatch("liquid cloud g-point properties must match shortwave g-points"))
-    length(ice_properties.mass_extinction_coefficient) == ng ||
+    length(ice_properties.mass_extinction_coefficient) == Ngpoints ||
         throw(DimensionMismatch("ice cloud g-point properties must match shortwave g-points"))
     length(liquid_water_path) == nlayers ||
         throw(DimensionMismatch("liquid_water_path must match shortwave layers"))
@@ -639,7 +639,7 @@ function add_mapped_cloud_scattering!(shortwave::ShortwaveOptics{<:Any, <:Abstra
         fraction_scale = clamp(FT(cloud_fraction[k]), zero(FT), one(FT))^exponent
         liquid_path = fraction_scale * max(FT(liquid_water_path[k]), zero(FT))
         ice_path = fraction_scale * max(FT(ice_water_path[k]), zero(FT))
-        for gpoint in 1:ng
+        for gpoint in 1:Ngpoints
             τ_absorption = shortwave.optical_depth[gpoint, k]
             τ_scattering = shortwave.rayleigh_optical_depth[gpoint, k]
             asymmetry = shortwave.scattering_asymmetry[gpoint, k]

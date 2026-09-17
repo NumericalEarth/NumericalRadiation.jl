@@ -99,7 +99,7 @@ end
 ##### One column through the optics and the streaming solvers
 #####
 
-# Layer-optics functors over the `(ng, nlayers)` arrays `optical_properties!`
+# Layer-optics functors over the `(Ngpoints, nlayers)` arrays `optical_properties!`
 # fills, in the form the streaming solvers take.
 struct LongwaveLayerOptics{L}
     longwave :: L
@@ -127,12 +127,12 @@ end
 
 function ColumnWorkspace(model, nlayers)
     FT = eltype(model)
-    ng_lw, ng_sw = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave = LongwaveOptics(zeros(FT, ng_lw, nlayers), zeros(FT, ng_lw, nlayers);
-                              source_top = zeros(FT, ng_lw, nlayers),
-                              source_bottom = zeros(FT, ng_lw, nlayers),
-                              weights = zeros(FT, ng_lw))
-    shortwave = ShortwaveOptics(zeros(FT, ng_sw, nlayers); weights = zeros(FT, ng_sw))
+    Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
+    longwave = LongwaveOptics(zeros(FT, Nlongwave_gpoints, nlayers), zeros(FT, Nlongwave_gpoints, nlayers);
+                              source_top = zeros(FT, Nlongwave_gpoints, nlayers),
+                              source_bottom = zeros(FT, Nlongwave_gpoints, nlayers),
+                              weights = zeros(FT, Nlongwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, nlayers); weights = zeros(FT, Nshortwave_gpoints))
     return ColumnWorkspace(longwave, shortwave, zeros(FT, nlayers), zeros(FT, nlayers),
                            ShortwaveColumnScratch(FT, nlayers))
 end
@@ -215,7 +215,7 @@ function gauss_legendre_flux_nodes(n)
 end
 
 """
-    longwave_quadrature_fluxes!(up, down, longwave, weights, ng, nlayers,
+    longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, nlayers,
                                 surface_emission, surface_albedo, nodes)
 
 No-scattering longwave fluxes of one column with the layer transfer of
@@ -227,14 +227,14 @@ Lambertian surface reflection of the angle-integrated downwelling flux. With
 [`gauss_legendre_flux_nodes`](@ref) it isolates the angular-integration part
 of a difference to a line-by-line reference.
 """
-function longwave_quadrature_fluxes!(up, down, longwave, weights, ng, nlayers,
+function longwave_quadrature_fluxes!(up, down, longwave, weights, Ngpoints, nlayers,
                                      surface_emission, surface_albedo, nodes)
     fill!(up, 0)
     fill!(down, 0)
     nnodes = length(nodes)
     transmittance = zeros(nlayers, nnodes)
     source_up = zeros(nlayers, nnodes)
-    for gpoint in 1:ng
+    for gpoint in 1:Ngpoints
         # Downward sweeps at every node; the reflected part of the total
         # downwelling flux at the surface is isotropic.
         down_surface = 0.0
