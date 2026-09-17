@@ -90,9 +90,10 @@ or NamedTuple carrying `gravity`, `heat_capacity`, `stefan_boltzmann`,
 `solar_constant` properties works.
 
 All floating-point types default to `Float64`. To run in `Float32` (useful for
-GPU kernels), pass the type as a positional argument to the scheme
-constructors: `AnalyticBandLongwave(Float32)`,
-`OneBandShortwave(Float32)`, etc.
+GPU kernels), pass the type as the first positional argument to the scheme
+constructors and readers: `AnalyticBandLongwave(Float32)`,
+`OneBandShortwave(Float32)`, `read_reference_ecckd_gas_optics(Float32, "32x32")`,
+`SpectralCloudOptics(Float32, table, mapping; effective_radius)`, etc.
 
 ## With SpeedyWeather.jl
 

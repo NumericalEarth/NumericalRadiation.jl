@@ -483,15 +483,15 @@ function read_ecckd_definition(path::AbstractString)
 end
 
 """
-    read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path;
+    read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
                                     names = (:h2o, :co2),
-                                    h2o_mole_fraction = 0.005,
-                                    float_type = Float64)
+                                    h2o_mole_fraction = 0.005)
 
 Read reference ecCKD CKD-definition files into a lightweight runtime
-[`EcCKDTabulatedGasOpticsModel`](@ref) with element type `float_type`. The
-core package does not depend on NetCDF libraries, so NetCDF-backed loading is
-provided by the NCDatasets extension.
+[`EcCKDTabulatedGasOpticsModel`](@ref) with element type `FT`, passed as the
+first positional argument (default `Float64`). The core package does not
+depend on NetCDF libraries, so NetCDF-backed loading is provided by the
+NCDatasets extension.
 
 This loader is a runtime-ingestion bridge, not a full ecRad-equivalent
 ingestion path: it materializes coefficient tables for the requested
@@ -505,42 +505,57 @@ reference H2O mole-fraction table dimension is kept; at runtime
 for compatibility/fallback sampling of non-dynamic four-dimensional H2O
 tables. Longwave spectral weights are uniform over g-points; shortwave weights
 are the file's per-g-point solar irradiance normalized to unit sum. Every
-table, grid and weight vector is converted to `float_type`, so
-`float_type = Float32` yields a model whose optical properties are computed
-in single precision; the files store their coefficients in single precision,
-so that model carries them exactly.
+table, grid and weight vector is converted to `FT`, so
+`read_ecckd_tabulated_gas_optics(Float32, longwave_path, shortwave_path)`
+yields a model whose optical properties are computed in single precision; the
+files store their coefficients in single precision, so that model carries
+them exactly.
 """
-function read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
+function read_ecckd_tabulated_gas_optics(FT::DataType,
+                                         longwave_path::AbstractString,
                                          shortwave_path::AbstractString; kwargs...)
     # The NCDatasets extension specializes `::String`, so convert other string
     # types (a `SubString` from `strip`/`split`) instead of reporting them here as
     # a missing extension.
     (longwave_path isa String && shortwave_path isa String) ||
-        return read_ecckd_tabulated_gas_optics(String(longwave_path),
+        return read_ecckd_tabulated_gas_optics(FT, String(longwave_path),
                                                String(shortwave_path); kwargs...)
     throw(ArgumentError("read_ecckd_tabulated_gas_optics requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
-"""
-    read_reference_ecckd_gas_optics(model=:climate_64x32; kwargs...)
+read_ecckd_tabulated_gas_optics(longwave_path::AbstractString,
+                                shortwave_path::AbstractString; kwargs...) =
+    read_ecckd_tabulated_gas_optics(Float64, longwave_path, shortwave_path; kwargs...)
 
-Load an reference ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref).
-`model` accepts selectors such as `:climate_32x32`, `:climate_64x32`, or
-`"32x96"`. Keyword arguments are forwarded to
-[`read_ecckd_tabulated_gas_optics`](@ref), for example `names`,
-`h2o_mole_fraction` and `float_type`.
+"""
+    read_reference_ecckd_gas_optics([FT = Float64,] model = :climate_64x32; require = true, kwargs...)
+
+Load an reference ecCKD model pair into an [`EcCKDTabulatedGasOpticsModel`](@ref)
+with element type `FT`, passed as the first positional argument (default
+`Float64`), so `read_reference_ecckd_gas_optics(Float32, "32x32")` loads the
+tables in single precision. `model` accepts selectors such as
+`:climate_32x32`, `:climate_64x32`, or `"32x96"`. Keyword arguments other than
+`require` are forwarded to [`read_ecckd_tabulated_gas_optics`](@ref), for
+example `names` and `h2o_mole_fraction`.
 
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.
 """
-function read_reference_ecckd_gas_optics(model = :climate_64x32; require::Bool = true,
-                                        kwargs...)
+function read_reference_ecckd_gas_optics(FT::DataType, model = :climate_64x32;
+                                        require::Bool = true, kwargs...)
     paths = reference_ecckd_definition_paths(model; require)
     if paths.longwave === nothing || paths.shortwave === nothing
         return nothing
     end
-    return read_ecckd_tabulated_gas_optics(paths.longwave, paths.shortwave; kwargs...)
+    return read_ecckd_tabulated_gas_optics(FT, paths.longwave, paths.shortwave; kwargs...)
 end
+
+# `model` is never a `DataType`, so the annotation keeps the one-argument
+# forms `read_reference_ecckd_gas_optics(Float32)` and
+# `read_reference_ecckd_gas_optics("32x32")` unambiguous.
+read_reference_ecckd_gas_optics(model::Union{Symbol, AbstractString, EcCKDModelSpec} = :climate_64x32;
+                                kwargs...) =
+    read_reference_ecckd_gas_optics(Float64, model; kwargs...)
 
 """
     read_ecckd_definition(data)

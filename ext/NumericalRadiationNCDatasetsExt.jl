@@ -230,13 +230,12 @@ function reference_mole_fractions(ds, gas_names)
 end
 
 """
-    read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path;
+    read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
                                     names = (:h2o, :co2),
-                                    h2o_mole_fraction = 0.005,
-                                    float_type = Float64)
+                                    h2o_mole_fraction = 0.005)
 
 Materialize selected reference ecCKD gas coefficient tables into
-`EcCKDTabulatedGasOpticsModel{float_type}`.
+`EcCKDTabulatedGasOpticsModel{FT}`.
 
 This helper is intentionally a runtime-ingestion bridge, not a claim of full
 ecRad equivalence. It stacks the `<gas>_molar_absorption_coeff` tables for the
@@ -254,14 +253,15 @@ four-dimensional H2O tables. Longwave weights
 are uniform over g-points and the Planck source table is normalized by them;
 shortwave weights are the file's `solar_irradiance` normalized to unit sum
 (uniform when absent). Every table, grid and weight vector is converted to
-`float_type`; the files store their coefficients in single precision, so a
-`Float32` model carries them exactly.
+the element type `FT`, passed as the first positional argument in the
+Oceananigans style (default `Float64`); the files store their coefficients in
+single precision, so a `Float32` model carries them exactly.
 """
-function read_ecckd_tabulated_gas_optics(longwave_path::String,
+function read_ecckd_tabulated_gas_optics(FT::DataType,
+                                         longwave_path::String,
                                          shortwave_path::String;
                                          names = (:h2o, :co2),
-                                         h2o_mole_fraction = 0.005,
-                                         float_type = Float64)
+                                         h2o_mole_fraction = 0.005)
     gas_name_tuple = Tuple(Symbol.(names))
     lw = NCDataset(longwave_path, "r") do ds
         (
@@ -351,7 +351,7 @@ function read_ecckd_tabulated_gas_optics(longwave_path::String,
         longwave_weights = lw.weights,
         shortwave_weights = sw.weights,
     )
-    return EcCKDTabulatedGasOpticsModel{float_type}(model)
+    return EcCKDTabulatedGasOpticsModel{FT}(model)
 end
 
 end

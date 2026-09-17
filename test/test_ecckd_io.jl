@@ -232,6 +232,17 @@ using NCDatasets
         @test err !== nothing
         @test !occursin("load NCDatasets.jl", sprint(showerror, err))
     end
+    for reader in ((lw, sw) -> read_ecckd_tabulated_gas_optics(lw, sw),
+                   (lw, sw) -> read_ecckd_tabulated_gas_optics(Float32, lw, sw))
+        err = try
+            reader(missing_substring, missing_substring)
+            nothing
+        catch caught
+            caught
+        end
+        @test err !== nothing
+        @test !occursin("load NCDatasets.jl", sprint(showerror, err))
+    end
 end
 
 @testset "NCDatasets ecCKD reader extension" begin
@@ -287,6 +298,25 @@ end
     if lw_path !== nothing && sw_path !== nothing && isfile(lw_path) && isfile(sw_path)
         @test read_ecckd_tabulated_gas_optics(lw_path, sw_path) isa
               EcCKDTabulatedGasOpticsModel
+
+        # The element type is the first positional argument (Oceananigans
+        # style), defaulting to Float64; both readers accept it.
+        model64 = read_ecckd_tabulated_gas_optics(lw_path, sw_path)
+        @test model64 isa EcCKDTabulatedGasOpticsModel{Float64}
+        @test read_ecckd_tabulated_gas_optics(Float64, lw_path, sw_path) isa
+              EcCKDTabulatedGasOpticsModel{Float64}
+        model32 = read_ecckd_tabulated_gas_optics(Float32, lw_path, sw_path)
+        @test model32 isa EcCKDTabulatedGasOpticsModel{Float32}
+        @test model32.longwave_absorption == Float32.(model64.longwave_absorption)
+        @test read_ecckd_tabulated_gas_optics(Float32, strip(" " * lw_path * " "),
+                                              strip(" " * sw_path * " ")) isa
+              EcCKDTabulatedGasOpticsModel{Float32}
+        @test read_reference_ecckd_gas_optics(Float32, :climate_64x32) isa
+              EcCKDTabulatedGasOpticsModel{Float32}
+        @test read_reference_ecckd_gas_optics(:climate_64x32) isa
+              EcCKDTabulatedGasOpticsModel{Float64}
+        @test read_reference_ecckd_gas_optics(Float32; require = false) isa
+              EcCKDTabulatedGasOpticsModel{Float32}
 
         mktempdir() do dir
             for (label, perturb!) in (

@@ -52,8 +52,10 @@ explicitly to vary its amount — or to set it to zero.
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
 of NetCDF after loading and can be moved into a host model's radiation state.
-Pass `float_type = Float32` to load the tables in single precision (the files
-store them that way, so nothing is lost), or convert a loaded model with
+Pass `Float32` as the first positional argument,
+`read_reference_ecckd_gas_optics(Float32, "32x32"; names)`, to load the tables
+in single precision (the files store them that way, so nothing is lost), or
+convert a loaded model with
 `EcCKDTabulatedGasOpticsModel{Float32}(gas_optics)`; `Adapt.adapt` likewise
 follows the element type of the adapted arrays.
 Because `:h2o` is in `names`, the reference H2O mole-fraction table

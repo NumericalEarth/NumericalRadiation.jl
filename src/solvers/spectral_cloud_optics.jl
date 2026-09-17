@@ -50,18 +50,14 @@ $(TYPEDSIGNATURES)
 
 Build a [`SpectralCloudOptics`](@ref) from per-node arrays: `effective_radius`
 of shape `(nr,)` and the three property matrices of shape `(ng, nr)`. The
-element type is `promote_type` of the array element types unless `float_type`
-is given; the arrays are converted to `Vector{FT}` and `Matrix{FT}`.
+element type `FT` is passed as the first positional argument; the arrays are
+converted to `Vector{FT}` and `Matrix{FT}`.
 """
-function SpectralCloudOptics(effective_radius::AbstractVector,
+function SpectralCloudOptics(FT::DataType,
+                             effective_radius::AbstractVector,
                              mass_extinction_coefficient::AbstractMatrix,
                              single_scattering_albedo::AbstractMatrix,
-                             asymmetry_factor::AbstractMatrix;
-                             float_type = promote_type(eltype(effective_radius),
-                                                       eltype(mass_extinction_coefficient),
-                                                       eltype(single_scattering_albedo),
-                                                       eltype(asymmetry_factor)))
-    FT = float_type
+                             asymmetry_factor::AbstractMatrix)
     nr = length(effective_radius)
     nr >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
     validate_increasing_grid(effective_radius, "effective_radius")
@@ -82,6 +78,23 @@ end
 """
 $(TYPEDSIGNATURES)
 
+Build a [`SpectralCloudOptics`](@ref) from per-node arrays whose element type
+is `promote_type` of the array element types.
+"""
+SpectralCloudOptics(effective_radius::AbstractVector,
+                    mass_extinction_coefficient::AbstractMatrix,
+                    single_scattering_albedo::AbstractMatrix,
+                    asymmetry_factor::AbstractMatrix) =
+    SpectralCloudOptics(promote_type(eltype(effective_radius),
+                                     eltype(mass_extinction_coefficient),
+                                     eltype(single_scattering_albedo),
+                                     eltype(asymmetry_factor)),
+                        effective_radius, mass_extinction_coefficient,
+                        single_scattering_albedo, asymmetry_factor)
+
+"""
+$(TYPEDSIGNATURES)
+
 Map a [`CloudScatteringTable`](@ref) onto the g points of `mapping` at a single
 `effective_radius` (m), producing a one-node [`SpectralCloudOptics`](@ref).
 The node values are exactly those of [`cloud_scattering_gpoint_properties`](@ref)
@@ -89,16 +102,16 @@ with the same `mapping_method`, `delta_eddington_average`, and
 `thick_averaging` keywords; the defaults follow ecRad (`:ecrad` interval
 weighting with delta-Eddington averaging). Longwave mappings read by
 [`read_ecckd_spectral_mapping`](@ref) already carry Planck interval weights,
-so the same constructor serves both spectral regions. `float_type` sets the
-element type of the stored arrays.
+so the same constructor serves both spectral regions. The element type `FT` of
+the stored arrays is passed as the first positional argument.
 """
-function SpectralCloudOptics(table::CloudScatteringTable,
+function SpectralCloudOptics(FT::DataType,
+                             table::CloudScatteringTable,
                              mapping::EcCKDSpectralMapping;
                              effective_radius::Number,
                              mapping_method = :ecrad,
                              delta_eddington_average = true,
-                             thick_averaging = false,
-                             float_type = eltype(table))
+                             thick_averaging = false)
     properties = cloud_scattering_gpoint_properties(table, mapping, effective_radius;
                                                     mapping_method,
                                                     delta_eddington_average,
@@ -108,8 +121,17 @@ function SpectralCloudOptics(table::CloudScatteringTable,
     κ = reshape(properties.mass_extinction_coefficient, ng, 1)
     ω = reshape(properties.single_scattering_albedo, ng, 1)
     g = reshape(properties.asymmetry_factor, ng, 1)
-    return SpectralCloudOptics(radius, κ, ω, g; float_type)
+    return SpectralCloudOptics(FT, radius, κ, ω, g)
 end
+
+"""
+$(TYPEDSIGNATURES)
+
+Map a [`CloudScatteringTable`](@ref) onto the g points of `mapping` with the
+element type of `table`.
+"""
+SpectralCloudOptics(table::CloudScatteringTable, mapping::EcCKDSpectralMapping; kwargs...) =
+    SpectralCloudOptics(eltype(table), table, mapping; kwargs...)
 
 # The element type of an adapted model follows its adapted arrays, so a device
 # adaptor that changes precision yields a model whose layer optics compute in

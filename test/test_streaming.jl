@@ -572,7 +572,7 @@ array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray,
             @test_skip "ecrad_data artifact not installed"
         else
             model64 = read_reference_ecckd_gas_optics("32x32"; names)
-            model32 = read_reference_ecckd_gas_optics("32x32"; names, float_type = Float32)
+            model32 = read_reference_ecckd_gas_optics(Float32, "32x32"; names)
             @test model32 isa EcCKDTabulatedGasOpticsModel{Float32}
             @test eltype(model32.longwave_absorption) === Float32
             @test eltype(model32.longwave_h2o_absorption) === Float32

@@ -44,7 +44,7 @@ The streaming functions share the package conventions of the array path:
   `S₀ max(μ₀, 0)` so that night (`μ₀ ≤ 0`) yields exact zeros without a
   branch; the solver clamps `μ₀` to `√eps(FT)` internally, so there is no `NaN`.
 - **Precision.** `FT` is threaded from the model type: a `Float32` model
-  ([`read_reference_ecckd_gas_optics`](@ref) with `float_type = Float32`, or
+  ([`read_reference_ecckd_gas_optics`](@ref)`(Float32, "32x32")`, or
   `Adapt.adapt(Array{Float32}, model)`) produces `Float32` stencils, optical
   depths and sources, and the solvers take `FT` from the flux arrays.
 - **Device rules.** Every function on this page is `@inline`, allocation-free,

@@ -191,9 +191,8 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
         @test default.single_scattering_albedo == explicit.single_scattering_albedo
         @test default.asymmetry_factor == explicit.asymmetry_factor
 
-        # `float_type` converts the stored arrays.
-        single = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6,
-                                     float_type = Float32)
+        # A positional `FT` converts the stored arrays.
+        single = SpectralCloudOptics(Float32, table, mapping; effective_radius = 2.0e-6)
         @test single isa SpectralCloudOptics{Float32, Vector{Float32}, Matrix{Float32}}
         @test single.mass_extinction_coefficient ==
               Float32.(default.mass_extinction_coefficient)
@@ -241,8 +240,7 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
         @test w ≈ 0.5
 
         # A Float32 model brackets a Float64 radius in Float32.
-        three32 = SpectralCloudOptics(radius, ones(2, 3), ones(2, 3), ones(2, 3);
-                                      float_type = Float32)
+        three32 = SpectralCloudOptics(Float32, radius, ones(2, 3), ones(2, 3), ones(2, 3))
         @test effective_radius_bracket(three32, 3.0e-6) isa Tuple{Int, Int, Float32}
     end
 
@@ -427,10 +425,9 @@ Base.@noinline measure_add_cloud(cloud, b, wp) =
 
     @testset "device-path functions are inferrable and allocation-free" begin
         for FT in (Float64, Float32)
-            one_node = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6,
-                                           float_type = FT)
-            three = SpectralCloudOptics([1.0e-6, 5.0e-6, 20.0e-6],
-                                        rand(2, 3), rand(2, 3), rand(2, 3); float_type = FT)
+            one_node = SpectralCloudOptics(FT, table, mapping; effective_radius = 2.0e-6)
+            three = SpectralCloudOptics(FT, [1.0e-6, 5.0e-6, 20.0e-6],
+                                        rand(2, 3), rand(2, 3), rand(2, 3))
             radius = 3.0e-6
             wp = FT(0.1)
             for cloud in (one_node, three)
