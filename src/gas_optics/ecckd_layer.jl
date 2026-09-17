@@ -85,12 +85,9 @@ the arguments.
 """
 @inline hydrostatic_air_moles(Δp, g, mᵈ) = Δp / (g * mᵈ)
 
-# Scalar H₂O amount of a layer for the H₂O tables, `0` when the gas container
-# carries no `h2o` key (only legal for models without an H₂O table, which never
-# index i₀ᵀ). Resolved at compile time from the `NamedTuple` keys.
-@generated function water_vapor_layer_amount(::Type{FT}, gases::NamedTuple{Names}) where {FT, Names}
-    return :h2o in Names ? :(FT(gases.h2o)) : :(zero(FT))
-end
+# H₂O amount of a layer for the H₂O tables; `0` without an `h2o` key, which only
+# a model without an H₂O table accepts.
+@inline water_vapor_layer_amount(::Type{FT}, gases) where FT = hasproperty(gases, :h2o) ? FT(gases.h2o) : zero(FT)
 
 """
 $(TYPEDSIGNATURES)
