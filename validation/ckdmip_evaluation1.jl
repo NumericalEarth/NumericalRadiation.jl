@@ -103,15 +103,19 @@ const CKDMIP_GASES = (:h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
 const CKDMIP_FILES = ("concentrations", "lw_fluxes", "sw_fluxes")
 
 # Paths of the three CKDMIP files in the artifact, or `nothing` with a message
-# when they cannot be resolved (a missing artifact must not fail CI).
+# when the artifact itself cannot be resolved (a missing or undownloadable
+# artifact must not fail CI). Only that step is guarded: once the artifact is
+# present, a CKDMIP file missing from it is a real failure and throws.
 function ckdmip_files()
-    try
-        return map(CKDMIP_FILES) do name
-            ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require = true)
-        end
+    root = try
+        ecrad_data_path(; require = true)
     catch err
-        @warn "CKDMIP evaluation files are not available" exception = (err, catch_backtrace())
+        @warn "ecrad_data artifact is not available" exception = (err, catch_backtrace())
         return nothing
+    end
+    root === nothing && return nothing
+    return map(CKDMIP_FILES) do name
+        ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require = true)
     end
 end
 
