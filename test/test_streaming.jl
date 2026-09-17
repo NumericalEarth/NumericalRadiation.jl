@@ -294,6 +294,60 @@ end
     @test rayleigh_optical_depth(model, 1, 100.0) === 0.0
 end
 
+@testset "non-finite layer state gives NaN optics without throwing" begin
+    # A kernel cannot recover from a throw, so a column whose state has gone
+    # non-finite (a zero dry-air amount making χ = NaN, a blown-up
+    # temperature) must come out as NaN fluxes a host check can catch, not
+    # as an aborted launch. `floor(Int, NaN)` would throw an InexactError.
+    for FT in (Float64, Float32)
+        model, atmosphere = tabulated_fixture(FT)
+        k = 2
+        gases = layer_scalars(atmosphere.gases, k)
+        p, T = atmosphere.pressure_layers[k], atmosphere.temperature_layers[k]
+        χ = gases.h2o / gases.composite
+        np, nt, nh = length(model.pressure_grid), size(model.temperature_grid, 2),
+                     length(model.h2o_mole_fraction_grid)
+        in_range(s) = 1 <= s.pressure[1] < s.pressure[2] <= np &&
+                      1 <= s.temperature[1] < s.temperature[2] <= nt &&
+                      1 <= s.h2o[1] < s.h2o[2] <= nh
+        nan = FT(NaN)
+        for (state, axis) in (((nan, T, χ), :pressure), ((p, nan, χ), :temperature), ((p, T, nan), :h2o))
+            s = @inferred gas_optics_stencil(model, state...)
+            @test s isa GasOpticsStencil{FT}
+            @test in_range(s)
+            @test isnan(getfield(s, axis)[3])
+            @test isnan(longwave_optical_depth(model, 1, gases, s))
+            @test isnan(shortwave_optical_depth(model, 1, gases, s))
+        end
+        # A NaN pressure also poisons the pressure-dependent temperature grid.
+        @test isnan(gas_optics_stencil(model, nan, T, χ).temperature[3])
+        # Infinite inputs clamp to the table edges like any off-table value.
+        for state in ((FT(Inf), T, χ), (p, FT(Inf), χ), (p, T, FT(Inf)), (FT(-Inf), T, χ), (p, FT(-Inf), χ))
+            s = gas_optics_stencil(model, state...)
+            @test in_range(s)
+            @test isfinite(longwave_optical_depth(model, 1, gases, s))
+        end
+        @test gas_optics_stencil(model, FT(Inf), T, χ).pressure == (np - 1, np, 1)
+        @test gas_optics_stencil(model, p, T, FT(Inf)).h2o == (nh - 1, nh, 1)
+        # The Planck bracket and source propagate NaN the same way.
+        b = source_table_bracket(model, nan)
+        @test isnan(b[3]) && isnan(longwave_source(model, 1, nan, b))
+        @test isnan(TabulatedSurfaceEmission(model, nan)[1])
+    end
+
+    # The vector temperature grid goes through the same bracket.
+    model = EcCKDTabulatedGasOpticsModel(
+        names = (:h2o, :co2),
+        pressure_grid = [10_000.0, 100_000.0],
+        temperature_grid = [220.0, 300.0],
+        longwave_absorption = ones(2, 2, 2, 2),
+        shortwave_absorption = ones(2, 2, 2, 2),
+    )
+    s = gas_optics_stencil(model, 50_000.0, NaN, 0.0)
+    @test s.temperature[1:2] == (1, 2) && isnan(s.temperature[3])
+    @test isnan(longwave_optical_depth(model, 1, (h2o = 2.0, co2 = 3.0), s))
+end
+
 # Julia specializes the allocation measurement separately, so each scalar
 # function is called through a `@noinline` wrapper, once to compile and once
 # to measure.

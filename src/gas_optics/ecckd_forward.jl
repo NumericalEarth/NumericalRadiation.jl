@@ -377,9 +377,20 @@ end
     # inputs interpolate exactly to the edge nodes.
     step = log(grid[begin + 1]) - log(grid[begin])
     offset = (log(max(x, grid[begin])) - log(grid[begin])) / step
-    lo = clamp(floor(Int, offset), 0, length(grid) - 2)
+    lo = clamped_lower_index(offset, length(grid) - 2)
     weight = clamp(offset - lo, zero(offset), one(offset))
     return firstindex(grid) + lo, firstindex(grid) + lo + 1, weight
+end
+
+# Integer part of a nonnegative interpolation coordinate `x`, clamped to
+# `[0, top]`, without the `InexactError` that `floor(Int, x)` throws on a
+# non-finite `x` (inside a kernel that throw is an unrecoverable trap). The
+# clamp is done in floating point first, so `Inf` lands on the top node; a
+# `NaN` lands on index 0 and leaves its `NaN` in the caller's weight, so the
+# bad input surfaces as `NaN` optics rather than as an aborted launch.
+@inline function clamped_lower_index(x, top::Int)
+    clamped = clamp(x, zero(x), oftype(x, top))
+    return unsafe_trunc(Int, ifelse(isfinite(clamped), clamped, zero(x)))
 end
 
 @inline temperature_grid_length(grid::AbstractVector) = length(grid)
@@ -474,7 +485,9 @@ end
     temperature_index = one(FT) + clamp((temperature - temperature_origin) / temperature_step,
                                         zero(FT),
                                         FT(size(temperature_grid, 2)) - FT(1.0001))
-    it0 = Int(floor(temperature_index))
+    # `temperature_index` is at least 1 unless the state is `NaN`; see
+    # `clamped_lower_index` for why the conversion must not throw.
+    it0 = 1 + clamped_lower_index(temperature_index - one(FT), size(temperature_grid, 2) - 2)
     return pressure_bracket, (it0, it0 + 1, temperature_index - it0)
 end
 
