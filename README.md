@@ -123,10 +123,15 @@ through layer-optics functors with caller-owned scratch (a
 `TabulatedSurfaceEmission` surface source and a `ShortwaveColumnScratch`).
 `SpectralCloudOptics` adds per-g-point cloud optics to the same loop. The
 array methods (`optical_properties!`, `radiative_fluxes!`) are loops over
-these functions, so the two paths agree bit for bit; every function is
-`@inline`, allocation-free and `Adapt.jl`-aware, so the loop runs unchanged
-on GPU. [Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) uses this
-API in its `NumericalRadiation` extension; the
+these functions, so the two paths agree bit for bit — the longwave path and
+every shortwave g point that scatters; a shortwave g point with no scattering
+at all takes a closed-form Beer–Lambert branch in the array solver that
+treats the surface-reflected flux as a slant beam rather than diffuse, see the
+streaming column API page. Every function is `@inline`, allocation-free and
+`Adapt.jl`-aware, so the loop runs unchanged on GPU. This is the API the
+`NumericalRadiation` extension of
+[Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) (in progress) is
+built on; the
 [streaming column API](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/gas_optics/streaming_column_api/)
 page walks through the loop on a two-layer column.
 

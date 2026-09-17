@@ -1164,32 +1164,49 @@ end
     # A g point without scattering takes the closed-form Beer-Lambert branch of
     # `radiative_fluxes!`; the others take the adding method. The broadband
     # result is the weighted sum of both.
+    #
+    # The two paths agree on the direct beam but not on the reflected flux:
+    # the closed form sends it back up as a slant beam, `e^{-τ/μ0}`, while the
+    # adding method treats the Lambertian reflection as diffuse and attenuates
+    # it with the two-stream diffusivity 2, `e^{-2τ}` (γ₁ = 2, γ₂ = 0 for
+    # ω = 0). The two coincide only at μ0 = 1/2, so this test runs at μ0 = 0.6
+    # and compares each path with its own closed form.
     nlayers = 3
     absorption = [0.1 0.2 0.3; 0.05 0.1 0.15]
     scattering = [0.0 0.0 0.0; 0.02 0.03 0.04]
     weights = [0.4, 0.6]
     optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering, weights)
-    μ0, S0, albedo = 0.5, 1361.0, 0.2
+    μ0, S0, albedo = 0.6, 1361.0, 0.2
     fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1), longwave_down = zeros(nlayers + 1),
                              shortwave_up = zeros(nlayers + 1), shortwave_down = zeros(nlayers + 1))
     radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ0)),
                       ShortwaveBoundaryConditions(toa_shortwave_down = S0 * μ0, surface_albedo = albedo))
 
     τ_cumulative = [0.0; cumsum(absorption[1, :])]
+    τ_below = τ_cumulative[end] .- τ_cumulative
     beer_down = S0 * μ0 .* exp.(-τ_cumulative ./ μ0)
-    beer_up = albedo * beer_down[end] .* exp.(-(τ_cumulative[end] .- τ_cumulative) ./ μ0)
-    # Streamed through the adding method, the scattering-free g point is
-    # Beer-Lambert too, up to rounding.
+    slant_up = albedo * beer_down[end] .* exp.(-τ_below ./ μ0)      # closed-form branch
+    diffuse_up = albedo * beer_down[end] .* exp.(-2 .* τ_below)     # adding method
+    @test !(slant_up ≈ diffuse_up)
     up, down = zeros(nlayers + 1), zeros(nlayers + 1)
     streaming_shortwave_fluxes!(up, down, ShortwaveMatrixOptics(absorption, scattering, zero(absorption)),
                                 μ0, S0 * μ0, albedo, albedo, (1.0,), 1, nlayers,
                                 ShortwaveColumnScratch(Float64, nlayers))
     @test down ≈ beer_down rtol = 1e-10
-    @test up ≈ beer_up rtol = 1e-10
+    @test up ≈ diffuse_up rtol = 1e-10
     scratch_up, scratch_down = zeros(nlayers + 1), zeros(nlayers + 1)
     NumericalRadiation.ecrad_shortwave_column!(scratch_up, scratch_down, optics, 2, μ0, S0 * μ0, albedo)
     @test fluxes.shortwave_down ≈ weights[1] .* beer_down .+ weights[2] .* scratch_down rtol = 1e-12
-    @test fluxes.shortwave_up ≈ weights[1] .* beer_up .+ weights[2] .* scratch_up rtol = 1e-12
+    @test fluxes.shortwave_up ≈ weights[1] .* slant_up .+ weights[2] .* scratch_up rtol = 1e-12
+
+    # At μ0 = 1/2 the slant and diffuse attenuations coincide, so there the
+    # streamed g point reproduces the closed form too (to rounding).
+    μ0 = 0.5
+    beer_down = S0 * μ0 .* exp.(-τ_cumulative ./ μ0)
+    streaming_shortwave_fluxes!(up, down, ShortwaveMatrixOptics(absorption, scattering, zero(absorption)),
+                                μ0, S0 * μ0, albedo, albedo, (1.0,), 1, nlayers,
+                                ShortwaveColumnScratch(Float64, nlayers))
+    @test up ≈ albedo * beer_down[end] .* exp.(-τ_below ./ μ0) rtol = 1e-10
 end
 
 @testset "streaming shortwave is exactly zero at night, $FT" for FT in (Float64, Float32)

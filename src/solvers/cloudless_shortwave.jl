@@ -358,6 +358,17 @@ Arrays in `fluxes.shortwave_up` and `fluxes.shortwave_down` are overwritten.
 When `atmosphere.geometry.cos_zenith` is present, optical depths are scaled by
 the direct-beam path length `1 / cos_zenith`; otherwise the solver preserves the
 historical vertical-path convention.
+
+Every g point with scattering runs the two-stream adding method of
+[`streaming_shortwave_fluxes!`](@ref), so those g points match the streaming
+path bit for bit. A g point with no scattering at all takes a closed-form
+Beer–Lambert branch instead: the direct beam down the slant path, one
+Lambertian reflection, and the reflected flux attenuated back up along the
+same slant path, `e^{-τ / cos_zenith}`. The adding method treats the reflected
+flux as diffuse and attenuates it with the two-stream diffusivity factor 2,
+`e^{-2τ}`, so for such a g point the two paths agree on the downwelling flux
+but differ in the reflected flux except at `cos_zenith = 1/2`, where the two
+attenuations coincide.
 """
 function radiative_fluxes!(fluxes::RadiativeFluxes,
                            ::CloudlessShortwave,

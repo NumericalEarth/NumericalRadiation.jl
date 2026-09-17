@@ -6,9 +6,10 @@ own kernels — one thread per column, no allocation, no intermediate `(ng, nlay
 matrices — needs the same physics as scalar, per-layer, per-g-point functions.
 This page documents that *streaming* form of the API: the loop a host kernel
 runs, the conventions its arguments follow, and the guarantee that it
-reproduces the array path bit for bit. It is the layer
-[Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) builds its
-`NumericalRadiation` extension on.
+reproduces the array path bit for bit. It is the layer the
+`NumericalRadiation` extension of
+[Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) (in progress) is
+built on.
 
 ## Conventions
 
@@ -134,7 +135,13 @@ reproduces the array path bit for bit; `test/test_streaming.jl` pins this on
 the reference `climate_32x32` tables, and `test/access_points_check.jl` on the
 2-layer toy model below. The one deliberate exception is a shortwave g point
 with no scattering at all, which the array solver routes through a closed-form
-Beer–Lambert branch; streamed through the adding method it agrees to rounding.
+Beer–Lambert branch. Both paths give the same direct beam, but the closed form
+sends the surface-reflected flux back up as a slant beam, `e^{-τ/μ₀}`, whereas
+the adding method treats it as diffuse and attenuates it with the two-stream
+diffusivity 2, `e^{-2τ}`; the reflected fluxes therefore differ for such a g
+point except at `μ₀ = 1/2`, where the two attenuations coincide. Every g point
+of the reference ecCKD tables has Rayleigh scattering, so this branch is not
+reached with them.
 
 ## A two-layer column
 
@@ -236,10 +243,12 @@ julia> round.(shortwave_down; digits = 2)
 
 The same column through the array path — `optical_properties!` into
 `(ng, nlayers)` work arrays with interface Planck sources, then
-`radiative_fluxes!` — gives the same longwave fluxes bit for bit, and the
-same shortwave fluxes to rounding (this toy model has no Rayleigh table, so
-its single shortwave g point takes the Beer–Lambert branch of the array
-solver):
+`radiative_fluxes!` — gives the same longwave fluxes bit for bit, and at this
+`μ0 = 0.5` the same shortwave fluxes to rounding (this toy model has no
+Rayleigh table, so its single shortwave g point takes the Beer–Lambert branch
+of the array solver, which agrees with the adding method only at `μ0 = 1/2`,
+see [above](#Agreement-with-the-array-path); with scattering the two would be
+bitwise equal at any `μ0`):
 
 ```jldoctest streaming
 julia> atmosphere = ColumnAtmosphere(pressure_layers = column.pressure,
