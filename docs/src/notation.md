@@ -16,7 +16,9 @@ of either:
   with an English descriptor naming a component or a state: `τ`, `ω`, `g`,
   `κ`, `μ₀`, `γ₁`, `Tₛ`, `τ_absorption`, `τ_scattering`, `ω_clear`,
   `g_cloudy`, `κˡ`, `ωⁱ`. Subscripts and superscripts are unicode (`μ₀`,
-  `i₀ᵖ`), never ASCII glued on (`mu0`, `gamma1`, `ip0`).
+  `i₀ᵖ`), never ASCII glued on (`mu0`, `gamma1`, `ip0`). Qualifiers are
+  whole words too: `inverse_denominator`, `longwave_up`, `flux_down`, never
+  `inv_denominator`, `lw_up`, `flux_dn`.
 * English names are whole snake_case words: `optical_depth`,
   `transmittance`, `source_up`, `water_path`, `effective_radius`,
   `cloud_fraction`, `gpoint`, `longwave_…`, `shortwave_…`.
@@ -28,6 +30,8 @@ of either:
 | Asymmetry factor | `g`, `g_cloud`, `gˡ`, `gⁱ` | `scattering_asymmetry`, `asymmetry_factor` | `asym` |
 | Mass-extinction coefficient | `κ`, `κˡ`, `κⁱ` | `mass_extinction_coefficient` | `ext`, `mass_ext`, `kappa` |
 | Reflectance, transmittance | — | `reflectance`, `transmittance`, `direct_reflectance`, `direct_transmittance`, `direct_diffuse_transmittance` | `tr`, `ref_dir`, `trans_dir_diff` |
+| Flux direction | — | `up`, `down` (`flux_down`, `direct_down`, `longwave_down`) | `dn` |
+| Adding-method denominator | — | `denominator`, `inverse_denominator` (when the inverse is stored) | `denom`, `inv_denominator`, `reftrans_factor` |
 | Layer Planck source (flux units) | `B`, `B_top`, `B_bottom` | `source`, `source_up`, `source_down` | `src`, `s_up` |
 | Mass paths (kg m⁻²) | — | `water_path`, `liquid_path`, `ice_path`, `liquid_water_path`, `ice_water_path`, `cloud_water_path` | `wp`, `lwp`, `iwp`, `cwp` |
 | Cloud fraction, in-cloud variability | — | `cloud_fraction`, `fractional_standard_deviation`, `region_fraction` | `cf`, `fsd`, `frac`, `std` |
@@ -39,7 +43,8 @@ of either:
 | Counts (Oceananigans capital-`N` notation) | `Nz` (layers of a column; interfaces are `Nz + 1`) | `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`, `Nlongwave_gpoints`, `Nshortwave_gpoints`, `Nprofiles`, `Nsites`, `Nzenith` | `nlayers`, `N`, `nlev`, `ninterfaces`, `ng`, `nr`, `ncol`, `ngas`, `np`, `nt`, `nwav`, `nsites` |
 | Spectral regions | — | `longwave_…`, `shortwave_…` | `lw_…`, `sw_…` |
 | Surface, top of atmosphere | `Tₛ`, `pₛ` | `surface_…`, `toa_…` (TOA, OLR and RMSE are accepted acronyms) | `sfc`, `surf` |
-| Objects | — | `column` (a `RadiativeTransferColumn`), `diagnostics`, `temperature_tendency`, `geometry`, `constants`, `dataset` | `rtm`, `diag`, `dTdt`, `geom`, `ds` |
+| Objects | — | `column` (a `RadiativeTransferColumn`), `diagnostics`, `temperature_tendency`, `geometry`, `constants`, `dataset`, `variables`, `prognostic`, `radiation` | `rtm`, `diag`, `dTdt`, `geom`, `ds`, `vars`, `prog`, `rad` |
+| Extended column (an extension layer above the table top) | — | `Nz_extended`, `p_extended`, `T_extended` | `_ext` |
 
 Per-g-point, per-layer accessors of the array optics are one English family
 dispatched on the optics type — `optical_depth_at(optics, gpoint, k)`,

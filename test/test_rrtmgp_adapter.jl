@@ -156,17 +156,17 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         canonical.solver.sws.bcs.sfc_alb_diffuse .= 0.1
         RRTMGP.update_lw_fluxes!(canonical.solver)
         RRTMGP.update_sw_fluxes!(canonical.solver)
-        canonical_lw_up = RRTMGP.lw_flux_up(canonical.solver)
-        canonical_lw_dn = RRTMGP.lw_flux_dn(canonical.solver)
-        canonical_sw_up = RRTMGP.sw_flux_up(canonical.solver)
-        canonical_sw_dn = RRTMGP.sw_flux_dn(canonical.solver)
+        canonical_longwave_up = RRTMGP.lw_flux_up(canonical.solver)
+        canonical_longwave_down = RRTMGP.lw_flux_dn(canonical.solver)
+        canonical_shortwave_up = RRTMGP.sw_flux_up(canonical.solver)
+        canonical_shortwave_down = RRTMGP.sw_flux_dn(canonical.solver)
 
         for k in 1:(Nz + 1)
             k_reversed = Nz + 2 - k
-            @test adapter_fluxes.longwave_up[k] ≈ canonical_lw_up[k_reversed, 1] rtol = 1e-10
-            @test adapter_fluxes.longwave_down[k] ≈ canonical_lw_dn[k_reversed, 1] rtol = 1e-10
-            @test adapter_fluxes.shortwave_up[k] ≈ canonical_sw_up[k_reversed, 1] rtol = 1e-10
-            @test adapter_fluxes.shortwave_down[k] ≈ canonical_sw_dn[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.longwave_up[k] ≈ canonical_longwave_up[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.longwave_down[k] ≈ canonical_longwave_down[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.shortwave_up[k] ≈ canonical_shortwave_up[k_reversed, 1] rtol = 1e-10
+            @test adapter_fluxes.shortwave_down[k] ≈ canonical_shortwave_down[k_reversed, 1] rtol = 1e-10
         end
     end
 

@@ -64,21 +64,21 @@ end
     return ColumnGrid(geometry.σ_levels_full, geometry.σ_levels_half, geometry.σ_levels_thick)
 end
 
-function SpeedyWeather.parameterization!(ij::Integer, vars,
-                                         rad::SpeedyAnalyticBandLongwave{NF},
+function SpeedyWeather.parameterization!(ij::Integer, variables,
+                                         radiation::SpeedyAnalyticBandLongwave{NF},
                                          model) where NF
-    Nz = size(vars.grid.temperature_prev, 2)
+    Nz = size(variables.grid.temperature_prev, 2)
 
-    T  = @view vars.grid.temperature_prev[ij, :]
-    q  = @view vars.grid.humidity_prev[ij, :]
-    Φ  = @view vars.grid.geopotential[ij, :]
-    pₛ = vars.grid.pressure_prev[ij]
+    T  = @view variables.grid.temperature_prev[ij, :]
+    q  = @view variables.grid.humidity_prev[ij, :]
+    Φ  = @view variables.grid.geopotential[ij, :]
+    pₛ = variables.grid.pressure_prev[ij]
 
-    CO₂ = let prog = vars.prognostic
-        if hasproperty(prog, :greenhouse_gases) && haskey(prog.greenhouse_gases, :co2)
-            NF(prog.greenhouse_gases.co2[])
+    CO₂ = let prognostic = variables.prognostic
+        if hasproperty(prognostic, :greenhouse_gases) && haskey(prognostic.greenhouse_gases, :co2)
+            NF(prognostic.greenhouse_gases.co2[])
         else
-            rad.default_CO₂
+            radiation.default_CO₂
         end
     end
 
@@ -88,21 +88,21 @@ function SpeedyWeather.parameterization!(ij::Integer, vars,
                              
     geometry = speedy_column_geometry(model)
     surface  = SurfaceState{NF}(
-        sea_surface_temperature  = vars.prognostic.ocean.sea_surface_temperature[ij],
-        land_surface_temperature = vars.prognostic.land.soil_temperature[ij, 1],
+        sea_surface_temperature  = variables.prognostic.ocean.sea_surface_temperature[ij],
+        land_surface_temperature = variables.prognostic.land.soil_temperature[ij, 1],
         land_fraction            = model.land_sea_mask.mask[ij],
     )
     constants = speedy_physical_constants(model)
     diagnostics = LongwaveDiagnostics{NF}()
-    temperature_tendency = @view vars.tendencies.grid.temperature[ij, :]
+    temperature_tendency = @view variables.tendencies.grid.temperature[ij, :]
 
-    solve_longwave!(temperature_tendency, diagnostics, rad.scheme, profile, geometry, surface, constants)
+    solve_longwave!(temperature_tendency, diagnostics, radiation.scheme, profile, geometry, surface, constants)
 
-    vars.parameterizations.outgoing_longwave[ij]        = diagnostics.outgoing_longwave
-    vars.parameterizations.surface_longwave_down[ij]    = diagnostics.surface_longwave_down
-    vars.parameterizations.surface_longwave_up[ij]      = diagnostics.surface_longwave_up
-    vars.parameterizations.ocean.surface_longwave_up[ij] = diagnostics.ocean_surface_longwave_up
-    vars.parameterizations.land.surface_longwave_up[ij]  = diagnostics.land_surface_longwave_up
+    variables.parameterizations.outgoing_longwave[ij]        = diagnostics.outgoing_longwave
+    variables.parameterizations.surface_longwave_down[ij]    = diagnostics.surface_longwave_down
+    variables.parameterizations.surface_longwave_up[ij]      = diagnostics.surface_longwave_up
+    variables.parameterizations.ocean.surface_longwave_up[ij] = diagnostics.ocean_surface_longwave_up
+    variables.parameterizations.land.surface_longwave_up[ij]  = diagnostics.land_surface_longwave_up
 
     return nothing
 end

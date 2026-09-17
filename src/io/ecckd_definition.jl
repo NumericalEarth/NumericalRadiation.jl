@@ -419,14 +419,14 @@ function radiation_kind(definition::EcCKDDefinition)
     has_planck = has_named(definition.variables, :planck_function)
     has_solar = has_named(definition.variables, :solar_irradiance) ||
                 has_named(definition.variables, :solar_spectral_irradiance)
-    has_lw = variable_dims(definition, (:lw_absorption, :k_lw, :optical_depth_lw)) !== nothing
-    has_sw = variable_dims(definition, (:sw_absorption, :k_sw, :optical_depth_sw)) !== nothing
+    has_longwave = variable_dims(definition, (:lw_absorption, :k_lw, :optical_depth_lw)) !== nothing
+    has_shortwave = variable_dims(definition, (:sw_absorption, :k_sw, :optical_depth_sw)) !== nothing
 
-    if (has_planck || has_lw) && (has_solar || has_sw)
+    if (has_planck || has_longwave) && (has_solar || has_shortwave)
         return :combined
-    elseif has_planck || has_lw
+    elseif has_planck || has_longwave
         return :longwave
-    elseif has_solar || has_sw
+    elseif has_solar || has_shortwave
         return :shortwave
     else
         return :unknown
@@ -650,19 +650,19 @@ Validate required ecCKD schema metadata. Returns `true` when valid. When
 function validate_ecckd_definition(definition::EcCKDDefinition; throw_on_error::Bool = true)
     errors = String[]
     kind = radiation_kind(definition)
-    require_lw = kind in (:longwave, :combined, :unknown)
-    require_sw = kind in (:shortwave, :combined, :unknown)
+    require_longwave = kind in (:longwave, :combined, :unknown)
+    require_shortwave = kind in (:shortwave, :combined, :unknown)
 
-    require_lw && require_positive!(errors, definition, :lw_bands)
-    require_sw && require_positive!(errors, definition, :sw_bands)
-    require_lw && require_positive!(errors, definition, :lw_gpoints)
-    require_sw && require_positive!(errors, definition, :sw_gpoints)
+    require_longwave && require_positive!(errors, definition, :lw_bands)
+    require_shortwave && require_positive!(errors, definition, :sw_bands)
+    require_longwave && require_positive!(errors, definition, :lw_gpoints)
+    require_shortwave && require_positive!(errors, definition, :sw_gpoints)
     require_positive!(errors, definition, :gas)
     require_positive!(errors, definition, :pressure)
     require_positive!(errors, definition, :temperature)
     if !has_reference_molar_absorption(definition)
-        require_lw && require_variable!(errors, definition, (:lw_absorption, :k_lw, :optical_depth_lw), "longwave absorption")
-        require_sw && require_variable!(errors, definition, (:sw_absorption, :k_sw, :optical_depth_sw), "shortwave absorption")
+        require_longwave && require_variable!(errors, definition, (:lw_absorption, :k_lw, :optical_depth_lw), "longwave absorption")
+        require_shortwave && require_variable!(errors, definition, (:sw_absorption, :k_sw, :optical_depth_sw), "shortwave absorption")
     end
 
     gas_names = attribute(definition, (:gas_names, :gases), String[])

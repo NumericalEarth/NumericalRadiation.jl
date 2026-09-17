@@ -227,8 +227,8 @@ end
     thin_fraction = cloud_fraction * lower_cloud_fraction
     thick_fraction = max(cloud_fraction - thin_fraction, zero(FT))
 
-    min_gamma_scaling = FT(0.025)
-    thin_scaling = min_gamma_scaling + (one(FT) - min_gamma_scaling) *
+    minimum_gamma_scaling = FT(0.025)
+    thin_scaling = minimum_gamma_scaling + (one(FT) - minimum_gamma_scaling) *
         exp(-fractional_standard_deviation * (one(FT) + FT(0.5) * fractional_standard_deviation * (one(FT) + FT(0.5) * fractional_standard_deviation)))
     thick_scaling = thick_fraction <= sqrt(eps(FT)) ? one(FT) :
         max((cloud_fraction - thin_fraction * thin_scaling) / thick_fraction, zero(FT))
@@ -359,29 +359,29 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
         end
     end
 
-    flux_dn = zeros(FT, 3)
-    direct_dn = zeros(FT, 3)
+    flux_down = zeros(FT, 3)
+    direct_down = zeros(FT, 3)
     flux_up = zeros(FT, 3)
     for region in 1:3
-        direct_dn[region] = incoming_normal * region_fraction[region, 1]
-        flux_up[region] = direct_dn[region] * total_albedo_direct[region, 1]
+        direct_down[region] = incoming_normal * region_fraction[region, 1]
+        flux_up[region] = direct_down[region] * total_albedo_direct[region, 1]
     end
     up[1] += sum(flux_up)
-    down[1] += μ₀ * sum(direct_dn)
+    down[1] += μ₀ * sum(direct_down)
 
-    next_flux_dn = zeros(FT, 3)
-    next_direct_dn = zeros(FT, 3)
+    next_flux_down = zeros(FT, 3)
+    next_direct_down = zeros(FT, 3)
     for k in 1:Nz
         for region in 1:3
             inverse_denominator = inv(one(FT) - reflectance[region, k] * total_albedo[region, k + 1])
-            flux_dn[region] = (transmittance[region, k] * flux_dn[region] +
-                               direct_dn[region] * (direct_transmittance[region, k] *
+            flux_down[region] = (transmittance[region, k] * flux_down[region] +
+                               direct_down[region] * (direct_transmittance[region, k] *
                                                     total_albedo_direct[region, k + 1] *
                                                     reflectance[region, k] +
                                                     direct_diffuse_transmittance[region, k])) * inverse_denominator
-            direct_dn[region] = direct_transmittance[region, k] * direct_dn[region]
-            flux_up[region] = direct_dn[region] * total_albedo_direct[region, k + 1] +
-                              flux_dn[region] * total_albedo[region, k + 1]
+            direct_down[region] = direct_transmittance[region, k] * direct_down[region]
+            flux_up[region] = direct_down[region] * total_albedo_direct[region, k + 1] +
+                              flux_down[region] * total_albedo[region, k + 1]
         end
 
         if k < Nz
@@ -389,18 +389,18 @@ function tripleclouds_shortwave_column!(up::AbstractVector{FT},
                 v, matrix_overlap_parameter(solver, optics, k, FT),
                 solver.inhomogeneity_overlap_exponent,
                 region_fraction[:, k], region_fraction[:, k + 1])
-            fill!(next_flux_dn, zero(FT))
-            fill!(next_direct_dn, zero(FT))
+            fill!(next_flux_down, zero(FT))
+            fill!(next_direct_down, zero(FT))
             for upper in 1:3, lower in 1:3
-                next_flux_dn[lower] += v[lower, upper] * flux_dn[upper]
-                next_direct_dn[lower] += v[lower, upper] * direct_dn[upper]
+                next_flux_down[lower] += v[lower, upper] * flux_down[upper]
+                next_direct_down[lower] += v[lower, upper] * direct_down[upper]
             end
-            flux_dn .= next_flux_dn
-            direct_dn .= next_direct_dn
+            flux_down .= next_flux_down
+            direct_down .= next_direct_down
         end
 
         up[k + 1] += sum(flux_up)
-        down[k + 1] += μ₀ * sum(direct_dn) + sum(flux_dn)
+        down[k + 1] += μ₀ * sum(direct_down) + sum(flux_down)
     end
     return nothing
 end
@@ -443,7 +443,7 @@ function adding_shortwave_column!(up::AbstractVector{FT},
     flux_diffuse = Vector{FT}(undef, Nz + 1)
     source = Vector{FT}(undef, Nz + 1)
     stack_albedo = Vector{FT}(undef, Nz + 1)
-    inv_denominator = Vector{FT}(undef, Nz)
+    inverse_denominator = Vector{FT}(undef, Nz)
 
     flux_direct[1] = incoming_normal
     for k in 1:Nz
@@ -454,13 +454,13 @@ function adding_shortwave_column!(up::AbstractVector{FT},
     source[Nz + 1] = surface_albedo_direct * flux_direct[Nz + 1] * μ₀
     for k in Nz:-1:1
         below = stack_albedo[k + 1]
-        inv_denominator[k] = inv(one(FT) - below * reflectance[k])
+        inverse_denominator[k] = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] +
-            transmittance[k] * transmittance[k] * below * inv_denominator[k]
+            transmittance[k] * transmittance[k] * below * inverse_denominator[k]
         source[k] = direct_reflectance[k] * flux_direct[k] +
             transmittance[k] *
             (source[k + 1] + below * direct_diffuse_transmittance[k] * flux_direct[k]) *
-            inv_denominator[k]
+            inverse_denominator[k]
     end
 
     flux_diffuse[1] = zero(FT)
@@ -469,7 +469,7 @@ function adding_shortwave_column!(up::AbstractVector{FT},
     for k in 1:Nz
         flux_diffuse[k + 1] = (transmittance[k] * flux_diffuse[k] +
                                reflectance[k] * source[k + 1] +
-                               direct_diffuse_transmittance[k] * flux_direct[k]) * inv_denominator[k]
+                               direct_diffuse_transmittance[k] * flux_direct[k]) * inverse_denominator[k]
         up[k + 1] += stack_albedo[k + 1] * flux_diffuse[k + 1] + source[k + 1]
         down[k + 1] += flux_diffuse[k + 1] + flux_direct[k + 1] * μ₀
     end
@@ -550,30 +550,30 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
         end
     end
 
-    flux_dn = zeros(FT, 2)
-    direct_dn = zeros(FT, 2)
+    flux_down = zeros(FT, 2)
+    direct_down = zeros(FT, 2)
     flux_up = zeros(FT, 2)
-    direct_dn[1] = incoming_normal * region_fraction[1, 1]
-    direct_dn[2] = incoming_normal * region_fraction[2, 1]
+    direct_down[1] = incoming_normal * region_fraction[1, 1]
+    direct_down[2] = incoming_normal * region_fraction[2, 1]
     for region in 1:2
-        flux_up[region] = direct_dn[region] * total_albedo_direct[region, 1]
+        flux_up[region] = direct_down[region] * total_albedo_direct[region, 1]
     end
     up[1] += sum(flux_up)
-    down[1] += μ₀ * sum(direct_dn)
+    down[1] += μ₀ * sum(direct_down)
 
-    next_flux_dn = zeros(FT, 2)
-    next_direct_dn = zeros(FT, 2)
+    next_flux_down = zeros(FT, 2)
+    next_direct_down = zeros(FT, 2)
     for k in 1:Nz
         for region in 1:2
             inverse_denominator = inv(one(FT) - reflectance[region, k] * total_albedo[region, k + 1])
-            flux_dn[region] = (transmittance[region, k] * flux_dn[region] +
-                               direct_dn[region] * (direct_transmittance[region, k] *
+            flux_down[region] = (transmittance[region, k] * flux_down[region] +
+                               direct_down[region] * (direct_transmittance[region, k] *
                                                     total_albedo_direct[region, k + 1] *
                                                     reflectance[region, k] +
                                                     direct_diffuse_transmittance[region, k])) * inverse_denominator
-            direct_dn[region] = direct_transmittance[region, k] * direct_dn[region]
-            flux_up[region] = direct_dn[region] * total_albedo_direct[region, k + 1] +
-                              flux_dn[region] * total_albedo[region, k + 1]
+            direct_down[region] = direct_transmittance[region, k] * direct_down[region]
+            flux_up[region] = direct_down[region] * total_albedo_direct[region, k + 1] +
+                              flux_down[region] * total_albedo[region, k + 1]
         end
 
         if k < Nz
@@ -582,18 +582,18 @@ function matrix_maximum_shortwave_column!(up::AbstractVector{FT},
                                     region_fraction[1, k], region_fraction[2, k],
                                     region_fraction[1, k + 1],
                                     region_fraction[2, k + 1])
-            fill!(next_flux_dn, zero(FT))
-            fill!(next_direct_dn, zero(FT))
+            fill!(next_flux_down, zero(FT))
+            fill!(next_direct_down, zero(FT))
             for upper in 1:2, lower in 1:2
-                next_flux_dn[lower] += v[lower, upper] * flux_dn[upper]
-                next_direct_dn[lower] += v[lower, upper] * direct_dn[upper]
+                next_flux_down[lower] += v[lower, upper] * flux_down[upper]
+                next_direct_down[lower] += v[lower, upper] * direct_down[upper]
             end
-            flux_dn .= next_flux_dn
-            direct_dn .= next_direct_dn
+            flux_down .= next_flux_down
+            direct_down .= next_direct_down
         end
 
         up[k + 1] += sum(flux_up)
-        down[k + 1] += μ₀ * sum(direct_dn) + sum(flux_dn)
+        down[k + 1] += μ₀ * sum(direct_down) + sum(flux_down)
     end
     return nothing
 end

@@ -452,7 +452,7 @@ gate_records(gates) = [(; name = g.name,
                           flux_bias = g.metrics.flux_bias,
                           heating_rate_rmse = g.metrics.heating_rate_rmse,
                           flux_rmse_threshold = g.thresholds.flux_rmse,
-                          flux_abs_bias_threshold = g.thresholds.flux_absolute_bias,
+                          flux_absolute_bias_threshold = g.thresholds.flux_absolute_bias,
                           heating_rate_rmse_threshold = g.thresholds.heating_rate_rmse,
                           passes = first(gate_passes(g)))
                        for g in gates]

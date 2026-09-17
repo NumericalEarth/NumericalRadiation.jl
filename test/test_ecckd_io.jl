@@ -212,8 +212,8 @@ using NCDatasets
         @test mapping_substring.wavenumber1 == mapping_string.wavenumber1
 
         if paths.shortwave !== nothing && isfile(paths.shortwave)
-            sw_substring = strip(" " * paths.shortwave * " ")
-            model = read_ecckd_tabulated_gas_optics(as_substring, sw_substring)
+            shortwave_substring = strip(" " * paths.shortwave * " ")
+            model = read_ecckd_tabulated_gas_optics(as_substring, shortwave_substring)
             @test model isa EcCKDTabulatedGasOpticsModel
         end
     end
@@ -732,20 +732,20 @@ end
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
-    lw_coeff(gpoint, j, p, t) = 100gpoint + 10j + 0.001p + 0.01t
-    sw_coeff(gpoint, j, p, t) = 10gpoint + j + 0.0001p + 0.001t
+    longwave_coefficient(gpoint, j, p, t) = 100gpoint + 10j + 0.001p + 0.01t
+    shortwave_coefficient(gpoint, j, p, t) = 10gpoint + j + 0.0001p + 0.001t
     interpolated_pressure(p) = let (i₀ᵖ, i₁ᵖ, weight) = NumericalRadiation.pressure_axis_bracket(pressure_grid, p)
         pressure_grid[i₀ᵖ] + weight * (pressure_grid[i₁ᵖ] - pressure_grid[i₀ᵖ])
     end
     @test longwave.optical_depth[1, 1] ≈
-          lw_coeff(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
-          lw_coeff(1, 2, interpolated_pressure(15_000.0), 275.0) * 4.0
+          longwave_coefficient(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
+          longwave_coefficient(1, 2, interpolated_pressure(15_000.0), 275.0) * 4.0
     @test longwave.optical_depth[2, 2] ≈
-          lw_coeff(2, 1, interpolated_pressure(20_000.0), 250.0) * 3.0 +
-          lw_coeff(2, 2, interpolated_pressure(20_000.0), 250.0) * 4.0
+          longwave_coefficient(2, 1, interpolated_pressure(20_000.0), 250.0) * 3.0 +
+          longwave_coefficient(2, 2, interpolated_pressure(20_000.0), 250.0) * 4.0
     @test shortwave.optical_depth[1, 1] ≈
-          sw_coeff(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
-          sw_coeff(1, 2, interpolated_pressure(15_000.0), 275.0) * 4.0
+          shortwave_coefficient(1, 1, interpolated_pressure(15_000.0), 275.0) * 2.0 +
+          shortwave_coefficient(1, 2, interpolated_pressure(15_000.0), 275.0) * 4.0
     @test longwave.weights == [0.4, 0.6]
     @test shortwave.weights == [1.0]
 

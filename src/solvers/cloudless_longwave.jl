@@ -284,7 +284,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
         source_down = zeros(FT, Nz)
         albedo = zeros(FT, Nz + 1)
         source = zeros(FT, Nz + 1)
-        inv_denominator = zeros(FT, Nz)
+        inverse_denominator = zeros(FT, Nz)
 
         for gpoint in 1:number_of_gpoints(optics)
             w = FT(optics.weights[gpoint])
@@ -298,13 +298,13 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
             albedo[Nz + 1] = clamp(surface_longwave_albedo(boundary_conditions, gpoint), zero(FT), one(FT))
             source[Nz + 1] = surface_longwave_up_at(boundary_conditions, gpoint)
             for k in Nz:-1:1
-                inv_denominator[k] = inv(one(FT) - albedo[k + 1] * reflectance[k])
+                inverse_denominator[k] = inv(one(FT) - albedo[k + 1] * reflectance[k])
                 albedo[k] = reflectance[k] +
-                    transmittance[k]^2 * albedo[k + 1] * inv_denominator[k]
+                    transmittance[k]^2 * albedo[k + 1] * inverse_denominator[k]
                 source[k] = source_up[k] +
                     transmittance[k] *
                     (source[k + 1] + albedo[k + 1] * source_down[k]) *
-                    inv_denominator[k]
+                    inverse_denominator[k]
             end
 
             down = boundary_conditions.toa_longwave_down
@@ -313,7 +313,7 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
             for k in 1:Nz
                 down = (transmittance[k] * down +
                         reflectance[k] * source[k + 1] +
-                        source_down[k]) * inv_denominator[k]
+                        source_down[k]) * inverse_denominator[k]
                 up = albedo[k + 1] * down + source[k + 1]
                 fluxes.longwave_down[k + 1] += w * down
                 fluxes.longwave_up[k + 1] += w * up

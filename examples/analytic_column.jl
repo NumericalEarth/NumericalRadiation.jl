@@ -33,9 +33,9 @@ elapsed = @elapsed radiative_heating!(column)
 heating = similar(column.temperature_tendency)
 heating_rates!(heating, column)
 
-surface_lw_net = column.longwave_diagnostics.surface_longwave_down -
+surface_longwave_net = column.longwave_diagnostics.surface_longwave_down -
                  column.longwave_diagnostics.surface_longwave_up
-surface_sw_net = column.shortwave_diagnostics.surface_shortwave_down -
+surface_shortwave_net = column.shortwave_diagnostics.surface_shortwave_down -
                  column.shortwave_diagnostics.surface_shortwave_up
 toa_net = column.shortwave_diagnostics.outgoing_shortwave +
           column.longwave_diagnostics.outgoing_longwave
@@ -45,12 +45,12 @@ column_integrated_heating = sum(heating .* grid.σ_thick) *
                             column.physical_constants.gravity
 toa_down = column.physical_constants.solar_constant * surface.cos_zenith
 top_net_down = toa_down - toa_net
-surface_net_down = surface_lw_net + surface_sw_net
+surface_net_down = surface_longwave_net + surface_shortwave_net
 energy_closure_residual = column_integrated_heating - (top_net_down - surface_net_down)
 
 println("Analytic column metrics")
-println("surface flux LW net: $(round(surface_lw_net, digits = 6)) W m^-2")
-println("surface flux SW net: $(round(surface_sw_net, digits = 6)) W m^-2")
+println("surface flux LW net: $(round(surface_longwave_net, digits = 6)) W m^-2")
+println("surface flux SW net: $(round(surface_shortwave_net, digits = 6)) W m^-2")
 println("TOA flux outgoing: $(round(toa_net, digits = 6)) W m^-2")
 println("column-integrated heating: $(round(column_integrated_heating, digits = 6)) W m^-2")
 println("energy closure residual: $(round(energy_closure_residual, digits = 6)) W m^-2")

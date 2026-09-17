@@ -83,20 +83,20 @@ include(joinpath(@__DIR__, "common.jl"))
 # heating 33 K day⁻¹); the same statistic over the CKDMIP 4–1100 hPa range is
 # 0.063 K day⁻¹.
 const CKDMIP_GATES = (
-    climate_32x32 = (lw_toa_up = (bias = 0.5, rmse = 1.0),
-                     lw_surface_down = (bias = 0.8, rmse = 1.5),
-                     lw_heating_rate_troposphere = 0.10,
-                     lw_heating_rate_stratosphere = 0.5,
-                     sw_toa_up = 1.5,
-                     sw_surface_down = 2.5,
-                     sw_heating_rate_troposphere = 0.10),
-    climate_64x64 = (lw_toa_up = (bias = 0.3, rmse = 0.6),
-                     lw_surface_down = (bias = 0.5, rmse = 1.0),
-                     lw_heating_rate_troposphere = 0.09,
-                     lw_heating_rate_stratosphere = 0.4,
-                     sw_toa_up = 1.0,
-                     sw_surface_down = 1.5,
-                     sw_heating_rate_troposphere = 0.07),
+    climate_32x32 = (longwave_toa_up = (bias = 0.5, rmse = 1.0),
+                     longwave_surface_down = (bias = 0.8, rmse = 1.5),
+                     longwave_heating_rate_troposphere = 0.10,
+                     longwave_heating_rate_stratosphere = 0.5,
+                     shortwave_toa_up = 1.5,
+                     shortwave_surface_down = 2.5,
+                     shortwave_heating_rate_troposphere = 0.10),
+    climate_64x64 = (longwave_toa_up = (bias = 0.3, rmse = 0.6),
+                     longwave_surface_down = (bias = 0.5, rmse = 1.0),
+                     longwave_heating_rate_troposphere = 0.09,
+                     longwave_heating_rate_stratosphere = 0.4,
+                     shortwave_toa_up = 1.0,
+                     shortwave_surface_down = 1.5,
+                     shortwave_heating_rate_troposphere = 0.07),
 )
 
 const CKDMIP_GASES = (:h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
@@ -178,9 +178,9 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     shortwave_up = zeros(Nz + 1, Nzenith, Nprofiles)
     shortwave_down = zeros(Nz + 1, Nzenith, Nprofiles)
     longwave_heating = zeros(Nz, Nprofiles)
-    lw_heating_reference = zeros(Nz, Nprofiles)
+    longwave_heating_reference = zeros(Nz, Nprofiles)
     shortwave_heating = zeros(Nz, Nzenith, Nprofiles)
-    sw_heating_reference = zeros(Nz, Nzenith, Nprofiles)
+    shortwave_heating_reference = zeros(Nz, Nzenith, Nprofiles)
 
     profile_column(i) = benchmark_column(pressure_hl[:, i], temperature_hl[:, i], map(mf -> mf[:, i], mole_fractions);
                                          surface = (; temperature = temperature_hl[end, i], emissivity = 1.0),
@@ -201,59 +201,59 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
         shortwave_up[:, :, i] = fluxes.shortwave_up
         shortwave_down[:, :, i] = fluxes.shortwave_down
         longwave_heating[:, i] = heating_rate_per_day(fluxes.longwave_up, fluxes.longwave_down, atmosphere)
-        lw_heating_reference[:, i] = heating_rate_per_day(longwave.up[:, i], longwave.down[:, i], atmosphere)
+        longwave_heating_reference[:, i] = heating_rate_per_day(longwave.up[:, i], longwave.down[:, i], atmosphere)
         for j in 1:Nzenith
             shortwave_heating[:, j, i] = heating_rate_per_day(fluxes.shortwave_up[:, j], fluxes.shortwave_down[:, j], atmosphere)
-            sw_heating_reference[:, j, i] = heating_rate_per_day(shortwave.up[:, j, i], shortwave.down[:, j, i], atmosphere)
+            shortwave_heating_reference[:, j, i] = heating_rate_per_day(shortwave.up[:, j, i], shortwave.down[:, j, i], atmosphere)
         end
     end
 
     # Shortwave statistics pool profiles and zenith angles; the pressure
     # interfaces are replicated per zenith angle for the weighted heating-rate
     # RMSE. The surface-downwelling gate excludes μ₀ < 0.3.
-    pressure_sw = repeat(pressure_hl, inner = (1, Nzenith))
+    pressure_shortwave = repeat(pressure_hl, inner = (1, Nzenith))
     flat(x) = reshape(x, size(x, 1), :)
     high_sun = findall(>=(0.3), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
 
     statistics = (;
-        lw_toa_up = (bias = bias(longwave_up[1, :], longwave.up[1, :]), rmse = rmse(longwave_up[1, :], longwave.up[1, :])),
-        lw_surface_down = (bias = bias(longwave_down[end, :], longwave.down[end, :]), rmse = rmse(longwave_down[end, :], longwave.down[end, :])),
-        lw_profile_rmse = (up = rmse(longwave_up, longwave.up), down = rmse(longwave_down, longwave.down)),
-        lw_heating_rate = heating_ranges(pressure_hl, longwave_heating, lw_heating_reference),
-        sw_toa_up = (bias = bias(shortwave_up[1, :, :], shortwave.up[1, :, :]), rmse = rmse(shortwave_up[1, :, :], shortwave.up[1, :, :])),
-        sw_surface_down = (bias = bias(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
+        longwave_toa_up = (bias = bias(longwave_up[1, :], longwave.up[1, :]), rmse = rmse(longwave_up[1, :], longwave.up[1, :])),
+        longwave_surface_down = (bias = bias(longwave_down[end, :], longwave.down[end, :]), rmse = rmse(longwave_down[end, :], longwave.down[end, :])),
+        longwave_profile_rmse = (up = rmse(longwave_up, longwave.up), down = rmse(longwave_down, longwave.down)),
+        longwave_heating_rate = heating_ranges(pressure_hl, longwave_heating, longwave_heating_reference),
+        shortwave_toa_up = (bias = bias(shortwave_up[1, :, :], shortwave.up[1, :, :]), rmse = rmse(shortwave_up[1, :, :], shortwave.up[1, :, :])),
+        shortwave_surface_down = (bias = bias(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
                            rmse = rmse(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
                            rmse_all_zenith_angles = rmse(shortwave_down[end, :, :], shortwave.down[end, :, :])),
-        sw_profile_rmse = (up = rmse(shortwave_up, shortwave.up), down = rmse(shortwave_down, shortwave.down)),
-        sw_heating_rate = heating_ranges(pressure_sw, flat(shortwave_heating), flat(sw_heating_reference)),
-        sw_by_zenith_angle = [(; mu0 = μ₀[j],
+        shortwave_profile_rmse = (up = rmse(shortwave_up, shortwave.up), down = rmse(shortwave_down, shortwave.down)),
+        shortwave_heating_rate = heating_ranges(pressure_shortwave, flat(shortwave_heating), flat(shortwave_heating_reference)),
+        shortwave_by_zenith_angle = [(; mu0 = μ₀[j],
                                  toa_up_rmse = rmse(shortwave_up[1, j, :], shortwave.up[1, j, :]),
                                  surface_down_rmse = rmse(shortwave_down[end, j, :], shortwave.down[end, j, :]),
                                  heating_rate_troposphere_rmse = weighted_heating_rate_rmse(
-                                     pressure_hl, shortwave_heating[:, j, :], sw_heating_reference[:, j, :],
+                                     pressure_hl, shortwave_heating[:, j, :], shortwave_heating_reference[:, j, :],
                                      HEATING_RATE_RANGES.troposphere))
                               for j in 1:Nzenith],
     )
 
     gates_for = getproperty(CKDMIP_GATES, Symbol(model_name))
     gates = [
-        flux_gate("LW TOA up"; statistics.lw_toa_up...,
-                  rmse_threshold = gates_for.lw_toa_up.rmse, bias_threshold = gates_for.lw_toa_up.bias),
-        flux_gate("LW surface down"; statistics.lw_surface_down...,
-                  rmse_threshold = gates_for.lw_surface_down.rmse, bias_threshold = gates_for.lw_surface_down.bias),
+        flux_gate("LW TOA up"; statistics.longwave_toa_up...,
+                  rmse_threshold = gates_for.longwave_toa_up.rmse, bias_threshold = gates_for.longwave_toa_up.bias),
+        flux_gate("LW surface down"; statistics.longwave_surface_down...,
+                  rmse_threshold = gates_for.longwave_surface_down.rmse, bias_threshold = gates_for.longwave_surface_down.bias),
         heating_rate_gate("LW heating rate, p > 100 hPa";
-                          rmse = statistics.lw_heating_rate.troposphere,
-                          rmse_threshold = gates_for.lw_heating_rate_troposphere),
+                          rmse = statistics.longwave_heating_rate.troposphere,
+                          rmse_threshold = gates_for.longwave_heating_rate_troposphere),
         heating_rate_gate("LW heating rate, 4 Pa < p ≤ 100 hPa";
-                          rmse = statistics.lw_heating_rate.stratosphere,
-                          rmse_threshold = gates_for.lw_heating_rate_stratosphere),
-        flux_gate("SW TOA up, all μ₀"; rmse = statistics.sw_toa_up.rmse, rmse_threshold = gates_for.sw_toa_up),
-        flux_gate("SW surface down, μ₀ ≥ 0.3"; rmse = statistics.sw_surface_down.rmse,
-                  rmse_threshold = gates_for.sw_surface_down),
+                          rmse = statistics.longwave_heating_rate.stratosphere,
+                          rmse_threshold = gates_for.longwave_heating_rate_stratosphere),
+        flux_gate("SW TOA up, all μ₀"; rmse = statistics.shortwave_toa_up.rmse, rmse_threshold = gates_for.shortwave_toa_up),
+        flux_gate("SW surface down, μ₀ ≥ 0.3"; rmse = statistics.shortwave_surface_down.rmse,
+                  rmse_threshold = gates_for.shortwave_surface_down),
         heating_rate_gate("SW heating rate, p > 100 hPa";
-                          rmse = statistics.sw_heating_rate.troposphere,
-                          rmse_threshold = gates_for.sw_heating_rate_troposphere),
+                          rmse = statistics.shortwave_heating_rate.troposphere,
+                          rmse_threshold = gates_for.shortwave_heating_rate_troposphere),
     ]
 
     return (; model_name = String(model_name),
@@ -296,26 +296,26 @@ function ckdmip_markdown(results, benchmark, paths)
         push!(lines, markdown_row(("Quantity", "Value")))
         push!(lines, markdown_row(("---", "---")))
         push!(lines, markdown_row(("LW heating rate RMSE 0.02–4 hPa / 4–1100 hPa",
-                                   @sprintf("%.4f / %.4f K day⁻¹", s.lw_heating_rate.ckdmip_upper, s.lw_heating_rate.ckdmip_lower))))
+                                   @sprintf("%.4f / %.4f K day⁻¹", s.longwave_heating_rate.ckdmip_upper, s.longwave_heating_rate.ckdmip_lower))))
         push!(lines, markdown_row(("SW heating rate RMSE 0.02–4 hPa / 4–1100 hPa",
-                                   @sprintf("%.4f / %.4f K day⁻¹", s.sw_heating_rate.ckdmip_upper, s.sw_heating_rate.ckdmip_lower))))
+                                   @sprintf("%.4f / %.4f K day⁻¹", s.shortwave_heating_rate.ckdmip_upper, s.shortwave_heating_rate.ckdmip_lower))))
         push!(lines, markdown_row(("SW heating rate RMSE 4 Pa < p ≤ 100 hPa",
-                                   @sprintf("%.4f K day⁻¹", s.sw_heating_rate.stratosphere))))
-        push!(lines, markdown_row(("LW profile RMSE up / down", @sprintf("%.3f / %.3f W m⁻²", s.lw_profile_rmse.up, s.lw_profile_rmse.down))))
-        push!(lines, markdown_row(("SW profile RMSE up / down", @sprintf("%.3f / %.3f W m⁻²", s.sw_profile_rmse.up, s.sw_profile_rmse.down))))
-        push!(lines, markdown_row(("SW TOA up bias", @sprintf("%+.3f W m⁻²", s.sw_toa_up.bias))))
+                                   @sprintf("%.4f K day⁻¹", s.shortwave_heating_rate.stratosphere))))
+        push!(lines, markdown_row(("LW profile RMSE up / down", @sprintf("%.3f / %.3f W m⁻²", s.longwave_profile_rmse.up, s.longwave_profile_rmse.down))))
+        push!(lines, markdown_row(("SW profile RMSE up / down", @sprintf("%.3f / %.3f W m⁻²", s.shortwave_profile_rmse.up, s.shortwave_profile_rmse.down))))
+        push!(lines, markdown_row(("SW TOA up bias", @sprintf("%+.3f W m⁻²", s.shortwave_toa_up.bias))))
         push!(lines, markdown_row(("SW surface down bias (μ₀ ≥ 0.3) / RMSE (all μ₀)",
-                                   @sprintf("%+.3f / %.3f W m⁻²", s.sw_surface_down.bias, s.sw_surface_down.rmse_all_zenith_angles))))
+                                   @sprintf("%+.3f / %.3f W m⁻²", s.shortwave_surface_down.bias, s.shortwave_surface_down.rmse_all_zenith_angles))))
         m = r.moist_convention_statistics
-        push!(lines, markdown_row(("Moist convention: LW TOA up bias / RMSE", @sprintf("%+.3f / %.3f W m⁻²", m.lw_toa_up.bias, m.lw_toa_up.rmse))))
-        push!(lines, markdown_row(("Moist convention: LW surface down bias / RMSE", @sprintf("%+.3f / %.3f W m⁻²", m.lw_surface_down.bias, m.lw_surface_down.rmse))))
-        push!(lines, markdown_row(("Moist convention: LW heating rate RMSE p > 100 hPa", @sprintf("%.4f K day⁻¹", m.lw_heating_rate.troposphere))))
+        push!(lines, markdown_row(("Moist convention: LW TOA up bias / RMSE", @sprintf("%+.3f / %.3f W m⁻²", m.longwave_toa_up.bias, m.longwave_toa_up.rmse))))
+        push!(lines, markdown_row(("Moist convention: LW surface down bias / RMSE", @sprintf("%+.3f / %.3f W m⁻²", m.longwave_surface_down.bias, m.longwave_surface_down.rmse))))
+        push!(lines, markdown_row(("Moist convention: LW heating rate RMSE p > 100 hPa", @sprintf("%.4f K day⁻¹", m.longwave_heating_rate.troposphere))))
         push!(lines, markdown_row(("Moist convention: SW TOA up RMSE / surface down RMSE (μ₀ ≥ 0.3)",
-                                   @sprintf("%.3f / %.3f W m⁻²", m.sw_toa_up.rmse, m.sw_surface_down.rmse))))
+                                   @sprintf("%.3f / %.3f W m⁻²", m.shortwave_toa_up.rmse, m.shortwave_surface_down.rmse))))
         push!(lines, "")
         push!(lines, markdown_row(("μ₀", "SW TOA up RMSE", "SW surface down RMSE", "SW heating rate RMSE p > 100 hPa")))
         push!(lines, markdown_row(("---", "---", "---", "---")))
-        for z in s.sw_by_zenith_angle
+        for z in s.shortwave_by_zenith_angle
             push!(lines, markdown_row((string(z.mu0), @sprintf("%.3f", z.toa_up_rmse),
                                        @sprintf("%.3f", z.surface_down_rmse), @sprintf("%.4f", z.heating_rate_troposphere_rmse))))
         end

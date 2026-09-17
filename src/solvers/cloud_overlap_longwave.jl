@@ -193,17 +193,17 @@ function adding_longwave_column!(up::AbstractVector{FT},
 
     albedo = Vector{FT}(undef, Nz + 1)
     source = Vector{FT}(undef, Nz + 1)
-    inv_denominator = Vector{FT}(undef, Nz)
+    inverse_denominator = Vector{FT}(undef, Nz)
     albedo[Nz + 1] = clamp(FT(surface_albedo), zero(FT), one(FT))
     source[Nz + 1] = FT(surface_up)
     for k in Nz:-1:1
-        inv_denominator[k] = inv(one(FT) - albedo[k + 1] * reflectance[k])
+        inverse_denominator[k] = inv(one(FT) - albedo[k + 1] * reflectance[k])
         albedo[k] = reflectance[k] +
-            transmittance[k]^2 * albedo[k + 1] * inv_denominator[k]
+            transmittance[k]^2 * albedo[k + 1] * inverse_denominator[k]
         source[k] = source_up[k] +
             transmittance[k] *
             (source[k + 1] + albedo[k + 1] * source_down[k]) *
-            inv_denominator[k]
+            inverse_denominator[k]
     end
 
     diffuse_down = FT(toa_down)
@@ -212,7 +212,7 @@ function adding_longwave_column!(up::AbstractVector{FT},
     for k in 1:Nz
         diffuse_down = (transmittance[k] * diffuse_down +
                         reflectance[k] * source[k + 1] +
-                        source_down[k]) * inv_denominator[k]
+                        source_down[k]) * inverse_denominator[k]
         down[k + 1] += diffuse_down
         up[k + 1] += albedo[k + 1] * diffuse_down + source[k + 1]
     end

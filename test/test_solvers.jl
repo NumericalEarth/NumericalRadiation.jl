@@ -206,7 +206,7 @@ using NumericalRadiation
 using Dates
 
 # --- begin content of test_shortwave.jl ---
-function _test_sw_column(::Type{NF}, Nz; q = 0.005) where NF
+function _test_shortwave_column(::Type{NF}, Nz; q = 0.005) where NF
     σ_half = collect(NF.(range(0, 1, length = Nz + 1)))
     geometry   = ColumnGrid(σ_half)
     T      = NF.(collect(220 .+ 9 .* (0:(Nz - 1))))
@@ -220,7 +220,7 @@ end
 @testset "TransparentShortwave: surface energy budget" begin
     NF = Float32
     Nz = 4
-    profile, geometry = _test_sw_column(NF, Nz)
+    profile, geometry = _test_shortwave_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                land_surface_temperature = NF(NaN),
                                land_fraction = NF(0),
@@ -241,7 +241,7 @@ end
 @testset "OneBandGreyShortwave: absorption in the atmosphere" begin
     NF = Float32
     Nz = 8
-    profile, geometry = _test_sw_column(NF, Nz)
+    profile, geometry = _test_shortwave_column(NF, Nz)
     surface = SurfaceState{NF}(sea_surface_temperature = NF(295),
                                land_surface_temperature = NF(NaN),
                                land_fraction = NF(0),
@@ -267,7 +267,7 @@ end
 @testset "OneBandShortwave (full SPEEDY): runs with diagnostic clouds" begin
     NF = Float32
     Nz = 8
-    profile, geometry = _test_sw_column(NF, Nz; q = 0.01)
+    profile, geometry = _test_shortwave_column(NF, Nz; q = 0.01)
     profile = AtmosphereProfile(temperature = profile.temperature,
                                 humidity = profile.humidity,
                                 geopotential = profile.geopotential,
@@ -1652,7 +1652,7 @@ end
         dataset.attrib["particle_type"] = "cloud-ice"
         wavenumber = defVar(dataset, "wavenumber", Float64, ("wavenumber",))
         radius = defVar(dataset, "effective_radius", Float64, ("effective_radius",))
-        mass_ext = defVar(dataset, "mass_extinction_coefficient", Float64,
+        mass_extinction = defVar(dataset, "mass_extinction_coefficient", Float64,
                           ("wavenumber", "effective_radius"))
         ω = defVar(dataset, "single_scattering_albedo", Float64,
                    ("wavenumber", "effective_radius"))
@@ -1660,7 +1660,7 @@ end
                            ("wavenumber", "effective_radius"))
         wavenumber[:] = [100.0, 200.0]
         radius[:] = [1.0e-6, 2.0e-6, 3.0e-6]
-        mass_ext[:, :] = [10.0 20.0 30.0; 40.0 50.0 60.0]
+        mass_extinction[:, :] = [10.0 20.0 30.0; 40.0 50.0 60.0]
         ω[:, :] = fill(0.9, 2, 3)
         asymmetry[:, :] = fill(0.7, 2, 3)
     end
@@ -1679,12 +1679,12 @@ end
     NCDataset(path, "c") do dataset
         defDim(dataset, "wavenumber", 2)
         defDim(dataset, "g_point", 3)
-        w1 = defVar(dataset, "wavenumber1", Float64, ("wavenumber",))
+        wavenumber1 = defVar(dataset, "wavenumber1", Float64, ("wavenumber",))
         w2 = defVar(dataset, "wavenumber2", Float64, ("wavenumber",))
-        frac = defVar(dataset, "gpoint_fraction", Float64, ("wavenumber", "g_point"))
-        w1[:] = [100.0, 200.0]
+        gpoint_fraction = defVar(dataset, "gpoint_fraction", Float64, ("wavenumber", "g_point"))
+        wavenumber1[:] = [100.0, 200.0]
         w2[:] = [150.0, 250.0]
-        frac[:, :] = [1.0 0.0 0.0; 0.0 0.25 0.75]
+        gpoint_fraction[:, :] = [1.0 0.0 0.0; 0.0 0.25 0.75]
     end
 
     mapping = read_ecckd_spectral_mapping(path)
@@ -1719,12 +1719,12 @@ end
         @test all(-1 .<= liquid.asymmetry_factor .<= 1)
         @test all(-1 .<= ice.asymmetry_factor .<= 1)
 
-        sw_mapping = read_ecckd_spectral_mapping(
+        shortwave_mapping = read_ecckd_spectral_mapping(
             reference_ecckd_definition_path("ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"))
-        liquid_gpoints = cloud_scattering_gpoint_properties(liquid, sw_mapping, 10.0e-6)
-        ice_gpoints = cloud_scattering_gpoint_properties(ice, sw_mapping, 30.0e-6)
+        liquid_gpoints = cloud_scattering_gpoint_properties(liquid, shortwave_mapping, 10.0e-6)
+        ice_gpoints = cloud_scattering_gpoint_properties(ice, shortwave_mapping, 30.0e-6)
         liquid_ecrad_gpoints = cloud_scattering_gpoint_properties(
-            liquid, sw_mapping, 10.0e-6;
+            liquid, shortwave_mapping, 10.0e-6;
             mapping_method = :ecrad,
             delta_eddington_average = true,
         )

@@ -113,14 +113,14 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     @inbounds source[Nz + 1] = FT(direct_albedo) * direct_surface * μ₀
     @inbounds for k in Nz:-1:1
         below = stack_albedo[k + 1]
-        inv_denominator = inv(one(FT) - below * reflectance[k])
+        inverse_denominator = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] +
-            transmittance[k] * transmittance[k] * below * inv_denominator
+            transmittance[k] * transmittance[k] * below * inverse_denominator
         direct_above = ifelse(k == 1, incoming_normal, direct_flux[max(k - 1, 1)])
         source[k] = direct_reflectance[k] * direct_above +
             transmittance[k] *
             (source[k + 1] + below * direct_diffuse_transmittance[k] * direct_above) *
-            inv_denominator
+            inverse_denominator
     end
 
     # Top down: downward diffuse flux through the stack, then the interface
@@ -131,11 +131,11 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
     direct_above = incoming_normal
     @inbounds for k in 1:Nz
         below = stack_albedo[k + 1]
-        inv_denominator = inv(one(FT) - below * reflectance[k])
+        inverse_denominator = inv(one(FT) - below * reflectance[k])
         direct_below = direct_flux[k]
         flux_diffuse = (transmittance[k] * flux_diffuse +
                         reflectance[k] * source[k + 1] +
-                        direct_diffuse_transmittance[k] * direct_above) * inv_denominator
+                        direct_diffuse_transmittance[k] * direct_above) * inverse_denominator
         flux_up[k + 1] += w * (below * flux_diffuse + source[k + 1])
         flux_down[k + 1] += w * (flux_diffuse + direct_below * μ₀)
         direct_above = direct_below

@@ -80,24 +80,24 @@ function assert_scalar_matches_array(model, atmosphere; interface_sources)
     FT = eltype(model)
     Nz = length(atmosphere.temperature_layers)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    array_lw, array_sw = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
-    scalar_lw, scalar_sw = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
-    optical_properties!(array_lw, array_sw, model, atmosphere)
-    scalar_optical_properties!(scalar_lw, scalar_sw, model, atmosphere)
+    array_longwave, array_shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
+    scalar_longwave, scalar_shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources)
+    optical_properties!(array_longwave, array_shortwave, model, atmosphere)
+    scalar_optical_properties!(scalar_longwave, scalar_shortwave, model, atmosphere)
 
-    @test all(isfinite, array_lw.optical_depth)
-    @test !all(iszero, array_lw.optical_depth)
-    @test scalar_lw.optical_depth == array_lw.optical_depth
-    @test scalar_lw.source == array_lw.source
+    @test all(isfinite, array_longwave.optical_depth)
+    @test !all(iszero, array_longwave.optical_depth)
+    @test scalar_longwave.optical_depth == array_longwave.optical_depth
+    @test scalar_longwave.source == array_longwave.source
     if interface_sources
-        @test scalar_lw.source_top == array_lw.source_top
-        @test scalar_lw.source_bottom == array_lw.source_bottom
+        @test scalar_longwave.source_top == array_longwave.source_top
+        @test scalar_longwave.source_bottom == array_longwave.source_bottom
     end
-    @test scalar_sw.optical_depth == array_sw.optical_depth
-    @test scalar_sw.rayleigh_optical_depth == array_sw.rayleigh_optical_depth
-    @test scalar_sw.scattering_asymmetry == array_sw.scattering_asymmetry
-    @test scalar_lw.weights == array_lw.weights
-    @test scalar_sw.weights == array_sw.weights
+    @test scalar_shortwave.optical_depth == array_shortwave.optical_depth
+    @test scalar_shortwave.rayleigh_optical_depth == array_shortwave.rayleigh_optical_depth
+    @test scalar_shortwave.scattering_asymmetry == array_shortwave.scattering_asymmetry
+    @test scalar_longwave.weights == array_longwave.weights
+    @test scalar_shortwave.weights == array_shortwave.weights
     return nothing
 end
 
@@ -1081,7 +1081,7 @@ function shortwave_fixture(FT)
 end
 
 # The adding algorithm of `ecrad_shortwave_column!` before it became a wrapper
-# over the streaming solver (per-layer temporaries, `inv_denominator` stored),
+# over the streaming solver (per-layer temporaries, `inverse_denominator` stored),
 # kept as the reference the refactor must reproduce bitwise.
 function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{FT}, layer_optics, gpoint,
                                   μ₀, incoming_horizontal, surface_albedo, surface_albedo_direct,
@@ -1106,7 +1106,7 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     flux_diffuse = Vector{FT}(undef, Nz + 1)
     source = Vector{FT}(undef, Nz + 1)
     stack_albedo = Vector{FT}(undef, Nz + 1)
-    inv_denominator = Vector{FT}(undef, Nz)
+    inverse_denominator = Vector{FT}(undef, Nz)
     flux_direct[1] = incoming_normal
     for k in 1:Nz
         flux_direct[k + 1] = flux_direct[k] * direct_transmittance[k]
@@ -1115,13 +1115,13 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     source[Nz + 1] = surface_albedo_direct * flux_direct[Nz + 1] * μ₀
     for k in Nz:-1:1
         below = stack_albedo[k + 1]
-        inv_denominator[k] = inv(one(FT) - below * reflectance[k])
+        inverse_denominator[k] = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] +
-            transmittance[k] * transmittance[k] * below * inv_denominator[k]
+            transmittance[k] * transmittance[k] * below * inverse_denominator[k]
         source[k] = direct_reflectance[k] * flux_direct[k] +
             transmittance[k] *
             (source[k + 1] + below * direct_diffuse_transmittance[k] * flux_direct[k]) *
-            inv_denominator[k]
+            inverse_denominator[k]
     end
     flux_diffuse[1] = zero(FT)
     up[1] += source[1]
@@ -1129,7 +1129,7 @@ function reference_adding_column!(up::AbstractVector{FT}, down::AbstractVector{F
     for k in 1:Nz
         flux_diffuse[k + 1] = (transmittance[k] * flux_diffuse[k] +
                                reflectance[k] * source[k + 1] +
-                               direct_diffuse_transmittance[k] * flux_direct[k]) * inv_denominator[k]
+                               direct_diffuse_transmittance[k] * flux_direct[k]) * inverse_denominator[k]
         up[k + 1] += stack_albedo[k + 1] * flux_diffuse[k + 1] + source[k + 1]
         down[k + 1] += flux_diffuse[k + 1] + flux_direct[k + 1] * μ₀
     end
