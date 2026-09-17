@@ -2,17 +2,9 @@
 ##### Streaming no-scattering longwave solver
 #####
 #
-# The per-column, per-g-point core of the no-scattering longwave path of
-# `radiative_fluxes!(…, CloudlessLongwave(), …)`, written so that a host
-# kernel can run it with scalar layer optics: the caller supplies a functor
-# `layer_optics(g, k) -> (τ, Bₖ, Bₖ₊₁)` and an indexable per-g surface
-# source, and the solver streams over g points accumulating weighted broadband
-# fluxes into caller-owned interface arrays. The array solver in
-# `cloudless_longwave.jl` calls this function one g point at a time, so the
-# two paths agree bit for bit.
-#
-# Device-path rules: everything here is `@inline`, allocation-free, never
-# throws, and takes `FT` from the flux arrays.
+# No-scattering longwave fluxes of one column from a functor
+# `layer_optics(g, k) -> (τ, Bₖ, Bₖ₊₁)` and an indexable per-g surface source,
+# streamed over g points into caller-owned interface flux arrays.
 
 """
 $(TYPEDEF)
@@ -20,14 +12,11 @@ $(TYPEDEF)
 Per-g-point surface longwave source of an ecCKD gas-optics model at one
 surface `temperature`, with the surface `emissivity` folded in:
 `e[g] = ε B(Tˢ)`, where `B` is the model's [`longwave_source`](@ref) at
-that g point in its per-unit-weight flux convention. The Planck source-table bracket is
-taken once at construction, so indexing is one table interpolation per
-g point, and construction inside a kernel is allocation-free.
-
-It is an `AbstractVector`, so it can be passed directly as
-`surface_longwave_up` in [`LongwaveBoundaryConditions`](@ref) or as the
-`surface_emission` of [`streaming_longwave_fluxes!`](@ref);
-[`surface_longwave_emission`](@ref) is its `collect`.
+that g point in its per-unit-weight flux convention. The Planck source-table
+bracket is taken once at construction, so indexing is one table interpolation
+per g point. An `AbstractVector`, it serves as `surface_longwave_up` of a
+[`LongwaveBoundaryConditions`](@ref) or as the `surface_emission` of
+[`streaming_longwave_fluxes!`](@ref).
 """
 struct TabulatedSurfaceEmission{FT, M, B} <: AbstractVector{FT}
     model :: M
@@ -63,10 +52,8 @@ $(TYPEDSIGNATURES)
 
 Per-g-point surface longwave emission of `model` at the surface `temperature`,
 scaled by `emissivity`, in the same per-unit-weight flux convention as the
-model's Planck source tables, as a host `Vector`. Pass the result as
-`surface_longwave_up` in [`LongwaveBoundaryConditions`](@ref). It is the
-`collect` of a [`TabulatedSurfaceEmission`](@ref), which device code
-indexes lazily instead.
+model's Planck source tables, as a host `Vector` for `surface_longwave_up`
+in [`LongwaveBoundaryConditions`](@ref).
 
 For multi-g spectral models a scalar ``σT⁴`` boundary is a gray
 approximation: it does not reproduce the model's tabulated Planck spectrum

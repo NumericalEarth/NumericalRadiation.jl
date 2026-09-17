@@ -51,9 +51,11 @@ The streaming functions share the package conventions of the array path:
   ([`read_reference_ecckd_gas_optics`](@ref)`(Float32, "32x32")`, or
   `Adapt.adapt(Array{Float32}, model)`) produces `Float32` stencils, optical
   depths and sources, and the solvers take `FT` from the flux arrays.
-- **Device rules.** Every function on this page is `@inline`, allocation-free,
-  never throws, branches on model structure (empty tables, `Nothing` phases)
-  but not on data, and uses `ifelse` rather than data-dependent control flow.
+- **Device rules.** Every function on this page is `@inline`, allocation-free
+  and never throws. Branches are on model structure (empty tables, `Nothing`
+  phases) or on scalar layer values where the numerics require them — the
+  bisection that brackets a temperature on a table axis and the thin-layer
+  limit of the longwave layer sources — never on array shapes or host state.
   Scratch storage is caller-owned, so a kernel hands in views of its own
   device arrays.
 

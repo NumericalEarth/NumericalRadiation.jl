@@ -2,16 +2,9 @@
 ##### Scalar per-layer gas optics
 #####
 #
-# Everything in this file is the per-layer, per-g-point core of the ecCKD
-# forward models, written so that a host kernel can call it with scalar layer
-# state: an interpolation stencil built once per layer, then one optical depth
-# per g point from a `NamedTuple` of scalar layer gas amounts (mol m⁻²). The
-# array methods of `optical_properties!` in `ecckd_forward.jl` are loops over
-# these functions, so the two paths agree bit for bit.
-#
-# Device-path rules: every function here is `@inline`, allocation-free, never
-# throws, branches on model structure (empty tables, `Nothing` brackets) but
-# not on data, and threads `FT` from the model type.
+# Gas optics of one layer and one g point from scalar layer state: an
+# interpolation stencil built once per layer, then one optical depth per g
+# point from a `NamedTuple` of scalar layer gas amounts (mol m⁻²).
 
 """
 $(TYPEDEF)
@@ -86,14 +79,9 @@ $(TYPEDSIGNATURES)
 
 Molar amount of air (mol m⁻²) in a layer of pressure thickness `Δp` (Pa) under
 hydrostatic balance, `Δp / (g mᵈ)`, with the gravitational acceleration `g`
-and dry-air molar mass `mᵈ` supplied by the caller rather than fixed here, so
-a host's own constants propagate (a [`PhysicalConstants`](@ref) carries both
-as `gravity` and `dry_air_molar_mass`). The array
-`optical_properties!` methods read them from `atmosphere.constants`; a host
-kernel passes the values of its own constants object. Feeds the Rayleigh
-scattering optical depth and the dry-air fallback of the layer H₂O mole
-fraction. The result takes the promoted type of the arguments, so pass them
-in the model's element type.
+and dry-air molar mass `mᵈ` (a [`PhysicalConstants`](@ref) carries both as
+`gravity` and `dry_air_molar_mass`). The result takes the promoted type of
+the arguments.
 """
 @inline hydrostatic_air_moles(Δp, g, mᵈ) = Δp / (g * mᵈ)
 
@@ -121,11 +109,8 @@ when the model has no H₂O grid or the table is empty.
     return coefficient * FT(water_vapor_moles)
 end
 
-# Shared body of the longwave and shortwave tabulated optical depths: the
-# relative-linear gas sum over the `(Ng, Ngases, Npressures, Ntemperatures)` table, plus the H₂O
-# table, clamped as a total. Relative-linear gases legitimately contribute
-# negative optical depth below their reference mole fraction; only the summed
-# total is clamped, matching upstream run_ckd.
+# Relative-linear gases contribute negative optical depth below their reference
+# mole fraction; only the total is clamped, as in ecCKD's run_ckd.
 @inline function tabulated_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT}, table, water_vapor_table, g,
                                          gases::NamedTuple, stencil::GasOpticsStencil) where FT
     τ = accumulate_tabulated_optical_depth(gases, table, model.gas_reference_mole_fractions,
@@ -212,8 +197,7 @@ Scalar gas amounts of layer `k` as a `NamedTuple` keyed by `Names` (the
 model's gas names), picked from a column gas container whose entries are
 per-layer vectors or column-wide scalars. A `composite` (dry air) entry the
 container carries outside `Names` is kept, since the relative-linear
-convention reads it. This is how the array `optical_properties!` methods feed
-[`longwave_optical_depth`](@ref) and [`shortwave_optical_depth`](@ref).
+convention reads it.
 """
 @generated function layer_gases(gases::NamedTuple{Keys}, ::Val{Names}, k) where {Keys, Names}
     picked = collect(Names)

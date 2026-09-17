@@ -62,8 +62,7 @@ $(TYPEDSIGNATURES)
 Add the `weight`-scaled fluxes of g point `g` to `flux_up` and `flux_down`
 (length `Nz + 1`, top down), by the two-stream adding method of
 [`streaming_shortwave_fluxes!`](@ref) with scalar `direct_albedo` and
-`diffuse_albedo`. This is the single g-point body that every clear-sky
-shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
+`diffuse_albedo`; `μ₀` is clamped to `√eps(FT)` here.
 """
 @inline function add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, g, weight,
                                               μ₀, toa_irradiance, direct_albedo, diffuse_albedo,

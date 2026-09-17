@@ -1,20 +1,12 @@
 #####
-##### Per-g-point cloud optics for host kernels
+##### Per-g-point cloud optics
 #####
 #
-# A `SpectralCloudOptics` holds one hydrometeor phase (liquid droplets or ice
-# crystals) already mapped onto the g points of one ecCKD spectral mapping, on
-# a grid of effective-radius nodes. A host kernel brackets the layer's
-# effective radius once, reads the per-g-point `(κ, ω, 𝒢)` with
-# `cloud_layer_optics`, and folds them into the layer's absorption and
-# scattering optical depth with `add_scattering_layer` (shortwave) or
-# `cloud_absorption_optical_depth` (longwave, where cloud scattering is
-# neglected). `add_mapped_cloud_scattering!` in `cloud_optics.jl` is a loop
-# over `add_scattering_layer`, so the array and kernel paths agree.
-#
-# Device-path rules: every function below the constructors is `@inline`,
-# allocation-free, never throws, branches on structure (the node count, a
-# `Nothing` phase) but not on data, and threads `FT` from the type parameter.
+# One hydrometeor phase mapped onto the g points of an ecCKD spectral mapping
+# on a grid of effective-radius nodes: bracket a layer's effective radius once,
+# read its per-g-point `(κ, ω, 𝒢)`, and fold them into the layer's absorption
+# and scattering optical depths (shortwave) or its absorption optical depth
+# alone (longwave, where cloud scattering is neglected).
 
 """
 $(TYPEDEF)
@@ -216,9 +208,8 @@ $(TYPEDSIGNATURES)
 
 Fold `cloud` at g point `g` on the effective-radius bracket from
 [`effective_radius_bracket`](@ref) with mass path `W` (kg m⁻²) into a
-layer's `(τₐ, τₛ, 𝒢)`, returning the updated triple: [`cloud_layer_optics`](@ref)
-followed by [`add_scattering_layer`](@ref). A `Nothing` phase returns the
-layer unchanged, so one shortwave layer functor serves clear and cloudy skies.
+layer's `(τₐ, τₛ, 𝒢)`, returning the updated triple. A `Nothing` phase
+returns the layer unchanged.
 """
 @inline function add_cloud_scattering_layer(τₐ, τₛ, 𝒢, cloud::SpectralCloudOptics, g, radius_bracket, W)
     κ, ω, 𝒢ᶜ = cloud_layer_optics(cloud, g, radius_bracket)

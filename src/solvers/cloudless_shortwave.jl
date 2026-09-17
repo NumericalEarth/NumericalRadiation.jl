@@ -229,23 +229,7 @@ end
     e = exp(-λ * τ)
     e₂ = e * e
 
-    # In the conservative limit ω → 1 the two-stream coefficients satisfy
-    # γ₁ → γ₂, so λ → 0 (held at √1e-12 above) and every reflectance and
-    # transmittance below is an O(λ) result. Written as ecRad does, with
-    # `1 - e^{-2λτ}` and `λ + γ₁ + (λ - γ₁) e^{-2λτ}`, each is the difference
-    # of O(1) terms, and the relative rounding error `eps / (2λτ)` reaches 1e-10
-    # in Float64 and a few percent in Float32, breaking energy conservation of
-    # non-absorbing layers. The same expressions rearranged so that only the
-    # accurately computable small differences
-    #     m₁ = 1 - e^{-λτ},   m₂ = 1 - e^{-2λτ},   d = 1 - e^{-τ/μ₀}
-    # (from `expm1`) and sums of like-signed terms appear are the same algebra:
-    #     λ + γ₁ + (λ - γ₁) e²      = λ (1 + e²) + γ₁ m₂,
-    #     (1 - λμ₀)(α₂ + λγ₃) - (1 + λμ₀)(α₂ - λγ₃) e² - 2λe(γ₃ - α₂μ₀) 𝒟
-    #                               = (α₂ - λ²μ₀γ₃) m₂ + λ(γ₃ - μ₀α₂)(m₁² + 2e d),
-    #     2λe(γ₄ + α₁μ₀) - 𝒟[(1 + λμ₀)(α₁ + λγ₄) - (1 - λμ₀)(α₁ - λγ₄) e²]
-    #                               = λ(γ₄ + μ₀α₁)(d (1 + e²) - m₁²) - 𝒟(α₁ + λ²μ₀γ₄) m₂,
-    # with e = e^{-λτ} and 𝒟 = e^{-τ/μ₀}, using 1 + e² - 2e𝒟 = m₁² + 2e d and
-    # 2e - 𝒟(1 + e²) = d(1 + e²) - m₁².
+    # expm1 keeps m₁, m₂ and d accurate as λ → 0, where 1 - e^{-2λτ} would cancel.
     m₁ = -expm1(-λ * τ)
     m₂ = -expm1(-FT(2) * λ * τ)
     d = -expm1(-τ / μ₀)

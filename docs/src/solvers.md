@@ -114,6 +114,44 @@ optics before they are added to the gas optics, so that a cloud's forward peak
 does not also thin the gas absorption; the two agree when scattering dominates
 the layer and differ slightly when gas absorption does.
 
+### The layer solution near the conservative limit
+
+In the conservative limit ``\omega \to 1`` the two-stream coefficients satisfy
+``\gamma_1 \to \gamma_2``, so the eigenvalue
+``\lambda = \sqrt{(\gamma_1 - \gamma_2)(\gamma_1 + \gamma_2)}`` tends to zero (the
+solver holds it at ``\sqrt{10^{-12}}``) and every reflectance and transmittance
+of the layer is an ``O(\lambda)`` result. Written as ecRad does, with
+``1 - e^{-2\lambda\tau}`` and ``\lambda + \gamma_1 + (\lambda - \gamma_1) e^{-2\lambda\tau}``,
+each is the difference of ``O(1)`` terms, and the relative rounding error
+``\epsilon / (2\lambda\tau)`` reaches ``10^{-10}`` in `Float64` and a few percent in
+`Float32`, breaking energy conservation of non-absorbing layers. The solver
+evaluates the same algebra in terms of the small differences
+
+```math
+m_1 = 1 - e^{-\lambda\tau}, \qquad m_2 = 1 - e^{-2\lambda\tau}, \qquad d = 1 - e^{-\tau/\mu_0},
+```
+
+each computed with `expm1`, and of sums of like-signed terms. With
+``e = e^{-\lambda\tau}``, ``\mathcal{D} = e^{-\tau/\mu_0}``,
+``\alpha_1 = \gamma_1\gamma_4 + \gamma_2\gamma_3`` and
+``\alpha_2 = \gamma_1\gamma_3 + \gamma_2\gamma_4``,
+
+```math
+\begin{aligned}
+\lambda + \gamma_1 + (\lambda - \gamma_1) e^2
+  &= \lambda (1 + e^2) + \gamma_1 m_2, \\
+(1 - \lambda\mu_0)(\alpha_2 + \lambda\gamma_3) - (1 + \lambda\mu_0)(\alpha_2 - \lambda\gamma_3) e^2
+  - 2\lambda e (\gamma_3 - \alpha_2\mu_0) \mathcal{D}
+  &= (\alpha_2 - \lambda^2\mu_0\gamma_3) m_2 + \lambda(\gamma_3 - \mu_0\alpha_2)(m_1^2 + 2 e d), \\
+2\lambda e (\gamma_4 + \alpha_1\mu_0)
+  - \mathcal{D}\left[(1 + \lambda\mu_0)(\alpha_1 + \lambda\gamma_4) - (1 - \lambda\mu_0)(\alpha_1 - \lambda\gamma_4) e^2\right]
+  &= \lambda(\gamma_4 + \mu_0\alpha_1)\left(d\,(1 + e^2) - m_1^2\right) - \mathcal{D}(\alpha_1 + \lambda^2\mu_0\gamma_4) m_2,
+\end{aligned}
+```
+
+using ``1 + e^2 - 2 e \mathcal{D} = m_1^2 + 2 e d`` and
+``2 e - \mathcal{D}(1 + e^2) = d\,(1 + e^2) - m_1^2``.
+
 Surface albedos for diffuse and direct radiation are independent and may be
 broadband scalars or per-g-point vectors.
 

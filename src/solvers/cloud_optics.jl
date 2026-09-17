@@ -567,10 +567,8 @@ optical depth to `shortwave.optical_depth` and mixes scattering optical
 depth/asymmetry into `shortwave.rayleigh_optical_depth` and
 `shortwave.scattering_asymmetry`.
 
-Each layer and g point is two calls of [`add_scattering_layer`](@ref), one per
-phase, so a host kernel looping over that function reproduces this array
-method. The keyword scale factors enter that loop as follows: the extinction
-scales multiply each phase's mass-extinction coefficient; the cloud-fraction
+The keyword scale factors enter as follows: the extinction scales multiply
+each phase's mass-extinction coefficient; the cloud-fraction
 weight `cloud_fraction^cloud_fraction_exponent` multiplies both water paths;
 `shortwave_scattering_scale` multiplies each phase's single-scattering albedo
 (clamped to `[0, 1]`); and `delta_eddington_scale` removes the
