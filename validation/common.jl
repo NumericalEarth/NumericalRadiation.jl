@@ -178,30 +178,30 @@ function column_fluxes!(workspace::ColumnWorkspace, model, atmosphere;
 end
 
 """
-    gauss_legendre_flux_nodes(n)
+    gauss_legendre_flux_nodes(Nnodes)
 
 Angular quadrature of the hemispheric flux integral `F = 2π ∫₀¹ I(μ) μ dμ`
-as `n` `(secant, weight)` pairs from the Gauss–Legendre nodes `μᵢ` on
+as `Nnodes` `(secant, weight)` pairs from the Gauss–Legendre nodes `μᵢ` on
 `[0, 1]`: `F = Σ aᵢ I(μᵢ)` with `aᵢ = 2 μᵢ wᵢ`, so that isotropic radiance
 `B` gives `F = B` (`Σ aᵢ = 1`). Three or four nodes integrate the angular
 dependence of a no-scattering layer essentially exactly, which is what
 line-by-line flux codes such as LBLRTM's RADSUM do, in place of the
 diffusivity approximation `D = 1.66` of the two-stream solvers.
 """
-function gauss_legendre_flux_nodes(n)
+function gauss_legendre_flux_nodes(Nnodes)
     nodes = Tuple{Float64, Float64}[]
-    for i in 1:n
+    for i in 1:Nnodes
         # Newton iteration for the i-th root of Pₙ on [-1, 1].
-        z = cos(π * (i - 0.25) / (n + 0.5))
+        z = cos(π * (i - 0.25) / (Nnodes + 0.5))
         pp = 0.0
         for _ in 1:100
             p1, p2 = 1.0, 0.0
-            for j in 1:n
+            for j in 1:Nnodes
                 p3 = p2
                 p2 = p1
                 p1 = ((2j - 1) * z * p2 - (j - 1) * p3) / j
             end
-            pp = n * (z * p1 - p2) / (z^2 - 1)
+            pp = Nnodes * (z * p1 - p2) / (z^2 - 1)
             step = p1 / pp
             z -= step
             abs(step) < 1e-15 && break
@@ -308,7 +308,7 @@ CKDMIP test suite): a root-mean-square error over the layers whose mid-level
 pressure lies in `pressure_range = (low, high)` (Pa; `low ≤ p < high`),
 weighting each layer by its increment of the cube root of pressure, with the
 weights normalized per profile and the mean taken over profiles. All arrays
-are `(n, Nprofiles)` matrices with `n = Nz + 1` for the interfaces;
+are `(Nz + 1, Nprofiles)` matrices over the interfaces;
 `exclude_lowest` drops that many layers next to the surface from the statistic.
 """
 function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range;

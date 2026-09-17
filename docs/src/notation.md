@@ -40,7 +40,7 @@ of either:
 | g-point index | — | `gpoint` | `ig`, `g`, `n` |
 | Layer and generic indices | `k` (layer, top down), `i`, `j` | — | — |
 | Table stencil: lower index, upper index, weight | `(i₀ᵖ, i₁ᵖ, wᵖ)` pressure, `(i₀ᵀ, i₁ᵀ, wᵀ)` temperature, `(i₀ᴴ, i₁ᴴ, wᴴ)` H₂O; grid loop indices `iᵖ, iᵀ, iᴴ`; bracket bounds `lower`, `upper` | — | `ip`, `it`, `wt`, `ih`, `lo`, `hi` |
-| Counts (Oceananigans capital-`N` notation) | `Nz` (layers of a column; interfaces are `Nz + 1`) | `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`, `Nlongwave_gpoints`, `Nshortwave_gpoints`, `Nprofiles`, `Nsites`, `Nzenith` | `nlayers`, `N`, `nlev`, `ninterfaces`, `ng`, `nr`, `ncol`, `ngas`, `np`, `nt`, `nwav`, `nsites` |
+| Counts (Oceananigans capital-`N` notation) | `Nz` (layers of a column; interfaces are `Nz + 1`) | `Ngpoints`, `Ngases`, `Nradii`, `Ncolumns`, `Npressures`, `Ntemperatures`, `Nwater_vapor`, `Nwavenumbers`, `Nintervals`, `Nlongwave_gpoints`, `Nshortwave_gpoints`, `Nlongwave_bands`, `Nshortwave_bands`, `Nnodes`, `Nprofiles`, `Nsites`, `Nzenith`, `Ndaytime` | `nlayers`, `N`, `nlev`, `ninterfaces`, `ng`, `nr`, `ncol`, `ngas`, `np`, `nt`, `nwav`, `nsites` |
 | Spectral regions | — | `longwave_…`, `shortwave_…` | `lw_…`, `sw_…` |
 | Surface, top of atmosphere | `Tₛ`, `pₛ` | `surface_…`, `toa_…` (TOA, OLR and RMSE are accepted acronyms) | `sfc`, `surf` |
 | Objects | — | `column` (a `RadiativeTransferColumn`), `diagnostics`, `temperature_tendency`, `geometry`, `constants`, `dataset`, `variables`, `prognostic`, `radiation` | `rtm`, `diag`, `dTdt`, `geom`, `ds`, `vars`, `prog`, `rad` |

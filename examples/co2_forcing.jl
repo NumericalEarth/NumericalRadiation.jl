@@ -55,14 +55,14 @@ function solve_column(χCO₂)
         geometry = (cos_zenith = 0.5,),
         constants)
 
-    longwave_gpoints = length(gas_optics.longwave_weights)
-    shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, Nz), zeros(longwave_gpoints, Nz);
-                              source_top = zeros(longwave_gpoints, Nz),
-                              source_bottom = zeros(longwave_gpoints, Nz),
-                              weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
-                                weights = zeros(shortwave_gpoints))
+    Nlongwave_gpoints = length(gas_optics.longwave_weights)
+    Nshortwave_gpoints = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Nlongwave_gpoints, Nz), zeros(Nlongwave_gpoints, Nz);
+                              source_top = zeros(Nlongwave_gpoints, Nz),
+                              source_bottom = zeros(Nlongwave_gpoints, Nz),
+                              weights = zeros(Nlongwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz);
+                                weights = zeros(Nshortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),

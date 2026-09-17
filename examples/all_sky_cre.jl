@@ -103,17 +103,17 @@ gas_optics = read_reference_ecckd_gas_optics("32x32";
                                              names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
 
 function gas_optics_containers()
-    longwave_gpoints = length(gas_optics.longwave_weights)
-    shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, Nz),
-                              zeros(longwave_gpoints, Nz);
-                              source_top = zeros(longwave_gpoints, Nz),
-                              source_bottom = zeros(longwave_gpoints, Nz),
-                              weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, Nz);
-                                rayleigh_optical_depth = zeros(shortwave_gpoints, Nz),
-                                scattering_asymmetry = zeros(shortwave_gpoints, Nz),
-                                weights = zeros(shortwave_gpoints))
+    Nlongwave_gpoints = length(gas_optics.longwave_weights)
+    Nshortwave_gpoints = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Nlongwave_gpoints, Nz),
+                              zeros(Nlongwave_gpoints, Nz);
+                              source_top = zeros(Nlongwave_gpoints, Nz),
+                              source_bottom = zeros(Nlongwave_gpoints, Nz),
+                              weights = zeros(Nlongwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz);
+                                rayleigh_optical_depth = zeros(Nshortwave_gpoints, Nz),
+                                scattering_asymmetry = zeros(Nshortwave_gpoints, Nz),
+                                weights = zeros(Nshortwave_gpoints))
     return longwave, shortwave
 end
 

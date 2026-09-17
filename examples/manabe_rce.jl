@@ -126,22 +126,22 @@ nothing #hide
 # The staged runtime operates on caller-owned arrays: per-g-point optical
 # properties for each band, and broadband fluxes on the interfaces.
 
-function radiation_work_arrays(gas_optics, n)
-    longwave_gpoints = length(gas_optics.longwave_weights)
-    shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, n),
-                              zeros(longwave_gpoints, n);
-                              source_top = zeros(longwave_gpoints, n),
-                              source_bottom = zeros(longwave_gpoints, n),
-                              weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, n);
-                                rayleigh_optical_depth = zeros(shortwave_gpoints, n),
-                                scattering_asymmetry = zeros(shortwave_gpoints, n),
-                                weights = zeros(shortwave_gpoints))
-    fluxes = RadiativeFluxes(longwave_up = zeros(n + 1),
-                             longwave_down = zeros(n + 1),
-                             shortwave_up = zeros(n + 1),
-                             shortwave_down = zeros(n + 1))
+function radiation_work_arrays(gas_optics, Nz)
+    Nlongwave_gpoints = length(gas_optics.longwave_weights)
+    Nshortwave_gpoints = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Nlongwave_gpoints, Nz),
+                              zeros(Nlongwave_gpoints, Nz);
+                              source_top = zeros(Nlongwave_gpoints, Nz),
+                              source_bottom = zeros(Nlongwave_gpoints, Nz),
+                              weights = zeros(Nlongwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz);
+                                rayleigh_optical_depth = zeros(Nshortwave_gpoints, Nz),
+                                scattering_asymmetry = zeros(Nshortwave_gpoints, Nz),
+                                weights = zeros(Nshortwave_gpoints))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
     return longwave, shortwave, fluxes
 end
 nothing #hide

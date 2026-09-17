@@ -430,19 +430,19 @@ end
     model, _ = tabulated_fixture(FT)
     grid = model.longwave_source_temperature_grid    # [180, 240, 300]
     table = model.longwave_source_table              # (gpoint + 2) T²
-    n = length(grid)
+    Ntemperatures = length(grid)
     for gpoint in 1:length(model.longwave_weights)
         # Above the table: the bracket is the last interval with a weight > 1.
         T = FT(330)
         b = @inferred source_table_bracket(model, T)
-        @test b[1:2] == (n - 1, n)
+        @test b[1:2] == (Ntemperatures - 1, Ntemperatures)
         @test b[3] ≈ FT(1.5) rtol = 4eps(FT)
-        slope = (table[gpoint, n] - table[gpoint, n - 1]) / (grid[n] - grid[n - 1])
-        @test longwave_source(model, gpoint, T, b) ≈ table[gpoint, n] + slope * (T - grid[n]) rtol = 8eps(FT)
-        @test longwave_source(model, gpoint, T, b) > table[gpoint, n]
+        slope = (table[gpoint, Ntemperatures] - table[gpoint, Ntemperatures - 1]) / (grid[Ntemperatures] - grid[Ntemperatures - 1])
+        @test longwave_source(model, gpoint, T, b) ≈ table[gpoint, Ntemperatures] + slope * (T - grid[Ntemperatures]) rtol = 8eps(FT)
+        @test longwave_source(model, gpoint, T, b) > table[gpoint, Ntemperatures]
         # On the last node nothing changes.
-        b = source_table_bracket(model, grid[n])
-        @test longwave_source(model, gpoint, grid[n], b) == table[gpoint, n]
+        b = source_table_bracket(model, grid[Ntemperatures])
+        @test longwave_source(model, gpoint, grid[Ntemperatures], b) == table[gpoint, Ntemperatures]
         # Below the table: linear in T down to zero.
         T = FT(90)
         b = source_table_bracket(model, T)
@@ -458,7 +458,7 @@ end
     hot = TabulatedSurfaceEmission(model, FT(330))
     @test eltype(hot) === FT
     @test collect(hot) == surface_longwave_emission(model, FT(330))
-    @test all(collect(hot) .> collect(TabulatedSurfaceEmission(model, grid[n])))
+    @test all(collect(hot) .> collect(TabulatedSurfaceEmission(model, grid[Ntemperatures])))
     @test all(iszero, TabulatedSurfaceEmission(model, zero(FT)))
 end
 

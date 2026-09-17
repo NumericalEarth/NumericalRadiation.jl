@@ -298,8 +298,8 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
     ]
 
     return (; model_name = String(model_name),
-              longwave_gpoints = length(model.longwave_weights),
-              shortwave_gpoints = length(model.shortwave_weights),
+              Nlongwave_gpoints = length(model.longwave_weights),
+              Nshortwave_gpoints = length(model.shortwave_weights),
               Nsites, Nz, Ndaytime = length(day), excluded_sites = benchmark.excluded_sites,
               column_amount_convention,
               elapsed_seconds = elapsed,
@@ -331,7 +331,7 @@ function rfmip_markdown(results, benchmark)
         s = r.statistics
         m = r.moist_convention_statistics
         push!(lines, "")
-        push!(lines, "## $(r.model_name) ($(r.longwave_gpoints) LW × $(r.shortwave_gpoints) SW g-points)")
+        push!(lines, "## $(r.model_name) ($(r.Nlongwave_gpoints) LW × $(r.Nshortwave_gpoints) SW g-points)")
         push!(lines, "")
         push!(lines, "$(round(r.microseconds_per_column; digits = 1)) μs per column (optics + LW + SW), " *
                      "$(round(r.elapsed_seconds; digits = 3)) s total.")
@@ -410,8 +410,8 @@ function run_rfmip_irf(; models = (:climate_32x32, :climate_64x64))
                         generated = string(now()),
                         input_files = [basename(paths.input); collect(basename.(values(paths.fluxes)))],
                         model = result.model_name,
-                        longwave_gpoints = result.longwave_gpoints,
-                        shortwave_gpoints = result.shortwave_gpoints,
+                        Nlongwave_gpoints = result.Nlongwave_gpoints,
+                        Nshortwave_gpoints = result.Nshortwave_gpoints,
                         Nsites = result.Nsites, Ndaytime = result.Ndaytime, excluded_sites = result.excluded_sites,
                         Nz = result.Nz,
                         well_mixed_mole_fractions = (; co2 = benchmark.co2, ch4 = benchmark.ch4, n2o = benchmark.n2o,
