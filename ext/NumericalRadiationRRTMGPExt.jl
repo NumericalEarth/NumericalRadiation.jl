@@ -171,7 +171,9 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     end
 
     # Dry column amounts via RRTMGP's own kernel (dry-air VMR convention,
-    # moist molar mass; CPU and CUDA methods) on the reversed state.
+    # moist molar mass) on the reversed state. The staging above and the flux
+    # read-back below index the state arrays element by element, so this
+    # adapter is CPU-only: `context` must be a CPU ClimaComms context.
     RRTMGP.Optics.compute_col_gas!(ClimaComms.device(model.context),
                                    state.p_lev,
                                    view(state.layerdata, 1, :, :),
