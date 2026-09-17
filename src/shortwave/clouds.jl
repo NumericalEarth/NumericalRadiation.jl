@@ -18,26 +18,18 @@ cloud top. An independent stratocumulus term is diagnosed at the surface
 from dry-static-energy stability.
 
 Fields:
-- `relative_humidity_threshold_min`: Relative humidity threshold for cloud cover = 0 [1]
-  (default `NF(0.3)`)
-- `relative_humidity_threshold_max`: Relative humidity threshold for cloud cover = 1 [1]
-  (default `NF(1)`)
-- `specific_humidity_threshold_min`: Specific humidity threshold for cloud cover [kg/kg]
-  (default `NF(0.0002)`)
-- `precipitation_weight`: Weight for the √precipitation term [1] (default `NF(0.2)`)
-- `precipitation_max`: Cap on precipitation contributing to cloud cover [mm/day] (default
-  `NF(10)`)
-- `cloud_albedo`: Cloud albedo at CLC = 1 [1] (default `NF(0.6)`)
-- `stratocumulus_albedo`: Stratocumulus cloud albedo [1] (default `NF(0.5)`)
-- `stratocumulus_stability_min`: Static-stability lower threshold for stratocumulus (GSES0)
-  [J/kg] (default `NF(0.25)`)
-- `stratocumulus_stability_max`: Static-stability upper threshold for stratocumulus (GSES1)
-  [J/kg] (default `NF(0.4)`)
-- `stratocumulus_cover_max`: Maximum stratocumulus cloud cover (CLSMAX) [1] (default
-  `NF(0.6)`)
+- `relative_humidity_threshold_min`: Relative humidity threshold for cloud cover = 0, dimensionless (default `NF(0.3)`)
+- `relative_humidity_threshold_max`: Relative humidity threshold for cloud cover = 1, dimensionless (default `NF(1)`)
+- `specific_humidity_threshold_min`: Specific humidity threshold for cloud cover in kg/kg (default `NF(0.0002)`)
+- `precipitation_weight`: Weight for the √precipitation term, dimensionless (default `NF(0.2)`)
+- `precipitation_max`: Cap on precipitation contributing to cloud cover in mm/day (default `NF(10)`)
+- `cloud_albedo`: Cloud albedo at CLC = 1, dimensionless (default `NF(0.6)`)
+- `stratocumulus_albedo`: Stratocumulus cloud albedo, dimensionless (default `NF(0.5)`)
+- `stratocumulus_stability_min`: Static-stability lower threshold for stratocumulus (GSES0) in J/kg (default `NF(0.25)`)
+- `stratocumulus_stability_max`: Static-stability upper threshold for stratocumulus (GSES1) in J/kg (default `NF(0.4)`)
+- `stratocumulus_cover_max`: Maximum stratocumulus cloud cover (CLSMAX), dimensionless (default `NF(0.6)`)
 - `use_stratocumulus`: Enable the stratocumulus parameterization (default `true`)
-- `stratocumulus_cloud_factor`: Stratocumulus cloud factor (SPEEDY clfact) [1] (default
-  `NF(1.2)`)
+- `stratocumulus_cloud_factor`: Stratocumulus cloud factor (SPEEDY clfact), dimensionless (default `NF(1.2)`)
 """
 Base.@kwdef struct DiagnosticClouds{NF} <: AbstractShortwaveClouds
     relative_humidity_threshold_min::NF = NF(0.3)

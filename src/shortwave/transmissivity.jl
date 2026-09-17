@@ -48,14 +48,12 @@ correction factor `1 + azen (1 − μ₀)^nzen`.
 Fields:
 - `zenith_amplitude`: Zenith correction amplitude (SPEEDY azen) (default `NF(1)`)
 - `zenith_exponent`: Zenith correction exponent (SPEEDY nzen) (default `NF(2)`)
-- `absorptivity_dry_air`: Absorptivity of dry air [per 10⁵ Pa] (default `NF(0.03135)`)
+- `absorptivity_dry_air`: Absorptivity of dry air per 10⁵ Pa (default `NF(0.03135)`)
 - `aerosols`: Include a constant aerosol concentration (default `true`)
-- `absorptivity_aerosol`: Absorptivity of aerosols [per 10⁵ Pa] (default `NF(0.03135)`)
-- `absorptivity_water_vapor`: Absorptivity of water vapour [per kg/kg per 10⁵ Pa] (default
-  `NF(75)`)
-- `absorptivity_cloud_base`: Base cloud absorptivity [per kg/kg per 10⁵ Pa] (default
-  `NF(10)`)
-- `absorptivity_cloud_limit`: Maximum cloud absorptivity [per 10⁵ Pa] (default `NF(0.14)`)
+- `absorptivity_aerosol`: Absorptivity of aerosols per 10⁵ Pa (default `NF(0.03135)`)
+- `absorptivity_water_vapor`: Absorptivity of water vapour per kg/kg per 10⁵ Pa (default `NF(75)`)
+- `absorptivity_cloud_base`: Base cloud absorptivity per kg/kg per 10⁵ Pa (default `NF(10)`)
+- `absorptivity_cloud_limit`: Maximum cloud absorptivity per 10⁵ Pa (default `NF(0.14)`)
 """
 Base.@kwdef struct BackgroundShortwaveTransmissivity{NF} <: AbstractShortwaveTransmissivity
     zenith_amplitude::NF = NF(1)
