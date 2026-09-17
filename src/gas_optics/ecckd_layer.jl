@@ -240,7 +240,7 @@ end
 @inline function layer_gases(gases, ::Val{Names}, k) where Names
     picked = NamedTuple{Names}(map(name -> gas_value(gases, name, k), Names))
     if has_gas(gases, :composite) && !(:composite in Names)
-        return merge(picked, (; composite = gas_value(gases, :composite, k)))
+        return merge(picked, (; composite=gas_value(gases, :composite, k)))
     else
         return picked
     end

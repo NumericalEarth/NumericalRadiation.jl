@@ -377,7 +377,7 @@ optical depth for simple homogeneous-column composition. Use
 cloud fraction and overlap separately.
 """
 function cloud_optical_properties!(cloud::CloudOptics{FT}, model::LayerLiquidIceCloudOpticsModel, atmosphere) where FT
-    return fill_liquid_ice_cloud_optics!(cloud, model, atmosphere; scale_by_cloud_fraction = true)
+    return fill_liquid_ice_cloud_optics!(cloud, model, atmosphere; scale_by_cloud_fraction=true)
 end
 
 @inline function overlap_parameter_at(atmosphere, k, FT)
@@ -403,7 +403,7 @@ function cloudy_region_optical_properties!(cloud::CloudyRegionCloudOptics{FT},
                           cloud.shortwave_optical_depth;
                           shortwave_scattering_optical_depth = cloud.shortwave_scattering_optical_depth,
                           shortwave_scattering_asymmetry = cloud.shortwave_scattering_asymmetry)
-    fill_liquid_ice_cloud_optics!(scratch, model, atmosphere; scale_by_cloud_fraction = false)
+    fill_liquid_ice_cloud_optics!(scratch, model, atmosphere; scale_by_cloud_fraction=false)
     for k in 1:Nz
         cloud.cloud_fraction[k] = clamp(FT(layer_property(atmosphere, model.cloud_fraction,
                                                           :cloud_fraction, k)), zero(FT), one(FT))

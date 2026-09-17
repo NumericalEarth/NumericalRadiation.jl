@@ -83,15 +83,15 @@ include(joinpath(@__DIR__, "common.jl"))
 # heating 33 K day⁻¹); the same statistic over the CKDMIP 4–1100 hPa range is
 # 0.063 K day⁻¹.
 const CKDMIP_GATES = (
-    climate_32x32 = (longwave_toa_up = (bias = 0.5, rmse = 1.0),
-                     longwave_surface_down = (bias = 0.8, rmse = 1.5),
+    climate_32x32 = (longwave_toa_up = (bias=0.5, rmse=1.0),
+                     longwave_surface_down = (bias=0.8, rmse=1.5),
                      longwave_heating_rate_troposphere = 0.10,
                      longwave_heating_rate_stratosphere = 0.5,
                      shortwave_toa_up = 1.5,
                      shortwave_surface_down = 2.5,
                      shortwave_heating_rate_troposphere = 0.10),
-    climate_64x64 = (longwave_toa_up = (bias = 0.3, rmse = 0.6),
-                     longwave_surface_down = (bias = 0.5, rmse = 1.0),
+    climate_64x64 = (longwave_toa_up = (bias=0.3, rmse=0.6),
+                     longwave_surface_down = (bias=0.5, rmse=1.0),
                      longwave_heating_rate_troposphere = 0.09,
                      longwave_heating_rate_stratosphere = 0.4,
                      shortwave_toa_up = 1.0,
@@ -108,14 +108,14 @@ const CKDMIP_FILES = ("concentrations", "lw_fluxes", "sw_fluxes")
 # present, a CKDMIP file missing from it is a real failure and throws.
 function ckdmip_files()
     root = try
-        ecrad_data_path(; require = true)
+        ecrad_data_path(; require=true)
     catch exception
         @warn "ecrad_data artifact is not available" exception = (exception, catch_backtrace())
         return nothing
     end
     root === nothing && return nothing
     return map(CKDMIP_FILES) do name
-        ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require = true)
+        ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require=true)
     end
 end
 
@@ -129,13 +129,13 @@ function load_ckdmip(paths)
            mole_fractions = NamedTuple{CKDMIP_GASES}(map(gas -> dense(dataset["$(gas)_mole_fraction_fl"][:, :]), CKDMIP_GASES)))
     end
     longwave = NCDataset(longwave_path) do dataset
-        (; up = dense(dataset["flux_up_lw"][:, :]), down = dense(dataset["flux_dn_lw"][:, :]))
+        (; up=dense(dataset["flux_up_lw"][:, :]), down=dense(dataset["flux_dn_lw"][:, :]))
     end
     shortwave = NCDataset(shortwave_path) do dataset
         # The zenith dimension is read, not assumed: `mu0` is a coordinate of
         # the flux arrays `(half_level, mu0, column)`.
         haskey(dataset, "mu0") || throw(ArgumentError("shortwave reference file has no mu0 coordinate"))
-        μ₀ = round.(dense(dataset["mu0"][:]); digits = 6)   # stored in single precision
+        μ₀ = round.(dense(dataset["mu0"][:]); digits=6)   # stored in single precision
         up = dense(dataset["flux_up_sw"][:, :, :])
         down = dense(dataset["flux_dn_sw"][:, :, :])
         dimnames(dataset["flux_up_sw"]) == ("half_level", "mu0", "column") ||
@@ -151,11 +151,11 @@ function load_ckdmip(paths)
     # Solar constant and albedo of the reference calculation, from the fluxes
     # themselves: `S₀ = down_TOA / μ₀` and `α = up_surface / down_surface`.
     solar_constants = [shortwave.down[1, j, i] / shortwave.μ₀[j] for j in eachindex(shortwave.μ₀), i in 1:Nprofiles]
-    solar_constant = round(mean(solar_constants); digits = 1)
+    solar_constant = round(mean(solar_constants); digits=1)
     maximum(abs, solar_constants .- solar_constant) < 0.05 ||
         throw(ArgumentError("reference TOA irradiance is not a single solar constant"))
     albedos = shortwave.up[end, :, :] ./ shortwave.down[end, :, :]
-    albedo = round(mean(albedos); digits = 3)
+    albedo = round(mean(albedos); digits=3)
     maximum(abs, albedos .- albedo) < 1e-4 ||
         throw(ArgumentError("reference surface albedo is not spectrally and spatially constant"))
 
@@ -164,13 +164,13 @@ end
 
 # Run one model over every profile, returning fluxes, heating rates and the
 # statistics of the CKDMIP evaluation.
-function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
+function evaluate_ckdmip(model_name, benchmark; column_amount_convention=:dry)
     (; pressure_hl, temperature_hl, mole_fractions, longwave, shortwave, Nprofiles, solar_constant, albedo) = benchmark
     μ₀ = shortwave.μ₀
     Nz = size(pressure_hl, 1) - 1
     Nzenith = length(μ₀)
 
-    model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
+    model = read_reference_ecckd_gas_optics(model_name; names=ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, Nz)
 
     longwave_up = zeros(Nz + 1, Nprofiles)
@@ -183,7 +183,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     shortwave_heating_reference = zeros(Nz, Nzenith, Nprofiles)
 
     profile_column(i) = benchmark_column(pressure_hl[:, i], temperature_hl[:, i], map(mf -> mf[:, i], mole_fractions);
-                                         surface = (; temperature = temperature_hl[end, i], emissivity = 1.0),
+                                         surface = (; temperature=temperature_hl[end, i], emissivity=1.0),
                                          geometry = (;), column_amount_convention)
 
     # One untimed column first, so that the timing below excludes compilation.
@@ -211,21 +211,21 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
     # Shortwave statistics pool profiles and zenith angles; the pressure
     # interfaces are replicated per zenith angle for the weighted heating-rate
     # RMSE. The surface-downwelling gate excludes μ₀ < 0.3.
-    pressure_shortwave = repeat(pressure_hl, inner = (1, Nzenith))
+    pressure_shortwave = repeat(pressure_hl, inner=(1, Nzenith))
     flat(x) = reshape(x, size(x, 1), :)
     high_sun = findall(>=(0.3), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
 
     statistics = (;
-        longwave_toa_up = (bias = bias(longwave_up[1, :], longwave.up[1, :]), rmse = rmse(longwave_up[1, :], longwave.up[1, :])),
-        longwave_surface_down = (bias = bias(longwave_down[end, :], longwave.down[end, :]), rmse = rmse(longwave_down[end, :], longwave.down[end, :])),
-        longwave_profile_rmse = (up = rmse(longwave_up, longwave.up), down = rmse(longwave_down, longwave.down)),
+        longwave_toa_up = (bias=bias(longwave_up[1, :], longwave.up[1, :]), rmse=rmse(longwave_up[1, :], longwave.up[1, :])),
+        longwave_surface_down = (bias=bias(longwave_down[end, :], longwave.down[end, :]), rmse=rmse(longwave_down[end, :], longwave.down[end, :])),
+        longwave_profile_rmse = (up=rmse(longwave_up, longwave.up), down=rmse(longwave_down, longwave.down)),
         longwave_heating_rate = heating_ranges(pressure_hl, longwave_heating, longwave_heating_reference),
-        shortwave_toa_up = (bias = bias(shortwave_up[1, :, :], shortwave.up[1, :, :]), rmse = rmse(shortwave_up[1, :, :], shortwave.up[1, :, :])),
+        shortwave_toa_up = (bias=bias(shortwave_up[1, :, :], shortwave.up[1, :, :]), rmse=rmse(shortwave_up[1, :, :], shortwave.up[1, :, :])),
         shortwave_surface_down = (bias = bias(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
                                   rmse = rmse(shortwave_down[end, high_sun, :], shortwave.down[end, high_sun, :]),
                                   rmse_all_zenith_angles = rmse(shortwave_down[end, :, :], shortwave.down[end, :, :])),
-        shortwave_profile_rmse = (up = rmse(shortwave_up, shortwave.up), down = rmse(shortwave_down, shortwave.down)),
+        shortwave_profile_rmse = (up=rmse(shortwave_up, shortwave.up), down=rmse(shortwave_down, shortwave.down)),
         shortwave_heating_rate = heating_ranges(pressure_shortwave, flat(shortwave_heating), flat(shortwave_heating_reference)),
         shortwave_by_zenith_angle = [(; μ₀ = μ₀[j],
                                         toa_up_rmse = rmse(shortwave_up[1, j, :], shortwave.up[1, j, :]),
@@ -248,7 +248,7 @@ function evaluate_ckdmip(model_name, benchmark; column_amount_convention = :dry)
         heating_rate_gate("LW heating rate, 4 Pa < p ≤ 100 hPa";
                           rmse = statistics.longwave_heating_rate.stratosphere,
                           rmse_threshold = gates_for.longwave_heating_rate_stratosphere),
-        flux_gate("SW TOA up, all μ₀"; rmse = statistics.shortwave_toa_up.rmse, rmse_threshold = gates_for.shortwave_toa_up),
+        flux_gate("SW TOA up, all μ₀"; rmse=statistics.shortwave_toa_up.rmse, rmse_threshold=gates_for.shortwave_toa_up),
         flux_gate("SW surface down, μ₀ ≥ 0.3"; rmse = statistics.shortwave_surface_down.rmse,
                   rmse_threshold = gates_for.shortwave_surface_down),
         heating_rate_gate("SW heating rate, p > 100 hPa";
@@ -324,7 +324,7 @@ function ckdmip_markdown(results, benchmark, paths)
     return join(lines, "\n")
 end
 
-function run_ckdmip_evaluation1(; models = (:climate_32x32, :climate_64x64))
+function run_ckdmip_evaluation1(; models=(:climate_32x32, :climate_64x64))
     results_dir = validation_results_dir()
     paths = ckdmip_files()
     results = []
@@ -339,8 +339,8 @@ function run_ckdmip_evaluation1(; models = (:climate_32x32, :climate_64x64))
         for model_name in models
             result = evaluate_ckdmip(model_name, benchmark)
             # The contract's moist-molar-mass column amounts, reported but not gated.
-            moist = evaluate_ckdmip(model_name, benchmark; column_amount_convention = :moist)
-            result = (; result..., moist_convention_statistics = moist.statistics)
+            moist = evaluate_ckdmip(model_name, benchmark; column_amount_convention=:moist)
+            result = (; result..., moist_convention_statistics=moist.statistics)
             push!(results, result)
             println("\n$(result.model_name): $(round(result.microseconds_per_column; digits = 1)) μs per column")
             report_gates(result.gates)

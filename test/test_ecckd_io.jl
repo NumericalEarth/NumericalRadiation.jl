@@ -50,8 +50,8 @@ using Dates
     @test summary.source_tables_present
     @test summary.rayleigh_tables_present
 
-    invalid = EcCKDDefinition(model_name = "invalid", dimensions = (lw_bands = 16, gases = 1), variables = (;))
-    valid, errors = validate_ecckd_definition(invalid; throw_on_error = false)
+    invalid = EcCKDDefinition(model_name="invalid", dimensions=(lw_bands=16, gases=1), variables=(;))
+    valid, errors = validate_ecckd_definition(invalid; throw_on_error=false)
     @test !valid
     @test any(contains("sw_bands"), errors)
     @test any(contains("longwave absorption"), errors)
@@ -72,9 +72,9 @@ using Dates
             lw_absorption = (:gases, :lw_gpoints, :pressure, :temperature),
             sw_absorption = (:gases, :sw_gpoints, :pressure, :temperature),
         ),
-        attributes = (gas_names = ["h2o"],),
+        attributes = (gas_names=["h2o"],),
     )
-    valid_gases, gas_errors = validate_ecckd_definition(bad_gases; throw_on_error = false)
+    valid_gases, gas_errors = validate_ecckd_definition(bad_gases; throw_on_error=false)
     @test !valid_gases
     @test any(contains("gas_names length"), gas_errors)
 
@@ -113,12 +113,12 @@ using NumericalRadiation
     @test "ecckd-1.0_lw_climate_fsck-32b_ckd-definition.nc" in inventory
     @test "ecckd-1.4_sw_climate_vfine-96b_ckd-definition.nc" in inventory
 
-    root = ecrad_data_path(require = true)
+    root = ecrad_data_path(require=true)
     @test isdir(root)
 
     mktempdir() do temp_root
         withenv("RH_ECRAD_DATA_PATH" => temp_root) do
-            @test ecrad_data_path(require = true) == normpath(temp_root)
+            @test ecrad_data_path(require=true) == normpath(temp_root)
         end
     end
 
@@ -128,7 +128,7 @@ using NumericalRadiation
         mkpath(nested_data)
         write(joinpath(nested_data, filename), "")
         withenv("RH_ECRAD_DATA_PATH" => temp_root) do
-            @test reference_ecckd_definition_path(filename; require = true) ==
+            @test reference_ecckd_definition_path(filename; require=true) ==
                   normpath(joinpath(nested_data, filename))
         end
     end
@@ -138,16 +138,16 @@ using NumericalRadiation
         @test NumericalRadiation.source_root_with_file(missing_root, "README.md") === nothing
     end
 
-    source_root = ecckd_source_path(require = true)
+    source_root = ecckd_source_path(require=true)
     @test isfile(joinpath(source_root, "src", "ecckd", "optimize_lut.cpp"))
 
-    paths = reference_ecckd_definition_paths(require = true)
+    paths = reference_ecckd_definition_paths(require=true)
     @test isfile(paths.longwave)
     @test isfile(paths.shortwave)
     @test basename(paths.longwave) == "ecckd-1.2_lw_climate_narrow-64b_ckd-definition.nc"
     @test basename(paths.shortwave) == "ecckd-1.4_sw_climate_rgb-32b_ckd-definition.nc"
 
-    @test_throws ArgumentError reference_ecckd_definition_path(:not_a_model; require = false)
+    @test_throws ArgumentError reference_ecckd_definition_path(:not_a_model; require=false)
 end
 
 @testset "ecrad_test_file resolves the CKDMIP evaluation files" begin
@@ -155,11 +155,11 @@ end
     # profiles and line-by-line fluxes under `test/ckdmip/`; the validation
     # scripts in `validation/` read them through this helper.
     for name in ("concentrations", "lw_fluxes", "sw_fluxes")
-        path = ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require = false)
+        path = ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc"; require=false)
         @test path !== nothing && isfile(path)
         @test ecrad_test_file("ckdmip/ckdmip_evaluation1_$(name)_present_reduced.nc") == path
     end
-    @test ecrad_test_file("ckdmip/not_a_file.nc"; require = false) === nothing
+    @test ecrad_test_file("ckdmip/not_a_file.nc"; require=false) === nothing
     @test_throws ArgumentError ecrad_test_file("ckdmip/not_a_file.nc")
 
     # A checkout whose files live under one top-level child directory (a GitHub
@@ -170,7 +170,7 @@ end
         write(joinpath(nested, "profiles.nc"), "")
         withenv("RH_ECRAD_DATA_PATH" => temp_root) do
             @test ecrad_test_file("ckdmip/profiles.nc") == normpath(joinpath(nested, "profiles.nc"))
-            @test ecrad_test_file("ckdmip/missing.nc"; require = false) === nothing
+            @test ecrad_test_file("ckdmip/missing.nc"; require=false) === nothing
         end
     end
 end
@@ -190,7 +190,7 @@ using NCDatasets
     # The extension specializes `::String`. Without a funnel in the package stub,
     # a `SubString` misses it and is told to load NCDatasets — which is loaded
     # here — so assert the two reach the same reader.
-    paths = reference_ecckd_definition_paths(require = false)
+    paths = reference_ecckd_definition_paths(require=false)
     if paths.longwave !== nothing && isfile(paths.longwave)
         as_substring = strip(" " * paths.longwave * " ")
         @test as_substring isa SubString{String}
@@ -285,7 +285,7 @@ end
     # file and interpolates the shortwave table against them, so a shortwave file
     # that disagrees has to be rejected rather than silently mis-interpolated.
     # Every reference pair agrees, so perturb a copy to prove the check fires.
-    paths = reference_ecckd_definition_paths(require = false)
+    paths = reference_ecckd_definition_paths(require=false)
     longwave_path, shortwave_path = paths.longwave, paths.shortwave
 
     if longwave_path !== nothing && shortwave_path !== nothing && isfile(longwave_path) && isfile(shortwave_path)
@@ -308,7 +308,7 @@ end
               EcCKDTabulatedGasOpticsModel{Float32}
         @test read_reference_ecckd_gas_optics(:climate_64x32) isa
               EcCKDTabulatedGasOpticsModel{Float64}
-        @test read_reference_ecckd_gas_optics(Float32; require = false) isa
+        @test read_reference_ecckd_gas_optics(Float32; require=false) isa
               EcCKDTabulatedGasOpticsModel{Float32}
 
         mktempdir() do dir
@@ -331,7 +331,7 @@ end
             NCDataset(copied, "a") do dataset
                 dataset["ch4_reference_mole_fraction"][] *= 2
             end
-            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(longwave_path, copied; names = (:ch4, :n2o))
+            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(longwave_path, copied; names=(:ch4, :n2o))
         end
     else
         @info "Skipping paired ecCKD axis check; ecRad data files are not present"
@@ -339,7 +339,7 @@ end
 end
 
 @testset "reference ecCKD runtime LUT ingestion" begin
-    paths = reference_ecckd_definition_paths(require = false)
+    paths = reference_ecckd_definition_paths(require=false)
     longwave_path = paths.longwave
     shortwave_path = paths.shortwave
 
@@ -376,8 +376,8 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(64, 2), zeros(64, 2); weights = zeros(64))
-        shortwave = ShortwaveOptics(zeros(32, 2); weights = zeros(32))
+        longwave = LongwaveOptics(zeros(64, 2), zeros(64, 2); weights=zeros(64))
+        shortwave = ShortwaveOptics(zeros(32, 2); weights=zeros(32))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test all(isfinite, longwave.optical_depth)
@@ -394,7 +394,7 @@ end
 end
 
 @testset "reference ecCKD definition files" begin
-    paths = reference_ecckd_definition_paths(require = false)
+    paths = reference_ecckd_definition_paths(require=false)
     longwave_path = paths.longwave
     shortwave_path = paths.shortwave
 
@@ -514,12 +514,12 @@ using Dates
     @test reference_ecckd_model_spec("64x96").shortwave == :shortwave_96
     @test_throws ArgumentError reference_ecckd_model_spec("16x16")
 
-    paths = reference_ecckd_definition_paths("32x32"; require = false)
+    paths = reference_ecckd_definition_paths("32x32"; require=false)
     @test hasproperty(paths, :longwave)
     @test hasproperty(paths, :shortwave)
 
     if isnothing(paths.longwave) || isnothing(paths.shortwave)
-        @test read_reference_ecckd_gas_optics("32x32"; require = false) === nothing
+        @test read_reference_ecckd_gas_optics("32x32"; require=false) === nothing
     elseif isnothing(Base.get_extension(NumericalRadiation, :NumericalRadiationNCDatasetsExt))
         @test_throws ArgumentError read_reference_ecckd_gas_optics("32x32")
     else
@@ -583,8 +583,8 @@ end
         shortwave_weights = [1.0],
     )
 
-    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz); weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz); weights=zeros(2))
+    shortwave = ShortwaveOptics(zeros(1, Nz); weights=zeros(1))
 
     returned = optical_properties!(longwave, shortwave, model, atmosphere)
     @test returned == (longwave, shortwave)
@@ -603,7 +603,7 @@ end
     optical_properties_allocations(longwave, shortwave, model, atmosphere)
     @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
-    bad_longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz); weights = zeros(1))
+    bad_longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz); weights=zeros(1))
     @test_throws DimensionMismatch optical_properties!(bad_longwave, shortwave, model, atmosphere)
 
     @test_throws DimensionMismatch EcCKDGasOpticsModel(
@@ -619,7 +619,7 @@ end
         pressure_interfaces = [10_000.0, 20_000.0],
         temperature_layers = [275.0],
         temperature_interfaces = [250.0, 300.0],
-        gases = (h2o = [1.0], co2 = [1.0]),
+        gases = (h2o=[1.0], co2=[1.0]),
         surface = (;),
         geometry = (;),
     )
@@ -635,8 +635,8 @@ end
         longwave_weights = [0.5, 0.5],
         shortwave_weights = [1.0],
     )
-    longwave = LongwaveOptics(zeros(2, 1), zeros(2, 1); weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, 1); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(2, 1), zeros(2, 1); weights=zeros(2))
+    shortwave = ShortwaveOptics(zeros(1, 1); weights=zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
@@ -649,7 +649,7 @@ end
         pressure_interfaces = [10_000.0, 20_000.0],
         temperature_layers = [275.0],
         temperature_interfaces = [250.0, 300.0],
-        gases = (h2o = [1.0], co2 = [1.0]),
+        gases = (h2o=[1.0], co2=[1.0]),
         surface = (;),
         geometry = (;),
     )
@@ -663,8 +663,8 @@ end
         longwave_weights = [1.0],
         shortwave_weights = [0.5, 0.5],
     )
-    longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1); weights = zeros(1))
-    shortwave = ShortwaveOptics(zeros(2, 1); weights = zeros(2))
+    longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1); weights=zeros(1))
+    shortwave = ShortwaveOptics(zeros(2, 1); weights=zeros(2))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
@@ -712,8 +712,8 @@ end
         shortwave_weights = [1.0],
     )
 
-    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz); weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz); weights=zeros(2))
+    shortwave = ShortwaveOptics(zeros(1, Nz); weights=zeros(1))
 
     optical_properties!(longwave, shortwave, model, atmosphere)
 
@@ -776,8 +776,8 @@ end
         )
     end
 
-    @test_throws ArgumentError contract_model(pressure_grid = [100.0, 1_000.0, 5_000.0])
-    @test_throws ArgumentError contract_model(water_vapor_grid = [1.0e-6, 1.0e-4, 1.0e-3])
+    @test_throws ArgumentError contract_model(pressure_grid=[100.0, 1_000.0, 5_000.0])
+    @test_throws ArgumentError contract_model(water_vapor_grid=[1.0e-6, 1.0e-4, 1.0e-3])
     @test_throws DimensionMismatch contract_model(
         pressure_grid = [100.0, 1_000.0, 10_000.0],
         temperature_grid = [200.0 250.0; 210.0 260.0],
@@ -790,12 +790,12 @@ end
     )
 
     model = contract_model()
-    longwave = LongwaveOptics(zeros(1, 2), zeros(1, 2); weights = zeros(1))
-    shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(1, 2), zeros(1, 2); weights=zeros(1))
+    shortwave = ShortwaveOptics(zeros(1, 2); weights=zeros(1))
     atmosphere(; pressure_layers = [200.0, 800.0],
                  pressure_interfaces = [100.0, 500.0, 1_000.0],
                  temperature_interfaces = Float64[],
-                 gases = (h2o = [1.0, 2.0],)) = ColumnAtmosphere(
+                 gases = (h2o=[1.0, 2.0],)) = ColumnAtmosphere(
         pressure_layers = pressure_layers,
         pressure_interfaces = pressure_interfaces,
         temperature_layers = [250.0, 260.0],
@@ -806,22 +806,22 @@ end
     )
 
     @test_throws DimensionMismatch optical_properties!(
-        longwave, shortwave, model, atmosphere(pressure_layers = [200.0]))
+        longwave, shortwave, model, atmosphere(pressure_layers=[200.0]))
     @test_throws DimensionMismatch optical_properties!(
         longwave, shortwave, model,
-        atmosphere(pressure_interfaces = [100.0, 1_000.0]))
-    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(gases = (h2o = [1.0],)))
+        atmosphere(pressure_interfaces=[100.0, 1_000.0]))
+    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(gases=(h2o=[1.0],)))
 
     interface_longwave = LongwaveOptics(
         zeros(1, 2), zeros(1, 2);
         source_top = zeros(1, 2), source_bottom = zeros(1, 2), weights = zeros(1))
     @test_throws DimensionMismatch optical_properties!(
         interface_longwave, shortwave, model,
-        atmosphere(temperature_interfaces = [240.0, 270.0]))
-    top_only = LongwaveOptics(zeros(1, 2), zeros(1, 2); source_top = zeros(1, 2), weights = zeros(1))
+        atmosphere(temperature_interfaces=[240.0, 270.0]))
+    top_only = LongwaveOptics(zeros(1, 2), zeros(1, 2); source_top=zeros(1, 2), weights=zeros(1))
     @test_throws ArgumentError optical_properties!(
         top_only, shortwave, model,
-        atmosphere(temperature_interfaces = [240.0, 255.0, 270.0]))
+        atmosphere(temperature_interfaces=[240.0, 255.0, 270.0]))
 end
 
 @testset "property-backed gas views follow the Symbol-keyed gas contract" begin
@@ -861,13 +861,13 @@ end
             surface = (;),
             geometry = (;),
         )
-        longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1); weights = zeros(1))
-        shortwave = ShortwaveOptics(zeros(1, 1); weights = zeros(1))
+        longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1); weights=zeros(1))
+        shortwave = ShortwaveOptics(zeros(1, 1); weights=zeros(1))
         optical_properties!(longwave, shortwave, model, atmosphere)
         return longwave.optical_depth, shortwave.optical_depth
     end
 
-    named = (h2o = [1.0], co2 = [101.0], composite = [100.0])
+    named = (h2o=[1.0], co2=[101.0], composite=[100.0])
     expected = run_with_gases(named)
     @test run_with_gases(GasView(named...)) == expected
     @test run_with_gases(Dict(pairs(named))) == expected
@@ -883,7 +883,7 @@ end
 # say so) if the interpolation itself is ever meant to change again.
 @testset "ecCKD tabulated interpolation is bit-exact" begin
     Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
-    pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length = Npressures))
+    pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length=Npressures))
     Nlongwave_gpoints, Nshortwave_gpoints = 3, 2
 
     make_atmosphere(gases) = ColumnAtmosphere(
@@ -914,10 +914,10 @@ end
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
-        atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3))
+        atmosphere = make_atmosphere((h2o=[3.1, 12.7, 41.9], co2=8.3))
         longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
                                   weights = zeros(Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights = zeros(Nshortwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights=zeros(Nshortwave_gpoints))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
@@ -972,12 +972,12 @@ end
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
-        atmosphere = make_atmosphere((h2o = [3.1, 12.7, 41.9], co2 = 8.3, composite = [4.2e2, 1.1e3, 2.6e3]))
+        atmosphere = make_atmosphere((h2o=[3.1, 12.7, 41.9], co2=8.3, composite=[4.2e2, 1.1e3, 2.6e3]))
         longwave = LongwaveOptics(zeros(Nlongwave_gpoints, 3), zeros(Nlongwave_gpoints, 3);
                                   source_top = zeros(Nlongwave_gpoints, 3),
                                   source_bottom = zeros(Nlongwave_gpoints, 3),
                                   weights = zeros(Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights = zeros(Nshortwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, 3); weights=zeros(Nshortwave_gpoints))
         optical_properties!(longwave, shortwave, model, atmosphere)
 
         @test longwave.optical_depth == [
@@ -1018,7 +1018,7 @@ end
     function tabulated_fixture(FT, matrix_temperature_grid::Bool)
         Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
         Nlongwave_gpoints, Nshortwave_gpoints, Ngases, Nz = 3, 2, 3, 3
-        pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = Npressures)))
+        pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length=Npressures)))
         temperature_grid = matrix_temperature_grid ?
             FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures] :
             FT[200, 250, 300]
@@ -1067,7 +1067,7 @@ end
                                   source_top = zeros(FT, Nlongwave_gpoints, Nz),
                                   source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
                                   weights = zeros(FT, Nlongwave_gpoints))
-        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
+        shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights=zeros(FT, Nshortwave_gpoints))
         return model, atmosphere, longwave, shortwave
     end
 
@@ -1116,7 +1116,7 @@ end
                                               source_top = zero(longwave.source_top),
                                               source_bottom = zero(longwave.source_bottom),
                                               weights = zero(longwave.weights))
-            adapted_shortwave = ShortwaveOptics(zero(shortwave.optical_depth); weights = zero(shortwave.weights))
+            adapted_shortwave = ShortwaveOptics(zero(shortwave.optical_depth); weights=zero(shortwave.weights))
             optical_properties!(adapted_longwave, adapted_shortwave, adapted, atmosphere)
             @test adapted_longwave.optical_depth == longwave.optical_depth
             @test adapted_shortwave.optical_depth == shortwave.optical_depth

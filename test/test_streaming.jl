@@ -72,7 +72,7 @@ function optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_
                               source_top = interface_sources ? zeros(FT, Nlongwave_gpoints, Nz) : nothing,
                               source_bottom = interface_sources ? zeros(FT, Nlongwave_gpoints, Nz) : nothing,
                               weights = zeros(FT, Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights=zeros(FT, Nshortwave_gpoints))
     return longwave, shortwave
 end
 
@@ -109,9 +109,9 @@ function smoke_fixture()
         pressure_interfaces = [1_000.0, 45_000.0, 100_000.0],
         temperature_layers = [240.0, 285.0],
         temperature_interfaces = [230.0, 260.0, 295.0],
-        gases = (; h2o = [0.002, 0.014], co2 = 420.0e-6),
-        surface = (; temperature = 295.0, albedo = 0.1),
-        geometry = (; cos_zenith = 0.5),
+        gases = (; h2o=[0.002, 0.014], co2=420.0e-6),
+        surface = (; temperature=295.0, albedo=0.1),
+        geometry = (; cos_zenith=0.5),
     )
     model = EcCKDGasOpticsModel(
         names = (:h2o, :co2),
@@ -129,7 +129,7 @@ end
 function tabulated_fixture(FT)
     Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
     Nlongwave_gpoints, Nshortwave_gpoints, Ngases = 3, 2, 3
-    pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = Npressures)))
+    pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length=Npressures)))
     temperature_grid = FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Npressures, iᵀ in 1:Ntemperatures]
     source_temperature_grid = FT[180, 240, 300]
     model = EcCKDTabulatedGasOpticsModel(
@@ -159,7 +159,7 @@ function tabulated_fixture(FT)
         pressure_interfaces = FT[1_000, 14_000, 52_000, 101_000],
         temperature_layers = FT[217.3, 263.9, 291.4],
         temperature_interfaces = FT[205.1, 231.7, 279.2, 297.8],
-        gases = (h2o = FT[3.1, 12.7, 41.9], co2 = FT(8.3), composite = FT[4.2e2, 1.1e3, 2.6e3]),
+        gases = (h2o=FT[3.1, 12.7, 41.9], co2=FT(8.3), composite=FT[4.2e2, 1.1e3, 2.6e3]),
         surface = (;),
         geometry = (;),
     )
@@ -172,7 +172,7 @@ end
 # is `nᵈ = Δp / (g (mᵈ + mᵛ χ))`, every gas is `χ nᵈ`, and the layer's
 # mass closes: `mᵈ nᵈ + mᵛ n_H₂O == Δp / g`.
 function reference_column(Nz)
-    pressure_interfaces = exp.(range(log(100.0), log(101_325.0), length = Nz + 1))
+    pressure_interfaces = exp.(range(log(100.0), log(101_325.0), length=Nz + 1))
     Δp = diff(pressure_interfaces)
     pressure_layers = Δp ./ log.(pressure_interfaces[2:end] ./ pressure_interfaces[1:end - 1])
     temperature_interfaces = [200 + 95 * (p / 101_325.0)^0.3 for p in pressure_interfaces]
@@ -224,11 +224,11 @@ end
                                    temperature_interfaces = atmosphere.temperature_interfaces,
                                    gases = atmosphere.gases, surface = atmosphere.surface,
                                    geometry = atmosphere.geometry,
-                                   constants = PhysicalConstants(FT; gravity = 2 * FT(GRAVITY)))
+                                   constants = PhysicalConstants(FT; gravity=2 * FT(GRAVITY)))
         Nz = length(atmosphere.temperature_layers)
         Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-        longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = false)
-        heavy_longwave, heavy_shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = false)
+        longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources=false)
+        heavy_longwave, heavy_shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources=false)
         optical_properties!(longwave, shortwave, model, atmosphere)
         optical_properties!(heavy_longwave, heavy_shortwave, model, heavy)
         @test heavy_shortwave.rayleigh_optical_depth == shortwave.rayleigh_optical_depth ./ 2
@@ -236,8 +236,8 @@ end
         @test heavy_longwave.optical_depth == longwave.optical_depth
 
         # `heating_rates!` defaults to the column's constants.
-        fluxes = RadiativeFluxes(longwave_up = FT.(collect(range(300, 400; length = Nz + 1))),
-                                 longwave_down = FT.(collect(range(250, 150; length = Nz + 1))),
+        fluxes = RadiativeFluxes(longwave_up = FT.(collect(range(300, 400; length=Nz + 1))),
+                                 longwave_down = FT.(collect(range(250, 150; length=Nz + 1))),
                                  shortwave_up = zeros(FT, Nz + 1),
                                  shortwave_down = zeros(FT, Nz + 1))
         heating, heavy_heating, explicit = zeros(FT, Nz), zeros(FT, Nz), zeros(FT, Nz)
@@ -275,8 +275,8 @@ end
 @testset "scalar layer optics reproduce optical_properties! bitwise" begin
     @testset "2-layer fixed-coefficient model" begin
         model, atmosphere = smoke_fixture()
-        assert_scalar_matches_array(model, atmosphere; interface_sources = false)
-        assert_scalar_matches_array(model, atmosphere; interface_sources = true)
+        assert_scalar_matches_array(model, atmosphere; interface_sources=false)
+        assert_scalar_matches_array(model, atmosphere; interface_sources=true)
         # The fixed-coefficient model has no stencil, no source table and no
         # Rayleigh scattering.
         @test gas_optics_stencil(model, 20_000.0, 240.0, 0.0) === nothing
@@ -288,13 +288,13 @@ end
 
     @testset "synthetic tabulated model, $FT" for FT in (Float64, Float32)
         model, atmosphere = tabulated_fixture(FT)
-        assert_scalar_matches_array(model, atmosphere; interface_sources = false)
-        assert_scalar_matches_array(model, atmosphere; interface_sources = true)
+        assert_scalar_matches_array(model, atmosphere; interface_sources=false)
+        assert_scalar_matches_array(model, atmosphere; interface_sources=true)
     end
 
     @testset "reference climate_32x32 tables" begin
         names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
-        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        paths = reference_ecckd_definition_paths("32x32"; require=false)
         if paths.longwave === nothing || paths.shortwave === nothing
             @test_skip "ecrad_data artifact not installed"
         else
@@ -303,19 +303,19 @@ end
             @test length(model.shortwave_rayleigh_molar_scattering) == length(model.shortwave_weights)
             @test length(model.water_vapor_mole_fraction_grid) > 0
             atmosphere, _, _ = reference_column(24)
-            assert_scalar_matches_array(model, atmosphere; interface_sources = true)
-            assert_scalar_matches_array(model, atmosphere; interface_sources = false)
+            assert_scalar_matches_array(model, atmosphere; interface_sources=true)
+            assert_scalar_matches_array(model, atmosphere; interface_sources=false)
         end
     end
 end
 
 @testset "layer_gases picks scalar layer amounts" begin
-    column = (h2o = [1.0, 2.0, 3.0], co2 = 4.0, composite = [10.0, 20.0, 30.0], unused = [7.0, 8.0, 9.0])
+    column = (h2o=[1.0, 2.0, 3.0], co2=4.0, composite=[10.0, 20.0, 30.0], unused=[7.0, 8.0, 9.0])
     picked = layer_gases(column, Val((:h2o, :co2)), 2)
     # Names in order, then the composite the relative-linear convention reads.
-    @test picked === (h2o = 2.0, co2 = 4.0, composite = 20.0)
-    @test layer_gases(column, Val((:composite, :h2o)), 3) === (composite = 30.0, h2o = 3.0)
-    @test layer_gases((h2o = [1.0, 2.0],), Val((:h2o,)), 1) === (h2o = 1.0,)
+    @test picked === (h2o=2.0, co2=4.0, composite=20.0)
+    @test layer_gases(column, Val((:composite, :h2o)), 3) === (composite=30.0, h2o=3.0)
+    @test layer_gases((h2o=[1.0, 2.0],), Val((:h2o,)), 1) === (h2o=1.0,)
     # Property-backed containers and dictionaries follow the same contract.
     @test layer_gases(Dict(pairs(column)), Val((:h2o, :co2)), 2) == picked
     @test (@inferred layer_gases(column, Val((:h2o, :co2)), 2)) == picked
@@ -364,7 +364,7 @@ end
     s = gas_optics_stencil(model, 50_000.0, 260.0, 0.0)
     @test s.water_vapor == (1, 1, 0)
     @test water_vapor_table_optical_depth(model, model.longwave_water_vapor_absorption, 1.0, 1, s) === 0.0
-    @test longwave_optical_depth(model, 1, (h2o = 2.0, co2 = 3.0), s) == 5.0
+    @test longwave_optical_depth(model, 1, (h2o=2.0, co2=3.0), s) == 5.0
     @test rayleigh_optical_depth(model, 1, 100.0) === 0.0
 end
 
@@ -419,7 +419,7 @@ end
     )
     s = gas_optics_stencil(model, 50_000.0, NaN, 0.0)
     @test s.temperature[1:2] == (1, 2) && isnan(s.temperature[3])
-    @test isnan(longwave_optical_depth(model, 1, (h2o = 2.0, co2 = 3.0), s))
+    @test isnan(longwave_optical_depth(model, 1, (h2o=2.0, co2=3.0), s))
 end
 
 @testset "Planck source off the table follows ecRad, $FT" for FT in (Float64, Float32)
@@ -539,7 +539,7 @@ end
     end
     @testset "reference climate_32x32 tables" begin
         names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
-        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        paths = reference_ecckd_definition_paths("32x32"; require=false)
         if paths.longwave === nothing || paths.shortwave === nothing
             @test_skip "ecrad_data artifact not installed"
         else
@@ -569,7 +569,7 @@ function broadband_fluxes(model, atmosphere; surface_temperature, cos_zenith, su
     FT = eltype(model)
     Nz = length(atmosphere.temperature_layers)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
+    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources=true)
     optical_properties!(longwave, shortwave, model, atmosphere)
     fluxes = RadiativeFluxes(longwave_up = zeros(FT, Nz + 1),
                              longwave_down = zeros(FT, Nz + 1),
@@ -577,7 +577,7 @@ function broadband_fluxes(model, atmosphere; surface_temperature, cos_zenith, su
                              shortwave_down = zeros(FT, Nz + 1))
     surface_up = surface_longwave_emission(model, FT(surface_temperature))
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = surface_up))
+                      LongwaveBoundaryConditions(surface_longwave_up=surface_up))
     radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
                       ShortwaveBoundaryConditions(toa_shortwave_down = FT(SOLAR_CONSTANT) * FT(cos_zenith),
                                                   surface_albedo = FT(surface_albedo)))
@@ -616,8 +616,8 @@ array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray, fi
         atmosphere32 = convert_column(Float32, atmosphere)
         Nz = length(atmosphere.temperature_layers)
         Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-        longwave32, shortwave32 = optics_arrays(Float32, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
-        longwave64, shortwave64 = optics_arrays(Float64, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
+        longwave32, shortwave32 = optics_arrays(Float32, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources=true)
+        longwave64, shortwave64 = optics_arrays(Float64, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources=true)
         @test (@inferred optical_properties!(longwave32, shortwave32, model32, atmosphere32)) isa Tuple
         optical_properties!(longwave64, shortwave64, model, atmosphere)
         @test eltype(longwave32.optical_depth) === Float32
@@ -632,7 +632,7 @@ array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray, fi
 
     @testset "Float32 vs Float64 broadband fluxes on the reference column" begin
         names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
-        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        paths = reference_ecckd_definition_paths("32x32"; require=false)
         if paths.longwave === nothing || paths.shortwave === nothing
             @test_skip "ecrad_data artifact not installed"
         else
@@ -773,7 +773,7 @@ function assert_streaming_matches_array(model, atmosphere; surface_temperature, 
     FT = eltype(model)
     Nz = length(atmosphere.temperature_layers)
     Nlongwave_gpoints, Nshortwave_gpoints = length(model.longwave_weights), length(model.shortwave_weights)
-    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources = true)
+    longwave, shortwave = optics_arrays(FT, Nlongwave_gpoints, Nshortwave_gpoints, Nz; interface_sources=true)
     optical_properties!(longwave, shortwave, model, atmosphere)
 
     fluxes = solve_longwave_array(FT, model, longwave; surface_temperature, emissivity, surface_albedo, toa_down)
@@ -821,19 +821,19 @@ end
             @test length(emission) == length(model.longwave_weights)
             @test collect(emission) == surface_longwave_emission(model, T)
             @test collect(emission) isa Vector{FT}
-            scaled = TabulatedSurfaceEmission(model, T; emissivity = 0.9)
+            scaled = TabulatedSurfaceEmission(model, T; emissivity=0.9)
             @test scaled.emissivity === FT(0.9)
-            @test collect(scaled) == surface_longwave_emission(model, T; emissivity = 0.9)
+            @test collect(scaled) == surface_longwave_emission(model, T; emissivity=0.9)
             @test collect(scaled) ≈ 0.9 .* collect(emission) rtol = 4eps(FT)
             @test emission[end] == emission[length(emission)]
         end
         # Gray path: scale × σT⁴, emissivity folded in.
-        @test TabulatedSurfaceEmission(gray, 300.0; emissivity = 0.5)[2] == 0.5 * (1.05 * (σ * 300.0^4))
+        @test TabulatedSurfaceEmission(gray, 300.0; emissivity=0.5)[2] == 0.5 * (1.05 * (σ * 300.0^4))
     end
 
     @testset "reference climate_32x32 tables" begin
         names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
-        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        paths = reference_ecckd_definition_paths("32x32"; require=false)
         if paths.longwave === nothing || paths.shortwave === nothing
             @test_skip "ecrad_data artifact not installed"
         else
@@ -841,20 +841,20 @@ end
             emission = TabulatedSurfaceEmission(model, 300)
             @test emission.bracket !== nothing
             @test collect(emission) == surface_longwave_emission(model, 300)
-            @test collect(TabulatedSurfaceEmission(model, 300; emissivity = 0.98)) ==
-                  surface_longwave_emission(model, 300; emissivity = 0.98)
+            @test collect(TabulatedSurfaceEmission(model, 300; emissivity=0.98)) ==
+                  surface_longwave_emission(model, 300; emissivity=0.98)
             @test sum(model.longwave_weights .* collect(emission)) ≈ σ * 300.0^4 atol = 0.2
         end
     end
 end
 
 @testset "streaming longwave reproduces CloudlessLongwave" begin
-    settings = (surface_temperature = 295.0, emissivity = 0.98, surface_albedo = 0.02, toa_down = 0.0)
+    settings = (surface_temperature=295.0, emissivity=0.98, surface_albedo=0.02, toa_down=0.0)
 
     @testset "2-layer fixed-coefficient model" begin
         model, atmosphere = smoke_fixture()
         assert_streaming_matches_array(model, atmosphere; settings...)
-        assert_streaming_matches_array(model, atmosphere; settings..., toa_down = 12.5)
+        assert_streaming_matches_array(model, atmosphere; settings..., toa_down=12.5)
     end
 
     @testset "synthetic tabulated model, $FT" for FT in (Float64, Float32)
@@ -864,7 +864,7 @@ end
 
     @testset "reference climate_32x32 tables" begin
         names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
-        paths = reference_ecckd_definition_paths("32x32"; require = false)
+        paths = reference_ecckd_definition_paths("32x32"; require=false)
         if paths.longwave === nothing || paths.shortwave === nothing
             @test_skip "ecrad_data artifact not installed"
         else
@@ -879,7 +879,7 @@ end
         model, atmosphere = tabulated_fixture(Float64)
         Nz = length(atmosphere.temperature_layers)
         Ngpoints = length(model.longwave_weights)
-        longwave, shortwave = optics_arrays(Float64, Ngpoints, length(model.shortwave_weights), Nz; interface_sources = true)
+        longwave, shortwave = optics_arrays(Float64, Ngpoints, length(model.shortwave_weights), Nz; interface_sources=true)
         optical_properties!(longwave, shortwave, model, atmosphere)
         albedo = [0.01, 0.05, 0.1]
         fluxes = solve_longwave_array(Float64, model, longwave; surface_temperature = 290.0, emissivity = 0.95,
@@ -893,7 +893,7 @@ end
             # it out by streaming with a one-hot weight vector.
             onehot = [j == gpoint ? model.longwave_weights[j] : 0.0 for j in 1:Ngpoints]
             gpoint_up, gpoint_down = stream_longwave(Float64, MatrixLayerOptics(longwave),
-                                                     TabulatedSurfaceEmission(model, 290.0; emissivity = 0.95),
+                                                     TabulatedSurfaceEmission(model, 290.0; emissivity=0.95),
                                                      albedo[gpoint], 0.0, onehot, Ngpoints, Nz)
             up .+= gpoint_up
             down .+= gpoint_down
@@ -911,7 +911,7 @@ shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
     for FT in (Float64, Float32)
         Nz = 7
         Ngpoints = 3
-        τ = FT.(10 .^ range(-4, 1, length = Ngpoints * Nz))
+        τ = FT.(10 .^ range(-4, 1, length=Ngpoints * Nz))
         τ = reshape(shuffle_like(τ), Ngpoints, Nz)
         source = FT.(100 .+ 150 .* rand(Ngpoints, Nz))
         source_top = FT.(100 .+ 150 .* rand(Ngpoints, Nz))
@@ -920,16 +920,16 @@ shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
         surface_up = FT[310, 330, 350]
         for (optics, boundary) in (
                 (LongwaveOptics(τ, source; weights),
-                 LongwaveBoundaryConditions(surface_longwave_up = surface_up)),
+                 LongwaveBoundaryConditions(surface_longwave_up=surface_up)),
                 (LongwaveOptics(τ, source; source_top, source_bottom, weights),
-                 LongwaveBoundaryConditions(surface_longwave_up = surface_up)),
+                 LongwaveBoundaryConditions(surface_longwave_up=surface_up)),
                 (LongwaveOptics(τ, source; source_top, source_bottom, weights),
-                 LongwaveBoundaryConditions(surface_longwave_up = FT(300), toa_longwave_down = FT(7))),
+                 LongwaveBoundaryConditions(surface_longwave_up=FT(300), toa_longwave_down=FT(7))),
                 (LongwaveOptics(vec(τ[1, :]), vec(source[1, :])),
-                 LongwaveBoundaryConditions(surface_longwave_up = FT(300))),
+                 LongwaveBoundaryConditions(surface_longwave_up=FT(300))),
                 (LongwaveOptics(vec(τ[1, :]), vec(source[1, :]);
                                 source_top = vec(source_top[1, :]), source_bottom = vec(source_bottom[1, :])),
-                 LongwaveBoundaryConditions(surface_longwave_up = FT(300), toa_longwave_down = FT(3))))
+                 LongwaveBoundaryConditions(surface_longwave_up=FT(300), toa_longwave_down=FT(3))))
             new = longwave_fluxes(FT, Nz)
             legacy = longwave_fluxes(FT, Nz)
             radiative_fluxes!(new, CloudlessLongwave(), optics, nothing, boundary)
@@ -947,7 +947,7 @@ shuffle_like(x) = x[sortperm(sin.(1:length(x)))]
     for interface_sources in (false, true)
         longwave, shortwave = optics_arrays(Float64, 2, 1, Nz; interface_sources)
         optical_properties!(longwave, shortwave, model, atmosphere)
-        boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_longwave_emission(model, 295.0))
+        boundary = LongwaveBoundaryConditions(surface_longwave_up=surface_longwave_emission(model, 295.0))
         new = longwave_fluxes(Float64, Nz)
         legacy = longwave_fluxes(Float64, Nz)
         radiative_fluxes!(new, CloudlessLongwave(), longwave, atmosphere, boundary)
@@ -962,14 +962,14 @@ end
     # the full Planck flux, so with `ε = 0.9` and `α = 0.1` the surface
     # upwelling flux `ε σT⁴ + α σT⁴` closes to `σT⁴`, as does every interior
     # interface in radiative equilibrium with the isothermal gas.
-    gray = EcCKDGasOpticsModel(names = (:composite,), longwave_absorption = [1.0;;], shortwave_absorption = [0.5;;])
+    gray = EcCKDGasOpticsModel(names=(:composite,), longwave_absorption=[1.0;;], shortwave_absorption=[0.5;;])
     for FT in (Float64, Float32)
         T = FT(280)
         B = FT(σ) * T^4
         Nz = 6
         layer = UniformLayerOptics(FT(50), B)
         model = NumericalRadiation.Adapt.adapt(Array{FT}, gray)
-        surface = TabulatedSurfaceEmission(model, T; emissivity = 0.9)
+        surface = TabulatedSurfaceEmission(model, T; emissivity=0.9)
         @test surface[1] ≈ FT(0.9) * B rtol = 4eps(FT)
         up, down = stream_longwave(FT, layer, surface, FT(0.1), zero(FT), model.longwave_weights, 1, Nz)
         rtol = FT === Float64 ? 1e-12 : 200eps(Float32)
@@ -986,7 +986,7 @@ end
 
 Base.@noinline measure_streaming_longwave(up, down, layer, surface, albedo, toa, weights, Ngpoints, Nz, transmittance, source_up) =
     @allocated streaming_longwave_fluxes!(up, down, layer, surface, albedo, toa, weights, Ngpoints, Nz, transmittance, source_up)
-Base.@noinline measure_surface_emission(model, T, ε) = @allocated TabulatedSurfaceEmission(model, T; emissivity = ε)
+Base.@noinline measure_surface_emission(model, T, ε) = @allocated TabulatedSurfaceEmission(model, T; emissivity=ε)
 Base.@noinline measure_surface_index(surface, gpoint) = @allocated surface[gpoint]
 
 @testset "streaming longwave is inferrable and allocation-free" begin
@@ -994,11 +994,11 @@ Base.@noinline measure_surface_index(surface, gpoint) = @allocated surface[gpoin
         model, atmosphere = tabulated_fixture(FT)
         Nz = length(atmosphere.temperature_layers)
         Ngpoints = length(model.longwave_weights)
-        longwave, shortwave = optics_arrays(FT, Ngpoints, 2, Nz; interface_sources = true)
+        longwave, shortwave = optics_arrays(FT, Ngpoints, 2, Nz; interface_sources=true)
         optical_properties!(longwave, shortwave, model, atmosphere)
         layer = MatrixLayerOptics(longwave)
 
-        surface = @inferred TabulatedSurfaceEmission(model, FT(290); emissivity = FT(0.98))
+        surface = @inferred TabulatedSurfaceEmission(model, FT(290); emissivity=FT(0.98))
         @test typeof(@inferred surface[1]) === FT
 
         # Column rows of `(Ncolumns, N + 1)` and `(Ncolumns, N)` workspaces, as a host
@@ -1205,7 +1205,7 @@ end
                                  longwave_down = zeros(FT, Nz + 1),
                                  shortwave_up = zeros(FT, Nz + 1),
                                  shortwave_down = zeros(FT, Nz + 1))
-        radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ₀)),
+        radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry=(; cos_zenith=μ₀)),
                           ShortwaveBoundaryConditions(toa_shortwave_down = toa_irradiance,
                                                       surface_albedo = diffuse_albedo,
                                                       surface_albedo_direct = direct_albedo))
@@ -1239,12 +1239,12 @@ end
     absorption = [0.1 0.2 0.3; 0.05 0.1 0.15]
     scattering = [0.0 0.0 0.0; 0.02 0.03 0.04]
     weights = [0.4, 0.6]
-    optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering, weights)
+    optics = ShortwaveOptics(absorption; scattering_optical_depth=scattering, weights)
     μ₀, S₀, albedo = 0.6, SOLAR_CONSTANT, 0.2
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1), longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1), shortwave_down = zeros(Nz + 1))
-    radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ₀)),
-                      ShortwaveBoundaryConditions(toa_shortwave_down = S₀ * μ₀, surface_albedo = albedo))
+    radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry=(; cos_zenith=μ₀)),
+                      ShortwaveBoundaryConditions(toa_shortwave_down=S₀ * μ₀, surface_albedo=albedo))
 
     τ_cumulative = [0.0; cumsum(absorption[1, :])]
     τ_below = τ_cumulative[end] .- τ_cumulative

@@ -126,7 +126,7 @@ struct LongwaveBoundaryConditions{FT, S, A}
     surface_albedo::A
 end
 
-function LongwaveBoundaryConditions(; surface_longwave_up, toa_longwave_down = nothing, surface_albedo = nothing)
+function LongwaveBoundaryConditions(; surface_longwave_up, toa_longwave_down=nothing, surface_albedo=nothing)
     FT = surface_longwave_up isa Number ? typeof(surface_longwave_up) : eltype(surface_longwave_up)
     down = toa_longwave_down === nothing ? zero(FT) : FT(toa_longwave_down)
     albedo = surface_albedo === nothing ? zero(FT) : surface_albedo

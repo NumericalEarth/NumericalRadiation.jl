@@ -82,9 +82,9 @@ nothing #hide
 # and its heating is discarded. Extension-column arrays carry the suffix
 # `_extended`; index 1 is the extension layer and physical layer j sits at j + 1.
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2, :ch4, :n2o))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :o3, :co2, :ch4, :n2o))
 
-zᵢ = collect(range(0, zₜ; length = Nz + 1))
+zᵢ = collect(range(0, zₜ; length=Nz + 1))
 z = 0.5 .* (zᵢ[1:Nz] .+ zᵢ[2:Nz+1])
 pᵢ = reverse(standard_pressure.(zᵢ))     # TOA-first, increasing downward
 p = reverse(standard_pressure.(z))       # standard_pressure at altitude midpoints
@@ -169,12 +169,12 @@ function equilibrate!(Tᵢ, Tˢ; χCO₂, ozone = χO₃_extended, fixed_water_v
                                     temperature_layers = T_extended,
                                     temperature_interfaces = Tᵢ_extended,
                                     gases, surface = nothing,
-                                    geometry = (cos_zenith = μ₀,),
+                                    geometry = (cos_zenith=μ₀,),
                                     constants)
     longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, Nz_extended)
-    shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = ℐꜜ_toa, surface_albedo = α)
+    shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down=ℐꜜ_toa, surface_albedo=α)
     surface_emission = surface_longwave_emission(gas_optics, Tˢ)
-    longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_emission)
+    longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up=surface_emission)
     Q = zeros(Nz_extended)
     Ṫᵢ = zeros(Nz + 1)
     previous = zeros(Nz + 1)
@@ -244,7 +244,7 @@ nothing #hide
 # to [150, 350] K) until the imbalance changes sign, then iterates a secant
 # step with a bisection fallback:
 
-function bracketed_secant(toa_imbalance, guesses; imbalance_tolerance = 0.1, max_expansions = 8, max_iterations = 12)
+function bracketed_secant(toa_imbalance, guesses; imbalance_tolerance=0.1, max_expansions=8, max_iterations=12)
     lower, upper = min(guesses...), max(guesses...)
     ΔF_lower, state_lower = toa_imbalance(lower)
     ΔF_upper, state_upper = toa_imbalance(upper)
@@ -295,7 +295,7 @@ function rce(χCO₂; ozone = χO₃_extended, fixed_water_vapor = nothing,
     end
     Tˢ, state, iterations, expansions = bracketed_secant(toa_imbalance, Tˢ_guesses; imbalance_tolerance,
                                                          max_expansions, max_iterations)
-    return (; state..., Tˢ, secant_iterations = iterations, bracket_expansions = expansions)
+    return (; state..., Tˢ, secant_iterations=iterations, bracket_expansions=expansions)
 end
 nothing #hide
 
@@ -309,9 +309,9 @@ nothing #hide
 χCO₂ = 420e-6
 
 control      = rce(χCO₂)
-doubled      = rce(2χCO₂; warm_start = control.Tᵢ)
-quadrupled   = rce(4χCO₂; warm_start = control.Tᵢ)
-frozen_vapor = rce(4χCO₂; warm_start = control.Tᵢ, fixed_water_vapor = control.χH₂O)
+doubled      = rce(2χCO₂; warm_start=control.Tᵢ)
+quadrupled   = rce(4χCO₂; warm_start=control.Tᵢ)
+frozen_vapor = rce(4χCO₂; warm_start=control.Tᵢ, fixed_water_vapor=control.χH₂O)
 
 for (name, state) in (("control, 420 ppm CO₂", control),
                       ("2× CO₂, fixed RH", doubled),
@@ -339,17 +339,17 @@ function profile_axis(fig; title)
                 yticks = pressure_ticks, title)
 end
 
-fig = Figure(size = (700, 660))
-ax = profile_axis(fig; title = "RCE response to CO₂")
+fig = Figure(size=(700, 660))
+ax = profile_axis(fig; title="RCE response to CO₂")
 for (state, label, color, style) in
         ((control, "1× CO₂ (420 ppm), fixed RH", :steelblue4, :solid),
          (doubled, "2× CO₂, fixed RH", :darkorange3, :solid),
          (quadrupled, "4× CO₂, fixed RH", :firebrick, :solid),
          (frozen_vapor, "4× CO₂, frozen water vapor", :firebrick, :dash))
-    lines!(ax, state.T_extended[2:Nz_extended], p ./ 100; color, label, linewidth = 2, linestyle = style)
-    scatter!(ax, [state.Tˢ], [pˢ / 100]; color, markersize = 10)
+    lines!(ax, state.T_extended[2:Nz_extended], p ./ 100; color, label, linewidth=2, linestyle=style)
+    scatter!(ax, [state.Tˢ], [pˢ / 100]; color, markersize=10)
 end
-Legend(fig[2, 1], ax; orientation = :horizontal, nbanks = 2, framevisible = false)
+Legend(fig[2, 1], ax; orientation=:horizontal, nbanks=2, framevisible=false)
 save("manabe_rce_states.png", fig); nothing #hide
 
 # ![Equilibrium temperature profiles](manabe_rce_states.png)
@@ -367,25 +367,25 @@ save("manabe_rce_states.png", fig); nothing #hide
 # the full equilibrium — water vapor frozen to zero, CO₂ removed, or ozone
 # removed, each through the same solver and gates:
 
-without_H₂O = rce(χCO₂; warm_start = control.Tᵢ, fixed_water_vapor = zero(control.χH₂O), Tˢ_guesses = (255, 275))
-without_CO₂ = rce(0; warm_start = control.Tᵢ, Tˢ_guesses = (265, 285))
-without_O₃  = rce(χCO₂; warm_start = control.Tᵢ, ozone = zero(χO₃_extended), Tˢ_guesses = (275, 292))
+without_H₂O = rce(χCO₂; warm_start=control.Tᵢ, fixed_water_vapor=zero(control.χH₂O), Tˢ_guesses=(255, 275))
+without_CO₂ = rce(0; warm_start=control.Tᵢ, Tˢ_guesses=(265, 285))
+without_O₃  = rce(χCO₂; warm_start=control.Tᵢ, ozone=zero(χO₃_extended), Tˢ_guesses=(275, 292))
 
 for (name, state) in (("without water vapor", without_H₂O), ("without CO₂", without_CO₂), ("without O₃", without_O₃))
     @printf("%-28s Tˢ = %7.2f K   ΔTˢ = %+6.2f K\n", name, state.Tˢ, state.Tˢ - control.Tˢ)
 end
 
-fig = Figure(size = (700, 660))
-ax = profile_axis(fig; title = "Absorber contributions")
+fig = Figure(size=(700, 660))
+ax = profile_axis(fig; title="Absorber contributions")
 for (state, label, color) in
         ((control, "all modeled absorbers", :steelblue4),
          (without_H₂O, "no H₂O", :darkorange3),
          (without_CO₂, "no CO₂", :firebrick),
          (without_O₃, "no O₃", :seagreen))
-    lines!(ax, state.T_extended[2:Nz_extended], p ./ 100; color, label, linewidth = 2)
-    scatter!(ax, [state.Tˢ], [pˢ / 100]; color, markersize = 10)
+    lines!(ax, state.T_extended[2:Nz_extended], p ./ 100; color, label, linewidth=2)
+    scatter!(ax, [state.Tˢ], [pˢ / 100]; color, markersize=10)
 end
-Legend(fig[2, 1], ax; orientation = :horizontal, framevisible = false)
+Legend(fig[2, 1], ax; orientation=:horizontal, framevisible=false)
 save("manabe_rce_absorbers.png", fig); nothing #hide
 
 # ![Absorber contributions](manabe_rce_absorbers.png)
@@ -397,7 +397,7 @@ save("manabe_rce_absorbers.png", fig); nothing #hide
 # the isothermal lookup-boundary layer, a tropospheric inversion limit,
 # and surface-emission consistency.
 
-function verify_equilibria(states; imbalance_gate = 0.1)
+function verify_equilibria(states; imbalance_gate=0.1)
     for (name, state) in states
         state.converged || error("$name: final equilibration not converged")
         abs(state.asr - state.olr) < imbalance_gate || error("$name: TOA imbalance $(state.asr - state.olr) W/m²")

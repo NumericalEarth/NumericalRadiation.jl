@@ -25,7 +25,7 @@ using Printf
 # ecCKD gas activation.
 
 Nz = 48
-pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
+pᵢ = collect(range(2_000, 101_325; length=Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
 Tˢ = 300
@@ -55,8 +55,8 @@ atmosphere = ColumnAtmosphere(;
              n2o = 330e-9 .* nᵈ,
              cfc11 = 0,
              cfc12 = 0),
-    surface = (temperature = Tˢ,),
-    geometry = (cos_zenith = 0.5,))
+    surface = (temperature=Tˢ,),
+    geometry = (cos_zenith=0.5,))
 nothing #hide
 
 # ## The prescribed cloud
@@ -99,7 +99,7 @@ nothing #hide
 # containers cannot touch the clear reference. That non-aliasing contract
 # is gate-verified below, not assumed.
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
 
 function gas_optics_containers()
     Nlongwave_gpoints = length(gas_optics.longwave_weights)
@@ -159,8 +159,8 @@ nothing #hide
 # per-g Planck emission; the shortwave boundary is a prescribed global-mean
 # insolation over an idealized dark surface.
 
-longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up = surface_longwave_emission(gas_optics, Tˢ))
-shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = 340.25, surface_albedo = 0.06)
+longwave_boundary = LongwaveBoundaryConditions(surface_longwave_up=surface_longwave_emission(gas_optics, Tˢ))
+shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down=340.25, surface_albedo=0.06)
 
 flux_containers() = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                                     longwave_down = zeros(Nz + 1),
@@ -172,12 +172,12 @@ radiative_fluxes!(clear_fluxes, CloudlessLongwave(), clear_longwave, atmosphere,
 radiative_fluxes!(clear_fluxes, CloudlessShortwave(), clear_shortwave, atmosphere, shortwave_boundary)
 
 allsky_fluxes = flux_containers()
-radiative_fluxes!(allsky_fluxes, CloudOverlapLongwave(overlap = :adding),
+radiative_fluxes!(allsky_fluxes, CloudOverlapLongwave(overlap=:adding),
                   LongwaveCloudOverlapOptics(clear_longwave,
                                              cloudy_longwave,
                                              cloud.cloud_fraction),
                   atmosphere, longwave_boundary)
-radiative_fluxes!(allsky_fluxes, CloudOverlapShortwave(overlap = :adding),
+radiative_fluxes!(allsky_fluxes, CloudOverlapShortwave(overlap=:adding),
                   ShortwaveCloudOverlapOptics(clear_shortwave,
                                               cloudy_shortwave,
                                               cloud.cloud_fraction),
@@ -229,7 +229,7 @@ shortwave_cre = net(allsky_fluxes.shortwave_down, allsky_fluxes.shortwave_up) .-
 
 using CairoMakie
 
-fig = Figure(size = (1260, 500))
+fig = Figure(size=(1260, 500))
 
 pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
 
@@ -239,30 +239,30 @@ axes3 = map(enumerate((("Longwave flux (W m⁻²)", "Longwave"),
     ax = Axis(fig[1, i]; xlabel, ylabel = "Pressure (hPa)",
               yscale = log10, yreversed = true,
               yticks = (pressure_ticks, string.(pressure_ticks)), title)
-    hspan!(ax, 800, 900; color = (:gray, 0.15))
+    hspan!(ax, 800, 900; color=(:gray, 0.15))
     ax
 end
 
-lines!(axes3[1], clear_fluxes.longwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2)
-lines!(axes3[1], allsky_fluxes.longwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2, linestyle = :dash)
-lines!(axes3[1], clear_fluxes.longwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2)
-lines!(axes3[1], allsky_fluxes.longwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2, linestyle = :dash)
+lines!(axes3[1], clear_fluxes.longwave_up, pᵢ ./ 100; color=:firebrick, linewidth=2)
+lines!(axes3[1], allsky_fluxes.longwave_up, pᵢ ./ 100; color=:firebrick, linewidth=2, linestyle=:dash)
+lines!(axes3[1], clear_fluxes.longwave_down, pᵢ ./ 100; color=:steelblue4, linewidth=2)
+lines!(axes3[1], allsky_fluxes.longwave_down, pᵢ ./ 100; color=:steelblue4, linewidth=2, linestyle=:dash)
 
-lines!(axes3[2], clear_fluxes.shortwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2)
-lines!(axes3[2], allsky_fluxes.shortwave_up, pᵢ ./ 100; color = :firebrick, linewidth = 2, linestyle = :dash)
-lines!(axes3[2], clear_fluxes.shortwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2)
-lines!(axes3[2], allsky_fluxes.shortwave_down, pᵢ ./ 100; color = :steelblue4, linewidth = 2, linestyle = :dash)
+lines!(axes3[2], clear_fluxes.shortwave_up, pᵢ ./ 100; color=:firebrick, linewidth=2)
+lines!(axes3[2], allsky_fluxes.shortwave_up, pᵢ ./ 100; color=:firebrick, linewidth=2, linestyle=:dash)
+lines!(axes3[2], clear_fluxes.shortwave_down, pᵢ ./ 100; color=:steelblue4, linewidth=2)
+lines!(axes3[2], allsky_fluxes.shortwave_down, pᵢ ./ 100; color=:steelblue4, linewidth=2, linestyle=:dash)
 
 ΔṪ = (allsky_Ṫ .- clear_Ṫ) .* 86_400
 @assert all(isfinite, ΔṪ)
-lines!(axes3[3], ΔṪ, p ./ 100; color = :darkorange3, linewidth = 2)
-vlines!(axes3[3], [0]; color = (:black, 0.4), linestyle = :dash)
+lines!(axes3[3], ΔṪ, p ./ 100; color=:darkorange3, linewidth=2)
+vlines!(axes3[3], [0]; color=(:black, 0.4), linestyle=:dash)
 
-legend_entries = [LineElement(color = :firebrick, linewidth = 2),
-                  LineElement(color = :steelblue4, linewidth = 2),
-                  LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
-                  LineElement(color = :gray30, linewidth = 2, linestyle = :dash),
-                  PolyElement(color = (:gray, 0.3))]
+legend_entries = [LineElement(color=:firebrick, linewidth=2),
+                  LineElement(color=:steelblue4, linewidth=2),
+                  LineElement(color=:gray30, linewidth=2, linestyle=:solid),
+                  LineElement(color=:gray30, linewidth=2, linestyle=:dash),
+                  PolyElement(color=(:gray, 0.3))]
 Legend(fig[2, 1:3], legend_entries,
        ["up", "down", "clear", "all-sky", "cloud deck"];
        orientation = :horizontal, framevisible = false)

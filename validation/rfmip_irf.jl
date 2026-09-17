@@ -98,14 +98,14 @@ const RFMIP_EXPERIMENT = 1   # present day
 # Regression gates (W m⁻² for fluxes, K day⁻¹ for heating rates), set from the
 # first run with about 50 % headroom; see the header.
 const RFMIP_GATES = (
-    climate_32x32 = (longwave_toa_up = (bias = 0.6, rmse = 1.0),
-                     longwave_surface_down = (bias = 0.6, rmse = 2.0),
+    climate_32x32 = (longwave_toa_up = (bias=0.6, rmse=1.0),
+                     longwave_surface_down = (bias=0.6, rmse=2.0),
                      longwave_heating_rate_troposphere = 0.30,
                      shortwave_toa_up = 0.6,
                      shortwave_surface_down = 1.5,
                      shortwave_heating_rate_troposphere = 0.06),
-    climate_64x64 = (longwave_toa_up = (bias = 0.6, rmse = 1.0),
-                     longwave_surface_down = (bias = 0.6, rmse = 2.0),
+    climate_64x64 = (longwave_toa_up = (bias=0.6, rmse=1.0),
+                     longwave_surface_down = (bias=0.6, rmse=2.0),
                      longwave_heating_rate_troposphere = 0.30,
                      shortwave_toa_up = 0.6,
                      shortwave_surface_down = 1.5,
@@ -129,11 +129,11 @@ function rfmip_files()
             partial = path * ".part"
             try
                 println("Downloading $(url)")
-                Downloads.download(url, partial; timeout = 300)
-                mv(partial, path; force = true)
+                Downloads.download(url, partial; timeout=300)
+                mv(partial, path; force=true)
             catch exception
                 @warn "Download failed" url exception = (exception, catch_backtrace())
-                isfile(partial) && rm(partial; force = true)
+                isfile(partial) && rm(partial; force=true)
                 push!(missing_urls, url)
                 continue
             end
@@ -146,7 +146,7 @@ function rfmip_files()
         foreach(url -> println("  ", url), missing_urls)
         return nothing
     end
-    return (input = paths[1], fluxes = NamedTuple{Symbol.(RFMIP_FLUX_VARIABLES)}(Tuple(paths[2:end])))
+    return (input=paths[1], fluxes=NamedTuple{Symbol.(RFMIP_FLUX_VARIABLES)}(Tuple(paths[2:end])))
 end
 
 # Scale a `*_GM` well-mixed-gas value by its units attribute ("1.e-6" etc.).
@@ -156,7 +156,7 @@ function scaled_global_mean(dataset, name, experiment)
     return Float64(variable[experiment]) * scale
 end
 
-function load_rfmip(paths; experiment = RFMIP_EXPERIMENT)
+function load_rfmip(paths; experiment=RFMIP_EXPERIMENT)
     sites = NCDataset(paths.input) do dataset
         (; pressure_layers = dense(dataset["pres_layer"][:, :]),
            pressure_interfaces = dense(dataset["pres_level"][:, :]),
@@ -196,10 +196,10 @@ function load_rfmip(paths; experiment = RFMIP_EXPERIMENT)
     return (; sites..., reference, Nsites, μ₀, daytime, excluded_sites)
 end
 
-function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
+function evaluate_rfmip(model_name, benchmark; column_amount_convention=:dry)
     (; Nsites, μ₀, daytime, reference) = benchmark
     Nz = size(benchmark.pressure_layers, 1)
-    model = read_reference_ecckd_gas_optics(model_name; names = ECCKD_GAS_NAMES)
+    model = read_reference_ecckd_gas_optics(model_name; names=ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, Nz)
 
     longwave_up = zeros(Nz + 1, Nsites)
@@ -225,7 +225,7 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
                                       temperature_layers = benchmark.temperature_layers[:, i],
                                       surface = (; temperature = benchmark.surface_temperature[i],
                                                    emissivity = benchmark.surface_emissivity[i]),
-                                      geometry = (; cos_zenith = μ₀[i]),
+                                      geometry = (; cos_zenith=μ₀[i]),
                                       column_amount_convention)
 
     # One untimed column first, so that the timing below excludes compilation.
@@ -260,15 +260,15 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
     night = findall(<=(0), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
     statistics = (;
-        longwave_toa_up = (bias = bias(longwave_up[1, :], reference.rlu[1, :]), rmse = rmse(longwave_up[1, :], reference.rlu[1, :])),
-        longwave_surface_down = (bias = bias(longwave_down[end, :], reference.rld[end, :]), rmse = rmse(longwave_down[end, :], reference.rld[end, :])),
-        longwave_surface_up = (bias = bias(longwave_up[end, :], reference.rlu[end, :]), rmse = rmse(longwave_up[end, :], reference.rlu[end, :])),
-        longwave_profile_rmse = (up = rmse(longwave_up, reference.rlu), down = rmse(longwave_down, reference.rld)),
+        longwave_toa_up = (bias=bias(longwave_up[1, :], reference.rlu[1, :]), rmse=rmse(longwave_up[1, :], reference.rlu[1, :])),
+        longwave_surface_down = (bias=bias(longwave_down[end, :], reference.rld[end, :]), rmse=rmse(longwave_down[end, :], reference.rld[end, :])),
+        longwave_surface_up = (bias=bias(longwave_up[end, :], reference.rlu[end, :]), rmse=rmse(longwave_up[end, :], reference.rlu[end, :])),
+        longwave_profile_rmse = (up=rmse(longwave_up, reference.rlu), down=rmse(longwave_down, reference.rld)),
         longwave_heating_rate = heating_ranges(p_hl, heating.longwave, heating.longwave_reference),
-        shortwave_toa_up = (bias = bias(shortwave_up[1, day], reference.rsu[1, day]), rmse = rmse(shortwave_up[1, day], reference.rsu[1, day])),
-        shortwave_surface_down = (bias = bias(shortwave_down[end, day], reference.rsd[end, day]), rmse = rmse(shortwave_down[end, day], reference.rsd[end, day])),
+        shortwave_toa_up = (bias=bias(shortwave_up[1, day], reference.rsu[1, day]), rmse=rmse(shortwave_up[1, day], reference.rsu[1, day])),
+        shortwave_surface_down = (bias=bias(shortwave_down[end, day], reference.rsd[end, day]), rmse=rmse(shortwave_down[end, day], reference.rsd[end, day])),
         shortwave_toa_down_max_relative_error = maximum(abs, shortwave_down[1, day] ./ reference.rsd[1, day] .- 1),
-        shortwave_profile_rmse = (up = rmse(shortwave_up[:, day], reference.rsu[:, day]), down = rmse(shortwave_down[:, day], reference.rsd[:, day])),
+        shortwave_profile_rmse = (up=rmse(shortwave_up[:, day], reference.rsu[:, day]), down=rmse(shortwave_down[:, day], reference.rsd[:, day])),
         shortwave_heating_rate = heating_ranges(p_hl[:, day], heating.shortwave[:, day], heating.shortwave_reference[:, day]),
         night_sites_max_flux = maximum(abs, [shortwave_up[:, night]; shortwave_down[:, night]]),
         longwave_heating_rate_troposphere_above_lowest_two_layers =
@@ -290,8 +290,8 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention = :dry)
         heating_rate_gate("LW heating rate, p > 100 hPa";
                           rmse = statistics.longwave_heating_rate.troposphere,
                           rmse_threshold = gates_for.longwave_heating_rate_troposphere),
-        flux_gate("SW TOA up, μ₀ > 0"; rmse = statistics.shortwave_toa_up.rmse, rmse_threshold = gates_for.shortwave_toa_up),
-        flux_gate("SW surface down, μ₀ > 0"; rmse = statistics.shortwave_surface_down.rmse, rmse_threshold = gates_for.shortwave_surface_down),
+        flux_gate("SW TOA up, μ₀ > 0"; rmse=statistics.shortwave_toa_up.rmse, rmse_threshold=gates_for.shortwave_toa_up),
+        flux_gate("SW surface down, μ₀ > 0"; rmse=statistics.shortwave_surface_down.rmse, rmse_threshold=gates_for.shortwave_surface_down),
         heating_rate_gate("SW heating rate, p > 100 hPa, μ₀ > 0";
                           rmse = statistics.shortwave_heating_rate.troposphere,
                           rmse_threshold = gates_for.shortwave_heating_rate_troposphere),
@@ -369,7 +369,7 @@ function rfmip_markdown(results, benchmark)
     return join(lines, "\n")
 end
 
-function run_rfmip_irf(; models = (:climate_32x32, :climate_64x64))
+function run_rfmip_irf(; models=(:climate_32x32, :climate_64x64))
     results_dir = validation_results_dir()
     results = []
     @testset "RFMIP-IRF clear sky" begin
@@ -378,7 +378,7 @@ function run_rfmip_irf(; models = (:climate_32x32, :climate_64x64))
             @test_skip "RFMIP-IRF input or LBLRTM reference files not available"
             return results
         end
-        model_paths = reference_ecckd_definition_paths(:climate_32x32; require = false)
+        model_paths = reference_ecckd_definition_paths(:climate_32x32; require=false)
         if model_paths.longwave === nothing
             @test_skip "ecrad_data artifact not available"
             return results
@@ -388,8 +388,8 @@ function run_rfmip_irf(; models = (:climate_32x32, :climate_64x64))
                 "$(length(benchmark.daytime)) daytime sites")
         for model_name in models
             result = evaluate_rfmip(model_name, benchmark)
-            moist = evaluate_rfmip(model_name, benchmark; column_amount_convention = :moist)
-            result = (; result..., moist_convention_statistics = moist.statistics)
+            moist = evaluate_rfmip(model_name, benchmark; column_amount_convention=:moist)
+            result = (; result..., moist_convention_statistics=moist.statistics)
             push!(results, result)
             println("\n$(result.model_name): $(round(result.microseconds_per_column; digits = 1)) μs per column")
             report_gates(result.gates)

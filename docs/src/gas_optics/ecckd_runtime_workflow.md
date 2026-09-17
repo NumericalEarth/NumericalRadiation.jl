@@ -15,9 +15,9 @@ pairs currently exposed are `"32x32"`, `"32x64"`, `"32x96"`, `"64x32"`,
 using NumericalRadiation
 
 spec = reference_ecckd_model_spec("32x32")
-paths = reference_ecckd_definition_paths(spec; require = false)
+paths = reference_ecckd_definition_paths(spec; require=false)
 
-(name = spec.name, longwave = spec.longwave, shortwave = spec.shortwave)
+(name=spec.name, longwave=spec.longwave, shortwave=spec.shortwave)
 ```
 
 Compact selectors such as `"32x64"` and full selectors such as

@@ -21,7 +21,7 @@ using NumericalRadiation
 using CairoMakie
 
 longwave = AnalyticBandLongwave(Float64)
-ν̃ = range(longwave.wavenumber_min, longwave.wavenumber_max, length = 500)
+ν̃ = range(longwave.wavenumber_min, longwave.wavenumber_max, length=500)
 
 # Replace zeros with NaN so the log-y plot shows gaps where a band is inactive.
 nan_zero(v) = [x == 0 ? NaN : x for x in v]
@@ -30,16 +30,16 @@ water_vapor_line_absorption      = nan_zero([water_vapor_line_absorption_referen
 water_vapor_continuum_absorption =          [water_vapor_continuum_absorption_reference(ν, longwave) for ν in ν̃]
 carbon_dioxide_absorption        = nan_zero([carbon_dioxide_absorption_reference(ν, longwave)        for ν in ν̃])
 
-fig = Figure(size = (760, 440))
+fig = Figure(size=(760, 440))
 ax  = Axis(fig[1, 1];
            xlabel = "Wavenumber ν̃ [cm⁻¹]",
            ylabel = "κ [m² kg⁻¹]",
            yscale = log10,
            title  = "Williams (2026) reference absorption (T = 260 K, p = 500 hPa)")
-lines!(ax, ν̃, water_vapor_line_absorption;      label = "H₂O line",      linewidth = 2)
-lines!(ax, ν̃, water_vapor_continuum_absorption; label = "H₂O continuum", linewidth = 2)
-lines!(ax, ν̃, carbon_dioxide_absorption;        label = "CO₂ 15 μm",      linewidth = 2, linestyle = :dash)
-axislegend(ax; position = :rt)
+lines!(ax, ν̃, water_vapor_line_absorption;      label="H₂O line",      linewidth=2)
+lines!(ax, ν̃, water_vapor_continuum_absorption; label="H₂O continuum", linewidth=2)
+lines!(ax, ν̃, carbon_dioxide_absorption;        label="CO₂ 15 μm",      linewidth=2, linestyle=:dash)
+axislegend(ax; position=:rt)
 save("absorption.png", fig); nothing # hide
 ```
 
@@ -63,11 +63,11 @@ using NumericalRadiation
 using CairoMakie
 
 Nz = 32
-σᵢ = collect(range(0, 1, length = Nz + 1))   # interface sigma coordinate
+σᵢ = collect(range(0, 1, length=Nz + 1))   # interface sigma coordinate
 grid = ColumnGrid(σᵢ)
 
 FT = Float64
-surface   = SurfaceState(FT; sea_surface_temperature = 295, land_surface_temperature = 285, land_fraction = 0.3)
+surface   = SurfaceState(FT; sea_surface_temperature=295, land_surface_temperature=285, land_fraction=0.3)
 constants = PhysicalConstants(FT)
 longwave  = AnalyticBandLongwave(FT)
 
@@ -76,7 +76,7 @@ carbon_dioxide_ppm = [50, 100, 200, 280, 400, 560, 800, 1120]
 OLR = FT[]
 for CO₂ in carbon_dioxide_ppm
     profile = AtmosphereProfile(
-        temperature      = collect(range(220, 295, length = Nz)),
+        temperature      = collect(range(220, 295, length=Nz)),
         humidity         = fill(0.005, Nz),
         geopotential     = zeros(Nz),
         surface_pressure = 100_000,
@@ -88,24 +88,24 @@ for CO₂ in carbon_dioxide_ppm
     push!(OLR, diagnostics.outgoing_longwave)
 end
 
-fig = Figure(size = (820, 360))
+fig = Figure(size=(820, 360))
 ax1 = Axis(fig[1, 1];
            xlabel = "CO₂ [ppmv]",
            ylabel = "ℐꜛˡʷ at TOA [W m⁻²]",
            xscale = log10,
            title  = "Clear-sky outgoing longwave vs CO₂")
-lines!(ax1, carbon_dioxide_ppm, OLR;   color = :black, linestyle = :dash)
-scatter!(ax1, carbon_dioxide_ppm, OLR; markersize = 10, color = :black)
+lines!(ax1, carbon_dioxide_ppm, OLR;   color=:black, linestyle=:dash)
+scatter!(ax1, carbon_dioxide_ppm, OLR; markersize=10, color=:black)
 
 ax2 = Axis(fig[1, 2];
            xlabel = "CO₂ [ppmv]",
            ylabel = "ℐꜛˡʷ(280) − ℐꜛˡʷ(CO₂) [W m⁻²]",
            xscale = log10,
            title  = "Clear-sky CO₂ radiative forcing")
-lines!(ax2, carbon_dioxide_ppm, OLR[4] .- OLR; color = :crimson, linewidth = 2)
-scatter!(ax2, carbon_dioxide_ppm, OLR[4] .- OLR; markersize = 10, color = :crimson)
-vlines!(ax2, 560; color = :gray70, linestyle = :dot)
-hlines!(ax2, 0;   color = :gray70)
+lines!(ax2, carbon_dioxide_ppm, OLR[4] .- OLR; color=:crimson, linewidth=2)
+scatter!(ax2, carbon_dioxide_ppm, OLR[4] .- OLR; markersize=10, color=:crimson)
+vlines!(ax2, 560; color=:gray70, linestyle=:dot)
+hlines!(ax2, 0;   color=:gray70)
 
 ΔOLR = OLR[4] - OLR[6]
 Label(fig[2, 1:2], "2× CO₂ forcing (280 → 560 ppmv) = $(round(ΔOLR, digits = 2)) W m⁻²";

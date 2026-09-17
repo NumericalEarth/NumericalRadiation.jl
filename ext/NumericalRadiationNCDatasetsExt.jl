@@ -66,7 +66,7 @@ function read_ecckd_definition(path::String)
     end
 end
 
-function string_attribute(dataset, name, default = "")
+function string_attribute(dataset, name, default="")
     haskey(dataset.attrib, name) || return default
     return String(dataset.attrib[name])
 end
@@ -286,7 +286,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
     end
     shortwave = NCDataset(shortwave_path, "r") do dataset
         pressure_grid = Float64.(Array(dataset["pressure"]))
-        isapprox(pressure_grid, longwave.pressure_grid; rtol = 0.0, atol = 1.0e-3) ||
+        isapprox(pressure_grid, longwave.pressure_grid; rtol=0.0, atol=1.0e-3) ||
             throw(ArgumentError("longwave and shortwave ecCKD pressure grids differ"))
         (
             temperature_grid = read_temperature_grid(dataset),
@@ -316,11 +316,11 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
     # that the pressure check above already allows.
     size(shortwave.temperature_grid) == size(longwave.temperature_grid) ||
         throw(ArgumentError("longwave and shortwave ecCKD temperature grid sizes differ"))
-    isapprox(shortwave.temperature_grid, longwave.temperature_grid; rtol = 0.0, atol = 1.0e-3) ||
+    isapprox(shortwave.temperature_grid, longwave.temperature_grid; rtol=0.0, atol=1.0e-3) ||
         throw(ArgumentError("longwave and shortwave ecCKD temperature grids differ"))
     size(shortwave.water_vapor_grid) == size(longwave.water_vapor_grid) ||
         throw(ArgumentError("longwave and shortwave ecCKD H₂O mole-fraction grid sizes differ"))
-    isapprox(shortwave.water_vapor_grid, longwave.water_vapor_grid; rtol = 1.0e-9, atol = 0.0) ||
+    isapprox(shortwave.water_vapor_grid, longwave.water_vapor_grid; rtol=1.0e-9, atol=0.0) ||
         throw(ArgumentError("longwave and shortwave ecCKD H₂O mole-fraction grids differ"))
     for (gas_index, gas) in enumerate(gas_name_tuple)
         # Gases absent from the shortwave file contribute zero and legitimately

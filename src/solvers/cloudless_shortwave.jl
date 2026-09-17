@@ -86,7 +86,7 @@ struct ShortwaveBoundaryConditions{FT, A, D}
     surface_albedo_direct::D
 end
 
-function ShortwaveBoundaryConditions(; toa_shortwave_down, surface_albedo, surface_albedo_direct = surface_albedo)
+function ShortwaveBoundaryConditions(; toa_shortwave_down, surface_albedo, surface_albedo_direct=surface_albedo)
     albedo_type = surface_albedo isa AbstractArray ? eltype(surface_albedo) : typeof(surface_albedo)
     direct_albedo_type = surface_albedo_direct isa AbstractArray ?
         eltype(surface_albedo_direct) : typeof(surface_albedo_direct)
@@ -191,7 +191,7 @@ Delta-Eddington-scale a layer and return its two-stream reflectance and
 transmittance. This is the single entry point every shortwave two-stream path
 uses, so the scaling cannot be skipped by one caller and applied by another.
 """
-@inline function shortwave_two_stream_layer(::Type{FT}, μ₀, τ, ω, ĝ, direct_source_limit = Val(:unit)) where FT
+@inline function shortwave_two_stream_layer(::Type{FT}, μ₀, τ, ω, ĝ, direct_source_limit=Val(:unit)) where FT
     τ, ω, ĝ = shortwave_delta_eddington(FT, τ, ω, ĝ)
     γ₁, γ₂, γ₃ = shortwave_two_stream_coefficients(FT, μ₀, ω, ĝ)
     return shortwave_reflectance_transmittance(FT, μ₀, τ, ω, γ₁, γ₂, γ₃, direct_source_limit)

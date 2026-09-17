@@ -17,7 +17,7 @@ using NumericalRadiation
 using NCDatasets
 using Printf
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :co2))
 nothing #hide
 
 # The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
@@ -29,7 +29,7 @@ g  = constants.gravity               # m s⁻²
 mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
 
 Nz = 48
-pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
+pᵢ = collect(range(2_000, 101_325; length=Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 nᵈ = diff(pᵢ) ./ (g * mᵈ)                                # mol m⁻²
 
@@ -50,8 +50,8 @@ function solve_column(χCO₂)
         gases = (composite = nᵈ,
                  h2o = 0.006 .* nᵈ,
                  co2 = χCO₂ .* nᵈ),
-        surface = (temperature = Tˢ,),
-        geometry = (cos_zenith = 0.5,),
+        surface = (temperature=Tˢ,),
+        geometry = (cos_zenith=0.5,),
         constants)
 
     Nlongwave_gpoints = length(gas_optics.longwave_weights)
@@ -60,7 +60,7 @@ function solve_column(χCO₂)
                               source_top = zeros(Nlongwave_gpoints, Nz),
                               source_bottom = zeros(Nlongwave_gpoints, Nz),
                               weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights = zeros(Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights=zeros(Nshortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),
@@ -69,8 +69,8 @@ function solve_column(χCO₂)
     optical_properties!(longwave, shortwave, gas_optics, atmosphere)
     surface_emission = surface_longwave_emission(gas_optics, Tˢ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
-    return (; olr = fluxes.longwave_up[1], up = fluxes.longwave_up)
+                      LongwaveBoundaryConditions(surface_longwave_up=surface_emission))
+    return (; olr=fluxes.longwave_up[1], up=fluxes.longwave_up)
 end
 nothing #hide
 
@@ -94,7 +94,7 @@ nothing #hide
 
 using CairoMakie
 
-fig = Figure(size = (760, 440))
+fig = Figure(size=(760, 440))
 
 pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
 
@@ -102,17 +102,17 @@ ax1 = Axis(fig[1, 1]; xlabel = "Upwelling longwave flux (W m⁻²)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Upwelling longwave flux")
-lines!(ax1, base.up, pᵢ ./ 100; color = :steelblue4, linewidth = 2, label = "420 ppm")
-lines!(ax1, doubled.up, pᵢ ./ 100; color = :firebrick, linewidth = 2, label = "840 ppm")
-axislegend(ax1; position = :rt, framevisible = false)
+lines!(ax1, base.up, pᵢ ./ 100; color=:steelblue4, linewidth=2, label="420 ppm")
+lines!(ax1, doubled.up, pᵢ ./ 100; color=:firebrick, linewidth=2, label="840 ppm")
+axislegend(ax1; position=:rt, framevisible=false)
 
 ax2 = Axis(fig[1, 2]; xlabel = "Δ upwelling flux, 1× − 2× (W m⁻²)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "OLR reduction from doubling CO₂")
-vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
-lines!(ax2, base.up .- doubled.up, pᵢ ./ 100; color = :firebrick, linewidth = 2)
-scatter!(ax2, [ΔOLR], [pᵢ[1] / 100]; color = :firebrick, markersize = 10)
+vlines!(ax2, [0]; color=(:black, 0.4), linestyle=:dash)
+lines!(ax2, base.up .- doubled.up, pᵢ ./ 100; color=:firebrick, linewidth=2)
+scatter!(ax2, [ΔOLR], [pᵢ[1] / 100]; color=:firebrick, markersize=10)
 text!(ax2, ΔOLR, pᵢ[1] / 100;
       text = "TOA: $(round(ΔOLR; digits = 2)) W m⁻² ",
       align = (:right, :top), offset = (-6, 0), fontsize = 12)

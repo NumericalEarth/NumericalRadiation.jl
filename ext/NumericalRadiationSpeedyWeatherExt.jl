@@ -33,7 +33,7 @@ end
 
 Adapt.@adapt_structure SpeedyAnalyticBandLongwave
 
-function SpeedyAnalyticBandLongwave(SG::SpeedyWeather.SpectralGrid; CO₂ = 280, kwargs...)
+function SpeedyAnalyticBandLongwave(SG::SpeedyWeather.SpectralGrid; CO₂=280, kwargs...)
     return SpeedyAnalyticBandLongwave(AnalyticBandLongwave{SG.NF}(; kwargs...), SG.NF(CO₂))
 end
 
@@ -82,7 +82,7 @@ function SpeedyWeather.parameterization!(ij::Integer, variables,
         end
     end
 
-    profile  = AtmosphereProfile(temperature = T, humidity = q, geopotential = Φ, surface_pressure = pˢ, CO₂ = CO₂)
+    profile  = AtmosphereProfile(temperature=T, humidity=q, geopotential=Φ, surface_pressure=pˢ, CO₂=CO₂)
     geometry = speedy_column_geometry(model)
     surface  = SurfaceState{NF}(
         sea_surface_temperature  = variables.prognostic.ocean.sea_surface_temperature[ij],

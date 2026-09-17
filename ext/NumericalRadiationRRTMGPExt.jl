@@ -88,7 +88,7 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
                                                 backend = nothing) where FT
     Nz = length(atmosphere.temperature_layers)
     Ncolumns = 1
-    grid_params = RRTMGPGridParams(FT; context = model.context, domain_nlay = Nz, ncol = Ncolumns)
+    grid_params = RRTMGPGridParams(FT; context=model.context, domain_nlay=Nz, ncol=Ncolumns)
     array_type = ClimaComms.array_type(ClimaComms.device(model.context))
 
     # Read the NetCDF lookup tables once and hand the bundle to the solver.

@@ -30,7 +30,7 @@ const σ = PhysicalConstants().stefan_boltzmann
             @test model.stefan_boltzmann === FT(σ)
             @test emission ≈ FT[0.5, 1.0] .* FT(σ) * FT(290)^4 rtol = 1e-6
             # Emissivity scales linearly.
-            scaled = surface_longwave_emission(model, FT(290); emissivity = FT(0.9))
+            scaled = surface_longwave_emission(model, FT(290); emissivity=FT(0.9))
             @test scaled ≈ FT(0.9) .* emission rtol = 1e-6
         end
     end
@@ -45,20 +45,20 @@ const σ = PhysicalConstants().stefan_boltzmann
         # Planck flux, which sits within the gray-vs-spectral closure
         # difference of σT⁴.
         broadband = sum(model.longwave_weights .* emission)
-        @test isapprox(broadband, σ * 300.0^4; atol = 0.2)
+        @test isapprox(broadband, σ * 300.0^4; atol=0.2)
         # Spectral, not gray: per-unit-weight emission varies strongly
         # across g points.
         weighted = model.longwave_weights .* emission
         @test maximum(weighted) / minimum(weighted) > 10
         # Emissivity scaling on the tabulated path too.
-        @test surface_longwave_emission(model, 300.0; emissivity = 0.98) ≈
+        @test surface_longwave_emission(model, 300.0; emissivity=0.98) ≈
               0.98 .* emission rtol = 1e-12
     end
 end
 
 @testset "total optical-depth clamp" begin
     Nz = 1
-    atmosphere_gases(methane_amount) = (composite = [100.0], ch4 = [methane_amount])
+    atmosphere_gases(methane_amount) = (composite=[100.0], ch4=[methane_amount])
     # Synthetic tabulated model with a relative-linear CH₄-like gas: with a
     # reference mole fraction and zero requested amount, the CH₄ term is
     # -reference * composite * k and can exceed the composite term, driving
@@ -86,7 +86,7 @@ end
         surface = nothing,
         geometry = (;),
     )
-    longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(1, Nz), zeros(1, Nz); weights=zeros(1))
     shortwave = ShortwaveOptics(zeros(1, Nz);
                                 rayleigh_optical_depth = zeros(1, Nz),
                                 scattering_asymmetry = zeros(1, Nz),
@@ -103,7 +103,7 @@ end
     reference_amount = 1e-3 * 100.0
     optical_properties!(longwave, shortwave, model, atmosphere(atmosphere_gases(reference_amount)))
     @test longwave.optical_depth[1, 1] > 0
-    @test isapprox(longwave.optical_depth[1, 1], 1e-4 * 100.0; rtol = 1e-10)
+    @test isapprox(longwave.optical_depth[1, 1], 1e-4 * 100.0; rtol=1e-10)
     @test shortwave.optical_depth[1, 1] > 0
-    @test isapprox(shortwave.optical_depth[1, 1], 1e-4 * 100.0; rtol = 1e-10)
+    @test isapprox(shortwave.optical_depth[1, 1], 1e-4 * 100.0; rtol=1e-10)
 end

@@ -173,7 +173,7 @@ and are the only identifiers exempt from the rules above:
 * RRTMGP struct fields and keywords (`vmr_h2o`, `ncol`, `nbnd_lw`, `grav`,
   `molmass_dryair`, `Stefan`);
 * SpeedyWeather fields and keywords (`σ_levels_full`, `σ_levels_half`, `σ_levels_thick`, `mol_mass_dry_air`,
-  `R_dry`, `greenhouse_gases.co2`, `SpectralGrid(nlayers = 8)`,
+  `R_dry`, `greenhouse_gases.co2`, `SpectralGrid(nlayers=8)`,
   `spectral_grid.nlayers`);
 * the Williams (2026) Table 1 parameters of [`AnalyticBandLongwave`](@ref)
   listed in the table, and the SPEEDY Fortran names quoted in the docstrings of
@@ -184,3 +184,22 @@ and are the only identifiers exempt from the rules above:
 Identifiers otherwise never spell a species by chemical formula — they say
 `water_vapor`, `carbon_dioxide`, `ozone`, `methane`, `nitrous_oxide` — while
 mathematics and prose use the formula with subscripts (`H₂O`, `CO₂`, `χH₂O`).
+
+## Layout
+
+Two layout rules, borrowed from Oceananigans, hold throughout the source,
+tests, examples and documentation:
+
+* **A statement that fits in about 120 characters is written on one line.**
+  An assignment is never split after `=`, a guard `cond || throw(...)` is
+  not broken before `throw`, a call or signature is not spread over several
+  lines, and a tuple is not written one field per line when the whole fits.
+  A statement that does not fit keeps either the first operand on the `=`
+  line with the operator continuations aligned under it, or `=` closing the
+  line and a four-space body (long short-form methods and destructurings).
+* **Continuation lines align with the first argument** after the opening
+  bracket of a call, signature, type-parameter list or literal (`f(; a,` aligns
+  with `a`), and with the first operand of a multi-line expression. Keyword
+  lists written across several lines are spaced, `a = 1`; keywords inside a
+  call on one line are not, `f(x=1)`, and neither are keyword defaults in a
+  one-line signature or fields of a one-line named tuple, `(; a=1, b=2)`.

@@ -31,7 +31,7 @@ using Printf
 # and analytic moisture and ozone mixing-ratio profiles:
 
 Nz = 48
-pᵢ = collect(range(2_000, 101_325; length = Nz + 1))
+pᵢ = collect(range(2_000, 101_325; length=Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
 Tˢ = 300
@@ -84,8 +84,8 @@ ecckd_atmosphere = ColumnAtmosphere(;
              n2o = χN₂O .* nᵈ,
              cfc11 = 0,
              cfc12 = 0),
-    surface = (temperature = Tˢ,),
-    geometry = (cos_zenith = 0.5,),
+    surface = (temperature=Tˢ,),
+    geometry = (cos_zenith=0.5,),
     constants)
 
 rrtmgp_atmosphere = ColumnAtmosphere(;
@@ -96,8 +96,8 @@ rrtmgp_atmosphere = ColumnAtmosphere(;
     gases = (h2o = χH₂O, o3 = χO₃, co2 = χCO₂,
              ch4 = χCH₄, n2o = χN₂O,
              o2 = 0.20946, n2 = 0.78084, co = 0),
-    surface = (temperature = Tˢ,),
-    geometry = (cos_zenith = 0.5,),
+    surface = (temperature=Tˢ,),
+    geometry = (cos_zenith=0.5,),
     constants)
 nothing #hide
 
@@ -112,7 +112,7 @@ nothing #hide
 intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
 
 function ecckd_member(selector)
-    gas_optics = read_reference_ecckd_gas_optics(selector; names = intended_gases)
+    gas_optics = read_reference_ecckd_gas_optics(selector; names=intended_gases)
     @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
     Nlongwave_gpoints = length(gas_optics.longwave_weights)
     Nshortwave_gpoints = length(gas_optics.shortwave_weights)
@@ -121,7 +121,7 @@ function ecckd_member(selector)
                               source_top = zeros(Nlongwave_gpoints, Nz),
                               source_bottom = zeros(Nlongwave_gpoints, Nz),
                               weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights = zeros(Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights=zeros(Nshortwave_gpoints))
     fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
                              longwave_down = zeros(Nz + 1),
                              shortwave_up = zeros(Nz + 1),
@@ -129,7 +129,7 @@ function ecckd_member(selector)
     optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
     surface_emission = surface_longwave_emission(gas_optics, Tˢ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
+                      LongwaveBoundaryConditions(surface_longwave_up=surface_emission))
     Ṫ = zeros(Nz)
     heating_rates!(Ṫ, fluxes, ecckd_atmosphere)
     return (; fluxes, Ṫ)
@@ -189,7 +189,7 @@ family = [(name = "ecCKD 32 (FSCK)", member = ecckd_member("32x32"),
            color = :steelblue4),
           (name = "ecCKD 64 (narrow-band)", member = ecckd_member("64x32"),
            color = :darkorange3),
-          (name = "RRTMGP (256 g)", member = rrtmgp, color = :firebrick)]
+          (name="RRTMGP (256 g)", member=rrtmgp, color=:firebrick)]
 
 println("OLR by family member:")
 for f in family
@@ -206,7 +206,7 @@ olr = [f.member.fluxes.longwave_up[1] for f in family]
 
 using CairoMakie
 
-fig = Figure(size = (940, 480))
+fig = Figure(size=(940, 480))
 
 pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
 
@@ -215,23 +215,23 @@ ax1 = Axis(fig[1, 1]; xlabel = "Longwave flux (W m⁻²)",
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Fluxes")
 for f in family
-    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100; color = f.color, linewidth = 2)
-    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100; color = f.color, linewidth = 2, linestyle = :dash)
+    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100; color=f.color, linewidth=2)
+    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100; color=f.color, linewidth=2, linestyle=:dash)
 end
 
 ax2 = Axis(fig[1, 2]; xlabel = "Ṫ (K day⁻¹)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Heating rates")
-vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
+vlines!(ax2, [0]; color=(:black, 0.4), linestyle=:dash)
 for f in family
-    lines!(ax2, f.member.Ṫ .* 86_400, p ./ 100; color = f.color, linewidth = 2)
+    lines!(ax2, f.member.Ṫ .* 86_400, p ./ 100; color=f.color, linewidth=2)
 end
 
 legend_entries = vcat(
-    [LineElement(color = f.color, linewidth = 2) for f in family],
-    [LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
-     LineElement(color = :gray30, linewidth = 2, linestyle = :dash)])
+    [LineElement(color=f.color, linewidth=2) for f in family],
+    [LineElement(color=:gray30, linewidth=2, linestyle=:solid),
+     LineElement(color=:gray30, linewidth=2, linestyle=:dash)])
 Legend(fig[2, 1:2], legend_entries,
        vcat([f.name for f in family], ["up", "down"]);
        orientation = :horizontal, framevisible = false)

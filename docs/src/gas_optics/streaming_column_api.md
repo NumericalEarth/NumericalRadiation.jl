@@ -208,7 +208,7 @@ julia> function (layers::LongwaveLayers)(gpoint, k)
 
 julia> Nz = 2;
 
-julia> surface = TabulatedSurfaceEmission(model, 295.0; emissivity = 0.98);
+julia> surface = TabulatedSurfaceEmission(model, 295.0; emissivity=0.98);
 
 julia> longwave_up, longwave_down = zeros(Nz + 1), zeros(Nz + 1);
 
@@ -216,7 +216,7 @@ julia> streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveLayers(mod
                                   surface, 0.02, 0.0, model.longwave_weights, 2, Nz,
                                   zeros(Nz), zeros(Nz));
 
-julia> round.(longwave_up; digits = 2)
+julia> round.(longwave_up; digits=2)
 3-element Vector{Float64}:
  430.18
  430.22
@@ -254,7 +254,7 @@ julia> streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveLayers
                                    μ₀, S₀ * max(μ₀, 0), albedo, albedo, model.shortwave_weights,
                                    1, Nz, ShortwaveColumnScratch(Float64, Nz));
 
-julia> round.(shortwave_down; digits = 2)
+julia> round.(shortwave_down; digits=2)
 3-element Vector{Float64}:
  680.5
  680.47
@@ -275,16 +275,16 @@ julia> atmosphere = ColumnAtmosphere(pressure_layers = column.pressure,
                                      pressure_interfaces = column.pressure_interfaces,
                                      temperature_layers = column.temperature,
                                      temperature_interfaces = column.temperature_interfaces,
-                                     gases = (; h2o = column.h2o, co2 = column.co2),
-                                     surface = (; temperature = 295.0),
-                                     geometry = (; cos_zenith = μ₀));
+                                     gases = (; h2o=column.h2o, co2=column.co2),
+                                     surface = (; temperature=295.0),
+                                     geometry = (; cos_zenith=μ₀));
 
 julia> longwave = LongwaveOptics(zeros(2, Nz), zeros(2, Nz);
                                  source_top = zeros(2, Nz),
                                  source_bottom = zeros(2, Nz),
                                  weights = zeros(2));
 
-julia> shortwave = ShortwaveOptics(zeros(1, Nz); weights = zeros(1));
+julia> shortwave = ShortwaveOptics(zeros(1, Nz); weights=zeros(1));
 
 julia> optical_properties!(longwave, shortwave, model, atmosphere);
 

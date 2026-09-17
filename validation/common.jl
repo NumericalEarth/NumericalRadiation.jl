@@ -132,7 +132,7 @@ function ColumnWorkspace(model, Nz)
                               source_top = zeros(FT, Nlongwave_gpoints, Nz),
                               source_bottom = zeros(FT, Nlongwave_gpoints, Nz),
                               weights = zeros(FT, Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights = zeros(FT, Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(FT, Nshortwave_gpoints, Nz); weights=zeros(FT, Nshortwave_gpoints))
     return ColumnWorkspace(longwave, shortwave, zeros(FT, Nz), zeros(FT, Nz), ShortwaveColumnScratch(FT, Nz))
 end
 
@@ -311,7 +311,7 @@ weights normalized per profile and the mean taken over profiles. All arrays
 are `(Nz + 1, Nprofiles)` matrices over the interfaces;
 `exclude_lowest` drops that many layers next to the surface from the statistic.
 """
-function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range; exclude_lowest = 0)
+function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range; exclude_lowest=0)
     Nz, Nprofiles = size(heating)
     low, high = pressure_range
     total = 0.0
@@ -354,15 +354,15 @@ struct Gate
     thresholds :: RadiationThresholds{Float64}
 end
 
-function flux_gate(name; rmse, bias = 0.0, rmse_threshold, bias_threshold = Inf)
+function flux_gate(name; rmse, bias=0.0, rmse_threshold, bias_threshold=Inf)
     metrics = RadiationErrorMetrics{Float64}(rmse, 0.0, bias, 0.0, 0.0, 0.0, 0.0, 0.0)
-    thresholds = RadiationThresholds(flux_rmse = rmse_threshold, flux_absolute_bias = bias_threshold)
+    thresholds = RadiationThresholds(flux_rmse=rmse_threshold, flux_absolute_bias=bias_threshold)
     return Gate(name, metrics, thresholds)
 end
 
 function heating_rate_gate(name; rmse, rmse_threshold)
     metrics = RadiationErrorMetrics{Float64}(0.0, 0.0, 0.0, rmse, 0.0, 0.0, 0.0, 0.0)
-    thresholds = RadiationThresholds(heating_rate_rmse = rmse_threshold)
+    thresholds = RadiationThresholds(heating_rate_rmse=rmse_threshold)
     return Gate(name, metrics, thresholds)
 end
 
@@ -421,7 +421,7 @@ function json_value(value, indent)
     end
 end
 
-function json_object(object, indent = 0)
+function json_object(object, indent=0)
     pad = " " ^ (indent + 2)
     entries = String[]
     for (key, value) in pairs(object)

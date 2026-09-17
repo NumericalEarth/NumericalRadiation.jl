@@ -19,13 +19,13 @@ println("Selected ecCKD model: ", spec.name)
 println("  LW: ", basename(paths.longwave))
 println("  SW: ", basename(paths.shortwave))
 
-gas_optics = read_reference_ecckd_gas_optics(spec; names = (:composite, :h2o, :co2), water_vapor_mole_fraction = 0.005)
+gas_optics = read_reference_ecckd_gas_optics(spec; names=(:composite, :h2o, :co2), water_vapor_mole_fraction=0.005)
 
 Nz = 24
-pressure_interfaces = collect(range(10_000.0, 100_000.0; length = Nz + 1))
+pressure_interfaces = collect(range(10_000.0, 100_000.0; length=Nz + 1))
 pressure_layers = 0.5 .* (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end])
-temperature_layers = collect(range(220.0, 295.0; length = Nz))
-temperature_interfaces = collect(range(215.0, 300.0; length = Nz + 1))
+temperature_layers = collect(range(220.0, 295.0; length=Nz))
+temperature_interfaces = collect(range(215.0, 300.0; length=Nz + 1))
 air_column = hydrostatic_air_moles.(diff(pressure_interfaces), constants.gravity, constants.dry_air_molar_mass)
 
 atmosphere = ColumnAtmosphere(;
@@ -35,11 +35,11 @@ atmosphere = ColumnAtmosphere(;
     temperature_interfaces = temperature_interfaces,
     gases = (
         composite = air_column,
-        h2o = collect(range(0.002, 0.015; length = Nz)) .* air_column,
+        h2o = collect(range(0.002, 0.015; length=Nz)) .* air_column,
         co2 = fill(420.0e-6, Nz) .* air_column,
     ),
-    surface = (temperature = temperature_interfaces[end],),
-    geometry = (cos_zenith = μ₀,),
+    surface = (temperature=temperature_interfaces[end],),
+    geometry = (cos_zenith=μ₀,),
     constants,
 )
 
@@ -97,8 +97,8 @@ heating_rates!(heating, fluxes, atmosphere)
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+ fluxes.shortwave_down .- fluxes.shortwave_up
 
 println("Runtime g-points: ", Nlongwave_gpoints, " LW, ", Nshortwave_gpoints, " SW")
-println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m^-2")
-println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m^-2")
+println("TOA net flux:     ", round(net_flux[1]; digits=3), " W m^-2")
+println("Surface net flux: ", round(net_flux[end]; digits=3), " W m^-2")
 println("Heating range:    ",
-        round(86_400 * minimum(heating); digits = 3), " to ",
-        round(86_400 * maximum(heating); digits = 3), " K day^-1")
+        round(86_400 * minimum(heating); digits=3), " to ",
+        round(86_400 * maximum(heating); digits=3), " K day^-1")

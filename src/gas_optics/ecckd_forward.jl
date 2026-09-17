@@ -410,7 +410,7 @@ function validate_log_uniform_grid(grid, name)
     expected_step = log(grid[firstindex(grid) + 1]) - log(grid[firstindex(grid)])
     for i in (firstindex(grid) + 2):lastindex(grid)
         step = log(grid[i]) - log(grid[i - 1])
-        isapprox(step, expected_step; rtol = 1.0e-5, atol = 0.0) ||
+        isapprox(step, expected_step; rtol=1.0e-5, atol=0.0) ||
             throw(ArgumentError("$name must be uniformly spaced in log coordinates"))
     end
     return nothing
@@ -429,7 +429,7 @@ function validate_temperature_grid(grid::AbstractMatrix, pressure_count)
     for iᵖ in axes(grid, 1), iᵀ in 2:size(grid, 2)
         step = grid[iᵖ, iᵀ] - grid[iᵖ, iᵀ - 1]
         step > 0 || throw(ArgumentError("temperature_grid rows must be strictly increasing"))
-        isapprox(step, expected_step; rtol = 1.0e-5, atol = 0.0) ||
+        isapprox(step, expected_step; rtol=1.0e-5, atol=0.0) ||
             throw(ArgumentError("temperature_grid must use one uniform temperature increment"))
     end
     return nothing
@@ -559,7 +559,7 @@ end
         for (j, name) in enumerate(GasNames)
     ]
     isempty(terms) && return :(zero(FT))
-    return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
+    return foldl((a, b) -> :($a + $b), terms; init=:(zero(FT)))
 end
 
 @inline function accumulate_optical_depth(gases, coefficients::AbstractMatrix{FT}, gas_names::Tuple, gpoint, k) where FT
@@ -594,7 +594,7 @@ end
         push!(terms, :(interpolate_table(coefficients, gpoint, $j, stencil) * $amount))
     end
     isempty(terms) && return :(zero(FT))
-    return foldl((a, b) -> :($a + $b), terms; init = :(zero(FT)))
+    return foldl((a, b) -> :($a + $b), terms; init=:(zero(FT)))
 end
 
 @inline function accumulate_tabulated_optical_depth(gases,

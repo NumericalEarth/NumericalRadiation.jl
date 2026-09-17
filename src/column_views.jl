@@ -147,10 +147,10 @@ mutable struct ShortwaveDiagnostics{NF}
     stratocumulus_cover::NF
 end
 
-ShortwaveDiagnostics(::Type{NF}, Nz::Integer = 1) where NF = ShortwaveDiagnostics{NF}(Nz)
+ShortwaveDiagnostics(::Type{NF}, Nz::Integer=1) where NF = ShortwaveDiagnostics{NF}(Nz)
 
-ShortwaveDiagnostics{NF}(Nz::Integer = 1) where NF = ShortwaveDiagnostics{NF}(
+ShortwaveDiagnostics{NF}(Nz::Integer=1) where NF = ShortwaveDiagnostics{NF}(
     zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF),
     zero(NF), zero(NF), Nz + 1, zero(NF))
 
-ShortwaveDiagnostics(Nz::Integer = 1) = ShortwaveDiagnostics{Float64}(Nz)
+ShortwaveDiagnostics(Nz::Integer=1) = ShortwaveDiagnostics{Float64}(Nz)

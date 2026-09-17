@@ -195,7 +195,7 @@ end
 Construct reusable storage for repeated runtime calls. Host integrations may
 also pass their own arrays/views directly to component methods.
 """
-function radiation_workspace(model, atmosphere; backend = nothing)
+function radiation_workspace(model, atmosphere; backend=nothing)
     return nothing
 end
 
@@ -206,7 +206,7 @@ The existing single-column object is already a reusable workspace: it owns the
 temperature-tendency vector, shortwave transmissivity scratch, and diagnostic
 objects used by the analytic-band paths.
 """
-radiation_workspace(column::RadiativeTransferColumn; backend = nothing) = column
+radiation_workspace(column::RadiativeTransferColumn; backend=nothing) = column
 
 """
     radiative_heating!(column::RadiativeTransferColumn; reset=true, longwave=true, shortwave=true)

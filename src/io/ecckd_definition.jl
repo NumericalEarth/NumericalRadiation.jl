@@ -142,7 +142,7 @@ function artifact_root(name::String; require::Bool)
     return nothing
 end
 
-function ecrad_artifact_root(; require::Bool = false)
+function ecrad_artifact_root(; require::Bool=false)
     root = artifact_root("ecrad_data"; require)
     root === nothing || return root
     require || return nothing
@@ -155,7 +155,7 @@ function ecrad_artifact_root(; require::Bool = false)
     end
 end
 
-function ecckd_source_artifact_root(; require::Bool = false)
+function ecckd_source_artifact_root(; require::Bool=false)
     root = artifact_root("ecckd_source"; require)
     root === nothing || return root
     require || return nothing
@@ -190,7 +190,7 @@ the local validation checkout at `validation/external/ecrad`. GitHub archive
 artifacts may contain the data under one top-level child directory; individual
 file resolution handles both `<root>/data` and `<root>/<archive>/data`.
 """
-function ecrad_data_path(; require::Bool = false)
+function ecrad_data_path(; require::Bool=false)
     root = first_existing_directory((
         get(ENV, "RH_ECRAD_DATA_PATH", nothing),
         ecrad_artifact_root(; require),
@@ -236,7 +236,7 @@ order is `RH_ECCKD_SOURCE_PATH`, the lazy `ecckd_source` artifact in
 `Artifacts.toml`, then the local validation checkout at
 `validation/external/ecckd`.
 """
-function ecckd_source_path(; require::Bool = false)
+function ecckd_source_path(; require::Bool=false)
     root = source_root_with_file(get(ENV, "RH_ECCKD_SOURCE_PATH", nothing), "README.md")
     root === nothing && (root = source_root_with_file(ecckd_source_artifact_root(; require), "README.md"))
     root === nothing && (root = source_root_with_file(
@@ -247,7 +247,7 @@ function ecckd_source_path(; require::Bool = false)
     return root
 end
 
-function ecrad_data_file(filename::AbstractString; require::Bool = true)
+function ecrad_data_file(filename::AbstractString; require::Bool=true)
     root = ecrad_data_path(; require)
     root === nothing && return nothing
     data_dir = ecrad_data_dir(root)
@@ -274,7 +274,7 @@ With `require = true` (the default) a missing root or file throws an
 `ArgumentError`, and the lazy artifact is downloaded if needed; with
 `require = false` the function returns `nothing` instead and never downloads.
 """
-function ecrad_test_file(relative_path::AbstractString; require::Bool = true)
+function ecrad_test_file(relative_path::AbstractString; require::Bool=true)
     root = ecrad_data_path(; require)
     root === nothing && return nothing
     candidates = String[joinpath(root, "test", relative_path)]
@@ -320,7 +320,7 @@ Return an [`EcCKDModelSpec`](@ref) for an reference ecCKD model pair. `name` may
 be a full selector such as `:climate_32x32` or a compact string such as
 `"32x32"`.
 """
-function reference_ecckd_model_spec(name = :climate_64x32)
+function reference_ecckd_model_spec(name=:climate_64x32)
     name isa EcCKDModelSpec && return name
     key = normalize_ecckd_model_name(name)
     if !haskey(_REFERENCE_ECCKD_MODEL_SPECS, key)
@@ -338,7 +338,7 @@ filename from [`reference_ecckd_model_inventory`](@ref) or one of
 `:longwave_32`, `:shortwave_32`, `:longwave_64`, `:shortwave_64`, or
 `:shortwave_96`.
 """
-function reference_ecckd_definition_path(name; require::Bool = true)
+function reference_ecckd_definition_path(name; require::Bool=true)
     filename = if name isa Symbol
         haskey(_REFERENCE_ECCKD_DEFAULTS, name) || throw(ArgumentError("unknown reference ecCKD model key: $(name)"))
         getproperty(_REFERENCE_ECCKD_DEFAULTS, name)
@@ -354,7 +354,7 @@ end
 Return `(longwave=..., shortwave=...)` paths for the default reference ecCKD
 runtime pair used by validation and examples.
 """
-function reference_ecckd_definition_paths(; longwave = :longwave_64, shortwave = :shortwave_32, require::Bool = true)
+function reference_ecckd_definition_paths(; longwave=:longwave_64, shortwave=:shortwave_32, require::Bool=true)
     return (
         longwave = reference_ecckd_definition_path(longwave; require),
         shortwave = reference_ecckd_definition_path(shortwave; require),
@@ -369,9 +369,9 @@ Return `(longwave=..., shortwave=...)` paths for an reference ecCKD model pair.
 With `require=false`, this function returns `nothing` paths instead of
 downloading lazy artifacts or throwing when the data are not already installed.
 """
-function reference_ecckd_definition_paths(model; require::Bool = true)
+function reference_ecckd_definition_paths(model; require::Bool=true)
     spec = reference_ecckd_model_spec(model)
-    return reference_ecckd_definition_paths(; longwave = spec.longwave, shortwave = spec.shortwave, require)
+    return reference_ecckd_definition_paths(; longwave=spec.longwave, shortwave=spec.shortwave, require)
 end
 
 const _ECCKD_DIM_ALIASES = (
@@ -535,7 +535,7 @@ example `names`, `water_vapor_mole_fraction` and `stefan_boltzmann`.
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.
 """
-function read_reference_ecckd_gas_optics(FT::DataType, model = :climate_64x32; require::Bool = true, kwargs...)
+function read_reference_ecckd_gas_optics(FT::DataType, model=:climate_64x32; require::Bool=true, kwargs...)
     paths = reference_ecckd_definition_paths(model; require)
     if paths.longwave === nothing || paths.shortwave === nothing
         return nothing
@@ -633,7 +633,7 @@ end
 Validate required ecCKD schema metadata. Returns `true` when valid. When
 `throw_on_error=false`, returns `(valid, errors)`.
 """
-function validate_ecckd_definition(definition::EcCKDDefinition; throw_on_error::Bool = true)
+function validate_ecckd_definition(definition::EcCKDDefinition; throw_on_error::Bool=true)
     errors = String[]
     kind = radiation_kind(definition)
     require_longwave = kind in (:longwave, :combined, :unknown)

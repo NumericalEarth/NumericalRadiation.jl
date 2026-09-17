@@ -252,7 +252,7 @@ function cloud_scattering_gpoint_properties(table::CloudScatteringTable,
             Σκ[gpoint], ω[gpoint], ĝ[gpoint] = revert_delta_eddington(Σκ[gpoint], ω[gpoint], ĝ[gpoint])
         end
     end
-    return (mass_extinction_coefficient = Σκ, single_scattering_albedo = ω, asymmetry_factor = ĝ)
+    return (mass_extinction_coefficient=Σκ, single_scattering_albedo=ω, asymmetry_factor=ĝ)
 end
 
 @inline function find_spectral_interval(mapping::EcCKDSpectralMapping, wavenumber)
@@ -430,5 +430,5 @@ function cloud_scattering_gpoint_properties_ecrad(table::CloudScatteringTable,
         end
     end
 
-    return (mass_extinction_coefficient = Σκ, single_scattering_albedo = ω, asymmetry_factor = ĝ)
+    return (mass_extinction_coefficient=Σκ, single_scattering_albedo=ω, asymmetry_factor=ĝ)
 end

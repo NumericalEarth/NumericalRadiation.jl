@@ -73,7 +73,7 @@ const REQUIRED_EXPORTS = (
 
 function exported_symbol_status(name)
     names = Base.names(NumericalRadiation)
-    return (name = string(name), exported = name in names, defined = isdefined(NumericalRadiation, name))
+    return (name=string(name), exported=name in names, defined=isdefined(NumericalRadiation, name))
 end
 
 # Layer-optics functors over precomputed `(Ngpoints, Nz)` matrices, in the
@@ -108,7 +108,7 @@ function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
                               source_top = zeros(Nlongwave_gpoints, Nz),
                               source_bottom = zeros(Nlongwave_gpoints, Nz),
                               weights = zeros(Nlongwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights = zeros(Nshortwave_gpoints))
+    shortwave = ShortwaveOptics(zeros(Nshortwave_gpoints, Nz); weights=zeros(Nshortwave_gpoints))
     optical_properties!(longwave, shortwave, gas_model, atmosphere)
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
@@ -155,9 +155,9 @@ function component_smoke()
         pressure_interfaces = [1_000.0, 45_000.0, 100_000.0],
         temperature_layers = [240.0, 285.0],
         temperature_interfaces = [230.0, 260.0, 295.0],
-        gases = (; h2o = [0.002, 0.014], co2 = 420.0e-6),
-        surface = (; temperature = 295.0, albedo = 0.1),
-        geometry = (; cos_zenith = 0.5),
+        gases = (; h2o=[0.002, 0.014], co2=420.0e-6),
+        surface = (; temperature=295.0, albedo=0.1),
+        geometry = (; cos_zenith=0.5),
     )
     gas_model = EcCKDGasOpticsModel(
         names = (:h2o, :co2),
@@ -185,8 +185,8 @@ function component_smoke()
                                             shortwave_mass_extinction = 0.1,
                                             shortwave_single_scattering_albedo = 0.7,
                                             shortwave_scattering_asymmetry = 0.6)
-    longwave = LongwaveOptics(zeros(2, 2), zeros(2, 2); weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(2, 2), zeros(2, 2); weights=zeros(2))
+    shortwave = ShortwaveOptics(zeros(1, 2); weights=zeros(1))
     cloud = CloudOptics(zeros(2), zeros(2))
     cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1), zeros(2), zeros(2))
     aerosol = AerosolOptics(zeros(2), zeros(2))
@@ -200,14 +200,14 @@ function component_smoke()
 
     optical_properties!(longwave, shortwave, gas_model, atmosphere)
     cloud_optical_properties!(cloud, cloud_model, atmosphere)
-    cloudy_region_optical_properties!(cloudy_region_cloud, cloud_model, (; overlap_parameter = [0.8]))
+    cloudy_region_optical_properties!(cloudy_region_cloud, cloud_model, (; overlap_parameter=[0.8]))
     aerosol_optical_properties!(aerosol, aerosol_model, atmosphere)
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = atmosphere.constants.stefan_boltzmann * 295.0^4))
+                      LongwaveBoundaryConditions(surface_longwave_up=atmosphere.constants.stefan_boltzmann * 295.0^4))
     radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
-                      ShortwaveBoundaryConditions(toa_shortwave_down = 680.5, surface_albedo = 0.1))
+                      ShortwaveBoundaryConditions(toa_shortwave_down=680.5, surface_albedo=0.1))
     heating_rates!(heating, fluxes, atmosphere)
     streaming = streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
 

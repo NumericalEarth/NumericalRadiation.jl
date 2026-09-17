@@ -110,7 +110,7 @@ function background_shortwave(FT, Ngpoints, Nz)
     optical_depth = FT[0.01 + 0.003 * gpoint + 0.02 * k for gpoint in 1:Ngpoints, k in 1:Nz]
     scattering = FT[0.05 + 0.001 * gpoint * k for gpoint in 1:Ngpoints, k in 1:Nz]
     asymmetry = FT[0.1 * ((gpoint + k) % 3) for gpoint in 1:Ngpoints, k in 1:Nz]
-    return ShortwaveOptics(optical_depth; scattering_optical_depth = scattering, scattering_asymmetry = asymmetry)
+    return ShortwaveOptics(optical_depth; scattering_optical_depth=scattering, scattering_asymmetry=asymmetry)
 end
 
 copy_shortwave(shortwave) = ShortwaveOptics(copy(shortwave.optical_depth);
@@ -175,7 +175,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         end
 
         # The defaults are ecRad's: `:ecrad` weighting with delta-Eddington averaging.
-        default = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6)
+        default = SpectralCloudOptics(table, mapping; effective_radius=2.0e-6)
         explicit = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6,
                                        mapping_method = :ecrad,
                                        delta_eddington_average = true,
@@ -185,7 +185,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
         @test default.asymmetry_factor == explicit.asymmetry_factor
 
         # A positional `FT` converts the stored arrays.
-        single = SpectralCloudOptics(Float32, table, mapping; effective_radius = 2.0e-6)
+        single = SpectralCloudOptics(Float32, table, mapping; effective_radius=2.0e-6)
         @test single isa SpectralCloudOptics{Float32, Vector{Float32}, Matrix{Float32}}
         @test single.mass_extinction_coefficient ==
               Float32.(default.mass_extinction_coefficient)
@@ -213,7 +213,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     end
 
     @testset "effective_radius_bracket" begin
-        one_node = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6)
+        one_node = SpectralCloudOptics(table, mapping; effective_radius=2.0e-6)
         for radius in (0.0, 1.0e-6, 2.0e-6, 1.0e-3)
             @test effective_radius_bracket(one_node, radius) === (1, 1, 0.0)
         end
@@ -238,7 +238,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     end
 
     @testset "cloud_layer_optics and cloud_absorption_optical_depth" begin
-        one_node = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6)
+        one_node = SpectralCloudOptics(table, mapping; effective_radius=2.0e-6)
         bracket = effective_radius_bracket(one_node, 7.0e-6)
         for gpoint in 1:2
             κ, ω, g = cloud_layer_optics(one_node, gpoint, bracket)
@@ -305,9 +305,9 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
             rtol = FT === Float64 ? 1e-12 : 1e-5
             cases = (
                 (;),
-                (; cloud_fraction_exponent = 0.5),
-                (; liquid_extinction_scale = 1.3, ice_extinction_scale = 0.7),
-                (; shortwave_scattering_scale = 0.5),
+                (; cloud_fraction_exponent=0.5),
+                (; liquid_extinction_scale=1.3, ice_extinction_scale=0.7),
+                (; shortwave_scattering_scale=0.5),
                 (; cloud_fraction_exponent = 2, liquid_extinction_scale = 2.0,
                    ice_extinction_scale = 0.5, shortwave_scattering_scale = 0.9),
             )
@@ -358,8 +358,8 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
             asymmetry_factor = [0.8 0.75; 0.7 0.72; 0.4 0.5],
         )
         liquid_radius, ice_radius = 2.0e-6, 30.0e-6
-        liquid = SpectralCloudOptics(liquid_table, mapping; effective_radius = liquid_radius)
-        ice = SpectralCloudOptics(ice_table, mapping; effective_radius = ice_radius)
+        liquid = SpectralCloudOptics(liquid_table, mapping; effective_radius=liquid_radius)
+        ice = SpectralCloudOptics(ice_table, mapping; effective_radius=ice_radius)
         liquid_nodes = cloud_scattering_gpoint_properties(liquid_table, mapping, liquid_radius;
                                                           mapping_method = :ecrad,
                                                           delta_eddington_average = true)
@@ -417,7 +417,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
 
     @testset "device-path functions are inferrable and allocation-free" begin
         for FT in (Float64, Float32)
-            one_node = SpectralCloudOptics(FT, table, mapping; effective_radius = 2.0e-6)
+            one_node = SpectralCloudOptics(FT, table, mapping; effective_radius=2.0e-6)
             three = SpectralCloudOptics(FT, [1.0e-6, 5.0e-6, 20.0e-6], rand(2, 3), rand(2, 3), rand(2, 3))
             radius = 3.0e-6
             water_path = FT(0.1)
@@ -449,7 +449,7 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     end
 
     @testset "Adapt threads the element type from the adapted arrays" begin
-        cloud = SpectralCloudOptics(table, mapping; effective_radius = 2.0e-6)
+        cloud = SpectralCloudOptics(table, mapping; effective_radius=2.0e-6)
         same = Adapt.adapt(Array, cloud)
         @test same isa SpectralCloudOptics{Float64, Vector{Float64}, Matrix{Float64}}
         @test same.mass_extinction_coefficient == cloud.mass_extinction_coefficient
@@ -463,10 +463,10 @@ Base.@noinline measure_add_cloud(cloud, b, water_path) =
     end
 
     @testset "reference ecRad tables map onto climate_32x32" begin
-        liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc"; require = false)
-        ice_path = NumericalRadiation.ecrad_data_file("baum-general-habit-mixture_ice_scattering.nc"; require = false)
-        longwave_path = reference_ecckd_definition_path(:longwave_32; require = false)
-        shortwave_path = reference_ecckd_definition_path(:shortwave_32; require = false)
+        liquid_path = NumericalRadiation.ecrad_data_file("mie_droplet_scattering.nc"; require=false)
+        ice_path = NumericalRadiation.ecrad_data_file("baum-general-habit-mixture_ice_scattering.nc"; require=false)
+        longwave_path = reference_ecckd_definition_path(:longwave_32; require=false)
+        shortwave_path = reference_ecckd_definition_path(:shortwave_32; require=false)
 
         if any(isnothing, (liquid_path, ice_path, longwave_path, shortwave_path))
             @info "Skipping reference cloud optics mapping check; ecRad data files are not present" liquid_path ice_path longwave_path shortwave_path

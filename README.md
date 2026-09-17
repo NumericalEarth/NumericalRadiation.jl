@@ -49,12 +49,12 @@ with one argument:
 using NumericalRadiation
 
 Nz = 8
-σ_half  = collect(range(0.0, 1.0, length = Nz + 1))
+σ_half  = collect(range(0.0, 1.0, length=Nz + 1))
 grid    = ColumnGrid(σ_half)
 
 # Lapse-rate profile: top of atmosphere (k=1) cold, surface (k=Nz) warm.
 profile = AtmosphereProfile(
-    temperature      = collect(range(220.0, 295.0, length = Nz)),
+    temperature      = collect(range(220.0, 295.0, length=Nz)),
     humidity         = fill(0.005, Nz),
     geopotential     = zeros(Nz),
     surface_pressure = 100_000.0,
@@ -109,9 +109,9 @@ and can be passed directly to `PrimitiveWetModel`:
 using SpeedyWeather, NumericalRadiation
 const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
-spectral_grid = SpectralGrid(trunc = 31, nlayers = 8)
+spectral_grid = SpectralGrid(trunc=31, nlayers=8)
 longwave      = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
-model         = PrimitiveWetModel(spectral_grid; longwave_radiation = longwave)
+model         = PrimitiveWetModel(spectral_grid; longwave_radiation=longwave)
 ```
 
 ## Host kernels (Breeze)

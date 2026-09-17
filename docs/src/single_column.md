@@ -12,11 +12,11 @@ using NumericalRadiation
 using CairoMakie
 
 Nz = 32
-σᵢ = collect(range(0, 1, length = Nz + 1))   # interface sigma coordinate
+σᵢ = collect(range(0, 1, length=Nz + 1))   # interface sigma coordinate
 grid = ColumnGrid(σᵢ)
 
 base_profile = AtmosphereProfile(
-    temperature      = collect(range(220, 295, length = Nz)),
+    temperature      = collect(range(220, 295, length=Nz)),
     humidity         = fill(0.008, Nz),
     geopotential     = zeros(Nz),
     surface_pressure = 100_000,
@@ -58,18 +58,18 @@ end
 baseline = solve_column(280)
 doubled  = solve_column(560)
 
-fig = Figure(size = (920, 460))
-ax_longwave = Axis(fig[1, 1]; xlabel = "LW heating rate [K day⁻¹]", ylabel = "σ", yreversed = true, title = "Longwave")
+fig = Figure(size=(920, 460))
+ax_longwave = Axis(fig[1, 1]; xlabel="LW heating rate [K day⁻¹]", ylabel="σ", yreversed=true, title="Longwave")
 ax_shortwave = Axis(fig[1, 2]; xlabel = "SW heating rate [K day⁻¹]",
                     ylabel = "σ", yreversed = true, title = "Shortwave")
-ax_net = Axis(fig[1, 3]; xlabel = "Net heating rate [K day⁻¹]", ylabel = "σ", yreversed = true, title = "Net (LW + SW)")
+ax_net = Axis(fig[1, 3]; xlabel="Net heating rate [K day⁻¹]", ylabel="σ", yreversed=true, title="Net (LW + SW)")
 
 for (result, label, color) in ((baseline, "280 ppmv", :dodgerblue), (doubled, "560 ppmv", :crimson))
-    lines!(ax_longwave, result.Ṫˡʷ .* 86_400, grid.σ_full; label, color, linewidth = 2)
-    lines!(ax_shortwave, result.Ṫˢʷ .* 86_400, grid.σ_full; label, color, linewidth = 2)
-    lines!(ax_net, (result.Ṫˡʷ .+ result.Ṫˢʷ) .* 86_400, grid.σ_full; label, color, linewidth = 2)
+    lines!(ax_longwave, result.Ṫˡʷ .* 86_400, grid.σ_full; label, color, linewidth=2)
+    lines!(ax_shortwave, result.Ṫˢʷ .* 86_400, grid.σ_full; label, color, linewidth=2)
+    lines!(ax_net, (result.Ṫˡʷ .+ result.Ṫˢʷ) .* 86_400, grid.σ_full; label, color, linewidth=2)
 end
-Legend(fig[2, 1:3], ax_longwave; orientation = :horizontal, framevisible = false)
+Legend(fig[2, 1:3], ax_longwave; orientation=:horizontal, framevisible=false)
 save("single_column.png", fig); nothing # hide
 ```
 

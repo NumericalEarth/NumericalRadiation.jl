@@ -37,7 +37,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         pressure_interfaces = pressure_interfaces,
         temperature_layers = temperature_layers,
         temperature_interfaces = temperature_interfaces,
-        gases = (h2o = water_vapor, o3 = [1e-8, 2e-8, 3e-8, 4e-8], co2 = 400e-6),
+        gases = (h2o=water_vapor, o3=[1e-8, 2e-8, 3e-8, 4e-8], co2=400e-6),
         surface = (;),
         geometry = (;),
     )
@@ -62,13 +62,13 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         @test params.Stefan == constants.stefan_boltzmann
         @test params.avogad == constants.avogadro_number
         # A host's own constants propagate into the adapter.
-        heavy = PhysicalConstants(FT; gravity = 2 * constants.gravity)
-        @test EXT.RRTMGPClearSkyModel(FT; constants = heavy).parameters.grav == heavy.gravity
+        heavy = PhysicalConstants(FT; gravity=2 * constants.gravity)
+        @test EXT.RRTMGPClearSkyModel(FT; constants=heavy).parameters.grav == heavy.gravity
         # Without a leading element type the adapter defaults to Float64.
         default_model = EXT.RRTMGPClearSkyModel()
         @test default_model isa EXT.RRTMGPClearSkyModel{Float64}
         @test default_model.parameters == params
-        @test EXT.RRTMGPClearSkyModel(; constants = heavy).parameters.grav == heavy.gravity
+        @test EXT.RRTMGPClearSkyModel(; constants=heavy).parameters.grav == heavy.gravity
     end
 
     @testset "orientation: ingest is bottom-at-index-1" begin
@@ -176,12 +176,12 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         @test adapter_fluxes.longwave_down[end] > 100.0
         # Upwelling at the surface is boundary emission plus reflection.
         surface_up = 0.98 * σ * 300.0^4 + (1 - 0.98) * adapter_fluxes.longwave_down[end]
-        @test isapprox(adapter_fluxes.longwave_up[end], surface_up; rtol = 2e-2)
+        @test isapprox(adapter_fluxes.longwave_up[end], surface_up; rtol=2e-2)
         # OLR is positive and below the surface blackbody value.
         @test 0 < adapter_fluxes.longwave_up[1] < σ * 300.0^4
         # Shortwave: TOA downwelling equals the prescribed incident beam and
         # is attenuated (never amplified) toward the surface.
-        @test isapprox(adapter_fluxes.shortwave_down[1], SOLAR_CONSTANT * 0.5; rtol = 1e-6)
+        @test isapprox(adapter_fluxes.shortwave_down[1], SOLAR_CONSTANT * 0.5; rtol=1e-6)
         @test adapter_fluxes.shortwave_down[end] <= adapter_fluxes.shortwave_down[1]
         @test all(isfinite, adapter_fluxes.longwave_up)
         @test all(isfinite, adapter_fluxes.longwave_down)

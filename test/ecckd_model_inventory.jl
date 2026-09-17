@@ -61,7 +61,7 @@ end
 function inventory_entry(filename)
     path = reference_ecckd_definition_path(filename)
     definition = read_ecckd_definition(path)
-    valid, errors = validate_ecckd_definition(definition; throw_on_error = false)
+    valid, errors = validate_ecckd_definition(definition; throw_on_error=false)
     summary = summarize_ecckd_definition(definition)
     kind = model_kind(summary)
     gpoints = kind == "longwave" ? summary.longwave_gpoints : summary.shortwave_gpoints
@@ -90,7 +90,7 @@ function run_ecckd_model_inventory()
         case = "ecckd_model_inventory",
         timestamp_utc = string(Dates.now()),
         status = all(entry -> entry.valid_schema, entries) ? "passed" : "failed",
-        ecrad_data_path = ecrad_data_path(require = true),
+        ecrad_data_path = ecrad_data_path(require=true),
         entries = entries,
     )
 end

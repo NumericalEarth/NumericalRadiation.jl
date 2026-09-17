@@ -48,14 +48,14 @@ using Dates
     valid, errors = passes_thresholds(metrics, loose)
     @test valid
     @test isempty(errors)
-    @test passes_thresholds(metrics, loose; throw_on_error = true)
+    @test passes_thresholds(metrics, loose; throw_on_error=true)
 
-    strict = RadiationThresholds(flux_rmse = 1.0, surface_forcing_absolute_error = 1.0)
+    strict = RadiationThresholds(flux_rmse=1.0, surface_forcing_absolute_error=1.0)
     valid_strict, strict_errors = passes_thresholds(metrics, strict)
     @test !valid_strict
     @test any(contains("flux_rmse"), strict_errors)
     @test any(contains("surface_forcing_absolute_error"), strict_errors)
-    @test_throws ArgumentError passes_thresholds(metrics, strict; throw_on_error = true)
+    @test_throws ArgumentError passes_thresholds(metrics, strict; throw_on_error=true)
 
     @test_throws DimensionMismatch radiation_error_metrics(
         candidate_flux = [1.0],
@@ -92,7 +92,7 @@ end
         shortwave_down = [99.0, 79.0, 59.0],
     )
 
-    metrics = radiative_flux_error_metrics(candidate, reference, atmosphere; gravity = 10.0, heat_capacity = 1000.0)
+    metrics = radiative_flux_error_metrics(candidate, reference, atmosphere; gravity=10.0, heat_capacity=1000.0)
     @test metrics isa RadiationErrorMetrics
     @test metrics.flux_rmse ≈ sqrt(10 / 12)
     @test metrics.flux_maximum_absolute_error == 1.0
