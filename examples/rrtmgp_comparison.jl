@@ -50,9 +50,10 @@ nothing #hide
 # ``nᵈ (m^d + χ_{H₂O}\, m^v)``, so (dry-air molar-mass convention, matching
 # RRTMGP):
 
-g  = 9.80665         # m s⁻²
-mᵈ = 0.028964        # kg mol⁻¹
-mᵛ = 0.018016        # kg mol⁻¹
+constants = PhysicalConstants()      # shared by both columns and the RRTMGP adapter below
+g  = constants.gravity               # m s⁻²
+mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
+mᵛ = constants.water_molar_mass      # kg mol⁻¹
 
 dry_air_amounts(χH₂O, pᵢ) =
     [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
@@ -85,7 +86,8 @@ ecckd_atmosphere = ColumnAtmosphere(;
              cfc11 = 0,
              cfc12 = 0),
     surface = (temperature = Tₛ,),
-    geometry = (cos_zenith = 0.5,))
+    geometry = (cos_zenith = 0.5,),
+    constants)
 
 rrtmgp_atmosphere = ColumnAtmosphere(;
     pressure_layers = p,
@@ -96,7 +98,8 @@ rrtmgp_atmosphere = ColumnAtmosphere(;
              ch4 = χCH₄, n2o = χN₂O,
              o2 = 0.20946, n2 = 0.78084, co = 0),
     surface = (temperature = Tₛ,),
-    geometry = (cos_zenith = 0.5,))
+    geometry = (cos_zenith = 0.5,),
+    constants)
 nothing #hide
 
 # ## The ecCKD members
@@ -130,7 +133,7 @@ function ecckd_member(selector)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
                       LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
     Ṫ = zeros(N)
-    heating_rates!(Ṫ, fluxes, ecckd_atmosphere; gravity = g, heat_capacity = 1004)
+    heating_rates!(Ṫ, fluxes, ecckd_atmosphere)
     return (; fluxes, Ṫ)
 end
 nothing #hide
@@ -138,12 +141,14 @@ nothing #hide
 # ## The RRTMGP member
 #
 # One member of the same family, with its own k-reduction (256 longwave
-# g points), run through the package's adapter extension:
+# g points), run through the package's adapter extension. The adapter builds
+# RRTMGP's parameters from the same `constants`, so both representations use
+# one gravity and one pair of molar masses:
 
 rrtmgp_extension = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
 
 function rrtmgp_member()
-    model = rrtmgp_extension.RRTMGPClearSkyModel(Float64)
+    model = rrtmgp_extension.RRTMGPClearSkyModel(Float64; constants)
     boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
         surface_temperature = Tₛ,
         surface_emissivity = 1,
@@ -159,7 +164,7 @@ function rrtmgp_member()
     @assert all(iszero, fluxes.shortwave_up)
     @assert all(iszero, fluxes.shortwave_down)
     Ṫ = zeros(N)
-    heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere; gravity = g, heat_capacity = 1004)
+    heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere)
     return (; fluxes, Ṫ, workspace)
 end
 
@@ -172,7 +177,7 @@ nothing #hide
 # molecules cm⁻², and its levels are bottom-up, hence the unit factor with
 # Avogadro's number ``Nᴬ`` and the index reversal):
 
-Nᴬ = 6.02214076e23
+Nᴬ = constants.avogadro_number
 
 molecular_column_rrtmgp = reverse(rrtmgp.workspace.atmospheric_state.layerdata[1, :, 1])
 molecular_column_ecckd = nᵈ .* Nᴬ ./ 1e4

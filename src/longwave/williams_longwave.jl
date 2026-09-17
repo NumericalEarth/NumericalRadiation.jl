@@ -66,6 +66,10 @@ struct AnalyticBandLongwave{NF} <: AbstractLongwaveScheme
     pv_ref::NF
     "Temperature-scaling exponent for the continuum (Mlawer et al. 1997) [K⁻¹]"
     σ_cont::NF
+    "Water-to-dry-air molar mass ratio ε = mᵛ / mᵈ of the vapor partial pressure"
+    water_vapor_molar_mass_ratio::NF
+    "CO₂-to-dry-air molar mass ratio converting ppmv to a mass mixing ratio"
+    carbon_dioxide_molar_mass_ratio::NF
 end
 
 Adapt.@adapt_structure AnalyticBandLongwave
@@ -81,12 +85,15 @@ function AnalyticBandLongwave{NF}(;
         diffusivity = NF(1.5),
         p_ref  = NF(50000), T_ref  = NF(260),   pv_ref = NF(224.92),
         σ_cont = NF(0.02),
+        water_vapor_molar_mass_ratio = NF(0.622),
+        carbon_dioxide_molar_mass_ratio = NF(44 / 29),
     ) where NF
     return AnalyticBandLongwave{NF}(
         nwavenumber, wavenumber_min, wavenumber_max,
         κ_rot, l_rot, κ_vr, l_vr1, l_vr2, κ_cnt1, κ_cnt2,
         κ_CO₂, l_CO₂, ν̃_CO₂,
         diffusivity, p_ref, T_ref, pv_ref, σ_cont,
+        water_vapor_molar_mass_ratio, carbon_dioxide_molar_mass_ratio,
     )
 end
 

@@ -7,7 +7,7 @@ using NCDatasets
 # weighting, emissivity, eltype) and the total optical-depth clamp
 # (negative totals clamped, positive totals preserved).
 
-const σ_SB = 5.670374419e-8
+const σ_SB = PhysicalConstants().stefan_boltzmann
 
 @testset "surface_longwave_emission" begin
     @testset "fallback source path (no source table)" begin
@@ -25,7 +25,9 @@ const σ_SB = 5.670374419e-8
             emission = surface_longwave_emission(model, FT(290))
             @test emission isa Vector{FT}
             @test length(emission) == 2
-            # Without a source table each g point emits scale * σT⁴.
+            # Without a source table each g point emits scale * σT⁴, with the
+            # model's σ (the package default unless one is passed).
+            @test model.stefan_boltzmann === FT(σ_SB)
             @test emission ≈ FT[0.5, 1.0] .* FT(σ_SB) * FT(290)^4 rtol = 1e-6
             # Emissivity scales linearly.
             scaled = surface_longwave_emission(model, FT(290); emissivity = FT(0.9))

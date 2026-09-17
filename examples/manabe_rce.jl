@@ -38,12 +38,14 @@ N  = 60                      # physical layers, uniform in altitude
 zₜ = 60e3                    # m; one isothermal lookup-boundary layer above
 pₛ = 101_325                 # Pa
 
-g  = 9.80665         # gravitational acceleration, m s⁻²
-cₚ = 1004            # isobaric heat capacity, J kg⁻¹ K⁻¹
-σ  = 5.670374419e-8  # Stefan-Boltzmann constant, W m⁻² K⁻⁴
-Rᵈ = 287.05          # dry-air gas constant, J kg⁻¹ K⁻¹
-mᵈ = 0.028964        # dry-air molar mass, kg mol⁻¹
-mᵛ = 0.018016        # water molar mass, kg mol⁻¹
+constants = PhysicalConstants()      # Earth defaults; every constant below is one of its fields
+g  = constants.gravity               # gravitational acceleration, m s⁻²
+cₚ = constants.heat_capacity         # isobaric heat capacity, J kg⁻¹ K⁻¹
+σ  = constants.stefan_boltzmann      # Stefan-Boltzmann constant, W m⁻² K⁻⁴
+Rᵈ = constants.dry_air_gas_constant  # dry-air gas constant, J kg⁻¹ K⁻¹
+mᵈ = constants.dry_air_molar_mass    # dry-air molar mass, kg mol⁻¹
+mᵛ = constants.water_molar_mass      # water molar mass, kg mol⁻¹
+freezing_temperature = ThermodynamicConstants().freezing_temperature   # K
 day = 86_400         # s
 nothing #hide
 
@@ -106,7 +108,7 @@ nothing #hide
 # floor — applied to the full radiation column including the extension
 # layer:
 
-saturation_vapor_pressure(T) = 610.94 * exp(17.625 * (T - 273.15) / (T - 30.11))
+saturation_vapor_pressure(T) = 610.94 * exp(17.625 * (T - freezing_temperature) / (T - 30.11))
 
 function fixed_relative_humidity!(χH₂O_ext, T_ext)
     for k in eachindex(χH₂O_ext)
@@ -169,7 +171,8 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
                                   temperature_layers = T_ext,
                                   temperature_interfaces = Tᵢ_ext,
                                   gases, surface = nothing,
-                                  geometry = (cos_zenith = μ₀,))
+                                  geometry = (cos_zenith = μ₀,),
+                                  constants)
     longwave, shortwave, fluxes = radiation_work_arrays(gas_optics, N_ext)
     shortwave_boundary = ShortwaveBoundaryConditions(toa_shortwave_down = S₀,
                                                      surface_albedo = α)
@@ -222,7 +225,7 @@ function equilibrate!(Tᵢ, Tₛ; χCO₂, ozone = χO₃_ext, fixed_water_vapor
             break
         end
         previous .= Tᵢ
-        heating_rates!(Q, fluxes, atmosphere; gravity = g, heat_capacity = cₚ)
+        heating_rates!(Q, fluxes, atmosphere)     # g and cₚ from atmosphere.constants
         ## discard the extension tendency Q[1]; physical layer j is Q[j + 1]
         Ṫᵢ[1] = Q[2]
         Ṫᵢ[N+1] = Q[N_ext]

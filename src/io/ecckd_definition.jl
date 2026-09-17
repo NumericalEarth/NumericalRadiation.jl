@@ -536,7 +536,7 @@ with element type `FT`, passed as the first positional argument (default
 tables in single precision. `model` accepts selectors such as
 `:climate_32x32`, `:climate_64x32`, or `"32x96"`. Keyword arguments other than
 `require` are forwarded to [`read_ecckd_tabulated_gas_optics`](@ref), for
-example `names` and `water_vapor_mole_fraction`.
+example `names`, `water_vapor_mole_fraction` and `stefan_boltzmann`.
 
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.

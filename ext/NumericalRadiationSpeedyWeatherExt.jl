@@ -42,13 +42,20 @@ SpeedyWeather.initialize!(::SpeedyAnalyticBandLongwave, ::SpeedyWeather.Primitiv
 # Re-export under the PR's original name for drop-in compatibility.
 const SimpleSpectralLongwave = SpeedyAnalyticBandLongwave
 
+# Every constant comes from the SpeedyWeather model, so the radiation runs
+# with the host's values; SpeedyWeather stores molar masses in g mol⁻¹.
 @inline function speedy_physical_constants(model)
     NF = typeof(model.planet.gravity)
+    (; planet, atmosphere) = model
     return PhysicalConstants{NF}(
-        gravity          = model.planet.gravity,
-        heat_capacity    = model.atmosphere.heat_capacity,
-        stefan_boltzmann = model.atmosphere.stefan_boltzmann,
-        solar_constant   = model.planet.solar_constant,
+        gravity                = planet.gravity,
+        heat_capacity          = atmosphere.heat_capacity,
+        stefan_boltzmann       = atmosphere.stefan_boltzmann,
+        solar_constant         = planet.solar_constant,
+        dry_air_molar_mass     = atmosphere.mol_mass_dry_air / 1000,
+        water_molar_mass       = atmosphere.mol_mass_vapor / 1000,
+        dry_air_gas_constant   = atmosphere.R_dry,
+        universal_gas_constant = atmosphere.R_gas,
     )
 end
 

@@ -39,6 +39,7 @@ longwave_optical_depth
 shortwave_optical_depth
 water_vapor_table_optical_depth
 rayleigh_optical_depth
+hydrostatic_air_moles
 longwave_source
 source_table_bracket
 TabulatedSurfaceEmission

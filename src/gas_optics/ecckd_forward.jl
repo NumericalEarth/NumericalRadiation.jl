@@ -10,7 +10,9 @@ to longwave and shortwave optical properties.
 `longwave_absorption` and `shortwave_absorption` are shaped `(ng, ngas)`.
 Gas values in [`ColumnAtmosphere`](@ref) are interpreted as layer absorber
 amounts. A gas value may be a scalar, in which case it is applied to every
-layer, or a vector with one entry per layer.
+layer, or a vector with one entry per layer. The gray longwave source is
+`longwave_source_scale[ig] σT⁴` with the model's `stefan_boltzmann`
+(keyword; [`PhysicalConstants`](@ref) default).
 
 """
 struct EcCKDGasOpticsModel{FT, GasNames, LWA, SWA, LWS, LWW, SWW} <: AbstractGasOpticsModel
@@ -19,6 +21,7 @@ struct EcCKDGasOpticsModel{FT, GasNames, LWA, SWA, LWS, LWW, SWW} <: AbstractGas
     longwave_source_scale::LWS   # Longwave source scaling per g-point.
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
+    stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source, W m⁻² K⁻⁴.
 end
 
 # The element type of an adapted model follows its adapted tables, so
@@ -33,7 +36,8 @@ function Adapt.adapt_structure(to, model::EcCKDGasOpticsModel{<:Any, GasNames}) 
     fields = (longwave_absorption, shortwave_absorption, longwave_source_scale,
               longwave_weights, shortwave_weights)
     FT = eltype(longwave_absorption)
-    return EcCKDGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...)
+    return EcCKDGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...,
+                                                                    FT(model.stefan_boltzmann))
 end
 
 function EcCKDGasOpticsModel(; names,
@@ -41,7 +45,8 @@ function EcCKDGasOpticsModel(; names,
                              shortwave_absorption::AbstractMatrix,
                              longwave_source_scale = nothing,
                              longwave_weights = nothing,
-                             shortwave_weights = nothing)
+                             shortwave_weights = nothing,
+                             stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     FT = promote_type(eltype(longwave_absorption), eltype(shortwave_absorption))
     lw_source = longwave_source_scale === nothing ?
         ones(FT, size(longwave_absorption, 1)) : longwave_source_scale
@@ -67,7 +72,8 @@ function EcCKDGasOpticsModel(; names,
     gas_name_tuple = Tuple(Symbol.(names))
     fields = (longwave_absorption, shortwave_absorption, lw_source,
               lw_weights, sw_weights)
-    return EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...)
+    return EcCKDGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...,
+                                                                          FT(stefan_boltzmann))
 end
 
 Base.eltype(::EcCKDGasOpticsModel{FT}) where FT = FT
@@ -94,7 +100,9 @@ coefficients for each layer, multiplies them by layer absorber amounts from
 The pressure and optional H₂O grids must be positive and uniformly spaced in
 log coordinates, matching the ecCKD file format. A matrix temperature grid is
 shaped `(npressure, ntemperature)` and must use one positive temperature
-increment throughout.
+increment throughout. Without a Planck source table the longwave source is
+the gray `longwave_source_scale[ig] σT⁴` with the model's `stefan_boltzmann`
+(keyword; [`PhysicalConstants`](@ref) default).
 
 """
 struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LHWA, SHWA, SWR, LWS, LST, LSTB, LWW, SWW} <:
@@ -113,6 +121,7 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     longwave_source_table::LSTB   # Optional longwave source table with shape `(ng_lw, ntemperature)`.
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
+    stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source fallback, W m⁻² K⁻⁴.
 end
 
 # As for `EcCKDGasOpticsModel`, the adapted model's element type follows its
@@ -140,7 +149,8 @@ function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, Ga
               longwave_source_scale, longwave_source_temperature_grid,
               longwave_source_table, longwave_weights, shortwave_weights)
     FT = eltype(pressure_grid)
-    return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...)
+    return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields...,
+                                                                             FT(model.stefan_boltzmann))
 end
 
 # Adaptor that converts the element type of every array in a model while
@@ -182,7 +192,8 @@ function EcCKDTabulatedGasOpticsModel(; names,
                                       longwave_source_temperature_grid = nothing,
                                       longwave_source_table = nothing,
                                       longwave_weights = nothing,
-                                      shortwave_weights = nothing)
+                                      shortwave_weights = nothing,
+                                      stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     source_types = longwave_source_table === nothing ?
         () :
         (eltype(longwave_source_temperature_grid), eltype(longwave_source_table))
@@ -266,7 +277,8 @@ function EcCKDTabulatedGasOpticsModel(; names,
               longwave_absorption, shortwave_absorption,
               longwave_water_vapor, shortwave_water_vapor, sw_rayleigh, lw_source, longwave_source_temperature_grid,
               longwave_source_table, lw_weights, sw_weights)
-    return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...)
+    return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...,
+                                                                                   FT(stefan_boltzmann))
 end
 
 Base.eltype(::EcCKDTabulatedGasOpticsModel{FT}) where FT = FT
@@ -554,7 +566,7 @@ end
                                   temperature,
                                   source_bracket) where FT
     source_bracket === nothing &&
-        return model.longwave_source_scale[ig] * FT(5.670374419e-8) * FT(temperature)^4
+        return model.longwave_source_scale[ig] * model.stefan_boltzmann * FT(temperature)^4
     source = interp_source_table(model.longwave_source_table, ig, source_bracket)
     # Linear to zero below the first node, as in ecRad; the factor is exactly
     # one on and above the table, so in-range sources are untouched.
@@ -772,6 +784,14 @@ end
 @inline layer_pressure_thickness(atmosphere::ColumnAtmosphere, k) =
     atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]
 
+# Hydrostatic molar amount of layer `k` in the model precision, with gravity
+# and the dry-air molar mass of the column's own constants.
+@inline function layer_air_moles(::Type{FT}, atmosphere::ColumnAtmosphere, k) where FT
+    (; gravity, dry_air_molar_mass) = atmosphere.constants
+    Δp = layer_pressure_thickness(atmosphere, k)
+    return hydrostatic_air_moles(FT(Δp), FT(gravity), FT(dry_air_molar_mass))
+end
+
 # Layer H₂O mole fraction relative to dry air for the H₂O-axis bracket: the
 # `composite` amount when the column carries one, else the hydrostatic molar
 # amount of the layer, `Δp / (g mᵈ)`.
@@ -781,7 +801,7 @@ end
     water_vapor_moles = max(FT(gas_value(atmosphere.gases, :h2o, k)), zero(FT))
     dry_air_moles = has_gas(atmosphere.gases, :composite) ?
         max(FT(gas_value(atmosphere.gases, :composite, k)), sqrt(eps(FT))) :
-        max(hydrostatic_air_moles(FT, layer_pressure_thickness(atmosphere, k)), sqrt(eps(FT)))
+        max(layer_air_moles(FT, atmosphere, k), sqrt(eps(FT)))
     return water_vapor_moles / dry_air_moles
 end
 
@@ -829,7 +849,7 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         source_top_bracket = source_table_bracket(model, temperature_top)
         source_bottom_bracket = source_table_bracket(model, temperature_bottom)
         gases = layer_gases(atmosphere.gases, Val(names), k)
-        air_moles = hydrostatic_air_moles(FT, layer_pressure_thickness(atmosphere, k))
+        air_moles = layer_air_moles(FT, atmosphere, k)
 
         for ig in axes(model.longwave_absorption, 1)
             longwave.optical_depth[ig, k] = longwave_optical_depth(model, ig, gases, stencil)

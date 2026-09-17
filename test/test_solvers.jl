@@ -73,7 +73,7 @@ end
     T = fill(NF(280), nlayers)
     q = fill(NF(0.005), nlayers)
     pₛ = NF(100_000)
-    g  = NF(9.80665)
+    g  = PhysicalConstants(NF).gravity
 
     lw = AnalyticBandLongwave(NF)
 
@@ -409,8 +409,8 @@ end
                            land_fraction = 0.3)
 
     # Plain NamedTuple with the expected field names — should work.
-    foreign = (gravity = 9.80665, heat_capacity = 1004.64,
-               stefan_boltzmann = 5.670374419e-8, solar_constant = 1361.0)
+    (; gravity, heat_capacity, stefan_boltzmann, solar_constant) = PhysicalConstants()
+    foreign = (; gravity, heat_capacity, stefan_boltzmann, solar_constant)
     dTdt = zeros(nlayers)
     diag = LongwaveDiagnostics()
     solve_longwave!(dTdt, diag, AnalyticBandLongwave(), profile, grid, surface, foreign)

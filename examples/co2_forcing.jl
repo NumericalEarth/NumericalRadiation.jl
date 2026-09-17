@@ -25,8 +25,9 @@ nothing #hide
 # atmosphere first), layer pressures ``p`` at their midpoints, and the
 # dry-air molar amount ``nᵈ`` of each layer from the hydrostatic relation:
 
-g  = 9.80665         # m s⁻²
-mᵈ = 0.0289647       # kg mol⁻¹
+constants = PhysicalConstants()
+g  = constants.gravity               # m s⁻²
+mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
 
 N  = 48
 pᵢ = collect(range(2_000, 101_325; length = N + 1))
@@ -51,7 +52,8 @@ function solve_column(χCO₂)
                  h2o = 0.006 .* nᵈ,
                  co2 = χCO₂ .* nᵈ),
         surface = (temperature = Tₛ,),
-        geometry = (cos_zenith = 0.5,))
+        geometry = (cos_zenith = 0.5,),
+        constants)
 
     longwave_gpoints = length(gas_optics.longwave_weights)
     shortwave_gpoints = length(gas_optics.shortwave_weights)

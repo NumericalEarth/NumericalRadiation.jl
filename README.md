@@ -87,7 +87,11 @@ For the low-level kernel form (what host extensions such as
 flattened `(dTdt, diagnostics, scheme, profile, grid, surface, constants, …)`
 signature directly, and the `constants` argument is duck-typed — any struct
 or NamedTuple carrying `gravity`, `heat_capacity`, `stefan_boltzmann`,
-`solar_constant` properties works.
+`solar_constant` properties works. The staged runtime reads the same kind of
+object from `ColumnAtmosphere.constants` (a `PhysicalConstants` by default,
+which also carries `dry_air_molar_mass`, `water_molar_mass`,
+`dry_air_gas_constant`, `universal_gas_constant` and `avogadro_number`), so
+no physical constant is hard-coded anywhere on the radiation path.
 
 All floating-point types default to `Float64`. To run in `Float32` (useful for
 GPU kernels), pass the type as the first positional argument to the scheme

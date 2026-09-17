@@ -179,8 +179,12 @@ julia> column = (pressure = [20_000.0, 70_000.0],
                  temperature = [240.0, 285.0],
                  temperature_interfaces = [230.0, 260.0, 295.0],
                  h2o = [0.002, 0.014],
-                 co2 = 420e-6);
+                 co2 = 420e-6,
+                 constants = PhysicalConstants());
 ```
+
+The column carries the host's physical constants; nothing on this path has a
+constant of its own (the model's `stefan_boltzmann` is set at construction).
 
 The longwave functor builds the stencil, the optical depth and the two
 interface Planck sources of layer `k` for g point `ig`:
@@ -220,9 +224,10 @@ julia> round.(longwave_up; digits = 2)
 ```
 
 The shortwave functor returns the absorption optical depth, the Rayleigh
-scattering optical depth from the layer's molar amount of air, and the
-scattering asymmetry (zero for Rayleigh scattering; clouds would raise it
-through `add_scattering_layer`):
+scattering optical depth from the layer's molar amount of air —
+`hydrostatic_air_moles` with the column's gravity and dry-air molar mass, as
+the array path computes it — and the scattering asymmetry (zero for Rayleigh
+scattering; clouds would raise it through `add_scattering_layer`):
 
 ```jldoctest streaming
 julia> struct ShortwaveLayers{M, C}
@@ -236,11 +241,12 @@ julia> function (layers::ShortwaveLayers)(ig, k)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
            τ = shortwave_optical_depth(model, ig, gases, stencil)
            Δp = column.pressure_interfaces[k + 1] - column.pressure_interfaces[k]
-           air_moles = Δp / (9.80665 * 0.0289647)
+           (; gravity, dry_air_molar_mass) = column.constants
+           air_moles = hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass)
            return τ, rayleigh_optical_depth(model, ig, air_moles), 0.0
        end;
 
-julia> μ0, S0, albedo = 0.5, 1361.0, 0.1;
+julia> μ0, S0, albedo = 0.5, column.constants.solar_constant, 0.1;
 
 julia> shortwave_up, shortwave_down = zeros(nlayers + 1), zeros(nlayers + 1);
 

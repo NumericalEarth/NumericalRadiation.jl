@@ -18,8 +18,9 @@ using NumericalRadiation
 # scale. Closed forms are always evaluated in Float64 from the exact Float32
 # inputs the solver saw.
 
-const σ = 5.670374419e-8   # Stefan–Boltzmann constant, W m⁻² K⁻⁴
-const D = 1.66             # longwave diffusivity factor of the solver
+const σ = PhysicalConstants().stefan_boltzmann            # Stefan–Boltzmann constant, W m⁻² K⁻⁴
+const SOLAR_CONSTANT = PhysicalConstants().solar_constant  # S₀, W m⁻²
+const D = 1.66                                             # longwave diffusivity factor of the solver
 
 const FLOAT_TYPES = (Float64, Float32)
 
@@ -422,7 +423,7 @@ end
         @testset "Beer–Lambert on the adding path ($FT)" begin
             rng = LinearCongruentialDraws(0x5eed5eed5eed5eed)
             nlayers = 6
-            μ0, S₀, α = 0.6, 1361.0, 0.3
+            μ0, S₀, α = 0.6, SOLAR_CONSTANT, 0.3
             amounts = FT[draw!(rng, 0.01, 1.0) for _ in 1:nlayers]
             model = gray_model(FT, [1.0], [1.0])
             optics = GrayShortwaveLayerOptics(model, amounts)
@@ -442,7 +443,7 @@ end
 
         @testset "conservative scattering ($FT)" begin
             nlayers = 4
-            μ0, S₀ = 0.5, 1361.0
+            μ0, S₀ = 0.5, SOLAR_CONSTANT
             scattering = FT[0.3, 1.0, 0.5, 2.0]
             absorption = zeros(FT, nlayers)
             tol = tolerances(FT, 1e-10, S₀ * μ0)

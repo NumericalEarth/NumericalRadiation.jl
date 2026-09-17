@@ -602,7 +602,7 @@ end
     @test longwave.weights == [0.25, 0.75]
     @test shortwave.weights == [1.0]
 
-    stefan_boltzmann = 5.670374419e-8
+    stefan_boltzmann = PhysicalConstants().stefan_boltzmann
     @test longwave.source[1, :] ≈ 0.5 .* stefan_boltzmann .* atmosphere.temperature_layers .^ 4
     @test longwave.source[2, :] ≈ stefan_boltzmann .* atmosphere.temperature_layers .^ 4
 
@@ -748,7 +748,7 @@ end
     @test longwave.weights == [0.4, 0.6]
     @test shortwave.weights == [1.0]
 
-    stefan_boltzmann = 5.670374419e-8
+    stefan_boltzmann = PhysicalConstants().stefan_boltzmann
     @test longwave.source[1, :] ≈ stefan_boltzmann .* atmosphere.temperature_layers .^ 4
     @test longwave.source[2, :] ≈ 2 .* stefan_boltzmann .* atmosphere.temperature_layers .^ 4
 

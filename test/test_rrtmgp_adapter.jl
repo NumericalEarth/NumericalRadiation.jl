@@ -20,6 +20,7 @@ using ClimaComms
 #    ingest and reverse fluxes back on egress.
 
 const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
+const SOLAR_CONSTANT = PhysicalConstants().solar_constant
 
 @testset "RRTMGP adapter reference" begin
     FT = Float64
@@ -44,11 +45,26 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
     boundary = EXT.RRTMGPBoundaryConditions(surface_temperature = 300.0,
                                             surface_emissivity = 0.98,
                                             surface_albedo = 0.1,
-                                            toa_shortwave_down = 1361.0,
+                                            toa_shortwave_down = SOLAR_CONSTANT,
                                             cos_zenith = 0.5)
     workspace = radiation_workspace(model, atmosphere)
     EXT.fill_atmospheric_state!(workspace, model, atmosphere, boundary)
     state = workspace.atmospheric_state
+
+    @testset "RRTMGP parameters come from PhysicalConstants" begin
+        constants = PhysicalConstants(FT)
+        params = model.parameters
+        @test params.grav == constants.gravity
+        @test params.molmass_dryair == constants.dry_air_molar_mass
+        @test params.molmass_water == constants.water_molar_mass
+        @test params.gas_constant == constants.universal_gas_constant
+        @test params.kappa_d == constants.dry_air_gas_constant / constants.heat_capacity
+        @test params.Stefan == constants.stefan_boltzmann
+        @test params.avogad == constants.avogadro_number
+        # A host's own constants propagate into the adapter.
+        heavy = PhysicalConstants(FT; gravity = 2 * constants.gravity)
+        @test EXT.RRTMGPClearSkyModel(FT; constants = heavy).parameters.grav == heavy.gravity
+    end
 
     @testset "orientation: ingest is bottom-at-index-1" begin
         # Level arrays: RRTMGP index 1 must hold the SURFACE values.
@@ -130,7 +146,7 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
         haskey(gas_indices, "co") && (mole_fractions[gas_indices["co"]] = 0.0)
         canonical.solver.lws.bcs.sfc_emis .= 0.98
         canonical.solver.sws.bcs.cos_zenith .= 0.5
-        canonical.solver.sws.bcs.toa_flux .= 1361.0
+        canonical.solver.sws.bcs.toa_flux .= SOLAR_CONSTANT
         canonical.solver.sws.bcs.sfc_alb_direct .= 0.1
         canonical.solver.sws.bcs.sfc_alb_diffuse .= 0.1
         RRTMGP.update_lw_fluxes!(canonical.solver)
@@ -150,7 +166,7 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
     end
 
     @testset "orientation: endpoint diagnostics are top-down" begin
-        σ = 5.670374419e-8
+        σ = model.parameters.Stefan
         # Downwelling longwave must vanish at TOA (index 1, top-down) and be
         # substantial at the surface; a flipped adapter reverses this.
         @test adapter_fluxes.longwave_down[1] < 5.0
@@ -162,7 +178,7 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
         @test 0 < adapter_fluxes.longwave_up[1] < σ * 300.0^4
         # Shortwave: TOA downwelling equals the prescribed incident beam and
         # is attenuated (never amplified) toward the surface.
-        @test isapprox(adapter_fluxes.shortwave_down[1], 1361.0 * 0.5; rtol = 1e-6)
+        @test isapprox(adapter_fluxes.shortwave_down[1], SOLAR_CONSTANT * 0.5; rtol = 1e-6)
         @test adapter_fluxes.shortwave_down[end] <= adapter_fluxes.shortwave_down[1]
         @test all(isfinite, adapter_fluxes.longwave_up)
         @test all(isfinite, adapter_fluxes.longwave_down)

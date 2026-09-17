@@ -55,6 +55,7 @@ const REQUIRED_EXPORTS = (
     :shortwave_optical_depth,
     :water_vapor_table_optical_depth,
     :rayleigh_optical_depth,
+    :hydrostatic_air_moles,
     :longwave_source,
     :source_table_bracket,
     :TabulatedSurfaceEmission,
@@ -210,10 +211,10 @@ function component_smoke()
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = 5.670374419e-8 * 295.0^4))
+                      LongwaveBoundaryConditions(surface_longwave_up = atmosphere.constants.stefan_boltzmann * 295.0^4))
     radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
                       ShortwaveBoundaryConditions(toa_shortwave_down = 680.5, surface_albedo = 0.1))
-    heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
+    heating_rates!(heating, fluxes, atmosphere)
     streaming = streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
 
     return (

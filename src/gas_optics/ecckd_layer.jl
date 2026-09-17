@@ -85,12 +85,21 @@ end
 # temperature brackets; the H₂O tables add the mole-fraction bracket.
 @inline table_brackets(s::GasOpticsStencil) = (s.pressure, s.temperature)
 
-# Molar amount of air (mol m⁻²) in a layer of pressure thickness `Δp` (Pa)
-# under hydrostatic balance, `Δp / (g mᵈ)`, with `g = 9.80665 m s⁻²` and the
-# dry-air molar mass `mᵈ = 0.0289647 kg mol⁻¹`. The Rayleigh scattering table
-# and the dry-air fallback of `layer_water_vapor_mole_fraction` both use it.
-@inline hydrostatic_air_moles(::Type{FT}, Δp) where FT =
-    FT(Δp) / (FT(9.80665) * FT(0.0289647))
+"""
+$(TYPEDSIGNATURES)
+
+Molar amount of air (mol m⁻²) in a layer of pressure thickness `Δp` (Pa) under
+hydrostatic balance, `Δp / (g mᵈ)`, with `gravity` and `dry_air_molar_mass`
+supplied by the caller rather than fixed here, so a host's own constants
+propagate (a [`PhysicalConstants`](@ref) carries both). The array
+`optical_properties!` methods read them from `atmosphere.constants`; a host
+kernel passes the values of its own constants object. Feeds the Rayleigh
+scattering optical depth and the dry-air fallback of the layer H₂O mole
+fraction. The result takes the promoted type of the arguments, so pass them
+in the model's element type.
+"""
+@inline hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass) =
+    Δp / (gravity * dry_air_molar_mass)
 
 # Scalar H₂O amount of a layer for the H₂O tables, `0` when the gas container
 # carries no `h2o` key (only legal for models without an H₂O table, which never
@@ -215,13 +224,15 @@ $(TYPEDSIGNATURES)
 Longwave Planck source of g point `ig` at `temperature`, in the model's
 per-unit-weight flux convention: the tabulated source interpolated with
 `source_bracket` from [`source_table_bracket`](@ref), or
-`longwave_source_scale[ig] σT⁴` without a table.
+`longwave_source_scale[ig] σT⁴` without a table, with `σ` the model's
+`stefan_boltzmann` field (set at construction, [`PhysicalConstants`](@ref)
+default).
 """
 @inline function longwave_source(model::EcCKDGasOpticsModel{FT},
                                  ig,
                                  temperature,
                                  ::Nothing) where FT
-    return model.longwave_source_scale[ig] * (FT(5.670374419e-8) * FT(temperature)^4)
+    return model.longwave_source_scale[ig] * (model.stefan_boltzmann * FT(temperature)^4)
 end
 
 """

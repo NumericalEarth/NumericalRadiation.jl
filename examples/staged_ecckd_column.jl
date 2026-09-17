@@ -21,8 +21,11 @@ day = 86_400         # s
 # The ``N``-layer column has interface pressures ``pᵢ`` increasing from top
 # of atmosphere to surface, layer pressures ``p`` at their midpoints, and
 # layer and interface temperatures ``T`` and ``Tᵢ``. Gas values in this
-# minimal staged model are layer path amounts.
+# minimal staged model are layer path amounts. The column carries the
+# physical constants the later stages read (gravity and heat capacity for
+# the heating rates; the solar constant for the shortwave boundary).
 
+constants = PhysicalConstants()
 N  = 24
 pᵢ = collect(range(10_000, 100_000; length = N + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
@@ -40,6 +43,7 @@ atmosphere = ColumnAtmosphere(
     ),
     surface = (temperature = Tᵢ[end],),
     geometry = (cos_zenith = 0.55,),
+    constants,
 )
 
 # ## A small tabulated gas-optics model
@@ -119,13 +123,13 @@ radiative_fluxes!(
     shortwave,
     atmosphere,
     ShortwaveBoundaryConditions(
-        toa_shortwave_down = 1361 * atmosphere.geometry.cos_zenith,
+        toa_shortwave_down = constants.solar_constant * atmosphere.geometry.cos_zenith,
         surface_albedo = 0.15,
     ),
 )
 
 Ṫ = zeros(N)
-heating_rates!(Ṫ, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004)
+heating_rates!(Ṫ, fluxes, atmosphere)     # gravity and heat capacity from atmosphere.constants
 daily_heating_rate = day .* Ṫ
 
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+

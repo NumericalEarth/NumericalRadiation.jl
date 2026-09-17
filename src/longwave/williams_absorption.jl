@@ -70,7 +70,9 @@ The result already includes the two-stream diffusivity factor `D ≈ 1.5`
 (Armstrong 1968).
 
 `temperature` and `humidity` are length-`nlayers` column vectors; `geometry`
-is a [`ColumnGrid`](@ref).
+is a [`ColumnGrid`](@ref). The molar mass ratios of the vapor partial pressure
+and of the CO₂ mass mixing ratio are the scheme's
+`water_vapor_molar_mass_ratio` and `carbon_dioxide_molar_mass_ratio`.
 """
 @inline function williams_delta_tau(k::Integer, ν̃::NF, CO₂::NF,
                                      temperature::AbstractVector, humidity::AbstractVector,
@@ -93,8 +95,9 @@ is a [`ColumnGrid`](@ref).
     Δτ_H₂O_line = κ_line * (p_full_k / NF(scheme.p_ref)) * q_k * Δp_k / g
 
     # H₂O continuum: self-broadening + temperature scaling
-    # Vapor partial pressure: pᵥ = q p / (ε + (1 − ε) q), ε ≈ 0.622
-    p_v_k   = q_k * p_full_k / (NF(0.622) + NF(0.378) * q_k)
+    # Vapor partial pressure: pᵥ = q p / (ε + (1 − ε) q), ε = mᵛ / mᵈ
+    ε       = NF(scheme.water_vapor_molar_mass_ratio)
+    p_v_k   = q_k * p_full_k / (ε + (1 - ε) * q_k)
     κ_cont  = water_vapor_continuum_kappa_ref(ν̃, scheme)
     Δτ_H₂O_cont = κ_cont * (p_v_k / NF(scheme.pv_ref)) *
                   exp(NF(scheme.σ_cont) * (NF(scheme.T_ref) - T_k)) *
@@ -104,7 +107,7 @@ is a [`ColumnGrid`](@ref).
     # For a well-mixed gas with κ ∝ p / p_ref the column integral from the TOA
     # to pressure p gives τ = D κ q_CO₂ p² / (2 g p_ref). The layer increment
     # is the difference of τ at the two bounding half levels.
-    q_CO₂ = NF(CO₂ * NF(1e-6) * 44 / 29)
+    q_CO₂ = NF(CO₂ * NF(1e-6) * NF(scheme.carbon_dioxide_molar_mass_ratio))
     κ_CO₂_v = carbon_dioxide_kappa_ref(ν̃, scheme)
     p_half_k   = NF(σ_half[k])   * pₛ
     p_half_kp1 = NF(σ_half[k+1]) * pₛ

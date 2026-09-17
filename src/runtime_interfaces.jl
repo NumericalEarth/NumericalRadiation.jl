@@ -12,7 +12,7 @@ Fields are
 
 $(TYPEDFIELDS)
 """
-struct ColumnAtmosphere{FT, A, G, S, Geo} <: AbstractAtmosphericState
+struct ColumnAtmosphere{FT, A, G, S, Geo, C} <: AbstractAtmosphericState
     "Layer pressures, indexed top-down."
     pressure_layers::A
     "Interface pressures, indexed top-down."
@@ -27,6 +27,11 @@ struct ColumnAtmosphere{FT, A, G, S, Geo} <: AbstractAtmosphericState
     surface::S
     "Geometry, solar angles, or host-model geometry view."
     geometry::Geo
+    """Physical constants of the host ([`PhysicalConstants`](@ref) in the column's
+    element type by default): gravity and the dry-air molar mass for the
+    hydrostatic layer air amounts of `optical_properties!`, gravity and the heat
+    capacity for [`heating_rates!`](@ref)."""
+    constants::C
 end
 
 function ColumnAtmosphere(; pressure_layers::A,
@@ -35,9 +40,10 @@ function ColumnAtmosphere(; pressure_layers::A,
                           temperature_interfaces::A,
                           gases::G,
                           surface::S,
-                          geometry::Geo) where {A, G, S, Geo}
+                          geometry::Geo,
+                          constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {A, G, S, Geo, C}
     FT = eltype(temperature_layers)
-    return ColumnAtmosphere{FT, A, G, S, Geo}(
+    return ColumnAtmosphere{FT, A, G, S, Geo, C}(
         pressure_layers,
         pressure_interfaces,
         temperature_layers,
@@ -45,6 +51,7 @@ function ColumnAtmosphere(; pressure_layers::A,
         gases,
         surface,
         geometry,
+        constants,
     )
 end
 
@@ -136,9 +143,12 @@ end
 
 """
     heating_rates!(heating, fluxes::RadiativeFluxes, atmosphere::ColumnAtmosphere;
-                   gravity, heat_capacity)
+                   gravity = atmosphere.constants.gravity,
+                   heat_capacity = atmosphere.constants.heat_capacity)
 
-Convert interface fluxes to layer heating rates in K s^-1.
+Convert interface fluxes to layer heating rates in K s^-1. `gravity` and
+`heat_capacity` default to the column's [`PhysicalConstants`](@ref); pass them
+to override.
 
 Conventions:
 - vertical indexing is top-down;
@@ -157,8 +167,8 @@ where `F_net = longwave_down - longwave_up + shortwave_down - shortwave_up`.
 function heating_rates!(heating::AbstractVector,
                         fluxes::RadiativeFluxes,
                         atmosphere::ColumnAtmosphere;
-                        gravity,
-                        heat_capacity)
+                        gravity = atmosphere.constants.gravity,
+                        heat_capacity = atmosphere.constants.heat_capacity)
     p_interface = atmosphere.pressure_interfaces
     nlayers = length(atmosphere.temperature_layers)
     length(heating) == nlayers ||

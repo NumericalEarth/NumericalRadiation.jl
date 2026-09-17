@@ -7,7 +7,7 @@
 using NumericalRadiation
 using NCDatasets
 
-const σ_SB = 5.670374419e-8
+constants = PhysicalConstants()
 
 model_name = get(ENV, "ECCKD_MODEL", "32x32")
 spec = reference_ecckd_model_spec(model_name)
@@ -27,7 +27,7 @@ pressure_interfaces = collect(range(10_000.0, 100_000.0; length = nlayers + 1))
 pressure_layers = 0.5 .* (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end])
 temperature_layers = collect(range(220.0, 295.0; length = nlayers))
 temperature_interfaces = collect(range(215.0, 300.0; length = nlayers + 1))
-air_column = (pressure_interfaces[2:end] .- pressure_interfaces[1:end-1]) ./ (9.80665 * 0.0289647)
+air_column = hydrostatic_air_moles.(diff(pressure_interfaces), constants.gravity, constants.dry_air_molar_mass)
 
 atmosphere = ColumnAtmosphere(
     pressure_layers = pressure_layers,
@@ -41,6 +41,7 @@ atmosphere = ColumnAtmosphere(
     ),
     surface = (temperature = temperature_interfaces[end],),
     geometry = (cos_zenith = 0.55,),
+    constants,
 )
 
 ng_lw = length(gas_optics.longwave_weights)
@@ -86,13 +87,13 @@ radiative_fluxes!(
     shortwave,
     atmosphere,
     ShortwaveBoundaryConditions(
-        toa_shortwave_down = 1361.0 * atmosphere.geometry.cos_zenith,
+        toa_shortwave_down = constants.solar_constant * atmosphere.geometry.cos_zenith,
         surface_albedo = 0.15,
     ),
 )
 
 heating = zeros(nlayers)
-heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
+heating_rates!(heating, fluxes, atmosphere)
 
 net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
            fluxes.shortwave_down .- fluxes.shortwave_up

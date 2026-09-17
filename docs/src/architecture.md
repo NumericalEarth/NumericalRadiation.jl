@@ -27,9 +27,14 @@ and the staged solvers cover clear-sky ([`CloudlessLongwave`](@ref),
 all writing caller-owned [`RadiativeFluxes`](@ref).
 
 [`heating_rates!`](@ref) can convert [`RadiativeFluxes`](@ref) into layer
-heating rates for a [`ColumnAtmosphere`](@ref) using explicit `gravity` and
-`heat_capacity` keywords. The convention is top-down pressure interfaces,
-net-downward flux, and positive heating for atmospheric warming.
+heating rates for a [`ColumnAtmosphere`](@ref) with the gravity and heat
+capacity of the column's `constants` (a [`PhysicalConstants`](@ref) by
+default; `gravity` and `heat_capacity` keywords override). No stage carries a
+physical constant of its own: the gas optics read gravity and the dry-air
+molar mass from the same `constants` for the hydrostatic layer air amounts,
+and the ecCKD models store the Stefan–Boltzmann constant they were built
+with. The convention is top-down pressure interfaces, net-downward flux, and
+positive heating for atmospheric warming.
 
 ## Workspace access
 

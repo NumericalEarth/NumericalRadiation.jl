@@ -93,12 +93,16 @@ function read_cloud_scattering_table(path::String)
 end
 
 """
-    read_ecckd_spectral_mapping(path::String)
+    read_ecckd_spectral_mapping(path::String;
+                                planck_weight_temperature = ThermodynamicConstants().freezing_temperature)
 
 Read resolved wavenumber intervals and `gpoint_fraction` from an ecCKD
-CKD-definition file using `NCDatasets.jl`.
+CKD-definition file using `NCDatasets.jl`. Longwave intervals are weighted by
+the Planck function at `planck_weight_temperature` (0 °C by default),
+shortwave intervals by the file's solar spectral irradiance.
 """
-function read_ecckd_spectral_mapping(path::String)
+function read_ecckd_spectral_mapping(path::String;
+                                     planck_weight_temperature = ThermodynamicConstants().freezing_temperature)
     NCDataset(path, "r") do ds
         interval_weight = if haskey(ds, "solar_spectral_irradiance")
             Float64.(Array(ds["solar_spectral_irradiance"]))
@@ -106,7 +110,7 @@ function read_ecckd_spectral_mapping(path::String)
             wavenumber_midpoint =
                 0.5 .* (Float64.(Array(ds["wavenumber1"])) .+
                         Float64.(Array(ds["wavenumber2"])))
-            planck_wavenumber_weight.(wavenumber_midpoint, 273.15)
+            planck_wavenumber_weight.(wavenumber_midpoint, planck_weight_temperature)
         else
             ones(Float64, length(ds["wavenumber1"]))
         end
@@ -119,13 +123,12 @@ function read_ecckd_spectral_mapping(path::String)
     end
 end
 
-# Second radiation constant c₂ = hc/k_B in cm K (CODATA).
-const c₂ = 1.438776877
-
+# Planck weight `ν̃³ / (exp(c₂ ν̃ / T) - 1)` with the second radiation constant
+# c₂ = hc/k_B in cm K.
 function planck_wavenumber_weight(wavenumber_cm, temperature)
     w = max(Float64(wavenumber_cm), 0)
     t = max(Float64(temperature), eps(Float64))
-    exponent = c₂ * w / t
+    exponent = NumericalRadiation.SECOND_RADIATION_CONSTANT * w / t
     return exponent > 700 ? 0.0 : w^3 / expm1(exponent)   # expm1 overflows past 700
 end
 
@@ -232,7 +235,8 @@ end
 """
     read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
                                     names = (:h2o, :co2),
-                                    water_vapor_mole_fraction = 0.005)
+                                    water_vapor_mole_fraction = 0.005,
+                                    stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
 
 Materialize selected reference ecCKD gas coefficient tables into
 `EcCKDTabulatedGasOpticsModel{FT}`.
@@ -255,13 +259,16 @@ shortwave weights are the file's `solar_irradiance` normalized to unit sum
 (uniform when absent). Every table, grid and weight vector is converted to
 the element type `FT`, passed as the first positional argument in the
 Oceananigans style (default `Float64`); the files store their coefficients in
-single precision, so a `Float32` model carries them exactly.
+single precision, so a `Float32` model carries them exactly. `stefan_boltzmann`
+is stored on the model for the gray `σT⁴` source fallback of g points without
+a Planck source table, so a host passes its own value here.
 """
 function read_ecckd_tabulated_gas_optics(FT::DataType,
                                          longwave_path::String,
                                          shortwave_path::String;
                                          names = (:h2o, :co2),
-                                         water_vapor_mole_fraction = 0.005)
+                                         water_vapor_mole_fraction = 0.005,
+                                         stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     gas_name_tuple = Tuple(Symbol.(names))
     lw = NCDataset(longwave_path, "r") do ds
         (
@@ -350,6 +357,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         longwave_source_table = lw_source_table,
         longwave_weights = lw.weights,
         shortwave_weights = sw.weights,
+        stefan_boltzmann = stefan_boltzmann,
     )
     return EcCKDTabulatedGasOpticsModel{FT}(model)
 end

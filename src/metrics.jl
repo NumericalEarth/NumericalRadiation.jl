@@ -162,19 +162,21 @@ end
 
 """
     radiative_flux_error_metrics(candidate_fluxes, reference_fluxes, atmosphere;
-                                 gravity, heat_capacity)
+                                 gravity = atmosphere.constants.gravity,
+                                 heat_capacity = atmosphere.constants.heat_capacity)
 
 Compare two [`RadiativeFluxes`](@ref) objects on the same
 [`ColumnAtmosphere`](@ref). The flux metric is computed over all longwave and
 shortwave up/down interface flux components, while heating-rate metrics are
-computed from the native flux-divergence convention in [`heating_rates!`](@ref).
+computed from the native flux-divergence convention in [`heating_rates!`](@ref),
+with the column's constants unless `gravity` and `heat_capacity` are passed.
 TOA and surface forcing errors use net downward flux.
 """
 function radiative_flux_error_metrics(candidate_fluxes::RadiativeFluxes,
                                       reference_fluxes::RadiativeFluxes,
                                       atmosphere::ColumnAtmosphere;
-                                      gravity,
-                                      heat_capacity)
+                                      gravity = atmosphere.constants.gravity,
+                                      heat_capacity = atmosphere.constants.heat_capacity)
     nlayers = length(atmosphere.temperature_layers)
     candidate_heating = zeros(promote_type(eltype(candidate_fluxes),
                                            eltype(reference_fluxes)), nlayers)

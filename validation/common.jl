@@ -17,10 +17,13 @@ using Printf
 using Statistics
 using Test
 
-const GRAVITY = 9.80665                 # m s⁻²
-const DRY_AIR_MOLAR_MASS = 0.0289647    # kg mol⁻¹ (mᵈ, as `hydrostatic_air_moles`)
-const WATER_MOLAR_MASS = 0.01801528     # kg mol⁻¹ (mᵛ)
-const HEAT_CAPACITY = 1004.64           # J kg⁻¹ K⁻¹ (cₚ)
+# The package's Earth defaults, which `hydrostatic_air_moles` and
+# `heating_rates!` also read from every benchmark column.
+const CONSTANTS = PhysicalConstants()
+const GRAVITY = CONSTANTS.gravity                        # m s⁻²
+const DRY_AIR_MOLAR_MASS = CONSTANTS.dry_air_molar_mass  # kg mol⁻¹ (mᵈ)
+const WATER_MOLAR_MASS = CONSTANTS.water_molar_mass      # kg mol⁻¹ (mᵛ)
+const HEAT_CAPACITY = CONSTANTS.heat_capacity            # J kg⁻¹ K⁻¹ (cₚ)
 const SECONDS_PER_DAY = 86_400.0
 
 # The gas set of the reference ecCKD "climate" models: dry air (`composite`,
@@ -89,7 +92,7 @@ function benchmark_column(pressure_interfaces, temperature_interfaces, mole_frac
                             pressure_interfaces = p_hl,
                             temperature_layers = T_fl,
                             temperature_interfaces = T_hl,
-                            gases, surface, geometry)
+                            gases, surface, geometry, constants = CONSTANTS)
 end
 
 #####
@@ -276,9 +279,9 @@ end
     heating_rate_per_day(up, down, atmosphere)
 
 Layer heating rate (K day⁻¹) of one band from its interface fluxes, through
-`heating_rates!` with `g = 9.80665 m s⁻²` and `cₚ = 1004.64 J kg⁻¹ K⁻¹`. The
-same function is applied to the candidate and the reference, so those
-constants cancel in every error statistic.
+`heating_rates!` with the gravity and heat capacity of the column's
+`PhysicalConstants`. The same function is applied to the candidate and the
+reference, so those constants cancel in every error statistic.
 """
 function heating_rate_per_day(up, down, atmosphere)
     nlayers = length(atmosphere.temperature_layers)
@@ -286,7 +289,7 @@ function heating_rate_per_day(up, down, atmosphere)
     zero_flux = zeros(nlayers + 1)
     fluxes = RadiativeFluxes(longwave_up = Float64.(up), longwave_down = Float64.(down),
                              shortwave_up = zero_flux, shortwave_down = zero_flux)
-    heating_rates!(heating, fluxes, atmosphere; gravity = GRAVITY, heat_capacity = HEAT_CAPACITY)
+    heating_rates!(heating, fluxes, atmosphere)
     return heating .* SECONDS_PER_DAY
 end
 

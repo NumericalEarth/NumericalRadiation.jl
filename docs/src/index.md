@@ -30,15 +30,15 @@ using NCDatasets   # activates the NetCDF reader extension
 
 gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2))
 
-g  = 9.80665     # gravitational acceleration, m s⁻²
-mᵈ = 0.0289647   # dry-air molar mass, kg mol⁻¹
+constants = PhysicalConstants()   # Earth defaults: g, mᵈ, cₚ, σ, S₀, …
 
 N  = 24
 pᵢ = collect(range(10_000, 100_000; length = N + 1))   # Pa, TOA first
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
-nᵈ = diff(pᵢ) ./ (g * mᵈ)                              # dry-air amount, mol m⁻²
+nᵈ = hydrostatic_air_moles.(diff(pᵢ), constants.gravity, constants.dry_air_molar_mass)   # mol m⁻²
 
 atmosphere = ColumnAtmosphere(;
+    constants,
     pressure_layers = p,
     pressure_interfaces = pᵢ,
     temperature_layers = collect(range(220, 295; length = N)),

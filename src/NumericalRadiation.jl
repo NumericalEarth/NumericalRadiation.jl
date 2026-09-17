@@ -30,7 +30,7 @@ export read_ecckd_tabulated_gas_optics, read_reference_ecckd_gas_optics
 export surface_longwave_emission, TabulatedSurfaceEmission, streaming_longwave_fluxes!
 export GasOpticsStencil, gas_optics_stencil, layer_gases, gas_names
 export longwave_optical_depth, shortwave_optical_depth, water_vapor_table_optical_depth
-export rayleigh_optical_depth, longwave_source, source_table_bracket
+export rayleigh_optical_depth, hydrostatic_air_moles, longwave_source, source_table_bracket
 export ShortwaveColumnScratch, streaming_shortwave_fluxes!
 export reference_ecckd_model_inventory, reference_ecckd_definition_path,
        reference_ecckd_definition_paths, reference_ecckd_model_specs,
@@ -66,6 +66,7 @@ export RadiativeTransferColumn, reset!
 export solar_declination, equation_of_time, cosine_solar_zenith
 
 include("abstract_types.jl")
+include("physical_constants.jl")
 include("column_views.jl")
 include("flux_to_tendency.jl")
 include("planck.jl")

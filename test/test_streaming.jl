@@ -11,10 +11,14 @@ using NCDatasets   # extension trigger for the reference ecCKD reader
 # model of `access_points_check.jl` and on the reference `climate_32x32`
 # tables, and (2) inferrability and zero allocation of every scalar function.
 
-const σ_SB = 5.670374419e-8
-const GRAVITY = 9.80665
-const DRY_AIR_MOLAR_MASS = 0.0289647
-const WATER_MOLAR_MASS = 0.01801528
+# Every constant the tests need comes from the package's Earth defaults, the
+# same object a `ColumnAtmosphere` carries when none is passed.
+const CONSTANTS = PhysicalConstants()
+const σ_SB = CONSTANTS.stefan_boltzmann
+const GRAVITY = CONSTANTS.gravity
+const DRY_AIR_MOLAR_MASS = CONSTANTS.dry_air_molar_mass
+const WATER_MOLAR_MASS = CONSTANTS.water_molar_mass
+const SOLAR_CONSTANT = CONSTANTS.solar_constant
 
 # Scalar gas amounts of layer `k` from a column container of per-layer vectors
 # and column-wide scalars, built the way a host kernel would (not through
@@ -22,7 +26,9 @@ const WATER_MOLAR_MASS = 0.01801528
 layer_scalars(gases::NamedTuple, k) = map(value -> value isa Number ? value : value[k], gases)
 
 # The scalar loop a host kernel runs: stencil once per layer, then one call
-# per g point. `air_moles` is the hydrostatic molar amount `Δp / (g mᵈ)`.
+# per g point. `air_moles` is the hydrostatic molar amount `Δp / (g mᵈ)`,
+# written out with the host's own constants (the array path calls
+# `hydrostatic_air_moles` with `atmosphere.constants`, the same values here).
 function scalar_optical_properties!(longwave, shortwave, model, atmosphere)
     FT = eltype(model)
     nlayers = length(atmosphere.temperature_layers)
@@ -199,6 +205,75 @@ end
     @test water_vapor ./ dry_air ≈ χ_H₂O rtol = 1e-12
 end
 
+# No physical constant is hard-coded on the runtime path: the hydrostatic air
+# amount reads gravity and the dry-air molar mass from the column's constants,
+# the gray source reads σ from the model, and both follow a host's own values.
+@testset "constants propagate from the column and the model" begin
+    Δp = 12_500.0
+    @test hydrostatic_air_moles(Δp, GRAVITY, DRY_AIR_MOLAR_MASS) == Δp / (GRAVITY * DRY_AIR_MOLAR_MASS)
+    @test hydrostatic_air_moles(Float32(Δp), Float32(GRAVITY), Float32(DRY_AIR_MOLAR_MASS)) isa Float32
+
+    for FT in (Float64, Float32)
+        model, atmosphere = tabulated_fixture(FT)
+        @test atmosphere.constants isa PhysicalConstants{FT}
+        @test model.stefan_boltzmann === FT(σ_SB)
+        # A column with twice the gravity has half the air per layer, so the
+        # Rayleigh optical depth (the only term built from the hydrostatic
+        # amount when `composite` is supplied) halves exactly.
+        heavy = ColumnAtmosphere(; pressure_layers = atmosphere.pressure_layers,
+                                 pressure_interfaces = atmosphere.pressure_interfaces,
+                                 temperature_layers = atmosphere.temperature_layers,
+                                 temperature_interfaces = atmosphere.temperature_interfaces,
+                                 gases = atmosphere.gases, surface = atmosphere.surface,
+                                 geometry = atmosphere.geometry,
+                                 constants = PhysicalConstants(FT; gravity = 2 * FT(GRAVITY)))
+        nlayers = length(atmosphere.temperature_layers)
+        ng_lw, ng_sw = length(model.longwave_weights), length(model.shortwave_weights)
+        longwave, shortwave = optics_arrays(FT, ng_lw, ng_sw, nlayers; interface_sources = false)
+        heavy_longwave, heavy_shortwave = optics_arrays(FT, ng_lw, ng_sw, nlayers; interface_sources = false)
+        optical_properties!(longwave, shortwave, model, atmosphere)
+        optical_properties!(heavy_longwave, heavy_shortwave, model, heavy)
+        @test heavy_shortwave.rayleigh_optical_depth == shortwave.rayleigh_optical_depth ./ 2
+        @test heavy_shortwave.optical_depth == shortwave.optical_depth
+        @test heavy_longwave.optical_depth == longwave.optical_depth
+
+        # `heating_rates!` defaults to the column's constants.
+        fluxes = RadiativeFluxes(longwave_up = FT.(collect(range(300, 400; length = nlayers + 1))),
+                                 longwave_down = FT.(collect(range(250, 150; length = nlayers + 1))),
+                                 shortwave_up = zeros(FT, nlayers + 1),
+                                 shortwave_down = zeros(FT, nlayers + 1))
+        heating, heavy_heating, explicit = zeros(FT, nlayers), zeros(FT, nlayers), zeros(FT, nlayers)
+        heating_rates!(heating, fluxes, atmosphere)
+        heating_rates!(heavy_heating, fluxes, heavy)
+        heating_rates!(explicit, fluxes, atmosphere; gravity = heavy.constants.gravity,
+                       heat_capacity = heavy.constants.heat_capacity)
+        @test heavy_heating == 2 .* heating
+        @test explicit == heavy_heating
+    end
+
+    # The Stefan–Boltzmann constant is a model field: a custom value scales the
+    # gray source and survives element-type conversion and adaptation.
+    σ = 2 * σ_SB
+    gray = EcCKDGasOpticsModel(names = (:h2o,),
+                               longwave_absorption = [0.1; 0.2;;],
+                               shortwave_absorption = [0.01;;],
+                               longwave_source_scale = [1.0, 1.05],
+                               stefan_boltzmann = σ)
+    @test gray.stefan_boltzmann == σ
+    @test longwave_source(gray, 2, 240.0, nothing) == 1.05 * (σ * 240.0^4)
+    gray32 = NumericalRadiation.Adapt.adapt(Array{Float32}, gray)
+    @test gray32.stefan_boltzmann === Float32(σ)
+    tabulated = EcCKDTabulatedGasOpticsModel(names = (:h2o,),
+                                             pressure_grid = [10_000.0, 100_000.0],
+                                             temperature_grid = [220.0, 300.0],
+                                             longwave_absorption = ones(2, 1, 2, 2),
+                                             shortwave_absorption = ones(1, 1, 2, 2),
+                                             stefan_boltzmann = σ)
+    @test tabulated.stefan_boltzmann == σ
+    @test longwave_source(tabulated, 1, 260.0, nothing) == σ * 260.0^4
+    @test EcCKDTabulatedGasOpticsModel{Float32}(tabulated).stefan_boltzmann === Float32(σ)
+end
+
 @testset "scalar layer optics reproduce optical_properties! bitwise" begin
     @testset "2-layer fixed-coefficient model" begin
         model, atmosphere = smoke_fixture()
@@ -210,6 +285,7 @@ end
         @test source_table_bracket(model, 240.0) === nothing
         @test rayleigh_optical_depth(model, 1, 100.0) === 0.0
         @test longwave_source(model, 2, 240.0, nothing) == 1.05 * (σ_SB * 240.0^4)
+        @test model.stefan_boltzmann == σ_SB
     end
 
     @testset "synthetic tabulated model, $FT" for FT in (Float64, Float32)
@@ -513,7 +589,7 @@ function broadband_fluxes(model, atmosphere; surface_temperature, cos_zenith, su
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
                       LongwaveBoundaryConditions(surface_longwave_up = surface_up))
     radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
-                      ShortwaveBoundaryConditions(toa_shortwave_down = FT(1361) * FT(cos_zenith),
+                      ShortwaveBoundaryConditions(toa_shortwave_down = FT(SOLAR_CONSTANT) * FT(cos_zenith),
                                                   surface_albedo = FT(surface_albedo)))
     return longwave, shortwave, fluxes
 end
@@ -1105,7 +1181,7 @@ end
 @testset "streaming shortwave reproduces the adding solver, $FT" for FT in (Float64, Float32)
     fixture = shortwave_fixture(FT)
     (; ng, nlayers, optics, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
-    S0 = FT(1361)
+    S0 = FT(SOLAR_CONSTANT)
     tolerance = FT === Float64 ? 1e-12 : 20 * eps(Float32)
     for μ0 in FT[1, 0.5, 0.1]
         toa_irradiance = S0 * μ0
@@ -1176,7 +1252,7 @@ end
     scattering = [0.0 0.0 0.0; 0.02 0.03 0.04]
     weights = [0.4, 0.6]
     optics = ShortwaveOptics(absorption; scattering_optical_depth = scattering, weights)
-    μ0, S0, albedo = 0.6, 1361.0, 0.2
+    μ0, S0, albedo = 0.6, SOLAR_CONSTANT, 0.2
     fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1), longwave_down = zeros(nlayers + 1),
                              shortwave_up = zeros(nlayers + 1), shortwave_down = zeros(nlayers + 1))
     radiative_fluxes!(fluxes, CloudlessShortwave(), optics, (; geometry = (; cos_zenith = μ0)),
@@ -1211,7 +1287,7 @@ end
 
 @testset "streaming shortwave is exactly zero at night, $FT" for FT in (Float64, Float32)
     fixture = shortwave_fixture(FT)
-    S0 = FT(1361)
+    S0 = FT(SOLAR_CONSTANT)
     # The host convention `toa_irradiance = S0 max(μ0, 0)`: the sun below or
     # on the horizon gives identically zero fluxes without a branch.
     for μ0 in FT[0, -0.3, -1]
@@ -1238,7 +1314,7 @@ Base.@noinline measure_streaming_shortwave(up, down, layer_optics, μ0, toa, α_
     (; ng, nlayers, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
     up, down = zeros(FT, nlayers + 1), zeros(FT, nlayers + 1)
     scratch = ShortwaveColumnScratch(FT, nlayers)
-    μ0, toa = FT(0.5), FT(1361) * FT(0.5)
+    μ0, toa = FT(0.5), FT(SOLAR_CONSTANT) * FT(0.5)
     @test (@inferred streaming_shortwave_fluxes!(up, down, layer_optics, μ0, toa, direct_albedo,
                                                  diffuse_albedo, weights, ng, nlayers, scratch)) === nothing
     for _ in 1:2   # compile on the first pass, measure on the second

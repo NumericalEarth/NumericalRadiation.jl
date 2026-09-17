@@ -29,6 +29,21 @@ convention), but the mapping to the symbolic notation is always unambiguous.
 | `σ` (Stefan–Boltzmann) | `PhysicalConstants.stefan_boltzmann` | W m⁻² K⁻⁴ |
 | `g` | `PhysicalConstants.gravity` | m s⁻² |
 | `cₚ` | `PhysicalConstants.heat_capacity` | Isobaric specific heat (J kg⁻¹ K⁻¹) |
+| `S₀` | `PhysicalConstants.solar_constant` | W m⁻² |
+| `mᵈ`, `mᵛ` | `PhysicalConstants.dry_air_molar_mass`, `.water_molar_mass` | kg mol⁻¹ |
+| `Rᵈ` | `PhysicalConstants.dry_air_gas_constant` | J kg⁻¹ K⁻¹ |
+| `R` | `PhysicalConstants.universal_gas_constant` | J mol⁻¹ K⁻¹ |
+| `Nᴬ` | `PhysicalConstants.avogadro_number` | mol⁻¹ |
+| `h`, `c`, `k_B`, `c₂` | `PLANCK_CONSTANT`, `SPEED_OF_LIGHT`, `BOLTZMANN_CONSTANT`, `SECOND_RADIATION_CONSTANT` | Universal constants (module constants, not fields) |
+
+Physical constants are never numeric literals at a call site or in a kernel:
+they live once, as the defaults of [`PhysicalConstants`](@ref) and
+[`ThermodynamicConstants`](@ref), and propagate from a host's constants
+object — through `ColumnAtmosphere.constants` on the staged path, the
+`constants` argument of the column schemes, the `stefan_boltzmann` field of
+the ecCKD gas-optics models, and the `constants` keyword of the RRTMGP
+adapter. Examples and tests bind them once at the top of a file
+(`constants = PhysicalConstants()`, then `g = constants.gravity`).
 
 ## Sigma-coordinate vertical grid
 
@@ -58,10 +73,10 @@ defined at first use on each page:
 | `χH₂O`, `χO₃`, `χCO₂`, … | Mole fractions relative to dry air (dry-air volume mixing ratios) |
 | `nᵈ` | Dry-air molar amount per layer (mol m⁻²); gas amounts are `χ .* nᵈ` |
 | `Ṫ` | Temperature tendency (K s⁻¹); example plots show `Ṫ * 86_400` in K day⁻¹ |
-| `mᵈ`, `mᵛ` | Dry-air and water molar masses (kg mol⁻¹) |
+| `mᵈ`, `mᵛ` | Dry-air and water molar masses (kg mol⁻¹), from `PhysicalConstants` |
 | `μ₀` | Cosine of the solar zenith angle |
-| `Rᵈ` | Dry-air gas constant (J kg⁻¹ K⁻¹) |
-| `S₀` | Prescribed TOA downwelling shortwave flux (W m⁻²) |
+| `Rᵈ` | Dry-air gas constant (J kg⁻¹ K⁻¹), from `PhysicalConstants` |
+| `S₀` | Prescribed TOA downwelling shortwave flux (W m⁻²), `PhysicalConstants.solar_constant` |
 | `Γ` | Critical lapse rate (K m⁻¹) |
 | `Cₛ` | Surface slab heat capacity (J m⁻² K⁻¹) |
 | `longwave_gpoints`, `shortwave_gpoints` | g-point counts of the loaded gas-optics model |

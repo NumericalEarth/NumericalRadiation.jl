@@ -35,12 +35,14 @@ Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
 χH₂O = @. 0.015 * (p / 101_325)^3 + 3e-6
 χO₃  = @. 3e-8 + 5e-6 * (2_000 / p)
 
-g  = 9.80665         # m s⁻²
-mᵈ = 0.028964        # kg mol⁻¹
-mᵛ = 0.018016        # kg mol⁻¹
+constants = PhysicalConstants()      # Earth defaults, carried by the column below
+g  = constants.gravity               # m s⁻²
+mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
+mᵛ = constants.water_molar_mass      # kg mol⁻¹
 nᵈ = [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:N]
 
 atmosphere = ColumnAtmosphere(;
+    constants,
     pressure_layers = p,
     pressure_interfaces = pᵢ,
     temperature_layers = T,
@@ -191,8 +193,8 @@ radiative_fluxes!(allsky_fluxes, CloudOverlapShortwave(overlap = :adding),
 
 clear_Ṫ = zeros(N)
 allsky_Ṫ = zeros(N)
-heating_rates!(clear_Ṫ, clear_fluxes, atmosphere; gravity = g, heat_capacity = 1004)
-heating_rates!(allsky_Ṫ, allsky_fluxes, atmosphere; gravity = g, heat_capacity = 1004)
+heating_rates!(clear_Ṫ, clear_fluxes, atmosphere)     # g and cₚ from atmosphere.constants
+heating_rates!(allsky_Ṫ, allsky_fluxes, atmosphere)
 nothing #hide
 
 # ## Gates

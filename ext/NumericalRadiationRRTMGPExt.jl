@@ -16,23 +16,21 @@ struct RRTMGPClearSkyModel{FT, C}
     parameters::RRTMGPParameters{FT}
 end
 
+# RRTMGP's `RRTMGPParameters` are built from a `PhysicalConstants` (or any
+# object with the same properties), so the adapter runs with the same gravity,
+# molar masses and Stefan–Boltzmann constant as the rest of a host's radiation
+# (`kappa_d = Rᵈ / cₚ`). The keyword names on the right are RRTMGP's.
 function RRTMGPClearSkyModel(::Type{FT} = Float64;
                              context = ClimaComms.context(ClimaComms.CPUSingleThreaded()),
-                             gravity = 9.80665,
-                             molmass_dryair = 0.028964,
-                             molmass_water = 0.018016,
-                             gas_constant = 8.31446261815324,
-                             kappa_d = 287.05 / 1004.0,
-                             stefan_boltzmann_constant = 5.670374419e-8,
-                             avogadro_number = 6.02214076e23) where FT
+                             constants = PhysicalConstants(FT)) where FT
     parameters = RRTMGPParameters(
-        grav = FT(gravity),
-        molmass_dryair = FT(molmass_dryair),
-        molmass_water = FT(molmass_water),
-        gas_constant = FT(gas_constant),
-        kappa_d = FT(kappa_d),
-        Stefan = FT(stefan_boltzmann_constant),
-        avogad = FT(avogadro_number),
+        grav = FT(constants.gravity),
+        molmass_dryair = FT(constants.dry_air_molar_mass),
+        molmass_water = FT(constants.water_molar_mass),
+        gas_constant = FT(constants.universal_gas_constant),
+        kappa_d = FT(constants.dry_air_gas_constant / constants.heat_capacity),
+        Stefan = FT(constants.stefan_boltzmann),
+        avogad = FT(constants.avogadro_number),
     )
     return RRTMGPClearSkyModel{FT, typeof(context)}(context, parameters)
 end
