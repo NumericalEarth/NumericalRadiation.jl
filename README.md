@@ -29,8 +29,8 @@ The analytic-band solvers are pure scalar ingredients that a host model can
 fuse into its own column loops or kernels; the
 `NumericalRadiationSpeedyWeatherExt` package extension wires them into
 [SpeedyWeather.jl](https://github.com/SpeedyWeather/SpeedyWeather.jl) per
-column. The ecCKD look-up tables are `Adapt.jl`-aware so they can be moved to
-device memory; direct staged device execution is not demonstrated here.
+column. The ecCKD path has the same scalar form for host kernels — see
+[Host kernels (Breeze)](#host-kernels-breeze) below.
 
 ## Installation
 
@@ -109,6 +109,26 @@ spectral_grid = SpectralGrid(trunc = 31, nlayers = 8)
 longwave      = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
 model         = PrimitiveWetModel(spectral_grid; longwave_radiation = longwave)
 ```
+
+## Host kernels (Breeze)
+
+The ecCKD gas optics and the clear-sky solvers are also exposed as scalar,
+per-layer, per-g-point functions that a host model calls inside its own
+column kernels without allocating: [`gas_optics_stencil`](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/gas_optics/streaming_column_api/)
+brackets a layer on the coefficient tables once, `longwave_optical_depth`,
+`shortwave_optical_depth`, `rayleigh_optical_depth` and `longwave_source`
+evaluate one g point at a time from a `NamedTuple` of scalar gas amounts, and
+`streaming_longwave_fluxes!` / `streaming_shortwave_fluxes!` sweep one column
+through layer-optics functors with caller-owned scratch (a
+`TabulatedSurfaceEmission` surface source and a `ShortwaveColumnScratch`).
+`SpectralCloudOptics` adds per-g-point cloud optics to the same loop. The
+array methods (`optical_properties!`, `radiative_fluxes!`) are loops over
+these functions, so the two paths agree bit for bit; every function is
+`@inline`, allocation-free and `Adapt.jl`-aware, so the loop runs unchanged
+on GPU. [Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) uses this
+API in its `NumericalRadiation` extension; the
+[streaming column API](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/gas_optics/streaming_column_api/)
+page walks through the loop on a two-layer column.
 
 ## Schemes at a glance
 

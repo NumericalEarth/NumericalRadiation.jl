@@ -41,6 +41,17 @@ h2o_table_optical_depth
 rayleigh_optical_depth
 longwave_source
 source_table_bracket
+TabulatedSurfaceEmission
+streaming_longwave_fluxes!
+ShortwaveColumnScratch
+streaming_shortwave_fluxes!
+NumericalRadiation.sw_two_stream_layer
+NumericalRadiation.sw_path_factor
+SpectralCloudOptics
+effective_radius_bracket
+cloud_layer_optics
+add_scattering_layer
+cloud_absorption_optical_depth
 cloud_optical_properties!
 cloudy_region_optical_properties!
 aerosol_optical_properties!

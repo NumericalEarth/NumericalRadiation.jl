@@ -78,6 +78,79 @@ function exported_symbol_status(name)
     )
 end
 
+# Layer-optics functors over precomputed `(ng, nlayers)` matrices, in the
+# `(ig, k)` form a host kernel hands to the streaming solvers: longwave
+# `(τ, B_top, B_bottom)` and shortwave `(τ_absorption, τ_scattering, asymmetry)`.
+struct LongwaveMatrixOptics{L}
+    optics :: L
+end
+
+(layer::LongwaveMatrixOptics)(ig, k) = (layer.optics.optical_depth[ig, k],
+                                        layer.optics.source_top[ig, k],
+                                        layer.optics.source_bottom[ig, k])
+
+struct ShortwaveMatrixOptics{S}
+    optics :: S
+end
+
+(layer::ShortwaveMatrixOptics)(ig, k) = (layer.optics.optical_depth[ig, k],
+                                         layer.optics.rayleigh_optical_depth[ig, k],
+                                         layer.optics.scattering_asymmetry[ig, k])
+
+# The streaming (kernel-facing) solvers against the array solvers on the same
+# optics. The array longwave solver streams each g point through
+# `streaming_longwave_fluxes!` when interface Planck sources are present, and
+# the array shortwave solver through the same adding step as
+# `streaming_shortwave_fluxes!` for every g point that scatters, so both
+# comparisons are bitwise.
+function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
+    nlayers = length(atmosphere.temperature_layers)
+    ng_lw, ng_sw = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
+    longwave = LongwaveOptics(zeros(ng_lw, nlayers), zeros(ng_lw, nlayers);
+                              source_top = zeros(ng_lw, nlayers),
+                              source_bottom = zeros(ng_lw, nlayers),
+                              weights = zeros(ng_lw))
+    shortwave = ShortwaveOptics(zeros(ng_sw, nlayers); weights = zeros(ng_sw))
+    optical_properties!(longwave, shortwave, gas_model, atmosphere)
+    add_cloud_optical_depths!(longwave, shortwave, cloud)
+    add_aerosol_optical_depths!(longwave, shortwave, aerosol)
+
+    surface_temperature, emissivity, longwave_albedo = 295.0, 0.98, 0.02
+    μ0, toa_irradiance, shortwave_albedo = 0.5, 680.5, 0.1
+    surface_emission = TabulatedSurfaceEmission(gas_model, surface_temperature; emissivity)
+
+    fluxes = RadiativeFluxes(longwave_up = zeros(nlayers + 1),
+                             longwave_down = zeros(nlayers + 1),
+                             shortwave_up = zeros(nlayers + 1),
+                             shortwave_down = zeros(nlayers + 1))
+    radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
+                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission,
+                                                 surface_albedo = longwave_albedo))
+    radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
+                      ShortwaveBoundaryConditions(toa_shortwave_down = toa_irradiance,
+                                                  surface_albedo = shortwave_albedo))
+
+    longwave_up, longwave_down = zeros(nlayers + 1), zeros(nlayers + 1)
+    streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveMatrixOptics(longwave),
+                               surface_emission, longwave_albedo, 0.0,
+                               longwave.weights, ng_lw, nlayers, zeros(nlayers), zeros(nlayers))
+    shortwave_up, shortwave_down = zeros(nlayers + 1), zeros(nlayers + 1)
+    streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveMatrixOptics(shortwave),
+                                μ0, toa_irradiance, shortwave_albedo, shortwave_albedo,
+                                shortwave.weights, ng_sw, nlayers, ShortwaveColumnScratch(Float64, nlayers))
+
+    return (
+        streaming_longwave_matches_array = all(isfinite, longwave_up) &&
+                                           !all(iszero, longwave_up) &&
+                                           longwave_up == fluxes.longwave_up &&
+                                           longwave_down == fluxes.longwave_down,
+        streaming_shortwave_matches_array = all(isfinite, shortwave_up) &&
+                                            !all(iszero, shortwave_up) &&
+                                            shortwave_up == fluxes.shortwave_up &&
+                                            shortwave_down == fluxes.shortwave_down,
+    )
+end
+
 function component_smoke()
     atmosphere = ColumnAtmosphere(
         pressure_layers = [20_000.0, 70_000.0],
@@ -140,6 +213,7 @@ function component_smoke()
     radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
                       ShortwaveBoundaryConditions(toa_shortwave_down = 680.5, surface_albedo = 0.1))
     heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
+    streaming = streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
 
     return (
         optical_properties_callable = all(isfinite, longwave.optical_depth) &&
@@ -164,6 +238,7 @@ function component_smoke()
         host_can_stop_after_gas_optics = !all(iszero, longwave.optical_depth) &&
                                          !all(iszero, shortwave.optical_depth),
         host_can_replace_solver_or_vertical_integral = all(isfinite, heating),
+        streaming...,
     )
 end
 
@@ -220,6 +295,8 @@ function markdown_report(result)
         "| Heating rates callable separately | $(result.component_smoke.heating_rates_callable) |",
         "| Host can stop after gas optics | $(result.component_smoke.host_can_stop_after_gas_optics) |",
         "| Host can replace solver or vertical integral | $(result.component_smoke.host_can_replace_solver_or_vertical_integral) |",
+        "| Streaming longwave equals the array solver | $(result.component_smoke.streaming_longwave_matches_array) |",
+        "| Streaming shortwave equals the array solver | $(result.component_smoke.streaming_shortwave_matches_array) |",
     ])
     return join(lines, "\n") * "\n"
 end

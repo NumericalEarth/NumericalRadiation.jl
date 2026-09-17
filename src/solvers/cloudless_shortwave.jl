@@ -142,6 +142,15 @@ end
         FT(boundary_conditions.surface_albedo_direct[ig]) :
         FT(boundary_conditions.surface_albedo_direct)
 
+"""
+$(TYPEDSIGNATURES)
+
+Direct-beam slant-path factor `1 / μ₀` of a column, with `μ₀` read from
+`atmosphere.geometry.cos_zenith` and clamped to `√eps(FT)` so that a sun on
+or below the horizon gives a finite path; `1` (a vertical path) when the
+atmosphere carries no solar geometry. [`streaming_shortwave_fluxes!`](@ref)
+applies the same clamp to the `μ₀` it is handed directly.
+"""
 @inline function sw_path_factor(::Type{FT}, atmosphere) where FT
     if atmosphere !== nothing && hasproperty(atmosphere, :geometry)
         geometry = getproperty(atmosphere, :geometry)

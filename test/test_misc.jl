@@ -134,6 +134,8 @@ using Dates
     @test occursin("\"status\": \"passed\"", json)
     @test occursin("\"host_can_stop_after_gas_optics\": true", json)
     @test occursin("\"host_can_replace_solver_or_vertical_integral\": true", json)
+    @test occursin("\"streaming_longwave_matches_array\": true", json)
+    @test occursin("\"streaming_shortwave_matches_array\": true", json)
 end
 # --- end content of test_access_points_check.jl ---
 
