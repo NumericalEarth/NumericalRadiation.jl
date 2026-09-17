@@ -16,33 +16,38 @@ solve_shortwave!(column)
 @show column.longwave_diagnostics.outgoing_longwave
 ```
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `grid`: Column vertical grid (sigma coordinates)
+- `profile`: Atmosphere profile (temperature, humidity, geopotential, surface pressure, rain
+  rate)
+- `surface`: Lower boundary state (SST/LST, albedos, emissivities, cos-zenith)
+- `longwave_scheme`: Longwave scheme, e.g. [`AnalyticBandLongwave`](@ref)
+- `shortwave_scheme`: Shortwave scheme, e.g. [`OneBandShortwave`](@ref) or
+  [`TransparentShortwave`](@ref)
+- `physical_constants`: Physical constants (gravity, heat capacity, Stefan–Boltzmann, solar
+  constant)
+- `thermodynamic_constants`: Thermodynamic constants (Clausius–Clapeyron parameters for
+  saturation humidity)
+- `temperature_tendency`: Per-layer temperature tendency written by `solve_longwave!` /
+  `solve_shortwave!`
+- `transmissivity_scratch`: Per-layer scratch for the shortwave transmissivity
+- `longwave_diagnostics`: Scalar longwave diagnostics (OLR, surface up/down, ocean/land
+  split)
+- `shortwave_diagnostics`: Scalar shortwave diagnostics (TOA up, surface up/down, albedo,
+  clouds)
 """
 struct RadiativeTransferColumn{NF, LW, SW, PC, TC, V<:AbstractVector{NF}, G<:ColumnGrid{NF},
                                AP<:AtmosphereProfile{NF}}
-    "Column vertical grid (sigma coordinates)"
     grid::G
-    "Atmosphere profile (temperature, humidity, geopotential, surface pressure, rain rate)"
     profile::AP
-    "Lower boundary state (SST/LST, albedos, emissivities, cos-zenith)"
     surface::SurfaceState{NF}
-    "Longwave scheme, e.g. [`AnalyticBandLongwave`](@ref)"
     longwave_scheme::LW
-    "Shortwave scheme, e.g. [`OneBandShortwave`](@ref) or [`TransparentShortwave`](@ref)"
     shortwave_scheme::SW
-    "Physical constants (gravity, heat capacity, Stefan–Boltzmann, solar constant)"
     physical_constants::PC
-    "Thermodynamic constants (Clausius–Clapeyron parameters for saturation humidity)"
     thermodynamic_constants::TC
-    "Per-layer temperature tendency written by `solve_longwave!` / `solve_shortwave!`"
     temperature_tendency::V
-    "Per-layer scratch for the shortwave transmissivity"
     transmissivity_scratch::V
-    "Scalar longwave diagnostics (OLR, surface up/down, ocean/land split)"
     longwave_diagnostics::LongwaveDiagnostics{NF}
-    "Scalar shortwave diagnostics (TOA up, surface up/down, albedo, clouds)"
     shortwave_diagnostics::ShortwaveDiagnostics{NF}
 end
 

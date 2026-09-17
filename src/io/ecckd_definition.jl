@@ -8,20 +8,18 @@ lookup tables into runtime gas-optics models. A NetCDF reader extension can
 populate it from reference ecCKD files without making `NCDatasets.jl` a hard
 dependency of the core package.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `model_name`: Model name from file metadata or user-provided configuration
+- `version`: Model version from file metadata or user-provided configuration
+- `dimensions`: Named dimensions and their lengths
+- `variables`: Named variables and their dimension tuples
+- `attributes`: Additional global attributes
 """
 struct EcCKDDefinition{D, V, A}
-    "Model name from file metadata or user-provided configuration."
     model_name::String
-    "Model version from file metadata or user-provided configuration."
     version::String
-    "Named dimensions and their lengths."
     dimensions::D
-    "Named variables and their dimension tuples."
     variables::V
-    "Additional global attributes."
     attributes::A
 end
 
@@ -39,9 +37,18 @@ $(TYPEDEF)
 
 Small validation-oriented summary returned by [`summarize_ecckd_definition`](@ref).
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `model_name`: Model name from file metadata or user-provided configuration
+- `version`: Model version from file metadata or user-provided configuration
+- `longwave_bands`: Number of longwave bands, or `0` when the file has none
+- `shortwave_bands`: Number of shortwave bands, or `0` when the file has none
+- `longwave_gpoints`: Number of longwave g points, or `0` when the file has none
+- `shortwave_gpoints`: Number of shortwave g points, or `0` when the file has none
+- `gases`: Gas names present in the definition
+- `pressure_grid_size`: Length of the pressure lookup grid
+- `temperature_grid_size`: Length of the temperature lookup grid
+- `source_tables_present`: Whether the file carries Planck source tables
+- `rayleigh_tables_present`: Whether the file carries Rayleigh scattering tables
 """
 struct EcCKDSchemaSummary
     model_name::String
@@ -62,18 +69,16 @@ $(TYPEDEF)
 
 Named pair of reference ecCKD longwave and shortwave CKD-definition files.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `name`: Public model-pair selector, for example `:climate_32x32`
+- `longwave`: Reference longwave CKD-definition key
+- `shortwave`: Reference shortwave CKD-definition key
+- `description`: Human-readable summary for docs and logging
 """
 struct EcCKDModelSpec
-    "Public model-pair selector, for example `:climate_32x32`."
     name::Symbol
-    "Reference longwave CKD-definition key."
     longwave::Symbol
-    "Reference shortwave CKD-definition key."
     shortwave::Symbol
-    "Human-readable summary for docs and logging."
     description::String
 end
 

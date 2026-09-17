@@ -15,24 +15,27 @@ transmittance: the adding sweeps need that running product, not the factor.
 source of everything below interface `k`.
 
 Every element is written before it is read, so the storage need not be
-initialized. Fields are
+initialized.
 
-$(TYPEDFIELDS)
+Fields:
+- `reflectance`: Layer diffuse reflectance, length `Nz`
+- `transmittance`: Layer diffuse transmittance, length `Nz`
+- `direct_reflectance`: Layer reflectance of the direct beam into the diffuse upward stream,
+  length `Nz`
+- `direct_diffuse_transmittance`: Layer transmittance of the direct beam into the diffuse
+  downward stream, length `Nz`
+- `direct_transmittance`: Normal-incidence direct-beam flux at the bottom of each layer,
+  length `Nz`
+- `stack_albedo`: Diffuse albedo of the stack below each interface, length `Nz + 1`
+- `source`: Upward diffuse source of the stack below each interface, length `Nz + 1`
 """
 struct ShortwaveColumnScratch{V}
-    "Layer diffuse reflectance, length `Nz`."
     reflectance::V
-    "Layer diffuse transmittance, length `Nz`."
     transmittance::V
-    "Layer reflectance of the direct beam into the diffuse upward stream, length `Nz`."
     direct_reflectance::V
-    "Layer transmittance of the direct beam into the diffuse downward stream, length `Nz`."
     direct_diffuse_transmittance::V
-    "Normal-incidence direct-beam flux at the bottom of each layer, length `Nz`."
     direct_transmittance::V
-    "Diffuse albedo of the stack below each interface, length `Nz + 1`."
     stack_albedo::V
-    "Upward diffuse source of the stack below each interface, length `Nz + 1`."
     source::V
 end
 

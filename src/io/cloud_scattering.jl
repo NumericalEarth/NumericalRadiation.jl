@@ -8,24 +8,25 @@ wavenumber and effective radius. Spectral mapping to radiation bands or
 g-points is a separate operation because it depends on the gas-optics spectral
 definition and averaging convention.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `medium`: Hydrometeor medium, for example `liquid-water` or `ice`
+- `particle_type`: Particle type from file metadata
+- `wavenumber`: Wavenumber grid in cm^-1
+- `effective_radius`: Effective-radius grid in m
+- `mass_extinction_coefficient`: Mass-extinction coefficient with shape
+  `(wavenumber, effective_radius)`
+- `single_scattering_albedo`: Single-scattering albedo with shape
+  `(wavenumber, effective_radius)`
+- `asymmetry_factor`: Scattering asymmetry factor with shape
+  `(wavenumber, effective_radius)`
 """
 struct CloudScatteringTable{FT, V, M}
-    "Hydrometeor medium, for example `liquid-water` or `ice`."
     medium::String
-    "Particle type from file metadata."
     particle_type::String
-    "Wavenumber grid in cm^-1."
     wavenumber::V
-    "Effective-radius grid in m."
     effective_radius::V
-    "Mass-extinction coefficient with shape `(wavenumber, effective_radius)`."
     mass_extinction_coefficient::M
-    "Single-scattering albedo with shape `(wavenumber, effective_radius)`."
     single_scattering_albedo::M
-    "Scattering asymmetry factor with shape `(wavenumber, effective_radius)`."
     asymmetry_factor::M
 end
 
@@ -40,18 +41,16 @@ Spectral mapping from ecCKD resolved wavenumber intervals to g-points.
 cm^-1. `gpoint_fraction` has shape `(wavenumber, gpoint)` and gives the
 fractional contribution of each interval to each gas-optics g-point.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `wavenumber1`: Lower wavenumber edge for each resolved spectral interval in cm^-1
+- `wavenumber2`: Upper wavenumber edge for each resolved spectral interval in cm^-1
+- `gpoint_fraction`: Fractional contribution with shape `(wavenumber, gpoint)`
+- `interval_weight`: Spectral interval weights, e.g. solar irradiance or Planck weights
 """
 struct EcCKDSpectralMapping{FT, V, M}
-    "Lower wavenumber edge for each resolved spectral interval in cm^-1."
     wavenumber1::V
-    "Upper wavenumber edge for each resolved spectral interval in cm^-1."
     wavenumber2::V
-    "Fractional contribution with shape `(wavenumber, gpoint)`."
     gpoint_fraction::M
-    "Spectral interval weights, e.g. solar irradiance or Planck weights."
     interval_weight::V
 end
 

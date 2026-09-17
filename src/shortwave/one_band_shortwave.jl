@@ -7,14 +7,14 @@ cloud top, ozone absorption in the stratosphere, layer-by-layer transmission
 with the configured [`AbstractShortwaveTransmissivity`](@ref), stratocumulus
 reflection just above the surface, and surface-albedo reflection.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `ozone_absorption`: Total ozone absorption as a fraction of incoming TOA flux (default
+  `NF(0.01)`)
+- `ozone_distribution`: Ozone vertical distribution `ζ(σ) → weight`, normalised so
+  ∫ ζ(σ) dσ = 1 (default `default_ozone_distribution(NF)`)
 """
 Base.@kwdef struct OneBandShortwaveRadiativeTransfer{NF, F} <: AbstractShortwaveScheme
-    "Total ozone absorption as a fraction of incoming TOA flux"
     ozone_absorption::NF = NF(0.01)
-    "Ozone vertical distribution `ζ(σ) → weight`, normalised so ∫ ζ(σ) dσ = 1"
     ozone_distribution::F = default_ozone_distribution(NF)
 end
 
@@ -34,9 +34,11 @@ Composite one-band shortwave scheme: a cloud diagnosis, a layer-transmissivity
 model and a radiative-transfer solver are combined into a single scheme that
 can be passed to [`solve_shortwave!`](@ref).
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `clouds`: Cloud diagnosis, an [`AbstractShortwaveClouds`](@ref)
+- `transmissivity`: Layer-transmissivity model, an [`AbstractShortwaveTransmissivity`](@ref)
+- `radiative_transfer`: Radiative-transfer solver, an
+  [`OneBandShortwaveRadiativeTransfer`](@ref)
 """
 struct OneBandShortwave{C<:AbstractShortwaveClouds, T<:AbstractShortwaveTransmissivity,
                        R<:OneBandShortwaveRadiativeTransfer} <: AbstractShortwaveScheme

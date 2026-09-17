@@ -9,20 +9,19 @@ cloud scattering/absorption. `cloud_fraction` is kept separate so host models
 and all-sky solvers do not have to encode cloud fraction by weakening the
 cloudy-region optical depth.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `clear`: Clear-region shortwave optical properties
+- `cloudy`: Cloudy-region shortwave optical properties
+- `cloud_fraction`: Layer cloud fraction
+- `overlap_parameter`: Interface overlap parameter between adjacent cloudy layers
+- `fractional_standard_deviation`: Layer fractional standard deviation of in-cloud
+  condensate
 """
 struct ShortwaveCloudOverlapOptics{FT, S, F, O, D}
-    "Clear-region shortwave optical properties."
     clear::S
-    "Cloudy-region shortwave optical properties."
     cloudy::S
-    "Layer cloud fraction."
     cloud_fraction::F
-    "Interface overlap parameter between adjacent cloudy layers."
     overlap_parameter::O
-    "Layer fractional standard deviation of in-cloud condensate."
     fractional_standard_deviation::D
 end
 
@@ -83,18 +82,18 @@ region into thin and thick regions using ecRad's gamma optical-depth scaling.
 These latter modes are diagnostics between final-flux blending and a full
 Tripleclouds/McICA solver.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `clear_solver`: Underlying two-stream shortwave solver
+- `overlap`: Cloud-fraction overlap rule, `:maximum` or `:average`
+- `cloud_fraction_exponent`: Exponent applied to layer cloud fraction before interface
+  blending
+- `inhomogeneity_overlap_exponent`: Exponent applied to alpha overlap inside the
+  Tripleclouds inhomogeneity split
 """
 struct CloudOverlapShortwave{FT, S} <: AbstractRadiativeTransferSolver
-    "Underlying two-stream shortwave solver."
     clear_solver::S
-    "Cloud-fraction overlap rule: `:maximum` or `:average`."
     overlap::Symbol
-    "Exponent applied to layer cloud fraction before interface blending."
     cloud_fraction_exponent::FT
-    "Exponent applied to alpha overlap inside the Tripleclouds inhomogeneity split."
     inhomogeneity_overlap_exponent::FT
 end
 

@@ -13,24 +13,22 @@ half-level Planck functions. Optional `single_scattering_albedo` and
 adding path. `weights` has length `Ngpoints` and is applied while accumulating
 broadband fluxes.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `optical_depth`: Layer optical depth
+- `source`: Layer source function in flux units
+- `source_top`: Top-interface source function for each layer, or `nothing`
+- `source_bottom`: Bottom-interface source function for each layer, or `nothing`
+- `single_scattering_albedo`: Layer single-scattering albedo, or `nothing` for no scattering
+- `scattering_asymmetry`: Layer scattering asymmetry factor, or `nothing` for no scattering
+- `weights`: Spectral weights
 """
 struct LongwaveOptics{FT, A, ST, SB, SA, SG, W}
-    "Layer optical depth."
     optical_depth::A
-    "Layer source function in flux units."
     source::A
-    "Top-interface source function for each layer, or `nothing`."
     source_top::ST
-    "Bottom-interface source function for each layer, or `nothing`."
     source_bottom::SB
-    "Layer single-scattering albedo, or `nothing` for no scattering."
     single_scattering_albedo::SA
-    "Layer scattering asymmetry factor, or `nothing` for no scattering."
     scattering_asymmetry::SG
-    "Spectral weights."
     weights::W
 end
 
@@ -119,16 +117,14 @@ spectrally-gray emission (every g point emits the same flux), a gray
 approximation that does not reproduce a tabulated model's Planck spectrum
 and may bias outgoing longwave fluxes.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `surface_longwave_up`: Upwelling longwave flux entering the bottom interface
+- `toa_longwave_down`: Downwelling longwave flux entering the top interface
+- `surface_albedo`: Diffuse longwave surface albedo
 """
 struct LongwaveBoundaryConditions{FT, S, A}
-    "Upwelling longwave flux entering the bottom interface."
     surface_longwave_up::S
-    "Downwelling longwave flux entering the top interface."
     toa_longwave_down::FT
-    "Diffuse longwave surface albedo."
     surface_albedo::A
 end
 

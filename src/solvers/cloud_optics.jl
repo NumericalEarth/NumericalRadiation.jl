@@ -9,18 +9,16 @@ models can test all-sky plumbing independently from gas optics and
 radiative-transfer solvers. More complete phase functions and overlap
 properties can extend this interface without changing the gas-optics API.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `longwave_optical_depth`: Layer longwave cloud optical depth
+- `shortwave_optical_depth`: Layer shortwave absorptive cloud optical depth
+- `shortwave_scattering_optical_depth`: Layer shortwave scattering cloud optical depth
+- `shortwave_scattering_asymmetry`: Layer shortwave cloud scattering asymmetry factor
 """
 struct CloudOptics{FT, A}
-    "Layer longwave cloud optical depth."
     longwave_optical_depth::A
-    "Layer shortwave absorptive cloud optical depth."
     shortwave_optical_depth::A
-    "Layer shortwave scattering cloud optical depth."
     shortwave_scattering_optical_depth::A
-    "Layer shortwave cloud scattering asymmetry factor."
     shortwave_scattering_asymmetry::A
 end
 
@@ -56,22 +54,22 @@ Tripleclouds/McICA-style solvers. This avoids the grid-mean shortcut that is
 useful for simple smoke tests but inconsistent with ecRad's all-sky
 cloud-region optical-property convention.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `cloud_fraction`: Layer cloud fraction
+- `overlap_parameter`: Interface cloud-overlap parameter between adjacent layers
+- `longwave_optical_depth`: Cloudy-region longwave cloud optical depth
+- `shortwave_optical_depth`: Cloudy-region shortwave absorptive cloud optical depth
+- `shortwave_scattering_optical_depth`: Cloudy-region shortwave scattering cloud optical
+  depth
+- `shortwave_scattering_asymmetry`: Cloudy-region shortwave cloud scattering asymmetry
+  factor
 """
 struct CloudyRegionCloudOptics{FT, A}
-    "Layer cloud fraction."
     cloud_fraction::A
-    "Interface cloud-overlap parameter between adjacent layers."
     overlap_parameter::A
-    "Cloudy-region longwave cloud optical depth."
     longwave_optical_depth::A
-    "Cloudy-region shortwave absorptive cloud optical depth."
     shortwave_optical_depth::A
-    "Cloudy-region shortwave scattering cloud optical depth."
     shortwave_scattering_optical_depth::A
-    "Cloudy-region shortwave cloud scattering asymmetry factor."
     shortwave_scattering_asymmetry::A
 end
 
@@ -118,18 +116,16 @@ it stores absorptive longwave and shortwave optical depth at model layers so
 host models can compose gas, cloud, and aerosol optics without accepting a
 single end-to-end radiation path.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `longwave_optical_depth`: Layer longwave aerosol optical depth
+- `shortwave_optical_depth`: Layer shortwave absorptive aerosol optical depth
+- `shortwave_scattering_optical_depth`: Layer shortwave scattering aerosol optical depth
+- `shortwave_scattering_asymmetry`: Layer shortwave aerosol scattering asymmetry factor
 """
 struct AerosolOptics{FT, A}
-    "Layer longwave aerosol optical depth."
     longwave_optical_depth::A
-    "Layer shortwave absorptive aerosol optical depth."
     shortwave_optical_depth::A
-    "Layer shortwave scattering aerosol optical depth."
     shortwave_scattering_optical_depth::A
-    "Layer shortwave aerosol scattering asymmetry factor."
     shortwave_scattering_asymmetry::A
 end
 
@@ -167,20 +163,19 @@ object supporting `getproperty(..., :cloud_water_path)`. Optical depths are
 τ_sw_scat = ω0 * shortwave_mass_extinction * cloud_water_path
 ```
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `cloud_water_path`: Layer cloud water path, or fallback value when the atmosphere does not
+  provide one
+- `longwave_mass_absorption`: Longwave mass absorption coefficient
+- `shortwave_mass_extinction`: Shortwave mass extinction coefficient
+- `shortwave_single_scattering_albedo`: Shortwave single-scattering albedo
+- `shortwave_scattering_asymmetry`: Shortwave scattering asymmetry factor
 """
 struct LayerCloudOpticsModel{FT, CWP} <: AbstractCloudOpticsModel
-    "Layer cloud water path, or fallback value when the atmosphere does not provide one."
     cloud_water_path::CWP
-    "Longwave mass absorption coefficient."
     longwave_mass_absorption::FT
-    "Shortwave mass extinction coefficient."
     shortwave_mass_extinction::FT
-    "Shortwave single-scattering albedo."
     shortwave_single_scattering_albedo::FT
-    "Shortwave scattering asymmetry factor."
     shortwave_scattering_asymmetry::FT
 end
 
@@ -205,34 +200,35 @@ Optical depths are
                      + ω0_ice * κ_sw_ice * IWP)
 ```
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `liquid_water_path`: Layer liquid water path, or fallback value when the atmosphere does
+  not provide one
+- `ice_water_path`: Layer ice water path, or fallback value when the atmosphere does not
+  provide one
+- `cloud_fraction`: Layer cloud fraction, or fallback value when the atmosphere does not
+  provide one
+- `liquid_longwave_mass_absorption`: Liquid longwave mass absorption coefficient
+- `ice_longwave_mass_absorption`: Ice longwave mass absorption coefficient
+- `liquid_shortwave_mass_extinction`: Liquid shortwave mass extinction coefficient
+- `ice_shortwave_mass_extinction`: Ice shortwave mass extinction coefficient
+- `liquid_shortwave_single_scattering_albedo`: Liquid shortwave single-scattering albedo
+- `ice_shortwave_single_scattering_albedo`: Ice shortwave single-scattering albedo
+- `liquid_shortwave_scattering_asymmetry`: Liquid shortwave scattering asymmetry factor
+- `ice_shortwave_scattering_asymmetry`: Ice shortwave scattering asymmetry factor
+- `cloud_fraction_exponent`: Exponent applied to cloud fraction before scaling optical depth
 """
 struct LayerLiquidIceCloudOpticsModel{FT, LWP, IWP, CF} <: AbstractCloudOpticsModel
-    "Layer liquid water path, or fallback value when the atmosphere does not provide one."
     liquid_water_path::LWP
-    "Layer ice water path, or fallback value when the atmosphere does not provide one."
     ice_water_path::IWP
-    "Layer cloud fraction, or fallback value when the atmosphere does not provide one."
     cloud_fraction::CF
-    "Liquid longwave mass absorption coefficient."
     liquid_longwave_mass_absorption::FT
-    "Ice longwave mass absorption coefficient."
     ice_longwave_mass_absorption::FT
-    "Liquid shortwave mass extinction coefficient."
     liquid_shortwave_mass_extinction::FT
-    "Ice shortwave mass extinction coefficient."
     ice_shortwave_mass_extinction::FT
-    "Liquid shortwave single-scattering albedo."
     liquid_shortwave_single_scattering_albedo::FT
-    "Ice shortwave single-scattering albedo."
     ice_shortwave_single_scattering_albedo::FT
-    "Liquid shortwave scattering asymmetry factor."
     liquid_shortwave_scattering_asymmetry::FT
-    "Ice shortwave scattering asymmetry factor."
     ice_shortwave_scattering_asymmetry::FT
-    "Exponent applied to cloud fraction before scaling optical depth."
     cloud_fraction_exponent::FT
 end
 
@@ -443,20 +439,19 @@ provided by `getproperty(atmosphere, :aerosol_path)`. Optical depths are
 τ_sw = shortwave_mass_extinction * aerosol_path
 ```
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `aerosol_path`: Layer aerosol path, or fallback value when the atmosphere does not provide
+  one
+- `longwave_mass_absorption`: Longwave mass absorption coefficient
+- `shortwave_mass_extinction`: Shortwave mass extinction coefficient
+- `shortwave_single_scattering_albedo`: Shortwave single-scattering albedo
+- `shortwave_scattering_asymmetry`: Shortwave scattering asymmetry factor
 """
 struct LayerAerosolOpticsModel{FT, AP} <: AbstractAerosolOpticsModel
-    "Layer aerosol path, or fallback value when the atmosphere does not provide one."
     aerosol_path::AP
-    "Longwave mass absorption coefficient."
     longwave_mass_absorption::FT
-    "Shortwave mass extinction coefficient."
     shortwave_mass_extinction::FT
-    "Shortwave single-scattering albedo."
     shortwave_single_scattering_albedo::FT
-    "Shortwave scattering asymmetry factor."
     shortwave_scattering_asymmetry::FT
 end
 

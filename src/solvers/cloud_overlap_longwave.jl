@@ -9,20 +9,19 @@ properties. `cloud_fraction` is kept separate so validation and host-model
 integrations do not have to represent cloud cover by weakening cloudy optical
 depth before transport.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `clear`: Clear-region longwave optical properties
+- `cloudy`: Cloudy-region longwave optical properties
+- `cloud_fraction`: Layer cloud fraction
+- `overlap_parameter`: Interface overlap parameter between adjacent cloudy layers
+- `fractional_standard_deviation`: Layer fractional standard deviation of in-cloud
+  condensate
 """
 struct LongwaveCloudOverlapOptics{FT, L, F, O, D}
-    "Clear-region longwave optical properties."
     clear::L
-    "Cloudy-region longwave optical properties."
     cloudy::L
-    "Layer cloud fraction."
     cloud_fraction::F
-    "Interface overlap parameter between adjacent cloudy layers."
     overlap_parameter::O
-    "Layer fractional standard deviation of in-cloud condensate."
     fractional_standard_deviation::D
 end
 
@@ -68,13 +67,16 @@ source terms before a scalar longwave adding pass. `overlap=:tripleclouds_alpha`
 splits cloudy layers into thin and thick regions using the same gamma
 inhomogeneity scaling as the staged shortwave Tripleclouds access point. This
 is still a diagnostic solver, not a bit-for-bit ecRad McICA implementation.
+
+Fields:
+- `overlap`: Cloud-fraction overlap rule
+- `cloud_fraction_exponent`: Exponent applied to layer cloud fraction before mixing
+- `inhomogeneity_overlap_exponent`: Exponent applied to alpha overlap inside the
+  Tripleclouds inhomogeneity split
 """
 struct CloudOverlapLongwave{FT} <: AbstractRadiativeTransferSolver
-    "Cloud-fraction overlap rule."
     overlap::Symbol
-    "Exponent applied to layer cloud fraction before mixing."
     cloud_fraction_exponent::FT
-    "Exponent applied to alpha overlap inside the Tripleclouds inhomogeneity split."
     inhomogeneity_overlap_exponent::FT
 end
 

@@ -17,34 +17,40 @@ a precipitation term; the highest layer exceeding the RH threshold sets the
 cloud top. An independent stratocumulus term is diagnosed at the surface
 from dry-static-energy stability.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `relative_humidity_threshold_min`: Relative humidity threshold for cloud cover = 0 [1]
+  (default `NF(0.3)`)
+- `relative_humidity_threshold_max`: Relative humidity threshold for cloud cover = 1 [1]
+  (default `NF(1)`)
+- `specific_humidity_threshold_min`: Specific humidity threshold for cloud cover [kg/kg]
+  (default `NF(0.0002)`)
+- `precipitation_weight`: Weight for the √precipitation term [1] (default `NF(0.2)`)
+- `precipitation_max`: Cap on precipitation contributing to cloud cover [mm/day] (default
+  `NF(10)`)
+- `cloud_albedo`: Cloud albedo at CLC = 1 [1] (default `NF(0.6)`)
+- `stratocumulus_albedo`: Stratocumulus cloud albedo [1] (default `NF(0.5)`)
+- `stratocumulus_stability_min`: Static-stability lower threshold for stratocumulus (GSES0)
+  [J/kg] (default `NF(0.25)`)
+- `stratocumulus_stability_max`: Static-stability upper threshold for stratocumulus (GSES1)
+  [J/kg] (default `NF(0.4)`)
+- `stratocumulus_cover_max`: Maximum stratocumulus cloud cover (CLSMAX) [1] (default
+  `NF(0.6)`)
+- `use_stratocumulus`: Enable the stratocumulus parameterization (default `true`)
+- `stratocumulus_cloud_factor`: Stratocumulus cloud factor (SPEEDY clfact) [1] (default
+  `NF(1.2)`)
 """
 Base.@kwdef struct DiagnosticClouds{NF} <: AbstractShortwaveClouds
-    "Relative humidity threshold for cloud cover = 0 [1]"
     relative_humidity_threshold_min::NF = NF(0.3)
-    "Relative humidity threshold for cloud cover = 1 [1]"
     relative_humidity_threshold_max::NF = NF(1)
-    "Specific humidity threshold for cloud cover [kg/kg]"
     specific_humidity_threshold_min::NF = NF(0.0002)
-    "Weight for the √precipitation term [1]"
     precipitation_weight::NF = NF(0.2)
-    "Cap on precipitation contributing to cloud cover [mm/day]"
     precipitation_max::NF = NF(10)
-    "Cloud albedo at CLC = 1 [1]"
     cloud_albedo::NF = NF(0.6)
-    "Stratocumulus cloud albedo [1]"
     stratocumulus_albedo::NF = NF(0.5)
-    "Static-stability lower threshold for stratocumulus (GSES0) [J/kg]"
     stratocumulus_stability_min::NF = NF(0.25)
-    "Static-stability upper threshold for stratocumulus (GSES1) [J/kg]"
     stratocumulus_stability_max::NF = NF(0.4)
-    "Maximum stratocumulus cloud cover (CLSMAX) [1]"
     stratocumulus_cover_max::NF = NF(0.6)
-    "Enable the stratocumulus parameterization"
     use_stratocumulus::Bool = true
-    "Stratocumulus cloud factor (SPEEDY clfact) [1]"
     stratocumulus_cloud_factor::NF = NF(1.2)
 end
 

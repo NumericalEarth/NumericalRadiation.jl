@@ -4,12 +4,11 @@ $(TYPEDEF)
 Constant atmospheric transmissivity, distributed across layers proportional
 to their pressure thickness.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `transmissivity`: Column-integrated atmospheric transmissivity (0 .. 1) (default
+  `NF(0.85)`)
 """
 Base.@kwdef struct ConstantShortwaveTransmissivity{NF} <: AbstractShortwaveTransmissivity
-    "Column-integrated atmospheric transmissivity (0 .. 1)"
     transmissivity::NF = NF(0.85)
 end
 
@@ -47,26 +46,26 @@ contributions from dry air, aerosols (∝ σ²), water vapour (∝ q), and cloud
 (active below the diagnosed cloud top); the column is weighted by a zenith
 correction factor `1 + azen (1 − cosθ)^nzen`.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `zenith_amplitude`: Zenith correction amplitude (SPEEDY azen) (default `NF(1)`)
+- `zenith_exponent`: Zenith correction exponent (SPEEDY nzen) (default `NF(2)`)
+- `absorptivity_dry_air`: Absorptivity of dry air [per 10⁵ Pa] (default `NF(0.03135)`)
+- `aerosols`: Include a constant aerosol concentration (default `true`)
+- `absorptivity_aerosol`: Absorptivity of aerosols [per 10⁵ Pa] (default `NF(0.03135)`)
+- `absorptivity_water_vapor`: Absorptivity of water vapour [per kg/kg per 10⁵ Pa] (default
+  `NF(75)`)
+- `absorptivity_cloud_base`: Base cloud absorptivity [per kg/kg per 10⁵ Pa] (default
+  `NF(10)`)
+- `absorptivity_cloud_limit`: Maximum cloud absorptivity [per 10⁵ Pa] (default `NF(0.14)`)
 """
 Base.@kwdef struct BackgroundShortwaveTransmissivity{NF} <: AbstractShortwaveTransmissivity
-    "Zenith correction amplitude (SPEEDY azen)"
     zenith_amplitude::NF = NF(1)
-    "Zenith correction exponent (SPEEDY nzen)"
     zenith_exponent::NF = NF(2)
-    "Absorptivity of dry air [per 10⁵ Pa]"
     absorptivity_dry_air::NF = NF(0.03135)
-    "Include a constant aerosol concentration"
     aerosols::Bool = true
-    "Absorptivity of aerosols [per 10⁵ Pa]"
     absorptivity_aerosol::NF = NF(0.03135)
-    "Absorptivity of water vapour [per kg/kg per 10⁵ Pa]"
     absorptivity_water_vapor::NF = NF(75)
-    "Base cloud absorptivity [per kg/kg per 10⁵ Pa]"
     absorptivity_cloud_base::NF = NF(10)
-    "Maximum cloud absorptivity [per 10⁵ Pa]"
     absorptivity_cloud_limit::NF = NF(0.14)
 end
 

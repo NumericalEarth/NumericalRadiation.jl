@@ -25,50 +25,50 @@ References:
 - Armstrong (1968), doi:10.1016/0022-4073(68)90052-6 (diffusivity factor D).
 - Mlawer et al. (1997), doi:10.1029/97JD00237 (continuum temperature scaling).
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `Nwavenumbers`: Number of evenly spaced wavenumber quadrature points
+- `wavenumber_min`: Minimum wavenumber of the spectral integration range [cm⁻¹]
+- `wavenumber_max`: Maximum wavenumber of the spectral integration range [cm⁻¹]
+- `κ_rot`: Peak absorption of the pure-rotation band κ_rot [m² kg⁻¹]
+- `l_rot`: e-folding decay length of the rotation band l_rot [cm⁻¹]
+- `κ_vr`: Peak absorption of the vibration–rotation band κ_vr [m² kg⁻¹]
+- `l_vr1`: e-folding length of vibration–rotation band (low-ν side) l_vr1 [cm⁻¹]
+- `l_vr2`: e-folding length of vibration–rotation band (high-ν side) l_vr2 [cm⁻¹]
+- `κ_cnt1`: Continuum absorption below 1700 cm⁻¹ κ_cnt1 [m² kg⁻¹]
+- `κ_cnt2`: Continuum absorption above 1700 cm⁻¹ κ_cnt2 [m² kg⁻¹]
+- `κ_CO₂`: Peak absorption of the CO₂ 15 μm band κ_CO₂ [m² kg⁻¹]
+- `l_CO₂`: e-folding half-width of CO₂ band l_CO₂ [cm⁻¹]
+- `ν̃_CO₂`: Centre wavenumber of CO₂ bending mode ν̃_CO₂ [cm⁻¹]
+- `diffusivity`: Two-stream diffusivity factor D (Armstrong 1968)
+- `p_ref`: Reference pressure for pressure broadening [Pa]
+- `T_ref`: Reference temperature for absorption coefficient fits [K]
+- `pv_ref`: Reference saturation water-vapor pressure at T_ref [Pa]
+- `σ_cont`: Temperature-scaling exponent for the continuum (Mlawer et al. 1997) [K⁻¹]
+- `water_vapor_molar_mass_ratio`: Water-to-dry-air molar mass ratio ε = mᵛ / mᵈ of the vapor
+  partial pressure
+- `carbon_dioxide_molar_mass_ratio`: CO₂-to-dry-air molar mass ratio converting ppmv to a
+  mass mixing ratio
 """
 struct AnalyticBandLongwave{NF} <: AbstractLongwaveScheme
-    "Number of evenly spaced wavenumber quadrature points"
     Nwavenumbers::Int
-    "Minimum wavenumber of the spectral integration range [cm⁻¹]"
     wavenumber_min::NF
-    "Maximum wavenumber of the spectral integration range [cm⁻¹]"
     wavenumber_max::NF
-    "Peak absorption of the pure-rotation band κ_rot [m² kg⁻¹]"
     κ_rot::NF
-    "e-folding decay length of the rotation band l_rot [cm⁻¹]"
     l_rot::NF
-    "Peak absorption of the vibration–rotation band κ_vr [m² kg⁻¹]"
     κ_vr::NF
-    "e-folding length of vibration–rotation band (low-ν side) l_vr1 [cm⁻¹]"
     l_vr1::NF
-    "e-folding length of vibration–rotation band (high-ν side) l_vr2 [cm⁻¹]"
     l_vr2::NF
-    "Continuum absorption below 1700 cm⁻¹ κ_cnt1 [m² kg⁻¹]"
     κ_cnt1::NF
-    "Continuum absorption above 1700 cm⁻¹ κ_cnt2 [m² kg⁻¹]"
     κ_cnt2::NF
-    "Peak absorption of the CO₂ 15 μm band κ_CO₂ [m² kg⁻¹]"
     κ_CO₂::NF
-    "e-folding half-width of CO₂ band l_CO₂ [cm⁻¹]"
     l_CO₂::NF
-    "Centre wavenumber of CO₂ bending mode ν̃_CO₂ [cm⁻¹]"
     ν̃_CO₂::NF
-    "Two-stream diffusivity factor D (Armstrong 1968)"
     diffusivity::NF
-    "Reference pressure for pressure broadening [Pa]"
     p_ref::NF
-    "Reference temperature for absorption coefficient fits [K]"
     T_ref::NF
-    "Reference saturation water-vapor pressure at T_ref [Pa]"
     pv_ref::NF
-    "Temperature-scaling exponent for the continuum (Mlawer et al. 1997) [K⁻¹]"
     σ_cont::NF
-    "Water-to-dry-air molar mass ratio ε = mᵛ / mᵈ of the vapor partial pressure"
     water_vapor_molar_mass_ratio::NF
-    "CO₂-to-dry-air molar mass ratio converting ppmv to a mass mixing ratio"
     carbon_dioxide_molar_mass_ratio::NF
 end
 

@@ -8,18 +8,17 @@ ecCKD gas-optics outputs.
 `(Ngpoints, Nz)`. `weights` has length `Ngpoints` and is applied while accumulating
 broadband fluxes.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `optical_depth`: Layer absorptive optical depth
+- `rayleigh_optical_depth`: Layer shortwave scattering optical depth. Historically this was
+  Rayleigh-only
+- `scattering_asymmetry`: Layer shortwave scattering asymmetry factor
+- `weights`: Spectral weights
 """
 struct ShortwaveOptics{FT, A, R, G, W}
-    "Layer absorptive optical depth."
     optical_depth::A
-    "Layer shortwave scattering optical depth. Historically this was Rayleigh-only."
     rayleigh_optical_depth::R
-    "Layer shortwave scattering asymmetry factor."
     scattering_asymmetry::G
-    "Spectral weights."
     weights::W
 end
 
@@ -75,16 +74,16 @@ $(TYPEDEF)
 
 Shortwave boundary conditions for [`CloudlessShortwave`](@ref).
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `toa_shortwave_down`: Downwelling shortwave flux entering the top interface
+- `surface_albedo`: Lambertian surface albedo for diffuse radiation, either broadband scalar
+  or per-g-point vector
+- `surface_albedo_direct`: Lambertian surface albedo for direct radiation, either broadband
+  scalar or per-g-point vector
 """
 struct ShortwaveBoundaryConditions{FT, A, D}
-    "Downwelling shortwave flux entering the top interface."
     toa_shortwave_down::FT
-    "Lambertian surface albedo for diffuse radiation, either broadband scalar or per-g-point vector."
     surface_albedo::A
-    "Lambertian surface albedo for direct radiation, either broadband scalar or per-g-point vector."
     surface_albedo_direct::D
 end
 

@@ -28,18 +28,17 @@ and interpolating with [`cloud_layer_optics`](@ref). The element type `FT`
 follows the stored arrays, so `Adapt.adapt(Array{Float32}, cloud)` yields a
 `Float32` model.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `effective_radius`: Effective-radius nodes in m, strictly increasing, shape `(Nradii,)`
+- `mass_extinction_coefficient`: Mass-extinction coefficient in m² kg⁻¹, shape
+  `(Ngpoints, Nradii)`
+- `single_scattering_albedo`: Single-scattering albedo, shape `(Ngpoints, Nradii)`
+- `asymmetry_factor`: Scattering asymmetry factor, shape `(Ngpoints, Nradii)`
 """
 struct SpectralCloudOptics{FT, V, M}
-    "Effective-radius nodes in m, strictly increasing, shape `(Nradii,)`."
     effective_radius :: V
-    "Mass-extinction coefficient in m² kg⁻¹, shape `(Ngpoints, Nradii)`."
     mass_extinction_coefficient :: M
-    "Single-scattering albedo, shape `(Ngpoints, Nradii)`."
     single_scattering_albedo :: M
-    "Scattering asymmetry factor, shape `(Ngpoints, Nradii)`."
     asymmetry_factor :: M
 end
 

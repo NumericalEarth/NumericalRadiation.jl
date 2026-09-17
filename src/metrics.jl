@@ -7,26 +7,24 @@ All flux-like quantities are in the units of the inputs, normally W m^-2.
 Heating-rate quantities are in the units of the heating-rate inputs, normally
 K day^-1 for validation reports. `bias` is `mean(candidate - reference)`.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `flux_rmse`: Root-mean-square flux error
+- `flux_maximum_absolute_error`: Maximum absolute flux error
+- `flux_bias`: Mean signed flux error, candidate minus reference
+- `heating_rate_rmse`: Root-mean-square heating-rate error
+- `heating_rate_maximum_absolute_error`: Maximum absolute heating-rate error
+- `heating_rate_bias`: Mean signed heating-rate error, candidate minus reference
+- `toa_forcing_error`: Top-of-atmosphere forcing error
+- `surface_forcing_error`: Surface forcing error
 """
 struct RadiationErrorMetrics{FT}
-    "Root-mean-square flux error."
     flux_rmse::FT
-    "Maximum absolute flux error."
     flux_maximum_absolute_error::FT
-    "Mean signed flux error, candidate minus reference."
     flux_bias::FT
-    "Root-mean-square heating-rate error."
     heating_rate_rmse::FT
-    "Maximum absolute heating-rate error."
     heating_rate_maximum_absolute_error::FT
-    "Mean signed heating-rate error, candidate minus reference."
     heating_rate_bias::FT
-    "Top-of-atmosphere forcing error."
     toa_forcing_error::FT
-    "Surface forcing error."
     surface_forcing_error::FT
 end
 
@@ -38,9 +36,16 @@ Hard validation thresholds for [`RadiationErrorMetrics`](@ref).
 Each field defaults to `Inf`, so callers can enforce only the metrics relevant
 to a validation gate.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `flux_rmse`: Bound on the root-mean-square flux error
+- `flux_maximum_absolute_error`: Bound on the maximum absolute flux error
+- `flux_absolute_bias`: Bound on the magnitude of the flux bias
+- `heating_rate_rmse`: Bound on the root-mean-square heating-rate error
+- `heating_rate_maximum_absolute_error`: Bound on the maximum absolute heating-rate error
+- `heating_rate_absolute_bias`: Bound on the magnitude of the heating-rate bias
+- `toa_forcing_absolute_error`: Bound on the magnitude of the top-of-atmosphere forcing
+  error
+- `surface_forcing_absolute_error`: Bound on the magnitude of the surface forcing error
 """
 struct RadiationThresholds{FT}
     flux_rmse::FT

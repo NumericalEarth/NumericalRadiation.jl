@@ -8,29 +8,27 @@ The existing analytic-band solvers use [`AtmosphereProfile`](@ref),
 is a host-model-facing container for newer gas-optics and solver paths where
 layer/interface pressure and temperature arrays need to be carried together.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `pressure_layers`: Layer pressures, indexed top-down
+- `pressure_interfaces`: Interface pressures, indexed top-down
+- `temperature_layers`: Layer temperatures, indexed top-down
+- `temperature_interfaces`: Interface temperatures, indexed top-down
+- `gases`: Symbol-keyed gas concentrations or host-model property view
+- `surface`: Lower-boundary state
+- `geometry`: Geometry, solar angles, or host-model geometry view
+- `constants`: Physical constants of the host ([`PhysicalConstants`](@ref) in the column's
+  element type by default): gravity and the dry-air molar mass for the hydrostatic layer air
+  amounts of `optical_properties!`, gravity and the heat capacity for
+  [`heating_rates!`](@ref)
 """
 struct ColumnAtmosphere{FT, A, G, S, Geo, C} <: AbstractAtmosphericState
-    "Layer pressures, indexed top-down."
     pressure_layers::A
-    "Interface pressures, indexed top-down."
     pressure_interfaces::A
-    "Layer temperatures, indexed top-down."
     temperature_layers::A
-    "Interface temperatures, indexed top-down."
     temperature_interfaces::A
-    "Symbol-keyed gas concentrations or host-model property view."
     gases::G
-    "Lower-boundary state."
     surface::S
-    "Geometry, solar angles, or host-model geometry view."
     geometry::Geo
-    """Physical constants of the host ([`PhysicalConstants`](@ref) in the column's
-    element type by default): gravity and the dry-air molar mass for the
-    hydrostatic layer air amounts of `optical_properties!`, gravity and the heat
-    capacity for [`heating_rates!`](@ref)."""
     constants::C
 end
 
@@ -66,18 +64,16 @@ Arrays are caller-owned and may be package work arrays, host-model views, or
 device arrays. Interface flux arrays should have one more vertical point than
 layer-centered heating arrays.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `longwave_up`: Upwelling longwave flux at interfaces
+- `longwave_down`: Downwelling longwave flux at interfaces
+- `shortwave_up`: Upwelling shortwave flux at interfaces
+- `shortwave_down`: Downwelling shortwave flux at interfaces
 """
 struct RadiativeFluxes{FT, A}
-    "Upwelling longwave flux at interfaces."
     longwave_up::A
-    "Downwelling longwave flux at interfaces."
     longwave_down::A
-    "Upwelling shortwave flux at interfaces."
     shortwave_up::A
-    "Downwelling shortwave flux at interfaces."
     shortwave_down::A
 end
 
