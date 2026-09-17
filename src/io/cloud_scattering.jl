@@ -360,6 +360,8 @@ end
 # and its inverse, used to average cloud properties in the scaled space.
 @inline function delta_eddington(τ, ω, 𝒢)
     f = 𝒢 * 𝒢
+    # A pure forward peak leaves a purely absorbing layer; the rescaling is 0/0 there.
+    f >= one(f) && return ((one(ω) - ω) * τ, zero(ω), zero(𝒢))
     denominator = one(τ) - ω * f
     return (τ * denominator, ω * (one(ω) - f) / denominator, 𝒢 / (one(𝒢) + 𝒢))
 end

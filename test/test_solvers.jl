@@ -1423,6 +1423,15 @@ using Dates
         @test delta_scaled.optical_depth[1, 1] ≈ 0.2
         @test delta_scaled.rayleigh_optical_depth[1, 1] ≈ 0.8 * (1 - 0.7^2)
         @test delta_scaled.scattering_asymmetry[1, 1] ≈ 0.7 / 1.7
+
+        # A pure forward peak (ω = 𝒢 = 1) scatters nothing into either stream, so the
+        # delta-Eddington-scaled cloud leaves the layer transparent.
+        forward = (mass_extinction_coefficient = [1.0], single_scattering_albedo = [1.0], asymmetry_factor = [1.0])
+        transparent = ShortwaveOptics(zeros(1, 1))
+        add_mapped_cloud_scattering!(transparent, forward, forward, [1.0], [0.0], [1.0]; delta_eddington_scale=true)
+        @test iszero(transparent.optical_depth)
+        @test iszero(transparent.rayleigh_optical_depth)
+        @test iszero(transparent.scattering_asymmetry)
     end
 end
 
