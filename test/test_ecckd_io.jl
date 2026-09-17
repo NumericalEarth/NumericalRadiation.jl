@@ -202,10 +202,11 @@ using NCDatasets
         @test from_substring.model_name == from_string.model_name
         @test from_substring.dimensions == from_string.dimensions
 
-        mapping_string = read_ecckd_spectral_mapping(String(paths.longwave))
-        mapping_substring = read_ecckd_spectral_mapping(as_substring)
+        mapping_string = read_ecckd_spectral_mapping(String(paths.longwave); planck_weight_temperature=280.0)
+        mapping_substring = read_ecckd_spectral_mapping(as_substring; planck_weight_temperature=280.0)
         @test mapping_substring isa EcCKDSpectralMapping
         @test mapping_substring.wavenumber1 == mapping_string.wavenumber1
+        @test mapping_substring.interval_weight == mapping_string.interval_weight
 
         if paths.shortwave !== nothing && isfile(paths.shortwave)
             shortwave_substring = strip(" " * paths.shortwave * " ")
