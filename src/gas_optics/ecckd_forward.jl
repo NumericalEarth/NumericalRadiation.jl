@@ -91,7 +91,7 @@ interpolation.
 `(ng, ngas, npressure, ntemperature)`. The runtime method interpolates
 coefficients for each layer, multiplies them by layer absorber amounts from
 [`ColumnAtmosphere`](@ref), and writes caller-owned optical-property arrays.
-The pressure and optional H2O grids must be positive and uniformly spaced in
+The pressure and optional H₂O grids must be positive and uniformly spaced in
 log coordinates, matching the ecCKD file format. A matrix temperature grid is
 shaped `(npressure, ntemperature)` and must use one positive temperature
 increment throughout.
@@ -101,12 +101,12 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
        AbstractGasOpticsModel
     pressure_grid::PG   # Positive, increasing, log-uniform pressure grid for coefficient tables.
     temperature_grid::TG   # Increasing temperature grid, or pressure-dependent matrix with one common increment.
-    h2o_mole_fraction_grid::HG   # Optional positive, increasing, log-uniform H2O mole-fraction grid.
+    water_vapor_mole_fraction_grid::HG   # Optional positive, increasing, log-uniform H₂O mole-fraction grid.
     gas_reference_mole_fractions::GREF   # Reference mole fractions for relative-linear gases, aligned with names.
     longwave_absorption::LWA   # Longwave absorption coefficients with shape `(ng_lw, ngas, np, nt)`.
     shortwave_absorption::SWA   # Shortwave absorption coefficients with shape `(ng_sw, ngas, np, nt)`.
-    longwave_h2o_absorption::LHWA   # Optional longwave H2O absorption coefficients with shape `(ng_lw, np, nt, nh2o)`.
-    shortwave_h2o_absorption::SHWA   # Optional shortwave H2O absorption coefficients with shape `(ng_sw, np, nt, nh2o)`.
+    longwave_water_vapor_absorption::LHWA   # Optional longwave H₂O absorption coefficients with shape `(ng_lw, np, nt, n_water_vapor)`.
+    shortwave_water_vapor_absorption::SHWA   # Optional shortwave H₂O absorption coefficients with shape `(ng_sw, np, nt, n_water_vapor)`.
     shortwave_rayleigh_molar_scattering::SWR   # Optional shortwave Rayleigh molar scattering coefficients with length `ng_sw`.
     longwave_source_scale::LWS   # Longwave source scaling per g-point.
     longwave_source_temperature_grid::LST   # Optional longwave source temperature grid.
@@ -121,11 +121,11 @@ end
 function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, GasNames}) where GasNames
     pressure_grid = Adapt.adapt(to, model.pressure_grid)
     temperature_grid = Adapt.adapt(to, model.temperature_grid)
-    h2o_mole_fraction_grid = Adapt.adapt(to, model.h2o_mole_fraction_grid)
+    water_vapor_mole_fraction_grid = Adapt.adapt(to, model.water_vapor_mole_fraction_grid)
     longwave_absorption = Adapt.adapt(to, model.longwave_absorption)
     shortwave_absorption = Adapt.adapt(to, model.shortwave_absorption)
-    longwave_h2o_absorption = Adapt.adapt(to, model.longwave_h2o_absorption)
-    shortwave_h2o_absorption = Adapt.adapt(to, model.shortwave_h2o_absorption)
+    longwave_water_vapor_absorption = Adapt.adapt(to, model.longwave_water_vapor_absorption)
+    shortwave_water_vapor_absorption = Adapt.adapt(to, model.shortwave_water_vapor_absorption)
     shortwave_rayleigh_molar_scattering = Adapt.adapt(to, model.shortwave_rayleigh_molar_scattering)
     gas_reference_mole_fractions = Adapt.adapt(to, model.gas_reference_mole_fractions)
     longwave_source_scale = Adapt.adapt(to, model.longwave_source_scale)
@@ -133,10 +133,10 @@ function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, Ga
     longwave_source_table = Adapt.adapt(to, model.longwave_source_table)
     longwave_weights = Adapt.adapt(to, model.longwave_weights)
     shortwave_weights = Adapt.adapt(to, model.shortwave_weights)
-    fields = (pressure_grid, temperature_grid, h2o_mole_fraction_grid,
+    fields = (pressure_grid, temperature_grid, water_vapor_mole_fraction_grid,
               gas_reference_mole_fractions, longwave_absorption,
-              shortwave_absorption, longwave_h2o_absorption,
-              shortwave_h2o_absorption, shortwave_rayleigh_molar_scattering,
+              shortwave_absorption, longwave_water_vapor_absorption,
+              shortwave_water_vapor_absorption, shortwave_rayleigh_molar_scattering,
               longwave_source_scale, longwave_source_temperature_grid,
               longwave_source_table, longwave_weights, shortwave_weights)
     FT = eltype(pressure_grid)
@@ -171,12 +171,12 @@ end
 function EcCKDTabulatedGasOpticsModel(; names,
                                       pressure_grid::AbstractVector,
                                       temperature_grid,
-                                      h2o_mole_fraction_grid = Float64[],
+                                      water_vapor_mole_fraction_grid = Float64[],
                                       gas_reference_mole_fractions = nothing,
                                       longwave_absorption::AbstractArray{<:Any, 4},
                                       shortwave_absorption::AbstractArray{<:Any, 4},
-                                      longwave_h2o_absorption = nothing,
-                                      shortwave_h2o_absorption = nothing,
+                                      longwave_water_vapor_absorption = nothing,
+                                      shortwave_water_vapor_absorption = nothing,
                                       shortwave_rayleigh_molar_scattering = nothing,
                                       longwave_source_scale = nothing,
                                       longwave_source_temperature_grid = nothing,
@@ -189,11 +189,11 @@ function EcCKDTabulatedGasOpticsModel(; names,
     FT = promote_type(eltype(pressure_grid), eltype(temperature_grid),
                       eltype(longwave_absorption), eltype(shortwave_absorption),
                       source_types...)
-    h2o_grid = collect(FT, h2o_mole_fraction_grid)
-    lw_h2o = longwave_h2o_absorption === nothing ?
-        zeros(FT, 0, 0, 0, 0) : FT.(longwave_h2o_absorption)
-    sw_h2o = shortwave_h2o_absorption === nothing ?
-        zeros(FT, 0, 0, 0, 0) : FT.(shortwave_h2o_absorption)
+    water_vapor_grid = collect(FT, water_vapor_mole_fraction_grid)
+    longwave_water_vapor = longwave_water_vapor_absorption === nothing ?
+        zeros(FT, 0, 0, 0, 0) : FT.(longwave_water_vapor_absorption)
+    shortwave_water_vapor = shortwave_water_vapor_absorption === nothing ?
+        zeros(FT, 0, 0, 0, 0) : FT.(shortwave_water_vapor_absorption)
     lw_source = longwave_source_scale === nothing ?
         ones(FT, size(longwave_absorption, 1)) : longwave_source_scale
     lw_weights = longwave_weights === nothing ?
@@ -228,18 +228,18 @@ function EcCKDTabulatedGasOpticsModel(; names,
         throw(DimensionMismatch("longwave_absorption temperature dimension must match temperature_grid"))
     size(shortwave_absorption, 4) == temperature_grid_length(temperature_grid) ||
         throw(DimensionMismatch("shortwave_absorption temperature dimension must match temperature_grid"))
-    if length(h2o_grid) > 0
-        length(h2o_grid) >= 2 ||
-            throw(DimensionMismatch("h2o_mole_fraction_grid must contain at least two points when supplied"))
+    if length(water_vapor_grid) > 0
+        length(water_vapor_grid) >= 2 ||
+            throw(DimensionMismatch("water_vapor_mole_fraction_grid must contain at least two points when supplied"))
         :h2o in gas_name_tuple ||
-            throw(ArgumentError("h2o_mole_fraction_grid requires :h2o in names"))
-        validate_log_uniform_grid(h2o_grid, "h2o_mole_fraction_grid")
-        size(lw_h2o) == (size(longwave_absorption, 1), length(pressure_grid),
-                         temperature_grid_length(temperature_grid), length(h2o_grid)) ||
-            throw(DimensionMismatch("longwave_h2o_absorption must have shape (ng_lw, np, nt, nh2o)"))
-        size(sw_h2o) == (size(shortwave_absorption, 1), length(pressure_grid),
-                         temperature_grid_length(temperature_grid), length(h2o_grid)) ||
-            throw(DimensionMismatch("shortwave_h2o_absorption must have shape (ng_sw, np, nt, nh2o)"))
+            throw(ArgumentError("water_vapor_mole_fraction_grid requires :h2o in names"))
+        validate_log_uniform_grid(water_vapor_grid, "water_vapor_mole_fraction_grid")
+        size(longwave_water_vapor) == (size(longwave_absorption, 1), length(pressure_grid),
+                                       temperature_grid_length(temperature_grid), length(water_vapor_grid)) ||
+            throw(DimensionMismatch("longwave_water_vapor_absorption must have shape (ng_lw, np, nt, n_water_vapor)"))
+        size(shortwave_water_vapor) == (size(shortwave_absorption, 1), length(pressure_grid),
+                                        temperature_grid_length(temperature_grid), length(water_vapor_grid)) ||
+            throw(DimensionMismatch("shortwave_water_vapor_absorption must have shape (ng_sw, np, nt, n_water_vapor)"))
     end
     length(lw_source) == size(longwave_absorption, 1) ||
         throw(DimensionMismatch("longwave_source_scale must have length ng_lw"))
@@ -262,9 +262,9 @@ function EcCKDTabulatedGasOpticsModel(; names,
     length(gas_refs) == ngas ||
         throw(DimensionMismatch("gas_reference_mole_fractions must match names length"))
 
-    fields = (pressure_grid, temperature_grid, h2o_grid, gas_refs,
-              longwave_absorption, shortwave_absorption, lw_h2o, sw_h2o,
-              sw_rayleigh, lw_source, longwave_source_temperature_grid,
+    fields = (pressure_grid, temperature_grid, water_vapor_grid, gas_refs,
+              longwave_absorption, shortwave_absorption,
+              longwave_water_vapor, shortwave_water_vapor, sw_rayleigh, lw_source, longwave_source_temperature_grid,
               longwave_source_table, lw_weights, sw_weights)
     return EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields...)
 end
@@ -448,13 +448,13 @@ end
     return log_bracket(pressure_grid, pressure)
 end
 
-# `log_bracket` needs two grid points. Models without a dynamic H2O table carry
-# an empty grid, and `h2o_table_optical_depth` short-circuits before the bracket
-# is ever indexed, so return a same-typed placeholder in that case.
-@inline function h2o_axis_bracket(h2o_grid, h2o_mole_fraction)
-    length(h2o_grid) < 2 &&
-        return firstindex(h2o_grid), firstindex(h2o_grid), zero(eltype(h2o_grid))
-    return log_bracket(h2o_grid, h2o_mole_fraction)
+# `log_bracket` needs two grid points. Models without a dynamic H₂O table carry
+# an empty grid, and `water_vapor_table_optical_depth` short-circuits before
+# the bracket is ever indexed, so return a same-typed placeholder in that case.
+@inline function water_vapor_axis_bracket(water_vapor_grid, water_vapor_mole_fraction)
+    length(water_vapor_grid) < 2 &&
+        return firstindex(water_vapor_grid), firstindex(water_vapor_grid), zero(eltype(water_vapor_grid))
+    return log_bracket(water_vapor_grid, water_vapor_mole_fraction)
 end
 
 # Pressure/temperature interpolation stencil for a coefficient table: a pair of
@@ -507,9 +507,9 @@ end
     return table[ig, it0] + wt * (table[ig, it1] - table[ig, it0])
 end
 
-@inline function interp_h2o_table(table::AbstractArray{<:Any, 4}, ig, stencil, h2o_bracket)
+@inline function interp_water_vapor_table(table::AbstractArray{<:Any, 4}, ig, stencil, water_vapor_bracket)
     (ip0, ip1, wp), (it0, it1, wt) = stencil
-    ih0, ih1, wh = h2o_bracket
+    ih0, ih1, wh = water_vapor_bracket
 
     c000 = table[ig, ip0, it0, ih0]
     c100 = table[ig, ip1, it0, ih0]
@@ -737,7 +737,7 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         temperature = source_temperature(atmosphere, k)
         gases = layer_gases(atmosphere.gases, Val(names), k)
         # Fixed coefficients: the stencil and source bracket are `nothing`, and
-        # the pressure and H2O arguments they would have consumed are unused.
+        # the pressure and H₂O arguments they would have consumed are unused.
         stencil = gas_optics_stencil(model, nothing, temperature, nothing)
         source_bracket = source_table_bracket(model, temperature)
 
@@ -766,23 +766,23 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
     return longwave, shortwave
 end
 
-@inline has_dynamic_h2o(model::EcCKDTabulatedGasOpticsModel) =
-    length(model.h2o_mole_fraction_grid) > 0
+@inline has_dynamic_water_vapor(model::EcCKDTabulatedGasOpticsModel) =
+    length(model.water_vapor_mole_fraction_grid) > 0
 
 @inline layer_pressure_thickness(atmosphere::ColumnAtmosphere, k) =
     atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]
 
-# Layer H2O mole fraction relative to dry air for the H2O-axis bracket: the
+# Layer H₂O mole fraction relative to dry air for the H₂O-axis bracket: the
 # `composite` amount when the column carries one, else the hydrostatic molar
 # amount of the layer, `Δp / (g mᵈ)`.
-@inline function layer_h2o_mole_fraction(::Type{FT},
-                                    atmosphere::ColumnAtmosphere,
-                                    k) where FT
-    h2o_moles = max(FT(gas_value(atmosphere.gases, :h2o, k)), zero(FT))
+@inline function layer_water_vapor_mole_fraction(::Type{FT},
+                                                 atmosphere::ColumnAtmosphere,
+                                                 k) where FT
+    water_vapor_moles = max(FT(gas_value(atmosphere.gases, :h2o, k)), zero(FT))
     dry_air_moles = has_gas(atmosphere.gases, :composite) ?
         max(FT(gas_value(atmosphere.gases, :composite, k)), sqrt(eps(FT))) :
         max(hydrostatic_air_moles(FT, layer_pressure_thickness(atmosphere, k)), sqrt(eps(FT)))
-    return h2o_moles / dry_air_moles
+    return water_vapor_moles / dry_air_moles
 end
 
 """
@@ -804,8 +804,8 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
     for k in 1:nlayers
         pressure = atmosphere.pressure_layers[k]
         temperature = atmosphere.temperature_layers[k]
-        h2o_mole_fraction = has_dynamic_h2o(model) ?
-            layer_h2o_mole_fraction(FT, atmosphere, k) : zero(FT)
+        water_vapor_mole_fraction = has_dynamic_water_vapor(model) ?
+            layer_water_vapor_mole_fraction(FT, atmosphere, k) : zero(FT)
 
         # Interface sources are optional and `temperature_interfaces` is only
         # required to be populated when they are requested, so fall back to the
@@ -824,7 +824,7 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
         # container, and each g point is one call into the layer API of
         # `ecckd_layer.jl`, so a host kernel calling those functions directly
         # reproduces this loop bit for bit.
-        stencil = gas_optics_stencil(model, pressure, temperature, h2o_mole_fraction)
+        stencil = gas_optics_stencil(model, pressure, temperature, water_vapor_mole_fraction)
         source_bracket = source_table_bracket(model, temperature)
         source_top_bracket = source_table_bracket(model, temperature_top)
         source_bottom_bracket = source_table_bracket(model, temperature_bottom)

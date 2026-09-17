@@ -29,7 +29,7 @@ export read_ecckd_definition, summarize_ecckd_definition, validate_ecckd_definit
 export read_ecckd_tabulated_gas_optics, read_reference_ecckd_gas_optics
 export surface_longwave_emission, TabulatedSurfaceEmission, streaming_longwave_fluxes!
 export GasOpticsStencil, gas_optics_stencil, layer_gases, gas_names
-export longwave_optical_depth, shortwave_optical_depth, h2o_table_optical_depth
+export longwave_optical_depth, shortwave_optical_depth, water_vapor_table_optical_depth
 export rayleigh_optical_depth, longwave_source, source_table_bracket
 export ShortwaveColumnScratch, streaming_shortwave_fluxes!
 export reference_ecckd_model_inventory, reference_ecckd_definition_path,
@@ -48,7 +48,7 @@ export LongwaveDiagnostics, ShortwaveDiagnostics
 export planck_wavenumber
 
 export AnalyticBandLongwave
-export h2o_line_kappa_ref, h2o_cont_kappa_ref, co2_kappa_ref
+export water_vapor_line_kappa_ref, water_vapor_continuum_kappa_ref, carbon_dioxide_kappa_ref
 export williams_delta_tau
 
 export NoClouds, DiagnosticClouds

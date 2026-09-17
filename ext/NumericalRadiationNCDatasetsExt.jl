@@ -140,7 +140,7 @@ function read_temperature_grid(ds)
     return Float64.(temperature)
 end
 
-function coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = false,
+function coefficient_table(ds, gas::Symbol; water_vapor_mole_fraction, dynamic_water_vapor = false,
                             allow_missing = false)
     name = String(gas) * "_molar_absorption_coeff"
     if !haskey(ds, name)
@@ -151,10 +151,10 @@ function coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = fal
     if ndims(table) == 4
         gas == :h2o ||
             throw(ArgumentError("unsupported four-dimensional coefficient table for gas $gas"))
-        dynamic_h2o && return zeros(Float64, size(table, 1), size(table, 2), size(table, 3))
-        h2o_grid = Float64.(Array(ds["h2o_mole_fraction"]))
-        ih2o = nearest_index(h2o_grid, h2o_mole_fraction)
-        return Float64.(table[:, :, :, ih2o])
+        dynamic_water_vapor && return zeros(Float64, size(table, 1), size(table, 2), size(table, 3))
+        water_vapor_grid = Float64.(Array(ds["h2o_mole_fraction"]))
+        water_vapor_index = nearest_index(water_vapor_grid, water_vapor_mole_fraction)
+        return Float64.(table[:, :, :, water_vapor_index])
     elseif ndims(table) == 3
         return Float64.(table)
     else
@@ -162,13 +162,13 @@ function coefficient_table(ds, gas::Symbol; h2o_mole_fraction, dynamic_h2o = fal
     end
 end
 
-function stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = false,
+function stack_coefficients(ds, gas_names; water_vapor_mole_fraction, dynamic_water_vapor = false,
                              allow_missing = false)
     first_table = nothing
     for gas in gas_names
         first_table = coefficient_table(ds, gas;
-                                         h2o_mole_fraction = h2o_mole_fraction,
-                                         dynamic_h2o = dynamic_h2o,
+                                         water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                         dynamic_water_vapor = dynamic_water_vapor,
                                          allow_missing = allow_missing)
         first_table === nothing || break
     end
@@ -178,8 +178,8 @@ function stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = fals
                    size(first_table, 2), size(first_table, 3))
     for (igas, gas) in enumerate(gas_names)
         table = coefficient_table(ds, gas;
-                                   h2o_mole_fraction = h2o_mole_fraction,
-                                   dynamic_h2o = dynamic_h2o,
+                                   water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                   dynamic_water_vapor = dynamic_water_vapor,
                                    allow_missing = allow_missing)
         table === nothing && continue
         output[:, igas, :, :] .= table
@@ -187,7 +187,7 @@ function stack_coefficients(ds, gas_names; h2o_mole_fraction, dynamic_h2o = fals
     return output
 end
 
-function h2o_absorption_table(ds, gas_names)
+function water_vapor_absorption_table(ds, gas_names)
     :h2o in gas_names || return nothing
     haskey(ds, "h2o_molar_absorption_coeff") || return nothing
     table = Array(ds["h2o_molar_absorption_coeff"])
@@ -232,7 +232,7 @@ end
 """
     read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
                                     names = (:h2o, :co2),
-                                    h2o_mole_fraction = 0.005)
+                                    water_vapor_mole_fraction = 0.005)
 
 Materialize selected reference ecCKD gas coefficient tables into
 `EcCKDTabulatedGasOpticsModel{FT}`.
@@ -244,12 +244,12 @@ zero), passes the pressure-dependent reference temperature grid through as a
 matrix for the runtime interpolation kernel, and reads each gas's
 `<gas>_reference_mole_fraction` so the runtime can apply the ecCKD
 relative-linear convention. When `:h2o` is requested, the reference
-four-dimensional H2O table is carried with its mole-fraction dimension intact;
-the runtime computes the layer H2O mole fraction from the `h2o` and
+four-dimensional H₂O table is carried with its mole-fraction dimension intact;
+the runtime computes the layer H₂O mole fraction from the `h2o` and
 `composite` gas amounts and interpolates the table per layer. The
-`h2o_mole_fraction` keyword is not a gas input on that path — it is accepted
-for compatibility/fallback nearest-index sampling of non-dynamic
-four-dimensional H2O tables. Longwave weights
+`water_vapor_mole_fraction` keyword is not a gas input on that path — it is
+accepted for compatibility/fallback nearest-index sampling of non-dynamic
+four-dimensional H₂O tables. Longwave weights
 are uniform over g-points and the Planck source table is normalized by them;
 shortwave weights are the file's `solar_irradiance` normalized to unit sum
 (uniform when absent). Every table, grid and weight vector is converted to
@@ -261,20 +261,20 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
                                          longwave_path::String,
                                          shortwave_path::String;
                                          names = (:h2o, :co2),
-                                         h2o_mole_fraction = 0.005)
+                                         water_vapor_mole_fraction = 0.005)
     gas_name_tuple = Tuple(Symbol.(names))
     lw = NCDataset(longwave_path, "r") do ds
         (
             pressure_grid = Float64.(Array(ds["pressure"])),
             temperature_grid = read_temperature_grid(ds),
-            h2o_grid = haskey(ds, "h2o_mole_fraction") ?
+            water_vapor_grid = haskey(ds, "h2o_mole_fraction") ?
                        Float64.(Array(ds["h2o_mole_fraction"])) :
                        Float64[],
             absorption = stack_coefficients(ds, gas_name_tuple;
-                                             h2o_mole_fraction = h2o_mole_fraction,
-                                             dynamic_h2o = :h2o in gas_name_tuple,
+                                             water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                             dynamic_water_vapor = :h2o in gas_name_tuple,
                                              allow_missing = false),
-            h2o_absorption = h2o_absorption_table(ds, gas_name_tuple),
+            water_vapor_absorption = water_vapor_absorption_table(ds, gas_name_tuple),
             gas_reference_mole_fractions = reference_mole_fractions(ds, gas_name_tuple),
             weights = fill(inv(Float64(size(ds["band_number"], 1))),
                            size(ds["band_number"], 1)),
@@ -291,11 +291,11 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         (
             temperature_grid = read_temperature_grid(ds),
             absorption = stack_coefficients(ds, gas_name_tuple;
-                                             h2o_mole_fraction = h2o_mole_fraction,
-                                             dynamic_h2o = :h2o in gas_name_tuple,
+                                             water_vapor_mole_fraction = water_vapor_mole_fraction,
+                                             dynamic_water_vapor = :h2o in gas_name_tuple,
                                              allow_missing = true),
-            h2o_absorption = h2o_absorption_table(ds, gas_name_tuple),
-            h2o_grid = haskey(ds, "h2o_mole_fraction") ?
+            water_vapor_absorption = water_vapor_absorption_table(ds, gas_name_tuple),
+            water_vapor_grid = haskey(ds, "h2o_mole_fraction") ?
                        Float64.(Array(ds["h2o_mole_fraction"])) :
                        Float64[],
             gas_reference_mole_fractions = reference_mole_fractions(ds, gas_name_tuple),
@@ -307,7 +307,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         )
     end
 
-    # The model carries a single pressure/temperature/H2O interpolation axis and
+    # The model carries a single pressure/temperature/H₂O interpolation axis and
     # a single set of reference mole fractions, all taken from the longwave file
     # and then used to interpolate the shortwave table too. Check that the
     # shortwave file actually agrees; otherwise its coefficients would be
@@ -318,10 +318,10 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         throw(ArgumentError("longwave and shortwave ecCKD temperature grid sizes differ"))
     isapprox(sw.temperature_grid, lw.temperature_grid; rtol = 0.0, atol = 1.0e-3) ||
         throw(ArgumentError("longwave and shortwave ecCKD temperature grids differ"))
-    size(sw.h2o_grid) == size(lw.h2o_grid) ||
-        throw(ArgumentError("longwave and shortwave ecCKD H2O mole-fraction grid sizes differ"))
-    isapprox(sw.h2o_grid, lw.h2o_grid; rtol = 1.0e-9, atol = 0.0) ||
-        throw(ArgumentError("longwave and shortwave ecCKD H2O mole-fraction grids differ"))
+    size(sw.water_vapor_grid) == size(lw.water_vapor_grid) ||
+        throw(ArgumentError("longwave and shortwave ecCKD H₂O mole-fraction grid sizes differ"))
+    isapprox(sw.water_vapor_grid, lw.water_vapor_grid; rtol = 1.0e-9, atol = 0.0) ||
+        throw(ArgumentError("longwave and shortwave ecCKD H₂O mole-fraction grids differ"))
     for (igas, gas) in enumerate(gas_name_tuple)
         # Gases absent from the shortwave file contribute zero and legitimately
         # carry no reference of their own, so only compare what it defines.
@@ -338,12 +338,12 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         names = gas_name_tuple,
         pressure_grid = lw.pressure_grid,
         temperature_grid = lw.temperature_grid,
-        h2o_mole_fraction_grid = lw.h2o_grid,
+        water_vapor_mole_fraction_grid = lw.water_vapor_grid,
         gas_reference_mole_fractions = lw.gas_reference_mole_fractions,
         longwave_absorption = lw.absorption,
         shortwave_absorption = sw.absorption,
-        longwave_h2o_absorption = lw.h2o_absorption,
-        shortwave_h2o_absorption = sw.h2o_absorption,
+        longwave_water_vapor_absorption = lw.water_vapor_absorption,
+        shortwave_water_vapor_absorption = sw.water_vapor_absorption,
         shortwave_rayleigh_molar_scattering = sw.rayleigh,
         longwave_source_scale = ones(Float64, size(lw.absorption, 1)),
         longwave_source_temperature_grid = lw_source_temperature_grid,

@@ -33,12 +33,12 @@ function scalar_optical_properties!(longwave, shortwave, model, atmosphere)
         temperature = atmosphere.temperature_layers[k]
         Δp = atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]
         air_moles = FT(Δp) / (FT(GRAVITY) * FT(DRY_AIR_MOLAR_MASS))
-        # H2O mole fraction relative to dry air: the `composite` amount when
+        # H₂O mole fraction relative to dry air: the `composite` amount when
         # the column carries one, else the hydrostatic molar amount.
         dry_air = haskey(gases, :composite) ? gases.composite : air_moles
-        h2o_mole_fraction = haskey(gases, :h2o) ? gases.h2o / dry_air : zero(FT)
+        water_vapor_mole_fraction = haskey(gases, :h2o) ? gases.h2o / dry_air : zero(FT)
 
-        stencil = gas_optics_stencil(model, pressure, temperature, h2o_mole_fraction)
+        stencil = gas_optics_stencil(model, pressure, temperature, water_vapor_mole_fraction)
         source_bracket = source_table_bracket(model, temperature)
         for ig in eachindex(model.longwave_weights)
             longwave.optical_depth[ig, k] = longwave_optical_depth(model, ig, gases, stencil)
@@ -121,9 +121,9 @@ function smoke_fixture()
 end
 
 # Synthetic tabulated model with every optional table populated (matrix
-# temperature grid, H2O table, Rayleigh, Planck source table) in one `FT`.
+# temperature grid, H₂O table, Rayleigh, Planck source table) in one `FT`.
 function tabulated_fixture(FT)
-    np, nt, nh2o = 4, 3, 3
+    np, nt, n_water_vapor = 4, 3, 3
     ng_lw, ng_sw, ngas = 3, 2, 3
     pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = np)))
     temperature_grid = FT[180 + 30 * (ip - 1) + 40 * (it - 1) for ip in 1:np, it in 1:nt]
@@ -132,7 +132,7 @@ function tabulated_fixture(FT)
         names = (:h2o, :co2, :composite),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
-        h2o_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
+        water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
         gas_reference_mole_fractions = FT[0, 4e-4, 0],
         longwave_absorption =
             FT[1e-4 * (7ig + 3j) * (1 + 1e-5 * pressure_grid[ip]) * (1 + 1e-3 * temperature_grid[ip, it])
@@ -140,10 +140,10 @@ function tabulated_fixture(FT)
         shortwave_absorption =
             FT[1e-5 * (5ig + 2j) * (1 + 2e-5 * pressure_grid[ip]) * (1 + 2e-3 * temperature_grid[ip, it])
                for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-        longwave_h2o_absorption =
-            FT[1e-3 * ig * (1 + 10ih) for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
-        shortwave_h2o_absorption =
-            FT[1e-4 * ig * (1 + 5ih) for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+        longwave_water_vapor_absorption =
+            FT[1e-3 * ig * (1 + 10ih) for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+        shortwave_water_vapor_absorption =
+            FT[1e-4 * ig * (1 + 5ih) for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
         shortwave_rayleigh_molar_scattering = FT[1.1e-6, 3.7e-6],
         longwave_source_temperature_grid = source_temperature_grid,
         longwave_source_table = FT[(ig + 2) * st^2 for ig in 1:ng_lw, st in source_temperature_grid],
@@ -164,21 +164,21 @@ end
 
 # Hydrostatic reference column for the climate_32x32 tables. Layer amounts
 # follow the moist-molar-mass convention of RRTMGP's compute_col_gas_kernel!:
-# with `χ` the H2O mole fraction relative to dry air, the dry-air molar amount
+# with `χ` the H₂O mole fraction relative to dry air, the dry-air molar amount
 # is `nᵈ = Δp / (g (mᵈ + mᵛ χ))`, every gas is `χ_gas nᵈ`, and the layer's
-# mass closes: `mᵈ nᵈ + mᵛ n_h2o == Δp / g`.
+# mass closes: `mᵈ nᵈ + mᵛ n_H₂O == Δp / g`.
 function reference_column(nlayers)
     pressure_interfaces = exp.(range(log(100.0), log(101_325.0), length = nlayers + 1))
     Δp = diff(pressure_interfaces)
     pressure_layers = Δp ./ log.(pressure_interfaces[2:end] ./ pressure_interfaces[1:end - 1])
     temperature_interfaces = [200 + 95 * (p / 101_325.0)^0.3 for p in pressure_interfaces]
     temperature_layers = [200 + 95 * (p / 101_325.0)^0.3 for p in pressure_layers]
-    χ_h2o = [max(2e-2 * (p / 101_325.0)^3, 3e-6) for p in pressure_layers]
-    χ_o3 = [1e-7 + 8e-6 * exp(-((log(p) - log(2_000.0)) / 0.8)^2) for p in pressure_layers]
-    dry_air = Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_h2o))
+    χ_H₂O = [max(2e-2 * (p / 101_325.0)^3, 3e-6) for p in pressure_layers]
+    χ_O₃ = [1e-7 + 8e-6 * exp(-((log(p) - log(2_000.0)) / 0.8)^2) for p in pressure_layers]
+    dry_air = Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_H₂O))
     gases = (composite = dry_air,
-             h2o = χ_h2o .* dry_air,
-             o3 = χ_o3 .* dry_air,
+             h2o = χ_H₂O .* dry_air,
+             o3 = χ_O₃ .* dry_air,
              co2 = 420e-6 .* dry_air,
              ch4 = 1.9e-6 .* dry_air,
              n2o = 3.3e-7 .* dry_air,
@@ -187,16 +187,16 @@ function reference_column(nlayers)
     atmosphere = ColumnAtmosphere(; pressure_layers, pressure_interfaces,
                                   temperature_layers, temperature_interfaces,
                                   gases, surface = (;), geometry = (;))
-    return atmosphere, Δp, χ_h2o
+    return atmosphere, Δp, χ_H₂O
 end
 
 @testset "moist-molar-mass column amounts" begin
-    atmosphere, Δp, χ_h2o = reference_column(4)
+    atmosphere, Δp, χ_H₂O = reference_column(4)
     dry_air = atmosphere.gases.composite
-    h2o = atmosphere.gases.h2o
-    @test dry_air ≈ Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_h2o)) rtol = 1e-12
-    @test DRY_AIR_MOLAR_MASS .* dry_air .+ WATER_MOLAR_MASS .* h2o ≈ Δp ./ GRAVITY rtol = 1e-12
-    @test h2o ./ dry_air ≈ χ_h2o rtol = 1e-12
+    water_vapor = atmosphere.gases.h2o
+    @test dry_air ≈ Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_H₂O)) rtol = 1e-12
+    @test DRY_AIR_MOLAR_MASS .* dry_air .+ WATER_MOLAR_MASS .* water_vapor ≈ Δp ./ GRAVITY rtol = 1e-12
+    @test water_vapor ./ dry_air ≈ χ_H₂O rtol = 1e-12
 end
 
 @testset "scalar layer optics reproduce optical_properties! bitwise" begin
@@ -227,7 +227,7 @@ end
             model = read_reference_ecckd_gas_optics("32x32"; names)
             @test eltype(model) === Float64
             @test length(model.shortwave_rayleigh_molar_scattering) == length(model.shortwave_weights)
-            @test length(model.h2o_mole_fraction_grid) > 0
+            @test length(model.water_vapor_mole_fraction_grid) > 0
             atmosphere, _, _ = reference_column(24)
             assert_scalar_matches_array(model, atmosphere; interface_sources = true)
             assert_scalar_matches_array(model, atmosphere; interface_sources = false)
@@ -258,13 +258,13 @@ end
         @test isbits(s)
         @test s.pressure[2] == s.pressure[1] + 1
         @test s.temperature[2] == s.temperature[1] + 1
-        @test s.h2o[2] == s.h2o[1] + 1
-        @test 0 <= s.pressure[3] <= 1 && 0 <= s.temperature[3] <= 1 && 0 <= s.h2o[3] <= 1
+        @test s.water_vapor[2] == s.water_vapor[1] + 1
+        @test 0 <= s.pressure[3] <= 1 && 0 <= s.temperature[3] <= 1 && 0 <= s.water_vapor[3] <= 1
         rebuilt = GasOpticsStencil(Int32(s.pressure[1]), s.pressure[3],
                                    Int32(s.temperature[1]), s.temperature[3],
-                                   Int32(s.h2o[1]), s.h2o[3])
+                                   Int32(s.water_vapor[1]), s.water_vapor[3])
         @test rebuilt === s
-        @test GasOpticsStencil(s.pressure, s.temperature, s.h2o) === s
+        @test GasOpticsStencil(s.pressure, s.temperature, s.water_vapor) === s
         for ig in eachindex(model.longwave_weights)
             @test longwave_optical_depth(model, ig, gases, rebuilt) ===
                   longwave_optical_depth(model, ig, gases, s)
@@ -272,14 +272,14 @@ end
         # Off-table inputs clamp to the axis edges rather than erroring.
         low = gas_optics_stencil(model, FT(1), FT(50), FT(1e-12))
         high = gas_optics_stencil(model, FT(1e7), FT(1e3), FT(1))
-        @test low.pressure == (1, 2, 0) && low.h2o == (1, 2, 0)
+        @test low.pressure == (1, 2, 0) && low.water_vapor == (1, 2, 0)
         @test high.pressure[2] == length(model.pressure_grid) && high.pressure[3] == 1
-        @test high.h2o[2] == length(model.h2o_mole_fraction_grid) && high.h2o[3] == 1
+        @test high.water_vapor[2] == length(model.water_vapor_mole_fraction_grid) && high.water_vapor[3] == 1
         @test all(isfinite, (longwave_optical_depth(model, 1, gases, low),
                              longwave_optical_depth(model, 1, gases, high)))
     end
 
-    # Without an H2O table the H2O bracket is a placeholder that is never indexed.
+    # Without an H₂O table the H₂O bracket is a placeholder that is never indexed.
     model = EcCKDTabulatedGasOpticsModel(
         names = (:h2o, :co2),
         pressure_grid = [10_000.0, 100_000.0],
@@ -288,8 +288,8 @@ end
         shortwave_absorption = ones(2, 2, 2, 2),
     )
     s = gas_optics_stencil(model, 50_000.0, 260.0, 0.0)
-    @test s.h2o == (1, 1, 0)
-    @test h2o_table_optical_depth(model, model.longwave_h2o_absorption, 1.0, 1, s) === 0.0
+    @test s.water_vapor == (1, 1, 0)
+    @test water_vapor_table_optical_depth(model, model.longwave_water_vapor_absorption, 1.0, 1, s) === 0.0
     @test longwave_optical_depth(model, 1, (h2o = 2.0, co2 = 3.0), s) == 5.0
     @test rayleigh_optical_depth(model, 1, 100.0) === 0.0
 end
@@ -306,12 +306,12 @@ end
         p, T = atmosphere.pressure_layers[k], atmosphere.temperature_layers[k]
         χ = gases.h2o / gases.composite
         np, nt, nh = length(model.pressure_grid), size(model.temperature_grid, 2),
-                     length(model.h2o_mole_fraction_grid)
+                     length(model.water_vapor_mole_fraction_grid)
         in_range(s) = 1 <= s.pressure[1] < s.pressure[2] <= np &&
                       1 <= s.temperature[1] < s.temperature[2] <= nt &&
-                      1 <= s.h2o[1] < s.h2o[2] <= nh
+                      1 <= s.water_vapor[1] < s.water_vapor[2] <= nh
         nan = FT(NaN)
-        for (state, axis) in (((nan, T, χ), :pressure), ((p, nan, χ), :temperature), ((p, T, nan), :h2o))
+        for (state, axis) in (((nan, T, χ), :pressure), ((p, nan, χ), :temperature), ((p, T, nan), :water_vapor))
             s = @inferred gas_optics_stencil(model, state...)
             @test s isa GasOpticsStencil{FT}
             @test in_range(s)
@@ -328,7 +328,7 @@ end
             @test isfinite(longwave_optical_depth(model, 1, gases, s))
         end
         @test gas_optics_stencil(model, FT(Inf), T, χ).pressure == (np - 1, np, 1)
-        @test gas_optics_stencil(model, p, T, FT(Inf)).h2o == (nh - 1, nh, 1)
+        @test gas_optics_stencil(model, p, T, FT(Inf)).water_vapor == (nh - 1, nh, 1)
         # The Planck bracket and source propagate NaN the same way.
         b = source_table_bracket(model, nan)
         @test isnan(b[3]) && isnan(longwave_source(model, 1, nan, b))
@@ -397,8 +397,8 @@ Base.@noinline measure_longwave(model, ig, gases, s) =
     @allocated longwave_optical_depth(model, ig, gases, s)
 Base.@noinline measure_shortwave(model, ig, gases, s) =
     @allocated shortwave_optical_depth(model, ig, gases, s)
-Base.@noinline measure_h2o(model, table, h2o, ig, s) =
-    @allocated h2o_table_optical_depth(model, table, h2o, ig, s)
+Base.@noinline measure_water_vapor(model, table, water_vapor_moles, ig, s) =
+    @allocated water_vapor_table_optical_depth(model, table, water_vapor_moles, ig, s)
 Base.@noinline measure_rayleigh(model, ig, air) =
     @allocated rayleigh_optical_depth(model, ig, air)
 Base.@noinline measure_source_bracket(model, T) =
@@ -440,10 +440,10 @@ function assert_inferred_and_allocation_free(model, atmosphere)
     @test typeof(@inferred longwave_source(model, 1, T_wide, b_wide)) === FT
     @test typeof(gas_optics_stencil(model, Float64(p), T_wide, Float64(χ))) === typeof(s)
     if model isa EcCKDTabulatedGasOpticsModel
-        τ_h2o = @inferred h2o_table_optical_depth(model, model.longwave_h2o_absorption, gases.h2o, 1, s)
-        @test typeof(τ_h2o) === FT
+        τ_H₂O = @inferred water_vapor_table_optical_depth(model, model.longwave_water_vapor_absorption, gases.h2o, 1, s)
+        @test typeof(τ_H₂O) === FT
         @inferred GasOpticsStencil(Int32(s.pressure[1]), s.pressure[3], Int32(s.temperature[1]),
-                                   s.temperature[3], Int32(s.h2o[1]), s.h2o[3])
+                                   s.temperature[3], Int32(s.water_vapor[1]), s.water_vapor[3])
         @test typeof(b_wide) === (b === nothing ? Nothing : Tuple{Int, Int, FT})
     end
 
@@ -456,9 +456,9 @@ function assert_inferred_and_allocation_free(model, atmosphere)
         @test measure_source(model, 1, T, b) == 0
         @test measure_layer_gases(atmosphere.gases, names, k) == 0
         if model isa EcCKDTabulatedGasOpticsModel
-            @test measure_h2o(model, model.longwave_h2o_absorption, gases.h2o, 1, s) == 0
+            @test measure_water_vapor(model, model.longwave_water_vapor_absorption, gases.h2o, 1, s) == 0
             @test measure_rebuild(Int32(s.pressure[1]), s.pressure[3], Int32(s.temperature[1]),
-                                  s.temperature[3], Int32(s.h2o[1]), s.h2o[3]) == 0
+                                  s.temperature[3], Int32(s.water_vapor[1]), s.water_vapor[3]) == 0
         end
     end
     return nothing
@@ -575,7 +575,7 @@ array_fields(model) = filter(name -> getfield(model, name) isa AbstractArray,
             model32 = read_reference_ecckd_gas_optics(Float32, "32x32"; names)
             @test model32 isa EcCKDTabulatedGasOpticsModel{Float32}
             @test eltype(model32.longwave_absorption) === Float32
-            @test eltype(model32.longwave_h2o_absorption) === Float32
+            @test eltype(model32.longwave_water_vapor_absorption) === Float32
             @test eltype(model32.longwave_source_table) === Float32
             @test eltype(model32.pressure_grid) === Float32
             @test eltype(model32.temperature_grid) === Float32

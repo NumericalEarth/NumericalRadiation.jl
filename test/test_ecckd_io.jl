@@ -288,7 +288,7 @@ end
 end
 
 @testset "paired ecCKD files must share their interpolation axes" begin
-    # The loader takes the pressure, temperature and H2O axes from the longwave
+    # The loader takes the pressure, temperature and H₂O axes from the longwave
     # file and interpolates the shortwave table against them, so a shortwave file
     # that disagrees has to be rejected rather than silently mis-interpolated.
     # Every reference pair agrees, so perturb a copy to prove the check fires.
@@ -354,13 +354,13 @@ end
     if lw_path !== nothing && sw_path !== nothing && isfile(lw_path) && isfile(sw_path)
         model = read_ecckd_tabulated_gas_optics(lw_path, sw_path;
                                                 names = (:h2o, :co2),
-                                                h2o_mole_fraction = 0.005)
+                                                water_vapor_mole_fraction = 0.005)
         @test model isa EcCKDTabulatedGasOpticsModel
         @test size(model.longwave_absorption) == (64, 2, 53, 6)
         @test size(model.shortwave_absorption) == (32, 2, 53, 6)
-        @test length(model.h2o_mole_fraction_grid) == 12
-        @test size(model.longwave_h2o_absorption) == (64, 53, 6, 12)
-        @test size(model.shortwave_h2o_absorption) == (32, 53, 6, 12)
+        @test length(model.water_vapor_mole_fraction_grid) == 12
+        @test size(model.longwave_water_vapor_absorption) == (64, 53, 6, 12)
+        @test size(model.shortwave_water_vapor_absorption) == (32, 53, 6, 12)
         @test all(iszero, model.longwave_absorption[:, 1, :, :])
         @test all(iszero, model.shortwave_absorption[:, 1, :, :])
         @test size(model.temperature_grid) == (53, 6)
@@ -774,25 +774,25 @@ end
 
     function contract_model(; pressure_grid = [100.0, 1_000.0],
                             temperature_grid = [200.0, 300.0],
-                            h2o_grid = Float64[])
+                            water_vapor_grid = Float64[])
         np = length(pressure_grid)
         nt = NumericalRadiation.temperature_grid_length(temperature_grid)
-        nh2o = length(h2o_grid)
-        h2o_table = nh2o == 0 ? nothing : zeros(1, np, nt, nh2o)
+        n_water_vapor = length(water_vapor_grid)
+        water_vapor_table = n_water_vapor == 0 ? nothing : zeros(1, np, nt, n_water_vapor)
         return EcCKDTabulatedGasOpticsModel(
             names = (:h2o,),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
-            h2o_mole_fraction_grid = h2o_grid,
+            water_vapor_mole_fraction_grid = water_vapor_grid,
             longwave_absorption = zeros(1, 1, np, nt),
             shortwave_absorption = zeros(1, 1, np, nt),
-            longwave_h2o_absorption = h2o_table,
-            shortwave_h2o_absorption = h2o_table,
+            longwave_water_vapor_absorption = water_vapor_table,
+            shortwave_water_vapor_absorption = water_vapor_table,
         )
     end
 
     @test_throws ArgumentError contract_model(pressure_grid = [100.0, 1_000.0, 5_000.0])
-    @test_throws ArgumentError contract_model(h2o_grid = [1.0e-6, 1.0e-4, 1.0e-3])
+    @test_throws ArgumentError contract_model(water_vapor_grid = [1.0e-6, 1.0e-4, 1.0e-3])
     @test_throws DimensionMismatch contract_model(
         pressure_grid = [100.0, 1_000.0, 10_000.0],
         temperature_grid = [200.0 250.0; 210.0 260.0],
@@ -849,22 +849,22 @@ end
     shortwave_absorption = zeros(1, 2, 2, 2)
     longwave_absorption[:, 2, :, :] .= 1.0
     shortwave_absorption[:, 2, :, :] .= 1.0
-    longwave_h2o = zeros(1, 2, 2, 2)
-    shortwave_h2o = zeros(1, 2, 2, 2)
-    longwave_h2o[:, :, :, 1] .= 10.0
-    longwave_h2o[:, :, :, 2] .= 20.0
-    shortwave_h2o[:, :, :, 1] .= 1.0
-    shortwave_h2o[:, :, :, 2] .= 2.0
+    longwave_water_vapor = zeros(1, 2, 2, 2)
+    shortwave_water_vapor = zeros(1, 2, 2, 2)
+    longwave_water_vapor[:, :, :, 1] .= 10.0
+    longwave_water_vapor[:, :, :, 2] .= 20.0
+    shortwave_water_vapor[:, :, :, 1] .= 1.0
+    shortwave_water_vapor[:, :, :, 2] .= 2.0
     model = EcCKDTabulatedGasOpticsModel(
         names = (:h2o, :co2),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
-        h2o_mole_fraction_grid = [1.0e-4, 1.0e-2],
+        water_vapor_mole_fraction_grid = [1.0e-4, 1.0e-2],
         gas_reference_mole_fractions = [0.0, 1.0],
         longwave_absorption = longwave_absorption,
         shortwave_absorption = shortwave_absorption,
-        longwave_h2o_absorption = longwave_h2o,
-        shortwave_h2o_absorption = shortwave_h2o,
+        longwave_water_vapor_absorption = longwave_water_vapor,
+        shortwave_water_vapor_absorption = shortwave_water_vapor,
         longwave_weights = [1.0],
         shortwave_weights = [1.0],
     )
@@ -901,7 +901,7 @@ end
 # with ecCKD's log-pressure interpolation. Regenerate them deliberately (and
 # say so) if the interpolation itself is ever meant to change again.
 @testset "ecCKD tabulated interpolation is bit-exact" begin
-    np, nt, nh2o = 4, 3, 3
+    np, nt, n_water_vapor = 4, 3, 3
     pressure_grid = exp.(range(log(5_000.0), log(100_000.0), length = np))
     ng_lw, ng_sw = 3, 2
 
@@ -958,30 +958,30 @@ end
         @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
     end
 
-    @testset "matrix temperature grid with dynamic H2O" begin
+    @testset "matrix temperature grid with dynamic H₂O" begin
         # Pressure-dependent temperature grid: origin shifts with pressure,
         # uniform step, which is the layout the reference ecCKD LUTs use.
         temperature_grid = [180.0 + 30.0 * (ip - 1) + 40.0 * (it - 1)
                             for ip in 1:np, it in 1:nt]
-        h2o_grid = [1e-6, 1e-4, 1e-2]
+        water_vapor_grid = [1e-6, 1e-4, 1e-2]
         source_temperature_grid = [180.0, 240.0, 300.0]
         ngas = 3
         model = EcCKDTabulatedGasOpticsModel(
             names = (:h2o, :co2, :composite),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
-            h2o_mole_fraction_grid = h2o_grid,
+            water_vapor_mole_fraction_grid = water_vapor_grid,
             gas_reference_mole_fractions = [0.0, 4.0e-4, 0.0],
             longwave_absorption = [lw_entry(ig, j, pressure_grid[ip], temperature_grid[ip, it])
                                    for ig in 1:ng_lw, j in 1:ngas, ip in 1:np, it in 1:nt],
             shortwave_absorption = [sw_entry(ig, j, pressure_grid[ip], temperature_grid[ip, it])
                                     for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            longwave_h2o_absorption = [1e-3 * ig * (1 + 1e-5 * pressure_grid[ip]) *
+            longwave_water_vapor_absorption = [1e-3 * ig * (1 + 1e-5 * pressure_grid[ip]) *
                                        (1 + 1e-3 * temperature_grid[ip, it]) * (1 + 10ih)
-                                       for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
-            shortwave_h2o_absorption = [1e-4 * ig * (1 + 2e-5 * pressure_grid[ip]) *
+                                       for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+            shortwave_water_vapor_absorption = [1e-4 * ig * (1 + 2e-5 * pressure_grid[ip]) *
                                         (1 + 2e-3 * temperature_grid[ip, it]) * (1 + 5ih)
-                                        for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+                                        for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
             shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
             longwave_source_table = [1.0 * (ig + 2) * st^2
@@ -1034,7 +1034,7 @@ end
 # fields across in the right order for a device model to agree with a host one.
 @testset "tabulated gas optics is inferrable, Float32-clean, and Adapt-stable" begin
     function tabulated_fixture(FT, matrix_temperature_grid::Bool)
-        np, nt, nh2o = 4, 3, 3
+        np, nt, n_water_vapor = 4, 3, 3
         ng_lw, ng_sw, ngas, nlayers = 3, 2, 3, 3
         pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length = np)))
         temperature_grid = matrix_temperature_grid ?
@@ -1048,7 +1048,7 @@ end
             names = (:h2o, :co2, :composite),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
-            h2o_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
+            water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
             gas_reference_mole_fractions = FT[0, 4e-4, 0],
             longwave_absorption =
                 FT[1e-4 * (7ig + 3j) * (1 + 1e-5 * pressure_grid[ip]) *
@@ -1058,12 +1058,12 @@ end
                 FT[1e-5 * (5ig + 2j) * (1 + 2e-5 * pressure_grid[ip]) *
                    (1 + 2e-3 * gridded(ip, it))
                    for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-            longwave_h2o_absorption =
+            longwave_water_vapor_absorption =
                 FT[1e-3 * ig * (1 + 10ih)
-                   for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
-            shortwave_h2o_absorption =
+                   for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
+            shortwave_water_vapor_absorption =
                 FT[1e-4 * ig * (1 + 5ih)
-                   for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
+                   for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:n_water_vapor],
             shortwave_rayleigh_molar_scattering = FT[1.1e-6, 3.7e-6],
             longwave_source_temperature_grid = source_temperature_grid,
             longwave_source_table = FT[(ig + 2) * st^2

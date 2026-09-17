@@ -58,9 +58,9 @@ The dry-air molar amount `nᵈ` of a layer of pressure thickness `Δp` follows
   the CKDMIP line-by-line optical depths (`average_optical_depth.cpp`), so
   it reproduces the reference optical depths and is the convention the
   gated benchmark runs use.
-* `:moist` — `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))`, the moist-molar-mass
+* `:moist` — `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`, the moist-molar-mass
   convention of RRTMGP's column amounts, under which the layer mass closes
-  as `mᵈ nᵈ + mᵛ n_h2o = Δp / g`. It
+  as `mᵈ nᵈ + mᵛ n_H₂O = Δp / g`. It
   carries up to ~3 % less absorber than `:dry` in the humid boundary layer,
   which shows up as a small surface-flux bias; the benchmarks report it
   alongside.
@@ -74,11 +74,11 @@ function benchmark_column(pressure_interfaces, temperature_interfaces, mole_frac
     p_fl = pressure_layers === nothing ? 0.5 .* (p_hl[1:nlayers] .+ p_hl[2:end]) : Float64.(pressure_layers)
     T_fl = temperature_layers === nothing ? 0.5 .* (T_hl[1:nlayers] .+ T_hl[2:end]) : Float64.(temperature_layers)
     Δp = diff(p_hl)
-    χ_h2o = Float64.(mole_fractions.h2o) .* ones(nlayers)
+    χ_H₂O = Float64.(mole_fractions.h2o) .* ones(nlayers)
     dry_air = if column_amount_convention === :dry
         Δp ./ (GRAVITY * DRY_AIR_MOLAR_MASS)
     elseif column_amount_convention === :moist
-        Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_h2o))
+        Δp ./ (GRAVITY .* (DRY_AIR_MOLAR_MASS .+ WATER_MOLAR_MASS .* χ_H₂O))
     else
         throw(ArgumentError("column_amount_convention must be :dry or :moist"))
     end

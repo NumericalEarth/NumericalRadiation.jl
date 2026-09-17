@@ -26,9 +26,9 @@ longwave = AnalyticBandLongwave(Float64)
 # Replace zeros with NaN so the log-y plot shows gaps where a band is inactive.
 nan_zero(v) = [x == 0 ? NaN : x for x in v]
 
-h2o_line_absorption      = nan_zero([h2o_line_kappa_ref(ν, longwave) for ν in ν̃])
-h2o_continuum_absorption =          [h2o_cont_kappa_ref(ν, longwave) for ν in ν̃]
-co2_absorption           = nan_zero([co2_kappa_ref(ν, longwave)      for ν in ν̃])
+water_vapor_line_absorption      = nan_zero([water_vapor_line_kappa_ref(ν, longwave)      for ν in ν̃])
+water_vapor_continuum_absorption =          [water_vapor_continuum_kappa_ref(ν, longwave) for ν in ν̃]
+carbon_dioxide_absorption        = nan_zero([carbon_dioxide_kappa_ref(ν, longwave)        for ν in ν̃])
 
 fig = Figure(size = (760, 440))
 ax  = Axis(fig[1, 1];
@@ -36,9 +36,9 @@ ax  = Axis(fig[1, 1];
            ylabel = "κ [m² kg⁻¹]",
            yscale = log10,
            title  = "Williams (2026) reference absorption (T = 260 K, p = 500 hPa)")
-lines!(ax, ν̃, h2o_line_absorption;      label = "H₂O line",      linewidth = 2)
-lines!(ax, ν̃, h2o_continuum_absorption; label = "H₂O continuum", linewidth = 2)
-lines!(ax, ν̃, co2_absorption;           label = "CO₂ 15 μm",      linewidth = 2, linestyle = :dash)
+lines!(ax, ν̃, water_vapor_line_absorption;      label = "H₂O line",      linewidth = 2)
+lines!(ax, ν̃, water_vapor_continuum_absorption; label = "H₂O continuum", linewidth = 2)
+lines!(ax, ν̃, carbon_dioxide_absorption;        label = "CO₂ 15 μm",      linewidth = 2, linestyle = :dash)
 axislegend(ax; position = :rt)
 save("absorption.png", fig); nothing # hide
 ```

@@ -326,7 +326,7 @@ function rfmip_markdown(results, benchmark)
     push!(lines, "Heating-rate RMSEs are weighted by the cube root of pressure within the range " *
                  "(the CKDMIP statistic); fluxes in W m⁻², heating rates in K day⁻¹. Gated runs use the " *
                  "dry column-amount convention `nᵈ = Δp / (g mᵈ)` of the ecCKD tables; the rows marked " *
-                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))`.")
+                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`.")
     for r in results
         s = r.statistics
         m = r.moist_convention_statistics

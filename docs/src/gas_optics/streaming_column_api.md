@@ -22,7 +22,11 @@ The streaming functions share the package conventions of the array path:
 - **Gases.** A layer's gas amounts are a `NamedTuple` of scalars in mol m⁻²
   keyed by the model's gas names ([`gas_names`](@ref)), plus `composite` (dry
   air) whenever the model applies the ecCKD relative-linear convention. The
-  H2O mole fraction handed to [`gas_optics_stencil`](@ref) is relative to dry
+  gas keys (`h2o`, `co2`, `o3`, `ch4`, `n2o`, `cfc11`, `cfc12`, `composite`)
+  mirror the ecCKD NetCDF variable prefixes and are the one place the package
+  abbreviates a species; every other identifier spells it out
+  (`water_vapor_mole_fraction`, [`water_vapor_table_optical_depth`](@ref)). The
+  H₂O mole fraction handed to [`gas_optics_stencil`](@ref) is relative to dry
   air, `h2o / composite`. The ecCKD tables expect the *dry* column-amount
   convention: for a hydrostatic layer of pressure thickness `Δp`,
   `composite = Δp / (g mᵈ)` — the whole layer mass over the dry molar mass,
@@ -74,7 +78,7 @@ per column:       streaming_longwave_fluxes!(…)
 ### Per-layer state
 
 [`gas_optics_stencil`](@ref) brackets one layer's pressure, temperature and
-H2O mole fraction on the coefficient tables of an
+H₂O mole fraction on the coefficient tables of an
 [`EcCKDTabulatedGasOpticsModel`](@ref) and returns an `isbits`
 [`GasOpticsStencil`](@ref). The stencil depends only on the layer state, so a
 kernel builds it once per layer and reuses it for every gas and g point. A

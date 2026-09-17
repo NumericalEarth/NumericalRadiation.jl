@@ -13,9 +13,9 @@ for the upwelling (`ℐꜛˡʷ`) and downwelling (`ℐꜜˡʷ`) spectral longwav
 fluxes at each of `nwavenumber` evenly spaced wavenumbers between
 `wavenumber_min` and `wavenumber_max`, with analytic mass absorption
 coefficients for H₂O
-line (rotation + vibration–rotation + combination bands, [`h2o_line_kappa_ref`](@ref)),
-a two-band H₂O continuum ([`h2o_cont_kappa_ref`](@ref)) and a Lorentzian CO₂
-15 μm bending mode ([`co2_kappa_ref`](@ref)). All reference constants are at
+line (rotation + vibration–rotation + combination bands, [`water_vapor_line_kappa_ref`](@ref)),
+a two-band H₂O continuum ([`water_vapor_continuum_kappa_ref`](@ref)) and a Lorentzian CO₂
+15 μm bending mode ([`carbon_dioxide_kappa_ref`](@ref)). All reference constants are at
 (T_ref, p_ref, RH_ref) = (260 K, 500 hPa, 100 %).
 
 Fields and defaults follow Williams (2026), Table 1.

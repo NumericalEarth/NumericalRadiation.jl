@@ -62,9 +62,16 @@ Published model pairs can be selected with compact names:
 reference_ecckd_model_specs()
 read_reference_ecckd_gas_optics("64x32";
     names = (:composite, :h2o, :co2),
-    h2o_mole_fraction = 0.005,
+    water_vapor_mole_fraction = 0.005,
 )
 ```
+
+The gas `Symbol`s in `names` — `:h2o`, `:co2`, `:o3`, `:ch4`, `:n2o`, `:cfc11`,
+`:cfc12` and `:composite` — mirror the ecCKD NetCDF variable prefixes
+(`h2o_molar_absorption_coeff`, `h2o_mole_fraction`, …) and the CKDMIP/RFMIP
+file variables, so they are deliberately not spelled out in English. They are
+the one exception: every other identifier in the package names a species in
+words (`water_vapor_mole_fraction`, `carbon_dioxide_kappa_ref`, …).
 
 Path lookup with `require=false` is non-mutating: it checks environment paths,
 installed artifacts, and local validation data without downloading the lazy

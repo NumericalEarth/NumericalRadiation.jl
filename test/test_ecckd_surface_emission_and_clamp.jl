@@ -56,9 +56,9 @@ end
 
 @testset "total optical-depth clamp" begin
     nlayers = 1
-    atmosphere_gases(ch4_amount) = (composite = [100.0], ch4 = [ch4_amount])
-    # Synthetic tabulated model with a relative-linear CH4-like gas: with a
-    # reference mole fraction and zero requested amount, the CH4 term is
+    atmosphere_gases(methane_amount) = (composite = [100.0], ch4 = [methane_amount])
+    # Synthetic tabulated model with a relative-linear CH₄-like gas: with a
+    # reference mole fraction and zero requested amount, the CH₄ term is
     # -reference * composite * k and can exceed the composite term, driving
     # the summed optical depth negative before the clamp.
     model = EcCKDTabulatedGasOpticsModel(
@@ -66,7 +66,7 @@ end
         pressure_grid = [10_000.0, 100_000.0],
         temperature_grid = [220.0, 300.0],
         longwave_absorption = cat(fill(1e-4, 1, 1, 2, 2),   # composite: weak
-                                  fill(1.0, 1, 1, 2, 2);    # ch4: strong
+                                  fill(1.0, 1, 1, 2, 2);    # CH₄: strong
                                   dims = 2),
         shortwave_absorption = cat(fill(1e-4, 1, 1, 2, 2),
                                    fill(1.0, 1, 1, 2, 2);
@@ -91,13 +91,13 @@ end
                                            scattering_asymmetry = zeros(1, nlayers),
                                            weights = zeros(1))
 
-    # Zero CH4 amount: total = composite - reference * composite * k_ch4 < 0
+    # Zero CH₄ amount: total = composite - reference * composite * k_CH₄ < 0
     # before the clamp; the stored value must be exactly zero.
     optical_properties!(longwave, shortwave, model, atmosphere(atmosphere_gases(0.0)))
     @test longwave.optical_depth[1, 1] == 0.0
     @test shortwave.optical_depth[1, 1] == 0.0
 
-    # CH4 at its reference abundance: the subtraction cancels and the
+    # CH₄ at its reference abundance: the subtraction cancels and the
     # positive composite total must be preserved, not clamped.
     reference_amount = 1e-3 * 100.0
     optical_properties!(longwave, shortwave, model,

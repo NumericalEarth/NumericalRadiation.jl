@@ -17,7 +17,7 @@
 #   * layer amounts follow the dry column-amount convention of the ecCKD
 #     tables, dry air `nᵈ = Δp / (g mᵈ)` and every gas `χ nᵈ`; N₂ and O₂ are
 #     the `composite` gas of the tables. The moist-molar-mass convention
-#     `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))` is run alongside, ungated;
+#     `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))` is run alongside, ungated;
 #   * longwave: surface temperature `Tₛ = temperature_hl[end]`, emissivity 1,
 #     no downwelling flux at 0.01 Pa;
 #   * shortwave: the five cosines of the solar zenith angle are read from the
@@ -280,7 +280,7 @@ function ckdmip_markdown(results, benchmark, paths)
     push!(lines, "Heating-rate RMSEs are weighted by the cube root of pressure within the range " *
                  "(the CKDMIP statistic); fluxes in W m⁻², heating rates in K day⁻¹. Gated runs use the " *
                  "dry column-amount convention `nᵈ = Δp / (g mᵈ)` of the ecCKD tables; the rows marked " *
-                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))`.")
+                 "\"moist convention\" use `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`.")
     for r in results
         s = r.statistics
         push!(lines, "")

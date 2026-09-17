@@ -4,7 +4,7 @@
 # broadening is applied in `williams_delta_tau`.
 
 """
-    h2o_line_kappa_ref(ν̃, scheme::AnalyticBandLongwave) -> κ  [m² kg⁻¹]
+    water_vapor_line_kappa_ref(ν̃, scheme::AnalyticBandLongwave) -> κ  [m² kg⁻¹]
 
 Reference H₂O line mass absorption coefficient. Piecewise-exponential fit to
 the pure-rotation (200–1000 cm⁻¹), vibration–rotation (1000–1700 cm⁻¹) and
@@ -12,7 +12,7 @@ combination bands (1700–2500 cm⁻¹).
 
 Reference: Williams (2026), Eq. 4 and Table 1.
 """
-@inline function h2o_line_kappa_ref(ν̃, scheme)
+@inline function water_vapor_line_kappa_ref(ν̃, scheme)
     NF = typeof(ν̃)
     (; κ_rot, l_rot, κ_vr, l_vr1, l_vr2) = scheme
     if ν̃ <= 200
@@ -31,7 +31,7 @@ Reference: Williams (2026), Eq. 4 and Table 1.
 end
 
 """
-    co2_kappa_ref(ν̃, scheme::AnalyticBandLongwave) -> κ  [m² kg⁻¹]
+    carbon_dioxide_kappa_ref(ν̃, scheme::AnalyticBandLongwave) -> κ  [m² kg⁻¹]
 
 Reference CO₂ absorption coefficient. A two-sided exponential (Laplace-shaped)
 wing centred on the 15 μm bending mode at ν̃_CO₂ ≈ 667 cm⁻¹, active only in
@@ -39,7 +39,7 @@ wing centred on the 15 μm bending mode at ν̃_CO₂ ≈ 667 cm⁻¹, active on
 
 Reference: Williams (2026), Eq. 5.
 """
-@inline function co2_kappa_ref(ν̃, scheme)
+@inline function carbon_dioxide_kappa_ref(ν̃, scheme)
     NF = typeof(ν̃)
     (; κ_CO₂, l_CO₂, ν̃_CO₂) = scheme
     return ifelse(ν̃ > 500 && ν̃ < 850,
@@ -48,14 +48,14 @@ Reference: Williams (2026), Eq. 5.
 end
 
 """
-    h2o_cont_kappa_ref(ν̃, scheme::AnalyticBandLongwave) -> κ  [m² kg⁻¹]
+    water_vapor_continuum_kappa_ref(ν̃, scheme::AnalyticBandLongwave) -> κ  [m² kg⁻¹]
 
 Reference H₂O continuum absorption. Two gray values split at 1700 cm⁻¹
 (stronger in the main atmospheric window below).
 
 Reference: Williams (2026), Eq. 6.
 """
-@inline function h2o_cont_kappa_ref(ν̃, scheme)
+@inline function water_vapor_continuum_kappa_ref(ν̃, scheme)
     NF = typeof(ν̃)
     # Paper convention: [10, 1700) → κ_cnt1, [1700, 2500] → κ_cnt2.
     return ν̃ < 1700 ? NF(scheme.κ_cnt1) : NF(scheme.κ_cnt2)
@@ -89,14 +89,14 @@ is a [`ColumnGrid`](@ref).
     g        = NF(gravity)
 
     # H₂O line: κ ∝ p / p_ref
-    κ_line = h2o_line_kappa_ref(ν̃, scheme)
-    Δτ_h2o_line = κ_line * (p_full_k / NF(scheme.p_ref)) * q_k * Δp_k / g
+    κ_line = water_vapor_line_kappa_ref(ν̃, scheme)
+    Δτ_H₂O_line = κ_line * (p_full_k / NF(scheme.p_ref)) * q_k * Δp_k / g
 
     # H₂O continuum: self-broadening + temperature scaling
     # Vapor partial pressure: pᵥ = q p / (ε + (1 − ε) q), ε ≈ 0.622
     p_v_k   = q_k * p_full_k / (NF(0.622) + NF(0.378) * q_k)
-    κ_cont  = h2o_cont_kappa_ref(ν̃, scheme)
-    Δτ_h2o_cont = κ_cont * (p_v_k / NF(scheme.pv_ref)) *
+    κ_cont  = water_vapor_continuum_kappa_ref(ν̃, scheme)
+    Δτ_H₂O_cont = κ_cont * (p_v_k / NF(scheme.pv_ref)) *
                   exp(NF(scheme.σ_cont) * (NF(scheme.T_ref) - T_k)) *
                   q_k * Δp_k / g
 
@@ -104,11 +104,11 @@ is a [`ColumnGrid`](@ref).
     # For a well-mixed gas with κ ∝ p / p_ref the column integral from the TOA
     # to pressure p gives τ = D κ q_CO₂ p² / (2 g p_ref). The layer increment
     # is the difference of τ at the two bounding half levels.
-    q_co2 = NF(CO₂ * NF(1e-6) * 44 / 29)
-    κ_CO₂_v = co2_kappa_ref(ν̃, scheme)
+    q_CO₂ = NF(CO₂ * NF(1e-6) * 44 / 29)
+    κ_CO₂_v = carbon_dioxide_kappa_ref(ν̃, scheme)
     p_half_k   = NF(σ_half[k])   * pₛ
     p_half_kp1 = NF(σ_half[k+1]) * pₛ
-    Δτ_co2 = κ_CO₂_v * q_co2 * (p_half_kp1^2 - p_half_k^2) / (2 * g * NF(scheme.p_ref))
+    Δτ_CO₂ = κ_CO₂_v * q_CO₂ * (p_half_kp1^2 - p_half_k^2) / (2 * g * NF(scheme.p_ref))
 
-    return NF(scheme.diffusivity) * (Δτ_h2o_line + Δτ_h2o_cont + Δτ_co2)
+    return NF(scheme.diffusivity) * (Δτ_H₂O_line + Δτ_H₂O_cont + Δτ_CO₂)
 end

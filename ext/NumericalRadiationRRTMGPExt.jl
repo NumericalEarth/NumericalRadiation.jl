@@ -68,16 +68,17 @@ struct RRTMGPWorkspace{S, AS, SOL}
     solver::SOL
 end
 
-# Zero-initialized global-mean volume mixing ratios: H₂O and O₃ vary per
-# layer, every other gas is a well-mixed scalar (RRTMGP's `VmrGM` layout).
-function initialize_global_mean_vmr(ngas, nlayers, ncol, FT, array_type)
-    vmr_h2o = array_type{FT}(undef, nlayers, ncol)
-    vmr_o3 = array_type{FT}(undef, nlayers, ncol)
-    vmr = array_type{FT}(undef, ngas)
-    fill!(vmr_h2o, zero(FT))
-    fill!(vmr_o3, zero(FT))
-    fill!(vmr, zero(FT))
-    return VmrGM(vmr_h2o, vmr_o3, vmr)
+# Zero-initialized global-mean gas mole fractions: H₂O and O₃ vary per
+# layer, every other gas is a well-mixed scalar (the layout of RRTMGP's
+# `VmrGM`, which calls them volume mixing ratios).
+function initialize_global_mean_mole_fractions(ngas, nlayers, ncol, FT, array_type)
+    water_vapor_mole_fraction = array_type{FT}(undef, nlayers, ncol)
+    ozone_mole_fraction = array_type{FT}(undef, nlayers, ncol)
+    mole_fractions = array_type{FT}(undef, ngas)
+    fill!(water_vapor_mole_fraction, zero(FT))
+    fill!(ozone_mole_fraction, zero(FT))
+    fill!(mole_fractions, zero(FT))
+    return VmrGM(water_vapor_mole_fraction, ozone_mole_fraction, mole_fractions)
 end
 
 function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
@@ -101,14 +102,14 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
     pressure_interfaces = array_type{FT}(undef, nlayers + 1, ncol)
     temperature_interfaces = array_type{FT}(undef, nlayers + 1, ncol)
     surface_temperature = array_type{FT}(undef, ncol)
-    vmr = initialize_global_mean_vmr(ngas, nlayers, ncol, FT, array_type)
+    mole_fractions = initialize_global_mean_mole_fractions(ngas, nlayers, ncol, FT, array_type)
     atmospheric_state = AtmosphericState(longitude,
                                          latitude,
                                          layerdata,
                                          pressure_interfaces,
                                          temperature_interfaces,
                                          surface_temperature,
-                                         vmr,
+                                         mole_fractions,
                                          nothing,
                                          nothing)
 
@@ -141,14 +142,14 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     nlayers = length(atmosphere.temperature_layers)
     state = workspace.atmospheric_state
     gases = atmosphere.gases
-    h2o = gas_value(gases, :h2o, zero(FT))
-    o3 = gas_value(gases, :o3, zero(FT))
-    co2 = FT(gas_value(gases, :co2, 400e-6))
-    ch4 = FT(gas_value(gases, :ch4, 1.8e-6))
-    n2o = FT(gas_value(gases, :n2o, 330e-9))
-    o2 = FT(gas_value(gases, :o2, 0.20946))
-    n2 = FT(gas_value(gases, :n2, 0.78084))
-    co = FT(gas_value(gases, :co, 0))
+    water_vapor = gas_value(gases, :h2o, zero(FT))
+    ozone = gas_value(gases, :o3, zero(FT))
+    carbon_dioxide = FT(gas_value(gases, :co2, 400e-6))
+    methane = FT(gas_value(gases, :ch4, 1.8e-6))
+    nitrous_oxide = FT(gas_value(gases, :n2o, 330e-9))
+    oxygen = FT(gas_value(gases, :o2, 0.20946))
+    nitrogen = FT(gas_value(gases, :n2, 0.78084))
+    carbon_monoxide = FT(gas_value(gases, :co, 0))
 
     # RRTMGP's kernels are bottom-at-index-1 (surface source/albedo and the
     # hydrostatic Δp in compute_col_gas_kernel! assume p decreasing with
@@ -156,12 +157,12 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     # per-layer/per-level copy reverses the vertical index.
     for k in 1:nlayers
         kr = nlayers - k + 1
-        h2o_k = max(FT(layer_value(h2o, k)), zero(FT))
+        water_vapor_k = max(FT(layer_value(water_vapor, k)), zero(FT))
         state.layerdata[2, kr, 1] = FT(atmosphere.pressure_layers[k])
         state.layerdata[3, kr, 1] = clamp(FT(atmosphere.temperature_layers[k]), FT(160), FT(355))
         state.layerdata[4, kr, 1] = zero(FT)
-        state.vmr.vmr_h2o[kr, 1] = h2o_k
-        state.vmr.vmr_o3[kr, 1] = max(FT(layer_value(o3, k)), zero(FT))
+        state.vmr.vmr_h2o[kr, 1] = water_vapor_k
+        state.vmr.vmr_o3[kr, 1] = max(FT(layer_value(ozone, k)), zero(FT))
     end
 
     for k in 1:(nlayers + 1)
@@ -170,10 +171,11 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
         state.t_lev[kr, 1] = clamp(FT(atmosphere.temperature_interfaces[k]), FT(160), FT(355))
     end
 
-    # Dry column amounts via RRTMGP's own kernel (dry-air VMR convention,
-    # moist molar mass) on the reversed state. The staging above and the flux
-    # read-back below index the state arrays element by element, so this
-    # adapter is CPU-only: `context` must be a CPU ClimaComms context.
+    # Dry column amounts via RRTMGP's own kernel (dry-air mole-fraction
+    # convention, "VMR" in RRTMGP, with the moist molar mass) on the reversed
+    # state. The staging above and the flux read-back below index the state
+    # arrays element by element, so this adapter is CPU-only: `context` must
+    # be a CPU ClimaComms context.
     RRTMGP.Optics.compute_col_gas!(ClimaComms.device(model.context),
                                    state.p_lev,
                                    view(state.layerdata, 1, :, :),
@@ -182,15 +184,15 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
                                    nothing)
     state.t_sfc[1] = clamp(FT(boundary.surface_temperature), FT(160), FT(355))
 
-    vmr = state.vmr.vmr
-    fill!(vmr, zero(FT))
+    mole_fractions = state.vmr.vmr
+    fill!(mole_fractions, zero(FT))
     gas_indices = workspace.solver.lookups.idx_gases_sw
-    haskey(gas_indices, "co2") && (vmr[gas_indices["co2"]] = co2)
-    haskey(gas_indices, "ch4") && (vmr[gas_indices["ch4"]] = ch4)
-    haskey(gas_indices, "n2o") && (vmr[gas_indices["n2o"]] = n2o)
-    haskey(gas_indices, "o2") && (vmr[gas_indices["o2"]] = o2)
-    haskey(gas_indices, "n2") && (vmr[gas_indices["n2"]] = n2)
-    haskey(gas_indices, "co") && (vmr[gas_indices["co"]] = co)
+    haskey(gas_indices, "co2") && (mole_fractions[gas_indices["co2"]] = carbon_dioxide)
+    haskey(gas_indices, "ch4") && (mole_fractions[gas_indices["ch4"]] = methane)
+    haskey(gas_indices, "n2o") && (mole_fractions[gas_indices["n2o"]] = nitrous_oxide)
+    haskey(gas_indices, "o2") && (mole_fractions[gas_indices["o2"]] = oxygen)
+    haskey(gas_indices, "n2") && (mole_fractions[gas_indices["n2"]] = nitrogen)
+    haskey(gas_indices, "co") && (mole_fractions[gas_indices["co"]] = carbon_monoxide)
 
     solver = workspace.solver
     solver.lws.bcs.sfc_emis .= FT(boundary.surface_emissivity)

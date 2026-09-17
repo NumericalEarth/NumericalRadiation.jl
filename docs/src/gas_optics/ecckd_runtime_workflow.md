@@ -42,7 +42,7 @@ using NCDatasets
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
     names = (:composite, :h2o, :co2),
-    h2o_mole_fraction = 0.005,
+    water_vapor_mole_fraction = 0.005,
 )
 ```
 
@@ -58,12 +58,12 @@ in single precision (the files store them that way, so nothing is lost), or
 convert a loaded model with
 `EcCKDTabulatedGasOpticsModel{Float32}(gas_optics)`; `Adapt.adapt` likewise
 follows the element type of the adapted arrays.
-Because `:h2o` is in `names`, the reference H2O mole-fraction table
+Because `:h2o` is in `names`, the reference H₂O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes
-the layer H2O mole fraction from the `h2o` and `composite` gas amounts and
-interpolates the table per layer. The `h2o_mole_fraction` keyword is not a gas
-input — it is accepted for compatibility/fallback sampling of non-dynamic
-H2O tables.
+the layer H₂O mole fraction from the `h2o` and `composite` gas amounts and
+interpolates the table per layer. The `water_vapor_mole_fraction` keyword is
+not a gas input — it is accepted for compatibility/fallback sampling of
+non-dynamic H₂O tables.
 
 Gas entries in [`ColumnAtmosphere`](@ref) are layer absorber amounts — column
 amounts in mol m⁻² (mole fraction times the layer air column), not mole

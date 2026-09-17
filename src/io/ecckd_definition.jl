@@ -485,7 +485,7 @@ end
 """
     read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
                                     names = (:h2o, :co2),
-                                    h2o_mole_fraction = 0.005)
+                                    water_vapor_mole_fraction = 0.005)
 
 Read reference ecCKD CKD-definition files into a lightweight runtime
 [`EcCKDTabulatedGasOpticsModel`](@ref) with element type `FT`, passed as the
@@ -498,11 +498,11 @@ ingestion path: it materializes coefficient tables for the requested
 `names` only, together with each gas's reference mole fraction for the
 ecCKD relative-linear convention, the shortwave Rayleigh molar scattering
 table, and the longwave Planck source table. When `:h2o` is requested, the
-reference H2O mole-fraction table dimension is kept; at runtime
-[`optical_properties!`](@ref) computes the layer H2O mole fraction from the
+reference H₂O mole-fraction table dimension is kept; at runtime
+[`optical_properties!`](@ref) computes the layer H₂O mole fraction from the
 `h2o` and `composite` gas amounts and interpolates the table per layer. The
-`h2o_mole_fraction` keyword is not a gas input on that path — it is accepted
-for compatibility/fallback sampling of non-dynamic four-dimensional H2O
+`water_vapor_mole_fraction` keyword is not a gas input on that path — it is
+accepted for compatibility/fallback sampling of non-dynamic four-dimensional H₂O
 tables. Longwave spectral weights are uniform over g-points; shortwave weights
 are the file's per-g-point solar irradiance normalized to unit sum. Every
 table, grid and weight vector is converted to `FT`, so
@@ -536,7 +536,7 @@ with element type `FT`, passed as the first positional argument (default
 tables in single precision. `model` accepts selectors such as
 `:climate_32x32`, `:climate_64x32`, or `"32x96"`. Keyword arguments other than
 `require` are forwarded to [`read_ecckd_tabulated_gas_optics`](@ref), for
-example `names` and `h2o_mole_fraction`.
+example `names` and `water_vapor_mole_fraction`.
 
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.

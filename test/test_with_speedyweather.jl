@@ -31,7 +31,7 @@ default_spectral_grid() = SpectralGrid(trunc=15, nlayers=8)
     @test any(!=(zero(spectral_grid.NF)), vars.tendencies.grid.temperature)
 end
 
-@testset "SpeedyWeather runs CO2 forcing" begin
+@testset "SpeedyWeather runs CO₂ forcing" begin
     # Construct, initialize, and run the column parameterization with two
     # different prescribed CO₂ concentrations. Verify that the tendency and
     # OLR respond in a physically sensible way (more CO₂ → less OLR, less

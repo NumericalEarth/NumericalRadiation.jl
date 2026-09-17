@@ -18,7 +18,7 @@ header comment; CI runs both in the `validation` job and uploads the reports.
 `common.jl` holds what the two share: `benchmark_column` (a top-down
 `ColumnAtmosphere` from half-level pressures and temperatures and dry-air mole
 fractions, with the `:dry` column-amount convention `nᵈ = Δp / (g mᵈ)` of the
-ecCKD tables or the `:moist` one `nᵈ = Δp / (g (mᵈ + mᵛ χ_h2o))`),
+ecCKD tables or the `:moist` one `nᵈ = Δp / (g (mᵈ + mᵛ χ_H₂O))`),
 `column_fluxes!` (one column through the optics and both streaming solvers),
 the CKDMIP heating-rate statistic (RMSE weighted by the cube root of pressure
 within a pressure range), `longwave_quadrature_fluxes!` (the same longwave

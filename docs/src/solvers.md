@@ -181,7 +181,7 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
   allocation-free sum. The ecCKD concentration conventions are applied at this
   point: the `composite` background gas, `relative-linear` gases as
   ``\kappa\,(u_j - r_j u_\mathrm{composite})`` with reference mole fraction
-  ``r_j``, and the H2O look-up-table dimension interpolated per layer from the
+  ``r_j``, and the H₂O look-up-table dimension interpolated per layer from the
   actual `h2o`/`composite` amounts. Shortwave Rayleigh optical depth is
   ``k_g\,\Delta p / (g M_\mathrm{air})`` from the per-g-point molar scattering
   table, and the longwave Planck source is interpolated from the file's

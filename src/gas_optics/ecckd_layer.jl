@@ -19,31 +19,31 @@ $(TYPEDEF)
 Per-layer interpolation stencil for the coefficient tables of an
 [`EcCKDTabulatedGasOpticsModel`](@ref): the `(i₀, i₁, w)` brackets on the
 log-pressure axis, the temperature axis (vector or pressure-dependent matrix
-grid) and the optional H2O mole-fraction axis. The stencil depends only on the
+grid) and the optional H₂O mole-fraction axis. The stencil depends only on the
 layer state, so a host builds it once per layer with
 [`gas_optics_stencil`](@ref) and reuses it across every g point and gas.
 
 `FT` is the model's element type; the struct is `isbits`, and the six stored
 scalars `(i₀ᵖ, wᵖ, i₀ᵀ, wᵀ, i₀ᴴ, wᴴ)` rebuild it through
-`GasOpticsStencil(ip, wp, it, wt, ih, wh)`. Without an H2O table the H2O
+`GasOpticsStencil(ip, wp, it, wt, ih, wh)`. Without an H₂O table the H₂O
 bracket is a placeholder that is never indexed.
 """
 struct GasOpticsStencil{FT}
     pressure    :: Tuple{Int, Int, FT}
     temperature :: Tuple{Int, Int, FT}
-    h2o         :: Tuple{Int, Int, FT}
+    water_vapor :: Tuple{Int, Int, FT}
 end
 
-@inline function GasOpticsStencil(pressure::Tuple, temperature::Tuple, h2o::Tuple)
-    FT = promote_type(typeof(pressure[3]), typeof(temperature[3]), typeof(h2o[3]))
-    return GasOpticsStencil{FT}(pressure, temperature, h2o)
+@inline function GasOpticsStencil(pressure::Tuple, temperature::Tuple, water_vapor::Tuple)
+    FT = promote_type(typeof(pressure[3]), typeof(temperature[3]), typeof(water_vapor[3]))
+    return GasOpticsStencil{FT}(pressure, temperature, water_vapor)
 end
 
 """
 $(TYPEDSIGNATURES)
 
 Rebuild a [`GasOpticsStencil`](@ref) from the six scalars a host stores per
-layer: the lower index and weight of the pressure, temperature and H2O
+layer: the lower index and weight of the pressure, temperature and H₂O
 brackets. The upper index of each bracket is the lower one plus one, which is
 what `gas_optics_stencil` produces whenever the bracket is used; integer
 inputs may be any `Integer` type (`Int32` storage is fine).
@@ -52,16 +52,16 @@ inputs may be any `Integer` type (`Int32` storage is fine).
     FT = promote_type(typeof(wp), typeof(wt), typeof(wh))
     pressure = (Int(ip), Int(ip) + 1, FT(wp))
     temperature = (Int(it), Int(it) + 1, FT(wt))
-    h2o = (Int(ih), Int(ih) + 1, FT(wh))
-    return GasOpticsStencil{FT}(pressure, temperature, h2o)
+    water_vapor = (Int(ih), Int(ih) + 1, FT(wh))
+    return GasOpticsStencil{FT}(pressure, temperature, water_vapor)
 end
 
 """
 $(TYPEDSIGNATURES)
 
 Interpolation stencil of `model` for one layer at `pressure` (Pa),
-`temperature` (K) and H2O mole fraction `h2o_mole_fraction` (mol mol⁻¹,
-relative to dry air; ignored by models without an H2O table). Off-table inputs
+`temperature` (K) and H₂O mole fraction `water_vapor_mole_fraction` (mol mol⁻¹,
+relative to dry air; ignored by models without an H₂O table). Off-table inputs
 clamp to the table edges. The stencil is built in the model's element type,
 so the coefficient tables are expected to share it.
 
@@ -71,67 +71,69 @@ are not interpolated.
 @inline function gas_optics_stencil(model::EcCKDTabulatedGasOpticsModel{FT},
                                     pressure,
                                     temperature,
-                                    h2o_mole_fraction) where FT
+                                    water_vapor_mole_fraction) where FT
     pressure_bracket, temperature_bracket =
         table_stencil(FT, model.pressure_grid, model.temperature_grid, pressure, temperature)
-    h2o_bracket = h2o_axis_bracket(model.h2o_mole_fraction_grid, h2o_mole_fraction)
-    return GasOpticsStencil{FT}(pressure_bracket, temperature_bracket, h2o_bracket)
+    water_vapor_bracket = water_vapor_axis_bracket(model.water_vapor_mole_fraction_grid,
+                                                   water_vapor_mole_fraction)
+    return GasOpticsStencil{FT}(pressure_bracket, temperature_bracket, water_vapor_bracket)
 end
 
-@inline gas_optics_stencil(::EcCKDGasOpticsModel, pressure, temperature, h2o_mole_fraction) = nothing
+@inline gas_optics_stencil(::EcCKDGasOpticsModel, pressure, temperature, water_vapor_mole_fraction) = nothing
 
 # The absorption tables index `(ig, gas, ip, it)` with the pressure and
-# temperature brackets; the H2O tables add the mole-fraction bracket.
+# temperature brackets; the H₂O tables add the mole-fraction bracket.
 @inline table_brackets(s::GasOpticsStencil) = (s.pressure, s.temperature)
 
 # Molar amount of air (mol m⁻²) in a layer of pressure thickness `Δp` (Pa)
 # under hydrostatic balance, `Δp / (g mᵈ)`, with `g = 9.80665 m s⁻²` and the
 # dry-air molar mass `mᵈ = 0.0289647 kg mol⁻¹`. The Rayleigh scattering table
-# and the dry-air fallback of `layer_h2o_mole_fraction` both use it.
+# and the dry-air fallback of `layer_water_vapor_mole_fraction` both use it.
 @inline hydrostatic_air_moles(::Type{FT}, Δp) where FT =
     FT(Δp) / (FT(9.80665) * FT(0.0289647))
 
-# Scalar H2O amount of a layer for the H2O tables, `0` when the gas container
-# carries no `h2o` key (only legal for models without an H2O table, which never
+# Scalar H₂O amount of a layer for the H₂O tables, `0` when the gas container
+# carries no `h2o` key (only legal for models without an H₂O table, which never
 # index it). Resolved at compile time from the `NamedTuple` keys.
-@generated function h2o_layer_amount(::Type{FT}, gases::NamedTuple{Names}) where {FT, Names}
+@generated function water_vapor_layer_amount(::Type{FT}, gases::NamedTuple{Names}) where {FT, Names}
     return :h2o in Names ? :(FT(gases.h2o)) : :(zero(FT))
 end
 
 """
 $(TYPEDSIGNATURES)
 
-Contribution of the H2O-mole-fraction-dependent `table` (`longwave_h2o_absorption`
-or `shortwave_h2o_absorption`) to a layer's optical depth for g point `ig`:
-the trilinearly interpolated coefficient times the layer's H2O amount
-`h2o_moles` (mol m⁻²). Zero when the model has no H2O grid or the table is
-empty.
+Contribution of the H₂O-mole-fraction-dependent `table`
+(`longwave_water_vapor_absorption` or `shortwave_water_vapor_absorption`) to a
+layer's optical depth for g point `ig`: the trilinearly interpolated
+coefficient times the layer's H₂O amount `water_vapor_moles` (mol m⁻²). Zero
+when the model has no H₂O grid or the table is empty.
 """
-@inline function h2o_table_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
-                                         table,
-                                         h2o_moles,
-                                         ig,
-                                         s::GasOpticsStencil) where FT
-    length(model.h2o_mole_fraction_grid) == 0 && return zero(FT)
+@inline function water_vapor_table_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
+                                                 table,
+                                                 water_vapor_moles,
+                                                 ig,
+                                                 s::GasOpticsStencil) where FT
+    length(model.water_vapor_mole_fraction_grid) == 0 && return zero(FT)
     length(table) == 0 && return zero(FT)
-    coefficient = interp_h2o_table(table, ig, table_brackets(s), s.h2o)
-    return coefficient * FT(h2o_moles)
+    coefficient = interp_water_vapor_table(table, ig, table_brackets(s), s.water_vapor)
+    return coefficient * FT(water_vapor_moles)
 end
 
 # Shared body of the longwave and shortwave tabulated optical depths: the
-# relative-linear gas sum over the `(ng, ngas, np, nt)` table, plus the H2O
+# relative-linear gas sum over the `(ng, ngas, np, nt)` table, plus the H₂O
 # table, clamped as a total. Relative-linear gases legitimately contribute
 # negative optical depth below their reference mole fraction; only the summed
 # total is clamped, matching upstream run_ckd.
 @inline function tabulated_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT},
                                          table,
-                                         h2o_table,
+                                         water_vapor_table,
                                          ig,
                                          gases::NamedTuple,
                                          s::GasOpticsStencil) where FT
     τ = accumulate_tabulated_tau(gases, table, model.gas_reference_mole_fractions,
                                  Val(gas_names(model)), ig, 1, table_brackets(s))
-    τ += h2o_table_optical_depth(model, h2o_table, h2o_layer_amount(FT, gases), ig, s)
+    water_vapor_moles = water_vapor_layer_amount(FT, gases)
+    τ += water_vapor_table_optical_depth(model, water_vapor_table, water_vapor_moles, ig, s)
     return max(τ, 0)
 end
 
@@ -149,7 +151,7 @@ clamped at zero.
                                gases::NamedTuple,
                                s::GasOpticsStencil) where FT =
     tabulated_optical_depth(model, model.longwave_absorption,
-                            model.longwave_h2o_absorption, ig, gases, s)
+                            model.longwave_water_vapor_absorption, ig, gases, s)
 
 """
 $(TYPEDSIGNATURES)
@@ -162,7 +164,7 @@ arguments as the longwave method.
                                 gases::NamedTuple,
                                 s::GasOpticsStencil) where FT =
     tabulated_optical_depth(model, model.shortwave_absorption,
-                            model.shortwave_h2o_absorption, ig, gases, s)
+                            model.shortwave_water_vapor_absorption, ig, gases, s)
 
 @inline longwave_optical_depth(model::EcCKDGasOpticsModel{FT},
                                ig,

@@ -55,7 +55,7 @@ defined at first use on each page:
 | `N` | Number of layers |
 | `pᵢ`, `p` | Interface and layer pressures (Pa), top-down, increasing downward |
 | `Tᵢ`, `T`, `Tₛ` | Interface, layer, and surface temperatures (K) |
-| `χH₂O`, `χO₃`, `χCO₂`, … | Dry-air volume mixing ratios (mole fractions relative to dry air) |
+| `χH₂O`, `χO₃`, `χCO₂`, … | Mole fractions relative to dry air (dry-air volume mixing ratios) |
 | `nᵈ` | Dry-air molar amount per layer (mol m⁻²); gas amounts are `χ .* nᵈ` |
 | `Ṫ` | Temperature tendency (K s⁻¹); example plots show `Ṫ * 86_400` in K day⁻¹ |
 | `mᵈ`, `mᵛ` | Dry-air and water molar masses (kg mol⁻¹) |
@@ -66,15 +66,42 @@ defined at first use on each page:
 | `Cₛ` | Surface slab heat capacity (J m⁻² K⁻¹) |
 | `longwave_gpoints`, `shortwave_gpoints` | g-point counts of the loaded gas-optics model |
 
+## Chemical species
+
+Identifiers — struct fields, function names, keyword arguments, local
+variables — name a species in English words, never by chemical formula:
+`water_vapor`, `carbon_dioxide`, `ozone`, `methane`, `nitrous_oxide`, and
+`mole_fraction` for what RRTMGP calls a volume mixing ratio (`VmrGM`). Math
+notation and prose use the formula with subscripts: `H₂O`, `CO₂`, `O₃`, `CH₄`,
+`N₂O`, `χ_H₂O`. RRTMGP's own field names (`state.vmr.vmr_h2o`) and
+SpeedyWeather's (`greenhouse_gases.co2`) are used as they are when addressing
+those packages' structs.
+
+| Species | Identifier | Math / prose |
+|:--------|:-----------|:-------------|
+| Water vapor | `water_vapor`, `water_vapor_mole_fraction` | `H₂O`, `χ_H₂O` |
+| Carbon dioxide | `carbon_dioxide` | `CO₂` |
+| Ozone | `ozone` | `O₃` |
+| Methane | `methane` | `CH₄` |
+| Nitrous oxide | `nitrous_oxide` | `N₂O` |
+| Volume mixing ratio | `mole_fraction`, `mole_fractions` | `χ` |
+
+The gas-name `Symbol`s of the ecCKD models — `:h2o`, `:co2`, `:o3`, `:ch4`,
+`:n2o`, `:cfc11`, `:cfc12`, `:composite` in `names`, [`gas_names`](@ref) and
+the `gases` `NamedTuple` of a [`ColumnAtmosphere`](@ref) — are the one
+exception: they mirror the ecCKD NetCDF variable prefixes
+(`h2o_molar_absorption_coeff`) and the CKDMIP/RFMIP file variables, see
+[ecCKD files](gas_optics/ecckd_files.md).
+
 ## Longwave spectroscopy
 
 | Math | Code | Description |
 |:-----|:-----|:------------|
 | `ν̃` | `ν̃` | Wavenumber (cm⁻¹) |
 | `B(T, ν̃)` | [`planck_wavenumber`](@ref) | Spectral Planck radiance |
-| `κ_line^ref(ν̃)` | [`h2o_line_kappa_ref`](@ref) | Reference H₂O line absorption |
-| `κ_cnt^ref(ν̃)` | [`h2o_cont_kappa_ref`](@ref) | Reference H₂O continuum absorption |
-| `κ_CO₂^ref(ν̃)` | [`co2_kappa_ref`](@ref) | Reference CO₂ absorption |
+| `κ_line^ref(ν̃)` | [`water_vapor_line_kappa_ref`](@ref) | Reference H₂O line absorption |
+| `κ_cnt^ref(ν̃)` | [`water_vapor_continuum_kappa_ref`](@ref) | Reference H₂O continuum absorption |
+| `κ_CO₂^ref(ν̃)` | [`carbon_dioxide_kappa_ref`](@ref) | Reference CO₂ absorption |
 | `τ(p)` | integrated internally | Optical depth |
 | `D` | `AnalyticBandLongwave.diffusivity` | Two-stream diffusivity factor (≈ 1.5) |
 

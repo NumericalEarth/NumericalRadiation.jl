@@ -8,10 +8,11 @@ using ClimaComms
 # properties a finiteness check cannot see:
 #
 # 1. COLUMN AMOUNTS: RRTMGP's compute_col_gas_kernel! (optics/gas_optics.jl)
-#    defines vmr_h2o relative to DRY air and divides the hydrostatic Δp by
-#    the moist molar mass m_air = molmass_dryair + molmass_water * vmr_h2o.
+#    defines `vmr_h2o` (the water-vapor mole fraction) relative to DRY air and
+#    divides the hydrostatic Δp by the moist molar mass
+#    `m_air = molmass_dryair + molmass_water * vmr_h2o`.
 #    The adapter must fill `layerdata[1, :, :]` (col_dry) with exactly that
-#    convention, not a (1 - h2o) mass-fraction approximation.
+#    convention, not a (1 - χ_H₂O) mass-fraction approximation.
 #
 # 2. ORIENTATION: RRTMGP's two-stream kernels are bottom-at-index-1 (surface
 #    source/albedo at level 1; longwave2stream.jl), while ColumnAtmosphere is
@@ -27,15 +28,15 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
     pressure_layers = (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end]) ./ 2
     temperature_interfaces = [210.0, 235.0, 260.0, 285.0, 300.0]
     temperature_layers = (temperature_interfaces[1:end-1] .+ temperature_interfaces[2:end]) ./ 2
-    # Distinct, humid per-layer h2o VMR values so both the index reversal and
-    # the moist-molar-mass difference are individually detectable.
-    h2o = [1e-4, 8e-4, 3e-3, 2e-2]
+    # Distinct, humid per-layer water-vapor mole fractions so both the index
+    # reversal and the moist-molar-mass difference are individually detectable.
+    water_vapor = [1e-4, 8e-4, 3e-3, 2e-2]
     atmosphere = ColumnAtmosphere(
         pressure_layers = pressure_layers,
         pressure_interfaces = pressure_interfaces,
         temperature_layers = temperature_layers,
         temperature_interfaces = temperature_interfaces,
-        gases = (h2o = h2o, o3 = [1e-8, 2e-8, 3e-8, 4e-8], co2 = 400e-6),
+        gases = (h2o = water_vapor, o3 = [1e-8, 2e-8, 3e-8, 4e-8], co2 = 400e-6),
         surface = (;),
         geometry = (;),
     )
@@ -60,24 +61,24 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
             kr = nlayers - k + 1
             @test state.layerdata[2, kr, 1] == pressure_layers[k]
             @test state.layerdata[3, kr, 1] == temperature_layers[k]
-            @test state.vmr.vmr_h2o[kr, 1] == h2o[k]
+            @test state.vmr.vmr_h2o[kr, 1] == water_vapor[k]
             @test state.vmr.vmr_o3[kr, 1] == atmosphere.gases.o3[k]
         end
     end
 
-    @testset "column amounts: RRTMGP dry-air-VMR convention" begin
+    @testset "column amounts: RRTMGP dry-air mole-fraction convention" begin
         params = model.parameters
         for k in 1:nlayers
             kr = nlayers - k + 1
             Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
-            m_air = params.molmass_dryair + params.molmass_water * h2o[k]
+            m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             expected = Δp * params.avogad / (1e4 * m_air * params.grav)
             @test state.layerdata[1, kr, 1] ≈ expected rtol = 1e-12
-            # Guard against regressing to the (1 - h2o) mass-fraction form:
+            # Guard against regressing to the (1 - χ_H₂O) mass-fraction form:
             # for the humid bottom layer the two formulas differ materially.
-            wrong = (Δp / params.grav) * (1 - h2o[k]) /
+            wrong = (Δp / params.grav) * (1 - water_vapor[k]) /
                     params.molmass_dryair * params.avogad / 1e4
-            if h2o[k] >= 1e-2
+            if water_vapor[k] >= 1e-2
                 @test abs(state.layerdata[1, kr, 1] - wrong) / expected > 5e-3
             end
         end
@@ -105,10 +106,10 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
             cstate.layerdata[2, kr, 1] = pressure_layers[k]
             cstate.layerdata[3, kr, 1] = temperature_layers[k]
             cstate.layerdata[4, kr, 1] = 0.0
-            cstate.vmr.vmr_h2o[kr, 1] = h2o[k]
+            cstate.vmr.vmr_h2o[kr, 1] = water_vapor[k]
             cstate.vmr.vmr_o3[kr, 1] = atmosphere.gases.o3[k]
             Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
-            m_air = params.molmass_dryair + params.molmass_water * h2o[k]
+            m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             cstate.layerdata[1, kr, 1] = Δp * params.avogad /
                                          (1e4 * m_air * params.grav)
         end
@@ -118,15 +119,15 @@ const EXT = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
             cstate.t_lev[kr, 1] = temperature_interfaces[k]
         end
         cstate.t_sfc[1] = 300.0
-        cvmr = cstate.vmr.vmr
-        fill!(cvmr, 0.0)
+        mole_fractions = cstate.vmr.vmr
+        fill!(mole_fractions, 0.0)
         gas_indices = canonical.solver.lookups.idx_gases_sw
-        haskey(gas_indices, "co2") && (cvmr[gas_indices["co2"]] = 400e-6)
-        haskey(gas_indices, "ch4") && (cvmr[gas_indices["ch4"]] = 1.8e-6)
-        haskey(gas_indices, "n2o") && (cvmr[gas_indices["n2o"]] = 330e-9)
-        haskey(gas_indices, "o2") && (cvmr[gas_indices["o2"]] = 0.20946)
-        haskey(gas_indices, "n2") && (cvmr[gas_indices["n2"]] = 0.78084)
-        haskey(gas_indices, "co") && (cvmr[gas_indices["co"]] = 0.0)
+        haskey(gas_indices, "co2") && (mole_fractions[gas_indices["co2"]] = 400e-6)
+        haskey(gas_indices, "ch4") && (mole_fractions[gas_indices["ch4"]] = 1.8e-6)
+        haskey(gas_indices, "n2o") && (mole_fractions[gas_indices["n2o"]] = 330e-9)
+        haskey(gas_indices, "o2") && (mole_fractions[gas_indices["o2"]] = 0.20946)
+        haskey(gas_indices, "n2") && (mole_fractions[gas_indices["n2"]] = 0.78084)
+        haskey(gas_indices, "co") && (mole_fractions[gas_indices["co"]] = 0.0)
         canonical.solver.lws.bcs.sfc_emis .= 0.98
         canonical.solver.sws.bcs.cos_zenith .= 0.5
         canonical.solver.sws.bcs.toa_flux .= 1361.0
