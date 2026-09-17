@@ -52,11 +52,8 @@ of shape `(Nr,)` and the three property matrices of shape `(Ng, Nr)`. The
 element type `FT` is passed as the first positional argument; the arrays are
 converted to `Vector{FT}` and `Matrix{FT}`.
 """
-function SpectralCloudOptics(FT::DataType,
-                             effective_radius::AbstractVector,
-                             mass_extinction_coefficient::AbstractMatrix,
-                             single_scattering_albedo::AbstractMatrix,
-                             asymmetry_factor::AbstractMatrix)
+function SpectralCloudOptics(FT::DataType, effective_radius::AbstractVector, mass_extinction_coefficient::AbstractMatrix,
+                             single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix)
     Nr = length(effective_radius)
     Nr >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
     validate_increasing_grid(effective_radius, "effective_radius")
@@ -80,16 +77,11 @@ $(TYPEDSIGNATURES)
 Build a [`SpectralCloudOptics`](@ref) from per-node arrays whose element type
 is `promote_type` of the array element types.
 """
-SpectralCloudOptics(effective_radius::AbstractVector,
-                    mass_extinction_coefficient::AbstractMatrix,
-                    single_scattering_albedo::AbstractMatrix,
-                    asymmetry_factor::AbstractMatrix) =
-    SpectralCloudOptics(promote_type(eltype(effective_radius),
-                                     eltype(mass_extinction_coefficient),
-                                     eltype(single_scattering_albedo),
-                                     eltype(asymmetry_factor)),
-                        effective_radius, mass_extinction_coefficient,
-                        single_scattering_albedo, asymmetry_factor)
+SpectralCloudOptics(effective_radius::AbstractVector, mass_extinction_coefficient::AbstractMatrix,
+                    single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix) =
+    SpectralCloudOptics(promote_type(eltype(effective_radius), eltype(mass_extinction_coefficient),
+                                     eltype(single_scattering_albedo), eltype(asymmetry_factor)),
+                        effective_radius, mass_extinction_coefficient, single_scattering_albedo, asymmetry_factor)
 
 """
 $(TYPEDSIGNATURES)

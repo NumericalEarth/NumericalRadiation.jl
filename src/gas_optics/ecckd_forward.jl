@@ -457,11 +457,7 @@ end
 @inline table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractVector, pressure, temperature) where FT =
     (pressure_axis_bracket(pressure_grid, pressure), bracket(temperature_grid, temperature))
 
-@inline function table_stencil(::Type{FT},
-                               pressure_grid,
-                               temperature_grid::AbstractMatrix,
-                               pressure,
-                               temperature) where FT
+@inline function table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractMatrix, pressure, temperature) where FT
     pressure_bracket = pressure_axis_bracket(pressure_grid, pressure)
     i₀ᵖ, i₁ᵖ, wᵖ = pressure_bracket
     temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] + wᵖ * temperature_grid[i₁ᵖ, 1]
@@ -547,11 +543,8 @@ end
     return source * min(FT(temperature) / T₁, one(FT))
 end
 
-@generated function accumulate_optical_depth(gases::NamedTuple,
-                                             coefficients::AbstractMatrix{FT},
-                                             ::Val{GasNames},
-                                             g,
-                                             k) where {FT, GasNames}
+@generated function accumulate_optical_depth(gases::NamedTuple, coefficients::AbstractMatrix{FT}, ::Val{GasNames},
+                                             g, k) where {FT, GasNames}
     terms = [
         :(coefficients[g, $j] * FT(gas_value(gases, $(QuoteNode(name)), k)))
         for (j, name) in enumerate(GasNames)
@@ -568,18 +561,11 @@ end
     return τ
 end
 
-@inline accumulate_optical_depth(gases,
-                                 coefficients::AbstractMatrix{FT},
-                                 ::Val{GasNames},
-                                 g,
-                                 k) where {FT, GasNames} = accumulate_optical_depth(gases, coefficients, GasNames, g, k)
+@inline accumulate_optical_depth(gases, coefficients::AbstractMatrix, ::Val{GasNames}, g, k) where GasNames =
+    accumulate_optical_depth(gases, coefficients, GasNames, g, k)
 
-@generated function accumulate_tabulated_optical_depth(gases::NamedTuple,
-                                                       coefficients::AbstractArray{FT, 4},
-                                                       gas_reference_mole_fractions,
-                                                       ::Val{GasNames},
-                                                       g,
-                                                       k,
+@generated function accumulate_tabulated_optical_depth(gases::NamedTuple, coefficients::AbstractArray{FT, 4},
+                                                       gas_reference_mole_fractions, ::Val{GasNames}, g, k,
                                                        stencil) where {FT, GasNames}
     gas_fields = fieldnames(gases)
     has_composite = :composite in gas_fields
@@ -595,13 +581,8 @@ end
     return foldl((a, b) -> :($a + $b), terms; init=:(zero(FT)))
 end
 
-@inline function accumulate_tabulated_optical_depth(gases,
-                                                    coefficients::AbstractArray{FT, 4},
-                                                    gas_names::Tuple,
-                                                    gas_reference_mole_fractions,
-                                                    g,
-                                                    k,
-                                                    stencil) where FT
+@inline function accumulate_tabulated_optical_depth(gases, coefficients::AbstractArray{FT, 4}, gas_names::Tuple,
+                                                    gas_reference_mole_fractions, g, k, stencil) where FT
     τ = zero(FT)
     for j in eachindex(gas_names)
         amount = FT(gas_value(gases, gas_names[j], k))
@@ -614,18 +595,11 @@ end
     return τ
 end
 
-@inline accumulate_tabulated_optical_depth(gases,
-                                           coefficients::AbstractArray{FT, 4},
-                                           gas_reference_mole_fractions,
-                                           ::Val{GasNames},
-                                           g,
-                                           k,
-                                           stencil) where {FT, GasNames} =
+@inline accumulate_tabulated_optical_depth(gases, coefficients::AbstractArray{<:Any, 4}, gas_reference_mole_fractions,
+                                           ::Val{GasNames}, g, k, stencil) where GasNames =
     accumulate_tabulated_optical_depth(gases, coefficients, GasNames, gas_reference_mole_fractions, g, k, stencil)
 
-function check_ecckd_optics_shapes(longwave::LongwaveOptics,
-                                   shortwave::ShortwaveOptics,
-                                   model::EcCKDGasOpticsModel,
+function check_ecckd_optics_shapes(longwave::LongwaveOptics, shortwave::ShortwaveOptics, model::EcCKDGasOpticsModel,
                                    atmosphere::ColumnAtmosphere)
     Nz = length(atmosphere.temperature_layers)
     check_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), Nz)
@@ -655,10 +629,8 @@ function check_ecckd_optics_shapes(longwave::LongwaveOptics,
     return nothing
 end
 
-function check_ecckd_optics_shapes(longwave::LongwaveOptics,
-                                   shortwave::ShortwaveOptics,
-                                   model::EcCKDTabulatedGasOpticsModel,
-                                   atmosphere::ColumnAtmosphere)
+function check_ecckd_optics_shapes(longwave::LongwaveOptics, shortwave::ShortwaveOptics,
+                                   model::EcCKDTabulatedGasOpticsModel, atmosphere::ColumnAtmosphere)
     Nz = length(atmosphere.temperature_layers)
     length(atmosphere.pressure_layers) == Nz || throw(DimensionMismatch("pressure_layers must contain Nz values"))
     length(atmosphere.pressure_interfaces) == Nz + 1 ||
@@ -699,8 +671,7 @@ does not allocate output arrays.
 """
 function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
                              shortwave::ShortwaveOptics{FT, <:AbstractMatrix},
-                             model::EcCKDGasOpticsModel{FT},
-                             atmosphere::ColumnAtmosphere) where FT
+                             model::EcCKDGasOpticsModel{FT}, atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
 
     Nz = length(atmosphere.temperature_layers)
@@ -773,8 +744,7 @@ the lightweight runtime LUT path for ecCKD-style gas optics.
 """
 function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
                              shortwave::ShortwaveOptics{FT, <:AbstractMatrix},
-                             model::EcCKDTabulatedGasOpticsModel{FT},
-                             atmosphere::ColumnAtmosphere) where FT
+                             model::EcCKDTabulatedGasOpticsModel{FT}, atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
 
     Nz = length(atmosphere.temperature_layers)

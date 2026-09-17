@@ -32,13 +32,17 @@ $(TYPEDSIGNATURES)
 Allocate host scratch storage of element type `FT`, passed as the first
 positional argument, for a column of `Nz` layers.
 """
-ShortwaveColumnScratch(::Type{FT}, Nz) where FT = ShortwaveColumnScratch(Vector{FT}(undef, Nz),
-                                                                         Vector{FT}(undef, Nz),
-                                                                         Vector{FT}(undef, Nz),
-                                                                         Vector{FT}(undef, Nz),
-                                                                         Vector{FT}(undef, Nz),
-                                                                         Vector{FT}(undef, Nz + 1),
-                                                                         Vector{FT}(undef, Nz + 1))
+function ShortwaveColumnScratch(::Type{FT}, Nz) where FT
+    reflectance = Vector{FT}(undef, Nz)
+    transmittance = Vector{FT}(undef, Nz)
+    direct_reflectance = Vector{FT}(undef, Nz)
+    direct_diffuse_transmittance = Vector{FT}(undef, Nz)
+    direct_flux = Vector{FT}(undef, Nz)
+    stack_albedo = Vector{FT}(undef, Nz + 1)
+    source = Vector{FT}(undef, Nz + 1)
+    return ShortwaveColumnScratch(reflectance, transmittance, direct_reflectance, direct_diffuse_transmittance,
+                                  direct_flux, stack_albedo, source)
+end
 
 """
 $(TYPEDSIGNATURES)
@@ -103,10 +107,8 @@ shortwave path shares; `μ₀` is clamped to `√eps(FT)` here.
         inverse_denominator = inv(one(FT) - below * reflectance[k])
         stack_albedo[k] = reflectance[k] + transmittance[k] * transmittance[k] * below * inverse_denominator
         direct_above = ifelse(k == 1, incoming_normal, direct_flux[max(k - 1, 1)])
-        source[k] = direct_reflectance[k] * direct_above +
-            transmittance[k] *
-            (source[k + 1] + below * direct_diffuse_transmittance[k] * direct_above) *
-            inverse_denominator
+        upward_below = source[k + 1] + below * direct_diffuse_transmittance[k] * direct_above
+        source[k] = direct_reflectance[k] * direct_above + transmittance[k] * upward_below * inverse_denominator
     end
 
     # Top down: downward diffuse flux through the stack, then the interface
@@ -166,11 +168,8 @@ Allocation-free; `scratch` may hold views into a host's own arrays.
         flux_down[k] = zero(FT)
     end
     for g in 1:Ng
-        add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, g,
-                                     @inbounds(weights[g]), μ₀, toa_irradiance,
-                                     gpoint_albedo(direct_albedo, g),
-                                     gpoint_albedo(diffuse_albedo, g),
-                                     Nz, scratch)
+        add_shortwave_gpoint_fluxes!(flux_up, flux_down, layer_optics, g, @inbounds(weights[g]), μ₀, toa_irradiance,
+                                     gpoint_albedo(direct_albedo, g), gpoint_albedo(diffuse_albedo, g), Nz, scratch)
     end
     return nothing
 end
