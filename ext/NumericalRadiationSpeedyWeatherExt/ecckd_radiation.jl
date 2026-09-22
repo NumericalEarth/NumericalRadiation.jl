@@ -47,10 +47,6 @@ struct EcCKDRadiation{NF, GO, MF} <: SpeedyWeather.AbstractRadiation
     emissivity_ocean::NF
     "Longwave emissivity over land [1]"
     emissivity_land::NF
-    "Molar mass of dry air [kg/mol]"
-    molar_mass_dry_air::NF
-    "Molar mass of water [kg/mol]"
-    molar_mass_water::NF
 end
 
 Adapt.@adapt_structure EcCKDRadiation
@@ -60,9 +56,7 @@ function EcCKDRadiation(SG::SpeedyWeather.SpectralGrid, gas_optics::EcCKDTabulat
                         ozone = default_ozone_profile,
                         mole_fractions = (;),
                         emissivity_ocean = 0.98,
-                        emissivity_land = 0.98,
-                        molar_mass_dry_air = 0.0289647,
-                        molar_mass_water = 0.018015)
+                        emissivity_land = 0.98)
     NF = SG.NF
     fractions = merge((; o3 = ozone), mole_fractions)
     fractions = map(x -> x isa Number ? NF(x) : x, fractions)
@@ -72,8 +66,7 @@ function EcCKDRadiation(SG::SpeedyWeather.SpectralGrid, gas_optics::EcCKDTabulat
             "the ecCKD model carries gas :$name; pass its mole fraction via mole_fractions = (; $name = ...)"))
     end
     return EcCKDRadiation(EcCKDTabulatedGasOpticsModel{NF}(gas_optics), NF(CO₂), fractions,
-                          NF(emissivity_ocean), NF(emissivity_land),
-                          NF(molar_mass_dry_air), NF(molar_mass_water))
+                          NF(emissivity_ocean), NF(emissivity_land))
 end
 
 """$(TYPEDSIGNATURES)
@@ -123,18 +116,14 @@ function SpeedyWeather.variables(rad::EcCKDRadiation{NF}, model::SpeedyWeather.A
         PV(:shortwave_up, interfaces, desc = "Upward shortwave flux", units = "W/m^2", namespace = ns),
         PV(:shortwave_down, interfaces, desc = "Downward shortwave flux", units = "W/m^2", namespace = ns),
         PV(:surface_emission, SpeedyWeather.Grid3D(n = ng_lw), desc = "Surface longwave emission per g point", units = "W/m^2", namespace = ns),
-        PV(:surface_emission_land, SpeedyWeather.Grid3D(n = ng_lw), desc = "Land surface longwave emission per g point", units = "W/m^2", namespace = ns),
-        # shortwave adding-method work arrays
+        # shortwave adding-method work arrays, the fields of ShortwaveColumnScratch
         PV(:sw_reflectance, layers, desc = "Shortwave work array", namespace = ns),
         PV(:sw_transmittance, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_ref_dir, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_trans_dir_diff, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_trans_dir_dir, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_inv_denominator, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_flux_direct, interfaces, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_flux_diffuse, interfaces, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_source, interfaces, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_direct_reflectance, layers, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_direct_diffuse_transmittance, layers, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_direct_flux, layers, desc = "Shortwave work array", namespace = ns),
         PV(:sw_stack_albedo, interfaces, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_source, interfaces, desc = "Shortwave work array", namespace = ns),
     )
 end
 
@@ -180,17 +169,19 @@ end
 """$(TYPEDSIGNATURES)
 Fill `amounts` (shape `(nlayers, ngas)`, gas order `names`) with layer molar
 amounts [mol/m²] from specific humidity `q`, layer pressures `p`, interface
-pressures `p_half`, the CO₂ mole fraction `x_co2` and `gravity`."""
-@generated function gas_amounts!(amounts, ::Val{names}, rad, q, p, p_half, x_co2, gravity) where names
+pressures `p_half`, the CO₂ mole fraction `x_co2` and the host's `constants`
+(gravity and the molar masses of dry air and water)."""
+@generated function gas_amounts!(amounts, ::Val{names}, rad, q, p, p_half, x_co2, constants) where names
     assignments = [:(amounts[k, $j] = gas_amount(Val($(QuoteNode(name))), rad, dry, h2o, x_co2, p[k]))
                    for (j, name) in enumerate(names)]
     return quote
         Base.@_propagate_inbounds_meta
+        (; gravity, dry_air_molar_mass, water_molar_mass) = constants
         for k in eachindex(q)
             moist_mass = (p_half[k + 1] - p_half[k]) / gravity     # kg/m² of moist air
             water_mass = q[k] * moist_mass
-            dry = (moist_mass - water_mass) / rad.molar_mass_dry_air
-            h2o = water_mass / rad.molar_mass_water
+            dry = (moist_mass - water_mass) / dry_air_molar_mass
+            h2o = water_mass / water_molar_mass
             $(assignments...)
         end
         return amounts
@@ -283,7 +274,8 @@ Base.@propagate_inbounds function ecckd_column_atmosphere!(ij, W, rad::EcCKDRadi
     end
     names = Val(NumericalRadiation.gas_names(rad.gas_optics))
     amounts = @view W.gas_amounts[ij, :, :]
-    gas_amounts!(amounts, names, rad, q, p, p_half, CO₂ * NF(1e-6), model.planet.gravity)
+    constants = speedy_physical_constants(model)
+    gas_amounts!(amounts, names, rad, q, p, p_half, CO₂ * NF(1e-6), constants)
 
     return ColumnAtmosphere(
         pressure_layers = p, pressure_interfaces = p_half,
@@ -291,6 +283,7 @@ Base.@propagate_inbounds function ecckd_column_atmosphere!(ij, W, rad::EcCKDRadi
         gases = gas_views(amounts, names),
         surface = (; temperature = surface.temperature),
         geometry = (; cos_zenith = surface.cos_zenith),
+        constants,
     )
 end
 
@@ -321,19 +314,21 @@ Base.@propagate_inbounds function ecckd_longwave!(ij, vars, fluxes, longwave, at
     nlayers = length(atmosphere.temperature_layers)
     f = surface.land_fraction
 
+    # per-g-point surface emission over ocean and land, evaluated lazily from the
+    # source table and blended by land fraction into the column's work vector
     emission = column(W.surface_emission, ij)
-    emission_land = column(W.surface_emission_land, ij)
-    surface_longwave_emission!(emission, gas_optics, surface.sea_surface_temperature;
-                               emissivity = rad.emissivity_ocean)
-    surface_longwave_emission!(emission_land, gas_optics, surface.land_surface_temperature;
-                               emissivity = rad.emissivity_land)
+    ocean = TabulatedSurfaceEmission(gas_optics, surface.sea_surface_temperature;
+                                     emissivity = rad.emissivity_ocean)
+    land = TabulatedSurfaceEmission(gas_optics, surface.land_surface_temperature;
+                                    emissivity = rad.emissivity_land)
     weights = gas_optics.longwave_weights
     up_ocean = zero(NF)             # broadband emission over ocean and land for their models
     up_land = zero(NF)
     for ig in eachindex(weights)
-        up_ocean += weights[ig] * emission[ig]
-        up_land += weights[ig] * emission_land[ig]
-        emission[ig] = (1 - f) * emission[ig] + f * emission_land[ig]
+        eₒ, eₗ = ocean[ig], land[ig]
+        up_ocean += weights[ig] * eₒ
+        up_land += weights[ig] * eₗ
+        emission[ig] = (1 - f) * eₒ + f * eₗ
     end
 
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
@@ -357,21 +352,17 @@ Base.@propagate_inbounds function ecckd_shortwave!(ij, vars, fluxes, shortwave, 
     (; cos_zenith, albedo, albedo_ocean, albedo_land) = surface
 
     if cos_zenith > 0
-        workspace = CloudlessShortwaveWorkspace(
-            reflectance = column(W.sw_reflectance, ij),
-            transmittance = column(W.sw_transmittance, ij),
-            ref_dir = column(W.sw_ref_dir, ij),
-            trans_dir_diff = column(W.sw_trans_dir_diff, ij),
-            trans_dir_dir = column(W.sw_trans_dir_dir, ij),
-            inv_denominator = column(W.sw_inv_denominator, ij),
-            flux_direct = column(W.sw_flux_direct, ij),
-            flux_diffuse = column(W.sw_flux_diffuse, ij),
-            source = column(W.sw_source, ij),
-            stack_albedo = column(W.sw_stack_albedo, ij))
+        scratch = ShortwaveColumnScratch(column(W.sw_reflectance, ij),
+                                         column(W.sw_transmittance, ij),
+                                         column(W.sw_direct_reflectance, ij),
+                                         column(W.sw_direct_diffuse_transmittance, ij),
+                                         column(W.sw_direct_flux, ij),
+                                         column(W.sw_stack_albedo, ij),
+                                         column(W.sw_source, ij))
         boundary = ShortwaveBoundaryConditions(
             toa_shortwave_down = model.planet.solar_constant * cos_zenith,
             surface_albedo = albedo)
-        radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere, boundary, workspace)
+        radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere, boundary, scratch)
     else
         for k in 1:(nlayers + 1)
             fluxes.shortwave_up[k] = zero(NF)

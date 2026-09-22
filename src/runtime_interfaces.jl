@@ -7,41 +7,43 @@ The existing analytic-band solvers use [`AtmosphereProfile`](@ref),
 [`ColumnGrid`](@ref), and [`SurfaceState`](@ref) directly. `ColumnAtmosphere`
 is a host-model-facing container for newer gas-optics and solver paths where
 layer/interface pressure and temperature arrays need to be carried together.
-The four arrays may have different array types (host-model views into arrays
-of different shape). `FT` is the element type of `temperature_layers`; the
-gas-optics and solver kernels convert the other arrays' values to their own
-working precision as they read them.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `pressure_layers`: Layer pressures, indexed top-down
+- `pressure_interfaces`: Interface pressures, indexed top-down
+- `temperature_layers`: Layer temperatures, indexed top-down
+- `temperature_interfaces`: Interface temperatures, indexed top-down
+- `gases`: Symbol-keyed gas concentrations or host-model property view
+- `surface`: Lower-boundary state
+- `geometry`: Geometry, solar angles, or host-model geometry view
+- The four arrays may have different array types (host-model views into arrays of
+  different shape); `FT` is the element type of `temperature_layers`.
+- `constants`: Physical constants of the host ([`PhysicalConstants`](@ref) in the column's
+  element type by default): gravity and the dry-air molar mass for the hydrostatic layer air
+  amounts of `optical_properties!`, gravity and the heat capacity for
+  [`heating_rates!`](@ref)
 """
-struct ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo} <: AbstractAtmosphericState
-    "Layer pressures, indexed top-down."
+struct ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C} <: AbstractAtmosphericState
     pressure_layers::PL
-    "Interface pressures, indexed top-down."
     pressure_interfaces::PI
-    "Layer temperatures, indexed top-down."
     temperature_layers::TL
-    "Interface temperatures, indexed top-down."
     temperature_interfaces::TI
-    "Symbol-keyed gas concentrations or host-model property view."
     gases::G
-    "Lower-boundary state."
     surface::S
-    "Geometry, solar angles, or host-model geometry view."
     geometry::Geo
+    constants::C
 end
 
 function ColumnAtmosphere(; pressure_layers::PL,
-                          pressure_interfaces::PI,
-                          temperature_layers::TL,
-                          temperature_interfaces::TI,
-                          gases::G,
-                          surface::S,
-                          geometry::Geo) where {PL, PI, TL, TI, G, S, Geo}
+                            pressure_interfaces::PI,
+                            temperature_layers::TL,
+                            temperature_interfaces::TI,
+                            gases::G,
+                            surface::S,
+                            geometry::Geo,
+                            constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {PL, PI, TL, TI, G, S, Geo, C}
     FT = eltype(temperature_layers)
-    return ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo}(
+    return ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C}(
         pressure_layers,
         pressure_interfaces,
         temperature_layers,
@@ -49,6 +51,7 @@ function ColumnAtmosphere(; pressure_layers::PL,
         gases,
         surface,
         geometry,
+        constants,
     )
 end
 
@@ -63,25 +66,20 @@ Arrays are caller-owned and may be package work arrays, host-model views, or
 device arrays. Interface flux arrays should have one more vertical point than
 layer-centered heating arrays.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `longwave_up`: Upwelling longwave flux at interfaces
+- `longwave_down`: Downwelling longwave flux at interfaces
+- `shortwave_up`: Upwelling shortwave flux at interfaces
+- `shortwave_down`: Downwelling shortwave flux at interfaces
 """
 struct RadiativeFluxes{FT, A}
-    "Upwelling longwave flux at interfaces."
     longwave_up::A
-    "Downwelling longwave flux at interfaces."
     longwave_down::A
-    "Upwelling shortwave flux at interfaces."
     shortwave_up::A
-    "Downwelling shortwave flux at interfaces."
     shortwave_down::A
 end
 
-function RadiativeFluxes(; longwave_up::A,
-                         longwave_down::A,
-                         shortwave_up::A,
-                         shortwave_down::A) where A
+function RadiativeFluxes(; longwave_up::A, longwave_down::A, shortwave_up::A, shortwave_down::A) where A
     FT = eltype(longwave_up)
     return RadiativeFluxes{FT, A}(longwave_up, longwave_down, shortwave_up, shortwave_down)
 end
@@ -140,9 +138,12 @@ end
 
 """
     heating_rates!(heating, fluxes::RadiativeFluxes, atmosphere::ColumnAtmosphere;
-                   gravity, heat_capacity)
+                   gravity = atmosphere.constants.gravity,
+                   heat_capacity = atmosphere.constants.heat_capacity)
 
-Convert interface fluxes to layer heating rates in K s^-1.
+Convert interface fluxes to layer heating rates in K s^-1. `gravity` and
+`heat_capacity` default to the column's [`PhysicalConstants`](@ref); pass them
+to override.
 
 Conventions:
 - vertical indexing is top-down;
@@ -153,41 +154,38 @@ Conventions:
 For layer `k`, the heating rate is
 
 ```text
-gravity / heat_capacity * (F_net[k] - F_net[k + 1]) / Δp[k]
+Ṫ[k] = g / cᵖ (ℐ[k] - ℐ[k + 1]) / Δp[k]
 ```
 
-where `F_net = longwave_down - longwave_up + shortwave_down - shortwave_up`.
+where `ℐ = ℐꜜˡʷ - ℐꜛˡʷ + ℐꜜˢʷ - ℐꜛˢʷ` is the net downward flux
+(`longwave_down - longwave_up + shortwave_down - shortwave_up`), and `g` and
+`cᵖ` are `gravity` and `heat_capacity`.
 """
 function heating_rates!(heating::AbstractVector,
                         fluxes::RadiativeFluxes,
                         atmosphere::ColumnAtmosphere;
-                        gravity,
-                        heat_capacity)
-    p_interface = atmosphere.pressure_interfaces
-    nlayers = length(atmosphere.temperature_layers)
-    length(heating) == nlayers ||
-        throw(DimensionMismatch("heating must have length nlayers"))
-    length(p_interface) == nlayers + 1 ||
-        throw(DimensionMismatch("pressure_interfaces must have length nlayers + 1"))
-    length(fluxes.longwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_up must have length nlayers + 1"))
-    length(fluxes.longwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("longwave_down must have length nlayers + 1"))
-    length(fluxes.shortwave_up) == nlayers + 1 ||
-        throw(DimensionMismatch("shortwave_up must have length nlayers + 1"))
-    length(fluxes.shortwave_down) == nlayers + 1 ||
-        throw(DimensionMismatch("shortwave_down must have length nlayers + 1"))
+                        gravity = atmosphere.constants.gravity,
+                        heat_capacity = atmosphere.constants.heat_capacity)
+    pᵢ = atmosphere.pressure_interfaces
+    Nz = length(atmosphere.temperature_layers)
+    length(heating) == Nz || throw(DimensionMismatch("heating must have length Nz"))
+    length(pᵢ) == Nz + 1 || throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
+    length(fluxes.longwave_up) == Nz + 1 || throw(DimensionMismatch("longwave_up must have length Nz + 1"))
+    length(fluxes.longwave_down) == Nz + 1 || throw(DimensionMismatch("longwave_down must have length Nz + 1"))
+    length(fluxes.shortwave_up) == Nz + 1 || throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
+    length(fluxes.shortwave_down) == Nz + 1 || throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
 
     FT = eltype(heating)
-    g_over_cp = FT(gravity) / FT(heat_capacity)
-    for k in 1:nlayers
-        Δp = FT(p_interface[k + 1] - p_interface[k])
+    g = FT(gravity)
+    cᵖ = FT(heat_capacity)
+    for k in 1:Nz
+        Δp = FT(pᵢ[k + 1] - pᵢ[k])
         Δp > zero(FT) || throw(ArgumentError("pressure_interfaces must increase downward"))
-        net_top = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
-                     fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
-        net_bottom = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +
-                        fluxes.shortwave_down[k + 1] - fluxes.shortwave_up[k + 1])
-        heating[k] = g_over_cp * (net_top - net_bottom) / Δp
+        ℐₖ = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
+                fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
+        ℐₖ₊₁ = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +
+                  fluxes.shortwave_down[k + 1] - fluxes.shortwave_up[k + 1])
+        heating[k] = g / cᵖ * (ℐₖ - ℐₖ₊₁) / Δp
     end
     return heating
 end
@@ -198,48 +196,48 @@ end
 Construct reusable storage for repeated runtime calls. Host integrations may
 also pass their own arrays/views directly to component methods.
 """
-function radiation_workspace(model, atmosphere; backend = nothing)
+function radiation_workspace(model, atmosphere; backend=nothing)
     return nothing
 end
 
 """
-    radiation_workspace(rtm::RadiativeTransferColumn)
+    radiation_workspace(column::RadiativeTransferColumn)
 
 The existing single-column object is already a reusable workspace: it owns the
 temperature-tendency vector, shortwave transmissivity scratch, and diagnostic
 objects used by the analytic-band paths.
 """
-radiation_workspace(rtm::RadiativeTransferColumn; backend = nothing) = rtm
+radiation_workspace(column::RadiativeTransferColumn; backend=nothing) = column
 
 """
-    radiative_heating!(rtm::RadiativeTransferColumn; reset=true, longwave=true, shortwave=true)
+    radiative_heating!(column::RadiativeTransferColumn; reset=true, longwave=true, shortwave=true)
 
 High-level analytic-band column update. This is a convenience wrapper around
 the component calls [`solve_longwave!`](@ref) and [`solve_shortwave!`](@ref);
 host models can keep using those lower-level calls directly when they own
 their own vertical integrals or tendency insertion.
 """
-function radiative_heating!(rtm::RadiativeTransferColumn;
+function radiative_heating!(column::RadiativeTransferColumn;
                             reset::Bool = true,
                             longwave::Bool = true,
                             shortwave::Bool = true,
-                            cloud_top_convective::Integer = length(rtm.profile.temperature) + 1)
-    reset && reset!(rtm)
-    longwave && solve_longwave!(rtm)
-    shortwave && solve_shortwave!(rtm; cloud_top_convective)
-    return rtm
+                            cloud_top_convective::Integer = length(column.profile.temperature) + 1)
+    reset && reset!(column)
+    longwave && solve_longwave!(column)
+    shortwave && solve_shortwave!(column; cloud_top_convective)
+    return column
 end
 
 """
-    heating_rates!(heating, rtm::RadiativeTransferColumn)
+    heating_rates!(heating, column::RadiativeTransferColumn)
 
 Copy the current column temperature tendency into `heating`. This method gives
 the staged interface an allocation-free bridge to the existing analytic-band
 workspace.
 """
-function heating_rates!(heating::AbstractVector, rtm::RadiativeTransferColumn)
-    length(heating) == length(rtm.temperature_tendency) ||
-        throw(DimensionMismatch("heating must have length $(length(rtm.temperature_tendency))"))
-    heating .= rtm.temperature_tendency
+function heating_rates!(heating::AbstractVector, column::RadiativeTransferColumn)
+    length(heating) == length(column.temperature_tendency) ||
+        throw(DimensionMismatch("heating must have length $(length(column.temperature_tendency))"))
+    heating .= column.temperature_tendency
     return heating
 end

@@ -12,8 +12,8 @@ Adapt.@adapt_structure TransparentShortwave
 """$(TYPEDSIGNATURES)
 Column transparent-atmosphere shortwave.
 """
-function solve_shortwave!(dTdt::AbstractVector,
-                          diag::ShortwaveDiagnostics{NF},
+function solve_shortwave!(temperature_tendency::AbstractVector,
+                          diagnostics::ShortwaveDiagnostics{NF},
                           ::TransparentShortwave,
                           profile::AtmosphereProfile,
                           geometry::ColumnGrid,
@@ -22,26 +22,25 @@ function solve_shortwave!(dTdt::AbstractVector,
                           thermodynamic;
                           cloud_top_convective::Integer = length(profile.temperature) + 1) where NF
     S₀ = NF(constants.solar_constant)
-    cos_zenith = NF(surface.cos_zenith)
-    D = S₀ * cos_zenith
+    μ₀ = NF(surface.cos_zenith)
+    ℐꜜ = S₀ * μ₀
 
-    diag.surface_shortwave_down       = D
-    diag.ocean_surface_shortwave_down = D
-    diag.land_surface_shortwave_down  = D
+    diagnostics.surface_shortwave_down       = ℐꜜ
+    diagnostics.ocean_surface_shortwave_down = ℐꜜ
+    diagnostics.land_surface_shortwave_down  = ℐꜜ
 
-    ocean_up = NF(surface.ocean_albedo) * D
-    land_up  = NF(surface.land_albedo)  * D
-    albedo   = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) +
-               NF(surface.land_fraction) * NF(surface.land_albedo)
+    ℐꜛ_ocean = NF(surface.ocean_albedo) * ℐꜜ
+    ℐꜛ_land  = NF(surface.land_albedo)  * ℐꜜ
+    α = (1 - NF(surface.land_fraction)) * NF(surface.ocean_albedo) + NF(surface.land_fraction) * NF(surface.land_albedo)
 
-    diag.ocean_surface_shortwave_up = ocean_up
-    diag.land_surface_shortwave_up  = land_up
-    diag.surface_shortwave_up       = albedo * D
-    diag.albedo                     = albedo
-    diag.outgoing_shortwave         = diag.surface_shortwave_up
+    diagnostics.ocean_surface_shortwave_up = ℐꜛ_ocean
+    diagnostics.land_surface_shortwave_up  = ℐꜛ_land
+    diagnostics.surface_shortwave_up       = α * ℐꜜ
+    diagnostics.albedo                     = α
+    diagnostics.outgoing_shortwave         = diagnostics.surface_shortwave_up
 
-    diag.cloud_cover        = zero(NF)
-    diag.stratocumulus_cover = zero(NF)
-    diag.cloud_top          = length(profile.temperature) + 1
+    diagnostics.cloud_cover        = zero(NF)
+    diagnostics.stratocumulus_cover = zero(NF)
+    diagnostics.cloud_top          = length(profile.temperature) + 1
     return nothing
 end

@@ -17,34 +17,32 @@ a precipitation term; the highest layer exceeding the RH threshold sets the
 cloud top. An independent stratocumulus term is diagnosed at the surface
 from dry-static-energy stability.
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `relative_humidity_threshold_min`: Relative humidity threshold for cloud cover = 0, dimensionless (default `NF(0.3)`)
+- `relative_humidity_threshold_max`: Relative humidity threshold for cloud cover = 1, dimensionless (default `NF(1)`)
+- `specific_humidity_threshold_min`: Specific humidity threshold for cloud cover in kg/kg (default `NF(0.0002)`)
+- `precipitation_weight`: Weight for the √precipitation term, dimensionless (default `NF(0.2)`)
+- `precipitation_max`: Cap on precipitation contributing to cloud cover in mm/day (default `NF(10)`)
+- `cloud_albedo`: Cloud albedo at CLC = 1, dimensionless (default `NF(0.6)`)
+- `stratocumulus_albedo`: Stratocumulus cloud albedo, dimensionless (default `NF(0.5)`)
+- `stratocumulus_stability_min`: Static-stability lower threshold for stratocumulus (GSES0) in J/kg (default `NF(0.25)`)
+- `stratocumulus_stability_max`: Static-stability upper threshold for stratocumulus (GSES1) in J/kg (default `NF(0.4)`)
+- `stratocumulus_cover_max`: Maximum stratocumulus cloud cover (CLSMAX), dimensionless (default `NF(0.6)`)
+- `use_stratocumulus`: Enable the stratocumulus parameterization (default `true`)
+- `stratocumulus_cloud_factor`: Stratocumulus cloud factor (SPEEDY clfact), dimensionless (default `NF(1.2)`)
 """
 Base.@kwdef struct DiagnosticClouds{NF} <: AbstractShortwaveClouds
-    "Relative humidity threshold for cloud cover = 0 [1]"
     relative_humidity_threshold_min::NF = NF(0.3)
-    "Relative humidity threshold for cloud cover = 1 [1]"
     relative_humidity_threshold_max::NF = NF(1)
-    "Specific humidity threshold for cloud cover [kg/kg]"
     specific_humidity_threshold_min::NF = NF(0.0002)
-    "Weight for the √precipitation term [1]"
     precipitation_weight::NF = NF(0.2)
-    "Cap on precipitation contributing to cloud cover [mm/day]"
     precipitation_max::NF = NF(10)
-    "Cloud albedo at CLC = 1 [1]"
     cloud_albedo::NF = NF(0.6)
-    "Stratocumulus cloud albedo [1]"
     stratocumulus_albedo::NF = NF(0.5)
-    "Static-stability lower threshold for stratocumulus (GSES0) [J/kg]"
     stratocumulus_stability_min::NF = NF(0.25)
-    "Static-stability upper threshold for stratocumulus (GSES1) [J/kg]"
     stratocumulus_stability_max::NF = NF(0.4)
-    "Maximum stratocumulus cloud cover (CLSMAX) [1]"
     stratocumulus_cover_max::NF = NF(0.6)
-    "Enable the stratocumulus parameterization"
     use_stratocumulus::Bool = true
-    "Stratocumulus cloud factor (SPEEDY clfact) [1]"
     stratocumulus_cloud_factor::NF = NF(1.2)
 end
 
@@ -56,20 +54,20 @@ DiagnosticClouds(::Type{NF}; kwargs...) where NF = DiagnosticClouds{NF}(; kwargs
 Returned tuple from cloud diagnosis: `(cloud_cover, cloud_top, cloud_albedo,
 stratocumulus_cover, stratocumulus_albedo)`.
 
-For `NoClouds`, `cloud_top = nlayers + 1` (below the surface) so downstream
+For `NoClouds`, `cloud_top = Nz + 1` (below the surface) so downstream
 shortwave code skips the cloud-reflection branch.
 """
 @inline function diagnose_clouds(::NoClouds, profile::AtmosphereProfile,
-                                  geometry::ColumnGrid,
-                                  surface::SurfaceState,
-                                  constants::PhysicalConstants,
-                                  thermodynamic::ThermodynamicConstants,
-                                  cloud_top_convective::Integer)
+                                 geometry::ColumnGrid,
+                                 surface::SurfaceState,
+                                 constants::PhysicalConstants,
+                                 thermodynamic::ThermodynamicConstants,
+                                 cloud_top_convective::Integer)
     NF = eltype(profile.temperature)
-    nlayers = length(profile.temperature)
+    Nz = length(profile.temperature)
     return (
         cloud_cover = zero(NF),
-        cloud_top = nlayers + 1,
+        cloud_top = Nz + 1,
         cloud_albedo = zero(NF),
         stratocumulus_cover = zero(NF),
         stratocumulus_albedo = zero(NF),
@@ -77,43 +75,43 @@ shortwave code skips the cloud-reflection branch.
 end
 
 @inline function diagnose_clouds(clouds::DiagnosticClouds{NF},
-                                  profile::AtmosphereProfile,
-                                  geometry::ColumnGrid,
-                                  surface::SurfaceState,
-                                  constants::PhysicalConstants,
-                                  thermodynamic::ThermodynamicConstants,
-                                  cloud_top_convective::Integer) where NF
+                                 profile::AtmosphereProfile,
+                                 geometry::ColumnGrid,
+                                 surface::SurfaceState,
+                                 constants::PhysicalConstants,
+                                 thermodynamic::ThermodynamicConstants,
+                                 cloud_top_convective::Integer) where NF
 
     T = profile.temperature
     q = profile.humidity
     Φ = profile.geopotential
-    nlayers = length(T)
-    pₛ = profile.surface_pressure
+    Nz = length(T)
+    pˢ = profile.surface_pressure
     σ_full = geometry.σ_full
-    cₚ = constants.heat_capacity
+    cᵖ = constants.heat_capacity
     land_fraction = surface.land_fraction
 
-    rh_min = clouds.relative_humidity_threshold_min
-    rh_max = clouds.relative_humidity_threshold_max
+    relative_humidity_min = clouds.relative_humidity_threshold_min
+    relative_humidity_max = clouds.relative_humidity_threshold_max
     q_min  = clouds.specific_humidity_threshold_min
-    precip_weight = clouds.precipitation_weight
-    precip_max    = clouds.precipitation_max
+    precipitation_weight = clouds.precipitation_weight
+    precipitation_max    = clouds.precipitation_max
 
     # Precipitation term — rain_rate in m/s; convert to mm/day.
-    precip_term = min(precip_max, (NF(86400) * profile.rain_rate) / NF(1000))
-    P = precip_weight * sqrt(max(zero(NF), precip_term))
+    precipitation_term = min(precipitation_max, (NF(86400) * profile.rain_rate) / NF(1000))
+    P = precipitation_weight * sqrt(max(zero(NF), precipitation_term))
 
     humidity_term::NF = zero(NF)
-    cloud_top_humidity = nlayers + 1
+    cloud_top_humidity = Nz + 1
 
-    for k in 1:(nlayers - 1)
+    for k in 1:(Nz - 1)
         q_k = q[k]
-        qsat = saturation_humidity(T[k], σ_full[k] * pₛ, thermodynamic)
-        if q_k > q_min && qsat > 0
-            rh_k = q_k / qsat
-            if rh_k >= rh_min
-                rh_norm = max(zero(NF), (rh_k - rh_min) / (rh_max - rh_min))
-                humidity_term = min(one(NF), rh_norm)^2
+        q_saturation = saturation_humidity(T[k], σ_full[k] * pˢ, thermodynamic)
+        if q_k > q_min && q_saturation > 0
+            relative_humidity_k = q_k / q_saturation
+            if relative_humidity_k >= relative_humidity_min
+                relative_humidity_normalized = max(zero(NF), (relative_humidity_k - relative_humidity_min) / (relative_humidity_max - relative_humidity_min))
+                humidity_term = min(one(NF), relative_humidity_normalized)^2
                 cloud_top_humidity = min(k, cloud_top_humidity)
             end
         end
@@ -124,19 +122,19 @@ end
 
     stratocumulus_cover::NF = zero(NF)
     if clouds.use_stratocumulus
-        surface_k = nlayers
-        above_k   = max(1, nlayers - 1)
-        G = (cₚ * T[surface_k] + Φ[surface_k]) - (cₚ * T[above_k] + Φ[above_k])
-        stab_min = clouds.stratocumulus_stability_min
-        stab_max = clouds.stratocumulus_stability_max
-        static_stability = clamp((G - stab_min) / (stab_max - stab_min), zero(NF), one(NF))
+        surface_k = Nz
+        above_k   = max(1, Nz - 1)
+        G = (cᵖ * T[surface_k] + Φ[surface_k]) - (cᵖ * T[above_k] + Φ[above_k])
+        stability_min = clouds.stratocumulus_stability_min
+        stability_max = clouds.stratocumulus_stability_max
+        static_stability = clamp((G - stability_min) / (stability_max - stability_min), zero(NF), one(NF))
         cover_max = clouds.stratocumulus_cover_max
         cloud_factor = clouds.stratocumulus_cloud_factor
-        strc_ocean = static_stability * max(cover_max - cloud_factor * cloud_cover, zero(NF))
-        qsat_surf = saturation_humidity(T[surface_k], σ_full[surface_k] * pₛ, thermodynamic)
-        rh_surf   = q[surface_k] / qsat_surf
-        strc_land = strc_ocean * rh_surf
-        stratocumulus_cover = (1 - land_fraction) * strc_ocean + land_fraction * strc_land
+        stratocumulus_ocean = static_stability * max(cover_max - cloud_factor * cloud_cover, zero(NF))
+        q_saturation_surface = saturation_humidity(T[surface_k], σ_full[surface_k] * pˢ, thermodynamic)
+        relative_humidity_surface = q[surface_k] / q_saturation_surface
+        stratocumulus_land = stratocumulus_ocean * relative_humidity_surface
+        stratocumulus_cover = (1 - land_fraction) * stratocumulus_ocean + land_fraction * stratocumulus_land
     end
 
     return (

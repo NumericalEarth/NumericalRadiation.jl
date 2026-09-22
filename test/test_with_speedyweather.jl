@@ -16,16 +16,16 @@ end
 
 # Idealised column state: temperature increasing towards the surface
 # (k = 1 is the top layer), moist, warm ocean and land surfaces.
-function set_test_state!(vars, model)
+function set_test_state!(variables, model)
     nlayers = model.spectral_grid.nlayers
-    vars.parameterizations.surface_pressure .= 100000        # [Pa]
+    variables.parameterizations.surface_pressure .= 100000        # [Pa]
     for k in 1:nlayers
-        vars.grid.temperature[:, k, :] .= 220 + 9 * (k - 1)   # all time steps
-        vars.grid.humidity[:, k, :] .= 0.005
+        variables.grid.temperature[:, k, :] .= 220 + 9 * (k - 1)   # all time steps
+        variables.grid.humidity[:, k, :] .= 0.005
     end
-    vars.prognostic.ocean.sea_surface_temperature .= 295
-    vars.prognostic.land.soil_temperature .= 285
-    vars.tendencies.grid.temperature .= 0
+    variables.prognostic.ocean.sea_surface_temperature .= 295
+    variables.prognostic.land.soil_temperature .= 285
+    variables.tendencies.grid.temperature .= 0
     return nothing
 end
 
@@ -34,16 +34,16 @@ end
     model = longwave_only_model(spectral_grid)
     @test model.radiation.longwave isa SpeedyExt.SpeedyAnalyticBandLongwave
 
-    vars = Variables(model)
-    set_test_state!(vars, model)
+    variables = Variables(model)
+    set_test_state!(variables, model)
 
     # run the parameterizations, here just longwave
-    SpeedyWeather.column_parameterizations!(vars, model)
+    SpeedyWeather.column_parameterizations!(variables, model)
 
     # After one call, temperature tendency should be non-zero (atmosphere cools)
-    @test any(!=(zero(spectral_grid.NF)), vars.tendencies.grid.temperature)
-    @test all(isfinite, vars.tendencies.grid.temperature)
-    @test all(>(zero(spectral_grid.NF)), vars.parameterizations.outgoing_longwave)
+    @test any(!=(zero(spectral_grid.NF)), variables.tendencies.grid.temperature)
+    @test all(isfinite, variables.tendencies.grid.temperature)
+    @test all(>(zero(spectral_grid.NF)), variables.parameterizations.outgoing_longwave)
 end
 
 @testset "SpeedyWeather runs CO2 forcing" begin
@@ -53,21 +53,21 @@ end
 
     co2 = CO2(spectral_grid, 280)
     model = longwave_only_model(spectral_grid; greenhouse_gases = (; co2 = co2))
-    vars = Variables(model)
+    variables = Variables(model)
 
     # --- Run 1: 280 ppm CO₂ ---
-    set_test_state!(vars, model)
-    vars.prognostic.greenhouse_gases.co2[] = 280
-    SpeedyWeather.column_parameterizations!(vars, model)
-    dT1  = copy(vars.tendencies.grid.temperature)
-    olr1 = copy(vars.parameterizations.outgoing_longwave)
+    set_test_state!(variables, model)
+    variables.prognostic.greenhouse_gases.co2[] = 280
+    SpeedyWeather.column_parameterizations!(variables, model)
+    dT1  = copy(variables.tendencies.grid.temperature)
+    olr1 = copy(variables.parameterizations.outgoing_longwave)
 
     # --- Run 2: 600 ppm CO₂ ---
-    set_test_state!(vars, model)
-    vars.prognostic.greenhouse_gases.co2[] = 600
-    SpeedyWeather.column_parameterizations!(vars, model)
-    dT2  = copy(vars.tendencies.grid.temperature)
-    olr2 = copy(vars.parameterizations.outgoing_longwave)
+    set_test_state!(variables, model)
+    variables.prognostic.greenhouse_gases.co2[] = 600
+    SpeedyWeather.column_parameterizations!(variables, model)
+    dT2  = copy(variables.tendencies.grid.temperature)
+    olr2 = copy(variables.parameterizations.outgoing_longwave)
 
     @test all(isfinite, dT1)
     @test all(isfinite, dT2)
@@ -110,15 +110,15 @@ const σ_SB = 5.670374419e-8
 
     model = PrimitiveWetModel(spectral_grid; radiation)
     @test model.radiation === radiation
-    vars = Variables(model)
-    W = vars.parameterizations.ecckd
+    variables = Variables(model)
+    W = variables.parameterizations.ecckd
     nlayers, npoints = spectral_grid.nlayers, spectral_grid.npoints
     @test size(W.longwave_optical_depth) == (npoints, nlayers, 32)
     @test size(W.shortwave_optical_depth) == (npoints, nlayers, 32)
     @test size(W.gas_amounts) == (npoints, nlayers, 4)
     @test size(W.longwave_up) == (npoints, nlayers + 1)
-    @test haskey(vars.parameterizations, :outgoing_longwave)
-    @test haskey(vars.parameterizations, :outgoing_shortwave)
+    @test haskey(variables.parameterizations, :outgoing_longwave)
+    @test haskey(variables.parameterizations, :outgoing_shortwave)
 
     # a model gas without a mole fraction is rejected at construction
     gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2, :ch4))
@@ -133,26 +133,26 @@ end
     radiation = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32")
     model = PrimitiveWetModel(spectral_grid; radiation, parameterizations = (:radiation,))
     initialize!(model.radiation, model)
-    vars = Variables(model)
+    variables = Variables(model)
     nlayers = spectral_grid.nlayers
 
     # a realistic column: tropospheric lapse rate, exponentially decaying humidity
-    vars.parameterizations.surface_pressure .= 100_000
+    variables.parameterizations.surface_pressure .= 100_000
     for k in 1:nlayers
         σ = model.geometry.σ_levels_full[k]
-        vars.grid.temperature[:, k, :] .= max(210, 290 * σ^0.28)
-        vars.grid.humidity[:, k, :] .= 0.012 * σ^3
+        variables.grid.temperature[:, k, :] .= max(210, 290 * σ^0.28)
+        variables.grid.humidity[:, k, :] .= 0.012 * σ^3
     end
-    vars.prognostic.ocean.sea_surface_temperature .= 293
-    vars.prognostic.land.soil_temperature .= 288
-    vars.parameterizations.ocean.albedo .= 0.06
-    vars.parameterizations.land.albedo .= 0.3
-    vars.parameterizations.cos_zenith .= 0.5
-    vars.tendencies.grid.temperature .= 0
+    variables.prognostic.ocean.sea_surface_temperature .= 293
+    variables.prognostic.land.soil_temperature .= 288
+    variables.parameterizations.ocean.albedo .= 0.06
+    variables.parameterizations.land.albedo .= 0.3
+    variables.parameterizations.cos_zenith .= 0.5
+    variables.tendencies.grid.temperature .= 0
 
-    SpeedyWeather.column_parameterizations!(vars, model)
+    SpeedyWeather.column_parameterizations!(variables, model)
 
-    P = vars.parameterizations
+    P = variables.parameterizations
     olr = P.outgoing_longwave
     @test all(isfinite, olr)
     @test all(200 .< olr .< 320)                                  # W/m², clear sky, ~290 K surface
@@ -164,7 +164,7 @@ end
     @test all(P.outgoing_shortwave .< P.surface_shortwave_down)
 
     # heating rates are finite and moderate
-    dTdt = vars.tendencies.grid.temperature[:, :, 1]
+    dTdt = variables.tendencies.grid.temperature[:, :, 1]
     @test all(isfinite, dTdt)
     @test maximum(abs, dTdt) * 86400 < 20                          # K/day
 
@@ -181,8 +181,8 @@ end
     # the same column through the staged API directly gives the same fluxes
     p = W.pressure_layers[ij, :]
     p_half = W.pressure_interfaces[ij, :]
-    T = Float64.(vars.grid.temperature[ij, :, 1])
-    q = Float64.(vars.grid.humidity[ij, :, 1])
+    T = Float64.(variables.grid.temperature[ij, :, 1])
+    q = Float64.(variables.grid.humidity[ij, :, 1])
     f = model.land_sea_mask.land_fraction[ij]
     T_surface = (1 - f) * 293.0 + f * 288.0
     T_half = zeros(nlayers + 1)
@@ -191,13 +191,16 @@ end
     @test T_half[end] ≈ T[end] + (T[end] - T[end - 1]) * (p_half[end] - p[end]) / (p[end] - p[end - 1])
     gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2))
     amounts = zeros(nlayers, 4)
+    constants = PhysicalConstants(Float64; gravity = model.planet.gravity,
+                                  dry_air_molar_mass = model.atmosphere.mol_mass_dry_air / 1000,
+                                  water_molar_mass = model.atmosphere.mol_mass_vapor / 1000)
     SpeedyExt.gas_amounts!(amounts, Val((:composite, :h2o, :o3, :co2)),
-                           (mole_fractions = (; o3 = SpeedyExt.default_ozone_profile), molar_mass_dry_air = 0.0289647, molar_mass_water = 0.018015),
-                           q, Float64.(p), Float64.(p_half), 280e-6, Float64(model.planet.gravity))
+                           (; mole_fractions = (; o3 = SpeedyExt.default_ozone_profile)),
+                           q, Float64.(p), Float64.(p_half), 280e-6, constants)
     atmosphere = ColumnAtmosphere(pressure_layers = Float64.(p), pressure_interfaces = Float64.(p_half),
                                   temperature_layers = T, temperature_interfaces = T_half,
                                   gases = (composite = amounts[:, 1], h2o = amounts[:, 2], o3 = amounts[:, 3], co2 = amounts[:, 4]),
-                                  surface = (; temperature = T_surface), geometry = (; cos_zenith = 0.5))
+                                  surface = (; temperature = T_surface), geometry = (; cos_zenith = 0.5), constants)
     longwave = LongwaveOptics(zeros(32, nlayers), zeros(32, nlayers); source_top = zeros(32, nlayers),
                               source_bottom = zeros(32, nlayers), weights = zeros(32))
     shortwave = ShortwaveOptics(zeros(32, nlayers); rayleigh_optical_depth = zeros(32, nlayers),
@@ -220,15 +223,15 @@ end
 
     # night: no shortwave, longwave unchanged
     olr_day = copy(olr)
-    vars.parameterizations.cos_zenith .= 0
-    vars.tendencies.grid.temperature .= 0
-    SpeedyWeather.column_parameterizations!(vars, model)
+    variables.parameterizations.cos_zenith .= 0
+    variables.tendencies.grid.temperature .= 0
+    SpeedyWeather.column_parameterizations!(variables, model)
     @test all(==(0), P.outgoing_shortwave)
     @test all(==(0), P.surface_shortwave_down)
     @test P.outgoing_longwave == olr_day
     # a clear-sky atmosphere emits more longwave than it absorbs: the mass-weighted
     # column heating (longwave only at night) is negative everywhere
-    dTdt_night = vars.tendencies.grid.temperature[:, :, 1]
+    dTdt_night = variables.tendencies.grid.temperature[:, :, 1]
     column_heating = [sum(dTdt_night[ij, k] * (W.pressure_interfaces[ij, k + 1] - W.pressure_interfaces[ij, k])
                           for k in 1:nlayers) for ij in 1:spectral_grid.npoints]
     @test all(column_heating .< 0)
@@ -238,10 +241,10 @@ end
                                   greenhouse_gases = (; co2 = CO2(spectral_grid, 280)))
     vars_co2 = Variables(model_co2)
     for name in (:surface_pressure, :cos_zenith)
-        getproperty(vars_co2.parameterizations, name) .= getproperty(vars.parameterizations, name)
+        getproperty(vars_co2.parameterizations, name) .= getproperty(variables.parameterizations, name)
     end
-    vars_co2.grid.temperature .= vars.grid.temperature
-    vars_co2.grid.humidity .= vars.grid.humidity
+    vars_co2.grid.temperature .= variables.grid.temperature
+    vars_co2.grid.humidity .= variables.grid.humidity
     vars_co2.prognostic.ocean.sea_surface_temperature .= 293
     vars_co2.prognostic.land.soil_temperature .= 288
     vars_co2.prognostic.greenhouse_gases.co2[] = 280

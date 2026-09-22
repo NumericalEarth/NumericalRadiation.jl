@@ -10,39 +10,44 @@ The high-level API is [`solve_longwave!`](@ref) and
 [`solve_shortwave!`](@ref) on a `RadiativeTransferColumn`:
 
 ```julia
-rtm = RadiativeTransferColumn(; grid, profile, surface)
-solve_longwave!(rtm)
-solve_shortwave!(rtm)
-@show rtm.longwave_diagnostics.outgoing_longwave
+column = RadiativeTransferColumn(; grid, profile, surface)
+solve_longwave!(column)
+solve_shortwave!(column)
+@show column.longwave_diagnostics.outgoing_longwave
 ```
 
-Fields are
-
-$(TYPEDFIELDS)
+Fields:
+- `grid`: Column vertical grid (sigma coordinates)
+- `profile`: Atmosphere profile (temperature, humidity, geopotential, surface pressure, rain
+  rate)
+- `surface`: Lower boundary state (SST/LST, albedos, emissivities, cos-zenith)
+- `longwave_scheme`: Longwave scheme, e.g. [`AnalyticBandLongwave`](@ref)
+- `shortwave_scheme`: Shortwave scheme, e.g. [`OneBandShortwave`](@ref) or
+  [`TransparentShortwave`](@ref)
+- `physical_constants`: Physical constants (gravity, heat capacity, Stefan–Boltzmann, solar
+  constant)
+- `thermodynamic_constants`: Thermodynamic constants (Clausius–Clapeyron parameters for
+  saturation humidity)
+- `temperature_tendency`: Per-layer temperature tendency written by `solve_longwave!` /
+  `solve_shortwave!`
+- `transmissivity_scratch`: Per-layer scratch for the shortwave transmissivity
+- `longwave_diagnostics`: Scalar longwave diagnostics (OLR, surface up/down, ocean/land
+  split)
+- `shortwave_diagnostics`: Scalar shortwave diagnostics (TOA up, surface up/down, albedo,
+  clouds)
 """
 struct RadiativeTransferColumn{NF, LW, SW, PC, TC, V<:AbstractVector{NF}, G<:ColumnGrid{NF},
                                AP<:AtmosphereProfile{NF}}
-    "Column vertical grid (sigma coordinates)"
     grid::G
-    "Atmosphere profile (temperature, humidity, geopotential, surface pressure, rain rate)"
     profile::AP
-    "Lower boundary state (SST/LST, albedos, emissivities, cos-zenith)"
     surface::SurfaceState{NF}
-    "Longwave scheme, e.g. [`AnalyticBandLongwave`](@ref)"
     longwave_scheme::LW
-    "Shortwave scheme, e.g. [`OneBandShortwave`](@ref) or [`TransparentShortwave`](@ref)"
     shortwave_scheme::SW
-    "Physical constants (gravity, heat capacity, Stefan–Boltzmann, solar constant)"
     physical_constants::PC
-    "Thermodynamic constants (Clausius–Clapeyron parameters for saturation humidity)"
     thermodynamic_constants::TC
-    "Per-layer temperature tendency written by `solve_longwave!` / `solve_shortwave!`"
     temperature_tendency::V
-    "Per-layer scratch for the shortwave transmissivity"
     transmissivity_scratch::V
-    "Scalar longwave diagnostics (OLR, surface up/down, ocean/land split)"
     longwave_diagnostics::LongwaveDiagnostics{NF}
-    "Scalar shortwave diagnostics (TOA up, surface up/down, albedo, clouds)"
     shortwave_diagnostics::ShortwaveDiagnostics{NF}
 end
 
@@ -51,7 +56,7 @@ Construct a [`RadiativeTransferColumn`](@ref).
 
 Required:
 - `grid`     — a [`ColumnGrid`](@ref).
-- `profile`  — an [`AtmosphereProfile`](@ref) whose temperature vector drives `nlayers`.
+- `profile`  — an [`AtmosphereProfile`](@ref) whose temperature vector drives `Nz`.
 - `surface`  — a [`SurfaceState`](@ref).
 
 Optional schemes and constants default to sensible Earth choices of the same
@@ -67,7 +72,7 @@ function RadiativeTransferColumn(;
         thermodynamic_constants = ThermodynamicConstants{eltype(profile.temperature)}(),
     )
     NF      = eltype(profile.temperature)
-    nlayers = length(profile.temperature)
+    Nz = length(profile.temperature)
     V       = typeof(profile.temperature)
     G       = typeof(grid)
     AP      = typeof(profile)
@@ -76,10 +81,10 @@ function RadiativeTransferColumn(;
     PC      = typeof(physical_constants)
     TC      = typeof(thermodynamic_constants)
 
-    temperature_tendency   = zeros(NF, nlayers)
+    temperature_tendency   = zeros(NF, Nz)
     transmissivity_scratch = similar(profile.temperature)
     longwave_diagnostics   = LongwaveDiagnostics{NF}()
-    shortwave_diagnostics  = ShortwaveDiagnostics{NF}(nlayers)
+    shortwave_diagnostics  = ShortwaveDiagnostics{NF}(Nz)
 
     return RadiativeTransferColumn{NF, LW, SW, PC, TC, V, G, AP}(
         grid, profile, surface,
@@ -91,14 +96,14 @@ function RadiativeTransferColumn(;
 end
 
 """$(TYPEDSIGNATURES)
-Zero the temperature tendency and scalar diagnostics on `rtm` so a fresh
+Zero the temperature tendency and scalar diagnostics on `column` so a fresh
 `solve_longwave!` / `solve_shortwave!` doesn't accumulate onto stale values.
 """
-function reset!(rtm::RadiativeTransferColumn)
-    rtm.temperature_tendency .= 0
-    reset!(rtm.longwave_diagnostics)
-    reset!(rtm.shortwave_diagnostics)
-    return rtm
+function reset!(column::RadiativeTransferColumn)
+    column.temperature_tendency .= 0
+    reset!(column.longwave_diagnostics)
+    reset!(column.shortwave_diagnostics)
+    return column
 end
 
 function reset!(d::LongwaveDiagnostics{NF}) where NF
@@ -126,39 +131,39 @@ function reset!(d::ShortwaveDiagnostics{NF}) where NF
 end
 
 """$(TYPEDSIGNATURES)
-Column longwave radiative transfer using the scheme stored on `rtm`.
-Accumulates into `rtm.temperature_tendency` (call `reset!(rtm)` first if you
-want a clean slate) and writes scalars into `rtm.longwave_diagnostics`.
+Column longwave radiative transfer using the scheme stored on `column`.
+Accumulates into `column.temperature_tendency` (call `reset!(column)` first if you
+want a clean slate) and writes scalars into `column.longwave_diagnostics`.
 """
-function solve_longwave!(rtm::RadiativeTransferColumn)
+function solve_longwave!(column::RadiativeTransferColumn)
     solve_longwave!(
-        rtm.temperature_tendency,
-        rtm.longwave_diagnostics,
-        rtm.longwave_scheme,
-        rtm.profile,
-        rtm.grid,
-        rtm.surface,
-        rtm.physical_constants,
+        column.temperature_tendency,
+        column.longwave_diagnostics,
+        column.longwave_scheme,
+        column.profile,
+        column.grid,
+        column.surface,
+        column.physical_constants,
     )
-    return rtm
+    return column
 end
 
 """$(TYPEDSIGNATURES)
-Column shortwave radiative transfer using the scheme stored on `rtm`.
+Column shortwave radiative transfer using the scheme stored on `column`.
 """
-function solve_shortwave!(rtm::RadiativeTransferColumn;
-                          cloud_top_convective::Integer = length(rtm.profile.temperature) + 1)
+function solve_shortwave!(column::RadiativeTransferColumn;
+                          cloud_top_convective::Integer = length(column.profile.temperature) + 1)
     solve_shortwave!(
-        rtm.temperature_tendency,
-        rtm.shortwave_diagnostics,
-        rtm.shortwave_scheme,
-        rtm.profile,
-        rtm.grid,
-        rtm.surface,
-        rtm.physical_constants,
-        rtm.thermodynamic_constants;
-        transmissivity_scratch = rtm.transmissivity_scratch,
+        column.temperature_tendency,
+        column.shortwave_diagnostics,
+        column.shortwave_scheme,
+        column.profile,
+        column.grid,
+        column.surface,
+        column.physical_constants,
+        column.thermodynamic_constants;
+        transmissivity_scratch = column.transmissivity_scratch,
         cloud_top_convective   = cloud_top_convective,
     )
-    return rtm
+    return column
 end

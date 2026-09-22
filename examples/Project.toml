@@ -12,7 +12,7 @@ Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 [compat]
 CairoMakie = "0.12, 0.13"
 ClimaComms = "0.6"
-RRTMGP = "0.21"
+RRTMGP = "0.22, 0.23, 1"
 SpeedyWeather = "0.23"
 
 [sources]

@@ -9,8 +9,8 @@ import NumericalRadiation: AtmosphereProfile, ColumnGrid, SurfaceState,
     PhysicalConstants, LongwaveDiagnostics, solve_longwave!, AnalyticBandLongwave
 import NumericalRadiation: EcCKDTabulatedGasOpticsModel, ColumnAtmosphere, RadiativeFluxes,
     LongwaveOptics, ShortwaveOptics, CloudlessLongwave, CloudlessShortwave,
-    CloudlessShortwaveWorkspace, LongwaveBoundaryConditions, ShortwaveBoundaryConditions,
-    optical_properties!, radiative_fluxes!, surface_longwave_emission!,
+    ShortwaveColumnScratch, TabulatedSurfaceEmission, LongwaveBoundaryConditions,
+    ShortwaveBoundaryConditions, optical_properties!, radiative_fluxes!,
     read_reference_ecckd_gas_optics
 
 include("analytic_band_longwave.jl")   # SpeedyAnalyticBandLongwave: analytic-band longwave as Radiation(; longwave)

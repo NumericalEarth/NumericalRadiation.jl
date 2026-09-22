@@ -9,11 +9,13 @@ docs/src/generated/
 .DS_Store
 .vscode/
 
-# Local developer checkouts of external reference data (ecrad, ecckd source).
+# Local developer checkouts of external reference data (ecrad, ecckd source),
+# downloaded benchmark inputs and the reports the validation scripts write.
 # These are user-provided or artifact-backed via Artifacts.toml; do not
-# track them in this repository. (This is also where the validation-platform
-# branch keeps its external checkouts.)
-validation/
+# track them in this repository. The scripts in validation/ are tracked.
+validation/external/
+validation/data/
+validation/results/
 
 # Local session/tooling state
 .claude/

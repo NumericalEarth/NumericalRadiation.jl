@@ -115,19 +115,28 @@ Re-scoped 2026-09-11: keep changes to the package small. Only what cannot live
 in the extension goes into `src/`; host glue moves to Phase 2. Done on
 `mg/adjust-to-speedy`, tests in `test/test_host_interface.jl`.
 
+Merged with `main` 2026-09-22. `main` had meanwhile grown the streaming
+column API for the Breeze coupling, which provides two of the three items
+below; this branch adopts `main`'s versions and drops its own.
+
 - [x] ~~Split `optical_properties!` per stream.~~ Not needed: with **U1** a
       single `EcCKDRadiation` component consumes both streams from one call,
       which is exactly what `optical_properties!` produces today.
-- [x] In-place `surface_longwave_emission!(out, model, T; emissivity)`
-      (exported, allocation-free); the allocating method now calls it.
-- [x] Element-type conversion `EcCKDTabulatedGasOpticsModel{FT}(model)`
-      (Float64 tables from the loader → Float32 for SpeedyWeather's default
-      `NF`; `optical_properties!` requires optics and model to share `FT`).
-      Reuses arrays already of type `FT`; absent optional tables stay absent.
+- [x] ~~In-place `surface_longwave_emission!`.~~ Superseded by `main`'s
+      `TabulatedSurfaceEmission`, a lazy per-g-point `AbstractVector` that
+      evaluates the source table on indexing and allocates nothing; it is
+      accepted directly as `surface_longwave_up` in `LongwaveBoundaryConditions`.
+- [x] ~~Element-type conversion `EcCKDTabulatedGasOpticsModel{FT}(model)`.~~
+      Superseded by `main`'s method of the same name, implemented with an
+      `Adapt` storage adaptor so it also converts on the device; arrays already
+      of type `FT` are shared. The tests written here for the conversion were
+      kept since they test behaviour, not implementation.
 - [x] `ColumnAtmosphere` with one array-type parameter per array (as done for
       `AtmosphereProfile` in Phase 0): a host's layer and interface views come
       from arrays of different shape and, for stepped prognostics, different
-      rank. No other code depended on the single parameter.
+      rank. Combined at the merge with `main`'s new `constants` field, which
+      carries the host's `PhysicalConstants` (gravity, molar masses, heat
+      capacity) into the gas optics and `heating_rates!`.
 - [ ] ~~Guard `check_ecckd_optics_shapes` behind `@boundscheck`.~~ Deferred:
       the checks are O(1) size comparisons, negligible on CPU, and
       `@boundscheck` would only elide them if `optical_properties!` were
@@ -136,24 +145,13 @@ in the extension goes into `src/`; host glue moves to Phase 2. Done on
       GPU test in Phase 4.
 - [ ] ~~Layout-agnostic accessor (U4).~~ Deferred to Phase 2: a permuted view
       of the `(nlayers, ng)` column slice keeps the package's `[ig, k]`
-      indexing without any package change; only if that costs measurably do
-      we revisit.
-- [x] Unit tests: in-place emission equals the allocating one and does not
-      allocate; converted Float32 model reproduces Float64 optics to 1e-4;
+      indexing without any package change.
+- [x] Unit tests: converted Float32 model reproduces Float64 optics to 1e-4;
       `ColumnAtmosphere` from views of a 2D/3D host layout gives results
       identical to plain vectors through optics, fluxes and heating rates.
 
 Moved to Phase 2 (extension, host glue): gas amounts from specific humidity,
 interface temperatures from layer temperatures.
-
-Re-audit 2026-09-11: no defects found in the committed code. Verified that
-reference-sized grids (53-point pressure grid over five decades, 12-point H2O
-grid) pass the constructor's 1e-5 log-uniform re-validation after the Float32
-round trip with about a threefold margin, and added that as a regression
-test. Wrapped the test file in a module like the other consolidated tests, and
-corrected the `ColumnAtmosphere` docstring, which overstated that the arrays
-"need not share an element type": the kernels do convert on read, but `FT`
-remains the working precision. Deferred items unchanged.
 
 ## Phase 2. `EcCKDRadiation` SpeedyWeather component in the extension
 
@@ -192,33 +190,31 @@ Implemented 2026-09-11 on `mg/adjust-to-speedy`, clear-sky, CPU.
 - [x] `variables(::EcCKDRadiation, model)`: standard shortwave and longwave
       diagnostics plus a `:ecckd` namespace of work arrays: layer pressure
       (`GridXYZ`), interface pressure and temperature, four interface fluxes,
-      two per-g surface-emission vectors (`Grid3D`), gas amounts and the seven
-      optical-property arrays (`Grid4D(n = ngas | ng)`), and ten shortwave
+      one per-g surface-emission vector (`Grid3D`), gas amounts and the seven
+      optical-property arrays (`Grid4D(n = ngas | ng)`), and the seven shortwave
       adding-method work arrays. Column views of these build
       `ColumnAtmosphere`, `LongwaveOptics`, `ShortwaveOptics`, `RadiativeFluxes`
-      and `CloudlessShortwaveWorkspace` without allocation; the `(nlayers, ng)`
+      and `ShortwaveColumnScratch` without allocation; the `(nlayers, ng)`
       column slice is wrapped in a `PermutedDimsArray` for `[ig, k]` indexing.
 - [x] `parameterization!(ij, vars, ::EcCKDRadiation, model)`, split into
       `ecckd_surface_state`, `ecckd_column_atmosphere!`, `ecckd_column_optics`,
       `ecckd_longwave!`, `ecckd_shortwave!`, `ecckd_heating!`: pressures from
       the vertical coordinates, gas amounts, CO₂ from the greenhouse-gas
       variable, interface temperatures; `optical_properties!` once; longwave
-      with spectral surface emission blended over ocean and land (in place, two
-      `surface_longwave_emission!` calls); shortwave only for `cos_zenith > 0`
+      with spectral surface emission blended over ocean and land (two lazy
+      `TabulatedSurfaceEmission` vectors blended per g point); shortwave only for `cos_zenith > 0`
       with TOA down = `solar_constant * cos_zenith` and blended albedo;
       diagnostics including the ocean / land splits; net flux convergence of
       both streams into `dTdt` via SpeedyWeather's `flux_to_tendency`.
-- [x] Unplanned package change: the Rayleigh (scattering) path of
-      `CloudlessShortwave` allocated twelve vectors per g-point per column, i.e.
-      ~400 allocations per column per step, which cannot be avoided from the
-      extension without dropping Rayleigh scattering. `radiative_fluxes!` now
-      takes an optional `CloudlessShortwaveWorkspace` (ten caller-owned
-      vectors; `radiation_workspace(CloudlessShortwave(), optics)` allocates
-      one, the keyword constructor accepts host views), and the per-g flux
-      accumulation writes directly into the flux arrays instead of through
-      scratch vectors. The 5-argument call allocates a workspace only when
-      scattering is present. Results are unchanged (checked bitwise in
-      `test/test_host_interface.jl`; `test/test_solvers.jl` still passes).
+- [x] Package change, revised at the merge with `main` (2026-09-22): the
+      Rayleigh path of `CloudlessShortwave` used to allocate its work vectors
+      per g-point and per column. This branch first added a
+      `CloudlessShortwaveWorkspace`; `main` meanwhile introduced
+      `ShortwaveColumnScratch` for the streaming API and allocates one per
+      `radiative_fluxes!` call. The merged version keeps `main`'s type and only
+      adds an optional caller-owned `scratch` argument to `radiative_fluxes!`,
+      so the extension passes seven column views and the call is
+      allocation-free (checked in `test/test_host_interface.jl`).
 - [x] Clear-sky only in this version. Cloud coupling (package has
       cloud-overlap solvers, SpeedyWeather has no cloud state) is a follow-up.
 - [x] Tests in `test/test_with_speedyweather.jl`: construction and work-array
@@ -266,7 +262,8 @@ branch with NCDatasets and Statistics.
          400 K within a day. Now the air temperature is extrapolated in
          pressure; the skin temperature enters only through the surface
          emission.
-      2. *Two-stream singularity (package bug, `src` change 7).* One column
+      2. *Two-stream singularity (package bug, `src` change 7; re-applied to
+         `main`'s `shortwave_reflectance_transmittance` at the merge).* One column
          with cos_zenith = 0.50002 hit k·μ0 = 1.0000012 in one g-point; the
          guard's 10-ulp nudge was smaller than its 1000-ulp detection band and
          landed on the singularity in Float32, giving NaN shortwave fluxes that

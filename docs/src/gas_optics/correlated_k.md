@@ -20,7 +20,7 @@ The band-integrated transmissivity can then be approximated as
 ```math
 \bar{T}_b(u)
   = \frac{1}{\Delta \nu_b}\int_{\nu \in b} e^{-\kappa_\nu u}\,d\nu
-  \approx \sum_{i=1}^{n_g} w_{b,i}
+  \approx \sum_{i=1}^{N_g} w_{b,i}
           \exp\left(-k_{b,i} u\right).
 ```
 

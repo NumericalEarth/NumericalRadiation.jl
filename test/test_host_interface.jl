@@ -1,6 +1,5 @@
-# Host-model facing preparations: in-place surface emission,
-# element-type conversion of tabulated models, and ColumnAtmosphere built from
-# views of differently shaped host arrays. Wrapped in a module so the fixture
+# Host-model facing preparations: element-type conversion of tabulated models
+# and ColumnAtmosphere built from views of differently shaped host arrays. Wrapped in a module so the fixture
 # helpers cannot clash with other test files.
 
 module TestHostInterface
@@ -19,7 +18,7 @@ function host_fixture_model()
         names = (:h2o, :co2, :composite),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
-        h2o_mole_fraction_grid = [1e-6, 1e-4, 1e-2],
+        water_vapor_mole_fraction_grid = [1e-6, 1e-4, 1e-2],
         gas_reference_mole_fractions = [0.0, 4e-4, 0.0],
         longwave_absorption =
             [1e-4 * (7ig + 3j) * (1 + 1e-5 * pressure_grid[ip]) * (1 + 1e-3 * temperature_grid[it])
@@ -27,9 +26,9 @@ function host_fixture_model()
         shortwave_absorption =
             [1e-5 * (5ig + 2j) * (1 + 2e-5 * pressure_grid[ip]) * (1 + 2e-3 * temperature_grid[it])
              for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-        longwave_h2o_absorption =
+        longwave_water_vapor_absorption =
             [1e-3 * ig * (1 + 10ih) for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
-        shortwave_h2o_absorption =
+        shortwave_water_vapor_absorption =
             [1e-4 * ig * (1 + 5ih) for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
         shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
         longwave_source_temperature_grid = source_temperature_grid,
@@ -51,24 +50,6 @@ function host_fixture_optics(FT, model, nlayers)
                                 scattering_asymmetry = zeros(FT, ng_sw, nlayers),
                                 weights = zeros(FT, ng_sw))
     return longwave, shortwave
-end
-
-@testset "surface_longwave_emission! (in place)" begin
-    model = host_fixture_model()
-    for T in (250.0, 300.0), emissivity in (1.0, 0.95)
-        out = zeros(length(model.longwave_weights))
-        returned = surface_longwave_emission!(out, model, T; emissivity)
-        @test returned === out
-        @test out == surface_longwave_emission(model, T; emissivity)
-    end
-    @test_throws DimensionMismatch surface_longwave_emission!(zeros(2), model, 300.0)
-
-    # Float32 model, Float32 output, no allocation in the hot call
-    model32 = EcCKDTabulatedGasOpticsModel{Float32}(model)
-    out32 = zeros(Float32, length(model.longwave_weights))
-    surface_longwave_emission!(out32, model32, 300.0f0)   # warm up
-    @test (@allocated surface_longwave_emission!(out32, model32, 300.0f0)) == 0
-    @test out32 ≈ Float32.(surface_longwave_emission(model, 300.0)) rtol = 1e-5
 end
 
 @testset "EcCKDTabulatedGasOpticsModel{FT} element-type conversion" begin
@@ -119,8 +100,8 @@ end
         shortwave_absorption = ones(2, 2, 2, 2),
     )
     plain32 = EcCKDTabulatedGasOpticsModel{Float32}(plain)
-    @test isempty(plain32.longwave_h2o_absorption)
-    @test isempty(plain32.h2o_mole_fraction_grid)
+    @test isempty(plain32.longwave_water_vapor_absorption)
+    @test isempty(plain32.water_vapor_mole_fraction_grid)
     @test plain32.longwave_source_table === nothing
     @test eltype(plain32.longwave_weights) === Float32
 
@@ -132,15 +113,15 @@ end
         names = (:h2o, :co2),
         pressure_grid = Float64.(Float32.(exp.(range(log(1.0), log(1.1e5), length = np)))),
         temperature_grid = [200.0, 250.0, 300.0],
-        h2o_mole_fraction_grid = Float64.(Float32.(exp.(range(log(1e-7), log(0.1), length = nh2o)))),
+        water_vapor_mole_fraction_grid = Float64.(Float32.(exp.(range(log(1e-7), log(0.1), length = nh2o)))),
         longwave_absorption = ones(2, 2, np, 3),
         shortwave_absorption = ones(2, 2, np, 3),
-        longwave_h2o_absorption = ones(2, np, 3, nh2o),
-        shortwave_h2o_absorption = ones(2, np, 3, nh2o),
+        longwave_water_vapor_absorption = ones(2, np, 3, nh2o),
+        shortwave_water_vapor_absorption = ones(2, np, 3, nh2o),
     )
     wide32 = EcCKDTabulatedGasOpticsModel{Float32}(wide)
     @test eltype(wide32.pressure_grid) === Float32
-    @test length(wide32.h2o_mole_fraction_grid) == nh2o
+    @test length(wide32.water_vapor_mole_fraction_grid) == nh2o
 end
 
 @testset "ColumnAtmosphere from differently shaped host views" begin
@@ -194,7 +175,7 @@ end
     @test all(isfinite, results[1][4])
 end
 
-@testset "CloudlessShortwave with a caller-owned workspace" begin
+@testset "CloudlessShortwave with a caller-owned scratch" begin
     model = host_fixture_model()
     nlayers = 3
     atmosphere = ColumnAtmosphere(
@@ -213,50 +194,42 @@ end
                                     shortwave_up = zeros(nlayers + 1), shortwave_down = zeros(nlayers + 1))
     allocating = radiative_fluxes!(make_fluxes(), CloudlessShortwave(), shortwave, atmosphere, boundary)
 
-    workspace = radiation_workspace(CloudlessShortwave(), shortwave)
-    @test workspace isa CloudlessShortwaveWorkspace
+    scratch = ShortwaveColumnScratch(Float64, nlayers)
     reused = make_fluxes()
-    radiative_fluxes!(reused, CloudlessShortwave(), shortwave, atmosphere, boundary, workspace)
+    radiative_fluxes!(reused, CloudlessShortwave(), shortwave, atmosphere, boundary, scratch)
     @test reused.shortwave_up == allocating.shortwave_up
     @test reused.shortwave_down == allocating.shortwave_down
     @test all(>(0), reused.shortwave_up)                     # Rayleigh reflection reaches TOA
-    radiative_fluxes!(reused, CloudlessShortwave(), shortwave, atmosphere, boundary, workspace)   # warm up
-    @test (@allocated radiative_fluxes!(reused, CloudlessShortwave(), shortwave, atmosphere, boundary, workspace)) == 0
+    radiative_fluxes!(reused, CloudlessShortwave(), shortwave, atmosphere, boundary, scratch)   # warm up
+    @test (@allocated radiative_fluxes!(reused, CloudlessShortwave(), shortwave, atmosphere, boundary, scratch)) == 0
 
-    # workspace built from views of host arrays, and a size check
-    layers, interfaces = zeros(nlayers, 6), zeros(nlayers + 1, 4)
-    from_views = CloudlessShortwaveWorkspace(
-        reflectance = view(layers, :, 1), transmittance = view(layers, :, 2), ref_dir = view(layers, :, 3),
-        trans_dir_diff = view(layers, :, 4), trans_dir_dir = view(layers, :, 5), inv_denominator = view(layers, :, 6),
-        flux_direct = view(interfaces, :, 1), flux_diffuse = view(interfaces, :, 2),
-        source = view(interfaces, :, 3), stack_albedo = view(interfaces, :, 4))
+    # scratch built from views of host arrays, as a host model's column kernel does
+    layers, interfaces = zeros(nlayers, 5), zeros(nlayers + 1, 2)
+    from_views = ShortwaveColumnScratch(view(layers, :, 1), view(layers, :, 2), view(layers, :, 3),
+                                        view(layers, :, 4), view(layers, :, 5),
+                                        view(interfaces, :, 1), view(interfaces, :, 2))
     again = make_fluxes()
     radiative_fluxes!(again, CloudlessShortwave(), shortwave, atmosphere, boundary, from_views)
     @test again.shortwave_down == allocating.shortwave_down
-    @test_throws DimensionMismatch CloudlessShortwaveWorkspace(
-        reflectance = zeros(nlayers), transmittance = zeros(nlayers + 1), ref_dir = zeros(nlayers),
-        trans_dir_diff = zeros(nlayers), trans_dir_dir = zeros(nlayers), inv_denominator = zeros(nlayers),
-        flux_direct = zeros(nlayers + 1), flux_diffuse = zeros(nlayers + 1),
-        source = zeros(nlayers + 1), stack_albedo = zeros(nlayers + 1))
 end
 
 @testset "shortwave two-stream near the direct-beam singularity k μ0 = 1" begin
     # Rayleigh-free absorbing layer: k = sqrt(γ1² - γ2²) with γ2 = 0, γ1 = 2 - 1.25 ω.
     for FT in (Float32, Float64), ω in (FT(6e-5), FT(0.3)), g in (FT(0), FT(0.5))
-        γ1, γ2, _ = NumericalRadiation.sw_two_stream_gammas(FT, FT(0.5), ω, g)
+        γ1, γ2, _ = NumericalRadiation.shortwave_two_stream_coefficients(FT, FT(0.5), ω, g)
         k = sqrt((γ1 - γ2) * (γ1 + γ2))
         μ_singular = one(FT) / k
         for δ in FT.((0, 1e-7, -1e-7, 1e-6, -1e-6, 2e-6, 1e-5, 1e-4, 1e-3)), τ in FT.((0.01, 0.5, 4.5))
             μ0 = μ_singular + δ
-            out = NumericalRadiation.sw_two_stream_layer(FT, μ0, τ, ω, g)
+            out = NumericalRadiation.shortwave_two_stream_layer(FT, μ0, τ, ω, g)
             @test all(isfinite, out)
             reflectance, transmittance, ref_dir, trans_dir_diff, direct = out
             @test 0 <= ref_dir <= 1
             @test 0 <= trans_dir_diff <= 1 - ref_dir
         end
         # away from the band the perturbation is inactive: results are continuous
-        far = NumericalRadiation.sw_two_stream_layer(FT, μ_singular * (1 + FT(1e-2)), FT(0.5), ω, g)
-        near = NumericalRadiation.sw_two_stream_layer(FT, μ_singular * (1 + FT(2e-3)), FT(0.5), ω, g)
+        far = NumericalRadiation.shortwave_two_stream_layer(FT, μ_singular * (1 + FT(1e-2)), FT(0.5), ω, g)
+        near = NumericalRadiation.shortwave_two_stream_layer(FT, μ_singular * (1 + FT(2e-3)), FT(0.5), ω, g)
         @test all(isapprox.(far[3:4], near[3:4]; atol = 0.05))
     end
 end

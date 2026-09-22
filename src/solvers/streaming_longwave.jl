@@ -1,0 +1,122 @@
+#####
+##### Streaming no-scattering longwave solver
+#####
+#
+# No-scattering longwave fluxes of one column from a functor
+# `layer_optics(g, k) -> (τ, Bₖ, Bₖ₊₁)` and an indexable per-g surface source,
+# streamed over g points into caller-owned interface flux arrays.
+
+"""
+$(TYPEDEF)
+
+Per-g-point surface longwave source of an ecCKD gas-optics model at one
+surface `temperature`, with the surface `emissivity` folded in:
+`e[g] = ε B(Tˢ)`, where `B` is the model's [`longwave_source`](@ref) at
+that g point in its per-unit-weight flux convention. The Planck source-table
+bracket is taken once at construction, so indexing is one table interpolation
+per g point. An `AbstractVector`, it serves as `surface_longwave_up` of a
+[`LongwaveBoundaryConditions`](@ref) or as the `surface_emission` of
+[`streaming_longwave_fluxes!`](@ref).
+"""
+struct TabulatedSurfaceEmission{FT, M, B} <: AbstractVector{FT}
+    model :: M
+    temperature :: FT
+    emissivity :: FT
+    bracket :: B
+end
+
+const EcCKDModels{FT} = Union{EcCKDTabulatedGasOpticsModel{FT}, EcCKDGasOpticsModel{FT}}
+
+"""
+$(TYPEDSIGNATURES)
+
+Surface longwave source of `model` at `temperature` (K) scaled by
+`emissivity`, evaluated lazily per g point; see [`TabulatedSurfaceEmission`](@ref).
+"""
+@inline function TabulatedSurfaceEmission(model::EcCKDModels{FT}, temperature; emissivity=one(FT)) where FT
+    Tˢ = FT(temperature)
+    bracket = source_table_bracket(model, Tˢ)
+    return TabulatedSurfaceEmission{FT, typeof(model), typeof(bracket)}(model, Tˢ, FT(emissivity), bracket)
+end
+
+@inline Base.getindex(e::TabulatedSurfaceEmission, g::Integer) =
+    e.emissivity * longwave_source(e.model, g, e.temperature, e.bracket)
+
+Base.size(e::TabulatedSurfaceEmission) = (length(e.model.longwave_weights),)
+Base.length(e::TabulatedSurfaceEmission) = length(e.model.longwave_weights)
+Base.eltype(::TabulatedSurfaceEmission{FT}) where FT = FT
+Base.IndexStyle(::Type{<:TabulatedSurfaceEmission}) = IndexLinear()
+
+"""
+$(TYPEDSIGNATURES)
+
+Per-g-point surface longwave emission of `model` at the surface `temperature`,
+scaled by `emissivity`, in the same per-unit-weight flux convention as the
+model's Planck source tables, as a host `Vector` for `surface_longwave_up`
+in [`LongwaveBoundaryConditions`](@ref).
+
+For multi-g spectral models a scalar ``σT⁴`` boundary is a gray
+approximation: it does not reproduce the model's tabulated Planck spectrum
+across g points and may bias outgoing longwave fluxes.
+"""
+function surface_longwave_emission(model::EcCKDModels{FT}, temperature; emissivity=one(FT)) where FT
+    return collect(TabulatedSurfaceEmission(model, temperature; emissivity))
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+No-scattering longwave interface fluxes of one column, streamed over g
+points and accumulated into `flux_up` and `flux_down` (length `Nz + 1`,
+top-down, interface 1 at the top of the atmosphere; both are zeroed here).
+Each layer is the ecRad half-level Planck path of
+[`CloudlessLongwave`](@ref): with diffusivity `D = 1.66` and the layer's
+`(τ, Bₖ, Bₖ₊₁)` from `layer_optics(g, k)`, the layer transmittance
+is `e^{-Dτ}` and its emission is that of a Planck function linear in optical
+depth between the two interfaces (the thin-layer limit below `τ = 10⁻³`).
+
+The column is swept downward first, from `toa_down` (the downwelling flux
+entering the top interface, the same for every g point), then upward from
+the surface, where `up = surface_emission[g] + surface_albedo * down`:
+`surface_emission` is indexable per g point with the emissivity already
+included (a [`TabulatedSurfaceEmission`](@ref)) and `surface_albedo` is the
+diffuse longwave surface albedo. Each g point's fluxes are added with
+`weights[g]` for `g in 1:Ng`. `transmittance` and `source_up` are caller
+scratch of length `Nz` that carry the layer coefficients from the
+downward sweep to the upward one. Allocation-free.
+"""
+@inline function streaming_longwave_fluxes!(flux_up, flux_down, layer_optics, surface_emission, surface_albedo, toa_down,
+                                            weights, Ng, Nz, transmittance, source_up)
+    FT = eltype(flux_up)
+
+    @inbounds for k in 1:Nz + 1
+        flux_up[k] = zero(FT)
+        flux_down[k] = zero(FT)
+    end
+
+    @inbounds for g in 1:Ng
+        w = FT(weights[g])
+
+        # Downward sweep from the top of the atmosphere, keeping each layer's
+        # transmittance and upward source for the sweep back up.
+        down = FT(toa_down)
+        flux_down[1] += w * down
+        for k in 1:Nz
+            τ, Bₖ, Bₖ₊₁ = layer_optics(g, k)
+            transmittance[k], source_up[k], source_down = no_scattering_longwave_sources(FT, τ, Bₖ, Bₖ₊₁)
+            down = down * transmittance[k] + source_down
+            flux_down[k + 1] += w * down
+        end
+
+        # Upward sweep from the surface: emission plus the reflected
+        # downwelling flux that just arrived there.
+        up = FT(surface_emission[g]) + FT(surface_albedo) * down
+        flux_up[Nz + 1] += w * up
+        for k in Nz:-1:1
+            up = up * transmittance[k] + source_up[k]
+            flux_up[k] += w * up
+        end
+    end
+
+    return flux_up, flux_down
+end

@@ -12,7 +12,6 @@ read_ecckd_spectral_mapping
 read_ecckd_tabulated_gas_optics
 read_reference_ecckd_gas_optics
 surface_longwave_emission
-surface_longwave_emission!
 summarize_ecckd_definition
 validate_ecckd_definition
 reference_ecckd_model_inventory
@@ -21,6 +20,6 @@ reference_ecckd_model_spec
 reference_ecckd_definition_path
 reference_ecckd_definition_paths
 ecrad_data_path
+ecrad_test_file
 ecckd_source_path
 ```
-

@@ -29,10 +29,10 @@ AbstractLongwaveScheme
 AnalyticBandLongwave
 solve_longwave!
 planck_wavenumber
-h2o_line_kappa_ref
-h2o_cont_kappa_ref
-co2_kappa_ref
-NumericalRadiation.williams_delta_tau
+water_vapor_line_absorption_reference
+water_vapor_continuum_absorption_reference
+carbon_dioxide_absorption_reference
+NumericalRadiation.williams_optical_depth_increment
 ```
 
 ## Shortwave
@@ -62,4 +62,3 @@ cosine_solar_zenith
 NumericalRadiation.fractional_year_angle
 NumericalRadiation.saturation_humidity
 ```
-
