@@ -200,7 +200,7 @@ end
     atmosphere = ColumnAtmosphere(pressure_layers = Float64.(p), pressure_interfaces = Float64.(p_half),
                                   temperature_layers = T, temperature_interfaces = T_half,
                                   gases = (composite = amounts[:, 1], h2o = amounts[:, 2], o3 = amounts[:, 3], co2 = amounts[:, 4]),
-                                  surface = (; temperature = T_surface), geometry = (; cos_zenith = 0.5), constants)
+                                  surface = (; temperature = T_surface), geometry = (; cos_zenith = 0.5), constants = constants)
     longwave = LongwaveOptics(zeros(32, nlayers), zeros(32, nlayers); source_top = zeros(32, nlayers),
                               source_bottom = zeros(32, nlayers), weights = zeros(32))
     shortwave = ShortwaveOptics(zeros(32, nlayers); rayleigh_optical_depth = zeros(32, nlayers),

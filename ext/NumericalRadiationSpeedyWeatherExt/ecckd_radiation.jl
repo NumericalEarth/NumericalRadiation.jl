@@ -116,12 +116,14 @@ function SpeedyWeather.variables(rad::EcCKDRadiation{NF}, model::SpeedyWeather.A
         PV(:shortwave_up, interfaces, desc = "Upward shortwave flux", units = "W/m^2", namespace = ns),
         PV(:shortwave_down, interfaces, desc = "Downward shortwave flux", units = "W/m^2", namespace = ns),
         PV(:surface_emission, SpeedyWeather.Grid3D(n = ng_lw), desc = "Surface longwave emission per g point", units = "W/m^2", namespace = ns),
-        # shortwave adding-method work arrays, the fields of ShortwaveColumnScratch
-        PV(:sw_reflectance, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_transmittance, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_direct_reflectance, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_direct_diffuse_transmittance, layers, desc = "Shortwave work array", namespace = ns),
-        PV(:sw_direct_flux, layers, desc = "Shortwave work array", namespace = ns),
+        # shortwave adding-method work arrays, the fields of ShortwaveColumnScratch; all with the
+        # interface length so that the seven column views share one type (the struct has one
+        # array-type parameter), the layer ones use the first nlayers entries
+        PV(:sw_reflectance, interfaces, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_transmittance, interfaces, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_direct_reflectance, interfaces, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_direct_diffuse_transmittance, interfaces, desc = "Shortwave work array", namespace = ns),
+        PV(:sw_direct_flux, interfaces, desc = "Shortwave work array", namespace = ns),
         PV(:sw_stack_albedo, interfaces, desc = "Shortwave work array", namespace = ns),
         PV(:sw_source, interfaces, desc = "Shortwave work array", namespace = ns),
     )
@@ -283,7 +285,7 @@ Base.@propagate_inbounds function ecckd_column_atmosphere!(ij, W, rad::EcCKDRadi
         gases = gas_views(amounts, names),
         surface = (; temperature = surface.temperature),
         geometry = (; cos_zenith = surface.cos_zenith),
-        constants,
+        constants = constants,
     )
 end
 
@@ -352,13 +354,13 @@ Base.@propagate_inbounds function ecckd_shortwave!(ij, vars, fluxes, shortwave, 
     (; cos_zenith, albedo, albedo_ocean, albedo_land) = surface
 
     if cos_zenith > 0
-        scratch = ShortwaveColumnScratch(column(W.sw_reflectance, ij),
-                                         column(W.sw_transmittance, ij),
-                                         column(W.sw_direct_reflectance, ij),
-                                         column(W.sw_direct_diffuse_transmittance, ij),
-                                         column(W.sw_direct_flux, ij),
-                                         column(W.sw_stack_albedo, ij),
-                                         column(W.sw_source, ij))
+        scratch = ShortwaveColumnScratch(view(W.sw_reflectance, ij, 1:nlayers),
+                                         view(W.sw_transmittance, ij, 1:nlayers),
+                                         view(W.sw_direct_reflectance, ij, 1:nlayers),
+                                         view(W.sw_direct_diffuse_transmittance, ij, 1:nlayers),
+                                         view(W.sw_direct_flux, ij, 1:nlayers),
+                                         view(W.sw_stack_albedo, ij, 1:(nlayers + 1)),
+                                         view(W.sw_source, ij, 1:(nlayers + 1)))
         boundary = ShortwaveBoundaryConditions(
             toa_shortwave_down = model.planet.solar_constant * cos_zenith,
             surface_albedo = albedo)
