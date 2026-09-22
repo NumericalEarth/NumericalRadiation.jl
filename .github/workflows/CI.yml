@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.11", "1.12"]
+        version: ["1.10", "1.12"]
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +26,22 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+
+  # The SpeedyWeather extension needs SpeedyWeather >= 0.23 (the `Radiation`
+  # bundle), not registered yet: tested from test/speedyweather/, whose
+  # [sources] entry pulls the development branch and needs Julia >= 1.11.
+  speedyweather:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.11"
+      - uses: julia-actions/cache@v2
+      - name: Instantiate the extension test environment
+        run: julia --project=test/speedyweather -e 'using Pkg; Pkg.instantiate()'
+      - name: SpeedyWeather extension tests
+        run: julia --project=test/speedyweather --check-bounds=yes test/speedyweather/runtests.jl
 
   # Line-by-line benchmarks of the reference ecCKD models (validation/).
   # Reference data come from the ecrad_data artifact and from downloads; a

@@ -33,7 +33,7 @@ NCDatasets = "0.14"
 Printf = "1"
 RRTMGP = "0.22, 0.23, 1"
 SpeedyWeather = "0.23"
-julia = "1.11"
+julia = "1.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

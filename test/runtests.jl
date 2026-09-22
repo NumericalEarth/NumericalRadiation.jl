@@ -16,6 +16,13 @@ include_test(filename::AbstractString) = include(joinpath(@__DIR__, filename))
     include_test("test_host_interface.jl")
 end
 
-@testset "SpeedyWeather Extension" begin
-    include_test("test_with_speedyweather.jl")
+# The SpeedyWeather extension needs SpeedyWeather >= 0.23, not registered yet, so it
+# is not part of test/Project.toml; its tests run from test/speedyweather/ (own
+# environment and CI job) and here only when SpeedyWeather happens to be loadable.
+if Base.find_package("SpeedyWeather") === nothing
+    @info "SpeedyWeather is not in this environment; skipping the extension tests (see test/speedyweather/)"
+else
+    @testset "SpeedyWeather Extension" begin
+        include_test("test_with_speedyweather.jl")
+    end
 end
