@@ -14,9 +14,9 @@ file extends the list.
 |---|---|---|---|---|
 | 1 | `AtmosphereProfile`: one array-type parameter per vector | 0 | ~10 | no |
 | 2 | `ColumnAtmosphere`: one array-type parameter per array | 1 | ~12 | no |
-| 3 | `surface_longwave_emission!` (in place); allocating method delegates | 1 | ~20 | no |
-| 4 | `EcCKDTabulatedGasOpticsModel{FT}(model)` element-type conversion | 1 | ~30 | no |
-| 5 | Export and API-docs entry for 3, new test file in the runner | 1 | ~3 | no |
+| 3 | ~~`surface_longwave_emission!` (in place)~~ dropped on merging `main`, which provides `TabulatedSurfaceEmission` | 1 | 0 | no |
+| 4 | ~~`EcCKDTabulatedGasOpticsModel{FT}(model)`~~ dropped on merging `main`, which added the same constructor | 1 | 0 | no |
+| 5 | New test file in the runner | 1 | ~1 | no |
 
 ## 1. `AtmosphereProfile{NF, VT, VQ, VG}` (was `{NF, V}`)
 
@@ -66,63 +66,23 @@ type of `temperature_layers`.
 shaped host views": optics, fluxes and heating rates from views of a 2D/3D host
 layout are identical to those from plain vectors.
 
-## 3. `surface_longwave_emission!(out, model, T; emissivity)`
+## 3 and 4. Superseded by `main`
 
-*File:* `src/gas_optics/ecckd_forward.jl`. Exported, documented in
-`docs/src/api/ecckd.md`.
+Both were written before `main` gained the streaming column API (PR #20,
+Breeze coupling). At the merge on 2026-09-22 `main`'s versions won:
 
-*What forced it.* The surface boundary of the tabulated longwave model is
-spectral, one value per g-point, and depends on the column's surface
-temperature, so a host rebuilds it for every column and (blended over ocean
-and land) twice per column. The existing method allocated a `Vector{FT}` per
-call. Inside SpeedyWeather's fused column kernel that would be the only
-allocation in the hot loop on CPU, and on GPU heap allocation inside a kernel
-does not compile at all.
-
-*Alternative considered.* Computing the emission in the extension. That would
-require calling the unexported `source_table_bracket` and `longwave_source`,
-tying the extension to internals of the source-table interpolation.
-
-*Why acceptable.* A dozen lines; the allocating method now calls the in-place
-one, so there is a single implementation. The `f` / `f!` pair is the idiomatic
-Julia shape.
-
-*Tests.* `test/test_host_interface.jl`: in-place equals allocating for several
-temperatures and emissivities, length check throws, zero allocations on a
-Float32 model.
-
-## 4. `EcCKDTabulatedGasOpticsModel{FT}(model)`
-
-*File:* `src/gas_optics/ecckd_forward.jl`.
-
-*What forced it.* SpeedyWeather runs in `Float32` by default, the NetCDF loader
-produces `Float64` tables, and `optical_properties!` requires the model and
-the optics arrays to share their element type. `Adapt.adapt` moves arrays
-between devices but does not change element types.
-
-*Alternative considered.* (a) A `FT` keyword on the NetCDF loader: that lives
-in the NCDatasets extension and would still leave already-loaded models
-unconvertible. (b) Rebuilding the model field by field in the SpeedyWeather
-extension through the keyword constructor: fourteen fields, several optional
-with `nothing`/empty-array conventions, i.e. knowledge of the struct layout
-that belongs next to the struct.
-
-*Why acceptable.* Thirty lines that only call the existing keyword
-constructor, so every validation (log-uniform grids, shapes) is re-run on the
-converted arrays. Arrays already of type `FT` are reused. Useful beyond
-SpeedyWeather for any single-precision or GPU host.
-
-*Tests.* `test/test_host_interface.jl`: field-wise conversion, reuse for the
-same type, absent optional tables stay absent, Float32 optics reproduce
-Float64 optics to 1e-4, and reference-sized grids (53-point pressure grid over
-five decades, 12-point H2O grid) survive the Float32 re-validation of the
-constructor with about a threefold margin on its 1e-5 tolerance.
+- `TabulatedSurfaceEmission(model, T; emissivity)` is a lazy `AbstractVector`
+  whose `getindex(g)` evaluates the source table for one g point, so a host
+  passes it as `surface_longwave_up` without any allocation; the in-place
+  `surface_longwave_emission!` of this branch became redundant.
+- `EcCKDTabulatedGasOpticsModel{FT}(model)` on `main` converts every array
+  through an `Adapt` storage adaptor, shares arrays already in `FT`, and works
+  on device arrays too; the constructor-based version of this branch was
+  dropped. The behavioural tests written here (field-wise conversion, reuse,
+  absent tables stay absent, Float32 optics within 1e-4 of Float64) were kept.
 
 ## 5. Housekeeping
 
-- `src/NumericalRadiation.jl`: exports `surface_longwave_emission!`.
-- `docs/src/api/ecckd.md`: `@docs` entry for it (the package builds docs with
-  `checkdocs = :exports`).
 - `test/runtests.jl`: includes `test_host_interface.jl`.
 
 ## Considered and deliberately not changed

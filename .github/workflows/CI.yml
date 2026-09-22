@@ -26,3 +26,31 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+
+  # Line-by-line benchmarks of the reference ecCKD models (validation/).
+  # Reference data come from the ecrad_data artifact and from downloads; a
+  # network failure skips a benchmark rather than failing the job.
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+      - uses: julia-actions/cache@v2
+      - name: Instantiate the test environment with the package developed into it
+        run: julia --project=test -e 'using Pkg; Pkg.develop(path="."); Pkg.instantiate()'
+      - name: CKDMIP Evaluation-1
+        run: julia --project=test validation/ckdmip_evaluation1.jl
+        env:
+          NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR: validation/results
+      - name: RFMIP-IRF vs LBLRTM
+        run: julia --project=test validation/rfmip_irf.jl
+        env:
+          NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR: validation/results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-results
+          path: validation/results/
+          if-no-files-found: ignore

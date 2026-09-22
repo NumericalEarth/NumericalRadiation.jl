@@ -9,7 +9,7 @@ RRTMGP = "a01a1ee8-cea4-48fc-987c-fc7878d79da1"
 [compat]
 CairoMakie = "0.12, 0.13"
 ClimaComms = "0.6"
-RRTMGP = "0.21"
+RRTMGP = "0.22, 0.23, 1"
 
 [sources]
 NumericalRadiation = {path = ".."}

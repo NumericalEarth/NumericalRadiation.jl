@@ -35,22 +35,22 @@ integrates the fluxes.
 The hemispheric fluxes are angular moments of intensity,
 
 ```math
-F_\nu^+ = 2\pi \int_0^1 \mu I_\nu(\mu)\,d\mu,
+\mathscr{I}^\uparrow_\nu = 2\pi \int_0^1 \mu I_\nu(\mu)\,d\mu,
 \qquad
-F_\nu^- = 2\pi \int_0^1 \mu I_\nu(-\mu)\,d\mu.
+\mathscr{I}^\downarrow_\nu = 2\pi \int_0^1 \mu I_\nu(-\mu)\,d\mu.
 ```
 
 After integrating over spectral interval, the net downward flux is
 
 ```math
-F_\mathrm{net} = F^\downarrow - F^\uparrow.
+\mathscr{I}_\mathrm{net} = \mathscr{I}^\downarrow - \mathscr{I}^\uparrow.
 ```
 
 Layer heating follows from pressure-coordinate flux convergence:
 
 ```math
 \frac{\partial T}{\partial t}
-  = -\frac{g}{c_p}\frac{\partial F_\mathrm{net}}{\partial p}.
+  = -\frac{g}{c^p}\frac{\partial \mathscr{I}_\mathrm{net}}{\partial p}.
 ```
 
 For layer ``k`` bounded by interfaces ``k`` and ``k+1``, the discrete form used
@@ -58,8 +58,8 @@ by the staged column API is
 
 ```math
 \left(\frac{\partial T}{\partial t}\right)_k
-  \approx \frac{g}{c_p}
-          \frac{F_{\mathrm{net}, k} - F_{\mathrm{net}, k+1}}
+  \approx \frac{g}{c^p}
+          \frac{\mathscr{I}_{\mathrm{net}, k} - \mathscr{I}_{\mathrm{net}, k+1}}
                {p_{k+1} - p_k}.
 ```
 
@@ -98,14 +98,14 @@ all-sky solvers keep cloud-region optical properties separate from
   the shortwave adding pass.
 - `:matrix_maximum`: clear and cloudy region fluxes are propagated with a
   two-region maximum-overlap matrix.
-- `:matrix_alpha`: the two-region matrix uses the supplied ecRad-style alpha
+- `:matrix_alpha`: the two-region matrix uses the supplied ecRad-style ``α``
   overlap parameter between adjacent layers.
 - `:tripleclouds_alpha`: cloudy regions are split into optically thinner and
-  thicker Tripleclouds regions, with alpha overlap applied to the matrix pass.
+  thicker Tripleclouds regions, with ``α`` overlap applied to the matrix pass.
 
 [`CloudOverlapLongwave`](@ref) currently supports two overlap modes:
 
 - `:adding`: clear/cloudy longwave reflectance, transmittance, and source terms
   are mixed before the scalar adding pass.
-- `:tripleclouds_alpha`: cloudy longwave regions use the same alpha-overlap
+- `:tripleclouds_alpha`: cloudy longwave regions use the same ``α``-overlap
   Tripleclouds split as the shortwave all-sky path.

@@ -1,6 +1,5 @@
-# Host-model facing preparations: in-place surface emission,
-# element-type conversion of tabulated models, and ColumnAtmosphere built from
-# views of differently shaped host arrays. Wrapped in a module so the fixture
+# Host-model facing preparations: element-type conversion of tabulated models
+# and ColumnAtmosphere built from views of differently shaped host arrays. Wrapped in a module so the fixture
 # helpers cannot clash with other test files.
 
 module TestHostInterface
@@ -19,7 +18,7 @@ function host_fixture_model()
         names = (:h2o, :co2, :composite),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
-        h2o_mole_fraction_grid = [1e-6, 1e-4, 1e-2],
+        water_vapor_mole_fraction_grid = [1e-6, 1e-4, 1e-2],
         gas_reference_mole_fractions = [0.0, 4e-4, 0.0],
         longwave_absorption =
             [1e-4 * (7ig + 3j) * (1 + 1e-5 * pressure_grid[ip]) * (1 + 1e-3 * temperature_grid[it])
@@ -27,9 +26,9 @@ function host_fixture_model()
         shortwave_absorption =
             [1e-5 * (5ig + 2j) * (1 + 2e-5 * pressure_grid[ip]) * (1 + 2e-3 * temperature_grid[it])
              for ig in 1:ng_sw, j in 1:ngas, ip in 1:np, it in 1:nt],
-        longwave_h2o_absorption =
+        longwave_water_vapor_absorption =
             [1e-3 * ig * (1 + 10ih) for ig in 1:ng_lw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
-        shortwave_h2o_absorption =
+        shortwave_water_vapor_absorption =
             [1e-4 * ig * (1 + 5ih) for ig in 1:ng_sw, ip in 1:np, it in 1:nt, ih in 1:nh2o],
         shortwave_rayleigh_molar_scattering = [1.1e-6, 3.7e-6],
         longwave_source_temperature_grid = source_temperature_grid,
@@ -51,24 +50,6 @@ function host_fixture_optics(FT, model, nlayers)
                                 scattering_asymmetry = zeros(FT, ng_sw, nlayers),
                                 weights = zeros(FT, ng_sw))
     return longwave, shortwave
-end
-
-@testset "surface_longwave_emission! (in place)" begin
-    model = host_fixture_model()
-    for T in (250.0, 300.0), emissivity in (1.0, 0.95)
-        out = zeros(length(model.longwave_weights))
-        returned = surface_longwave_emission!(out, model, T; emissivity)
-        @test returned === out
-        @test out == surface_longwave_emission(model, T; emissivity)
-    end
-    @test_throws DimensionMismatch surface_longwave_emission!(zeros(2), model, 300.0)
-
-    # Float32 model, Float32 output, no allocation in the hot call
-    model32 = EcCKDTabulatedGasOpticsModel{Float32}(model)
-    out32 = zeros(Float32, length(model.longwave_weights))
-    surface_longwave_emission!(out32, model32, 300.0f0)   # warm up
-    @test (@allocated surface_longwave_emission!(out32, model32, 300.0f0)) == 0
-    @test out32 ≈ Float32.(surface_longwave_emission(model, 300.0)) rtol = 1e-5
 end
 
 @testset "EcCKDTabulatedGasOpticsModel{FT} element-type conversion" begin
@@ -119,8 +100,8 @@ end
         shortwave_absorption = ones(2, 2, 2, 2),
     )
     plain32 = EcCKDTabulatedGasOpticsModel{Float32}(plain)
-    @test isempty(plain32.longwave_h2o_absorption)
-    @test isempty(plain32.h2o_mole_fraction_grid)
+    @test isempty(plain32.longwave_water_vapor_absorption)
+    @test isempty(plain32.water_vapor_mole_fraction_grid)
     @test plain32.longwave_source_table === nothing
     @test eltype(plain32.longwave_weights) === Float32
 
@@ -132,15 +113,15 @@ end
         names = (:h2o, :co2),
         pressure_grid = Float64.(Float32.(exp.(range(log(1.0), log(1.1e5), length = np)))),
         temperature_grid = [200.0, 250.0, 300.0],
-        h2o_mole_fraction_grid = Float64.(Float32.(exp.(range(log(1e-7), log(0.1), length = nh2o)))),
+        water_vapor_mole_fraction_grid = Float64.(Float32.(exp.(range(log(1e-7), log(0.1), length = nh2o)))),
         longwave_absorption = ones(2, 2, np, 3),
         shortwave_absorption = ones(2, 2, np, 3),
-        longwave_h2o_absorption = ones(2, np, 3, nh2o),
-        shortwave_h2o_absorption = ones(2, np, 3, nh2o),
+        longwave_water_vapor_absorption = ones(2, np, 3, nh2o),
+        shortwave_water_vapor_absorption = ones(2, np, 3, nh2o),
     )
     wide32 = EcCKDTabulatedGasOpticsModel{Float32}(wide)
     @test eltype(wide32.pressure_grid) === Float32
-    @test length(wide32.h2o_mole_fraction_grid) == nh2o
+    @test length(wide32.water_vapor_mole_fraction_grid) == nh2o
 end
 
 @testset "ColumnAtmosphere from differently shaped host views" begin

@@ -3,9 +3,9 @@ $(TYPEDEF)
 
 Vertical geometry for a single column expressed in sigma-pressure coordinates.
 
-`σ_full` has length `nlayers` and gives the midpoint of each layer.
-`σ_half` has length `nlayers + 1` and gives the layer interfaces.
-`σ_thick = diff(σ_half)` has length `nlayers`.
+`σ_full` has length `Nz` and gives the midpoint of each layer.
+`σ_half` has length `Nz + 1` and gives the layer interfaces.
+`σ_thick = diff(σ_half)` has length `Nz`.
 """
 struct ColumnGrid{NF, V<:AbstractVector{NF}}
     σ_full::V
@@ -14,8 +14,8 @@ struct ColumnGrid{NF, V<:AbstractVector{NF}}
 end
 
 function ColumnGrid(σ_half::AbstractVector{NF}) where NF
-    nlayers = length(σ_half) - 1
-    σ_full  = @views (σ_half[1:nlayers] .+ σ_half[2:end]) ./ 2
+    Nz = length(σ_half) - 1
+    σ_full  = @views (σ_half[1:Nz] .+ σ_half[2:end]) ./ 2
     σ_thick = diff(σ_half)
     return ColumnGrid{NF, typeof(σ_half)}(σ_full, σ_half, σ_thick)
 end
@@ -27,7 +27,7 @@ Column thermodynamic profile and lower boundary quantities read by the
 radiation solvers.
 
 The arrays are indexed top-down: `k = 1` is the top of the atmosphere,
-`k = nlayers` is the bottom (surface-adjacent) layer.
+`k = Nz` is the bottom (surface-adjacent) layer.
 
 The three vectors may have different array types (e.g. host-model views into
 arrays of different shape); they only need to share the element type `NF`.
@@ -42,8 +42,7 @@ struct AtmosphereProfile{NF, VT<:AbstractVector{NF}, VQ<:AbstractVector{NF}, VG<
 end
 
 function AtmosphereProfile(; temperature, humidity, geopotential = similar(temperature, 0),
-                           surface_pressure, rain_rate = zero(eltype(temperature)),
-                           CO₂ = eltype(temperature)(280))
+                           surface_pressure, rain_rate = zero(eltype(temperature)), CO₂ = eltype(temperature)(280))
     NF = eltype(temperature)
     return AtmosphereProfile{NF, typeof(temperature), typeof(humidity), typeof(geopotential)}(
         temperature, humidity, geopotential, NF(surface_pressure), NF(rain_rate), NF(CO₂))
@@ -90,8 +89,7 @@ Construct a [`SurfaceState`](@ref). Floating-point type defaults to `Float64`.
 """
 SurfaceState(::Type{NF}; kwargs...) where NF = SurfaceState{NF}(; kwargs...)
 
-function SurfaceState(; sea_surface_temperature, land_surface_temperature,
-                       land_fraction, kwargs...)
+function SurfaceState(; sea_surface_temperature, land_surface_temperature, land_fraction, kwargs...)
     NF = Float64
     return SurfaceState{NF}(;
         sea_surface_temperature  = convert(NF, sea_surface_temperature),
@@ -103,85 +101,17 @@ end
 """
 $(TYPEDEF)
 
-Physical constants consumed by the column radiation solvers.
-"""
-struct PhysicalConstants{NF}
-    gravity::NF
-    heat_capacity::NF
-    stefan_boltzmann::NF
-    solar_constant::NF
-end
-
-function PhysicalConstants{NF}(;
-        gravity          = NF(9.80665),
-        heat_capacity    = NF(1004.64),
-        stefan_boltzmann = NF(5.670374419e-8),
-        solar_constant   = NF(1361),
-    ) where NF
-    return PhysicalConstants{NF}(gravity, heat_capacity, stefan_boltzmann, solar_constant)
-end
-
-PhysicalConstants(::Type{NF}; kwargs...) where NF = PhysicalConstants{NF}(; kwargs...)
-
-PhysicalConstants(; kwargs...) = PhysicalConstants{Float64}(; kwargs...)
-
-"""
-$(TYPEDEF)
-
-Thermodynamic constants needed for saturation-humidity calculations used by
-the diagnostic cloud scheme.
-"""
-struct ThermodynamicConstants{NF}
-    saturation_vapor_pressure_reference::NF
-    latent_heat_condensation::NF
-    gas_constant_vapor::NF
-    freezing_temperature::NF
-    molar_mass_ratio::NF
-end
-
-function ThermodynamicConstants{NF}(;
-        saturation_vapor_pressure_reference = NF(610.78),
-        latent_heat_condensation            = NF(2.501e6),
-        gas_constant_vapor                  = NF(461.50),
-        freezing_temperature                = NF(273.15),
-        molar_mass_ratio                    = NF(0.622),
-    ) where NF
-    return ThermodynamicConstants{NF}(
-        saturation_vapor_pressure_reference,
-        latent_heat_condensation,
-        gas_constant_vapor,
-        freezing_temperature,
-        molar_mass_ratio,
-    )
-end
-
-ThermodynamicConstants(::Type{NF}; kwargs...) where NF = ThermodynamicConstants{NF}(; kwargs...)
-
-ThermodynamicConstants(; kwargs...) = ThermodynamicConstants{Float64}(; kwargs...)
-
-"""$(TYPEDSIGNATURES)
-Sensible Earth defaults for the full set of physical constants needed by the
-shortwave solver (constants + thermodynamic constants).
-"""
-default_earth_constants(::Type{NF}) where NF =
-    (physical = PhysicalConstants{NF}(), thermodynamic = ThermodynamicConstants{NF}())
-
-default_earth_constants() = default_earth_constants(Float64)
-
-"""
-$(TYPEDEF)
-
 Clausius–Clapeyron saturation specific humidity at `(T, p)` given
 `ThermodynamicConstants`. Returns `NaN` if the partial pressure is
 unresolvable (e.g. zero total pressure).
 """
-@inline function saturation_humidity(T, p, tc::ThermodynamicConstants)
+@inline function saturation_humidity(T, p, constants::ThermodynamicConstants)
     (; saturation_vapor_pressure_reference, latent_heat_condensation,
-       gas_constant_vapor, freezing_temperature, molar_mass_ratio) = tc
-    e_sat = saturation_vapor_pressure_reference *
-            exp(latent_heat_condensation / gas_constant_vapor *
-                (inv(freezing_temperature) - inv(T)))
-    return molar_mass_ratio * e_sat / p
+       gas_constant_vapor, freezing_temperature, molar_mass_ratio) = constants
+    saturation_vapor_pressure = saturation_vapor_pressure_reference *
+        exp(latent_heat_condensation / gas_constant_vapor *
+            (inv(freezing_temperature) - inv(T)))
+    return molar_mass_ratio * saturation_vapor_pressure / p
 end
 
 """
@@ -199,8 +129,7 @@ end
 
 LongwaveDiagnostics(::Type{NF}) where NF = LongwaveDiagnostics{NF}()
 
-LongwaveDiagnostics{NF}() where NF = LongwaveDiagnostics{NF}(
-    zero(NF), zero(NF), zero(NF), zero(NF), zero(NF))
+LongwaveDiagnostics{NF}() where NF = LongwaveDiagnostics{NF}(zero(NF), zero(NF), zero(NF), zero(NF), zero(NF))
 
 LongwaveDiagnostics() = LongwaveDiagnostics{Float64}()
 
@@ -223,11 +152,10 @@ mutable struct ShortwaveDiagnostics{NF}
     stratocumulus_cover::NF
 end
 
-ShortwaveDiagnostics(::Type{NF}, nlayers::Integer = 1) where NF =
-    ShortwaveDiagnostics{NF}(nlayers)
+ShortwaveDiagnostics(::Type{NF}, Nz::Integer=1) where NF = ShortwaveDiagnostics{NF}(Nz)
 
-ShortwaveDiagnostics{NF}(nlayers::Integer = 1) where NF = ShortwaveDiagnostics{NF}(
+ShortwaveDiagnostics{NF}(Nz::Integer=1) where NF = ShortwaveDiagnostics{NF}(
     zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF), zero(NF),
-    zero(NF), zero(NF), nlayers + 1, zero(NF))
+    zero(NF), zero(NF), Nz + 1, zero(NF))
 
-ShortwaveDiagnostics(nlayers::Integer = 1) = ShortwaveDiagnostics{Float64}(nlayers)
+ShortwaveDiagnostics(Nz::Integer=1) = ShortwaveDiagnostics{Float64}(Nz)

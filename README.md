@@ -29,8 +29,8 @@ The analytic-band solvers are pure scalar ingredients that a host model can
 fuse into its own column loops or kernels; the
 `NumericalRadiationSpeedyWeatherExt` package extension wires them into
 [SpeedyWeather.jl](https://github.com/SpeedyWeather/SpeedyWeather.jl) per
-column. The ecCKD look-up tables are `Adapt.jl`-aware so they can be moved to
-device memory; direct staged device execution is not demonstrated here.
+column. The ecCKD path has the same scalar form for host kernels — see
+[Host kernels (Breeze)](#host-kernels-breeze) below.
 
 ## Installation
 
@@ -48,15 +48,15 @@ with one argument:
 ```julia
 using NumericalRadiation
 
-nlayers = 8
-σ_half  = collect(range(0.0, 1.0, length = nlayers + 1))
+Nz = 8
+σ_half  = collect(range(0.0, 1.0, length=Nz + 1))
 grid    = ColumnGrid(σ_half)
 
-# Lapse-rate profile: top of atmosphere (k=1) cold, surface (k=nlayers) warm.
+# Lapse-rate profile: top of atmosphere (k=1) cold, surface (k=Nz) warm.
 profile = AtmosphereProfile(
-    temperature      = collect(range(220.0, 295.0, length = nlayers)),
-    humidity         = fill(0.005, nlayers),
-    geopotential     = zeros(nlayers),
+    temperature      = collect(range(220.0, 295.0, length=Nz)),
+    humidity         = fill(0.005, Nz),
+    geopotential     = zeros(Nz),
     surface_pressure = 100_000.0,
     CO₂              = 280.0,
 )
@@ -71,28 +71,33 @@ surface = SurfaceState(
 )
 
 # Schemes, constants, and output buffers all wrap up here.
-rtm = RadiativeTransferColumn(; grid, profile, surface)
+column = RadiativeTransferColumn(; grid, profile, surface)
 
-solve_longwave!(rtm)
-solve_shortwave!(rtm)
+solve_longwave!(column)
+solve_shortwave!(column)
 
-@show rtm.longwave_diagnostics.outgoing_longwave        # W m⁻²
-@show rtm.longwave_diagnostics.surface_longwave_down    # W m⁻²
-@show rtm.shortwave_diagnostics.surface_shortwave_down  # W m⁻²
-@show rtm.temperature_tendency                           # K s⁻¹ per layer
+@show column.longwave_diagnostics.outgoing_longwave        # W m⁻²
+@show column.longwave_diagnostics.surface_longwave_down    # W m⁻²
+@show column.shortwave_diagnostics.surface_shortwave_down  # W m⁻²
+@show column.temperature_tendency                           # K s⁻¹ per layer
 ```
 
 For the low-level kernel form (what host extensions such as
 `NumericalRadiationSpeedyWeatherExt` call internally), `solve_longwave!` and `solve_shortwave!` accept the
-flattened `(dTdt, diagnostics, scheme, profile, grid, surface, constants, …)`
+flattened `(temperature_tendency, diagnostics, scheme, profile, grid, surface, constants, …)`
 signature directly, and the `constants` argument is duck-typed — any struct
 or NamedTuple carrying `gravity`, `heat_capacity`, `stefan_boltzmann`,
-`solar_constant` properties works.
+`solar_constant` properties works. The staged runtime reads the same kind of
+object from `ColumnAtmosphere.constants` (a `PhysicalConstants` by default,
+which also carries `dry_air_molar_mass`, `water_molar_mass`,
+`dry_air_gas_constant`, `universal_gas_constant` and `avogadro_number`), so
+no physical constant is hard-coded anywhere on the radiation path.
 
 All floating-point types default to `Float64`. To run in `Float32` (useful for
-GPU kernels), pass the type as a positional argument to the scheme
-constructors: `AnalyticBandLongwave(Float32)`,
-`OneBandShortwave(Float32)`, etc.
+GPU kernels), pass the type as the first positional argument to the scheme
+constructors and readers: `AnalyticBandLongwave(Float32)`,
+`OneBandShortwave(Float32)`, `read_reference_ecckd_gas_optics(Float32, "32x32")`,
+`SpectralCloudOptics(Float32, table, mapping; effective_radius)`, etc.
 
 ## With SpeedyWeather.jl
 
@@ -102,8 +107,7 @@ and can be passed directly to `PrimitiveWetModel`:
 
 ```julia
 using SpeedyWeather, NumericalRadiation
-const SpeedyExt = Base.get_extension(NumericalRadiation,
-                                     :NumericalRadiationSpeedyWeatherExt)
+const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 spectral_grid = SpectralGrid(truncation = 32, nlayers = 8)
 longwave      = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
@@ -113,6 +117,31 @@ model         = PrimitiveWetModel(spectral_grid; radiation = Radiation(spectral_
 The scheme is the longwave half of SpeedyWeather's `Radiation` bundle
 (SpeedyWeather ≥ 0.23); pass `shortwave = nothing` to run it without any
 shortwave scheme.
+
+## Host kernels (Breeze)
+
+The ecCKD gas optics and the clear-sky solvers are also exposed as scalar,
+per-layer, per-g-point functions that a host model calls inside its own
+column kernels without allocating: [`gas_optics_stencil`](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/gas_optics/streaming_column_api/)
+brackets a layer on the coefficient tables once, `longwave_optical_depth`,
+`shortwave_optical_depth`, `rayleigh_optical_depth` and `longwave_source`
+evaluate one g point at a time from a `NamedTuple` of scalar gas amounts, and
+`streaming_longwave_fluxes!` / `streaming_shortwave_fluxes!` sweep one column
+through layer-optics functors with caller-owned scratch (a
+`TabulatedSurfaceEmission` surface source and a `ShortwaveColumnScratch`).
+`SpectralCloudOptics` adds per-g-point cloud optics to the same loop. The
+array methods (`optical_properties!`, `radiative_fluxes!`) are loops over
+these functions, so the two paths agree bit for bit — the longwave path and
+every shortwave g point that scatters; a shortwave g point with no scattering
+at all takes a closed-form Beer–Lambert branch in the array solver that
+treats the surface-reflected flux as a slant beam rather than diffuse, see the
+streaming column API page. Every function is `@inline`, allocation-free and
+`Adapt.jl`-aware, so the loop runs unchanged on GPU. This is the API the
+`NumericalRadiation` extension of
+[Breeze.jl](https://github.com/NumericalEarth/Breeze.jl) (in progress) is
+built on; the
+[streaming column API](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/gas_optics/streaming_column_api/)
+page walks through the loop on a two-layer column.
 
 ## Schemes at a glance
 

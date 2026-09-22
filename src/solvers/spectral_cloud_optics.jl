@@ -1,0 +1,234 @@
+#####
+##### Per-g-point cloud optics
+#####
+#
+# One hydrometeor phase mapped onto the g points of an ecCKD spectral mapping
+# on a grid of effective-radius nodes: bracket a layer's effective radius once,
+# read its per-g-point `(κ, ω, 𝒢)`, and fold them into the layer's absorption
+# and scattering optical depths (shortwave) or its absorption optical depth
+# alone (longwave, where cloud scattering is neglected).
+
+"""
+$(TYPEDEF)
+
+Cloud scattering properties of one hydrometeor phase mapped onto the g points
+of one [`EcCKDSpectralMapping`](@ref), tabulated on `Nr` effective-radius
+nodes. The mass-extinction coefficient `κ` (m² kg⁻¹), single-scattering albedo
+`ω`, and asymmetry factor `𝒢` have shape `(Ng, Nr)`; a layer's values are
+read by bracketing its effective radius with [`effective_radius_bracket`](@ref)
+and interpolating with [`cloud_layer_optics`](@ref). The element type `FT`
+follows the stored arrays, so `Adapt.adapt(Array{Float32}, cloud)` yields a
+`Float32` model.
+
+Fields:
+- `effective_radius`: Effective-radius nodes in m, strictly increasing, shape `(Nr,)`
+- `mass_extinction_coefficient`: Mass-extinction coefficient in m² kg⁻¹, shape
+  `(Ng, Nr)`
+- `single_scattering_albedo`: Single-scattering albedo, shape `(Ng, Nr)`
+- `asymmetry_factor`: Scattering asymmetry factor, shape `(Ng, Nr)`
+"""
+struct SpectralCloudOptics{FT, V, M}
+    effective_radius :: V
+    mass_extinction_coefficient :: M
+    single_scattering_albedo :: M
+    asymmetry_factor :: M
+end
+
+Base.eltype(::SpectralCloudOptics{FT}) where FT = FT
+
+"""
+$(TYPEDSIGNATURES)
+
+Build a [`SpectralCloudOptics`](@ref) from per-node arrays: `effective_radius`
+of shape `(Nr,)` and the three property matrices of shape `(Ng, Nr)`. The
+element type `FT` is passed as the first positional argument; the arrays are
+converted to `Vector{FT}` and `Matrix{FT}`.
+"""
+function SpectralCloudOptics(FT::DataType, effective_radius::AbstractVector, mass_extinction_coefficient::AbstractMatrix,
+                             single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix)
+    Nr = length(effective_radius)
+    Nr >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
+    validate_increasing_grid(effective_radius, "effective_radius")
+    Ng = size(mass_extinction_coefficient, 1)
+    for (name, array) in (("mass_extinction_coefficient", mass_extinction_coefficient),
+                          ("single_scattering_albedo", single_scattering_albedo),
+                          ("asymmetry_factor", asymmetry_factor))
+        size(array) == (Ng, Nr) ||
+            throw(DimensionMismatch("$name must have shape (Ng, Nr) = ($Ng, $Nr)"))
+    end
+    radius = Vector{FT}(effective_radius)
+    κ = Matrix{FT}(mass_extinction_coefficient)
+    ω = Matrix{FT}(single_scattering_albedo)
+    𝒢 = Matrix{FT}(asymmetry_factor)
+    return SpectralCloudOptics{FT, typeof(radius), typeof(κ)}(radius, κ, ω, 𝒢)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Build a [`SpectralCloudOptics`](@ref) from per-node arrays whose element type
+is `promote_type` of the array element types.
+"""
+SpectralCloudOptics(effective_radius::AbstractVector, mass_extinction_coefficient::AbstractMatrix,
+                    single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix) =
+    SpectralCloudOptics(promote_type(eltype(effective_radius), eltype(mass_extinction_coefficient),
+                                     eltype(single_scattering_albedo), eltype(asymmetry_factor)),
+                        effective_radius, mass_extinction_coefficient, single_scattering_albedo, asymmetry_factor)
+
+"""
+$(TYPEDSIGNATURES)
+
+Map a [`CloudScatteringTable`](@ref) onto the g points of `mapping` at a single
+`effective_radius` (m), producing a one-node [`SpectralCloudOptics`](@ref).
+The node values are exactly those of [`cloud_scattering_gpoint_properties`](@ref)
+with the same `mapping_method`, `delta_eddington_average`, and
+`thick_averaging` keywords; the defaults follow ecRad (`:ecrad` interval
+weighting with delta-Eddington averaging). Longwave mappings read by
+[`read_ecckd_spectral_mapping`](@ref) already carry Planck interval weights,
+so the same constructor serves both spectral regions. The element type `FT` of
+the stored arrays is passed as the first positional argument.
+"""
+function SpectralCloudOptics(FT::DataType,
+                             table::CloudScatteringTable,
+                             mapping::EcCKDSpectralMapping;
+                             effective_radius::Number,
+                             mapping_method = :ecrad,
+                             delta_eddington_average = true,
+                             thick_averaging = false)
+    properties = cloud_scattering_gpoint_properties(table, mapping, effective_radius;
+                                                    mapping_method,
+                                                    delta_eddington_average,
+                                                    thick_averaging)
+    Ng = length(properties.mass_extinction_coefficient)
+    radius = [effective_radius]
+    κ = reshape(properties.mass_extinction_coefficient, Ng, 1)
+    ω = reshape(properties.single_scattering_albedo, Ng, 1)
+    𝒢 = reshape(properties.asymmetry_factor, Ng, 1)
+    return SpectralCloudOptics(FT, radius, κ, ω, 𝒢)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Map a [`CloudScatteringTable`](@ref) onto the g points of `mapping` with the
+element type of `table`.
+"""
+SpectralCloudOptics(table::CloudScatteringTable, mapping::EcCKDSpectralMapping; kwargs...) =
+    SpectralCloudOptics(eltype(table), table, mapping; kwargs...)
+
+# The element type of an adapted model follows its adapted arrays, so a device
+# adaptor that changes precision yields a model whose layer optics compute in
+# that precision.
+function Adapt.adapt_structure(to, cloud::SpectralCloudOptics)
+    effective_radius = Adapt.adapt(to, cloud.effective_radius)
+    κ = Adapt.adapt(to, cloud.mass_extinction_coefficient)
+    ω = Adapt.adapt(to, cloud.single_scattering_albedo)
+    𝒢 = Adapt.adapt(to, cloud.asymmetry_factor)
+    FT = eltype(κ)
+    return SpectralCloudOptics{FT, typeof(effective_radius), typeof(κ)}(effective_radius, κ, ω, 𝒢)
+end
+
+function Base.show(io::IO, cloud::SpectralCloudOptics{FT}) where FT
+    Ng, Nr = size(cloud.mass_extinction_coefficient)
+    print(io, "SpectralCloudOptics{", FT, "} with ", Ng, " g points on ", Nr,
+          " effective-radius node", Nr == 1 ? "" : "s")
+    Nr == 1 && print(io, " at ", cloud.effective_radius[1] * 1e6, " μm")
+    return nothing
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Bracket `radius` (m) on the effective-radius nodes of `cloud`: the tuple
+`(i₀, i₁, w)` such that a property `p` interpolates as
+`(1 - w) p[g, i₀] + w p[g, i₁]`, clamped to the edge nodes off the grid. A
+one-node model brackets to `(1, 1, 0)` for every radius, and so does a
+`Nothing` phase, whose bracket is never indexed.
+"""
+@inline function effective_radius_bracket(cloud::SpectralCloudOptics{FT}, radius) where FT
+    grid = cloud.effective_radius
+    if length(grid) == 1
+        return (firstindex(grid), firstindex(grid), zero(FT))
+    else
+        return bracket(grid, FT(radius))
+    end
+end
+
+@inline effective_radius_bracket(::Nothing, radius) = (1, 1, 0)
+
+"""
+$(TYPEDSIGNATURES)
+
+Mass-extinction coefficient `κ` (m² kg⁻¹), single-scattering albedo `ω`, and
+asymmetry factor `𝒢` of `cloud` at g point `g`, interpolated on the
+effective-radius bracket `(i₀, i₁, w)` from [`effective_radius_bracket`](@ref).
+On a one-node model (`w = 0`) the node values are returned exactly.
+"""
+@inline function cloud_layer_optics(cloud::SpectralCloudOptics{FT}, g, radius_bracket) where FT
+    i₀, i₁, w = radius_bracket
+    w₀ = one(FT) - w
+    κ = w₀ * cloud.mass_extinction_coefficient[g, i₀] + w * cloud.mass_extinction_coefficient[g, i₁]
+    ω = w₀ * cloud.single_scattering_albedo[g, i₀] + w * cloud.single_scattering_albedo[g, i₁]
+    𝒢 = w₀ * cloud.asymmetry_factor[g, i₀] + w * cloud.asymmetry_factor[g, i₁]
+    return κ, ω, 𝒢
+end
+
+# A `Nothing` phase has no optics: zero extinction, so that
+# `add_scattering_layer` leaves the layer unchanged whatever the water path.
+@inline cloud_layer_optics(::Nothing, g, radius_bracket) = (0, 0, 0)
+
+"""
+$(TYPEDSIGNATURES)
+
+Fold one scattering constituent with mass-extinction coefficient `κ`,
+single-scattering albedo `ω`, asymmetry factor `𝒢ᶜ`, and mass path `W`
+(kg m⁻²) into a layer's absorption optical depth `τₐ`, scattering optical
+depth `τₛ`, and scattering-weighted asymmetry factor `𝒢`, returning the
+updated triple:
+
+```text
+τₐ′ = τₐ + κ (1 - ω) W
+τₛ′ = τₛ + κ ω W
+𝒢′ = (𝒢 τₛ + 𝒢ᶜ κ ω W) / τₛ′,    or 0 when τₛ′ = 0
+```
+
+The asymmetry update is evaluated as `𝒢 + (𝒢ᶜ - 𝒢) κ ω W / τₛ′`, which is
+the same number and leaves the layer bit-for-bit unchanged when `W = 0`.
+"""
+@inline function add_scattering_layer(τₐ, τₛ, 𝒢, κ, ω, 𝒢ᶜ, W)
+    τₛᶜ = κ * ω * W
+    τₐ′ = τₐ + κ * (1 - ω) * W
+    τₛ′ = τₛ + τₛᶜ
+    𝒢′ = ifelse(τₛ′ == 0, zero(τₛ′), 𝒢 + (𝒢ᶜ - 𝒢) * (τₛᶜ / τₛ′))
+    return τₐ′, τₛ′, 𝒢′
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Fold `cloud` at g point `g` on the effective-radius bracket from
+[`effective_radius_bracket`](@ref) with mass path `W` (kg m⁻²) into a
+layer's `(τₐ, τₛ, 𝒢)`, returning the updated triple. A `Nothing` phase
+returns the layer unchanged.
+"""
+@inline function add_cloud_scattering_layer(τₐ, τₛ, 𝒢, cloud::SpectralCloudOptics, g, radius_bracket, W)
+    κ, ω, 𝒢ᶜ = cloud_layer_optics(cloud, g, radius_bracket)
+    return add_scattering_layer(τₐ, τₛ, 𝒢, κ, ω, 𝒢ᶜ, W)
+end
+
+@inline add_cloud_scattering_layer(τₐ, τₛ, 𝒢, ::Nothing, g, radius_bracket, W) = (τₐ, τₛ, 𝒢)
+
+"""
+$(TYPEDSIGNATURES)
+
+Longwave cloud absorption optical depth `κ (1 - ω) W` of `cloud` at g point
+`g` for mass path `W` (kg m⁻²) on the effective-radius bracket from
+[`effective_radius_bracket`](@ref); longwave cloud scattering is neglected.
+Zero for a `Nothing` phase.
+"""
+@inline function cloud_absorption_optical_depth(cloud::SpectralCloudOptics, g, radius_bracket, W)
+    κ, ω, _ = cloud_layer_optics(cloud, g, radius_bracket)
+    return κ * (1 - ω) * W
+end
+
+@inline cloud_absorption_optical_depth(::Nothing, g, radius_bracket, W) = zero(W)

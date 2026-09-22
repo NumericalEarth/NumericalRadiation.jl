@@ -7,7 +7,9 @@
 using NumericalRadiation
 using NCDatasets
 
-const σ_SB = 5.670374419e-8
+constants = PhysicalConstants()
+S₀ = constants.solar_constant   # solar constant, W m⁻²
+μ₀ = 0.55                       # cosine of the solar zenith angle
 
 model_name = get(ENV, "ECCKD_MODEL", "32x32")
 spec = reference_ecckd_model_spec(model_name)
@@ -17,57 +19,55 @@ println("Selected ecCKD model: ", spec.name)
 println("  LW: ", basename(paths.longwave))
 println("  SW: ", basename(paths.shortwave))
 
-gas_optics = read_reference_ecckd_gas_optics(spec;
-    names = (:composite, :h2o, :co2),
-    h2o_mole_fraction = 0.005,
-)
+gas_optics = read_reference_ecckd_gas_optics(spec; names=(:composite, :h2o, :co2), water_vapor_mole_fraction=0.005)
 
-nlayers = 24
-pressure_interfaces = collect(range(10_000.0, 100_000.0; length = nlayers + 1))
+Nz = 24
+pressure_interfaces = collect(range(10_000.0, 100_000.0; length=Nz + 1))
 pressure_layers = 0.5 .* (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end])
-temperature_layers = collect(range(220.0, 295.0; length = nlayers))
-temperature_interfaces = collect(range(215.0, 300.0; length = nlayers + 1))
-air_column = (pressure_interfaces[2:end] .- pressure_interfaces[1:end-1]) ./ (9.80665 * 0.0289647)
+temperature_layers = collect(range(220.0, 295.0; length=Nz))
+temperature_interfaces = collect(range(215.0, 300.0; length=Nz + 1))
+air_column = hydrostatic_air_moles.(diff(pressure_interfaces), constants.gravity, constants.dry_air_molar_mass)
 
-atmosphere = ColumnAtmosphere(
+atmosphere = ColumnAtmosphere(;
     pressure_layers = pressure_layers,
     pressure_interfaces = pressure_interfaces,
     temperature_layers = temperature_layers,
     temperature_interfaces = temperature_interfaces,
     gases = (
         composite = air_column,
-        h2o = collect(range(0.002, 0.015; length = nlayers)) .* air_column,
-        co2 = fill(420.0e-6, nlayers) .* air_column,
+        h2o = collect(range(0.002, 0.015; length=Nz)) .* air_column,
+        co2 = fill(420.0e-6, Nz) .* air_column,
     ),
-    surface = (temperature = temperature_interfaces[end],),
-    geometry = (cos_zenith = 0.55,),
+    surface = (temperature=temperature_interfaces[end],),
+    geometry = (cos_zenith=μ₀,),
+    constants,
 )
 
-ng_lw = length(gas_optics.longwave_weights)
-ng_sw = length(gas_optics.shortwave_weights)
+Ngˡʷ = length(gas_optics.longwave_weights)
+Ngˢʷ = length(gas_optics.shortwave_weights)
 
 longwave = LongwaveOptics(
-    zeros(ng_lw, nlayers),
-    zeros(ng_lw, nlayers);
-    source_top = zeros(ng_lw, nlayers),
-    source_bottom = zeros(ng_lw, nlayers),
-    weights = zeros(ng_lw),
+    zeros(Ngˡʷ, Nz),
+    zeros(Ngˡʷ, Nz);
+    source_top = zeros(Ngˡʷ, Nz),
+    source_bottom = zeros(Ngˡʷ, Nz),
+    weights = zeros(Ngˡʷ),
 )
 
 shortwave = ShortwaveOptics(
-    zeros(ng_sw, nlayers);
-    rayleigh_optical_depth = zeros(ng_sw, nlayers),
-    scattering_asymmetry = zeros(ng_sw, nlayers),
-    weights = zeros(ng_sw),
+    zeros(Ngˢʷ, Nz);
+    rayleigh_optical_depth = zeros(Ngˢʷ, Nz),
+    scattering_asymmetry = zeros(Ngˢʷ, Nz),
+    weights = zeros(Ngˢʷ),
 )
 
 optical_properties!(longwave, shortwave, gas_optics, atmosphere)
 
 fluxes = RadiativeFluxes(
-    longwave_up = zeros(nlayers + 1),
-    longwave_down = zeros(nlayers + 1),
-    shortwave_up = zeros(nlayers + 1),
-    shortwave_down = zeros(nlayers + 1),
+    longwave_up = zeros(Nz + 1),
+    longwave_down = zeros(Nz + 1),
+    shortwave_up = zeros(Nz + 1),
+    shortwave_down = zeros(Nz + 1),
 )
 
 radiative_fluxes!(
@@ -86,20 +86,19 @@ radiative_fluxes!(
     shortwave,
     atmosphere,
     ShortwaveBoundaryConditions(
-        toa_shortwave_down = 1361.0 * atmosphere.geometry.cos_zenith,
+        toa_shortwave_down = S₀ * μ₀,
         surface_albedo = 0.15,
     ),
 )
 
-heating = zeros(nlayers)
-heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
+heating = zeros(Nz)
+heating_rates!(heating, fluxes, atmosphere)
 
-net_flux = fluxes.longwave_down .- fluxes.longwave_up .+
-           fluxes.shortwave_down .- fluxes.shortwave_up
+net_flux = fluxes.longwave_down .- fluxes.longwave_up .+ fluxes.shortwave_down .- fluxes.shortwave_up
 
-println("Runtime g-points: ", ng_lw, " LW, ", ng_sw, " SW")
-println("TOA net flux:     ", round(net_flux[1]; digits = 3), " W m^-2")
-println("Surface net flux: ", round(net_flux[end]; digits = 3), " W m^-2")
+println("Runtime g-points: ", Ngˡʷ, " LW, ", Ngˢʷ, " SW")
+println("TOA net flux:     ", round(net_flux[1]; digits=3), " W m^-2")
+println("Surface net flux: ", round(net_flux[end]; digits=3), " W m^-2")
 println("Heating range:    ",
-        round(86_400 * minimum(heating); digits = 3), " to ",
-        round(86_400 * maximum(heating); digits = 3), " K day^-1")
+        round(86_400 * minimum(heating); digits=3), " to ",
+        round(86_400 * maximum(heating); digits=3), " K day^-1")

@@ -112,19 +112,28 @@ Re-scoped 2026-09-11: keep changes to the package small. Only what cannot live
 in the extension goes into `src/`; host glue moves to Phase 2. Done on
 `mg/adjust-to-speedy`, tests in `test/test_host_interface.jl`.
 
+Merged with `main` 2026-09-22. `main` had meanwhile grown the streaming
+column API for the Breeze coupling, which provides two of the three items
+below; this branch adopts `main`'s versions and drops its own.
+
 - [x] ~~Split `optical_properties!` per stream.~~ Not needed: with **U1** a
       single `EcCKDRadiation` component consumes both streams from one call,
       which is exactly what `optical_properties!` produces today.
-- [x] In-place `surface_longwave_emission!(out, model, T; emissivity)`
-      (exported, allocation-free); the allocating method now calls it.
-- [x] Element-type conversion `EcCKDTabulatedGasOpticsModel{FT}(model)`
-      (Float64 tables from the loader → Float32 for SpeedyWeather's default
-      `NF`; `optical_properties!` requires optics and model to share `FT`).
-      Reuses arrays already of type `FT`; absent optional tables stay absent.
+- [x] ~~In-place `surface_longwave_emission!`.~~ Superseded by `main`'s
+      `TabulatedSurfaceEmission`, a lazy per-g-point `AbstractVector` that
+      evaluates the source table on indexing and allocates nothing; it is
+      accepted directly as `surface_longwave_up` in `LongwaveBoundaryConditions`.
+- [x] ~~Element-type conversion `EcCKDTabulatedGasOpticsModel{FT}(model)`.~~
+      Superseded by `main`'s method of the same name, implemented with an
+      `Adapt` storage adaptor so it also converts on the device; arrays already
+      of type `FT` are shared. The tests written here for the conversion were
+      kept since they test behaviour, not implementation.
 - [x] `ColumnAtmosphere` with one array-type parameter per array (as done for
       `AtmosphereProfile` in Phase 0): a host's layer and interface views come
       from arrays of different shape and, for stepped prognostics, different
-      rank. No other code depended on the single parameter.
+      rank. Combined at the merge with `main`'s new `constants` field, which
+      carries the host's `PhysicalConstants` (gravity, molar masses, heat
+      capacity) into the gas optics and `heating_rates!`.
 - [ ] ~~Guard `check_ecckd_optics_shapes` behind `@boundscheck`.~~ Deferred:
       the checks are O(1) size comparisons, negligible on CPU, and
       `@boundscheck` would only elide them if `optical_properties!` were
@@ -133,24 +142,13 @@ in the extension goes into `src/`; host glue moves to Phase 2. Done on
       GPU test in Phase 4.
 - [ ] ~~Layout-agnostic accessor (U4).~~ Deferred to Phase 2: a permuted view
       of the `(nlayers, ng)` column slice keeps the package's `[ig, k]`
-      indexing without any package change; only if that costs measurably do
-      we revisit.
-- [x] Unit tests: in-place emission equals the allocating one and does not
-      allocate; converted Float32 model reproduces Float64 optics to 1e-4;
+      indexing without any package change.
+- [x] Unit tests: converted Float32 model reproduces Float64 optics to 1e-4;
       `ColumnAtmosphere` from views of a 2D/3D host layout gives results
       identical to plain vectors through optics, fluxes and heating rates.
 
 Moved to Phase 2 (extension, host glue): gas amounts from specific humidity,
 interface temperatures from layer temperatures.
-
-Re-audit 2026-09-11: no defects found in the committed code. Verified that
-reference-sized grids (53-point pressure grid over five decades, 12-point H2O
-grid) pass the constructor's 1e-5 log-uniform re-validation after the Float32
-round trip with about a threefold margin, and added that as a regression
-test. Wrapped the test file in a module like the other consolidated tests, and
-corrected the `ColumnAtmosphere` docstring, which overstated that the arrays
-"need not share an element type": the kernels do convert on read, but `FT`
-remains the working precision. Deferred items unchanged.
 
 ## Phase 2. `EcCKDRadiation` SpeedyWeather component in the extension
 
