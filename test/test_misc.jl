@@ -27,35 +27,35 @@ using Dates
 
     @test metrics isa RadiationErrorMetrics
     @test metrics.flux_rmse ≈ sqrt((0.0^2 + 2.0^2 + 4.0^2) / 3)
-    @test metrics.flux_max_abs == 4.0
+    @test metrics.flux_maximum_absolute_error == 4.0
     @test metrics.flux_bias == 2.0
     @test metrics.heating_rate_rmse ≈ sqrt((0.05^2 + (-0.05)^2 + 0.20^2) / 3)
-    @test metrics.heating_rate_max_abs ≈ 0.20
+    @test metrics.heating_rate_maximum_absolute_error ≈ 0.20
     @test metrics.heating_rate_bias ≈ (0.05 - 0.05 + 0.20) / 3
     @test metrics.toa_forcing_error == 0.5
     @test metrics.surface_forcing_error == -2.0
 
     loose = RadiationThresholds(
         flux_rmse = 3.0,
-        flux_max_abs = 4.0,
-        flux_abs_bias = 2.0,
+        flux_maximum_absolute_error = 4.0,
+        flux_absolute_bias = 2.0,
         heating_rate_rmse = 0.2,
-        heating_rate_max_abs = 0.2,
-        heating_rate_abs_bias = 0.1,
-        toa_forcing_abs_error = 0.5,
-        surface_forcing_abs_error = 2.0,
+        heating_rate_maximum_absolute_error = 0.2,
+        heating_rate_absolute_bias = 0.1,
+        toa_forcing_absolute_error = 0.5,
+        surface_forcing_absolute_error = 2.0,
     )
     valid, errors = passes_thresholds(metrics, loose)
     @test valid
     @test isempty(errors)
-    @test passes_thresholds(metrics, loose; throw_on_error = true)
+    @test passes_thresholds(metrics, loose; throw_on_error=true)
 
-    strict = RadiationThresholds(flux_rmse = 1.0, surface_forcing_abs_error = 1.0)
+    strict = RadiationThresholds(flux_rmse=1.0, surface_forcing_absolute_error=1.0)
     valid_strict, strict_errors = passes_thresholds(metrics, strict)
     @test !valid_strict
     @test any(contains("flux_rmse"), strict_errors)
-    @test any(contains("surface_forcing_abs_error"), strict_errors)
-    @test_throws ArgumentError passes_thresholds(metrics, strict; throw_on_error = true)
+    @test any(contains("surface_forcing_absolute_error"), strict_errors)
+    @test_throws ArgumentError passes_thresholds(metrics, strict; throw_on_error=true)
 
     @test_throws DimensionMismatch radiation_error_metrics(
         candidate_flux = [1.0],
@@ -92,12 +92,10 @@ end
         shortwave_down = [99.0, 79.0, 59.0],
     )
 
-    metrics = radiative_flux_error_metrics(candidate, reference, atmosphere;
-                                           gravity = 10.0,
-                                           heat_capacity = 1000.0)
+    metrics = radiative_flux_error_metrics(candidate, reference, atmosphere; gravity=10.0, heat_capacity=1000.0)
     @test metrics isa RadiationErrorMetrics
     @test metrics.flux_rmse ≈ sqrt(10 / 12)
-    @test metrics.flux_max_abs == 1.0
+    @test metrics.flux_maximum_absolute_error == 1.0
     @test metrics.toa_forcing_error == 0.0
     @test metrics.surface_forcing_error == 0.0
     @test isfinite(metrics.heating_rate_rmse)
@@ -134,6 +132,8 @@ using Dates
     @test occursin("\"status\": \"passed\"", json)
     @test occursin("\"host_can_stop_after_gas_optics\": true", json)
     @test occursin("\"host_can_replace_solver_or_vertical_integral\": true", json)
+    @test occursin("\"streaming_longwave_matches_array\": true", json)
+    @test occursin("\"streaming_shortwave_matches_array\": true", json)
 end
 # --- end content of test_access_points_check.jl ---
 

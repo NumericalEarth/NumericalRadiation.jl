@@ -49,9 +49,9 @@ function json_object(object)
 end
 
 function model_kind(summary)
-    if summary.lw_gpoints > 0
+    if summary.longwave_gpoints > 0
         return "longwave"
-    elseif summary.sw_gpoints > 0
+    elseif summary.shortwave_gpoints > 0
         return "shortwave"
     else
         return "unknown"
@@ -61,11 +61,11 @@ end
 function inventory_entry(filename)
     path = reference_ecckd_definition_path(filename)
     definition = read_ecckd_definition(path)
-    valid, errors = validate_ecckd_definition(definition; throw_on_error = false)
+    valid, errors = validate_ecckd_definition(definition; throw_on_error=false)
     summary = summarize_ecckd_definition(definition)
     kind = model_kind(summary)
-    gpoints = kind == "longwave" ? summary.lw_gpoints : summary.sw_gpoints
-    bands = kind == "longwave" ? summary.lw_bands : summary.sw_bands
+    gpoints = kind == "longwave" ? summary.longwave_gpoints : summary.shortwave_gpoints
+    bands = kind == "longwave" ? summary.longwave_bands : summary.shortwave_bands
     return (
         filename = filename,
         path = path,
@@ -90,7 +90,7 @@ function run_ecckd_model_inventory()
         case = "ecckd_model_inventory",
         timestamp_utc = string(Dates.now()),
         status = all(entry -> entry.valid_schema, entries) ? "passed" : "failed",
-        ecrad_data_path = ecrad_data_path(require = true),
+        ecrad_data_path = ecrad_data_path(require=true),
         entries = entries,
     )
 end

@@ -26,17 +26,17 @@ using ClimaComms     # RRTMGP adapter extension trigger …
 using RRTMGP         # … and RRTMGP itself
 using Printf
 
-# The column: ``N`` layers with interface pressures ``pᵢ`` (Pa, top of
+# The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
 # atmosphere first), layer pressures ``p``, an idealized capped lapse rate,
 # and analytic moisture and ozone mixing-ratio profiles:
 
-N  = 48
-pᵢ = collect(range(2_000, 101_325; length = N + 1))
+Nz = 48
+pᵢ = collect(range(2_000, 101_325; length=Nz + 1))
 p  = 0.5 .* (pᵢ[1:end-1] .+ pᵢ[2:end])
 
-Tₛ = 300
-T  = clamp.(Tₛ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tₛ)
-Tᵢ = clamp.(Tₛ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tₛ)
+Tˢ = 300
+T  = clamp.(Tˢ .- 65 .* (1 .- (p ./ 101_325) .^ 0.286), 200, Tˢ)
+Tᵢ = clamp.(Tˢ .- 65 .* (1 .- (pᵢ ./ 101_325) .^ 0.286), 200, Tˢ)
 
 χH₂O = @. 0.015 * (p / 101_325)^3 + 3e-6      # moist below, dry aloft
 χO₃  = @. 3e-8 + 5e-6 * (2_000 / p)           # crude ozone increase aloft
@@ -50,12 +50,12 @@ nothing #hide
 # ``nᵈ (m^d + χ_{H₂O}\, m^v)``, so (dry-air molar-mass convention, matching
 # RRTMGP):
 
-g  = 9.80665         # m s⁻²
-mᵈ = 0.028964        # kg mol⁻¹
-mᵛ = 0.018016        # kg mol⁻¹
+constants = PhysicalConstants()      # shared by both columns and the RRTMGP adapter below
+g  = constants.gravity               # m s⁻²
+mᵈ = constants.dry_air_molar_mass    # kg mol⁻¹
+mᵛ = constants.water_molar_mass      # kg mol⁻¹
 
-dry_air_amounts(χH₂O, pᵢ) =
-    [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
+dry_air_amounts(χH₂O, pᵢ) = [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:(length(pᵢ) - 1)]
 
 nᵈ = dry_air_amounts(χH₂O, pᵢ)                # mol m⁻²
 nothing #hide
@@ -84,8 +84,9 @@ ecckd_atmosphere = ColumnAtmosphere(;
              n2o = χN₂O .* nᵈ,
              cfc11 = 0,
              cfc12 = 0),
-    surface = (temperature = Tₛ,),
-    geometry = (cos_zenith = 0.5,))
+    surface = (temperature=Tˢ,),
+    geometry = (cos_zenith=0.5,),
+    constants)
 
 rrtmgp_atmosphere = ColumnAtmosphere(;
     pressure_layers = p,
@@ -95,8 +96,9 @@ rrtmgp_atmosphere = ColumnAtmosphere(;
     gases = (h2o = χH₂O, o3 = χO₃, co2 = χCO₂,
              ch4 = χCH₄, n2o = χN₂O,
              o2 = 0.20946, n2 = 0.78084, co = 0),
-    surface = (temperature = Tₛ,),
-    geometry = (cos_zenith = 0.5,))
+    surface = (temperature=Tˢ,),
+    geometry = (cos_zenith=0.5,),
+    constants)
 nothing #hide
 
 # ## The ecCKD members
@@ -110,27 +112,26 @@ nothing #hide
 intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
 
 function ecckd_member(selector)
-    gas_optics = read_reference_ecckd_gas_optics(selector; names = intended_gases)
+    gas_optics = read_reference_ecckd_gas_optics(selector; names=intended_gases)
     @assert NumericalRadiation.gas_names(gas_optics) == intended_gases
-    longwave_gpoints = length(gas_optics.longwave_weights)
-    shortwave_gpoints = length(gas_optics.shortwave_weights)
-    longwave = LongwaveOptics(zeros(longwave_gpoints, N),
-                                         zeros(longwave_gpoints, N);
-                                         source_top = zeros(longwave_gpoints, N),
-                                         source_bottom = zeros(longwave_gpoints, N),
-                                         weights = zeros(longwave_gpoints))
-    shortwave = ShortwaveOptics(zeros(shortwave_gpoints, N);
-                                           weights = zeros(shortwave_gpoints))
-    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                             longwave_down = zeros(N + 1),
-                             shortwave_up = zeros(N + 1),
-                             shortwave_down = zeros(N + 1))
+    Ngˡʷ = length(gas_optics.longwave_weights)
+    Ngˢʷ = length(gas_optics.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Ngˡʷ, Nz),
+                              zeros(Ngˡʷ, Nz);
+                              source_top = zeros(Ngˡʷ, Nz),
+                              source_bottom = zeros(Ngˡʷ, Nz),
+                              weights = zeros(Ngˡʷ))
+    shortwave = ShortwaveOptics(zeros(Ngˢʷ, Nz); weights=zeros(Ngˢʷ))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
     optical_properties!(longwave, shortwave, gas_optics, ecckd_atmosphere)
-    surface_emission = surface_longwave_emission(gas_optics, Tₛ)
+    surface_emission = surface_longwave_emission(gas_optics, Tˢ)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, ecckd_atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission))
-    Ṫ = zeros(N)
-    heating_rates!(Ṫ, fluxes, ecckd_atmosphere; gravity = g, heat_capacity = 1004)
+                      LongwaveBoundaryConditions(surface_longwave_up=surface_emission))
+    Ṫ = zeros(Nz)
+    heating_rates!(Ṫ, fluxes, ecckd_atmosphere)
     return (; fluxes, Ṫ)
 end
 nothing #hide
@@ -138,28 +139,30 @@ nothing #hide
 # ## The RRTMGP member
 #
 # One member of the same family, with its own k-reduction (256 longwave
-# g points), run through the package's adapter extension:
+# g points), run through the package's adapter extension. The adapter builds
+# RRTMGP's parameters from the same `constants`, so both representations use
+# one gravity and one pair of molar masses:
 
 rrtmgp_extension = Base.get_extension(NumericalRadiation, :NumericalRadiationRRTMGPExt)
 
 function rrtmgp_member()
-    model = rrtmgp_extension.RRTMGPClearSkyModel(Float64)
+    model = rrtmgp_extension.RRTMGPClearSkyModel(Float64; constants)
     boundary = rrtmgp_extension.RRTMGPBoundaryConditions(
-        surface_temperature = Tₛ,
+        surface_temperature = Tˢ,
         surface_emissivity = 1,
         surface_albedo = 0,
         toa_shortwave_down = 0,   # longwave-only page
         cos_zenith = 0.5)
     workspace = radiation_workspace(model, rrtmgp_atmosphere)
-    fluxes = RadiativeFluxes(longwave_up = zeros(N + 1),
-                             longwave_down = zeros(N + 1),
-                             shortwave_up = zeros(N + 1),
-                             shortwave_down = zeros(N + 1))
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
     radiative_fluxes!(fluxes, model, rrtmgp_atmosphere, boundary, workspace)
     @assert all(iszero, fluxes.shortwave_up)
     @assert all(iszero, fluxes.shortwave_down)
-    Ṫ = zeros(N)
-    heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere; gravity = g, heat_capacity = 1004)
+    Ṫ = zeros(Nz)
+    heating_rates!(Ṫ, fluxes, rrtmgp_atmosphere)
     return (; fluxes, Ṫ, workspace)
 end
 
@@ -172,12 +175,11 @@ nothing #hide
 # molecules cm⁻², and its levels are bottom-up, hence the unit factor with
 # Avogadro's number ``Nᴬ`` and the index reversal):
 
-Nᴬ = 6.02214076e23
+Nᴬ = constants.avogadro_number
 
 molecular_column_rrtmgp = reverse(rrtmgp.workspace.atmospheric_state.layerdata[1, :, 1])
 molecular_column_ecckd = nᵈ .* Nᴬ ./ 1e4
-relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./
-                         molecular_column_ecckd)
+relative_error = maximum(abs.(molecular_column_rrtmgp .- molecular_column_ecckd) ./ molecular_column_ecckd)
 @assert relative_error < 1e-6
 relative_error
 
@@ -187,7 +189,7 @@ family = [(name = "ecCKD 32 (FSCK)", member = ecckd_member("32x32"),
            color = :steelblue4),
           (name = "ecCKD 64 (narrow-band)", member = ecckd_member("64x32"),
            color = :darkorange3),
-          (name = "RRTMGP (256 g)", member = rrtmgp, color = :firebrick)]
+          (name="RRTMGP (256 g)", member=rrtmgp, color=:firebrick)]
 
 println("OLR by family member:")
 for f in family
@@ -204,7 +206,7 @@ olr = [f.member.fluxes.longwave_up[1] for f in family]
 
 using CairoMakie
 
-fig = Figure(size = (940, 480))
+fig = Figure(size=(940, 480))
 
 pressure_ticks = [20, 50, 100, 200, 300, 500, 700, 1000]
 
@@ -213,25 +215,23 @@ ax1 = Axis(fig[1, 1]; xlabel = "Longwave flux (W m⁻²)",
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Fluxes")
 for f in family
-    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100;
-           color = f.color, linewidth = 2)
-    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100;
-           color = f.color, linewidth = 2, linestyle = :dash)
+    lines!(ax1, f.member.fluxes.longwave_up, pᵢ ./ 100; color=f.color, linewidth=2)
+    lines!(ax1, f.member.fluxes.longwave_down, pᵢ ./ 100; color=f.color, linewidth=2, linestyle=:dash)
 end
 
 ax2 = Axis(fig[1, 2]; xlabel = "Ṫ (K day⁻¹)",
            ylabel = "Pressure (hPa)", yscale = log10, yreversed = true,
            yticks = (pressure_ticks, string.(pressure_ticks)),
            title = "Heating rates")
-vlines!(ax2, [0]; color = (:black, 0.4), linestyle = :dash)
+vlines!(ax2, [0]; color=(:black, 0.4), linestyle=:dash)
 for f in family
-    lines!(ax2, f.member.Ṫ .* 86_400, p ./ 100; color = f.color, linewidth = 2)
+    lines!(ax2, f.member.Ṫ .* 86_400, p ./ 100; color=f.color, linewidth=2)
 end
 
 legend_entries = vcat(
-    [LineElement(color = f.color, linewidth = 2) for f in family],
-    [LineElement(color = :gray30, linewidth = 2, linestyle = :solid),
-     LineElement(color = :gray30, linewidth = 2, linestyle = :dash)])
+    [LineElement(color=f.color, linewidth=2) for f in family],
+    [LineElement(color=:gray30, linewidth=2, linestyle=:solid),
+     LineElement(color=:gray30, linewidth=2, linestyle=:dash)])
 Legend(fig[2, 1:2], legend_entries,
        vcat([f.name for f in family], ["up", "down"]);
        orientation = :horizontal, framevisible = false)

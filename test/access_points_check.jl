@@ -47,14 +47,105 @@ const REQUIRED_EXPORTS = (
     :radiative_heating!,
     :radiation_workspace,
     :add_mapped_cloud_scattering!,
+    :GasOpticsStencil,
+    :gas_optics_stencil,
+    :layer_gases,
+    :gas_names,
+    :longwave_optical_depth,
+    :shortwave_optical_depth,
+    :water_vapor_table_optical_depth,
+    :rayleigh_optical_depth,
+    :hydrostatic_air_moles,
+    :longwave_source,
+    :source_table_bracket,
+    :TabulatedSurfaceEmission,
+    :streaming_longwave_fluxes!,
+    :ShortwaveColumnScratch,
+    :streaming_shortwave_fluxes!,
+    :SpectralCloudOptics,
+    :effective_radius_bracket,
+    :cloud_layer_optics,
+    :add_scattering_layer,
+    :add_cloud_scattering_layer,
+    :cloud_absorption_optical_depth,
+    :ecrad_test_file,
 )
 
 function exported_symbol_status(name)
     names = Base.names(NumericalRadiation)
+    return (name=string(name), exported=name in names, defined=isdefined(NumericalRadiation, name))
+end
+
+# Layer-optics functors over precomputed `(Ng, Nz)` matrices, in the
+# `(g, k)` form a host kernel hands to the streaming solvers: longwave
+# `(τ, Bₖ, Bₖ₊₁)` and shortwave `(τₐ, τₛ, 𝒢)`.
+struct LongwaveMatrixOptics{L}
+    optics :: L
+end
+
+(layer::LongwaveMatrixOptics)(g, k) = (layer.optics.optical_depth[g, k],
+                                       layer.optics.source_top[g, k],
+                                       layer.optics.source_bottom[g, k])
+
+struct ShortwaveMatrixOptics{S}
+    optics :: S
+end
+
+(layer::ShortwaveMatrixOptics)(g, k) = (layer.optics.optical_depth[g, k],
+                                        layer.optics.rayleigh_optical_depth[g, k],
+                                        layer.optics.scattering_asymmetry[g, k])
+
+# The streaming (kernel-facing) solvers against the array solvers on the same
+# optics. The array longwave solver streams each g point through
+# `streaming_longwave_fluxes!` when interface Planck sources are present, and
+# the array shortwave solver through the same adding step as
+# `streaming_shortwave_fluxes!` for every g point that scatters, so both
+# comparisons are bitwise.
+function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
+    Nz = length(atmosphere.temperature_layers)
+    Ngˡʷ, Ngˢʷ = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
+    longwave = LongwaveOptics(zeros(Ngˡʷ, Nz), zeros(Ngˡʷ, Nz);
+                              source_top = zeros(Ngˡʷ, Nz),
+                              source_bottom = zeros(Ngˡʷ, Nz),
+                              weights = zeros(Ngˡʷ))
+    shortwave = ShortwaveOptics(zeros(Ngˢʷ, Nz); weights=zeros(Ngˢʷ))
+    optical_properties!(longwave, shortwave, gas_model, atmosphere)
+    add_cloud_optical_depths!(longwave, shortwave, cloud)
+    add_aerosol_optical_depths!(longwave, shortwave, aerosol)
+
+    surface_temperature, emissivity, longwave_albedo = 295.0, 0.98, 0.02
+    μ₀, toa_irradiance, shortwave_albedo = 0.5, 680.5, 0.1
+    surface_emission = TabulatedSurfaceEmission(gas_model, surface_temperature; emissivity)
+
+    fluxes = RadiativeFluxes(longwave_up = zeros(Nz + 1),
+                             longwave_down = zeros(Nz + 1),
+                             shortwave_up = zeros(Nz + 1),
+                             shortwave_down = zeros(Nz + 1))
+    radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
+                      LongwaveBoundaryConditions(surface_longwave_up = surface_emission,
+                                                 surface_albedo = longwave_albedo))
+    radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
+                      ShortwaveBoundaryConditions(toa_shortwave_down = toa_irradiance,
+                                                  surface_albedo = shortwave_albedo))
+
+    longwave_up, longwave_down = zeros(Nz + 1), zeros(Nz + 1)
+    streaming_longwave_fluxes!(longwave_up, longwave_down, LongwaveMatrixOptics(longwave),
+                               surface_emission, longwave_albedo, 0.0,
+                               longwave.weights, Ngˡʷ, Nz, zeros(Nz), zeros(Nz))
+    shortwave_up, shortwave_down = zeros(Nz + 1), zeros(Nz + 1)
+    streaming_shortwave_fluxes!(shortwave_up, shortwave_down, ShortwaveMatrixOptics(shortwave),
+                                μ₀, toa_irradiance, shortwave_albedo, shortwave_albedo,
+                                shortwave.weights, Ngˢʷ, Nz, ShortwaveColumnScratch(Float64, Nz))
+
     return (
-        name = string(name),
-        exported = name in names,
-        defined = isdefined(NumericalRadiation, name),
+        streaming_longwave_matches_array = all(isfinite, longwave_up) &&
+                                           !all(iszero, longwave_up) &&
+                                           longwave_up == fluxes.longwave_up &&
+                                           longwave_down == fluxes.longwave_down,
+        streaming_shortwave_matches_array = all(isfinite, shortwave_up) &&
+                                            !all(iszero, shortwave_up) &&
+                                            shortwave_up == fluxes.shortwave_up &&
+                                            shortwave_down == fluxes.shortwave_down,
     )
 end
 
@@ -64,9 +155,9 @@ function component_smoke()
         pressure_interfaces = [1_000.0, 45_000.0, 100_000.0],
         temperature_layers = [240.0, 285.0],
         temperature_interfaces = [230.0, 260.0, 295.0],
-        gases = (; h2o = [0.002, 0.014], co2 = 420.0e-6),
-        surface = (; temperature = 295.0, albedo = 0.1),
-        geometry = (; cos_zenith = 0.5),
+        gases = (; h2o=[0.002, 0.014], co2=420.0e-6),
+        surface = (; temperature=295.0, albedo=0.1),
+        geometry = (; cos_zenith=0.5),
     )
     gas_model = EcCKDGasOpticsModel(
         names = (:h2o, :co2),
@@ -94,11 +185,10 @@ function component_smoke()
                                             shortwave_mass_extinction = 0.1,
                                             shortwave_single_scattering_albedo = 0.7,
                                             shortwave_scattering_asymmetry = 0.6)
-    longwave = LongwaveOptics(zeros(2, 2), zeros(2, 2); weights = zeros(2))
-    shortwave = ShortwaveOptics(zeros(1, 2); weights = zeros(1))
+    longwave = LongwaveOptics(zeros(2, 2), zeros(2, 2); weights=zeros(2))
+    shortwave = ShortwaveOptics(zeros(1, 2); weights=zeros(1))
     cloud = CloudOptics(zeros(2), zeros(2))
-    cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1),
-                                                             zeros(2), zeros(2))
+    cloudy_region_cloud = CloudyRegionCloudOptics(zeros(2), zeros(1), zeros(2), zeros(2))
     aerosol = AerosolOptics(zeros(2), zeros(2))
     fluxes = RadiativeFluxes(
         longwave_up = zeros(3),
@@ -110,16 +200,16 @@ function component_smoke()
 
     optical_properties!(longwave, shortwave, gas_model, atmosphere)
     cloud_optical_properties!(cloud, cloud_model, atmosphere)
-    cloudy_region_optical_properties!(cloudy_region_cloud, cloud_model,
-                                      (; overlap_parameter = [0.8]))
+    cloudy_region_optical_properties!(cloudy_region_cloud, cloud_model, (; overlap_parameter=[0.8]))
     aerosol_optical_properties!(aerosol, aerosol_model, atmosphere)
     add_cloud_optical_depths!(longwave, shortwave, cloud)
     add_aerosol_optical_depths!(longwave, shortwave, aerosol)
     radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere,
-                      LongwaveBoundaryConditions(surface_longwave_up = 5.670374419e-8 * 295.0^4))
+                      LongwaveBoundaryConditions(surface_longwave_up=atmosphere.constants.stefan_boltzmann * 295.0^4))
     radiative_fluxes!(fluxes, CloudlessShortwave(), shortwave, atmosphere,
-                      ShortwaveBoundaryConditions(toa_shortwave_down = 680.5, surface_albedo = 0.1))
-    heating_rates!(heating, fluxes, atmosphere; gravity = 9.80665, heat_capacity = 1004.0)
+                      ShortwaveBoundaryConditions(toa_shortwave_down=680.5, surface_albedo=0.1))
+    heating_rates!(heating, fluxes, atmosphere)
+    streaming = streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
 
     return (
         optical_properties_callable = all(isfinite, longwave.optical_depth) &&
@@ -128,11 +218,10 @@ function component_smoke()
                                 all(isfinite, cloud.shortwave_optical_depth) &&
                                 all(isfinite, cloud.shortwave_scattering_optical_depth) &&
                                 all(isfinite, cloud.shortwave_scattering_asymmetry),
-        cloudy_region_cloud_optics_callable =
-            all(isfinite, cloudy_region_cloud.cloud_fraction) &&
-            all(isfinite, cloudy_region_cloud.overlap_parameter) &&
-            all(isfinite, cloudy_region_cloud.longwave_optical_depth) &&
-            !all(iszero, cloudy_region_cloud.longwave_optical_depth),
+        cloudy_region_cloud_optics_callable = all(isfinite, cloudy_region_cloud.cloud_fraction) &&
+                                              all(isfinite, cloudy_region_cloud.overlap_parameter) &&
+                                              all(isfinite, cloudy_region_cloud.longwave_optical_depth) &&
+                                              !all(iszero, cloudy_region_cloud.longwave_optical_depth),
         aerosol_optics_callable = all(isfinite, aerosol.longwave_optical_depth) &&
                                   all(isfinite, aerosol.shortwave_optical_depth) &&
                                   all(isfinite, aerosol.shortwave_scattering_optical_depth) &&
@@ -144,6 +233,7 @@ function component_smoke()
         host_can_stop_after_gas_optics = !all(iszero, longwave.optical_depth) &&
                                          !all(iszero, shortwave.optical_depth),
         host_can_replace_solver_or_vertical_integral = all(isfinite, heating),
+        streaming...,
     )
 end
 
@@ -200,6 +290,8 @@ function markdown_report(result)
         "| Heating rates callable separately | $(result.component_smoke.heating_rates_callable) |",
         "| Host can stop after gas optics | $(result.component_smoke.host_can_stop_after_gas_optics) |",
         "| Host can replace solver or vertical integral | $(result.component_smoke.host_can_replace_solver_or_vertical_integral) |",
+        "| Streaming longwave equals the array solver | $(result.component_smoke.streaming_longwave_matches_array) |",
+        "| Streaming shortwave equals the array solver | $(result.component_smoke.streaming_shortwave_matches_array) |",
     ])
     return join(lines, "\n") * "\n"
 end
@@ -207,8 +299,7 @@ end
 function main()
     export_status = [exported_symbol_status(name) for name in REQUIRED_EXPORTS]
     smoke = component_smoke()
-    passed = all(item -> item.exported && item.defined, export_status) &&
-             all(value -> value === true, values(smoke))
+    passed = all(item -> item.exported && item.defined, export_status) && all(value -> value === true, values(smoke))
     result = (
         case = "host_model_access_points_check",
         date = string(Dates.now()),

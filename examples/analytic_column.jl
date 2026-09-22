@@ -6,13 +6,13 @@
 
 using NumericalRadiation
 
-nlayers = 32
-grid = ColumnGrid(collect(range(0.0, 1.0, length = nlayers + 1)))
+Nz = 32
+grid = ColumnGrid(collect(range(0.0, 1.0, length=Nz + 1)))
 
 profile = AtmosphereProfile(
-    temperature = collect(range(215.0, 295.0, length = nlayers)),
-    humidity = [0.018 * exp(-z / 2.0) for z in range(0.0, 8.0, length = nlayers)],
-    geopotential = zeros(nlayers),
+    temperature = collect(range(215.0, 295.0, length=Nz)),
+    humidity = [0.018 * exp(-z / 2.0) for z in range(0.0, 8.0, length=Nz)],
+    geopotential = zeros(Nz),
     surface_pressure = 100_000.0,
     CO₂ = 420.0,
 )
@@ -26,31 +26,31 @@ surface = SurfaceState(
     cos_zenith = 0.5,
 )
 
-rtm = RadiativeTransferColumn(; grid, profile, surface)
+column = RadiativeTransferColumn(; grid, profile, surface)
 
-elapsed = @elapsed radiative_heating!(rtm)
+elapsed = @elapsed radiative_heating!(column)
 
-heating = similar(rtm.temperature_tendency)
-heating_rates!(heating, rtm)
+heating = similar(column.temperature_tendency)
+heating_rates!(heating, column)
 
-surface_lw_net = rtm.longwave_diagnostics.surface_longwave_down -
-                 rtm.longwave_diagnostics.surface_longwave_up
-surface_sw_net = rtm.shortwave_diagnostics.surface_shortwave_down -
-                 rtm.shortwave_diagnostics.surface_shortwave_up
-toa_net = rtm.shortwave_diagnostics.outgoing_shortwave +
-          rtm.longwave_diagnostics.outgoing_longwave
+surface_longwave_net = column.longwave_diagnostics.surface_longwave_down -
+                       column.longwave_diagnostics.surface_longwave_up
+surface_shortwave_net = column.shortwave_diagnostics.surface_shortwave_down -
+                        column.shortwave_diagnostics.surface_shortwave_up
+toa_net = column.shortwave_diagnostics.outgoing_shortwave + column.longwave_diagnostics.outgoing_longwave
 column_integrated_heating = sum(heating .* grid.σ_thick) *
                             profile.surface_pressure *
-                            rtm.physical_constants.heat_capacity /
-                            rtm.physical_constants.gravity
-toa_down = rtm.physical_constants.solar_constant * surface.cos_zenith
-top_net_down = toa_down - toa_net
-surface_net_down = surface_lw_net + surface_sw_net
+                            column.physical_constants.heat_capacity /
+                            column.physical_constants.gravity
+S₀ = column.physical_constants.solar_constant
+μ₀ = surface.cos_zenith
+top_net_down = S₀ * μ₀ - toa_net
+surface_net_down = surface_longwave_net + surface_shortwave_net
 energy_closure_residual = column_integrated_heating - (top_net_down - surface_net_down)
 
 println("Analytic column metrics")
-println("surface flux LW net: $(round(surface_lw_net, digits = 6)) W m^-2")
-println("surface flux SW net: $(round(surface_sw_net, digits = 6)) W m^-2")
+println("surface flux LW net: $(round(surface_longwave_net, digits = 6)) W m^-2")
+println("surface flux SW net: $(round(surface_shortwave_net, digits = 6)) W m^-2")
 println("TOA flux outgoing: $(round(toa_net, digits = 6)) W m^-2")
 println("column-integrated heating: $(round(column_integrated_heating, digits = 6)) W m^-2")
 println("energy closure residual: $(round(energy_closure_residual, digits = 6)) W m^-2")
