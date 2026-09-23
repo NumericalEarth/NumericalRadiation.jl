@@ -13,8 +13,8 @@
   <a href="https://github.com/NumericalEarth/NumericalRadiation.jl/releases">
     <img alt="GitHub tag (latest SemVer pre-release)" src="https://img.shields.io/github/v/tag/NumericalEarth/NumericalRadiation.jl?include_prereleases&label=latest%20version&logo=github&sort=semver&style=flat-square">
   </a>
-  <a href="https://mit-license.org">
-    <img alt="MIT license" src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square">
+  <a href="https://www.apache.org/licenses/LICENSE-2.0">
+    <img alt="Apache 2.0 license" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square">
   </a>
   <a href="https://github.com/SciML/ColPrac">
     <img alt="ColPrac: Contributor's Guide on Collaborative Practices for Community Packages" src="https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet?style=flat-square">
@@ -232,4 +232,4 @@ branch; this branch carries only the package.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Apache 2.0. See [LICENSE](./LICENSE).
