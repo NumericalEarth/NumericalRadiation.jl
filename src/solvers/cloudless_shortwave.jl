@@ -219,10 +219,13 @@ end
     α₁ = γ₁ * γ₄ + γ₂ * γ₃
     α₂ = γ₁ * γ₃ + γ₂ * γ₄
     λ = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+
+    # ℛ⁰ and 𝒯⁰ divide by 1 - (λμ₀)², a removable singularity of the Meador-Weaver
+    # solution. Step μ₀ to the edge of the band that detects the pole, not by a fraction
+    # of it: a smaller step can leave λμ₀ on the pole itself and divide by zero.
+    δ = FT(1000) * eps(FT)
     μ₀ = FT(μ₀)
-    if abs(one(FT) - λ * μ₀) < FT(1000) * eps(FT)
-        μ₀ *= one(FT) - FT(10) * eps(FT)
-    end
+    μ₀ = ifelse(abs(one(FT) - λ * μ₀) < δ, (one(FT) - δ) / λ, μ₀)
 
     τ = max(FT(τ), zero(FT))
     𝒟 = exp(-τ / μ₀)
