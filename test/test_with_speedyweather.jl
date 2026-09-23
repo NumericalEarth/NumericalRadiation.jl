@@ -1,13 +1,16 @@
 using SpeedyWeather, Statistics
-const SpeedyExt = Base.get_extension(NumericalRadiation,
-                                     :NumericalRadiationSpeedyWeatherExt)
+
+# The coupling is SpeedyWeather's extension SpeedyWeatherNumericalRadiationExt, active once
+# both packages are loaded: it makes this package's AnalyticBandLongwave and ClearSkyEcCKDRadiation
+# SpeedyWeather radiation schemes, with constructors from a SpectralGrid.
+@test Base.get_extension(SpeedyWeather, :SpeedyWeatherNumericalRadiationExt) !== nothing
 
 default_spectral_grid() = SpectralGrid(truncation = 16, nlayers = 8)
 
-# Longwave-only model: the analytic-band scheme as the longwave part of the
-# Radiation bundle, no shortwave, and no other parameterizations.
+# Longwave-only model: the analytic-band scheme as the longwave part of the Radiation
+# bundle, no shortwave, and no other parameterizations.
 function longwave_only_model(spectral_grid; kwargs...)
-    longwave = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
+    longwave = AnalyticBandLongwave(spectral_grid)
     radiation = Radiation(spectral_grid; shortwave = nothing, longwave)
     model = PrimitiveWetModel(spectral_grid; radiation, parameterizations = (:radiation,), kwargs...)
     initialize!(model.radiation, model)
@@ -32,7 +35,7 @@ end
 @testset "Model initializes and runs with SpeedyWeather" begin
     spectral_grid = default_spectral_grid()
     model = longwave_only_model(spectral_grid)
-    @test model.radiation.longwave isa SpeedyExt.SpeedyAnalyticBandLongwave
+    @test model.radiation.longwave isa AnalyticBandLongwave{spectral_grid.NF}
 
     variables = Variables(model)
     set_test_state!(variables, model)
@@ -85,7 +88,7 @@ end
 @testset "Full model time steps with the analytic-band longwave" begin
     # Default wet model with only the longwave scheme swapped; a few steps run through.
     spectral_grid = default_spectral_grid()
-    longwave = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
+    longwave = AnalyticBandLongwave(spectral_grid)
     model = PrimitiveWetModel(spectral_grid; radiation = Radiation(spectral_grid; longwave))
     simulation = initialize!(model)
     run!(simulation, steps = 4)

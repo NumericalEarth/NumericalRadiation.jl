@@ -10,6 +10,13 @@ SpeedyWeather 0.22.x plus the upstream changes tracked in
 Changes that land in SpeedyWeather itself are planned in that companion
 file and only referenced here as **U1 … U4**.
 
+**2026-09-22: the extension moved upstream.** The coupling now lives in SpeedyWeather as
+`SpeedyWeatherNumericalRadiationExt` (this package's `ClearSkyEcCKDRadiation` and `AnalyticBandLongwave`
+as SpeedyWeather schemes), see
+[extension_upstream.md](extension_upstream.md) and item U5 of the companion file. Phases 0
+and 2 below describe code that is now in SpeedyWeather; the package changes (Phase 1, the
+`src` changes) and the tests, example and validation scripts of the coupling stay here.
+
 ## Background
 
 **What exists.** NumericalRadiation already has a complete, host-neutral
