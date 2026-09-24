@@ -1,20 +1,52 @@
-# NumericalRadiation.jl
+<!-- Title -->
+<h1 align="center">
+  NumericalRadiation.jl
+</h1>
 
-[![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/)
-[![CI](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/CI.yml)
-[![Documenter](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml/badge.svg)](https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml)
+<!-- description -->
+<p align="center">
+  <strong>☀️ Atmospheric radiative transfer and gas optics in Julia, compatible with ECMWF's ecRad/ecCKD data, for CPUs and GPUs. https://NumericalEarth.github.io/NumericalRadiation.jl/dev</strong>
+</p>
 
-Atmospheric radiation and gas optics compatible with ECMWF's ecRad/ecCKD
-data. The package ingests reference ecCKD CKD-definition files into typed,
-`Adapt.jl`-aware look-up tables, evaluates g-point optical properties through
-a staged runtime (`optical_properties!` → `radiative_fluxes!` →
-`heating_rates!`), and solves clear-sky and cloud-overlap two-stream column
-transport — see the
-[documentation](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/)
-quickstart for that path.
+<!-- Information badges -->
+<p align="center">
+  <a href="https://github.com/NumericalEarth/NumericalRadiation.jl/releases">
+    <img alt="GitHub tag (latest SemVer pre-release)" src="https://img.shields.io/github/v/tag/NumericalEarth/NumericalRadiation.jl?include_prereleases&label=latest%20version&logo=github&sort=semver&style=flat-square">
+  </a>
+  <a href="https://www.apache.org/licenses/LICENSE-2.0">
+    <img alt="Apache 2.0 license" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square">
+  </a>
+  <a href="https://github.com/SciML/ColPrac">
+    <img alt="ColPrac: Contributor's Guide on Collaborative Practices for Community Packages" src="https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet?style=flat-square">
+  </a>
+</p>
 
-It also bundles two analytic-band per-column schemes for
-intermediate-complexity models:
+<!-- Documentation -->
+<p align="center">
+  <a href="https://NumericalEarth.github.io/NumericalRadiation.jl/stable">
+    <img alt="Stable documentation" src="https://img.shields.io/badge/documentation-stable%20release-blue?style=flat-square">
+  </a>
+  <a href="https://NumericalEarth.github.io/NumericalRadiation.jl/dev">
+    <img alt="Development documentation" src="https://img.shields.io/badge/documentation-in%20development-orange?style=flat-square">
+  </a>
+</p>
+
+<!-- Testing -->
+<p align="center">
+  <a href="https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/CI.yml">
+    <img alt="CI" src="https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/CI.yml/badge.svg">
+  </a>
+  <a href="https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml">
+    <img alt="Documenter" src="https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml/badge.svg">
+  </a>
+</p>
+
+NumericalRadiation computes atmospheric radiative fluxes and heating rates. It ingests
+reference ecCKD CKD-definition files into typed, `Adapt.jl`-aware look-up tables, evaluates
+g-point optical properties through a staged runtime (`optical_properties!` → `radiative_fluxes!` →
+`heating_rates!`), and solves clear-sky and cloud-overlap two-stream column transport.
+
+It also bundles two analytic-band per-column schemes for intermediate-complexity models:
 
 - **Longwave** — Williams (2026) *Simple Spectral Model*: a 41-wavenumber
   clear-sky two-stream Schwarzschild solver with analytic H₂O line,
@@ -30,14 +62,40 @@ fuse into its own column loops or kernels, and the ecCKD path has the same
 scalar form; see [Host kernels (Breeze)](#host-kernels-breeze) and
 [With SpeedyWeather.jl](#with-speedyweatherjl) below.
 
-## Installation
+## Contents
+
+- [Installation instructions](#installation-instructions)
+- [Running your first column](#running-your-first-column)
+- [With SpeedyWeather.jl](#with-speedyweatherjl)
+- [Host kernels (Breeze)](#host-kernels-breeze)
+- [Schemes at a glance](#schemes-at-a-glance)
+- [Getting help](#getting-help)
+- [Running the tests](#running-the-tests)
+- [Validation platform](#validation-platform)
+- [License](#license)
+
+## Installation instructions
+
+NumericalRadiation is a [registered Julia package](https://julialang.org/packages/). So to install it,
+
+1. [Download Julia](https://julialang.org/downloads/) (version 1.10 or later).
+
+2. Launch Julia and type
 
 ```julia
-using Pkg
-Pkg.add(url="https://github.com/NumericalEarth/NumericalRadiation.jl")
+julia> using Pkg
+
+julia> Pkg.add("NumericalRadiation")
 ```
 
-## Standalone usage (single column)
+This installs the latest version that's _compatible with your current environment_.
+Check which NumericalRadiation you installed with
+
+```julia
+julia> Pkg.status("NumericalRadiation")
+```
+
+## Running your first column
 
 Bundle the grid, profile, surface, schemes, constants, and pre-allocated
 buffers into a single `RadiativeTransferColumn` and call the solvers
@@ -155,10 +213,18 @@ page walks through the loop on a two-layer column.
 | `BackgroundShortwaveTransmissivity` | Dry-air + aerosol + WV + cloud absorptivities, pressure-weighted | SPEEDY §B4 |
 | `ConstantShortwaveTransmissivity` | Single-value column transmissivity | — |
 
-## Tests
+## Getting help
 
-```
-julia --project=. -e 'using Pkg; Pkg.test()'
+* The [documentation](https://NumericalEarth.github.io/NumericalRadiation.jl/dev/) has a quickstart, the physics and numerics behind each scheme, and a library of every user-facing object and function.
+* [Issues](https://github.com/NumericalEarth/NumericalRadiation.jl/issues) and [pull requests](https://github.com/NumericalEarth/NumericalRadiation.jl/pulls) record problems we've found, how we solved them, and what we're working on.
+* The [NumericalEarth slack](https://join.slack.com/t/numericalearth/shared_invite/zt-3pwpvky4k-XX7RkgQgHLIUt~wtwGXN~Q) is a good place to ask questions.
+
+## Running the tests
+
+```julia
+julia> using Pkg
+
+julia> Pkg.test("NumericalRadiation")
 ```
 
 ## Validation platform
@@ -170,4 +236,4 @@ branch; this branch carries only the package.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Apache 2.0. See [LICENSE](./LICENSE).
