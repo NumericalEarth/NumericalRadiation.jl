@@ -14,7 +14,7 @@ with diagnostic clouds.
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/NumericalEarth/NumericalRadiation.jl")
+Pkg.add("NumericalRadiation")
 ```
 
 ## Quickstart
