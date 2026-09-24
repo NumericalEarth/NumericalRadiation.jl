@@ -70,6 +70,13 @@ model component, is defined by the extension for the scheme types). CO₂ comes 
 
 ## Order
 
+**2026-09-24: the stack is collapsed into one PR.** With the extension gone from this
+package, the three-PR split (package prep, extension, ecCKD component) no longer maps onto
+anything: `mg/speedy-update` (#16, against `main`) is fast-forwarded to the fully merged top
+of the stack, #17 and #19 are closed, the GitHub stack is dissolved. The steps below are the
+record of how the branches were brought together.
+
+
 1. Bottom branch `mg/speedy-update` (PR #16), uncommitted until reviewed: delete the
    extension, drop the weak dependency, point `test/speedyweather/` at SpeedyWeather's
    `mg/numericalradiation-extension`, adapt the coupling test and the README. Squash into #16.

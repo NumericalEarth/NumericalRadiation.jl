@@ -1,31 +1,25 @@
-# Changes to `src/` made for the SpeedyWeather coupling, and why
+# Changes to `src/` compared to `main`, and why
 
-Companion to [ecckd_speedyweather.md](ecckd_speedyweather.md). The guiding rule
-for that work is to keep changes to the package's core small and to prefer the
-extension or SpeedyWeather itself whenever that is possible without giving up
-performance. This file lists every change to `src/` that was made anyway, what
-forced it, what the alternative would have been, and how it is tested. Nothing
-here changes numerical results of existing code paths.
+Companion to [ecckd_speedyweather.md](ecckd_speedyweather.md) and
+[extension_upstream.md](extension_upstream.md). The guiding rule for the
+SpeedyWeather coupling is to keep changes to the package's core small and to
+prefer the host side (SpeedyWeather's `SpeedyWeatherNumericalRadiationExt`, where
+the coupling code lives) whenever that is possible without giving up
+performance. This file lists every change to `src/` that PR #16 makes relative
+to `main` (as of `f3d6ff5`, 2026-09-24), what forced it, what the alternative
+would have been, and how it is tested. Nothing here changes numerical results
+of existing code paths; every change is a type-parameter relaxation, an optional
+argument, or an addition.
 
-Merged with `main` on 2026-09-22. `main` had meanwhile grown the streaming
-column API (PR #20, Breeze coupling), which made items 3 and 4 redundant and
-reduced item 5 to a few lines; the table and sections below reflect the
-merged state.
-
-Since 2026-09-22 the coupling code itself lives in SpeedyWeather
-(`SpeedyWeatherNumericalRadiationExt`, see [extension_upstream.md](extension_upstream.md)),
-which added change 8 below.
-
-| # | Change | Phase | Lines | Results changed |
+| # | Change | File | Lines | Results changed |
 |---|---|---|---|---|
-| 1 | `AtmosphereProfile`: one array-type parameter per vector | 0 | ~10 | no |
-| 2 | `ColumnAtmosphere`: one array-type parameter per array | 1 | ~12 | no |
-| 3 | ~~`surface_longwave_emission!`~~ dropped at the merge: `main`'s `TabulatedSurfaceEmission` is the allocation-free per-g-point surface source | 1 | 0 | no |
-| 4 | ~~`EcCKDTabulatedGasOpticsModel{FT}(model)`~~ dropped at the merge: `main` has the same method, `Adapt`-based and device-capable | 1 | 0 | no |
-| 5 | Optional caller-owned `ShortwaveColumnScratch` argument of `radiative_fluxes!` (was a separate workspace type before the merge) | 2 | ~8 | no |
-| 6 | New test file in the runner | 1 | ~1 | no |
-| 7 | Two-stream direct-beam singularity guard moved to the band edge (`shortwave_reflectance_transmittance`) | 4 | ~8 | only within 1000 ulps of λ μ₀ = 1 |
-| 8 | `ClearSkyEcCKDRadiation`: configured clear-sky ecCKD scheme (new file `src/ecckd_radiation.jl`) | extension move | ~100 | no |
+| 1 | `AtmosphereProfile`: one array-type parameter per vector | `src/column_views.jl` | ~10 | no |
+| 2 | `ColumnAtmosphere`: one array-type parameter per array | `src/runtime_interfaces.jl` | ~12 | no |
+| 3 | Optional caller-owned `ShortwaveColumnScratch` argument of `radiative_fluxes!(…, CloudlessShortwave(), …)` | `src/solvers/cloudless_shortwave.jl` | ~8 | no |
+| 4 | `ClearSkyEcCKDRadiation` and `default_ozone_profile`: the configured clear-sky ecCKD column scheme | `src/ecckd_radiation.jl` (new), `src/NumericalRadiation.jl` | ~105 | no (addition) |
+
+Three further changes that this work carried at some point were superseded by
+`main` and are no longer part of the diff; they are listed at the end.
 
 ## 1. `AtmosphereProfile{NF, VT, VQ, VG}` (was `{NF, V}`)
 
@@ -74,20 +68,7 @@ type of `temperature_layers`.
 shaped host views": optics, fluxes and heating rates from views of a 2D/3D host
 layout are identical to those from plain vectors.
 
-## 3 and 4. Superseded by `main`
-
-Both were written before `main` gained the streaming column API. At the merge
-`main`'s versions won:
-
-- `TabulatedSurfaceEmission(model, T; emissivity)` is a lazy `AbstractVector`
-  whose `getindex(g)` evaluates the source table for one g point, so a host
-  passes it as `surface_longwave_up`, or blends two of them per g point as the
-  SpeedyWeather extension does for ocean and land, without any allocation.
-- `EcCKDTabulatedGasOpticsModel{FT}(model)` on `main` converts every array
-  through an `Adapt` storage adaptor, shares arrays already in `FT`, and works
-  on device arrays too. The behavioural tests written here were kept.
-
-## 5. Optional `scratch` argument of `radiative_fluxes!(…, CloudlessShortwave(), …)`
+## 3. Optional `scratch` argument of `radiative_fluxes!(…, CloudlessShortwave(), …)`
 
 *File:* `src/solvers/cloudless_shortwave.jl`.
 
@@ -100,9 +81,9 @@ SpeedyWeather's fused column kernel that is still the only allocation in the
 hot loop on CPU and a compile failure on GPU, and the extension cannot avoid
 it without dropping Rayleigh scattering.
 
-*Alternative considered.* This branch originally carried its own
-`CloudlessShortwaveWorkspace` type and a rewritten accumulation; at the merge
-that was dropped in favour of `main`'s type.
+*Alternative considered.* This work originally carried its own
+`CloudlessShortwaveWorkspace` type and a rewritten accumulation; at the first
+merge of `main` that was dropped in favour of `main`'s type.
 
 *What changed.* `radiative_fluxes!` gained an optional last positional
 argument `scratch::ShortwaveColumnScratch`, defaulting to the allocation
@@ -113,36 +94,7 @@ positional constructor. No other line of the solver changed.
 caller-owned scratch": identical fluxes with and without the argument, zero
 allocations with it, a scratch built from views.
 
-## 7. Two-stream singularity guard (`shortwave_reflectance_transmittance`)
-
-*File:* `src/solvers/cloudless_shortwave.jl`.
-
-*What forced it.* Found in Phase 4: the coupled T31 L8 model produced NaN
-shortwave fluxes after two to four days and blew up. Traced with a per-step
-callback to one column with cos_zenith 0.50002 and one g-point/layer with
-diffusion exponent k = 1.99993, i.e. k·μ0 = 1.0000012: the removable
-singularity of the direct-beam two-stream terms, which divide by 1 - (kμ0)².
-The existing guard detected |1 - kμ0| < 1000 ulps but then nudged μ0 by only
-10 ulps, which in Float32 landed exactly on the singularity (0 × ∞ = NaN).
-
-*Alternative considered.* None in the extension; the singularity is inside
-the solver.
-
-*What changed.* Inside the band, μ0 is moved to the edge of the band,
-(1 ∓ 1000 ulps)/k, so the denominator is bounded away from zero by
-construction. Outside the band nothing changes; the reference comparisons in
-`test/test_solvers.jl` are unaffected.
-
-*Tests.* `test/test_host_interface.jl`: scan of μ0 around 1/k for two
-single-scattering albedos, two asymmetries, three optical depths, in Float32
-and Float64; all outputs finite and within the clamps, and continuity across
-the band edge.
-
-## 6. Housekeeping
-
-- `test/runtests.jl`: includes `test_host_interface.jl`.
-
-## 8. `ClearSkyEcCKDRadiation` (new, `src/ecckd_radiation.jl`)
+## 4. `ClearSkyEcCKDRadiation` (new file `src/ecckd_radiation.jl`, one `include`)
 
 *What forced it.* With the coupling moved into SpeedyWeather, the extension there
 adds methods to this package's scheme types instead of defining wrapper types of
@@ -163,12 +115,35 @@ with hard-coded defaults (no user configuration, and a type change once clouds
 or emissivities become configurable).
 
 *Why acceptable.* Purely additive, host-neutral (Breeze needs the same
-configuration), no existing code path changes. It is on the bottom branch of the
-stack because the SpeedyWeather extension `import`s the name at load time.
+configuration), no existing code path changes. The SpeedyWeather extension
+`import`s the name at load time, so it has to be part of this PR.
 
 *Tests.* `test/test_ecckd_radiation.jl` (construction, defaults, conversion,
 missing-gas error); the coupling tests in `test/speedyweather/` and SpeedyWeather's
 `test/numericalradiation/` use it end to end.
+
+## Superseded by `main` during the merges
+
+Written here first, then dropped when `main` provided the same:
+
+- **`surface_longwave_emission!` (in place).** `main`'s streaming column API
+  (PR #20, Breeze coupling) added `TabulatedSurfaceEmission(model, T; emissivity)`,
+  a lazy `AbstractVector` whose `getindex(g)` evaluates the source table for one
+  g point; a host passes it as `surface_longwave_up`, or blends two of them per g
+  point as the SpeedyWeather extension does for ocean and land, without any
+  allocation.
+- **`EcCKDTabulatedGasOpticsModel{FT}(model)`.** `main` added the same method,
+  converting every array through an `Adapt` storage adaptor, sharing arrays already
+  in `FT`, and working on device arrays. The behavioural tests written here were kept.
+- **Two-stream direct-beam singularity guard.** The Meador-Weaver direct-beam terms
+  divide by `1 - (λμ₀)²`; the old guard detected μ₀ within 1000 ulps of the pole but
+  nudged it by 10 ulps, which in Float32 could land exactly on the pole and produced
+  NaN fluxes in a coupled SpeedyWeather run (found with
+  `validation/speedyweather_nan_detector.jl`). This work moved μ₀ to the nearer edge
+  of the band; `main` fixed the same pole independently (54b6a75, found in a Breeze
+  Float32 run) by stepping to the lower edge with a branch-free `ifelse`. Same band,
+  same escape size, so `main`'s version stands; the singularity scan in
+  `test/test_host_interface.jl` stays as the regression test.
 
 ## Considered and deliberately not changed
 
