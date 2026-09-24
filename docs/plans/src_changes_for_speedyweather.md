@@ -6,9 +6,11 @@ extension or SpeedyWeather itself whenever that is possible without giving up
 performance. This file lists every change to `src/` on this branch
 (`mg/adjust-to-speedy`, Phases 0 and 1 of the plan), what forced it, what the
 alternative would have been, and how it is tested. Nothing here changes
-numerical results of existing code paths. Later phases (the `EcCKDRadiation`
-component and its validation) live on `mg/ecckd-speedy`, whose version of this
-file extends the list.
+numerical results of existing code paths. Later phases (the ecCKD coupling and
+its validation) live on `mg/ecckd-speedy`, whose version of this file extends
+the list. Since 2026-09-22 the coupling code itself lives in SpeedyWeather
+(`SpeedyWeatherNumericalRadiationExt`, see [extension_upstream.md](extension_upstream.md)),
+which added change 6 below.
 
 | # | Change | Phase | Lines | Results changed |
 |---|---|---|---|---|
@@ -17,6 +19,7 @@ file extends the list.
 | 3 | ~~`surface_longwave_emission!` (in place)~~ dropped on merging `main`, which provides `TabulatedSurfaceEmission` | 1 | 0 | no |
 | 4 | ~~`EcCKDTabulatedGasOpticsModel{FT}(model)`~~ dropped on merging `main`, which added the same constructor | 1 | 0 | no |
 | 5 | New test file in the runner | 1 | ~1 | no |
+| 6 | `ClearSkyEcCKDRadiation`: configured clear-sky ecCKD scheme (new file `src/ecckd_radiation.jl`) | extension move | ~100 | no |
 
 ## 1. `AtmosphereProfile{NF, VT, VQ, VG}` (was `{NF, V}`)
 
@@ -84,6 +87,34 @@ Breeze coupling). At the merge on 2026-09-22 `main`'s versions won:
 ## 5. Housekeeping
 
 - `test/runtests.jl`: includes `test_host_interface.jl`.
+
+## 6. `ClearSkyEcCKDRadiation` (new, `src/ecckd_radiation.jl`)
+
+*What forced it.* With the coupling moved into SpeedyWeather, the extension there
+adds methods to this package's scheme types instead of defining wrapper types of
+its own (`AnalyticBandLongwave` needed nothing). The ecCKD path had no scheme
+type: `EcCKDTabulatedGasOpticsModel` is a coefficient table, and the coupling
+needs configuration with no other home, the mole fractions of the gases a host
+does not carry (ozone, further gases) and the surface emissivity, implicitly
+also the solver pair. `ClearSkyEcCKDRadiation` bundles gas optics,
+`mole_fractions` (numbers or functions of pressure, `o3` and `co2` defaults,
+every further gas of the model required) and `surface_emissivity`; constructors
+from a tabulated model, from a number format and reference model pair, and a
+converting `{FT}` form; `default_ozone_profile` moved here from the extension.
+
+*Alternative considered.* Keeping a SpeedyWeather-side type (needs an exported
+type, an `ArgumentError` stub and a `src` file in SpeedyWeather for what is
+NumericalRadiation configuration), or extending the coefficient table directly
+with hard-coded defaults (no user configuration, and a type change once clouds
+or emissivities become configurable).
+
+*Why acceptable.* Purely additive, host-neutral (Breeze needs the same
+configuration), no existing code path changes. It is on the bottom branch of the
+stack because the SpeedyWeather extension `import`s the name at load time.
+
+*Tests.* `test/test_ecckd_radiation.jl` (construction, defaults, conversion,
+missing-gas error); the coupling tests in `test/speedyweather/` and SpeedyWeather's
+`test/numericalradiation/` use it end to end.
 
 ## Considered and deliberately not changed
 

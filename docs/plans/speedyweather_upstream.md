@@ -213,6 +213,18 @@ be awkward or slow inside kernels:
 - [ ] make the ecCKD kernels in NumericalRadiation layout-agnostic via an
       indexing accessor (then no upstream change is needed).
 
+## U5. Host the extension itself
+
+Status: **in progress** (2026-09-22) on branch `mg/numericalradiation-extension`; plan there:
+`docs/dev/2026-09/numericalradiation-extension.md`. The coupling code moves into SpeedyWeather
+as `SpeedyWeatherNumericalRadiationExt`; NumericalRadiation becomes a weak dependency of
+SpeedyWeather. Both scheme types are NumericalRadiation's own (`ClearSkyEcCKDRadiation`, the
+configured clear-sky ecCKD scheme, and `AnalyticBandLongwave`); the extension adds the
+methods SpeedyWeather calls and constructors from a `SpectralGrid`, SpeedyWeather's `src`
+is untouched. To-do there: collapse the dedicated test environment
+once NumericalRadiation is registered. See [extension_upstream.md](extension_upstream.md) for
+this side.
+
 ## Already available upstream (no change needed)
 
 - A user-extensible parameterization slot exists: `custom_parameterization`
