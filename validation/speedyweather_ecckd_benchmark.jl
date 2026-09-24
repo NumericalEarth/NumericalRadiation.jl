@@ -6,14 +6,13 @@
 #   julia --project=<env> validation/speedyweather_ecckd_benchmark.jl
 
 using SpeedyWeather, NumericalRadiation, NCDatasets, Printf, Statistics
-const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 spectral_grid = SpectralGrid(truncation = 31, nlayers = 8)
 configs = (
     :oneband => () -> Radiation(spectral_grid),
-    :analytic_lw => () -> Radiation(spectral_grid; longwave = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)),
-    :ecckd32x32 => () -> SpeedyExt.EcCKDRadiation(spectral_grid, "32x32"),
-    :ecckd64x96 => () -> SpeedyExt.EcCKDRadiation(spectral_grid, "64x96"),
+    :analytic_lw => () -> Radiation(spectral_grid; longwave = AnalyticBandLongwave(spectral_grid)),
+    :ecckd32x32 => () -> ClearSkyEcCKDRadiation(spectral_grid, "32x32"),
+    :ecckd64x96 => () -> ClearSkyEcCKDRadiation(spectral_grid, "64x96"),
 )
 
 @printf("%-14s %12s %12s %10s\n", "config", "s/step", "μs/column", "allocs")

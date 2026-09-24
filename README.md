@@ -26,11 +26,9 @@ intermediate-complexity models:
   cloud/stratocumulus model.
 
 The analytic-band solvers are pure scalar ingredients that a host model can
-fuse into its own column loops or kernels; the
-`NumericalRadiationSpeedyWeatherExt` package extension wires them into
-[SpeedyWeather.jl](https://github.com/SpeedyWeather/SpeedyWeather.jl) per
-column. The ecCKD path has the same scalar form for host kernels — see
-[Host kernels (Breeze)](#host-kernels-breeze) below.
+fuse into its own column loops or kernels, and the ecCKD path has the same
+scalar form; see [Host kernels (Breeze)](#host-kernels-breeze) and
+[With SpeedyWeather.jl](#with-speedyweatherjl) below.
 
 ## Installation
 
@@ -82,8 +80,8 @@ solve_shortwave!(column)
 @show column.temperature_tendency                           # K s⁻¹ per layer
 ```
 
-For the low-level kernel form (what host extensions such as
-`NumericalRadiationSpeedyWeatherExt` call internally), `solve_longwave!` and `solve_shortwave!` accept the
+For the low-level kernel form (what host couplings such as SpeedyWeather's
+`SpeedyWeatherNumericalRadiationExt` call internally), `solve_longwave!` and `solve_shortwave!` accept the
 flattened `(temperature_tendency, diagnostics, scheme, profile, grid, surface, constants, …)`
 signature directly, and the `constants` argument is duck-typed — any struct
 or NamedTuple carrying `gravity`, `heat_capacity`, `stefan_boltzmann`,
@@ -101,43 +99,29 @@ constructors and readers: `AnalyticBandLongwave(Float32)`,
 
 ## With SpeedyWeather.jl
 
-The `NumericalRadiationSpeedyWeatherExt` extension defines a
-`SpeedyAnalyticBandLongwave` scheme that subtypes `SpeedyWeather.AbstractLongwave`
-and can be passed directly to `PrimitiveWetModel`:
+The coupling to [SpeedyWeather.jl](https://github.com/SpeedyWeather/SpeedyWeather.jl)
+lives in SpeedyWeather as the extension `SpeedyWeatherNumericalRadiationExt`, activated
+when both packages are loaded. It makes this package's `ClearSkyEcCKDRadiation` (clear-sky ecCKD gas
+optics, longwave and shortwave from one gas-optics evaluation) and `AnalyticBandLongwave`
+usable as SpeedyWeather radiation schemes and adds constructors from a `SpectralGrid`:
 
 ```julia
 using SpeedyWeather, NumericalRadiation
-const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 spectral_grid = SpectralGrid(truncation = 32, nlayers = 8)
-longwave      = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
-model         = PrimitiveWetModel(spectral_grid; radiation = Radiation(spectral_grid; longwave))
+model = PrimitiveWetModel(spectral_grid; radiation = ClearSkyEcCKDRadiation(spectral_grid))   # or "64x96"
+# or the analytic-band longwave next to SpeedyWeather's one-band shortwave:
+longwave = AnalyticBandLongwave(spectral_grid)   # CO₂ from the model's greenhouse gases, else 280 ppm
+model = PrimitiveWetModel(spectral_grid; radiation = Radiation(spectral_grid; longwave))
 ```
 
-The scheme is the longwave half of SpeedyWeather's `Radiation` bundle
-(SpeedyWeather ≥ 0.23); pass `shortwave = nothing` to run it without any
-shortwave scheme.
-
-The same extension provides `EcCKDRadiation`, the clear-sky ecCKD gas optics
-with both streams as one SpeedyWeather radiation component. Loading the
-reference tables needs `NCDatasets`:
-
-```julia
-using SpeedyWeather, NumericalRadiation, NCDatasets
-const SpeedyExt = Base.get_extension(NumericalRadiation,
-                                     :NumericalRadiationSpeedyWeatherExt)
-
-spectral_grid = SpectralGrid(truncation = 32, nlayers = 8)
-radiation     = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32")   # or "64x96", ...
-model         = PrimitiveWetModel(spectral_grid; radiation)
-simulation    = initialize!(model)
-run!(simulation, period = Day(5))
-simulation.variables.parameterizations.outgoing_longwave
-```
-
-CO₂ follows the model's `greenhouse_gases`, ozone comes from an analytic
-default profile (`ozone = p -> ...` to override), and further gases of the
-ecCKD model are given as `mole_fractions = (; ch4 = 1.8e-6)`.
+CO₂ follows the model's `greenhouse_gases`, ozone comes from an analytic default
+profile (`ozone = p -> ...` to override), and further gases of the ecCKD model are
+prescribed with `mole_fractions = (; ch4 = 1.8e-6)`; see `ClearSkyEcCKDRadiation`.
+The full tests of the coupling (`test/speedyweather/`, an environment of its own
+because they need SpeedyWeather ≥ 0.23 with its NumericalRadiation extension), the
+example `examples/speedyweather_ecckd.jl` and the validation scripts in
+`validation/` stay in this repository.
 
 ## Host kernels (Breeze)
 

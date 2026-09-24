@@ -1,13 +1,16 @@
 using SpeedyWeather, Statistics
-const SpeedyExt = Base.get_extension(NumericalRadiation,
-                                     :NumericalRadiationSpeedyWeatherExt)
+
+# The coupling is SpeedyWeather's extension SpeedyWeatherNumericalRadiationExt, active once
+# both packages are loaded: it makes this package's AnalyticBandLongwave and ClearSkyEcCKDRadiation
+# SpeedyWeather radiation schemes, with constructors from a SpectralGrid.
+@test Base.get_extension(SpeedyWeather, :SpeedyWeatherNumericalRadiationExt) !== nothing
 
 default_spectral_grid() = SpectralGrid(truncation = 16, nlayers = 8)
 
-# Longwave-only model: the analytic-band scheme as the longwave part of the
-# Radiation bundle, no shortwave, and no other parameterizations.
+# Longwave-only model: the analytic-band scheme as the longwave part of the Radiation
+# bundle, no shortwave, and no other parameterizations.
 function longwave_only_model(spectral_grid; kwargs...)
-    longwave = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
+    longwave = AnalyticBandLongwave(spectral_grid)
     radiation = Radiation(spectral_grid; shortwave = nothing, longwave)
     model = PrimitiveWetModel(spectral_grid; radiation, parameterizations = (:radiation,), kwargs...)
     initialize!(model.radiation, model)
@@ -32,7 +35,7 @@ end
 @testset "Model initializes and runs with SpeedyWeather" begin
     spectral_grid = default_spectral_grid()
     model = longwave_only_model(spectral_grid)
-    @test model.radiation.longwave isa SpeedyExt.SpeedyAnalyticBandLongwave
+    @test model.radiation.longwave isa AnalyticBandLongwave{spectral_grid.NF}
 
     variables = Variables(model)
     set_test_state!(variables, model)
@@ -85,7 +88,7 @@ end
 @testset "Full model time steps with the analytic-band longwave" begin
     # Default wet model with only the longwave scheme swapped; a few steps run through.
     spectral_grid = default_spectral_grid()
-    longwave = SpeedyExt.SpeedyAnalyticBandLongwave(spectral_grid)
+    longwave = AnalyticBandLongwave(spectral_grid)
     model = PrimitiveWetModel(spectral_grid; radiation = Radiation(spectral_grid; longwave))
     simulation = initialize!(model)
     run!(simulation, steps = 4)
@@ -94,17 +97,19 @@ end
 end
 
 # -----------------------------------------------------------------------------
-# EcCKDRadiation: clear-sky ecCKD as one SpeedyWeather radiation component
+# ClearSkyEcCKDRadiation: clear-sky ecCKD as one SpeedyWeather radiation component
 # -----------------------------------------------------------------------------
-using NCDatasets   # activates the NetCDF loader for the reference ecCKD tables
+# extension internals used by the cross-check below (NCDatasets, a dependency of SpeedyWeather,
+# reads the reference ecCKD tables)
+const SWExt = Base.get_extension(SpeedyWeather, :SpeedyWeatherNumericalRadiationExt)
 
 const σ_SB = 5.670374419e-8
 
-@testset "EcCKDRadiation construction and variables" begin
+@testset "ClearSkyEcCKDRadiation construction and variables" begin
     spectral_grid = default_spectral_grid()
     NF = spectral_grid.NF
-    radiation = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32")
-    @test radiation isa SpeedyWeather.AbstractRadiation
+    radiation = ClearSkyEcCKDRadiation(spectral_grid, "32x32")
+    @test radiation isa ClearSkyEcCKDRadiation{NF}
     @test eltype(radiation.gas_optics) === NF
     @test NumericalRadiation.gas_names(radiation.gas_optics) == (:composite, :h2o, :o3, :co2)
 
@@ -122,15 +127,15 @@ const σ_SB = 5.670374419e-8
 
     # a model gas without a mole fraction is rejected at construction
     gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2, :ch4))
-    @test_throws ArgumentError SpeedyExt.EcCKDRadiation(spectral_grid, gas_optics)
-    @test SpeedyExt.EcCKDRadiation(spectral_grid, gas_optics; mole_fractions = (; ch4 = 1.8e-6)) isa
-          SpeedyExt.EcCKDRadiation
+    @test_throws ArgumentError ClearSkyEcCKDRadiation(spectral_grid, gas_optics)
+    @test ClearSkyEcCKDRadiation(spectral_grid, gas_optics; mole_fractions = (; ch4 = 1.8e-6)) isa
+          ClearSkyEcCKDRadiation
 end
 
-@testset "EcCKDRadiation column physics" begin
+@testset "ClearSkyEcCKDRadiation column physics" begin
     spectral_grid = default_spectral_grid()
     NF = spectral_grid.NF
-    radiation = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32")
+    radiation = ClearSkyEcCKDRadiation(spectral_grid, "32x32")
     model = PrimitiveWetModel(spectral_grid; radiation, parameterizations = (:radiation,))
     initialize!(model.radiation, model)
     variables = Variables(model)
@@ -186,7 +191,7 @@ end
     f = model.land_sea_mask.land_fraction[ij]
     T_surface = (1 - f) * 293.0 + f * 288.0
     T_half = zeros(nlayers + 1)
-    SpeedyExt.interface_temperatures!(T_half, T, Float64.(p), Float64.(p_half))
+    SWExt.interface_temperatures!(T_half, T, Float64.(p), Float64.(p_half))
     @test T_half[1] == T[1]
     @test T_half[end] ≈ T[end] + (T[end] - T[end - 1]) * (p_half[end] - p[end]) / (p[end] - p[end - 1])
     gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2))
@@ -194,8 +199,8 @@ end
     constants = PhysicalConstants(Float64; gravity = model.planet.gravity,
                                   dry_air_molar_mass = model.atmosphere.mol_mass_dry_air / 1000,
                                   water_molar_mass = model.atmosphere.mol_mass_vapor / 1000)
-    SpeedyExt.gas_amounts!(amounts, Val((:composite, :h2o, :o3, :co2)),
-                           (; mole_fractions = (; o3 = SpeedyExt.default_ozone_profile)),
+    SWExt.gas_amounts!(amounts, Val((:composite, :h2o, :o3, :co2)),
+                           (; mole_fractions = (; o3 = default_ozone_profile)),
                            q, Float64.(p), Float64.(p_half), 280e-6, constants)
     atmosphere = ColumnAtmosphere(pressure_layers = Float64.(p), pressure_interfaces = Float64.(p_half),
                                   temperature_layers = T, temperature_interfaces = T_half,
@@ -257,9 +262,9 @@ end
     @test 2 < mean(olr_280 .- olr_1120) < 12                       # ~2 doublings ≈ 7 W/m²
 end
 
-@testset "EcCKDRadiation runs in the full model" begin
+@testset "ClearSkyEcCKDRadiation runs in the full model" begin
     spectral_grid = default_spectral_grid()
-    radiation = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32")
+    radiation = ClearSkyEcCKDRadiation(spectral_grid, "32x32")
     model = PrimitiveWetModel(spectral_grid; radiation)
     simulation = initialize!(model)
     run!(simulation, steps = 4)

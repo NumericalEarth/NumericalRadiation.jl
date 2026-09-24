@@ -1,5 +1,5 @@
 # Per-step detector for the first non-finite value in a SpeedyWeather run with
-# `EcCKDRadiation` (plan Phase 4). It found the two-stream singularity that made
+# `ClearSkyEcCKDRadiation` (plan Phase 4). It found the two-stream singularity that made
 # the coupled model go NaN after a few days: the callback keeps the previous
 # step's surface state per column, stops at the first non-finite soil
 # temperature, near-surface air temperature, surface flux or longwave flux, and
@@ -9,7 +9,6 @@
 # Environment variables: DAYS (default 12), ECCKD_MODEL (default 32x32).
 
 using SpeedyWeather, NumericalRadiation, NCDatasets, Statistics, Printf, Dates
-const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 mutable struct NaNDetector <: SpeedyWeather.AbstractCallback
     step::Int
@@ -77,7 +76,7 @@ function SpeedyWeather.callback!(cb::NaNDetector, vars, model)
 end
 
 spectral_grid = SpectralGrid(truncation = 31, nlayers = 8)
-radiation = SpeedyExt.EcCKDRadiation(spectral_grid, get(ENV, "ECCKD_MODEL", "32x32"))
+radiation = ClearSkyEcCKDRadiation(spectral_grid, get(ENV, "ECCKD_MODEL", "32x32"))
 model = PrimitiveWetModel(spectral_grid; radiation)
 add!(model.callbacks, :nan => NaNDetector())
 simulation = initialize!(model, time = DateTime(2000, 1, 1))

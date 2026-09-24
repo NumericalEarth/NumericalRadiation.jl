@@ -1,8 +1,8 @@
-# Environment of the SpeedyWeather extension tests (test/test_with_speedyweather.jl).
-# Kept apart from test/Project.toml because the extension needs SpeedyWeather >= 0.23
-# (the `Radiation` bundle), which is not registered yet and is pulled from its
-# development branch through the [sources] entry below; that needs Julia >= 1.11,
-# whereas the package and its core tests support Julia 1.10. Run with
+# Environment of the SpeedyWeather coupling tests (test/test_with_speedyweather.jl).
+# Kept apart from test/Project.toml because the coupling needs SpeedyWeather >= 0.23 (the
+# `Radiation` bundle and its NumericalRadiation extension), which is not registered yet and
+# is pulled from its development branch through the [sources] entry below; that needs
+# Julia >= 1.11, whereas the package and its core tests support Julia 1.10. Run with
 #   julia --project=test/speedyweather -e 'using Pkg; Pkg.instantiate()'
 #   julia --project=test/speedyweather --check-bounds=yes test/speedyweather/runtests.jl
 # Remove the SpeedyWeather source once 0.23 is released.
@@ -19,4 +19,4 @@ SpeedyWeather = "0.23"
 
 [sources]
 NumericalRadiation = {path = "../.."}
-SpeedyWeather = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "mg/numericalradiation", subdir = "SpeedyWeather"}
+SpeedyWeather = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "mg/numericalradiation-extension", subdir = "SpeedyWeather"}

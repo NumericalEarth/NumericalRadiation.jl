@@ -13,7 +13,6 @@
 # CONFIGS (comma separated subset of oneband,ecckd32,ecckd32_noo3,ecckd64x96).
 
 using SpeedyWeather, NumericalRadiation, NCDatasets, Statistics, Printf, Dates
-const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 spinup_days = parse(Int, get(ENV, "SPINUP_DAYS", "10"))
 average_days = parse(Int, get(ENV, "AVERAGE_DAYS", "10"))
@@ -22,9 +21,9 @@ configs = Symbol.(split(get(ENV, "CONFIGS", "oneband,ecckd32,ecckd32_noo3"), ","
 spectral_grid = SpectralGrid(truncation = 31, nlayers = 8)
 
 radiation_for(::Val{:oneband}) = Radiation(spectral_grid)
-radiation_for(::Val{:ecckd32}) = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32")
-radiation_for(::Val{:ecckd32_noo3}) = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32"; ozone = 0.0)
-radiation_for(::Val{:ecckd64x96}) = SpeedyExt.EcCKDRadiation(spectral_grid, "64x96")
+radiation_for(::Val{:ecckd32}) = ClearSkyEcCKDRadiation(spectral_grid, "32x32")
+radiation_for(::Val{:ecckd32_noo3}) = ClearSkyEcCKDRadiation(spectral_grid, "32x32"; ozone = 0.0)
+radiation_for(::Val{:ecckd64x96}) = ClearSkyEcCKDRadiation(spectral_grid, "64x96")
 
 # area weights of the reduced grid: ring weight cos(lat) shared equally by the ring's points
 function area_weights(model)

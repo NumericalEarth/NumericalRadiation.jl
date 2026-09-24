@@ -16,7 +16,6 @@
 
 using SpeedyWeather, NumericalRadiation, NCDatasets
 using CairoMakie, Statistics, Printf, Dates
-const SpeedyExt = Base.get_extension(NumericalRadiation, :NumericalRadiationSpeedyWeatherExt)
 
 spinup_days  = 5
 average_days = 5
@@ -25,7 +24,7 @@ spectral_grid = SpectralGrid(truncation = 31, nlayers = 8)
 # ## The two radiation setups
 #
 # `Radiation(spectral_grid)` is SpeedyWeather's default pair, `OneBandShortwave`
-# with diagnostic clouds and `OneBandLongwave`. `EcCKDRadiation` loads the
+# with diagnostic clouds and `OneBandLongwave`. `ClearSkyEcCKDRadiation` loads the
 # 32-g-point longwave and shortwave reference tables, converts them to the
 # grid's number format, and solves both streams from one gas-optics evaluation.
 # It is clear-sky, takes CO₂ from the model's greenhouse gases (280 ppm here by
@@ -33,7 +32,7 @@ spectral_grid = SpectralGrid(truncation = 31, nlayers = 8)
 
 setups = (
     oneband = Radiation(spectral_grid),
-    ecckd   = SpeedyExt.EcCKDRadiation(spectral_grid, "32x32"),
+    ecckd   = ClearSkyEcCKDRadiation(spectral_grid, "32x32"),
 )
 
 # ## Area-weighted global and zonal means
@@ -138,5 +137,5 @@ println("figure written to ", figure_path)
 # With the analytic ozone profile the ecCKD stratosphere (σ ≈ 0.06) sits
 # within a few kelvin of the one-band model's; without ozone it would be
 # about 20 K colder. The 64-longwave × 96-shortwave g-point pair
-# (`EcCKDRadiation(spectral_grid, "64x96")`) gives the same budget to within
+# (`ClearSkyEcCKDRadiation(spectral_grid, "64x96")`) gives the same budget to within
 # 0.3 W m⁻² at twice the cost, so 32x32 is the sensible default.

@@ -66,7 +66,9 @@ the tables do not, so those numbers are not accuracy claims for the tables.
 
 Three scripts validate the clear-sky ecCKD radiation inside SpeedyWeather
 (plan Phase 4 in `docs/plans/ecckd_speedyweather.md`); they need an environment
-with SpeedyWeather ≥ 0.23 (the `Radiation` bundle), NCDatasets and Statistics:
+with SpeedyWeather ≥ 0.23 and its NumericalRadiation extension (the coupling lives
+there as `SpeedyWeatherNumericalRadiationExt`; branch `mg/numericalradiation-extension`
+until released), NCDatasets and Statistics, e.g. `examples/Project.toml`:
 
 | Script | Purpose |
 |:-------|:--------|

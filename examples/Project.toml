@@ -19,4 +19,4 @@ SpeedyWeather = "0.23"
 NumericalRadiation = {path = ".."}
 # SpeedyWeather's `Radiation` bundle is not released yet; until then use the
 # development branch (monorepo subdirectory). Needs Julia >= 1.11.
-SpeedyWeather = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "mg/numericalradiation", subdir = "SpeedyWeather"}
+SpeedyWeather = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "mg/numericalradiation-extension", subdir = "SpeedyWeather"}
