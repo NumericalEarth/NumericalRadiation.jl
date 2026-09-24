@@ -1022,6 +1022,27 @@ using Dates
     end
 end
 
+@testset "shortwave two-stream stays finite across the λμ₀ = 1 pole" begin
+    # ℛ⁰ and 𝒯⁰ divide by 1 - (λμ₀)². The guard that detects that pole must move μ₀ clear
+    # of it: stepping by a fraction of the detection band can leave λμ₀ exactly on 1. These
+    # arguments are from a Breeze column whose shortwave fluxes came back NaN.
+    @test all(isfinite, NumericalRadiation.shortwave_two_stream_layer(Float32, 0.84310526f0, 0.09549952f0, 0.5877195f0, 0f0))
+
+    for FT in (Float32, Float64), ω in FT.((0.1, 0.3, 0.5877195, 0.69)), 𝒢 in FT.((0, 0.5, 0.85))
+        γ₁, γ₂, _ = NumericalRadiation.shortwave_two_stream_coefficients(FT, FT(0.5), ω, 𝒢)
+        λ = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+
+        for n in -20:20, τ in FT.((1.0e-4, 0.0955, 1, 10))
+            μ₀ = (one(FT) + n * eps(FT)) / λ
+            (zero(FT) < μ₀ <= one(FT)) || continue
+            ℛ, 𝒯, ℛ⁰, 𝒯⁰, 𝒟 = NumericalRadiation.shortwave_two_stream_layer(FT, μ₀, τ, ω, 𝒢)
+            @test all(isfinite, (ℛ, 𝒯, ℛ⁰, 𝒯⁰, 𝒟))
+            @test 0 <= ℛ⁰ <= 1
+            @test 0 <= 𝒯⁰ <= 1 - ℛ⁰
+        end
+    end
+end
+
 @testset "shortwave two-stream conserves energy when scattering is conservative" begin
     # A single non-absorbing layer over a black surface has an exact budget:
     # reflected plus transmitted equals incident. Delta-Eddington scaling is what
