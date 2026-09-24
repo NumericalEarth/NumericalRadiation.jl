@@ -306,9 +306,12 @@ function ecrad_shortwave_column!(up::AbstractVector{FT},
 end
 
 """
-    radiative_fluxes!(fluxes, CloudlessShortwave(), optics, atmosphere, boundary_conditions)
+    radiative_fluxes!(fluxes, CloudlessShortwave(), optics, atmosphere, boundary_conditions[, scratch])
 
 Compute clear-sky shortwave interface fluxes from precomputed optical depth.
+`scratch` is the [`ShortwaveColumnScratch`](@ref) of the adding method; pass a
+caller-owned one (e.g. views into a host model's work arrays) to make the call
+allocation-free, otherwise one is allocated per call.
 Arrays in `fluxes.shortwave_up` and `fluxes.shortwave_down` are overwritten.
 When `atmosphere.geometry.cos_zenith` is present, optical depths are scaled by
 the direct-beam path length `1 / μ₀`; otherwise the solver preserves the
@@ -329,7 +332,8 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
                            ::CloudlessShortwave,
                            optics::ShortwaveOptics{FT},
                            atmosphere,
-                           boundary_conditions::ShortwaveBoundaryConditions{FT}) where FT
+                           boundary_conditions::ShortwaveBoundaryConditions{FT},
+                           scratch = ShortwaveColumnScratch(FT, number_of_layers(optics))) where FT
     Nz = number_of_layers(optics)
     length(fluxes.shortwave_up) == Nz + 1 || throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
     length(fluxes.shortwave_down) == Nz + 1 || throw(DimensionMismatch("shortwave_down must have length Nz + 1"))
@@ -347,7 +351,6 @@ function radiative_fluxes!(fluxes::RadiativeFluxes,
 
     # One scratch for every scattering g point; the adding method accumulates
     # its weighted fluxes in place.
-    scratch = ShortwaveColumnScratch(FT, Nz)
     layer_optics = PrecomputedShortwaveLayerOptics(optics)
 
     for g in 1:number_of_gpoints(optics)

@@ -61,3 +61,17 @@ first run. The gates in `rfmip_irf.jl` were set from the first run with about
 line-by-line data the ecCKD tables were trained on, integrates over zenith
 angle exactly rather than with the diffusivity 1.66, and carries halocarbons
 the tables do not, so those numbers are not accuracy claims for the tables.
+
+## SpeedyWeather coupling
+
+Three scripts validate the clear-sky ecCKD radiation inside SpeedyWeather
+(plan Phase 4 in `docs/plans/ecckd_speedyweather.md`); they need an environment
+with SpeedyWeather ≥ 0.23 and its NumericalRadiation extension (the coupling lives
+there as `SpeedyWeatherNumericalRadiationExt`; branch `mg/numericalradiation-extension`
+until released), NCDatasets and Statistics, e.g. `examples/Project.toml`:
+
+| Script | Purpose |
+|:-------|:--------|
+| `speedyweather_ecckd_budget.jl` | T31 L8 runs with the one-band default and ecCKD (32x32, without ozone, 64x96): global radiation budgets, temperature profile, wall time per step |
+| `speedyweather_ecckd_benchmark.jl` | per-column cost of the radiation schemes inside `column_parameterizations!` |
+| `speedyweather_nan_detector.jl` | per-step callback that stops at the first non-finite value and dumps that column, for debugging coupled runs |

@@ -23,3 +23,16 @@ run one clear-sky staged column, and print flux/heating diagnostics.
 julia --project=examples examples/ecckd_column.jl
 ECCKD_MODEL=64x32 julia --project=examples examples/ecckd_column.jl
 ```
+
+## `speedyweather_ecckd.jl`
+
+Run SpeedyWeather twice at T31 L8, with its default one-band radiation and with
+NumericalRadiation's clear-sky ecCKD radiation as the `radiation` component,
+and compare the global budgets, zonal-mean outgoing fluxes and the temperature
+profile (five days spin-up, five days averaged; about a minute). A figure is
+written to `FIGURE_PATH` (default: the temp directory). Not part of the docs
+build because it needs SpeedyWeather and a few minutes of model time.
+
+```bash
+julia --project=examples examples/speedyweather_ecckd.jl
+```

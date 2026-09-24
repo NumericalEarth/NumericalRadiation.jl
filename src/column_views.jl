@@ -28,20 +28,25 @@ radiation solvers.
 
 The arrays are indexed top-down: `k = 1` is the top of the atmosphere,
 `k = Nz` is the bottom (surface-adjacent) layer.
+
+The three vectors may have different array types (e.g. host-model views into
+arrays of different shape); they only need to share the element type `NF`.
 """
-struct AtmosphereProfile{NF, V<:AbstractVector{NF}}
-    temperature::V
-    humidity::V
-    geopotential::V
+struct AtmosphereProfile{NF, VT<:AbstractVector{NF}, VQ<:AbstractVector{NF}, VG<:AbstractVector{NF}}
+    temperature::VT
+    humidity::VQ
+    geopotential::VG
     surface_pressure::NF
     rain_rate::NF
     CO₂::NF
 end
 
-AtmosphereProfile(; temperature, humidity, geopotential = similar(temperature, 0),
-                    surface_pressure, rain_rate = zero(eltype(temperature)), CO₂ = eltype(temperature)(280)) =
-    AtmosphereProfile{eltype(temperature), typeof(temperature)}(
-        temperature, humidity, geopotential, surface_pressure, rain_rate, CO₂)
+function AtmosphereProfile(; temperature, humidity, geopotential = similar(temperature, 0),
+                           surface_pressure, rain_rate = zero(eltype(temperature)), CO₂ = eltype(temperature)(280))
+    NF = eltype(temperature)
+    return AtmosphereProfile{NF, typeof(temperature), typeof(humidity), typeof(geopotential)}(
+        temperature, humidity, geopotential, NF(surface_pressure), NF(rain_rate), NF(CO₂))
+end
 
 """
 $(TYPEDEF)

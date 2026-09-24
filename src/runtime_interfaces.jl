@@ -16,32 +16,34 @@ Fields:
 - `gases`: Symbol-keyed gas concentrations or host-model property view
 - `surface`: Lower-boundary state
 - `geometry`: Geometry, solar angles, or host-model geometry view
+- The four arrays may have different array types (host-model views into arrays of
+  different shape); `FT` is the element type of `temperature_layers`.
 - `constants`: Physical constants of the host ([`PhysicalConstants`](@ref) in the column's
   element type by default): gravity and the dry-air molar mass for the hydrostatic layer air
   amounts of `optical_properties!`, gravity and the heat capacity for
   [`heating_rates!`](@ref)
 """
-struct ColumnAtmosphere{FT, A, G, S, Geo, C} <: AbstractAtmosphericState
-    pressure_layers::A
-    pressure_interfaces::A
-    temperature_layers::A
-    temperature_interfaces::A
+struct ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C} <: AbstractAtmosphericState
+    pressure_layers::PL
+    pressure_interfaces::PI
+    temperature_layers::TL
+    temperature_interfaces::TI
     gases::G
     surface::S
     geometry::Geo
     constants::C
 end
 
-function ColumnAtmosphere(; pressure_layers::A,
-                            pressure_interfaces::A,
-                            temperature_layers::A,
-                            temperature_interfaces::A,
+function ColumnAtmosphere(; pressure_layers::PL,
+                            pressure_interfaces::PI,
+                            temperature_layers::TL,
+                            temperature_interfaces::TI,
                             gases::G,
                             surface::S,
                             geometry::Geo,
-                            constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {A, G, S, Geo, C}
+                            constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {PL, PI, TL, TI, G, S, Geo, C}
     FT = eltype(temperature_layers)
-    return ColumnAtmosphere{FT, A, G, S, Geo, C}(
+    return ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C}(
         pressure_layers,
         pressure_interfaces,
         temperature_layers,
