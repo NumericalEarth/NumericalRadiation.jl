@@ -1,7 +1,7 @@
 name = "NumericalRadiation"
 uuid = "cd8119b0-1744-44d6-9ede-6ad1ad750b26"
 authors = ["NumericalEarth organization (github.com/NumericalEarth) and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
