@@ -6,7 +6,7 @@ SpeedyWeather coupling is to keep changes to the package's core small and to
 prefer the host side (SpeedyWeather's `SpeedyWeatherNumericalRadiationExt`, where
 the coupling code lives) whenever that is possible without giving up
 performance. This file lists every change to `src/` that PR #16 makes relative
-to `main` (as of `f3d6ff5`, 2026-09-24), what forced it, what the alternative
+to `main` (as of `9c1e494`, 2026-09-29), what forced it, what the alternative
 would have been, and how it is tested. Nothing here changes numerical results
 of existing code paths; every change is a type-parameter relaxation, an optional
 argument, or an addition.
