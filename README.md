@@ -39,6 +39,9 @@
   <a href="https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml">
     <img alt="Documenter" src="https://github.com/NumericalEarth/NumericalRadiation.jl/actions/workflows/Documenter.yml/badge.svg">
   </a>
+  <a href="https://codecov.io/gh/NumericalEarth/NumericalRadiation.jl">
+    <img alt="Code coverage" src="https://codecov.io/gh/NumericalEarth/NumericalRadiation.jl/branch/main/graph/badge.svg">
+  </a>
 </p>
 
 NumericalRadiation computes atmospheric radiative fluxes and heating rates. It ingests
