@@ -1,4 +1,5 @@
-# Environment of the SpeedyWeather coupling tests (test/test_with_speedyweather.jl).
+# Environment of the SpeedyWeather coupling tests (test/test_speedyweather_analytic_band_longwave.jl,
+# test/test_speedyweather_clear_sky_ecckd.jl).
 # Kept apart from test/Project.toml because the coupling needs SpeedyWeather >= 0.23 (the
 # `Radiation` bundle and its NumericalRadiation extension), which is not registered yet and
 # is pulled from its development branch through the [sources] entry below; that needs

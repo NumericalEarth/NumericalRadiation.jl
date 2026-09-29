@@ -2,6 +2,7 @@
 using Test
 using NumericalRadiation
 
-@testset "SpeedyWeather Extension" begin
-    include(joinpath(@__DIR__, "..", "test_with_speedyweather.jl"))
+@testset "SpeedyWeather coupling" begin
+    include(joinpath(@__DIR__, "..", "test_speedyweather_analytic_band_longwave.jl"))
+    include(joinpath(@__DIR__, "..", "test_speedyweather_clear_sky_ecckd.jl"))
 end

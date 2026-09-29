@@ -43,10 +43,11 @@ the time-step layout of the prognostic arrays.
 package dispatched on the second parameter (`radiative_transfer_column.jl` and
 `williams_longwave.jl` use `AtmosphereProfile{NF}`).
 
-*Tests.* The extension test `test/test_with_speedyweather.jl` constructs the
-profile from real SpeedyWeather views; the solver suite is unchanged.
+*Tests.* The coupling test `test/test_speedyweather_analytic_band_longwave.jl`
+constructs the profile from real SpeedyWeather views (through SpeedyWeather's
+extension); the solver suite is unchanged.
 
-## 2. `ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo}` (was `{FT, A, G, S, Geo}`)
+## 2. `ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C}` (was `{FT, A, G, S, Geo, C}`)
 
 *File:* `src/runtime_interfaces.jl`.
 
@@ -77,9 +78,9 @@ solver needs seven work vectors. Before `main`'s refactor they were allocated
 per g-point and per column (about 400 allocations per column per step for the
 32-g-point model); `main` now allocates one `ShortwaveColumnScratch` per
 `radiative_fluxes!` call, i.e. seven vectors per column per step. Inside
-SpeedyWeather's fused column kernel that is still the only allocation in the
-hot loop on CPU and a compile failure on GPU, and the extension cannot avoid
-it without dropping Rayleigh scattering.
+SpeedyWeather's fused column kernel that would be the only allocation in the
+hot loop on CPU (and allocation is not possible inside a GPU kernel), and the
+extension cannot avoid it without dropping Rayleigh scattering.
 
 *Alternative considered.* This work originally carried its own
 `CloudlessShortwaveWorkspace` type and a rewritten accumulation; at the first
@@ -119,8 +120,8 @@ configuration), no existing code path changes. The SpeedyWeather extension
 `import`s the name at load time, so it has to be part of this PR.
 
 *Tests.* `test/test_ecckd_radiation.jl` (construction, defaults, conversion,
-missing-gas error); the coupling tests in `test/speedyweather/` and SpeedyWeather's
-`test/numericalradiation/` use it end to end.
+missing-gas error); `test/test_speedyweather_clear_sky_ecckd.jl` and SpeedyWeather's
+`test/parameterizations/numericalradiation.jl` use it end to end.
 
 ## Superseded by `main` during the merges
 
@@ -162,5 +163,5 @@ Written here first, then dropped when `main` provided the same:
 - **Gas-amount and interface-temperature helpers.** Host glue; they live in
   the extension (`gas_amounts!`, `interface_temperatures!`).
 - **Broadcasts inside the solvers** (`fluxes.longwave_up .= 0` and the like).
-  Fine on CPU; GPU kernels need scalar loops. Deferred to the GPU work in
-  Phase 4 together with the bounds checks.
+  Fine on CPU; GPU kernels need scalar loops. Deferred to the first GPU run
+  together with the bounds checks.
