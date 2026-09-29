@@ -1,5 +1,5 @@
-# Per-column cost of the radiation schemes inside SpeedyWeather's column kernel
-# (plan Phase 4): the default one-band pair, the analytic-band longwave, and
+# Per-column cost of the radiation schemes inside SpeedyWeather's column kernel:
+# the default one-band pair, the analytic-band longwave, and
 # ecCKD with the 32x32 and 64x96 reference pairs. Times `column_parameterizations!`
 # with radiation as the only parameterization on a realistic initialized state.
 #

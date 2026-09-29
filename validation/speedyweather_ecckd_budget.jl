@@ -1,5 +1,5 @@
 # Whole-model comparison of NumericalRadiation's clear-sky ecCKD radiation against
-# SpeedyWeather's default one-band schemes (plan Phase 4).
+# SpeedyWeather's default one-band schemes.
 #
 # Runs PrimitiveWetModel at T31 L8 with three radiation setups, spins up, then
 # averages daily snapshots of the TOA/surface radiation budget and the

@@ -5,10 +5,10 @@
 # global model twice, once with SpeedyWeather's default one-band schemes and
 # once with ecCKD, and compares the radiation budgets: global means at the top
 # of the atmosphere and the surface, zonal-mean outgoing fluxes, and the
-# global-mean temperature profile. It is a short version of the validation in
-# `docs/plans/ecckd_speedyweather.md` (Phase 4), which averaged over ten days
-# after ten days of spin-up; here both are five days so the script runs in
-# about a minute.
+# global-mean temperature profile. It is a short version of
+# `validation/speedyweather_ecckd_budget.jl`, which averages over ten days after
+# ten days of spin-up; here both are five days so the script runs in about a
+# minute.
 #
 # SpeedyWeather ≥ 0.23 is needed for the `Radiation` bundle (the `examples`
 # environment points at the development branch until that is released), and

@@ -1,5 +1,5 @@
 # Per-step detector for the first non-finite value in a SpeedyWeather run with
-# `ClearSkyEcCKDRadiation` (plan Phase 4). It found the two-stream singularity that made
+# `ClearSkyEcCKDRadiation`. It found the two-stream singularity that made
 # the coupled model go NaN after a few days: the callback keeps the previous
 # step's surface state per column, stops at the first non-finite soil
 # temperature, near-surface air temperature, surface flux or longwave flux, and
