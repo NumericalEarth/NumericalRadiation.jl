@@ -90,6 +90,36 @@ end
     @test mean(olr2) < mean(olr1)
 end
 
+@testset "Ocean and land emissivity (issue #9)" begin
+    # the scheme's emissivities go into the surface state: a darker surface emits less,
+    # so the surface upward flux and the OLR drop; default is 1 as before
+    spectral_grid = default_spectral_grid()
+    NF = spectral_grid.NF
+    @test AnalyticBandLongwave(spectral_grid).ocean_emissivity == one(NF)
+    @test AnalyticBandLongwave(spectral_grid).land_emissivity == one(NF)
+    longwave = AnalyticBandLongwave(spectral_grid; ocean_emissivity = 0.9, land_emissivity = 0.8)
+    @test longwave.ocean_emissivity == NF(0.9)
+    @test longwave.land_emissivity == NF(0.8)
+
+    results = map((AnalyticBandLongwave(spectral_grid), longwave)) do lw
+        radiation = Radiation(spectral_grid; shortwave = nothing, longwave = lw)
+        model = PrimitiveWetModel(spectral_grid; radiation, parameterizations = (:radiation,))
+        initialize!(model.radiation, model)
+        variables = Variables(model)
+        set_test_state!(variables, model)
+        SpeedyWeather.column_parameterizations!(variables, model)
+        (up = copy(variables.parameterizations.surface_longwave_up),
+         ocean_up = copy(variables.parameterizations.ocean.surface_longwave_up),
+         land_up = copy(variables.parameterizations.land.surface_longwave_up),
+         olr = copy(variables.parameterizations.outgoing_longwave))
+    end
+    default, darker = results
+    @test all(darker.up .< default.up)
+    @test all(darker.ocean_up .≈ 0.9 .* default.ocean_up)
+    @test all(darker.land_up .≈ 0.8 .* default.land_up)
+    @test all(darker.olr .< default.olr)
+end
+
 @testset "Full model time steps with the analytic-band longwave" begin
     # Default wet model with only the longwave scheme swapped; a few steps run through.
     spectral_grid = default_spectral_grid()

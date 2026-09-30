@@ -18,7 +18,9 @@ a two-band H₂O continuum ([`water_vapor_continuum_absorption_reference`](@ref)
 15 μm bending mode ([`carbon_dioxide_absorption_reference`](@ref)). All reference constants are at
 (T_ref, p_ref, RH_ref) = (260 K, 500 hPa, 100 %).
 
-Fields and defaults follow Williams (2026), Table 1.
+Fields and defaults follow Williams (2026), Table 1, except `ocean_emissivity` and
+`land_emissivity`: the longwave surface emissivities a host passes into its [`SurfaceState`](@ref)
+when it carries no surface emissivity of its own (SpeedyWeather does not); default 1.
 
 References:
 - Williams (2026), *J. Adv. Model. Earth Syst.*, doi:10.1029/2025MS005405.
@@ -48,6 +50,8 @@ Fields:
   partial pressure
 - `carbon_dioxide_molar_mass_ratio`: CO₂-to-dry-air molar mass ratio converting ppmv to a
   mass mixing ratio
+- `ocean_emissivity`: Longwave emissivity of the ocean surface, for hosts without their own.
+- `land_emissivity`: Longwave emissivity of the land surface, for hosts without their own.
 """
 struct AnalyticBandLongwave{NF} <: AbstractLongwaveScheme
     Nwavenumbers::Int
@@ -70,6 +74,8 @@ struct AnalyticBandLongwave{NF} <: AbstractLongwaveScheme
     σ_cont::NF
     water_vapor_molar_mass_ratio::NF
     carbon_dioxide_molar_mass_ratio::NF
+    ocean_emissivity::NF
+    land_emissivity::NF
 end
 
 Adapt.@adapt_structure AnalyticBandLongwave
@@ -87,6 +93,8 @@ function AnalyticBandLongwave{NF}(;
         σ_cont = NF(0.02),
         water_vapor_molar_mass_ratio = NF(0.622),
         carbon_dioxide_molar_mass_ratio = NF(44 / 29),
+        ocean_emissivity = one(NF),
+        land_emissivity = one(NF),
     ) where NF
     return AnalyticBandLongwave{NF}(
         Nwavenumbers, wavenumber_min, wavenumber_max,
@@ -94,6 +102,7 @@ function AnalyticBandLongwave{NF}(;
         κ_CO₂, l_CO₂, ν̃_CO₂,
         diffusivity, p_ref, T_ref, pv_ref, σ_cont,
         water_vapor_molar_mass_ratio, carbon_dioxide_molar_mass_ratio,
+        NF(ocean_emissivity), NF(land_emissivity),
     )
 end
 
