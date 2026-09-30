@@ -43,11 +43,8 @@ scheme = ClearSkyEcCKDRadiation(gas_optics; mole_fractions = (; ch4 = 1.8e-6))  
 ```
 """
 struct ClearSkyEcCKDRadiation{FT, GO <: EcCKDTabulatedGasOpticsModel{FT}, MF <: NamedTuple} <: AbstractRadiationScheme
-    "Tabulated ecCKD gas optics for both streams"
     gas_optics::GO
-    "Prescribed mole fractions of the gases the host does not carry: numbers or functions of pressure [Pa]"
     mole_fractions::MF
-    "Longwave emissivity of the surface [1]"
     surface_emissivity::FT
 end
 
