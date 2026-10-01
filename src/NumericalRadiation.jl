@@ -92,5 +92,6 @@ include("gas_optics/ecckd_forward.jl")
 include("gas_optics/ecckd_layer.jl")
 include("solvers/streaming_longwave.jl")
 include("metrics.jl")
+include("ecckd_radiation.jl")
 
 end # module

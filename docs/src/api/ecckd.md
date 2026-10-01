@@ -23,3 +23,10 @@ ecrad_data_path
 ecrad_test_file
 ecckd_source_path
 ```
+
+## Configured clear-sky scheme
+
+```@docs
+ClearSkyEcCKDRadiation
+default_ozone_profile
+```
