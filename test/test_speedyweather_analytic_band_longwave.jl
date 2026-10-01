@@ -90,7 +90,7 @@ end
     @test mean(olr2) < mean(olr1)
 end
 
-@testset "Ocean and land emissivity (issue #9)" begin
+@testset "Ocean and land emissivity" begin
     # the scheme's emissivities go into the surface state: a darker surface emits less,
     # so the surface upward flux and the OLR drop; default is 1 as before
     spectral_grid = default_spectral_grid()
