@@ -24,9 +24,3 @@ SpeedyWeather = "0.23"
 
 [sources]
 NumericalRadiation = {path = "../.."}
-# SpeedyWeather main depends on unreleased versions of its sibling packages: all from the monorepo's main
-SpeedyWeather = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "main", subdir = "SpeedyWeather"}
-LowerTriangularArrays = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "main", subdir = "LowerTriangularArrays"}
-RingGrids = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "main", subdir = "RingGrids"}
-SpeedyTransforms = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "main", subdir = "SpeedyTransforms"}
-SpeedyWeatherInternals = {url = "https://github.com/SpeedyWeather/SpeedyWeather.jl.git", rev = "main", subdir = "SpeedyWeatherInternals"}
