@@ -20,6 +20,10 @@ and interpolating with [`cloud_layer_optics`](@ref). The element type `FT`
 follows the stored arrays, so `Adapt.adapt(Array{Float32}, cloud)` yields a
 `Float32` model.
 
+The `lookup_search` keyword accepts [`BinarySearch`](@ref) (default) or
+[`FixedBinarySearch`](@ref), as in
+[`EcCKDTabulatedGasOpticsModel`](@ref), for effective-radius bracketing.
+
 Fields:
 - `effective_radius`: Effective-radius nodes in m, strictly increasing, shape `(Nr,)`
 - `mass_extinction_coefficient`: Mass-extinction coefficient in m² kg⁻¹, shape
@@ -27,11 +31,12 @@ Fields:
 - `single_scattering_albedo`: Single-scattering albedo, shape `(Ng, Nr)`
 - `asymmetry_factor`: Scattering asymmetry factor, shape `(Ng, Nr)`
 """
-struct SpectralCloudOptics{FT, V, M}
+struct SpectralCloudOptics{FT, V, M, S}
     effective_radius :: V
     mass_extinction_coefficient :: M
     single_scattering_albedo :: M
     asymmetry_factor :: M
+    lookup_search :: S
 end
 
 Base.eltype(::SpectralCloudOptics{FT}) where FT = FT
@@ -45,7 +50,8 @@ element type `FT` is passed as the first positional argument; the arrays are
 converted to `Vector{FT}` and `Matrix{FT}`.
 """
 function SpectralCloudOptics(FT::DataType, effective_radius::AbstractVector, mass_extinction_coefficient::AbstractMatrix,
-                             single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix)
+                             single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix;
+                             lookup_search::AbstractLookupSearch = BinarySearch())
     Nr = length(effective_radius)
     Nr >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
     validate_increasing_grid(effective_radius, "effective_radius")
@@ -60,7 +66,7 @@ function SpectralCloudOptics(FT::DataType, effective_radius::AbstractVector, mas
     κ = Matrix{FT}(mass_extinction_coefficient)
     ω = Matrix{FT}(single_scattering_albedo)
     𝒢 = Matrix{FT}(asymmetry_factor)
-    return SpectralCloudOptics{FT, typeof(radius), typeof(κ)}(radius, κ, ω, 𝒢)
+    return SpectralCloudOptics{FT, typeof(radius), typeof(κ), typeof(lookup_search)}(radius, κ, ω, 𝒢, lookup_search)
 end
 
 """
@@ -70,10 +76,10 @@ Build a [`SpectralCloudOptics`](@ref) from per-node arrays whose element type
 is `promote_type` of the array element types.
 """
 SpectralCloudOptics(effective_radius::AbstractVector, mass_extinction_coefficient::AbstractMatrix,
-                    single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix) =
+                    single_scattering_albedo::AbstractMatrix, asymmetry_factor::AbstractMatrix; kwargs...) =
     SpectralCloudOptics(promote_type(eltype(effective_radius), eltype(mass_extinction_coefficient),
                                      eltype(single_scattering_albedo), eltype(asymmetry_factor)),
-                        effective_radius, mass_extinction_coefficient, single_scattering_albedo, asymmetry_factor)
+                        effective_radius, mass_extinction_coefficient, single_scattering_albedo, asymmetry_factor; kwargs...)
 
 """
 $(TYPEDSIGNATURES)
@@ -94,7 +100,8 @@ function SpectralCloudOptics(FT::DataType,
                              effective_radius::Number,
                              mapping_method = :ecrad,
                              delta_eddington_average = true,
-                             thick_averaging = false)
+                             thick_averaging = false,
+                             lookup_search::AbstractLookupSearch = BinarySearch())
     properties = cloud_scattering_gpoint_properties(table, mapping, effective_radius;
                                                     mapping_method,
                                                     delta_eddington_average,
@@ -104,7 +111,7 @@ function SpectralCloudOptics(FT::DataType,
     κ = reshape(properties.mass_extinction_coefficient, Ng, 1)
     ω = reshape(properties.single_scattering_albedo, Ng, 1)
     𝒢 = reshape(properties.asymmetry_factor, Ng, 1)
-    return SpectralCloudOptics(FT, radius, κ, ω, 𝒢)
+    return SpectralCloudOptics(FT, radius, κ, ω, 𝒢; lookup_search)
 end
 
 """
@@ -125,7 +132,8 @@ function Adapt.adapt_structure(to, cloud::SpectralCloudOptics)
     ω = Adapt.adapt(to, cloud.single_scattering_albedo)
     𝒢 = Adapt.adapt(to, cloud.asymmetry_factor)
     FT = eltype(κ)
-    return SpectralCloudOptics{FT, typeof(effective_radius), typeof(κ)}(effective_radius, κ, ω, 𝒢)
+    search = cloud.lookup_search
+    return SpectralCloudOptics{FT, typeof(effective_radius), typeof(κ), typeof(search)}(effective_radius, κ, ω, 𝒢, search)
 end
 
 function Base.show(io::IO, cloud::SpectralCloudOptics{FT}) where FT
@@ -150,7 +158,7 @@ one-node model brackets to `(1, 1, 0)` for every radius, and so does a
     if length(grid) == 1
         return (firstindex(grid), firstindex(grid), zero(FT))
     else
-        return bracket(grid, FT(radius))
+        return bracket(grid, FT(radius), cloud.lookup_search)
     end
 end
 

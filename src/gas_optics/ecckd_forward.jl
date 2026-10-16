@@ -99,8 +99,14 @@ increment throughout. Without a Planck source table the longwave source is
 the gray `longwave_source_scale[g] σT⁴` with the model's `stefan_boltzmann`
 (keyword; [`PhysicalConstants`](@ref) default).
 
+Set `lookup_search=FixedBinarySearch()` to bracket vector temperature and Planck-source
+tables with a fixed number of binary-search iterations, suitable for batched
+kernel compilation. The default [`BinarySearch`](@ref) stops each search when its interval
+is found. Both use the same interpolation and endpoint behavior; pressure,
+H₂O, and matrix temperature grids retain their direct indexing.
+
 """
-struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LHWA, SHWA, SWR, LWS, LST, LSTB, LWW, SWW} <:
+struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LHWA, SHWA, SWR, LWS, LST, LSTB, LWW, SWW, S} <:
        AbstractGasOpticsModel
     pressure_grid::PG   # Positive, increasing, log-uniform pressure grid for coefficient tables.
     temperature_grid::TG   # Increasing temperature grid, or pressure-dependent matrix with one common increment.
@@ -116,6 +122,7 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     longwave_source_table::LSTB   # Optional longwave source table with shape `(Ngˡʷ, Ntemperatures)`.
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
+    lookup_search::S   # Concrete search strategy, chosen at construction.
     stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source fallback, W m⁻² K⁻⁴.
 end
 
@@ -140,7 +147,7 @@ function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, Ga
               shortwave_absorption, longwave_water_vapor_absorption,
               shortwave_water_vapor_absorption, shortwave_rayleigh_molar_scattering,
               longwave_source_scale, longwave_source_temperature_grid,
-              longwave_source_table, longwave_weights, shortwave_weights)
+              longwave_source_table, longwave_weights, shortwave_weights, model.lookup_search)
     FT = eltype(pressure_grid)
     return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields..., FT(model.stefan_boltzmann))
 end
@@ -185,6 +192,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
                                         longwave_source_table = nothing,
                                         longwave_weights = nothing,
                                         shortwave_weights = nothing,
+                                        lookup_search::AbstractLookupSearch = BinarySearch(),
                                         stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     source_types = longwave_source_table === nothing ?
         () :
@@ -265,7 +273,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
     fields = (pressure_grid, temperature_grid, water_vapor_grid, gas_reference_mole_fractions,
               longwave_absorption, shortwave_absorption, longwave_water_vapor, shortwave_water_vapor,
               shortwave_rayleigh_molar_scattering, longwave_source_scale, longwave_source_temperature_grid,
-              longwave_source_table, longwave_weights, shortwave_weights)
+              longwave_source_table, longwave_weights, shortwave_weights, lookup_search)
     model = EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
     return EcCKDTabulatedGasOpticsModel{FT}(model)
 end
@@ -347,25 +355,6 @@ end
     check_tabulated_gas_profile_lengths(gases, Names, Nz)
 
 @inline source_temperature(atmosphere::ColumnAtmosphere, k) = atmosphere.temperature_layers[k]
-
-@inline function bracket(grid, x)
-    x <= grid[begin] && return firstindex(grid), firstindex(grid) + 1, zero(eltype(grid))
-    last = lastindex(grid)
-    x >= grid[last] && return last - 1, last, one(eltype(grid))
-
-    lower = firstindex(grid)
-    upper = last
-    while upper - lower > 1
-        mid = (lower + upper) >>> 1
-        if x < grid[mid]
-            upper = mid
-        else
-            lower = mid
-        end
-    end
-    weight = (x - grid[lower]) / (grid[upper] - grid[lower])
-    return lower, upper, weight
-end
 
 @inline function log_bracket(grid, x)
     # Uniform log spacing by file contract; clamp to the axis so off-table
@@ -454,10 +443,12 @@ end
 # the grids: the matrix-grid temperature index below is evaluated in it, and
 # `EcCKDTabulatedGasOpticsModel` stores absorption tables as given, so their
 # element type need not match the model's.
-@inline table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractVector, pressure, temperature) where FT =
-    (pressure_axis_bracket(pressure_grid, pressure), bracket(temperature_grid, temperature))
+@inline table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractVector, pressure, temperature,
+                      lookup_search=BinarySearch()) where FT =
+    (pressure_axis_bracket(pressure_grid, pressure), bracket(temperature_grid, temperature, lookup_search))
 
-@inline function table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractMatrix, pressure, temperature) where FT
+@inline function table_stencil(::Type{FT}, pressure_grid, temperature_grid::AbstractMatrix, pressure, temperature,
+                               lookup_search=BinarySearch()) where FT
     pressure_bracket = pressure_axis_bracket(pressure_grid, pressure)
     i₀ᵖ, i₁ᵖ, wᵖ = pressure_bracket
     temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] + wᵖ * temperature_grid[i₁ᵖ, 1]

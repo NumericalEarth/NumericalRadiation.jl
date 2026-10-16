@@ -10,6 +10,7 @@ export AbstractRadiationScheme, AbstractLongwaveScheme, AbstractShortwaveScheme
 export AbstractShortwaveTransmissivity, AbstractShortwaveClouds
 export AbstractAtmosphericState, AbstractGasOpticsModel, AbstractCloudOpticsModel
 export AbstractAerosolOpticsModel, AbstractRadiativeTransferSolver, AbstractRadiationBackend
+export AbstractLookupSearch, BinarySearch, FixedBinarySearch
 
 export AtmosphereProfile, ColumnGrid, SurfaceState
 export ColumnAtmosphere, RadiativeFluxes
@@ -66,6 +67,7 @@ export RadiativeTransferColumn, reset!
 export solar_declination, equation_of_time, cosine_solar_zenith
 
 include("abstract_types.jl")
+include("lookup_search.jl")
 include("physical_constants.jl")
 include("column_views.jl")
 include("flux_to_tendency.jl")

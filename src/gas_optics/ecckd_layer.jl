@@ -63,7 +63,8 @@ are not interpolated.
 """
 @inline function gas_optics_stencil(model::EcCKDTabulatedGasOpticsModel{FT}, pressure, temperature,
                                     water_vapor_mole_fraction) where FT
-    pressure_bracket, temperature_bracket = table_stencil(FT, model.pressure_grid, model.temperature_grid, pressure, temperature)
+    pressure_bracket, temperature_bracket = table_stencil(FT, model.pressure_grid, model.temperature_grid,
+                                                         pressure, temperature, model.lookup_search)
     water_vapor_bracket = water_vapor_axis_bracket(model.water_vapor_mole_fraction_grid, water_vapor_mole_fraction)
     return GasOpticsStencil{FT}(pressure_bracket, temperature_bracket, water_vapor_bracket)
 end
@@ -201,7 +202,7 @@ end
     model.longwave_source_table === nothing && return nothing
     grid = model.longwave_source_temperature_grid
     T = FT(temperature)
-    i₀, i₁, w = bracket(grid, T)
+    i₀, i₁, w = bracket(grid, T, model.lookup_search)
     last = lastindex(grid)
     w_above = (T - grid[last - 1]) / (grid[last] - grid[last - 1])
     return i₀, i₁, ifelse(T > grid[last], w_above, w)
