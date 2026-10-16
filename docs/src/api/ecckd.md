@@ -7,6 +7,9 @@ EcCKDModelSpec
 EcCKDSpectralMapping
 EcCKDGasOpticsModel
 EcCKDTabulatedGasOpticsModel
+AbstractLookupSearch
+BinarySearch
+FixedBinarySearch
 read_ecckd_definition
 read_ecckd_spectral_mapping
 read_ecckd_tabulated_gas_optics

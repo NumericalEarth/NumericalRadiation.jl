@@ -505,6 +505,10 @@ table, grid and weight vector is converted to `FT`, so
 yields a model whose optical properties are computed in single precision; the
 files store their coefficients in single precision, so that model carries
 them exactly.
+
+Pass `lookup_search=FixedBinarySearch()` to use a fixed-count binary search for the
+temperature and Planck-source tables. The default is `BinarySearch()`; see
+[`EcCKDTabulatedGasOpticsModel`](@ref).
 """
 function read_ecckd_tabulated_gas_optics(FT::DataType,
                                          longwave_path::AbstractString,
@@ -530,7 +534,8 @@ with element type `FT`, passed as the first positional argument (default
 tables in single precision. `model` accepts selectors such as
 `:climate_32x32`, `:climate_64x32`, or `"32x96"`. Keyword arguments other than
 `require` are forwarded to [`read_ecckd_tabulated_gas_optics`](@ref), for
-example `names`, `water_vapor_mole_fraction` and `stefan_boltzmann`.
+example `names`, `water_vapor_mole_fraction`, `stefan_boltzmann`, and
+`lookup_search`.
 
 This method resolves the package's lazy ecRad artifact when needed. Load
 `NCDatasets.jl` before calling it so the NetCDF reader extension is active.

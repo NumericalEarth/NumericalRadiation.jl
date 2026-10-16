@@ -57,6 +57,22 @@ in single precision (the files store them that way, so nothing is lost), or
 convert a loaded model with
 `EcCKDTabulatedGasOpticsModel{Float32}(gas_optics)`; `Adapt.adapt` likewise
 follows the element type of the adapted arrays.
+
+For batched kernel compilation, pass `lookup_search=FixedBinarySearch()` to the loader,
+for example `read_reference_ecckd_gas_optics(Float32, "32x32"; lookup_search=FixedBinarySearch())`.
+This selects a fixed-count binary search for vector temperature and Planck-source
+tables. The default [`BinarySearch`](@ref) exits as soon as it finds the interval.
+Both preserve the interpolation and endpoint behavior, including Planck-source
+extrapolation. Log-uniform pressure and H₂O axes and matrix temperature grids
+keep their direct indexing. The setting survives precision conversion and
+device adaptation. `SpectralCloudOptics(...; lookup_search=FixedBinarySearch())` selects
+the same method independently for cloud effective-radius tables.
+
+The fixed search addresses the batched lookup compilation failure described in
+[issue #30](https://github.com/NumericalEarth/NumericalRadiation.jl/issues/30).
+It does not by itself establish that an entire radiation solver compiles and
+differentiates through Reactant.
+
 Because `:h2o` is in `names`, the reference H₂O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes
 the layer H₂O mole fraction from the `h2o` and `composite` gas amounts and
