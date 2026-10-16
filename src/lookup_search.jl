@@ -25,6 +25,19 @@ raise a data-dependent search loop. Interpolation and endpoint behavior match
 """
 struct FixedBinarySearch <: AbstractLookupSearch end
 
+"""
+$(TYPEDSIGNATURES)
+
+Direct indexing of a uniformly spaced table: the bracket is computed from the
+first node and the spacing, with no search and no loop. Requires uniformly
+spaced vector temperature and Planck-source grids (or effective-radius nodes,
+for cloud optics), which the constructors check. The ecCKD reference tables'
+Planck-source grid is uniform. Interpolation and endpoint behavior match
+[`BinarySearch`](@ref), except that a `NaN` query brackets the first interval
+(its weight is `NaN`, as for the searches).
+"""
+struct DirectIndexing <: AbstractLookupSearch end
+
 @inline bracket(grid, x) = bracket(grid, x, BinarySearch())
 
 @inline function bracket(grid, x, ::BinarySearch)
@@ -67,3 +80,18 @@ end
     @inbounds weight = ifelse(x >= grid[end], one(eltype(grid)), weight)
     return lower, upper, weight
 end
+
+@inline function bracket(grid, x, ::DirectIndexing)
+    first = firstindex(grid)
+    @inbounds offset = (x - grid[first]) / (grid[first + 1] - grid[first])
+    i₀ = first + clamped_lower_index(offset, length(grid) - 2)
+    # The weight is taken from the bracketing nodes rather than as the fractional part of
+    # `offset`, so the index enters only as an address: Reactant differentiates a truncated
+    # index as if it were the identity, which would cancel the weight's derivative.
+    @inbounds weight = (x - grid[i₀]) / (grid[i₀ + 1] - grid[i₀])
+    return i₀, i₀ + 1, clamp(weight, zero(weight), one(weight))
+end
+
+# Strategies that index directly need uniformly spaced axes
+validate_lookup_axis(::AbstractLookupSearch, grid, name) = nothing
+validate_lookup_axis(::DirectIndexing, grid, name) = length(grid) < 2 ? nothing : validate_uniform_grid(grid, name)

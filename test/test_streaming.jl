@@ -1164,6 +1164,14 @@ end
                                      view(layers, 2, :), view(layers, 1, :),
                                      view(interfaces, 1, :), view(interfaces, 2, :))
     @test eltype(scratch) === Float64
+    # Layer and interface storage can have distinct types (in particular, when
+    # a kernel backend includes array dimensions in those types).
+    distinct = ShortwaveColumnScratch(zeros(5), zeros(5), zeros(5), zeros(5), zeros(5),
+                                      view(interfaces, 1, :), view(interfaces, 2, :))
+    @test eltype(distinct) === Float64
+    @test length(distinct.reflectance) == 5
+    @test length(distinct.stack_albedo) == 6
+    @test length(distinct.source) == 6
 end
 
 @testset "streaming shortwave reproduces the adding solver, $FT" for FT in (Float64, Float32)

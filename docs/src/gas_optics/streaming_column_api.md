@@ -54,10 +54,14 @@ The streaming functions share the package conventions of the array path:
 - **Device rules.** Every function on this page is `@inline`, allocation-free
   and never throws. Branches are on model structure (empty tables, `Nothing`
   phases) or on scalar layer values where the numerics require them — the
-  bisection that brackets a temperature on a table axis and the thin-layer
-  limit of the longwave layer sources — never on array shapes or host state.
-  Scratch storage is caller-owned, so a kernel hands in views of its own
-  device arrays.
+  thin-layer limit of the longwave layer sources — never on array shapes or
+  host state, and table lookups skip bounds checks. With
+  `lookup_search=FixedBinarySearch()` or `DirectIndexing()` (see
+  [`EcCKDTabulatedGasOpticsModel`](@ref)) no loop has a data-dependent exit
+  either, so compilers that need static loops, such as Reactant, can compile
+  whole column kernels (see `test/reactant/`); the default `BinarySearch()`
+  stops each bisection as soon as it finds its interval. Scratch storage is
+  caller-owned, so a kernel hands in views of its own device arrays.
 
 ## The loop
 
@@ -91,8 +95,9 @@ host that stages columns in a separate kernel stores the six scalars
 [`EcCKDGasOpticsModel`](@ref) the stencil is `nothing`.
 
 [`source_table_bracket`](@ref) does the same for the Planck source table at an
-interface temperature; [`longwave_source`](@ref) then interpolates the source
-of each g point. Without a source table the source is the gray
+interface temperature, by the model's `lookup_search` (`DirectIndexing()`
+computes it from the uniform spacing of the reference tables' grid, as ecRad
+does); [`longwave_source`](@ref) then interpolates the source of each g point. Without a source table the source is the gray
 `longwave_source_scale[g] σT⁴`.
 
 ### Per-g-point optics
@@ -137,7 +142,8 @@ and upward source between the sweeps.
 through [`NumericalRadiation.shortwave_two_stream_layer`](@ref) (delta-Eddington
 scaling inside), and the adding sweeps run on a
 [`ShortwaveColumnScratch`](@ref) — five layer vectors and two interface
-vectors that a kernel supplies as views of its own arrays. The direct and
+vectors that a kernel supplies as views of its own arrays (layer and interface
+vectors may have different types, as Reactant's size-typed arrays do). The direct and
 diffuse surface albedos may be broadband numbers or per-g-point indexables.
 
 ## Agreement with the array path

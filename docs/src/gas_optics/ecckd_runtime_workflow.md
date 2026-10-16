@@ -68,10 +68,19 @@ keep their direct indexing. The setting survives precision conversion and
 device adaptation. `SpectralCloudOptics(...; lookup_search=FixedBinarySearch())` selects
 the same method independently for cloud effective-radius tables.
 
+The ecCKD reference tables' Planck-source grid is uniformly spaced, so
+`lookup_search=DirectIndexing()` computes its brackets from the spacing, with no
+search at all; it requires every axis it is used on (vector temperature and
+Planck-source grids, cloud effective radii) to be uniform, and the constructors
+check this.
+
 The fixed search addresses the batched lookup compilation failure described in
 [issue #30](https://github.com/NumericalEarth/NumericalRadiation.jl/issues/30).
-It does not by itself establish that an entire radiation solver compiles and
-differentiates through Reactant.
+With it (or `DirectIndexing`), the table lookups also skip bounds checks, whose
+failure branch would otherwise give every column sweep loop a data-dependent
+exit, so whole longwave and shortwave column kernels compile with Reactant
+(`test/reactant/`). Reverse-mode gradients through such kernels currently also
+compile, but two Reactant bugs make them wrong; see `test/reactant/runtests.jl`.
 
 Because `:h2o` is in `names`, the reference H₂O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes

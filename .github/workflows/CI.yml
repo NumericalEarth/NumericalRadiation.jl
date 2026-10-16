@@ -50,6 +50,23 @@ jobs:
       - name: SpeedyWeather extension tests
         run: julia --project=test/speedyweather --check-bounds=yes test/speedyweather/runtests.jl
 
+  # Reactant compatibility of the kernel path (issue #30): compiled with Reactant inside
+  # KernelAbstractions kernels and differentiated by Enzyme through Reactant, from
+  # test/reactant/, whose environment carries Reactant, CUDA (which Reactant needs to compile
+  # KernelAbstractions kernels on any backend) and Enzyme.
+  reactant:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.12"
+      - uses: julia-actions/cache@v2
+      - name: Instantiate the Reactant test environment
+        run: julia --project=test/reactant -e 'using Pkg; Pkg.instantiate()'
+      - name: Reactant compatibility tests
+        run: julia --project=test/reactant test/reactant/runtests.jl
+
   # Line-by-line benchmarks of the reference ecCKD models (validation/).
   # Reference data come from the ecrad_data artifact and from downloads; a
   # network failure skips a benchmark rather than failing the job.

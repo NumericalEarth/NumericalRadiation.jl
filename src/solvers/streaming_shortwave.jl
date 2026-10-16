@@ -3,9 +3,11 @@ $(TYPEDEF)
 
 Per-column scratch storage for [`streaming_shortwave_fluxes!`](@ref): five
 layer vectors of length `Nz` and two interface vectors of length `Nz + 1`.
-On the host `V` is a `Vector{FT}`; a host kernel hands in views of one row of
-its own device matrices instead, so the solver never allocates. Every element
-is written before it is read, so the storage need not be initialized.
+On the host `V` and `F` are `Vector{FT}`; a host kernel hands in views of one row
+of its own device matrices instead, so the solver never allocates. Layer and
+interface storage may have different types when array sizes are encoded in the
+type, as in Reactant kernels. Every element is written before it is read, so
+the storage need not be initialized.
 
 Fields:
 - `reflectance`: Layer diffuse reflectance, length `Nz`
@@ -16,14 +18,14 @@ Fields:
 - `stack_albedo`: Diffuse albedo of the stack below each interface, length `Nz + 1`
 - `source`: Upward diffuse source (W m⁻²) of the stack below each interface, length `Nz + 1`
 """
-struct ShortwaveColumnScratch{V}
+struct ShortwaveColumnScratch{V, F}
     reflectance::V
     transmittance::V
     direct_reflectance::V
     direct_diffuse_transmittance::V
     direct_flux::V
-    stack_albedo::V
-    source::V
+    stack_albedo::F
+    source::F
 end
 
 """
