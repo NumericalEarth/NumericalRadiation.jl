@@ -10,7 +10,7 @@ export AbstractRadiationScheme, AbstractLongwaveScheme, AbstractShortwaveScheme
 export AbstractShortwaveTransmissivity, AbstractShortwaveClouds
 export AbstractAtmosphericState, AbstractGasOpticsModel, AbstractCloudOpticsModel
 export AbstractAerosolOpticsModel, AbstractRadiativeTransferSolver, AbstractRadiationBackend
-export AbstractLookupSearch, BinarySearch, FixedBinarySearch
+export AbstractLookupSearch, BinarySearch, FixedBinarySearch, DirectIndexing
 
 export AtmosphereProfile, ColumnGrid, SurfaceState
 export ColumnAtmosphere, RadiativeFluxes

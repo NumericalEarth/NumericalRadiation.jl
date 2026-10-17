@@ -156,7 +156,7 @@ model carries no Rayleigh table, and always zero for an
 """
 @inline function rayleigh_optical_depth(model::EcCKDTabulatedGasOpticsModel{FT}, g, air_moles) where FT
     length(model.shortwave_rayleigh_molar_scattering) == 0 && return zero(FT)
-    return FT(model.shortwave_rayleigh_molar_scattering[g]) * FT(air_moles)
+    @inbounds return FT(model.shortwave_rayleigh_molar_scattering[g]) * FT(air_moles)
 end
 
 @inline rayleigh_optical_depth(::EcCKDGasOpticsModel{FT}, g, air_moles) where FT = zero(FT)
@@ -185,7 +185,7 @@ per-unit-weight flux convention: the tabulated source interpolated with
 default).
 """
 @inline function longwave_source(model::EcCKDGasOpticsModel{FT}, g, temperature, ::Nothing) where FT
-    return model.longwave_source_scale[g] * (model.stefan_boltzmann * FT(temperature)^4)
+    @inbounds return model.longwave_source_scale[g] * (model.stefan_boltzmann * FT(temperature)^4)
 end
 
 # The temperature is converted to the model precision before bracketing, as
@@ -204,17 +204,17 @@ end
     T = FT(temperature)
     i₀, i₁, w = bracket(grid, T, model.lookup_search)
     last = lastindex(grid)
-    w_above = (T - grid[last - 1]) / (grid[last] - grid[last - 1])
+    @inbounds w_above = (T - grid[last - 1]) / (grid[last] - grid[last - 1])
     return i₀, i₁, ifelse(T > grid[last], w_above, w)
 end
 
 @inline function longwave_source(model::EcCKDTabulatedGasOpticsModel{FT}, g, temperature, source_bracket) where FT
     source_bracket === nothing &&
-        return model.longwave_source_scale[g] * model.stefan_boltzmann * FT(temperature)^4
+        @inbounds return model.longwave_source_scale[g] * model.stefan_boltzmann * FT(temperature)^4
     source = interpolate_source_table(model.longwave_source_table, g, source_bracket)
     # Linear to zero below the first node, as in ecRad; the factor is exactly
     # one on and above the table, so in-range sources are untouched.
-    T₁ = model.longwave_source_temperature_grid[begin]
+    @inbounds T₁ = model.longwave_source_temperature_grid[begin]
     return source * min(FT(temperature) / T₁, one(FT))
 end
 

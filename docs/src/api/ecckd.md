@@ -10,6 +10,7 @@ EcCKDTabulatedGasOpticsModel
 AbstractLookupSearch
 BinarySearch
 FixedBinarySearch
+DirectIndexing
 read_ecckd_definition
 read_ecckd_spectral_mapping
 read_ecckd_tabulated_gas_optics

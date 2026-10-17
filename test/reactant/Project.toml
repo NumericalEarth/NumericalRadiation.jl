@@ -1,0 +1,22 @@
+# Environment of the Reactant compatibility tests (test/reactant/runtests.jl): the kernel path of
+# NumericalRadiation (lookup-table brackets, gas optics, Planck sources and the streaming column
+# solvers) compiled by Reactant inside KernelAbstractions kernels, and differentiated by Enzyme
+# through Reactant. Kept apart from test/Project.toml because Reactant is a heavy dependency that
+# the core tests do not need. Run with
+#   julia --project=test/reactant -e 'using Pkg; Pkg.instantiate()'
+#   julia --project=test/reactant test/reactant/runtests.jl
+# CUDA.jl must be loaded for Reactant to compile KernelAbstractions kernels, whatever the backend.
+
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+KernelAbstractions = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
+NumericalRadiation = "cd8119b0-1744-44d6-9ede-6ad1ad750b26"
+Reactant = "3c362404-f566-11ee-1572-e11a4b42c853"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+Reactant = "0.2.294"
+
+[sources]
+NumericalRadiation = {path = "../.."}

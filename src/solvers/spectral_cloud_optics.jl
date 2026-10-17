@@ -20,8 +20,8 @@ and interpolating with [`cloud_layer_optics`](@ref). The element type `FT`
 follows the stored arrays, so `Adapt.adapt(Array{Float32}, cloud)` yields a
 `Float32` model.
 
-The `lookup_search` keyword accepts [`BinarySearch`](@ref) (default) or
-[`FixedBinarySearch`](@ref), as in
+The `lookup_search` keyword accepts [`BinarySearch`](@ref) (default),
+[`FixedBinarySearch`](@ref) or [`DirectIndexing`](@ref), as in
 [`EcCKDTabulatedGasOpticsModel`](@ref), for effective-radius bracketing.
 
 Fields:
@@ -55,6 +55,7 @@ function SpectralCloudOptics(FT::DataType, effective_radius::AbstractVector, mas
     Nr = length(effective_radius)
     Nr >= 1 || throw(ArgumentError("SpectralCloudOptics needs at least one effective-radius node"))
     validate_increasing_grid(effective_radius, "effective_radius")
+    validate_lookup_axis(lookup_search, effective_radius, "effective_radius")
     Ng = size(mass_extinction_coefficient, 1)
     for (name, array) in (("mass_extinction_coefficient", mass_extinction_coefficient),
                           ("single_scattering_albedo", single_scattering_albedo),
@@ -175,9 +176,9 @@ On a one-node model (`w = 0`) the node values are returned exactly.
 @inline function cloud_layer_optics(cloud::SpectralCloudOptics{FT}, g, radius_bracket) where FT
     i₀, i₁, w = radius_bracket
     w₀ = one(FT) - w
-    κ = w₀ * cloud.mass_extinction_coefficient[g, i₀] + w * cloud.mass_extinction_coefficient[g, i₁]
-    ω = w₀ * cloud.single_scattering_albedo[g, i₀] + w * cloud.single_scattering_albedo[g, i₁]
-    𝒢 = w₀ * cloud.asymmetry_factor[g, i₀] + w * cloud.asymmetry_factor[g, i₁]
+    @inbounds κ = w₀ * cloud.mass_extinction_coefficient[g, i₀] + w * cloud.mass_extinction_coefficient[g, i₁]
+    @inbounds ω = w₀ * cloud.single_scattering_albedo[g, i₀] + w * cloud.single_scattering_albedo[g, i₁]
+    @inbounds 𝒢 = w₀ * cloud.asymmetry_factor[g, i₀] + w * cloud.asymmetry_factor[g, i₁]
     return κ, ω, 𝒢
 end
 

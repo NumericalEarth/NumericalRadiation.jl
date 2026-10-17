@@ -102,7 +102,9 @@ the gray `longwave_source_scale[g] σT⁴` with the model's `stefan_boltzmann`
 Set `lookup_search=FixedBinarySearch()` to bracket vector temperature and Planck-source
 tables with a fixed number of binary-search iterations, suitable for batched
 kernel compilation. The default [`BinarySearch`](@ref) stops each search when its interval
-is found. Both use the same interpolation and endpoint behavior; pressure,
+is found. [`DirectIndexing`](@ref) computes the bracket from the grid spacing with no
+search, for uniformly spaced grids (checked here), such as the Planck-source grid of the
+ecCKD reference tables. All use the same interpolation and endpoint behavior; pressure,
 H₂O, and matrix temperature grids retain their direct indexing.
 
 """
@@ -226,6 +228,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
         throw(DimensionMismatch("temperature_grid must contain at least two points"))
     validate_log_uniform_grid(pressure_grid, "pressure_grid")
     validate_temperature_grid(temperature_grid, length(pressure_grid))
+    temperature_grid isa AbstractVector && validate_lookup_axis(lookup_search, temperature_grid, "temperature_grid")
     size(longwave_absorption, 2) == Ngases ||
         throw(DimensionMismatch("longwave_absorption gas dimension must match names"))
     size(shortwave_absorption, 2) == Ngases ||
@@ -260,6 +263,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
         size(longwave_source_table, 2) == length(longwave_source_temperature_grid) ||
             throw(DimensionMismatch("longwave_source_table temperature dimension must match longwave_source_temperature_grid"))
         validate_increasing_grid(longwave_source_temperature_grid, "longwave_source_temperature_grid")
+        validate_lookup_axis(lookup_search, longwave_source_temperature_grid, "longwave_source_temperature_grid")
     end
     length(longwave_weights) == size(longwave_absorption, 1) ||
         throw(DimensionMismatch("longwave_weights must have length Ngˡʷ"))
@@ -359,8 +363,8 @@ end
 @inline function log_bracket(grid, x)
     # Uniform log spacing by file contract; clamp to the axis so off-table
     # inputs interpolate exactly to the edge nodes.
-    step = log(grid[begin + 1]) - log(grid[begin])
-    offset = (log(max(x, grid[begin])) - log(grid[begin])) / step
+    @inbounds step = log(grid[begin + 1]) - log(grid[begin])
+    @inbounds offset = (log(max(x, grid[begin])) - log(grid[begin])) / step
     lower = clamped_lower_index(offset, length(grid) - 2)
     weight = clamp(offset - lower, zero(offset), one(offset))
     return firstindex(grid) + lower, firstindex(grid) + lower + 1, weight
@@ -384,6 +388,17 @@ function validate_increasing_grid(grid, name)
     all(isfinite, grid) || throw(ArgumentError("$name must contain only finite values"))
     for i in (firstindex(grid) + 1):lastindex(grid)
         grid[i] > grid[i - 1] || throw(ArgumentError("$name must be strictly increasing"))
+    end
+    return nothing
+end
+
+function validate_uniform_grid(grid, name)
+    validate_increasing_grid(grid, name)
+    # `DirectIndexing` derives every index from the first interval
+    expected_step = grid[firstindex(grid) + 1] - grid[firstindex(grid)]
+    for i in (firstindex(grid) + 2):lastindex(grid)
+        isapprox(grid[i] - grid[i - 1], expected_step; rtol=1.0e-5, atol=0.0) ||
+            throw(ArgumentError("$name must be uniformly spaced"))
     end
     return nothing
 end
@@ -451,8 +466,8 @@ end
                                lookup_search=BinarySearch()) where FT
     pressure_bracket = pressure_axis_bracket(pressure_grid, pressure)
     i₀ᵖ, i₁ᵖ, wᵖ = pressure_bracket
-    temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] + wᵖ * temperature_grid[i₁ᵖ, 1]
-    temperature_step = temperature_grid[1, 2] - temperature_grid[1, 1]
+    @inbounds temperature_origin = (one(FT) - wᵖ) * temperature_grid[i₀ᵖ, 1] + wᵖ * temperature_grid[i₁ᵖ, 1]
+    @inbounds temperature_step = temperature_grid[1, 2] - temperature_grid[1, 1]
     temperature_index = one(FT) + clamp((temperature - temperature_origin) / temperature_step,
                                         zero(FT),
                                         FT(size(temperature_grid, 2)) - FT(1.0001))
@@ -466,10 +481,10 @@ end
     (i₀ᵖ, i₁ᵖ, wᵖ), (i₀ᵀ, i₁ᵀ, wᵀ) = stencil
     # Corner values c₍pressure node₎₍temperature node₎, interpolated first in
     # pressure (c₀, c₁ at the two temperature nodes) and then in temperature.
-    c₀₀ = table[g, j, i₀ᵖ, i₀ᵀ]
-    c₁₀ = table[g, j, i₁ᵖ, i₀ᵀ]
-    c₀₁ = table[g, j, i₀ᵖ, i₁ᵀ]
-    c₁₁ = table[g, j, i₁ᵖ, i₁ᵀ]
+    @inbounds c₀₀ = table[g, j, i₀ᵖ, i₀ᵀ]
+    @inbounds c₁₀ = table[g, j, i₁ᵖ, i₀ᵀ]
+    @inbounds c₀₁ = table[g, j, i₀ᵖ, i₁ᵀ]
+    @inbounds c₁₁ = table[g, j, i₁ᵖ, i₁ᵀ]
     c₀ = c₀₀ + wᵖ * (c₁₀ - c₀₀)
     c₁ = c₀₁ + wᵖ * (c₁₁ - c₀₁)
     return c₀ + wᵀ * (c₁ - c₀)
@@ -477,7 +492,7 @@ end
 
 @inline function interpolate_source_table(table::AbstractMatrix, g, temperature_bracket)
     i₀ᵀ, i₁ᵀ, wᵀ = temperature_bracket
-    return table[g, i₀ᵀ] + wᵀ * (table[g, i₁ᵀ] - table[g, i₀ᵀ])
+    @inbounds return table[g, i₀ᵀ] + wᵀ * (table[g, i₁ᵀ] - table[g, i₀ᵀ])
 end
 
 @inline function interpolate_water_vapor_table(table::AbstractArray{<:Any, 4}, g, stencil, water_vapor_bracket)
@@ -486,14 +501,14 @@ end
 
     # Corner values c₍pressure₎₍temperature₎₍H₂O₎, interpolated in pressure,
     # then temperature (c₀₀ … c₁₁ at the remaining nodes), then H₂O (c₀, c₁).
-    c₀₀₀ = table[g, i₀ᵖ, i₀ᵀ, i₀ᴴ]
-    c₁₀₀ = table[g, i₁ᵖ, i₀ᵀ, i₀ᴴ]
-    c₀₁₀ = table[g, i₀ᵖ, i₁ᵀ, i₀ᴴ]
-    c₁₁₀ = table[g, i₁ᵖ, i₁ᵀ, i₀ᴴ]
-    c₀₀₁ = table[g, i₀ᵖ, i₀ᵀ, i₁ᴴ]
-    c₁₀₁ = table[g, i₁ᵖ, i₀ᵀ, i₁ᴴ]
-    c₀₁₁ = table[g, i₀ᵖ, i₁ᵀ, i₁ᴴ]
-    c₁₁₁ = table[g, i₁ᵖ, i₁ᵀ, i₁ᴴ]
+    @inbounds c₀₀₀ = table[g, i₀ᵖ, i₀ᵀ, i₀ᴴ]
+    @inbounds c₁₀₀ = table[g, i₁ᵖ, i₀ᵀ, i₀ᴴ]
+    @inbounds c₀₁₀ = table[g, i₀ᵖ, i₁ᵀ, i₀ᴴ]
+    @inbounds c₁₁₀ = table[g, i₁ᵖ, i₁ᵀ, i₀ᴴ]
+    @inbounds c₀₀₁ = table[g, i₀ᵖ, i₀ᵀ, i₁ᴴ]
+    @inbounds c₁₀₁ = table[g, i₁ᵖ, i₀ᵀ, i₁ᴴ]
+    @inbounds c₀₁₁ = table[g, i₀ᵖ, i₁ᵀ, i₁ᴴ]
+    @inbounds c₁₁₁ = table[g, i₁ᵖ, i₁ᵀ, i₁ᴴ]
 
     c₀₀ = c₀₀₀ + wᵖ * (c₁₀₀ - c₀₀₀)
     c₁₀ = c₀₁₀ + wᵖ * (c₁₁₀ - c₀₁₀)
@@ -507,7 +522,7 @@ end
 @generated function accumulate_optical_depth(gases::NamedTuple, coefficients::AbstractMatrix{FT}, ::Val{GasNames},
                                              g, k) where {FT, GasNames}
     terms = [
-        :(coefficients[g, $j] * FT(gas_value(gases, $(QuoteNode(name)), k)))
+        :(@inbounds(coefficients[g, $j]) * FT(gas_value(gases, $(QuoteNode(name)), k)))
         for (j, name) in enumerate(GasNames)
     ]
     isempty(terms) && return :(zero(FT))
@@ -517,7 +532,7 @@ end
 @inline function accumulate_optical_depth(gases, coefficients::AbstractMatrix{FT}, gas_names::Tuple, g, k) where FT
     τ = zero(FT)
     for j in eachindex(gas_names)
-        τ += coefficients[g, j] * FT(gas_value(gases, gas_names[j], k))
+        @inbounds τ += coefficients[g, j] * FT(gas_value(gases, gas_names[j], k))
     end
     return τ
 end
@@ -534,7 +549,7 @@ end
     for (j, name) in enumerate(GasNames)
         amount = :(FT(gas_value(gases, $(QuoteNode(name)), k)))
         if has_composite
-            amount = :($amount - FT(gas_reference_mole_fractions[$j]) * FT(gas_value(gases, :composite, k)))
+            amount = :($amount - FT(@inbounds(gas_reference_mole_fractions[$j])) * FT(gas_value(gases, :composite, k)))
         end
         push!(terms, :(interpolate_table(coefficients, g, $j, stencil) * $amount))
     end
@@ -547,7 +562,7 @@ end
     τ = zero(FT)
     for j in eachindex(gas_names)
         amount = FT(gas_value(gases, gas_names[j], k))
-        reference = FT(gas_reference_mole_fractions[j])
+        @inbounds reference = FT(gas_reference_mole_fractions[j])
         if reference != zero(FT) && has_gas(gases, :composite)
             amount -= reference * FT(gas_value(gases, :composite, k))
         end

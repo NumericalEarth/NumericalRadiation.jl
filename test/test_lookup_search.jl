@@ -124,4 +124,83 @@ Base.@noinline bracket_allocation(grid, x, search) = @allocated NumericalRadiati
     end
 end
 
+function uniform_lookup_model(FT; lookup_search=BinarySearch())
+    return EcCKDTabulatedGasOpticsModel(
+        names = (:composite,),
+        pressure_grid = FT[10_000, 100_000],
+        temperature_grid = FT[200, 250, 300],
+        longwave_absorption = reshape(FT.(1:12) ./ 1000, 2, 1, 2, 3),
+        shortwave_absorption = reshape(FT.(1:12) ./ 2000, 2, 1, 2, 3),
+        longwave_source_temperature_grid = FT[200, 225, 250, 275, 300],
+        longwave_source_table = FT[10 20 45 70 100; 30 50 70 105 140],
+        lookup_search = lookup_search,
+    )
+end
+
+@testset "Direct indexing of uniform tables" begin
+    @testset "brackets and endpoints" for FT in (Float32, Float64)
+        line(x) = 3x + 1
+        for count in (2, 3, 4, 5, 17, 231)
+            grid = FT.(collect(range(120, 350; length = count)))
+            values = line.(grid)
+            midpoints = (grid[1:end-1] .+ grid[2:end]) ./ 2
+            for x in [grid; midpoints; FT[grid[1] - 7, grid[end] + 7, -Inf, Inf]]
+                i₀, i₁, w = @inferred NumericalRadiation.bracket(grid, x, DirectIndexing())
+                @test i₁ == i₀ + 1 && 0 <= w <= 1
+                # Equal interpolants; on a node either neighbouring interval is exact
+                @test (1 - w) * values[i₀] + w * values[i₁] ≈ line(clamp(x, grid[1], grid[end])) rtol = 8eps(FT)
+            end
+            for x in midpoints
+                @test NumericalRadiation.bracket(grid, x, DirectIndexing())[1:2] == NumericalRadiation.bracket(grid, x)[1:2]
+            end
+        end
+        @test isnan(NumericalRadiation.bracket(FT[1, 2, 3], FT(NaN), DirectIndexing())[3])
+        bracket_allocation(FT[0, 1, 2, 3], FT(2), DirectIndexing())
+        @test bracket_allocation(FT[0, 1, 2, 3], FT(2), DirectIndexing()) == 0
+    end
+
+    @testset "model selection and Planck sources" for FT in (Float32, Float64)
+        direct = uniform_lookup_model(FT; lookup_search = DirectIndexing())
+        searched = uniform_lookup_model(FT)
+        @test direct.lookup_search === DirectIndexing()
+        @test Adapt.adapt(Array, direct).lookup_search === DirectIndexing()
+        @test EcCKDTabulatedGasOpticsModel{Float32}(direct).lookup_search === DirectIndexing()
+        # Direct indexing needs uniform vector temperature and Planck-source grids
+        @test_throws ArgumentError lookup_model(FT; lookup_search = DirectIndexing())
+        @test_throws ArgumentError lookup_model(FT; lookup_search = DirectIndexing(), matrix_temperature_grid = true)
+        for temperature in FT[150, 200, 212.5, 225, 260, 299, 300, 350]
+            b = @inferred source_table_bracket(direct, temperature)
+            for g in 1:2
+                @test longwave_source(direct, g, temperature, b) ≈
+                      longwave_source(searched, g, temperature, source_table_bracket(searched, temperature)) rtol = 8eps(FT)
+            end
+            for pressure in FT[5_000, 30_000, 120_000]
+                a = gas_optics_stencil(direct, pressure, temperature, FT(0.001))
+                c = gas_optics_stencil(searched, pressure, temperature, FT(0.001))
+                @test longwave_optical_depth(direct, 1, (composite = FT(10),), a) ≈
+                      longwave_optical_depth(searched, 1, (composite = FT(10),), c) rtol = 8eps(FT)
+            end
+        end
+        @test isnan(source_table_bracket(direct, FT(NaN))[3])
+    end
+
+    @testset "cloud effective radii" for FT in (Float32, Float64)
+        uniform = FT[1, 3, 5, 7] .* FT(1e-6)
+        properties = reshape(FT.(1:8), 2, 4)
+        direct = SpectralCloudOptics(FT, uniform, properties, properties ./ 10, properties ./ 10; lookup_search = DirectIndexing())
+        searched = SpectralCloudOptics(FT, uniform, properties, properties ./ 10, properties ./ 10)
+        @test Adapt.adapt(Array{Float32}, direct).lookup_search === DirectIndexing()
+        @test_throws ArgumentError SpectralCloudOptics(FT, FT[1, 3, 7, 10] .* FT(1e-6), properties, properties, properties;
+                                                       lookup_search = DirectIndexing())
+        single = SpectralCloudOptics(FT, uniform[1:1], properties[:, 1:1], properties[:, 1:1], properties[:, 1:1];
+                                     lookup_search = DirectIndexing())
+        @test effective_radius_bracket(single, FT(4e-6)) == (1, 1, zero(FT))
+        for query in FT[0, 1, 2, 4.5, 7, 9] .* FT(1e-6)
+            a = effective_radius_bracket(direct, query)
+            b = effective_radius_bracket(searched, query)
+            @test all(cloud_layer_optics(direct, 1, a) .≈ cloud_layer_optics(searched, 1, b))
+        end
+    end
+end
+
 end # module
