@@ -102,7 +102,7 @@ end
 # `streaming_shortwave_fluxes!` for every g point that scatters, so both
 # comparisons are bitwise.
 function streaming_matches_array(gas_model, atmosphere, cloud, aerosol)
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     Ngˡʷ, Ngˢʷ = length(gas_model.longwave_weights), length(gas_model.shortwave_weights)
     longwave = LongwaveOptics(zeros(Ngˡʷ, Nz), zeros(Ngˡʷ, Nz);
                               source_top = zeros(Ngˡʷ, Nz),
@@ -151,16 +151,16 @@ end
 
 function component_smoke()
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [20_000.0, 70_000.0],
-        pressure_interfaces = [1_000.0, 45_000.0, 100_000.0],
-        temperature_layers = [240.0, 285.0],
-        temperature_interfaces = [230.0, 260.0, 295.0],
-        gases = (; h2o=[0.002, 0.014], co2=420.0e-6),
+        layer_pressures = [20_000.0, 70_000.0],
+        interface_pressures = [1_000.0, 45_000.0, 100_000.0],
+        layer_temperatures = [240.0, 285.0],
+        interface_temperatures = [230.0, 260.0, 295.0],
+        gases = (; H₂O=[0.002, 0.014], CO₂=420.0e-6),
         surface = (; temperature=295.0, albedo=0.1),
         geometry = (; cos_zenith=0.5),
     )
     gas_model = EcCKDGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         longwave_absorption = [0.08 0.004; 0.03 0.002],
         shortwave_absorption = [0.010 0.0008],
         longwave_source_scale = [1.0, 1.05],

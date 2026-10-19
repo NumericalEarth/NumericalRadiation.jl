@@ -26,9 +26,9 @@ const WATER_MOLAR_MASS = CONSTANTS.water_molar_mass      # kg mol⁻¹ (mᵛ)
 const HEAT_CAPACITY = CONSTANTS.heat_capacity            # J kg⁻¹ K⁻¹ (cᵖ)
 const SECONDS_PER_DAY = 86_400.0
 
-# The gas set of the reference ecCKD "climate" models: dry air (`composite`,
+# The gas set of the reference ecCKD "climate" models: dry air (`dry_air`,
 # N₂ + O₂ at fixed ratio) plus the seven absorbers the tables carry.
-const ECCKD_GAS_NAMES = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+const ECCKD_GAS_NAMES = (:dry_air, :H₂O, :O₃, :CO₂, :CH₄, :N₂O, :CFC₁₁, :CFC₁₂)
 
 # Reports go to NUMERICAL_RADIATION_VALIDATION_RESULTS_DIR when set, otherwise
 # to `validation/results/` in the package checkout.
@@ -44,8 +44,8 @@ end
 #####
 
 """
-    benchmark_column(pressure_interfaces, temperature_interfaces, mole_fractions;
-                     pressure_layers, temperature_layers, surface, geometry,
+    benchmark_column(interface_pressures, interface_temperatures, mole_fractions;
+                     layer_pressures, layer_temperatures, surface, geometry,
                      column_amount_convention = :dry)
 
 A top-down `ColumnAtmosphere` from half-level pressures (Pa) and temperatures
@@ -68,16 +68,16 @@ The dry-air molar amount `nᵈ` of a layer of pressure thickness `Δp` follows
   which shows up as a small surface-flux bias; the benchmarks report it
   alongside.
 """
-function benchmark_column(pressure_interfaces, temperature_interfaces, mole_fractions;
-                          pressure_layers = nothing, temperature_layers = nothing,
+function benchmark_column(interface_pressures, interface_temperatures, mole_fractions;
+                          layer_pressures = nothing, layer_temperatures = nothing,
                           surface, geometry, column_amount_convention = :dry)
-    p_hl = Float64.(pressure_interfaces)
-    T_hl = Float64.(temperature_interfaces)
+    p_hl = Float64.(interface_pressures)
+    T_hl = Float64.(interface_temperatures)
     Nz = length(p_hl) - 1
-    p_fl = pressure_layers === nothing ? 0.5 .* (p_hl[1:Nz] .+ p_hl[2:end]) : Float64.(pressure_layers)
-    T_fl = temperature_layers === nothing ? 0.5 .* (T_hl[1:Nz] .+ T_hl[2:end]) : Float64.(temperature_layers)
+    p_fl = layer_pressures === nothing ? 0.5 .* (p_hl[1:Nz] .+ p_hl[2:end]) : Float64.(layer_pressures)
+    T_fl = layer_temperatures === nothing ? 0.5 .* (T_hl[1:Nz] .+ T_hl[2:end]) : Float64.(layer_temperatures)
     Δp = diff(p_hl)
-    χH₂O = Float64.(mole_fractions.h2o) .* ones(Nz)
+    χH₂O = Float64.(mole_fractions.H₂O) .* ones(Nz)
     dry_air = if column_amount_convention === :dry
         Δp ./ (GRAVITY * DRY_AIR_MOLAR_MASS)
     elseif column_amount_convention === :moist
@@ -85,13 +85,13 @@ function benchmark_column(pressure_interfaces, temperature_interfaces, mole_frac
     else
         throw(ArgumentError("column_amount_convention must be :dry or :moist"))
     end
-    gases = (; composite = dry_air,
+    gases = (; dry_air = dry_air,
                (name => Float64.(getproperty(mole_fractions, name)) .* dry_air
                 for name in keys(mole_fractions))...)
-    return ColumnAtmosphere(; pressure_layers = p_fl,
-                              pressure_interfaces = p_hl,
-                              temperature_layers = T_fl,
-                              temperature_interfaces = T_hl,
+    return ColumnAtmosphere(; layer_pressures = p_fl,
+                              interface_pressures = p_hl,
+                              layer_temperatures = T_fl,
+                              interface_temperatures = T_hl,
                               gases, surface, geometry, constants = CONSTANTS)
 end
 
@@ -153,7 +153,7 @@ own direction.
 function column_fluxes!(workspace::ColumnWorkspace, model, atmosphere;
                         surface_temperature, emissivity, albedo, cos_zeniths, solar_constant)
     FT = eltype(model)
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     optical_properties!(workspace.longwave, workspace.shortwave, model, atmosphere)
 
     longwave_up = zeros(FT, Nz + 1)
@@ -284,7 +284,7 @@ Layer heating rate (K day⁻¹) of one band from its interface fluxes, through
 reference, so those constants cancel in every error statistic.
 """
 function heating_rate_per_day(up, down, atmosphere)
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     heating = zeros(Nz)
     zero_flux = zeros(Nz + 1)
     fluxes = RadiativeFluxes(longwave_up = Float64.(up), longwave_down = Float64.(down),
@@ -301,7 +301,7 @@ rmse(x, y) = sqrt(mean((x .- y) .^ 2))
 bias(x, y) = mean(x .- y)
 
 """
-    weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range)
+    weighted_heating_rate_rmse(interface_pressures, heating, reference, pressure_range)
 
 The CKDMIP heating-rate error statistic (`calc_hr_error.m` of the ecRad
 CKDMIP test suite): a root-mean-square error over the layers whose mid-level
@@ -311,14 +311,14 @@ weights normalized per profile and the mean taken over profiles. All arrays
 are `(Nz + 1, Nprofiles)` matrices over the interfaces;
 `exclude_lowest` drops that many layers next to the surface from the statistic.
 """
-function weighted_heating_rate_rmse(pressure_interfaces, heating, reference, pressure_range; exclude_lowest=0)
+function weighted_heating_rate_rmse(interface_pressures, heating, reference, pressure_range; exclude_lowest=0)
     Nz, Nprofiles = size(heating)
     low, high = pressure_range
     total = 0.0
     for j in 1:Nprofiles
         weights = zeros(Nz)
         for k in 1:Nz - exclude_lowest
-            p_top, p_bottom = pressure_interfaces[k, j], pressure_interfaces[k + 1, j]
+            p_top, p_bottom = interface_pressures[k, j], interface_pressures[k + 1, j]
             p_mid = 0.5 * (p_top + p_bottom)
             if low <= p_mid < high
                 weights[k] = cbrt(p_bottom) - cbrt(p_top)

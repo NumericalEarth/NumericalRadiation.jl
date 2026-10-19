@@ -82,7 +82,7 @@ nothing #hide
 # and its heating is discarded. Extension-column arrays carry the suffix
 # `_extended`; index 1 is the extension layer and physical layer j sits at j + 1.
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :o3, :co2, :ch4, :n2o))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:dry_air, :H₂O, :O₃, :CO₂, :CH₄, :N₂O))
 
 zᵢ = collect(range(0, zₜ; length=Nz + 1))
 z = 0.5 .* (zᵢ[1:Nz] .+ zᵢ[2:Nz+1])
@@ -162,12 +162,12 @@ function equilibrate!(Tᵢ, Tˢ; χCO₂, ozone = χO₃_extended, fixed_water_v
     Tᵢ_extended = zeros(Nz_extended + 1)
     χH₂O_extended = zeros(Nz_extended)
     nᵈ = zeros(Nz_extended)
-    gases = (composite = zeros(Nz_extended), h2o = zeros(Nz_extended), o3 = zeros(Nz_extended),
-             co2 = zeros(Nz_extended), ch4 = zeros(Nz_extended), n2o = zeros(Nz_extended))
-    atmosphere = ColumnAtmosphere(; pressure_layers = p_extended,
-                                    pressure_interfaces = pᵢ_extended,
-                                    temperature_layers = T_extended,
-                                    temperature_interfaces = Tᵢ_extended,
+    gases = (dry_air = zeros(Nz_extended), H₂O = zeros(Nz_extended), O₃ = zeros(Nz_extended),
+             CO₂ = zeros(Nz_extended), CH₄ = zeros(Nz_extended), N₂O = zeros(Nz_extended))
+    atmosphere = ColumnAtmosphere(; layer_pressures = p_extended,
+                                    interface_pressures = pᵢ_extended,
+                                    layer_temperatures = T_extended,
+                                    interface_temperatures = Tᵢ_extended,
                                     gases, surface = nothing,
                                     geometry = (cos_zenith=μ₀,),
                                     constants)
@@ -193,12 +193,12 @@ function equilibrate!(Tᵢ, Tˢ; χCO₂, ozone = χO₃_extended, fixed_water_v
         χH₂O_extended[1] = χH₂O_extended[2]      # extension copies the top physical layer
         for k in 1:Nz_extended
             nᵈ[k] = (pᵢ_extended[k + 1] - pᵢ_extended[k]) / (g * (mᵈ + mᵛ * χH₂O_extended[k]))
-            gases.composite[k] = nᵈ[k]
-            gases.h2o[k] = χH₂O_extended[k] * nᵈ[k]
-            gases.o3[k] = ozone[k] * nᵈ[k]
-            gases.co2[k] = χCO₂ * nᵈ[k]
-            gases.ch4[k] = χCH₄ * nᵈ[k]
-            gases.n2o[k] = χN₂O * nᵈ[k]
+            gases.dry_air[k] = nᵈ[k]
+            gases.H₂O[k] = χH₂O_extended[k] * nᵈ[k]
+            gases.O₃[k] = ozone[k] * nᵈ[k]
+            gases.CO₂[k] = χCO₂ * nᵈ[k]
+            gases.CH₄[k] = χCH₄ * nᵈ[k]
+            gases.N₂O[k] = χN₂O * nᵈ[k]
         end
         optical_properties!(longwave, shortwave, gas_optics, atmosphere)
         radiative_fluxes!(fluxes, CloudlessLongwave(), longwave, atmosphere, longwave_boundary)

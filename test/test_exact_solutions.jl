@@ -64,7 +64,7 @@ end
 # `longwave_source = scale σT⁴` (scale 1) and `rayleigh_optical_depth = 0`.
 function gray_model(::Type{FT}, κ_longwave::AbstractVector, κ_shortwave::AbstractVector;
                     longwave_weights = nothing) where FT
-    return EcCKDGasOpticsModel(names = (:composite,),
+    return EcCKDGasOpticsModel(names = (:dry_air,),
                                longwave_absorption = reshape(FT.(κ_longwave), :, 1),
                                shortwave_absorption = reshape(FT.(κ_shortwave), :, 1),
                                longwave_weights = longwave_weights === nothing ? nothing :
@@ -82,7 +82,7 @@ struct GrayLongwaveLayerOptics{M, V, T}
 end
 
 @inline function (optics::GrayLongwaveLayerOptics)(g, k)
-    τ = longwave_optical_depth(optics.model, g, (composite=optics.amounts[k],), nothing)
+    τ = longwave_optical_depth(optics.model, g, (dry_air=optics.amounts[k],), nothing)
     B_top = longwave_source(optics.model, g, optics.temperature_top[k], nothing)
     B_bottom = longwave_source(optics.model, g, optics.temperature_bottom[k], nothing)
     return (τ, B_top, B_bottom)
@@ -107,7 +107,7 @@ end
 
 @inline function (optics::GrayShortwaveLayerOptics)(g, k)
     n = optics.amounts[k]
-    τ_absorption = shortwave_optical_depth(optics.model, g, (composite=n,), nothing)
+    τ_absorption = shortwave_optical_depth(optics.model, g, (dry_air=n,), nothing)
     τ_scattering = rayleigh_optical_depth(optics.model, g, n)
     return (τ_absorption, τ_scattering, zero(τ_absorption))
 end

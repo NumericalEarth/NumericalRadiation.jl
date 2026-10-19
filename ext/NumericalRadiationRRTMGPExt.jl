@@ -86,7 +86,7 @@ end
 function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
                                                 atmosphere::ColumnAtmosphere;
                                                 backend = nothing) where FT
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     Ncolumns = 1
     grid_params = RRTMGPGridParams(FT; context=model.context, domain_nlay=Nz, ncol=Ncolumns)
     array_type = ClimaComms.array_type(ClimaComms.device(model.context))
@@ -101,15 +101,15 @@ function NumericalRadiation.radiation_workspace(model::RRTMGPClearSkyModel{FT},
     longitude = array_type{FT}(zeros(Ncolumns))
     latitude = array_type{FT}(zeros(Ncolumns))
     layerdata = array_type{FT}(undef, 4, Nz, Ncolumns)
-    pressure_interfaces = array_type{FT}(undef, Nz + 1, Ncolumns)
-    temperature_interfaces = array_type{FT}(undef, Nz + 1, Ncolumns)
+    interface_pressures = array_type{FT}(undef, Nz + 1, Ncolumns)
+    interface_temperatures = array_type{FT}(undef, Nz + 1, Ncolumns)
     surface_temperature = array_type{FT}(undef, Ncolumns)
     mole_fractions = initialize_global_mean_mole_fractions(Ngases, Nz, Ncolumns, FT, array_type)
     atmospheric_state = AtmosphericState(longitude,
                                          latitude,
                                          layerdata,
-                                         pressure_interfaces,
-                                         temperature_interfaces,
+                                         interface_pressures,
+                                         interface_temperatures,
                                          surface_temperature,
                                          mole_fractions,
                                          nothing,
@@ -140,17 +140,17 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
                                  model::RRTMGPClearSkyModel{FT},
                                  atmosphere::ColumnAtmosphere,
                                  boundary::RRTMGPBoundaryConditions) where FT
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     state = workspace.atmospheric_state
     gases = atmosphere.gases
-    water_vapor = gas_value(gases, :h2o, zero(FT))
-    ozone = gas_value(gases, :o3, zero(FT))
-    carbon_dioxide = FT(gas_value(gases, :co2, 400e-6))
-    methane = FT(gas_value(gases, :ch4, 1.8e-6))
-    nitrous_oxide = FT(gas_value(gases, :n2o, 330e-9))
-    oxygen = FT(gas_value(gases, :o2, 0.20946))
-    nitrogen = FT(gas_value(gases, :n2, 0.78084))
-    carbon_monoxide = FT(gas_value(gases, :co, 0))
+    water_vapor = gas_value(gases, :H₂O, zero(FT))
+    ozone = gas_value(gases, :O₃, zero(FT))
+    carbon_dioxide = FT(gas_value(gases, :CO₂, 400e-6))
+    methane = FT(gas_value(gases, :CH₄, 1.8e-6))
+    nitrous_oxide = FT(gas_value(gases, :N₂O, 330e-9))
+    oxygen = FT(gas_value(gases, :O₂, 0.20946))
+    nitrogen = FT(gas_value(gases, :N₂, 0.78084))
+    carbon_monoxide = FT(gas_value(gases, :CO, 0))
 
     # RRTMGP's kernels are bottom-at-index-1 (surface source/albedo and the
     # hydrostatic Δp in compute_col_gas_kernel! assume p decreasing with
@@ -159,8 +159,8 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
     for k in 1:Nz
         k_reversed = Nz - k + 1
         water_vapor_k = max(FT(layer_value(water_vapor, k)), zero(FT))
-        state.layerdata[2, k_reversed, 1] = FT(atmosphere.pressure_layers[k])
-        state.layerdata[3, k_reversed, 1] = clamp(FT(atmosphere.temperature_layers[k]), FT(160), FT(355))
+        state.layerdata[2, k_reversed, 1] = FT(atmosphere.layer_pressures[k])
+        state.layerdata[3, k_reversed, 1] = clamp(FT(atmosphere.layer_temperatures[k]), FT(160), FT(355))
         state.layerdata[4, k_reversed, 1] = zero(FT)
         state.vmr.vmr_h2o[k_reversed, 1] = water_vapor_k
         state.vmr.vmr_o3[k_reversed, 1] = max(FT(layer_value(ozone, k)), zero(FT))
@@ -168,8 +168,8 @@ function fill_atmospheric_state!(workspace::RRTMGPWorkspace,
 
     for k in 1:(Nz + 1)
         k_reversed = Nz + 2 - k
-        state.p_lev[k_reversed, 1] = FT(atmosphere.pressure_interfaces[k])
-        state.t_lev[k_reversed, 1] = clamp(FT(atmosphere.temperature_interfaces[k]), FT(160), FT(355))
+        state.p_lev[k_reversed, 1] = FT(atmosphere.interface_pressures[k])
+        state.t_lev[k_reversed, 1] = clamp(FT(atmosphere.interface_temperatures[k]), FT(160), FT(355))
     end
 
     # Dry column amounts via RRTMGP's own kernel (dry-air mole-fraction
@@ -209,7 +209,7 @@ function NumericalRadiation.radiative_fluxes!(fluxes::RadiativeFluxes,
                                               atmosphere::ColumnAtmosphere,
                                               boundary::RRTMGPBoundaryConditions,
                                               workspace::RRTMGPWorkspace = radiation_workspace(model, atmosphere))
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     for (name, v) in ((:longwave_up, fluxes.longwave_up),
                       (:longwave_down, fluxes.longwave_down),
                       (:shortwave_up, fluxes.shortwave_up),

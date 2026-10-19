@@ -65,7 +65,7 @@ function SpeedyWeather.callback!(cb::NaNDetector, vars, model)
             println("     air T column now  ", Array(T[ij, :]))
             println("     LW up/down now    ", Array(W.longwave_up[ij, :]), " / ", Array(W.longwave_down[ij, :]))
             println("     SW up/down now    ", Array(W.shortwave_up[ij, :]), " / ", Array(W.shortwave_down[ij, :]))
-            println("     T_half now        ", Array(W.temperature_interfaces[ij, :]))
+            println("     T_half now        ", Array(W.interface_temperatures[ij, :]))
             println("     gas amounts now   ", Array(W.gas_amounts[ij, :, :]))
             println("     emission now      ", Array(W.surface_emission[ij, :]))
         end

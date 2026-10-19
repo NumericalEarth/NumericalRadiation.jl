@@ -28,7 +28,7 @@ function matrix_grid_model(FT)
     temperature_grid = FT[180 + 30 * (iᵖ - 1) + 40 * (iᵀ - 1) for iᵖ in 1:Np, iᵀ in 1:NT]
     source_temperature_grid = FT[180, 240, 300]
     return EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2, :composite),
+        names = (:H₂O, :CO₂, :dry_air),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
         water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
@@ -54,7 +54,7 @@ function vector_grid_model(FT)
     pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length=Np)))
     temperature_grid = FT[170, 200, 215, 240, 270, 320]
     return EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2, :composite),
+        names = (:H₂O, :CO₂, :dry_air),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
         gas_reference_mole_fractions = FT[0, 4e-4, 0],
@@ -73,10 +73,10 @@ end
 function column_state(FT, Nc, Nz)
     pressure = FT[6_000 * (100_000 / 6_000)^((k - 0.5) / Nz) * (1 + 0.01c) for c in 1:Nc, k in 1:Nz]
     temperature = FT[205 + 85 * (k - 0.5) / Nz + 3c for c in 1:Nc, k in 1:Nz]
-    temperature_interfaces = FT[202 + 85 * (k - 1) / Nz + 3c for c in 1:Nc, k in 1:Nz+1]
+    interface_temperatures = FT[202 + 85 * (k - 1) / Nz + 3c for c in 1:Nc, k in 1:Nz+1]
     dry_air = FT[100 + 900 * k / Nz for c in 1:Nc, k in 1:Nz]
     water_vapor = FT[dry_air[c, k] * 1e-5 * 10^(3 * k / Nz) * (1 + 0.2c) for c in 1:Nc, k in 1:Nz]
-    return (; pressure, temperature, temperature_interfaces, dry_air, water_vapor)
+    return (; pressure, temperature, interface_temperatures, dry_air, water_vapor)
 end
 
 struct ColumnOptics{S, M, A}
@@ -95,7 +95,7 @@ ColumnOptics{S}(model, state, column) where S = ColumnOptics{S, typeof(model), t
         h = state.water_vapor[c, k]
         d = state.dry_air[c, k]
     end
-    gases = (h2o = h, co2 = 8 * h / 10 + d / 1250, composite = d)
+    gases = (H₂O = h, CO₂ = 8 * h / 10 + d / 1250, dry_air = d)
     return gases, gas_optics_stencil(optics.model, p, T, h / d)
 end
 
@@ -106,8 +106,8 @@ end
     gases, stencil = layer_gases_and_stencil(optics, k)
     τ = longwave_optical_depth(model, g, gases, stencil)
     @inbounds begin
-        Tₖ = optics.state.temperature_interfaces[optics.column, k]
-        Tₖ₊₁ = optics.state.temperature_interfaces[optics.column, k + 1]
+        Tₖ = optics.state.interface_temperatures[optics.column, k]
+        Tₖ₊₁ = optics.state.interface_temperatures[optics.column, k + 1]
     end
     return τ, planck(model, g, Tₖ), planck(model, g, Tₖ₊₁)
 end
@@ -116,7 +116,7 @@ end
     model = optics.model
     gases, stencil = layer_gases_and_stencil(optics, k)
     τₐ = shortwave_optical_depth(model, g, gases, stencil)
-    τₛ = rayleigh_optical_depth(model, g, gases.composite)
+    τₛ = rayleigh_optical_depth(model, g, gases.dry_air)
     return τₐ, τₛ, zero(τₛ)
 end
 
@@ -124,7 +124,7 @@ end
     c = @index(Global, Linear)
     Nz = size(state.pressure, 2)
     optics = ColumnOptics{:longwave}(model, state, c)
-    @inbounds emission = TabulatedSurfaceEmission(model, state.temperature_interfaces[c, Nz + 1]; emissivity = 0.98)
+    @inbounds emission = TabulatedSurfaceEmission(model, state.interface_temperatures[c, Nz + 1]; emissivity = 0.98)
     streaming_longwave_fluxes!(view(flux_up, c, :), view(flux_down, c, :), optics, emission, 0.02, 0,
                                model.longwave_weights, length(model.longwave_weights), Nz,
                                view(transmittance, c, :), view(source_up, c, :))
@@ -256,7 +256,7 @@ const Nc, Nz = 3, 6
         agrees = [isapprox(getproperty(gradient, name)[c, k],
                            finite_difference(name, c, k; h = 1e-4 * abs(getproperty(state, name)[c, k]));
                            rtol = 1e-5, atol = 1e-9)
-                  for name in (:temperature, :temperature_interfaces, :water_vapor, :pressure), c in 1:Nc
+                  for name in (:temperature, :interface_temperatures, :water_vapor, :pressure), c in 1:Nc
                   for k in (1, Nz ÷ 2, size(getproperty(state, name), 2))]
 
         # The gradient compiles and runs, but Reactant (0.2.294, Reactant_jll 0.0.423) gets it wrong,

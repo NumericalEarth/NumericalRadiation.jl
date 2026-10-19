@@ -40,7 +40,7 @@ end
 
 @testset "Reactant fixed lookup derivatives" begin
     gas = EcCKDTabulatedGasOpticsModel(
-        names = (:composite,),
+        names = (:dry_air,),
         pressure_grid = [10_000.0, 100_000.0],
         temperature_grid = [200.0, 300.0],
         longwave_absorption = ones(1, 1, 2, 2),

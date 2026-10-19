@@ -158,22 +158,22 @@ end
 
 function load_rfmip(paths; experiment=RFMIP_EXPERIMENT)
     sites = NCDataset(paths.input) do dataset
-        (; pressure_layers = dense(dataset["pres_layer"][:, :]),
-           pressure_interfaces = dense(dataset["pres_level"][:, :]),
-           temperature_layers = dense(dataset["temp_layer"][:, :, experiment]),
-           temperature_interfaces = dense(dataset["temp_level"][:, :, experiment]),
+        (; layer_pressures = dense(dataset["pres_layer"][:, :]),
+           interface_pressures = dense(dataset["pres_level"][:, :]),
+           layer_temperatures = dense(dataset["temp_layer"][:, :, experiment]),
+           interface_temperatures = dense(dataset["temp_level"][:, :, experiment]),
            surface_temperature = dense(dataset["surface_temperature"][:, experiment]),
            surface_emissivity = dense(dataset["surface_emissivity"][:]),
            surface_albedo = dense(dataset["surface_albedo"][:]),
            solar_zenith_angle = dense(dataset["solar_zenith_angle"][:]),
            total_solar_irradiance = dense(dataset["total_solar_irradiance"][:]),
-           h2o = dense(dataset["water_vapor"][:, :, experiment]),
-           o3 = dense(dataset["ozone"][:, :, experiment]),
-           co2 = scaled_global_mean(dataset, "carbon_dioxide_GM", experiment),
-           ch4 = scaled_global_mean(dataset, "methane_GM", experiment),
-           n2o = scaled_global_mean(dataset, "nitrous_oxide_GM", experiment),
-           cfc11 = scaled_global_mean(dataset, "cfc11eq_GM", experiment),
-           cfc12 = scaled_global_mean(dataset, "cfc12_GM", experiment),
+           H₂O = dense(dataset["water_vapor"][:, :, experiment]),
+           O₃ = dense(dataset["ozone"][:, :, experiment]),
+           CO₂ = scaled_global_mean(dataset, "carbon_dioxide_GM", experiment),
+           CH₄ = scaled_global_mean(dataset, "methane_GM", experiment),
+           N₂O = scaled_global_mean(dataset, "nitrous_oxide_GM", experiment),
+           CFC₁₁ = scaled_global_mean(dataset, "cfc11eq_GM", experiment),
+           CFC₁₂ = scaled_global_mean(dataset, "cfc12_GM", experiment),
            experiment_label = String(dataset["expt_label"][experiment]))
     end
     reference = map(paths.fluxes) do path
@@ -182,11 +182,11 @@ function load_rfmip(paths; experiment=RFMIP_EXPERIMENT)
             dense(dataset[variable][:, :, experiment])
         end
     end
-    Nsites = size(sites.pressure_interfaces, 2)
-    all(size(flux) == size(sites.pressure_interfaces) for flux in reference) ||
+    Nsites = size(sites.interface_pressures, 2)
+    all(size(flux) == size(sites.interface_pressures) for flux in reference) ||
         throw(DimensionMismatch("LBLRTM flux shapes do not match the input levels"))
     # Levels run top-down from 0.01 Pa, as the solvers expect.
-    all(sites.pressure_interfaces[1, :] .< sites.pressure_interfaces[end, :]) ||
+    all(sites.interface_pressures[1, :] .< sites.interface_pressures[end, :]) ||
         throw(ArgumentError("RFMIP levels are expected top-down"))
     μ₀ = cosd.(sites.solar_zenith_angle)
     # Daytime is where the reference has sunlight: LBLRTM treated one site
@@ -198,7 +198,7 @@ end
 
 function evaluate_rfmip(model_name, benchmark; column_amount_convention=:dry)
     (; Nsites, μ₀, daytime, reference) = benchmark
-    Nz = size(benchmark.pressure_layers, 1)
+    Nz = size(benchmark.layer_pressures, 1)
     model = read_reference_ecckd_gas_optics(model_name; names=ECCKD_GAS_NAMES)
     workspace = ColumnWorkspace(model, Nz)
 
@@ -215,14 +215,14 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention=:dry)
     longwave_up_quadrature = zeros(Nz + 1, Nsites)
     longwave_down_quadrature = zeros(Nz + 1, Nsites)
 
-    site_mole_fractions(i) = (h2o = benchmark.h2o[:, i], o3 = benchmark.o3[:, i],
-                              co2 = benchmark.co2, ch4 = benchmark.ch4, n2o = benchmark.n2o,
-                              cfc11 = benchmark.cfc11, cfc12 = benchmark.cfc12)
+    site_mole_fractions(i) = (H₂O = benchmark.H₂O[:, i], O₃ = benchmark.O₃[:, i],
+                              CO₂ = benchmark.CO₂, CH₄ = benchmark.CH₄, N₂O = benchmark.N₂O,
+                              CFC₁₁ = benchmark.CFC₁₁, CFC₁₂ = benchmark.CFC₁₂)
 
-    site_column(i) = benchmark_column(benchmark.pressure_interfaces[:, i], benchmark.temperature_interfaces[:, i],
+    site_column(i) = benchmark_column(benchmark.interface_pressures[:, i], benchmark.interface_temperatures[:, i],
                                       site_mole_fractions(i);
-                                      pressure_layers = benchmark.pressure_layers[:, i],
-                                      temperature_layers = benchmark.temperature_layers[:, i],
+                                      layer_pressures = benchmark.layer_pressures[:, i],
+                                      layer_temperatures = benchmark.layer_temperatures[:, i],
                                       surface = (; temperature = benchmark.surface_temperature[i],
                                                    emissivity = benchmark.surface_emissivity[i]),
                                       geometry = (; cos_zenith=μ₀[i]),
@@ -255,7 +255,7 @@ function evaluate_rfmip(model_name, benchmark; column_amount_convention=:dry)
         heating.longwave_quadrature[:, i] = heating_rate_per_day(longwave_up_quadrature[:, i], longwave_down_quadrature[:, i], atmosphere)
     end
 
-    p_hl = benchmark.pressure_interfaces
+    p_hl = benchmark.interface_pressures
     day = daytime
     night = findall(<=(0), μ₀)
     heating_ranges(p, hr, ref) = map(range -> weighted_heating_rate_rmse(p, hr, ref, range), HEATING_RATE_RANGES)
@@ -314,14 +314,14 @@ function rfmip_markdown(results, benchmark)
     push!(lines, "Generated $(Dates.format(now(), "yyyy-mm-dd HH:MM")) by `validation/rfmip_irf.jl`.")
     push!(lines, "")
     push!(lines, "$(benchmark.Nsites) sites of experiment $(RFMIP_EXPERIMENT) (\"$(benchmark.experiment_label)\"), " *
-                 "$(size(benchmark.pressure_layers, 1)) layers from $(benchmark.pressure_interfaces[1, 1]) Pa; " *
+                 "$(size(benchmark.layer_pressures, 1)) layers from $(benchmark.interface_pressures[1, 1]) Pa; " *
                  "per-site skin temperature, emissivity, albedo, solar zenith angle and total solar irradiance; " *
                  "$(length(benchmark.daytime)) daytime sites enter the shortwave statistics" *
                  (isempty(benchmark.excluded_sites) ? "" :
                   " (sites $(benchmark.excluded_sites) have the sun above the horizon but no sunlight in the reference and are left out)") * ". " *
                  "Reference: LBLRTM 12.8 (AER, `rad-irf`, r1i1p1f1, v20190514). Well-mixed gases: " *
                  @sprintf("CO₂ %.1f ppm, CH₄ %.1f ppb, N₂O %.1f ppb, CFC-11-eq %.1f ppt, CFC-12 %.1f ppt.",
-                          1e6 * benchmark.co2, 1e9 * benchmark.ch4, 1e9 * benchmark.n2o, 1e12 * benchmark.cfc11, 1e12 * benchmark.cfc12))
+                          1e6 * benchmark.CO₂, 1e9 * benchmark.CH₄, 1e9 * benchmark.N₂O, 1e12 * benchmark.CFC₁₁, 1e12 * benchmark.CFC₁₂))
     push!(lines, "")
     push!(lines, "Heating-rate RMSEs are weighted by the cube root of pressure within the range " *
                  "(the CKDMIP statistic); fluxes in W m⁻², heating rates in K day⁻¹. Gated runs use the " *
@@ -414,8 +414,8 @@ function run_rfmip_irf(; models=(:climate_32x32, :climate_64x64))
                         Ngˢʷ = result.Ngˢʷ,
                         Nsites = result.Nsites, Ndaytime = result.Ndaytime, excluded_sites = result.excluded_sites,
                         Nz = result.Nz,
-                        well_mixed_mole_fractions = (; co2 = benchmark.co2, ch4 = benchmark.ch4, n2o = benchmark.n2o,
-                                                       cfc11 = benchmark.cfc11, cfc12 = benchmark.cfc12),
+                        well_mixed_mole_fractions = (; CO₂ = benchmark.CO₂, CH₄ = benchmark.CH₄, N₂O = benchmark.N₂O,
+                                                       CFC₁₁ = benchmark.CFC₁₁, CFC₁₂ = benchmark.CFC₁₂),
                         column_amount_convention = result.column_amount_convention,
                         elapsed_seconds = result.elapsed_seconds,
                         microseconds_per_column = result.microseconds_per_column,

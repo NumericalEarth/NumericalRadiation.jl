@@ -332,7 +332,7 @@ end
             NCDataset(copied, "a") do dataset
                 dataset["ch4_reference_mole_fraction"][] *= 2
             end
-            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(longwave_path, copied; names=(:ch4, :n2o))
+            @test_throws ArgumentError read_ecckd_tabulated_gas_optics(longwave_path, copied; names=(:CH₄, :N₂O))
         end
     else
         @info "Skipping paired ecCKD axis check; ecRad data files are not present"
@@ -346,7 +346,7 @@ end
 
     if longwave_path !== nothing && shortwave_path !== nothing && isfile(longwave_path) && isfile(shortwave_path)
         model = read_ecckd_tabulated_gas_optics(longwave_path, shortwave_path;
-                                                names = (:h2o, :co2),
+                                                names = (:H₂O, :CO₂),
                                                 water_vapor_mole_fraction = 0.005)
         @test model isa EcCKDTabulatedGasOpticsModel
         @test size(model.longwave_absorption) == (64, 2, 53, 6)
@@ -366,13 +366,13 @@ end
         @test sum(model.shortwave_weights) ≈ 1.0
 
         atmosphere = ColumnAtmosphere(
-            pressure_layers = [20_000.0, 80_000.0],
-            pressure_interfaces = [10_000.0, 50_000.0, 100_000.0],
-            temperature_layers = [240.0, 290.0],
-            temperature_interfaces = [230.0, 265.0, 300.0],
+            layer_pressures = [20_000.0, 80_000.0],
+            interface_pressures = [10_000.0, 50_000.0, 100_000.0],
+            layer_temperatures = [240.0, 290.0],
+            interface_temperatures = [230.0, 265.0, 300.0],
             gases = (
-                h2o = [1.0e-3, 5.0e-3],
-                co2 = [4.0e-4, 4.0e-4],
+                H₂O = [1.0e-3, 5.0e-3],
+                CO₂ = [4.0e-4, 4.0e-4],
             ),
             surface = (;),
             geometry = (;),
@@ -553,29 +553,29 @@ Base.@noinline function optical_properties_allocations(longwave, shortwave, mode
 end
 
 struct GasView{H, C, A}
-    h2o::H
-    co2::C
-    composite::A
+    H₂O::H
+    CO₂::C
+    dry_air::A
 end
 
 # --- begin content of test_ecckd_forward.jl ---
 @testset "ecCKD-style forward gas optics" begin
     Nz = 3
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [20_000.0, 50_000.0, 80_000.0],
-        pressure_interfaces = [10_000.0, 35_000.0, 65_000.0, 95_000.0],
-        temperature_layers = [220.0, 260.0, 300.0],
-        temperature_interfaces = [210.0, 240.0, 280.0, 305.0],
+        layer_pressures = [20_000.0, 50_000.0, 80_000.0],
+        interface_pressures = [10_000.0, 35_000.0, 65_000.0, 95_000.0],
+        layer_temperatures = [220.0, 260.0, 300.0],
+        interface_temperatures = [210.0, 240.0, 280.0, 305.0],
         gases = (
-            h2o = [1.0, 2.0, 3.0],
-            co2 = 4.0,
+            H₂O = [1.0, 2.0, 3.0],
+            CO₂ = 4.0,
         ),
         surface = (;),
         geometry = (;),
     )
 
     model = EcCKDGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         longwave_absorption = [0.1 0.01;
                                0.2 0.02],
         shortwave_absorption = [0.03 0.003],
@@ -597,8 +597,8 @@ end
     @test shortwave.weights == [1.0]
 
     @test model.stefan_boltzmann == STEFAN_BOLTZMANN
-    @test longwave.source[1, :] ≈ 0.5 .* model.stefan_boltzmann .* atmosphere.temperature_layers .^ 4
-    @test longwave.source[2, :] ≈ model.stefan_boltzmann .* atmosphere.temperature_layers .^ 4
+    @test longwave.source[1, :] ≈ 0.5 .* model.stefan_boltzmann .* atmosphere.layer_temperatures .^ 4
+    @test longwave.source[2, :] ≈ model.stefan_boltzmann .* atmosphere.layer_temperatures .^ 4
 
     # Julia 1.10 specializes the allocation measurement separately.
     optical_properties_allocations(longwave, shortwave, model, atmosphere)
@@ -608,7 +608,7 @@ end
     @test_throws DimensionMismatch optical_properties!(bad_longwave, shortwave, model, atmosphere)
 
     @test_throws DimensionMismatch EcCKDGasOpticsModel(
-        names = (:h2o,),
+        names = (:H₂O,),
         longwave_absorption = [0.1 0.01],
         shortwave_absorption = reshape([0.03], 1, 1),
     )
@@ -616,16 +616,16 @@ end
 
 @testset "ecCKD-style tabulated longwave source table" begin
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [15_000.0],
-        pressure_interfaces = [10_000.0, 20_000.0],
-        temperature_layers = [275.0],
-        temperature_interfaces = [250.0, 300.0],
-        gases = (h2o=[1.0], co2=[1.0]),
+        layer_pressures = [15_000.0],
+        interface_pressures = [10_000.0, 20_000.0],
+        layer_temperatures = [275.0],
+        interface_temperatures = [250.0, 300.0],
+        gases = (H₂O=[1.0], CO₂=[1.0]),
         surface = (;),
         geometry = (;),
     )
     model = EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = [10_000.0, 20_000.0],
         temperature_grid = [250.0, 300.0],
         longwave_absorption = fill(0.1, 2, 2, 2, 2),
@@ -646,16 +646,16 @@ end
 
 @testset "ecCKD-style tabulated shortwave Rayleigh channel" begin
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [15_000.0],
-        pressure_interfaces = [10_000.0, 20_000.0],
-        temperature_layers = [275.0],
-        temperature_interfaces = [250.0, 300.0],
-        gases = (h2o=[1.0], co2=[1.0]),
+        layer_pressures = [15_000.0],
+        interface_pressures = [10_000.0, 20_000.0],
+        layer_temperatures = [275.0],
+        interface_temperatures = [250.0, 300.0],
+        gases = (H₂O=[1.0], CO₂=[1.0]),
         surface = (;),
         geometry = (;),
     )
     model = EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = [10_000.0, 20_000.0],
         temperature_grid = [250.0, 300.0],
         longwave_absorption = fill(0.1, 1, 2, 2, 2),
@@ -690,20 +690,20 @@ end
     end
 
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [15_000.0, 20_000.0],
-        pressure_interfaces = [10_000.0, 17_500.0, 25_000.0],
-        temperature_layers = [275.0, 250.0],
-        temperature_interfaces = [260.0, 280.0, 245.0],
+        layer_pressures = [15_000.0, 20_000.0],
+        interface_pressures = [10_000.0, 17_500.0, 25_000.0],
+        layer_temperatures = [275.0, 250.0],
+        interface_temperatures = [260.0, 280.0, 245.0],
         gases = (
-            h2o = [2.0, 3.0],
-            co2 = 4.0,
+            H₂O = [2.0, 3.0],
+            CO₂ = 4.0,
         ),
         surface = (;),
         geometry = (;),
     )
 
     model = EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
         longwave_absorption = longwave_table,
@@ -736,15 +736,15 @@ end
     @test shortwave.weights == [1.0]
 
     @test model.stefan_boltzmann == STEFAN_BOLTZMANN
-    @test longwave.source[1, :] ≈ model.stefan_boltzmann .* atmosphere.temperature_layers .^ 4
-    @test longwave.source[2, :] ≈ 2 .* model.stefan_boltzmann .* atmosphere.temperature_layers .^ 4
+    @test longwave.source[1, :] ≈ model.stefan_boltzmann .* atmosphere.layer_temperatures .^ 4
+    @test longwave.source[2, :] ≈ 2 .* model.stefan_boltzmann .* atmosphere.layer_temperatures .^ 4
 
     # Julia 1.10 specializes the allocation measurement separately.
     optical_properties_allocations(longwave, shortwave, model, atmosphere)
     @test optical_properties_allocations(longwave, shortwave, model, atmosphere) == 0
 
     @test_throws DimensionMismatch EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
         longwave_absorption = zeros(2, 2, 1, 2),
@@ -766,7 +766,7 @@ end
         Nwater_vapor = length(water_vapor_grid)
         water_vapor_table = Nwater_vapor == 0 ? nothing : zeros(1, Npressures, Ntemperatures, Nwater_vapor)
         return EcCKDTabulatedGasOpticsModel(
-            names = (:h2o,),
+            names = (:H₂O,),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = water_vapor_grid,
@@ -793,35 +793,35 @@ end
     model = contract_model()
     longwave = LongwaveOptics(zeros(1, 2), zeros(1, 2); weights=zeros(1))
     shortwave = ShortwaveOptics(zeros(1, 2); weights=zeros(1))
-    atmosphere(; pressure_layers = [200.0, 800.0],
-                 pressure_interfaces = [100.0, 500.0, 1_000.0],
-                 temperature_interfaces = Float64[],
-                 gases = (h2o=[1.0, 2.0],)) = ColumnAtmosphere(
-        pressure_layers = pressure_layers,
-        pressure_interfaces = pressure_interfaces,
-        temperature_layers = [250.0, 260.0],
-        temperature_interfaces = temperature_interfaces,
+    atmosphere(; layer_pressures = [200.0, 800.0],
+                 interface_pressures = [100.0, 500.0, 1_000.0],
+                 interface_temperatures = Float64[],
+                 gases = (H₂O=[1.0, 2.0],)) = ColumnAtmosphere(
+        layer_pressures = layer_pressures,
+        interface_pressures = interface_pressures,
+        layer_temperatures = [250.0, 260.0],
+        interface_temperatures = interface_temperatures,
         gases = gases,
         surface = (;),
         geometry = (;),
     )
 
-    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(pressure_layers=[200.0]))
+    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(layer_pressures=[200.0]))
     @test_throws DimensionMismatch optical_properties!(
         longwave, shortwave, model,
-        atmosphere(pressure_interfaces=[100.0, 1_000.0]))
-    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(gases=(h2o=[1.0],)))
+        atmosphere(interface_pressures=[100.0, 1_000.0]))
+    @test_throws DimensionMismatch optical_properties!(longwave, shortwave, model, atmosphere(gases=(H₂O=[1.0],)))
 
     interface_longwave = LongwaveOptics(
         zeros(1, 2), zeros(1, 2);
         source_top = zeros(1, 2), source_bottom = zeros(1, 2), weights = zeros(1))
     @test_throws DimensionMismatch optical_properties!(
         interface_longwave, shortwave, model,
-        atmosphere(temperature_interfaces=[240.0, 270.0]))
+        atmosphere(interface_temperatures=[240.0, 270.0]))
     top_only = LongwaveOptics(zeros(1, 2), zeros(1, 2); source_top=zeros(1, 2), weights=zeros(1))
     @test_throws ArgumentError optical_properties!(
         top_only, shortwave, model,
-        atmosphere(temperature_interfaces=[240.0, 255.0, 270.0]))
+        atmosphere(interface_temperatures=[240.0, 255.0, 270.0]))
 end
 
 @testset "property-backed gas views follow the Symbol-keyed gas contract" begin
@@ -838,7 +838,7 @@ end
     shortwave_water_vapor[:, :, :, 1] .= 1.0
     shortwave_water_vapor[:, :, :, 2] .= 2.0
     model = EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
         water_vapor_mole_fraction_grid = [1.0e-4, 1.0e-2],
@@ -853,10 +853,10 @@ end
 
     function run_with_gases(gases)
         atmosphere = ColumnAtmosphere(
-            pressure_layers = [15_000.0],
-            pressure_interfaces = [10_000.0, 20_000.0],
-            temperature_layers = [275.0],
-            temperature_interfaces = [250.0, 300.0],
+            layer_pressures = [15_000.0],
+            interface_pressures = [10_000.0, 20_000.0],
+            layer_temperatures = [275.0],
+            interface_temperatures = [250.0, 300.0],
             gases = gases,
             surface = (;),
             geometry = (;),
@@ -867,7 +867,7 @@ end
         return longwave.optical_depth, shortwave.optical_depth
     end
 
-    named = (h2o=[1.0], co2=[101.0], composite=[100.0])
+    named = (H₂O=[1.0], CO₂=[101.0], dry_air=[100.0])
     expected = run_with_gases(named)
     @test run_with_gases(GasView(named...)) == expected
     @test run_with_gases(Dict(pairs(named))) == expected
@@ -887,10 +887,10 @@ end
     Ngˡʷ, Ngˢʷ = 3, 2
 
     make_atmosphere(gases) = ColumnAtmosphere(
-        pressure_layers = [7_500.0, 33_000.0, 88_000.0],
-        pressure_interfaces = [1_000.0, 14_000.0, 52_000.0, 101_000.0],
-        temperature_layers = [217.3, 263.9, 291.4],
-        temperature_interfaces = [205.1, 231.7, 279.2, 297.8],
+        layer_pressures = [7_500.0, 33_000.0, 88_000.0],
+        interface_pressures = [1_000.0, 14_000.0, 52_000.0, 101_000.0],
+        layer_temperatures = [217.3, 263.9, 291.4],
+        interface_temperatures = [205.1, 231.7, 279.2, 297.8],
         gases = gases,
         surface = (;),
         geometry = (;),
@@ -903,7 +903,7 @@ end
         temperature_grid = [200.0, 250.0, 300.0]
         Ngases = 2
         model = EcCKDTabulatedGasOpticsModel(
-            names = (:h2o, :co2),
+            names = (:H₂O, :CO₂),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
             longwave_absorption = [longwave_entry(g, j, pressure_grid[iᵖ], temperature_grid[iᵀ])
@@ -914,7 +914,7 @@ end
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
-        atmosphere = make_atmosphere((h2o=[3.1, 12.7, 41.9], co2=8.3))
+        atmosphere = make_atmosphere((H₂O=[3.1, 12.7, 41.9], CO₂=8.3))
         longwave = LongwaveOptics(zeros(Ngˡʷ, 3), zeros(Ngˡʷ, 3);
                                   weights = zeros(Ngˡʷ))
         shortwave = ShortwaveOptics(zeros(Ngˢʷ, 3); weights=zeros(Ngˢʷ))
@@ -948,7 +948,7 @@ end
         source_temperature_grid = [180.0, 240.0, 300.0]
         Ngases = 3
         model = EcCKDTabulatedGasOpticsModel(
-            names = (:h2o, :co2, :composite),
+            names = (:H₂O, :CO₂, :dry_air),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = water_vapor_grid,
@@ -972,7 +972,7 @@ end
             longwave_weights = [0.2, 0.3, 0.5],
             shortwave_weights = [0.45, 0.55],
         )
-        atmosphere = make_atmosphere((h2o=[3.1, 12.7, 41.9], co2=8.3, composite=[4.2e2, 1.1e3, 2.6e3]))
+        atmosphere = make_atmosphere((H₂O=[3.1, 12.7, 41.9], CO₂=8.3, dry_air=[4.2e2, 1.1e3, 2.6e3]))
         longwave = LongwaveOptics(zeros(Ngˡʷ, 3), zeros(Ngˡʷ, 3);
                                   source_top = zeros(Ngˡʷ, 3),
                                   source_bottom = zeros(Ngˡʷ, 3),
@@ -1026,7 +1026,7 @@ end
         source_temperature_grid = FT[180, 240, 300]
 
         model = EcCKDTabulatedGasOpticsModel(
-            names = (:h2o, :co2, :composite),
+            names = (:H₂O, :CO₂, :dry_air),
             pressure_grid = pressure_grid,
             temperature_grid = temperature_grid,
             water_vapor_mole_fraction_grid = FT[1e-6, 1e-4, 1e-2],
@@ -1053,12 +1053,12 @@ end
             shortwave_weights = FT[0.45, 0.55],
         )
         atmosphere = ColumnAtmosphere(
-            pressure_layers = FT[7_500, 33_000, 88_000],
-            pressure_interfaces = FT[1_000, 14_000, 52_000, 101_000],
-            temperature_layers = FT[217.3, 263.9, 291.4],
-            temperature_interfaces = FT[205.1, 231.7, 279.2, 297.8],
-            gases = (h2o = FT[3.1, 12.7, 41.9], co2 = FT(8.3),
-                     composite = FT[4.2e2, 1.1e3, 2.6e3]),
+            layer_pressures = FT[7_500, 33_000, 88_000],
+            interface_pressures = FT[1_000, 14_000, 52_000, 101_000],
+            layer_temperatures = FT[217.3, 263.9, 291.4],
+            interface_temperatures = FT[205.1, 231.7, 279.2, 297.8],
+            gases = (H₂O = FT[3.1, 12.7, 41.9], CO₂ = FT(8.3),
+                     dry_air = FT[4.2e2, 1.1e3, 2.6e3]),
             surface = (;),
             geometry = (;),
         )
@@ -1124,7 +1124,7 @@ end
     end
 
     @testset "mixed-precision inputs share the promoted element type" begin
-        model = EcCKDTabulatedGasOpticsModel(names = (:co2,),
+        model = EcCKDTabulatedGasOpticsModel(names = (:CO₂,),
                                              pressure_grid = Float32[1, 10],
                                              temperature_grid = [200.0, 300.0],
                                              longwave_absorption = ones(1, 1, 2, 2),
@@ -1132,15 +1132,15 @@ end
         adapted = NumericalRadiation.Adapt.adapt(Array, model)
         @test eltype(model) === eltype(adapted) === Float64
         @test eltype(model.pressure_grid) === eltype(adapted.pressure_grid) === Float64
-        atmosphere = ColumnAtmosphere(pressure_layers = [5.0], pressure_interfaces = [1.0, 10.0],
-                                      temperature_layers = [250.0], temperature_interfaces = [240.0, 260.0],
-                                      gases = (; co2=1.0), surface = (;), geometry = (;))
+        atmosphere = ColumnAtmosphere(layer_pressures = [5.0], interface_pressures = [1.0, 10.0],
+                                      layer_temperatures = [250.0], interface_temperatures = [240.0, 260.0],
+                                      gases = (; CO₂=1.0), surface = (;), geometry = (;))
         longwave = LongwaveOptics(zeros(1, 1), zeros(1, 1))
         shortwave = ShortwaveOptics(zeros(1, 1))
         optical_properties!(longwave, shortwave, adapted, atmosphere)
         @test longwave.optical_depth == shortwave.optical_depth == [1.0;;]
 
-        gray = EcCKDGasOpticsModel(names = (:co2,), longwave_absorption = Float32[1;;], shortwave_absorption = [1.0;;])
+        gray = EcCKDGasOpticsModel(names = (:CO₂,), longwave_absorption = Float32[1;;], shortwave_absorption = [1.0;;])
         @test eltype(gray.longwave_absorption) === Float64
         @test NumericalRadiation.Adapt.adapt(Array, gray) isa EcCKDGasOpticsModel{Float64}
     end

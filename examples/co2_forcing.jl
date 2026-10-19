@@ -17,7 +17,7 @@ using NumericalRadiation
 using NCDatasets
 using Printf
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :co2))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:dry_air, :H₂O, :CO₂))
 nothing #hide
 
 # The column: ``Nz`` layers with interface pressures ``pᵢ`` (Pa, top of
@@ -43,13 +43,13 @@ nothing #hide
 
 function solve_column(χCO₂)
     atmosphere = ColumnAtmosphere(;
-        pressure_layers = p,
-        pressure_interfaces = pᵢ,
-        temperature_layers = T,
-        temperature_interfaces = Tᵢ,
-        gases = (composite = nᵈ,
-                 h2o = 0.006 .* nᵈ,
-                 co2 = χCO₂ .* nᵈ),
+        layer_pressures = p,
+        interface_pressures = pᵢ,
+        layer_temperatures = T,
+        interface_temperatures = Tᵢ,
+        gases = (dry_air = nᵈ,
+                 H₂O = 0.006 .* nᵈ,
+                 CO₂ = χCO₂ .* nᵈ),
         surface = (temperature=Tˢ,),
         geometry = (cos_zenith=0.5,),
         constants)

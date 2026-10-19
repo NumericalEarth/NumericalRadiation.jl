@@ -86,9 +86,9 @@ the arguments.
 """
 @inline hydrostatic_air_moles(Δp, g, mᵈ) = Δp / (g * mᵈ)
 
-# H₂O amount of a layer for the H₂O tables; `0` without an `h2o` key, which only
+# H₂O amount of a layer for the H₂O tables; `0` without an `H₂O` key, which only
 # a model without an H₂O table accepts.
-@inline water_vapor_layer_amount(::Type{FT}, gases) where FT = hasproperty(gases, :h2o) ? FT(gases.h2o) : zero(FT)
+@inline water_vapor_layer_amount(::Type{FT}, gases) where FT = hasproperty(gases, :H₂O) ? FT(gases.H₂O) : zero(FT)
 
 """
 $(TYPEDSIGNATURES)
@@ -123,7 +123,7 @@ $(TYPEDSIGNATURES)
 
 Longwave gas optical depth of one layer for g point `g`. `gases` is a
 `NamedTuple` of scalar layer amounts (mol m⁻²) keyed by the model's gas names,
-plus `composite` (dry air) when the model applies the ecCKD relative-linear
+plus `dry_air` (dry air) when the model applies the ecCKD relative-linear
 convention; `stencil` is the layer's [`gas_optics_stencil`](@ref). The total is
 clamped at zero.
 """
@@ -223,21 +223,21 @@ $(TYPEDSIGNATURES)
 
 Scalar gas amounts of layer `k` as a `NamedTuple` keyed by `Names` (the
 model's gas names), picked from a column gas container whose entries are
-per-layer vectors or column-wide scalars. A `composite` (dry air) entry the
+per-layer vectors or column-wide scalars. A `dry_air` (dry air) entry the
 container carries outside `Names` is kept, since the relative-linear
 convention reads it.
 """
 @generated function layer_gases(gases::NamedTuple{Keys}, ::Val{Names}, k) where {Keys, Names}
     picked = collect(Names)
-    :composite in Keys && !(:composite in Names) && push!(picked, :composite)
+    :dry_air in Keys && !(:dry_air in Names) && push!(picked, :dry_air)
     values = [:(gas_value(gases, $(QuoteNode(name)), k)) for name in picked]
     return :(NamedTuple{$(Tuple(picked))}(($(values...),)))
 end
 
 @inline function layer_gases(gases, ::Val{Names}, k) where Names
     picked = NamedTuple{Names}(map(name -> gas_value(gases, name, k), Names))
-    if has_gas(gases, :composite) && !(:composite in Names)
-        return merge(picked, (; composite=gas_value(gases, :composite, k)))
+    if has_gas(gases, :dry_air) && !(:dry_air in Names)
+        return merge(picked, (; dry_air=gas_value(gases, :dry_air, k)))
     else
         return picked
     end

@@ -20,23 +20,23 @@ The streaming functions share the package conventions of the array path:
   the top. A host whose own columns run bottom-up flips the index when it
   stages the column.
 - **Gases.** A layer's gas amounts are a `NamedTuple` of scalars in mol m⁻²
-  keyed by the model's gas names ([`gas_names`](@ref)), plus `composite` (dry
+  keyed by the model's gas names ([`gas_names`](@ref)), plus `dry_air` (dry
   air) whenever the model applies the ecCKD relative-linear convention. The
-  gas keys (`h2o`, `co2`, `o3`, `ch4`, `n2o`, `cfc11`, `cfc12`, `composite`)
-  mirror the ecCKD NetCDF variable prefixes and are the one place the package
-  abbreviates a species; every other identifier spells it out
-  (`water_vapor_mole_fraction`, [`water_vapor_table_optical_depth`](@ref)). The
-  H₂O mole fraction handed to [`gas_optics_stencil`](@ref) is relative to dry
-  air, `h2o / composite`. The ecCKD tables expect the *dry* column-amount
+  gas keys are the chemical formulas, as in Breeze's `BackgroundAtmosphere`
+  (`H₂O`, `CO₂`, `O₃`, `CH₄`, `N₂O`, `CFC₁₁`, `CFC₁₂`), and `dry_air`, which
+  the ecCKD files call `composite`; only the readers see the files' names
+  (`h2o`, `co2`, ..., through `ecckd_file_gas_name`). The H₂O mole fraction
+  handed to [`gas_optics_stencil`](@ref) is relative to dry air,
+  `H₂O / dry_air`. The ecCKD tables expect the *dry* column-amount
   convention: for a hydrostatic layer of pressure thickness `Δp`,
-  `composite = Δp / (g mᵈ)` — the whole layer mass over the dry molar mass,
-  so in a host model `composite = ρ Δz / mᵈ` with the *total* density — and
-  every gas is `χ composite` (`h2o = χ composite`). This is how the ecCKD tool
+  `dry_air = Δp / (g mᵈ)` — the whole layer mass over the dry molar mass,
+  so in a host model `dry_air = ρ Δz / mᵈ` with the *total* density — and
+  every gas is `χ dry_air` (`H₂O = χ dry_air`). This is how the ecCKD tool
   derived the molar absorption coefficients from the line-by-line optical
   depths and how ecRad applies them, so it reproduces the ecRad/CKDMIP
   reference fluxes (`validation/ckdmip_evaluation1.jl`). The moist molar-mass
-  convention `composite = Δp / (g (mᵈ + mᵛ χ))`, under which
-  `mᵈ composite + mᵛ h2o == Δp / g`, is an alternative that under-counts every
+  convention `dry_air = Δp / (g (mᵈ + mᵛ χ))`, under which
+  `mᵈ dry_air + mᵛ H₂O == Δp / g`, is an alternative that under-counts every
   absorber by the factor `1 + χ mᵛ/mᵈ` (up to ~3 % in the humid boundary
   layer); on the CKDMIP profiles it biases the surface downwelling longwave
   flux by about −0.2 W m⁻² and raises the surface shortwave RMSE by ~50 %.
@@ -176,7 +176,7 @@ from its own column arrays.
 ```jldoctest streaming
 julia> using NumericalRadiation
 
-julia> model = EcCKDGasOpticsModel(names = (:h2o, :co2),
+julia> model = EcCKDGasOpticsModel(names = (:H₂O, :CO₂),
                                    longwave_absorption = [0.08 0.004; 0.03 0.002],
                                    shortwave_absorption = [0.010 0.0008],
                                    longwave_source_scale = [1.0, 1.05],
@@ -184,11 +184,11 @@ julia> model = EcCKDGasOpticsModel(names = (:h2o, :co2),
                                    shortwave_weights = [1.0]);
 
 julia> column = (pressure = [20_000.0, 70_000.0],
-                 pressure_interfaces = [1_000.0, 45_000.0, 100_000.0],
+                 interface_pressures = [1_000.0, 45_000.0, 100_000.0],
                  temperature = [240.0, 285.0],
-                 temperature_interfaces = [230.0, 260.0, 295.0],
-                 h2o = [0.002, 0.014],
-                 co2 = 420e-6,
+                 interface_temperatures = [230.0, 260.0, 295.0],
+                 H₂O = [0.002, 0.014],
+                 CO₂ = 420e-6,
                  constants = PhysicalConstants());
 ```
 
@@ -206,10 +206,10 @@ julia> struct LongwaveLayers{M, C}
 
 julia> function (layers::LongwaveLayers)(g, k)
            (; model, column) = layers
-           gases = (h2o = column.h2o[k], co2 = column.co2)
+           gases = (H₂O = column.H₂O[k], CO₂ = column.CO₂)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
            τ = longwave_optical_depth(model, g, gases, stencil)
-           Tₖ, Tₖ₊₁ = column.temperature_interfaces[k], column.temperature_interfaces[k + 1]
+           Tₖ, Tₖ₊₁ = column.interface_temperatures[k], column.interface_temperatures[k + 1]
            Bₖ = longwave_source(model, g, Tₖ, source_table_bracket(model, Tₖ))
            Bₖ₊₁ = longwave_source(model, g, Tₖ₊₁, source_table_bracket(model, Tₖ₊₁))
            return τ, Bₖ, Bₖ₊₁
@@ -246,10 +246,10 @@ julia> struct ShortwaveLayers{M, C}
 
 julia> function (layers::ShortwaveLayers)(g, k)
            (; model, column) = layers
-           gases = (h2o = column.h2o[k], co2 = column.co2)
+           gases = (H₂O = column.H₂O[k], CO₂ = column.CO₂)
            stencil = gas_optics_stencil(model, column.pressure[k], column.temperature[k], 0.0)
            τ = shortwave_optical_depth(model, g, gases, stencil)
-           Δp = column.pressure_interfaces[k + 1] - column.pressure_interfaces[k]
+           Δp = column.interface_pressures[k + 1] - column.interface_pressures[k]
            (; gravity, dry_air_molar_mass) = column.constants
            air_moles = hydrostatic_air_moles(Δp, gravity, dry_air_molar_mass)
            return τ, rayleigh_optical_depth(model, g, air_moles), 0.0
@@ -280,11 +280,11 @@ see [above](#Agreement-with-the-array-path); with scattering the two would be
 bitwise equal at any `μ₀`):
 
 ```jldoctest streaming
-julia> atmosphere = ColumnAtmosphere(pressure_layers = column.pressure,
-                                     pressure_interfaces = column.pressure_interfaces,
-                                     temperature_layers = column.temperature,
-                                     temperature_interfaces = column.temperature_interfaces,
-                                     gases = (; h2o=column.h2o, co2=column.co2),
+julia> atmosphere = ColumnAtmosphere(layer_pressures = column.pressure,
+                                     interface_pressures = column.interface_pressures,
+                                     layer_temperatures = column.temperature,
+                                     interface_temperatures = column.interface_temperatures,
+                                     gases = (; H₂O=column.H₂O, CO₂=column.CO₂),
                                      surface = (; temperature=295.0),
                                      geometry = (; cos_zenith=μ₀));
 

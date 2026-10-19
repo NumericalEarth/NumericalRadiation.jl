@@ -9,45 +9,45 @@ is a host-model-facing container for newer gas-optics and solver paths where
 layer/interface pressure and temperature arrays need to be carried together.
 
 Fields:
-- `pressure_layers`: Layer pressures, indexed top-down
-- `pressure_interfaces`: Interface pressures, indexed top-down
-- `temperature_layers`: Layer temperatures, indexed top-down
-- `temperature_interfaces`: Interface temperatures, indexed top-down
+- `layer_pressures`: Layer pressures, indexed top-down
+- `interface_pressures`: Interface pressures, indexed top-down
+- `layer_temperatures`: Layer temperatures, indexed top-down
+- `interface_temperatures`: Interface temperatures, indexed top-down
 - `gases`: Symbol-keyed gas concentrations or host-model property view
 - `surface`: Lower-boundary state
 - `geometry`: Geometry, solar angles, or host-model geometry view
 - The four arrays may have different array types (host-model views into arrays of
-  different shape); `FT` is the element type of `temperature_layers`.
+  different shape); `FT` is the element type of `layer_temperatures`.
 - `constants`: Physical constants of the host ([`PhysicalConstants`](@ref) in the column's
   element type by default): gravity and the dry-air molar mass for the hydrostatic layer air
   amounts of `optical_properties!`, gravity and the heat capacity for
   [`heating_rates!`](@ref)
 """
 struct ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C} <: AbstractAtmosphericState
-    pressure_layers::PL
-    pressure_interfaces::PI
-    temperature_layers::TL
-    temperature_interfaces::TI
+    layer_pressures::PL
+    interface_pressures::PI
+    layer_temperatures::TL
+    interface_temperatures::TI
     gases::G
     surface::S
     geometry::Geo
     constants::C
 end
 
-function ColumnAtmosphere(; pressure_layers::PL,
-                            pressure_interfaces::PI,
-                            temperature_layers::TL,
-                            temperature_interfaces::TI,
+function ColumnAtmosphere(; layer_pressures::PL,
+                            interface_pressures::PI,
+                            layer_temperatures::TL,
+                            interface_temperatures::TI,
                             gases::G,
                             surface::S,
                             geometry::Geo,
-                            constants::C = PhysicalConstants(float(eltype(temperature_layers)))) where {PL, PI, TL, TI, G, S, Geo, C}
-    FT = eltype(temperature_layers)
+                            constants::C = PhysicalConstants(float(eltype(layer_temperatures)))) where {PL, PI, TL, TI, G, S, Geo, C}
+    FT = eltype(layer_temperatures)
     return ColumnAtmosphere{FT, PL, PI, TL, TI, G, S, Geo, C}(
-        pressure_layers,
-        pressure_interfaces,
-        temperature_layers,
-        temperature_interfaces,
+        layer_pressures,
+        interface_pressures,
+        layer_temperatures,
+        interface_temperatures,
         gases,
         surface,
         geometry,
@@ -166,10 +166,10 @@ function heating_rates!(heating::AbstractVector,
                         atmosphere::ColumnAtmosphere;
                         gravity = atmosphere.constants.gravity,
                         heat_capacity = atmosphere.constants.heat_capacity)
-    pᵢ = atmosphere.pressure_interfaces
-    Nz = length(atmosphere.temperature_layers)
+    pᵢ = atmosphere.interface_pressures
+    Nz = length(atmosphere.layer_temperatures)
     length(heating) == Nz || throw(DimensionMismatch("heating must have length Nz"))
-    length(pᵢ) == Nz + 1 || throw(DimensionMismatch("pressure_interfaces must have length Nz + 1"))
+    length(pᵢ) == Nz + 1 || throw(DimensionMismatch("interface_pressures must have length Nz + 1"))
     length(fluxes.longwave_up) == Nz + 1 || throw(DimensionMismatch("longwave_up must have length Nz + 1"))
     length(fluxes.longwave_down) == Nz + 1 || throw(DimensionMismatch("longwave_down must have length Nz + 1"))
     length(fluxes.shortwave_up) == Nz + 1 || throw(DimensionMismatch("shortwave_up must have length Nz + 1"))
@@ -180,7 +180,7 @@ function heating_rates!(heating::AbstractVector,
     cᵖ = FT(heat_capacity)
     for k in 1:Nz
         Δp = FT(pᵢ[k + 1] - pᵢ[k])
-        Δp > zero(FT) || throw(ArgumentError("pressure_interfaces must increase downward"))
+        Δp > zero(FT) || throw(ArgumentError("interface_pressures must increase downward"))
         ℐₖ = FT(fluxes.longwave_down[k] - fluxes.longwave_up[k] +
                 fluxes.shortwave_down[k] - fluxes.shortwave_up[k])
         ℐₖ₊₁ = FT(fluxes.longwave_down[k + 1] - fluxes.longwave_up[k + 1] +

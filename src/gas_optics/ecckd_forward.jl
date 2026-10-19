@@ -244,7 +244,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
     if length(water_vapor_grid) > 0
         length(water_vapor_grid) >= 2 ||
             throw(DimensionMismatch("water_vapor_mole_fraction_grid must contain at least two points when supplied"))
-        :h2o in gas_name_tuple || throw(ArgumentError("water_vapor_mole_fraction_grid requires :h2o in names"))
+        :H₂O in gas_name_tuple || throw(ArgumentError("water_vapor_mole_fraction_grid requires :H₂O in names"))
         validate_log_uniform_grid(water_vapor_grid, "water_vapor_mole_fraction_grid")
         size(longwave_water_vapor) == (size(longwave_absorption, 1), length(pressure_grid),
                                        temperature_grid_length(temperature_grid), length(water_vapor_grid)) ||
@@ -291,7 +291,7 @@ Base.eltype(::EcCKDTabulatedGasOpticsModel{FT}) where FT = FT
 end
 
 # Gas containers are keyed by `Symbol` throughout. A `String`-keyed container
-# must fail here rather than fall back silently: the `haskey(gases, :composite)`
+# must fail here rather than fall back silently: the `haskey(gases, :dry_air)`
 # guards below would miss its keys and quietly change the optical depth.
 @inline function gas_value(gases::AbstractDict, name::Symbol, k)
     value = gases[name]
@@ -338,15 +338,15 @@ end
 
 @inline function check_tabulated_gas_profile_lengths(gases, names, Nz)
     check_gas_profile_lengths(gases, names, Nz)
-    if !(:composite in names) && has_gas(gases, :composite)
-        check_gas_profile_length(gases, :composite, Nz)
+    if !(:dry_air in names) && has_gas(gases, :dry_air)
+        check_gas_profile_length(gases, :dry_air, Nz)
     end
     return nothing
 end
 
 @generated function check_tabulated_gas_profile_lengths(gases::NamedTuple{Keys}, ::Val{Names}, Nz) where {Keys, Names}
     names_to_check = collect(Names)
-    :composite in Keys && !(:composite in Names) && push!(names_to_check, :composite)
+    :dry_air in Keys && !(:dry_air in Names) && push!(names_to_check, :dry_air)
     checks = [:( check_gas_profile_length(gases, $(QuoteNode(name)), Nz) )
               for name in names_to_check]
     return quote
@@ -358,7 +358,7 @@ end
 @inline check_tabulated_gas_profile_lengths(gases, ::Val{Names}, Nz) where Names =
     check_tabulated_gas_profile_lengths(gases, Names, Nz)
 
-@inline source_temperature(atmosphere::ColumnAtmosphere, k) = atmosphere.temperature_layers[k]
+@inline source_temperature(atmosphere::ColumnAtmosphere, k) = atmosphere.layer_temperatures[k]
 
 @inline function log_bracket(grid, x)
     # Uniform log spacing by file contract; clamp to the axis so off-table
@@ -544,12 +544,12 @@ end
                                                        gas_reference_mole_fractions, ::Val{GasNames}, g, k,
                                                        stencil) where {FT, GasNames}
     gas_fields = fieldnames(gases)
-    has_composite = :composite in gas_fields
+    has_dry_air = :dry_air in gas_fields
     terms = Expr[]
     for (j, name) in enumerate(GasNames)
         amount = :(FT(gas_value(gases, $(QuoteNode(name)), k)))
-        if has_composite
-            amount = :($amount - FT(@inbounds(gas_reference_mole_fractions[$j])) * FT(gas_value(gases, :composite, k)))
+        if has_dry_air
+            amount = :($amount - FT(@inbounds(gas_reference_mole_fractions[$j])) * FT(gas_value(gases, :dry_air, k)))
         end
         push!(terms, :(interpolate_table(coefficients, g, $j, stencil) * $amount))
     end
@@ -563,8 +563,8 @@ end
     for j in eachindex(gas_names)
         amount = FT(gas_value(gases, gas_names[j], k))
         @inbounds reference = FT(gas_reference_mole_fractions[j])
-        if reference != zero(FT) && has_gas(gases, :composite)
-            amount -= reference * FT(gas_value(gases, :composite, k))
+        if reference != zero(FT) && has_gas(gases, :dry_air)
+            amount -= reference * FT(gas_value(gases, :dry_air, k))
         end
         τ += interpolate_table(coefficients, g, j, stencil) * amount
     end
@@ -577,14 +577,14 @@ end
 
 function check_ecckd_optics_shapes(longwave::LongwaveOptics, shortwave::ShortwaveOptics, model::EcCKDGasOpticsModel,
                                    atmosphere::ColumnAtmosphere)
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     check_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), Nz)
     interface_sources = longwave.source_top !== nothing || longwave.source_bottom !== nothing
     (longwave.source_top === nothing) == (longwave.source_bottom === nothing) ||
         throw(ArgumentError("longwave source_top and source_bottom must both be provided or both be nothing"))
     if interface_sources
-        length(atmosphere.temperature_interfaces) == Nz + 1 ||
-            throw(DimensionMismatch("temperature_interfaces must contain Nz + 1 values"))
+        length(atmosphere.interface_temperatures) == Nz + 1 ||
+            throw(DimensionMismatch("interface_temperatures must contain Nz + 1 values"))
     end
     size(longwave.optical_depth) == (size(model.longwave_absorption, 1), Nz) ||
         throw(DimensionMismatch("longwave optical_depth must have shape (Ngˡʷ, Nz)"))
@@ -607,17 +607,17 @@ end
 
 function check_ecckd_optics_shapes(longwave::LongwaveOptics, shortwave::ShortwaveOptics,
                                    model::EcCKDTabulatedGasOpticsModel, atmosphere::ColumnAtmosphere)
-    Nz = length(atmosphere.temperature_layers)
-    length(atmosphere.pressure_layers) == Nz || throw(DimensionMismatch("pressure_layers must contain Nz values"))
-    length(atmosphere.pressure_interfaces) == Nz + 1 ||
-        throw(DimensionMismatch("pressure_interfaces must contain Nz + 1 values"))
+    Nz = length(atmosphere.layer_temperatures)
+    length(atmosphere.layer_pressures) == Nz || throw(DimensionMismatch("layer_pressures must contain Nz values"))
+    length(atmosphere.interface_pressures) == Nz + 1 ||
+        throw(DimensionMismatch("interface_pressures must contain Nz + 1 values"))
     check_tabulated_gas_profile_lengths(atmosphere.gases, Val(gas_names(model)), Nz)
     interface_sources = longwave.source_top !== nothing || longwave.source_bottom !== nothing
     (longwave.source_top === nothing) == (longwave.source_bottom === nothing) ||
         throw(ArgumentError("longwave source_top and source_bottom must both be provided or both be nothing"))
     if interface_sources
-        length(atmosphere.temperature_interfaces) == Nz + 1 ||
-            throw(DimensionMismatch("temperature_interfaces must contain Nz + 1 values"))
+        length(atmosphere.interface_temperatures) == Nz + 1 ||
+            throw(DimensionMismatch("interface_temperatures must contain Nz + 1 values"))
     end
     size(longwave.optical_depth) == (size(model.longwave_absorption, 1), Nz) ||
         throw(DimensionMismatch("longwave optical_depth must have shape (Ngˡʷ, Nz)"))
@@ -650,7 +650,7 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
                              model::EcCKDGasOpticsModel{FT}, atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
 
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     names = gas_names(model)
 
     # Each layer is one call into the scalar layer API of `ecckd_layer.jl`
@@ -668,8 +668,8 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
             longwave.optical_depth[g, k] = longwave_optical_depth(model, g, gases, stencil)
             longwave.source[g, k] = longwave_source(model, g, temperature, source_bracket)
             if longwave.source_top !== nothing && longwave.source_bottom !== nothing
-                temperature_top = atmosphere.temperature_interfaces[k]
-                temperature_bottom = atmosphere.temperature_interfaces[k + 1]
+                temperature_top = atmosphere.interface_temperatures[k]
+                temperature_bottom = atmosphere.interface_temperatures[k + 1]
                 longwave.source_top[g, k] = longwave_source(model, g, temperature_top, source_bracket)
                 longwave.source_bottom[g, k] = longwave_source(model, g, temperature_bottom, source_bracket)
             end
@@ -690,7 +690,7 @@ end
 @inline has_dynamic_water_vapor(model::EcCKDTabulatedGasOpticsModel) = length(model.water_vapor_mole_fraction_grid) > 0
 
 @inline layer_pressure_thickness(atmosphere::ColumnAtmosphere, k) =
-    atmosphere.pressure_interfaces[k + 1] - atmosphere.pressure_interfaces[k]
+    atmosphere.interface_pressures[k + 1] - atmosphere.interface_pressures[k]
 
 # Hydrostatic molar amount of layer `k` in the model precision, with gravity
 # and the dry-air molar mass of the column's own constants.
@@ -701,12 +701,12 @@ end
 end
 
 # Layer H₂O mole fraction relative to dry air for the H₂O-axis bracket: the
-# `composite` amount when the column carries one, else the hydrostatic molar
+# `dry_air` amount when the column carries one, else the hydrostatic molar
 # amount of the layer, `Δp / (g mᵈ)`.
 @inline function layer_water_vapor_mole_fraction(::Type{FT}, atmosphere::ColumnAtmosphere, k) where FT
-    water_vapor_moles = max(FT(gas_value(atmosphere.gases, :h2o, k)), zero(FT))
-    dry_air_moles = has_gas(atmosphere.gases, :composite) ?
-        max(FT(gas_value(atmosphere.gases, :composite, k)), sqrt(eps(FT))) :
+    water_vapor_moles = max(FT(gas_value(atmosphere.gases, :H₂O, k)), zero(FT))
+    dry_air_moles = has_gas(atmosphere.gases, :dry_air) ?
+        max(FT(gas_value(atmosphere.gases, :dry_air, k)), sqrt(eps(FT))) :
         max(layer_air_moles(FT, atmosphere, k), sqrt(eps(FT)))
     return water_vapor_moles / dry_air_moles
 end
@@ -723,22 +723,22 @@ function optical_properties!(longwave::LongwaveOptics{FT, <:AbstractMatrix},
                              model::EcCKDTabulatedGasOpticsModel{FT}, atmosphere::ColumnAtmosphere) where FT
     check_ecckd_optics_shapes(longwave, shortwave, model, atmosphere)
 
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     names = gas_names(model)
 
     for k in 1:Nz
-        pressure = atmosphere.pressure_layers[k]
-        temperature = atmosphere.temperature_layers[k]
+        pressure = atmosphere.layer_pressures[k]
+        temperature = atmosphere.layer_temperatures[k]
         water_vapor_mole_fraction = has_dynamic_water_vapor(model) ?
             layer_water_vapor_mole_fraction(FT, atmosphere, k) : zero(FT)
 
-        # Interface sources are optional and `temperature_interfaces` is only
+        # Interface sources are optional and `interface_temperatures` is only
         # required to be populated when they are requested, so fall back to the
         # layer temperature otherwise rather than indexing it. The condition is
         # decided by the optical-property types, so this folds away.
         interface_sources = longwave.source_top !== nothing && longwave.source_bottom !== nothing
-        temperature_top = interface_sources ? atmosphere.temperature_interfaces[k] : temperature
-        temperature_bottom = interface_sources ? atmosphere.temperature_interfaces[k + 1] : temperature
+        temperature_top = interface_sources ? atmosphere.interface_temperatures[k] : temperature
+        temperature_bottom = interface_sources ? atmosphere.interface_temperatures[k + 1] : temperature
 
         # Every interpolation bracket depends only on the layer, so build the
         # stencil once here instead of once per g point and gas. From here on

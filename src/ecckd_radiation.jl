@@ -10,7 +10,7 @@ export ClearSkyEcCKDRadiation, default_ozone_profile
     default_ozone_profile(p)
 
 Ozone mole fraction as a function of pressure `p` [Pa]: a Chapman-layer shape peaking at
-8 ppmv near 30 hPa and vanishing towards the surface. The default `o3` prescription of
+8 ppmv near 30 hPa and vanishing towards the surface. The default `O₃` prescription of
 [`ClearSkyEcCKDRadiation`](@ref) for hosts without an ozone field; a crude stand-in for a climatology.
 """
 @inline function default_ozone_profile(p)
@@ -27,19 +27,19 @@ Clear-sky ecCKD radiation as one configured column scheme: tabulated correlated-
 Longwave and shortwave are solved clear-sky ([`CloudlessLongwave`](@ref),
 [`CloudlessShortwave`](@ref)) from one evaluation of the gas optics.
 
-Gas composition: `composite` (dry air) and `h2o` always come from the host's state. Every
+Gas composition: `dry_air` (dry air) and `H₂O` always come from the host's state. Every
 other gas of the ecCKD model needs an entry in `mole_fractions`, a number (mole fraction) or a
-function of pressure [Pa]; `o3` defaults to [`default_ozone_profile`](@ref) and `co2` to
-280 ppm, and a host that carries CO₂ (SpeedyWeather's greenhouse gases) overrides `co2`.
+function of pressure [Pa]; `O₃` defaults to [`default_ozone_profile`](@ref) and `CO₂` to
+280 ppm, and a host that carries CO₂ (SpeedyWeather's greenhouse gases) overrides `CO₂`.
 Gases the ecCKD model knows but that were not requested when loading it stay at their
 reference concentration.
 
 ```julia
 using NumericalRadiation, NCDatasets
 scheme = ClearSkyEcCKDRadiation(Float32, "32x32")                                  # reference tables
-scheme = ClearSkyEcCKDRadiation(Float32, "64x96"; mole_fractions = (; co2 = 400e-6), surface_emissivity = 0.97)
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2, :ch4))
-scheme = ClearSkyEcCKDRadiation(gas_optics; mole_fractions = (; ch4 = 1.8e-6))     # every extra gas must be prescribed
+scheme = ClearSkyEcCKDRadiation(Float32, "64x96"; mole_fractions = (; CO₂ = 400e-6), surface_emissivity = 0.97)
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:dry_air, :H₂O, :O₃, :CO₂, :CH₄))
+scheme = ClearSkyEcCKDRadiation(gas_optics; mole_fractions = (; CH₄ = 1.8e-6))     # every extra gas must be prescribed
 ```
 """
 struct ClearSkyEcCKDRadiation{FT, GO <: EcCKDTabulatedGasOpticsModel{FT}, MF <: NamedTuple} <: AbstractRadiationScheme
@@ -51,21 +51,21 @@ end
 Adapt.@adapt_structure ClearSkyEcCKDRadiation
 
 # gases every host takes from its own state
-const HOST_GASES = (:composite, :h2o)
+const HOST_GASES = (:dry_air, :H₂O)
 
 """
     ClearSkyEcCKDRadiation(gas_optics::EcCKDTabulatedGasOpticsModel{FT}; ozone = default_ozone_profile,
                            mole_fractions = (;), surface_emissivity = 0.98)
 
 Configure `gas_optics` into a [`ClearSkyEcCKDRadiation`](@ref). `ozone` is a shortcut for
-`mole_fractions.o3`; `mole_fractions` overrides the defaults (`o3 = ozone`, `co2 = 280e-6`)
+`mole_fractions.O₃`; `mole_fractions` overrides the defaults (`O₃ = ozone`, `CO₂ = 280e-6`)
 and prescribes every further gas of the model, an `ArgumentError` names a missing one.
 Numbers are converted to `FT`."""
 function ClearSkyEcCKDRadiation(gas_optics::EcCKDTabulatedGasOpticsModel{FT};
                         ozone = default_ozone_profile,
                         mole_fractions = (;),
                         surface_emissivity = 0.98) where FT
-    fractions = merge((; o3 = ozone, co2 = FT(280e-6)), mole_fractions)
+    fractions = merge((; O₃ = ozone, CO₂ = FT(280e-6)), mole_fractions)
     fractions = map(x -> x isa Number ? FT(x) : x, fractions)
     for name in gas_names(gas_optics)
         name in HOST_GASES && continue
@@ -83,12 +83,12 @@ ClearSkyEcCKDRadiation{FT}(gas_optics::EcCKDTabulatedGasOpticsModel; kwargs...) 
     ClearSkyEcCKDRadiation(EcCKDTabulatedGasOpticsModel{FT}(gas_optics); kwargs...)
 
 """
-    ClearSkyEcCKDRadiation(FT::Type, model_pair; names = (:composite, :h2o, :o3, :co2), kwargs...)
+    ClearSkyEcCKDRadiation(FT::Type, model_pair; names = (:dry_air, :H₂O, :O₃, :CO₂), kwargs...)
 
 Load the reference ecCKD `model_pair` (e.g. `"32x32"`, `"64x96"`) with the gases `names` through
 [`read_reference_ecckd_gas_optics`](@ref) (NCDatasets must be loaded) in number format `FT`."""
 ClearSkyEcCKDRadiation(FT::Type, model_pair::Union{Symbol, AbstractString, EcCKDModelSpec};
-                       names = (:composite, :h2o, :o3, :co2), kwargs...) =
+                       names = (:dry_air, :H₂O, :O₃, :CO₂), kwargs...) =
     ClearSkyEcCKDRadiation{FT}(read_reference_ecckd_gas_optics(model_pair; names); kwargs...)
 
 Base.eltype(::ClearSkyEcCKDRadiation{FT}) where FT = FT

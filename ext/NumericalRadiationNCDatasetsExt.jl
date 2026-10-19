@@ -4,7 +4,7 @@ using NumericalRadiation
 using NCDatasets
 
 import NumericalRadiation: EcCKDDefinition, EcCKDTabulatedGasOpticsModel
-using NumericalRadiation: AbstractLookupSearch, BinarySearch
+using NumericalRadiation: AbstractLookupSearch, BinarySearch, ecckd_file_gas_name
 import NumericalRadiation: CloudScatteringTable, EcCKDSpectralMapping
 import NumericalRadiation: read_ecckd_definition, read_ecckd_tabulated_gas_optics
 import NumericalRadiation: read_cloud_scattering_table, read_ecckd_spectral_mapping
@@ -142,14 +142,14 @@ end
 
 function coefficient_table(dataset, gas::Symbol; water_vapor_mole_fraction, dynamic_water_vapor = false,
                            allow_missing = false)
-    name = String(gas) * "_molar_absorption_coeff"
+    name = ecckd_file_gas_name(gas) * "_molar_absorption_coeff"
     if !haskey(dataset, name)
         allow_missing && return nothing
         throw(ArgumentError("missing ecCKD coefficient variable: $name"))
     end
     table = Array(dataset[name])
     if ndims(table) == 4
-        gas == :h2o || throw(ArgumentError("unsupported four-dimensional coefficient table for gas $gas"))
+        gas == :H₂O || throw(ArgumentError("unsupported four-dimensional coefficient table for gas $gas"))
         dynamic_water_vapor && return zeros(Float64, size(table, 1), size(table, 2), size(table, 3))
         water_vapor_grid = Float64.(Array(dataset["h2o_mole_fraction"]))
         water_vapor_index = nearest_index(water_vapor_grid, water_vapor_mole_fraction)
@@ -185,7 +185,7 @@ function stack_coefficients(dataset, gas_names; water_vapor_mole_fraction, dynam
 end
 
 function water_vapor_absorption_table(dataset, gas_names)
-    :h2o in gas_names || return nothing
+    :H₂O in gas_names || return nothing
     haskey(dataset, "h2o_molar_absorption_coeff") || return nothing
     table = Array(dataset["h2o_molar_absorption_coeff"])
     ndims(table) == 4 || return nothing
@@ -215,12 +215,12 @@ function read_longwave_source_table(dataset, longwave_weights)
 end
 
 reference_mole_fraction_present(dataset, gas_names) =
-    [haskey(dataset, String(gas) * "_reference_mole_fraction") for gas in gas_names]
+    [haskey(dataset, ecckd_file_gas_name(gas) * "_reference_mole_fraction") for gas in gas_names]
 
 function reference_mole_fractions(dataset, gas_names)
     reference = zeros(Float64, length(gas_names))
     for (gas_index, gas) in enumerate(gas_names)
-        name = String(gas) * "_reference_mole_fraction"
+        name = ecckd_file_gas_name(gas) * "_reference_mole_fraction"
         haskey(dataset, name) && (reference[gas_index] = Float64(Array(dataset[name])[]))
     end
     return reference
@@ -228,7 +228,7 @@ end
 
 """
     read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
-                                    names = (:h2o, :co2),
+                                    names = (:H₂O, :CO₂),
                                     water_vapor_mole_fraction = 0.005,
                                     stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
 
@@ -241,10 +241,10 @@ requested `gas_names` only (gases absent from the shortwave file contribute
 zero), passes the pressure-dependent reference temperature grid through as a
 matrix for the runtime interpolation kernel, and reads each gas's
 `<gas>_reference_mole_fraction` so the runtime can apply the ecCKD
-relative-linear convention. When `:h2o` is requested, the reference
+relative-linear convention. When `:H₂O` is requested, the reference
 four-dimensional H₂O table is carried with its mole-fraction dimension intact;
-the runtime computes the layer H₂O mole fraction from the `h2o` and
-`composite` gas amounts and interpolates the table per layer. The
+the runtime computes the layer H₂O mole fraction from the `H₂O` and
+`dry_air` gas amounts and interpolates the table per layer. The
 `water_vapor_mole_fraction` keyword is not a gas input on that path — it is
 accepted for compatibility/fallback nearest-index sampling of non-dynamic
 four-dimensional H₂O tables. Longwave weights
@@ -262,7 +262,7 @@ The `lookup_search` keyword is forwarded to `EcCKDTabulatedGasOpticsModel`;
 function read_ecckd_tabulated_gas_optics(FT::DataType,
                                          longwave_path::String,
                                          shortwave_path::String;
-                                         names = (:h2o, :co2),
+                                         names = (:H₂O, :CO₂),
                                          water_vapor_mole_fraction = 0.005,
                                          lookup_search::AbstractLookupSearch = BinarySearch(),
                                          stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
@@ -276,7 +276,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
                        Float64[],
             absorption = stack_coefficients(dataset, gas_name_tuple;
                                             water_vapor_mole_fraction = water_vapor_mole_fraction,
-                                            dynamic_water_vapor = :h2o in gas_name_tuple,
+                                            dynamic_water_vapor = :H₂O in gas_name_tuple,
                                             allow_missing = false),
             water_vapor_absorption = water_vapor_absorption_table(dataset, gas_name_tuple),
             gas_reference_mole_fractions = reference_mole_fractions(dataset, gas_name_tuple),
@@ -296,7 +296,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
             temperature_grid = read_temperature_grid(dataset),
             absorption = stack_coefficients(dataset, gas_name_tuple;
                                             water_vapor_mole_fraction = water_vapor_mole_fraction,
-                                            dynamic_water_vapor = :h2o in gas_name_tuple,
+                                            dynamic_water_vapor = :H₂O in gas_name_tuple,
                                             allow_missing = true),
             water_vapor_absorption = water_vapor_absorption_table(dataset, gas_name_tuple),
             water_vapor_grid = haskey(dataset, "h2o_mole_fraction") ?
