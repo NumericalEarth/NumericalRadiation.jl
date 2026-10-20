@@ -72,29 +72,29 @@ nothing #hide
 # surfaces emit as blackbodies.
 
 ecckd_atmosphere = ColumnAtmosphere(;
-    pressure_layers = p,
-    pressure_interfaces = pᵢ,
-    temperature_layers = T,
-    temperature_interfaces = Tᵢ,
-    gases = (composite = nᵈ,
-             h2o = χH₂O .* nᵈ,
-             o3 = χO₃ .* nᵈ,
-             co2 = χCO₂ .* nᵈ,
-             ch4 = χCH₄ .* nᵈ,
-             n2o = χN₂O .* nᵈ,
-             cfc11 = 0,
-             cfc12 = 0),
+    layer_pressures = p,
+    interface_pressures = pᵢ,
+    layer_temperatures = T,
+    interface_temperatures = Tᵢ,
+    gases = (dry_air = nᵈ,
+             H₂O = χH₂O .* nᵈ,
+             O₃ = χO₃ .* nᵈ,
+             CO₂ = χCO₂ .* nᵈ,
+             CH₄ = χCH₄ .* nᵈ,
+             N₂O = χN₂O .* nᵈ,
+             CFC₁₁ = 0,
+             CFC₁₂ = 0),
     surface = (temperature=Tˢ,),
     geometry = (cos_zenith=0.5,),
     constants)
 
 rrtmgp_atmosphere = ColumnAtmosphere(;
-    pressure_layers = p,
-    pressure_interfaces = pᵢ,
-    temperature_layers = T,
-    temperature_interfaces = Tᵢ,
-    gases = (h2o = χH₂O, o3 = χO₃, co2 = χCO₂,
-             ch4 = χCH₄, n2o = χN₂O,
+    layer_pressures = p,
+    interface_pressures = pᵢ,
+    layer_temperatures = T,
+    interface_temperatures = Tᵢ,
+    gases = (H₂O = χH₂O, O₃ = χO₃, CO₂ = χCO₂,
+             CH₄ = χCH₄, N₂O = χN₂O,
              o2 = 0.20946, n2 = 0.78084, co = 0),
     surface = (temperature=Tˢ,),
     geometry = (cos_zenith=0.5,),
@@ -109,7 +109,7 @@ nothing #hide
 # [`surface_longwave_emission`](@ref); a scalar ``σT⁴`` boundary would be
 # spectrally gray and misplace surface emission across g points.
 
-intended_gases = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+intended_gases = (:dry_air, :H₂O, :O₃, :CO₂, :CH₄, :N₂O, :CFC₁₁, :CFC₁₂)
 
 function ecckd_member(selector)
     gas_optics = read_reference_ecckd_gas_optics(selector; names=intended_gases)

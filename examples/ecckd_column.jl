@@ -19,26 +19,26 @@ println("Selected ecCKD model: ", spec.name)
 println("  LW: ", basename(paths.longwave))
 println("  SW: ", basename(paths.shortwave))
 
-gas_optics = read_reference_ecckd_gas_optics(spec; names=(:composite, :h2o, :co2), water_vapor_mole_fraction=0.005)
+gas_optics = read_reference_ecckd_gas_optics(spec; names=(:dry_air, :H₂O, :CO₂), water_vapor_mole_fraction=0.005)
 
 Nz = 24
-pressure_interfaces = collect(range(10_000.0, 100_000.0; length=Nz + 1))
-pressure_layers = 0.5 .* (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end])
-temperature_layers = collect(range(220.0, 295.0; length=Nz))
-temperature_interfaces = collect(range(215.0, 300.0; length=Nz + 1))
-air_column = hydrostatic_air_moles.(diff(pressure_interfaces), constants.gravity, constants.dry_air_molar_mass)
+interface_pressures = collect(range(10_000.0, 100_000.0; length=Nz + 1))
+layer_pressures = 0.5 .* (interface_pressures[1:end-1] .+ interface_pressures[2:end])
+layer_temperatures = collect(range(220.0, 295.0; length=Nz))
+interface_temperatures = collect(range(215.0, 300.0; length=Nz + 1))
+air_column = hydrostatic_air_moles.(diff(interface_pressures), constants.gravity, constants.dry_air_molar_mass)
 
 atmosphere = ColumnAtmosphere(;
-    pressure_layers = pressure_layers,
-    pressure_interfaces = pressure_interfaces,
-    temperature_layers = temperature_layers,
-    temperature_interfaces = temperature_interfaces,
+    layer_pressures = layer_pressures,
+    interface_pressures = interface_pressures,
+    layer_temperatures = layer_temperatures,
+    interface_temperatures = interface_temperatures,
     gases = (
-        composite = air_column,
-        h2o = collect(range(0.002, 0.015; length=Nz)) .* air_column,
-        co2 = fill(420.0e-6, Nz) .* air_column,
+        dry_air = air_column,
+        H₂O = collect(range(0.002, 0.015; length=Nz)) .* air_column,
+        CO₂ = fill(420.0e-6, Nz) .* air_column,
     ),
-    surface = (temperature=temperature_interfaces[end],),
+    surface = (temperature=interface_temperatures[end],),
     geometry = (cos_zenith=μ₀,),
     constants,
 )

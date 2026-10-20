@@ -60,15 +60,15 @@ Published model pairs can be selected with compact names:
 
 ```julia
 reference_ecckd_model_specs()
-read_reference_ecckd_gas_optics("64x32"; names=(:composite, :h2o, :co2), water_vapor_mole_fraction=0.005)
+read_reference_ecckd_gas_optics("64x32"; names=(:dry_air, :H₂O, :CO₂), water_vapor_mole_fraction=0.005)
 ```
 
-The gas `Symbol`s in `names` — `:h2o`, `:co2`, `:o3`, `:ch4`, `:n2o`, `:cfc11`,
-`:cfc12` and `:composite` — mirror the ecCKD NetCDF variable prefixes
-(`h2o_molar_absorption_coeff`, `h2o_mole_fraction`, …) and the CKDMIP/RFMIP
-file variables, so they are deliberately not spelled out in English. They are
-the one exception: every other identifier in the package names a species in
-words (`water_vapor_mole_fraction`, `carbon_dioxide_absorption_reference`, …).
+The gas `Symbol`s in `names` — `:H₂O`, `:CO₂`, `:O₃`, `:CH₄`, `:N₂O`, `:CFC₁₁`,
+`:CFC₁₂` and `:dry_air` — are the chemical formulas, as in Breeze's
+`BackgroundAtmosphere`, and the dry air that the ecCKD files call the
+`composite` gas. The readers translate them to the files' variable prefixes
+(`h2o_molar_absorption_coeff`, `composite_molar_absorption_coeff`, …) with
+`ecckd_file_gas_name`; no other code sees the files' names.
 
 Path lookup with `require=false` is non-mutating: it checks environment paths,
 installed artifacts, and local validation data without downloading the lazy

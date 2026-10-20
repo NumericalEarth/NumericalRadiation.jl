@@ -28,7 +28,7 @@ column amounts in mol m⁻².
 using NumericalRadiation
 using NCDatasets   # activates the NetCDF reader extension
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :co2))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:dry_air, :H₂O, :CO₂))
 
 constants = PhysicalConstants()   # Earth defaults: g, mᵈ, cᵖ, σ, S₀, …
 
@@ -39,11 +39,11 @@ nᵈ = hydrostatic_air_moles.(diff(pᵢ), constants.gravity, constants.dry_air_m
 
 atmosphere = ColumnAtmosphere(;
     constants,
-    pressure_layers = p,
-    pressure_interfaces = pᵢ,
-    temperature_layers = collect(range(220, 295; length=Nz)),
-    temperature_interfaces = collect(range(215, 300; length=Nz + 1)),
-    gases = (composite=nᵈ, h2o=0.005 .* nᵈ, co2=420e-6 .* nᵈ),
+    layer_pressures = p,
+    interface_pressures = pᵢ,
+    layer_temperatures = collect(range(220, 295; length=Nz)),
+    interface_temperatures = collect(range(215, 300; length=Nz + 1)),
+    gases = (dry_air=nᵈ, H₂O=0.005 .* nᵈ, CO₂=420e-6 .* nᵈ),
     surface = (temperature=300,),
     geometry = (cos_zenith=0.55,))
 

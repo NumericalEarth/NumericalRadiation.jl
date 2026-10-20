@@ -71,10 +71,10 @@ end
 
 @testset "RadiativeFluxes comparison metrics" begin
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [25_000.0, 75_000.0],
-        pressure_interfaces = [0.0, 50_000.0, 100_000.0],
-        temperature_layers = [250.0, 280.0],
-        temperature_interfaces = [240.0, 265.0, 290.0],
+        layer_pressures = [25_000.0, 75_000.0],
+        interface_pressures = [0.0, 50_000.0, 100_000.0],
+        layer_temperatures = [250.0, 280.0],
+        interface_temperatures = [240.0, 265.0, 290.0],
         gases = (;),
         surface = (;),
         geometry = (;),

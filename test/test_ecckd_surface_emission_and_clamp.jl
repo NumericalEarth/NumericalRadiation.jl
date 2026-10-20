@@ -13,7 +13,7 @@ const σ = PhysicalConstants().stefan_boltzmann
     @testset "fallback source path (no source table)" begin
         for FT in (Float64, Float32)
             model = EcCKDTabulatedGasOpticsModel(
-                names = (:h2o, :co2),
+                names = (:H₂O, :CO₂),
                 pressure_grid = FT[10_000, 100_000],
                 temperature_grid = FT[220, 300],
                 longwave_absorption = ones(FT, 2, 2, 2, 2),
@@ -37,7 +37,7 @@ const σ = PhysicalConstants().stefan_boltzmann
 
     @testset "tabulated source path (reference 32x32)" begin
         model = read_reference_ecckd_gas_optics("32x32";
-                                                names = (:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+                                                names = (:dry_air, :H₂O, :O₃, :CO₂, :CH₄, :N₂O, :CFC₁₁, :CFC₁₂))
         emission = surface_longwave_emission(model, 300.0)
         @test length(emission) == length(model.longwave_weights)
         @test all(>(0), emission)
@@ -58,13 +58,13 @@ end
 
 @testset "total optical-depth clamp" begin
     Nz = 1
-    atmosphere_gases(methane_amount) = (composite=[100.0], ch4=[methane_amount])
+    atmosphere_gases(methane_amount) = (dry_air=[100.0], CH₄=[methane_amount])
     # Synthetic tabulated model with a relative-linear CH₄-like gas: with a
     # reference mole fraction and zero requested amount, the CH₄ term is
     # -reference * composite * k and can exceed the composite term, driving
     # the summed optical depth negative before the clamp.
     model = EcCKDTabulatedGasOpticsModel(
-        names = (:composite, :ch4),
+        names = (:dry_air, :CH₄),
         pressure_grid = [10_000.0, 100_000.0],
         temperature_grid = [220.0, 300.0],
         longwave_absorption = cat(fill(1e-4, 1, 1, 2, 2),   # composite: weak
@@ -78,10 +78,10 @@ end
         shortwave_weights = [1.0],
     )
     atmosphere(gases) = ColumnAtmosphere(
-        pressure_layers = [50_000.0],
-        pressure_interfaces = [45_000.0, 55_000.0],
-        temperature_layers = [260.0],
-        temperature_interfaces = [255.0, 265.0],
+        layer_pressures = [50_000.0],
+        interface_pressures = [45_000.0, 55_000.0],
+        layer_temperatures = [260.0],
+        interface_temperatures = [255.0, 265.0],
         gases = gases,
         surface = nothing,
         geometry = (;),

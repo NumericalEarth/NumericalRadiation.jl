@@ -43,18 +43,18 @@ nᵈ = [(pᵢ[k + 1] - pᵢ[k]) / (g * (mᵈ + mᵛ * χH₂O[k])) for k in 1:Nz
 
 atmosphere = ColumnAtmosphere(;
     constants,
-    pressure_layers = p,
-    pressure_interfaces = pᵢ,
-    temperature_layers = T,
-    temperature_interfaces = Tᵢ,
-    gases = (composite = nᵈ,
-             h2o = χH₂O .* nᵈ,
-             o3 = χO₃ .* nᵈ,
-             co2 = 420e-6 .* nᵈ,
-             ch4 = 1.8e-6 .* nᵈ,
-             n2o = 330e-9 .* nᵈ,
-             cfc11 = 0,
-             cfc12 = 0),
+    layer_pressures = p,
+    interface_pressures = pᵢ,
+    layer_temperatures = T,
+    interface_temperatures = Tᵢ,
+    gases = (dry_air = nᵈ,
+             H₂O = χH₂O .* nᵈ,
+             O₃ = χO₃ .* nᵈ,
+             CO₂ = 420e-6 .* nᵈ,
+             CH₄ = 1.8e-6 .* nᵈ,
+             N₂O = 330e-9 .* nᵈ,
+             CFC₁₁ = 0,
+             CFC₁₂ = 0),
     surface = (temperature=Tˢ,),
     geometry = (cos_zenith=0.5,))
 nothing #hide
@@ -99,7 +99,7 @@ nothing #hide
 # containers cannot touch the clear reference. That non-aliasing contract
 # is gate-verified below, not assumed.
 
-gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:composite, :h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12))
+gas_optics = read_reference_ecckd_gas_optics("32x32"; names=(:dry_air, :H₂O, :O₃, :CO₂, :CH₄, :N₂O, :CFC₁₁, :CFC₁₂))
 
 function gas_optics_containers()
     Ngˡʷ = length(gas_optics.longwave_weights)

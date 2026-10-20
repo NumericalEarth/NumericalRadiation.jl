@@ -9,7 +9,7 @@ const Adapt = NumericalRadiation.Adapt
 function lookup_model(FT; lookup_search=BinarySearch(), matrix_temperature_grid=false)
     temperature_grid = matrix_temperature_grid ? FT[200 250 300; 210 260 310] : FT[200, 230, 300]
     return EcCKDTabulatedGasOpticsModel(
-        names = (:composite,),
+        names = (:dry_air,),
         pressure_grid = FT[10_000, 100_000],
         temperature_grid = temperature_grid,
         longwave_absorption = reshape(FT.(1:12) ./ 1000, 2, 1, 2, 3),
@@ -64,11 +64,11 @@ Base.@noinline bracket_allocation(grid, x, search) = @allocated NumericalRadiati
         end
 
         atmosphere = ColumnAtmosphere(
-            pressure_layers = FT[15_000, 40_000, 85_000],
-            pressure_interfaces = FT[10_000, 25_000, 60_000, 100_000],
-            temperature_layers = FT[215, 255, 285],
-            temperature_interfaces = FT[190, 235, 275, 320],
-            gases = (composite = FT[10, 20, 30],),
+            layer_pressures = FT[15_000, 40_000, 85_000],
+            interface_pressures = FT[10_000, 25_000, 60_000, 100_000],
+            layer_temperatures = FT[215, 255, 285],
+            interface_temperatures = FT[190, 235, 275, 320],
+            gases = (dry_air = FT[10, 20, 30],),
             surface = (;), geometry = (;),
         )
         outputs = map((dynamic, fixed)) do model
@@ -126,7 +126,7 @@ end
 
 function uniform_lookup_model(FT; lookup_search=BinarySearch())
     return EcCKDTabulatedGasOpticsModel(
-        names = (:composite,),
+        names = (:dry_air,),
         pressure_grid = FT[10_000, 100_000],
         temperature_grid = FT[200, 250, 300],
         longwave_absorption = reshape(FT.(1:12) ./ 1000, 2, 1, 2, 3),
@@ -177,8 +177,8 @@ end
             for pressure in FT[5_000, 30_000, 120_000]
                 a = gas_optics_stencil(direct, pressure, temperature, FT(0.001))
                 c = gas_optics_stencil(searched, pressure, temperature, FT(0.001))
-                @test longwave_optical_depth(direct, 1, (composite = FT(10),), a) ≈
-                      longwave_optical_depth(searched, 1, (composite = FT(10),), c) rtol = 8eps(FT)
+                @test longwave_optical_depth(direct, 1, (dry_air = FT(10),), a) ≈
+                      longwave_optical_depth(searched, 1, (dry_air = FT(10),), c) rtol = 8eps(FT)
             end
         end
         @test isnan(source_table_bracket(direct, FT(NaN))[3])

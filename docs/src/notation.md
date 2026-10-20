@@ -54,8 +54,8 @@ The conventions the table relies on:
 * **Gas amounts are molar column amounts** in mol m⁻² per layer, under the
   *dry column-amount convention* of the ecCKD tables: the dry air of a
   hydrostatic layer is `nᵈ = Δp / (g mᵈ)` (`hydrostatic_air_moles`, the
-  `:composite` entry of the gas container) and every gas is `χ nᵈ` with `χ`
-  its mole fraction relative to dry air (`h2o = χH₂O nᵈ`, and so on).
+  `:dry_air` entry of the gas container) and every gas is `χ nᵈ` with `χ`
+  its mole fraction relative to dry air (`H₂O = χH₂O nᵈ`, and so on).
 * `constants` is a [`PhysicalConstants`](@ref); physical constants are never
   numeric literals at a call site or in a kernel, they propagate from a host's
   constants object (`ColumnAtmosphere.constants`, the `constants` argument of
@@ -94,12 +94,12 @@ fields inherited from SpeedyWeather and in `Δσ_k`).
 | **Column state and grid** | | | |
 | ``N_z`` | `Nz` | `number_of_layers(optics)` | Number of layers; interface arrays have length `Nz + 1` |
 | ``k`` | `k` | | Layer index, top down; `k` and `k + 1` are a layer's top and bottom interfaces |
-| ``p`` | `p`, `p_k` | `ColumnAtmosphere.pressure_layers` | Layer pressure, Pa, increasing downward |
-| ``p_i`` | `pᵢ` | `ColumnAtmosphere.pressure_interfaces` | Interface pressure, Pa, length `Nz + 1` |
-| ``\Delta p`` | `Δp`, `Δp_k` | `diff(pressure_interfaces)` | Layer pressure thickness, Pa |
+| ``p`` | `p`, `p_k` | `ColumnAtmosphere.layer_pressures` | Layer pressure, Pa, increasing downward |
+| ``p_i`` | `pᵢ` | `ColumnAtmosphere.interface_pressures` | Interface pressure, Pa, length `Nz + 1` |
+| ``\Delta p`` | `Δp`, `Δp_k` | `diff(interface_pressures)` | Layer pressure thickness, Pa |
 | ``p^s`` | `pˢ` | `AtmosphereProfile.surface_pressure` | Surface pressure, Pa (Breeze) |
-| ``T`` | `T`, `T_k` | `ColumnAtmosphere.temperature_layers`, `AtmosphereProfile.temperature` | Layer temperature, K (Breeze) |
-| ``T_i`` | `Tᵢ` | `ColumnAtmosphere.temperature_interfaces` | Interface temperature, K |
+| ``T`` | `T`, `T_k` | `ColumnAtmosphere.layer_temperatures`, `AtmosphereProfile.temperature` | Layer temperature, K (Breeze) |
+| ``T_i`` | `Tᵢ` | `ColumnAtmosphere.interface_temperatures` | Interface temperature, K |
 | ``T^s`` | `Tˢ` | `surface.temperature`, `SurfaceState.sea_surface_temperature`, `land_surface_temperature` | Surface temperature, K |
 | ``\dot T`` | `Ṫ` | `temperature_tendency`, `heating_rates!` | Temperature tendency, K s⁻¹ (example plots show `Ṫ * 86_400` in K day⁻¹) |
 | ``q^v`` | `q`, `q_k` | `AtmosphereProfile.humidity` | Specific humidity, kg kg⁻¹ (Breeze's `qᵛ`; the column schemes write `q`) |
@@ -108,8 +108,8 @@ fields inherited from SpeedyWeather and in `Δσ_k`).
 | ``\Phi`` | `Φ` | `AtmosphereProfile.geopotential` | Geopotential, m² s⁻² |
 | ``\sigma_k``, ``\sigma_{k+\frac12}``, ``\Delta\sigma_k`` | `σ_full`, `σ_half`, `σ_thick`, `Δσ_k` | `ColumnGrid.σ_full`, `.σ_half`, `.σ_thick` | Sigma coordinate `p / pˢ` at layer midpoints (length `Nz`), interfaces (length `Nz + 1`, 0 at the top, 1 at the surface) and the layer thickness `diff(σ_half)` |
 | ``\chi`` | `χ`, `χH₂O`, `χCO₂`, `χO₃`, `χCH₄`, `χN₂O` | `mole_fractions`, `water_vapor_mole_fraction` | Mole fraction relative to dry air (dry-air volume mixing ratio; RRTMGP's `vmr`), formula glued as in `H₂O` |
-| ``n^d`` | `nᵈ`, `air_moles`, `dry_air_moles` | `gases.composite`, [`hydrostatic_air_moles`](@ref) | Dry-air molar amount of a layer, mol m⁻², `Δp / (g mᵈ)` |
-| ``n`` | `n`, `gases`, `layer_gases` | `ColumnAtmosphere.gases`, [`layer_gases`](@ref) | Molar amount of a gas in a layer, mol m⁻², `χ nᵈ`; keyed `:composite :h2o :co2 :o3 :ch4 :n2o :cfc11 :cfc12` after the ecCKD files |
+| ``n^d`` | `nᵈ`, `air_moles`, `dry_air_moles` | `gases.dry_air`, [`hydrostatic_air_moles`](@ref) | Dry-air molar amount of a layer, mol m⁻², `Δp / (g mᵈ)` |
+| ``n`` | `n`, `gases`, `layer_gases` | `ColumnAtmosphere.gases`, [`layer_gases`](@ref) | Molar amount of a gas in a layer, mol m⁻², `χ nᵈ`; keyed by chemical formula, `:dry_air :H₂O :CO₂ :O₃ :CH₄ :N₂O :CFC₁₁ :CFC₁₂`, which the readers translate to the ecCKD files' `composite`, `h2o`, ... |
 | ``\mathrm{CO_2}`` | `CO₂`, `default_CO₂` | `AtmosphereProfile.CO₂` | CO₂ concentration of the column schemes, ppmv |
 | ``\zeta`` | `ζ` | `OneBandShortwaveRadiativeTransfer.ozone_distribution` | Ozone vertical distribution over the sigma coordinate, `∫ ζ dσ = 1`; `ozone_absorption_k` is the fraction of the TOA flux it absorbs in layer `k` |
 | **Gas optics** | | | |
@@ -175,10 +175,8 @@ and are the only identifiers exempt from the rules above:
 
 * the ecCKD, CKDMIP and RFMIP NetCDF variable, dimension and attribute names
   (`h2o_molar_absorption_coeff`, `lw_gpoints`, `planck_function`,
-  `wavenumber1`, `wavenumber2`, the CKDMIP `"mu0"` coordinate string) and the
-  gas `Symbol`s `:h2o :co2 :o3 :ch4 :n2o :cfc11 :cfc12 :composite` of the
-  ecCKD models' `names`, [`gas_names`](@ref) and the `gases` container of a
-  [`ColumnAtmosphere`](@ref), which mirror the file variable prefixes (see
+  `wavenumber1`, `wavenumber2`, the CKDMIP `"mu0"` coordinate string), whose
+  gas prefixes (`h2o`, `composite`, ...) only the readers use (see
   [ecCKD files](gas_optics/ecckd_files.md));
 * RRTMGP struct fields and keywords (`vmr_h2o`, `ncol`, `nbnd_lw`, `grav`,
   `molmass_dryair`, `Stefan`);

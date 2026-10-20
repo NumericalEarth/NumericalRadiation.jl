@@ -477,9 +477,27 @@ function read_ecckd_definition(path::AbstractString)
     throw(ArgumentError("read_ecckd_definition(\"$path\") requires the NetCDF reader extension; load NCDatasets.jl before calling it"))
 end
 
+# The gases by their names in NumericalRadiation and in the ecCKD files, which name the dry air
+# the `dry_air` of N₂, O₂ and the gases the tables fold into it. Only the readers use the
+# file names: every gas container, gas optics model and `names` keyword uses the first.
+const ECCKD_FILE_GAS_NAMES = (dry_air = "composite", H₂O = "h2o", O₃ = "o3", CO₂ = "co2", CH₄ = "ch4",
+                              N₂O = "n2o", CFC₁₁ = "cfc11", CFC₁₂ = "cfc12", O₂ = "o2", N₂ = "n2")
+
+"""
+    ecckd_file_gas_name(name::Symbol)
+
+The name of gas `name` in the ecCKD files, such as `"h2o"` for `:H₂O` and `"composite"` for
+`:dry_air`.
+"""
+function ecckd_file_gas_name(name::Symbol)
+    haskey(ECCKD_FILE_GAS_NAMES, name) && return ECCKD_FILE_GAS_NAMES[name]
+    throw(ArgumentError("unknown gas $(repr(name)): the ecCKD gases are " *
+                        join(map(repr, keys(ECCKD_FILE_GAS_NAMES)), ", ")))
+end
+
 """
     read_ecckd_tabulated_gas_optics([FT = Float64,] longwave_path, shortwave_path;
-                                    names = (:h2o, :co2),
+                                    names = (:H₂O, :CO₂),
                                     water_vapor_mole_fraction = 0.005)
 
 Read reference ecCKD CKD-definition files into a lightweight runtime
@@ -492,10 +510,10 @@ This loader is a runtime-ingestion bridge, not a full ecRad-equivalent
 ingestion path: it materializes coefficient tables for the requested
 `names` only, together with each gas's reference mole fraction for the
 ecCKD relative-linear convention, the shortwave Rayleigh molar scattering
-table, and the longwave Planck source table. When `:h2o` is requested, the
+table, and the longwave Planck source table. When `:H₂O` is requested, the
 reference H₂O mole-fraction table dimension is kept; at runtime
 [`optical_properties!`](@ref) computes the layer H₂O mole fraction from the
-`h2o` and `composite` gas amounts and interpolates the table per layer. The
+`H₂O` and `dry_air` gas amounts and interpolates the table per layer. The
 `water_vapor_mole_fraction` keyword is not a gas input on that path — it is
 accepted for compatibility/fallback sampling of non-dynamic four-dimensional H₂O
 tables. Longwave spectral weights are uniform over g-points; shortwave weights

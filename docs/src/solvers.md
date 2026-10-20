@@ -217,10 +217,10 @@ Two runtime gas-optics models implement [`optical_properties!`](@ref):
   (supporting ecCKD's pressure-dependent temperature grids), and accumulates
   ``\tau_g = \sum_j \kappa_{g,j}(p, T)\, u_j`` over the gases with an unrolled,
   allocation-free sum. The ecCKD concentration conventions are applied at this
-  point: the `composite` background gas, `relative-linear` gases as
-  ``\kappa\,(u_j - r_j u_\mathrm{composite})`` with reference mole fraction
+  point: the `dry_air` background gas, `relative-linear` gases as
+  ``\kappa\,(u_j - r_j u_\mathrm{dry\,air})`` with reference mole fraction
   ``r_j``, and the H₂O look-up-table dimension interpolated per layer from the
-  actual `h2o`/`composite` amounts. Shortwave Rayleigh optical depth is
+  actual `H₂O`/`dry_air` amounts. Shortwave Rayleigh optical depth is
   ``k_g\,\Delta p / (g M_\mathrm{air})`` from the per-g-point molar scattering
   table, and the longwave Planck source is interpolated from the file's
   source table at layer and interface temperatures.

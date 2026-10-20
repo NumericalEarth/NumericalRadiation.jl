@@ -15,7 +15,7 @@ function host_fixture_model()
     temperature_grid = [200.0, 250.0, 300.0]
     source_temperature_grid = [180.0, 240.0, 300.0]
     return EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2, :composite),
+        names = (:H₂O, :CO₂, :dry_air),
         pressure_grid = pressure_grid,
         temperature_grid = temperature_grid,
         water_vapor_mole_fraction_grid = [1e-6, 1e-4, 1e-2],
@@ -77,11 +77,11 @@ end
     # the Float32 model produces Float32 optics close to the Float64 ones
     nlayers = 3
     atmosphere(FT) = ColumnAtmosphere(
-        pressure_layers = FT[7_500, 33_000, 88_000],
-        pressure_interfaces = FT[1_000, 14_000, 52_000, 101_000],
-        temperature_layers = FT[217.3, 263.9, 291.4],
-        temperature_interfaces = FT[205.1, 231.7, 279.2, 297.8],
-        gases = (h2o = FT[3.1, 12.7, 41.9], co2 = FT(8.3), composite = FT[4.2e2, 1.1e3, 2.6e3]),
+        layer_pressures = FT[7_500, 33_000, 88_000],
+        interface_pressures = FT[1_000, 14_000, 52_000, 101_000],
+        layer_temperatures = FT[217.3, 263.9, 291.4],
+        interface_temperatures = FT[205.1, 231.7, 279.2, 297.8],
+        gases = (H₂O = FT[3.1, 12.7, 41.9], CO₂ = FT(8.3), dry_air = FT[4.2e2, 1.1e3, 2.6e3]),
         surface = (;), geometry = (;))
     lw64, sw64 = host_fixture_optics(Float64, model, nlayers)
     lw32, sw32 = host_fixture_optics(Float32, model32, nlayers)
@@ -95,7 +95,7 @@ end
 
     # absent optional tables stay absent
     plain = EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = [10_000.0, 100_000.0],
         temperature_grid = [220.0, 300.0],
         longwave_absorption = ones(2, 2, 2, 2),
@@ -112,7 +112,7 @@ end
     # grid over five decades deviates by a few 1e-6 in Float32 arithmetic.
     np, nh2o = 53, 12
     wide = EcCKDTabulatedGasOpticsModel(
-        names = (:h2o, :co2),
+        names = (:H₂O, :CO₂),
         pressure_grid = Float64.(Float32.(exp.(range(log(1.0), log(1.1e5), length = np)))),
         temperature_grid = [200.0, 250.0, 300.0],
         water_vapor_mole_fraction_grid = Float64.(Float32.(exp.(range(log(1e-7), log(0.1), length = nh2o)))),
@@ -134,27 +134,27 @@ end
 
     # host-style storage: layers in a (npoints, nlayers) matrix, interfaces in a
     # (npoints, nlayers + 1) matrix, temperatures with a trailing step dimension
-    pressure_layers = zeros(npoints, nlayers)
-    pressure_interfaces = zeros(npoints, nlayers + 1)
-    temperature_layers = zeros(npoints, nlayers, 2)
-    temperature_interfaces = zeros(npoints, nlayers + 1)
-    pressure_layers[ij, :] .= [7_500, 33_000, 88_000]
-    pressure_interfaces[ij, :] .= [1_000, 14_000, 52_000, 101_000]
-    temperature_layers[ij, :, 1] .= [217.3, 263.9, 291.4]
-    temperature_interfaces[ij, :] .= [205.1, 231.7, 279.2, 297.8]
-    gases = (h2o = [3.1, 12.7, 41.9], co2 = 8.3, composite = [4.2e2, 1.1e3, 2.6e3])
+    layer_pressures = zeros(npoints, nlayers)
+    interface_pressures = zeros(npoints, nlayers + 1)
+    layer_temperatures = zeros(npoints, nlayers, 2)
+    interface_temperatures = zeros(npoints, nlayers + 1)
+    layer_pressures[ij, :] .= [7_500, 33_000, 88_000]
+    interface_pressures[ij, :] .= [1_000, 14_000, 52_000, 101_000]
+    layer_temperatures[ij, :, 1] .= [217.3, 263.9, 291.4]
+    interface_temperatures[ij, :] .= [205.1, 231.7, 279.2, 297.8]
+    gases = (H₂O = [3.1, 12.7, 41.9], CO₂ = 8.3, dry_air = [4.2e2, 1.1e3, 2.6e3])
 
     view_atmosphere = ColumnAtmosphere(
-        pressure_layers = view(pressure_layers, ij, :),
-        pressure_interfaces = view(pressure_interfaces, ij, :),
-        temperature_layers = view(temperature_layers, ij, :, 1),
-        temperature_interfaces = view(temperature_interfaces, ij, :),
+        layer_pressures = view(layer_pressures, ij, :),
+        interface_pressures = view(interface_pressures, ij, :),
+        layer_temperatures = view(layer_temperatures, ij, :, 1),
+        interface_temperatures = view(interface_temperatures, ij, :),
         gases = gases, surface = (;), geometry = (;))
     vector_atmosphere = ColumnAtmosphere(
-        pressure_layers = pressure_layers[ij, :],
-        pressure_interfaces = pressure_interfaces[ij, :],
-        temperature_layers = temperature_layers[ij, :, 1],
-        temperature_interfaces = temperature_interfaces[ij, :],
+        layer_pressures = layer_pressures[ij, :],
+        interface_pressures = interface_pressures[ij, :],
+        layer_temperatures = layer_temperatures[ij, :, 1],
+        interface_temperatures = interface_temperatures[ij, :],
         gases = gases, surface = (;), geometry = (;))
     @test eltype(view_atmosphere) === Float64
 
@@ -181,11 +181,11 @@ end
     model = host_fixture_model()
     nlayers = 3
     atmosphere = ColumnAtmosphere(
-        pressure_layers = [7_500.0, 33_000.0, 88_000.0],
-        pressure_interfaces = [1_000.0, 14_000.0, 52_000.0, 101_000.0],
-        temperature_layers = [217.3, 263.9, 291.4],
-        temperature_interfaces = [205.1, 231.7, 279.2, 297.8],
-        gases = (h2o = [3.1, 12.7, 41.9], co2 = 8.3, composite = [4.2e2, 1.1e3, 2.6e3]),
+        layer_pressures = [7_500.0, 33_000.0, 88_000.0],
+        interface_pressures = [1_000.0, 14_000.0, 52_000.0, 101_000.0],
+        layer_temperatures = [217.3, 263.9, 291.4],
+        interface_temperatures = [205.1, 231.7, 279.2, 297.8],
+        gases = (H₂O = [3.1, 12.7, 41.9], CO₂ = 8.3, dry_air = [4.2e2, 1.1e3, 2.6e3]),
         surface = (;), geometry = (; cos_zenith = 0.6))
     longwave, shortwave = host_fixture_optics(Float64, model, nlayers)
     optical_properties!(longwave, shortwave, model, atmosphere)

@@ -182,7 +182,7 @@ function radiative_flux_error_metrics(candidate_fluxes::RadiativeFluxes,
                                       atmosphere::ColumnAtmosphere;
                                       gravity = atmosphere.constants.gravity,
                                       heat_capacity = atmosphere.constants.heat_capacity)
-    Nz = length(atmosphere.temperature_layers)
+    Nz = length(atmosphere.layer_temperatures)
     candidate_heating = zeros(promote_type(eltype(candidate_fluxes), eltype(reference_fluxes)), Nz)
     reference_heating = similar(candidate_heating)
     heating_rates!(candidate_heating, candidate_fluxes, atmosphere; gravity, heat_capacity)

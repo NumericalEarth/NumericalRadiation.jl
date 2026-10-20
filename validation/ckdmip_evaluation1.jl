@@ -16,7 +16,7 @@
 #     half levels; the Planck sources are evaluated at the half levels;
 #   * layer amounts follow the dry column-amount convention of the ecCKD
 #     tables, dry air `nᵈ = Δp / (g mᵈ)` and every gas `χ nᵈ`; N₂ and O₂ are
-#     the `composite` gas of the tables. The moist-molar-mass convention
+#     the `dry_air` gas of the tables. The moist-molar-mass convention
 #     `nᵈ = Δp / (g (mᵈ + mᵛ χH₂O))` is run alongside, ungated;
 #   * longwave: surface temperature `Tˢ = temperature_hl[end]`, emissivity 1,
 #     no downwelling flux at 0.01 Pa;
@@ -99,7 +99,7 @@ const CKDMIP_GATES = (
                      shortwave_heating_rate_troposphere = 0.07),
 )
 
-const CKDMIP_GASES = (:h2o, :o3, :co2, :ch4, :n2o, :cfc11, :cfc12)
+const CKDMIP_GASES = (:H₂O, :O₃, :CO₂, :CH₄, :N₂O, :CFC₁₁, :CFC₁₂)
 const CKDMIP_FILES = ("concentrations", "lw_fluxes", "sw_fluxes")
 
 # Paths of the three CKDMIP files in the artifact, or `nothing` with a message
@@ -126,7 +126,7 @@ function load_ckdmip(paths)
     data = NCDataset(concentrations) do dataset
         (; pressure_hl = dense(dataset["pressure_hl"][:, :]),
            temperature_hl = dense(dataset["temperature_hl"][:, :]),
-           mole_fractions = NamedTuple{CKDMIP_GASES}(map(gas -> dense(dataset["$(gas)_mole_fraction_fl"][:, :]), CKDMIP_GASES)))
+           mole_fractions = NamedTuple{CKDMIP_GASES}(map(gas -> dense(dataset["$(NumericalRadiation.ecckd_file_gas_name(gas))_mole_fraction_fl"][:, :]), CKDMIP_GASES)))
     end
     longwave = NCDataset(longwave_path) do dataset
         (; up=dense(dataset["flux_up_lw"][:, :]), down=dense(dataset["flux_dn_lw"][:, :]))

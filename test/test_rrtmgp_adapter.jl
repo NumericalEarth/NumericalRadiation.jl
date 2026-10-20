@@ -25,19 +25,19 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
 @testset "RRTMGP adapter reference" begin
     FT = Float64
     Nz = 4
-    pressure_interfaces = [10_000.0, 30_000.0, 55_000.0, 80_000.0, 100_000.0]
-    pressure_layers = (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end]) ./ 2
-    temperature_interfaces = [210.0, 235.0, 260.0, 285.0, 300.0]
-    temperature_layers = (temperature_interfaces[1:end-1] .+ temperature_interfaces[2:end]) ./ 2
+    interface_pressures = [10_000.0, 30_000.0, 55_000.0, 80_000.0, 100_000.0]
+    layer_pressures = (interface_pressures[1:end-1] .+ interface_pressures[2:end]) ./ 2
+    interface_temperatures = [210.0, 235.0, 260.0, 285.0, 300.0]
+    layer_temperatures = (interface_temperatures[1:end-1] .+ interface_temperatures[2:end]) ./ 2
     # Distinct, humid per-layer water-vapor mole fractions so both the index
     # reversal and the moist-molar-mass difference are individually detectable.
     water_vapor = [1e-4, 8e-4, 3e-3, 2e-2]
     atmosphere = ColumnAtmosphere(
-        pressure_layers = pressure_layers,
-        pressure_interfaces = pressure_interfaces,
-        temperature_layers = temperature_layers,
-        temperature_interfaces = temperature_interfaces,
-        gases = (h2o=water_vapor, o3=[1e-8, 2e-8, 3e-8, 4e-8], co2=400e-6),
+        layer_pressures = layer_pressures,
+        interface_pressures = interface_pressures,
+        layer_temperatures = layer_temperatures,
+        interface_temperatures = interface_temperatures,
+        gases = (H₂O=water_vapor, O₃=[1e-8, 2e-8, 3e-8, 4e-8], CO₂=400e-6),
         surface = (;),
         geometry = (;),
     )
@@ -80,10 +80,10 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         # Layer arrays: our layer k lands at RRTMGP layer Nz - k + 1.
         for k in 1:Nz
             k_reversed = Nz - k + 1
-            @test state.layerdata[2, k_reversed, 1] == pressure_layers[k]
-            @test state.layerdata[3, k_reversed, 1] == temperature_layers[k]
+            @test state.layerdata[2, k_reversed, 1] == layer_pressures[k]
+            @test state.layerdata[3, k_reversed, 1] == layer_temperatures[k]
             @test state.vmr.vmr_h2o[k_reversed, 1] == water_vapor[k]
-            @test state.vmr.vmr_o3[k_reversed, 1] == atmosphere.gases.o3[k]
+            @test state.vmr.vmr_o3[k_reversed, 1] == atmosphere.gases.O₃[k]
         end
     end
 
@@ -91,7 +91,7 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         params = model.parameters
         for k in 1:Nz
             k_reversed = Nz - k + 1
-            Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
+            Δp = interface_pressures[k + 1] - interface_pressures[k]
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             expected = Δp * params.avogad / (1e4 * m_air * params.grav)
             @test state.layerdata[1, k_reversed, 1] ≈ expected rtol = 1e-12
@@ -123,19 +123,19 @@ const SOLAR_CONSTANT = PhysicalConstants().solar_constant
         params = model.parameters
         for k_reversed in 1:Nz                       # k_reversed: 1 = bottom (canonical)
             k = Nz - k_reversed + 1                  # our top-down index
-            canonical_state.layerdata[2, k_reversed, 1] = pressure_layers[k]
-            canonical_state.layerdata[3, k_reversed, 1] = temperature_layers[k]
+            canonical_state.layerdata[2, k_reversed, 1] = layer_pressures[k]
+            canonical_state.layerdata[3, k_reversed, 1] = layer_temperatures[k]
             canonical_state.layerdata[4, k_reversed, 1] = 0.0
             canonical_state.vmr.vmr_h2o[k_reversed, 1] = water_vapor[k]
-            canonical_state.vmr.vmr_o3[k_reversed, 1] = atmosphere.gases.o3[k]
-            Δp = pressure_interfaces[k + 1] - pressure_interfaces[k]
+            canonical_state.vmr.vmr_o3[k_reversed, 1] = atmosphere.gases.O₃[k]
+            Δp = interface_pressures[k + 1] - interface_pressures[k]
             m_air = params.molmass_dryair + params.molmass_water * water_vapor[k]
             canonical_state.layerdata[1, k_reversed, 1] = Δp * params.avogad / (1e4 * m_air * params.grav)
         end
         for k_reversed in 1:(Nz + 1)
             k = Nz + 2 - k_reversed
-            canonical_state.p_lev[k_reversed, 1] = pressure_interfaces[k]
-            canonical_state.t_lev[k_reversed, 1] = temperature_interfaces[k]
+            canonical_state.p_lev[k_reversed, 1] = interface_pressures[k]
+            canonical_state.t_lev[k_reversed, 1] = interface_temperatures[k]
         end
         canonical_state.t_sfc[1] = 300.0
         mole_fractions = canonical_state.vmr.vmr

@@ -35,13 +35,13 @@ T  = collect(range(220, 295; length=Nz))
 Tᵢ = collect(range(215, 300; length=Nz + 1))
 
 atmosphere = ColumnAtmosphere(;
-    pressure_layers = p,
-    pressure_interfaces = pᵢ,
-    temperature_layers = T,
-    temperature_interfaces = Tᵢ,
+    layer_pressures = p,
+    interface_pressures = pᵢ,
+    layer_temperatures = T,
+    interface_temperatures = Tᵢ,
     gases = (
-        h2o = collect(range(0.2, 2.2; length=Nz)),
-        co2 = fill(1, Nz),
+        H₂O = collect(range(0.2, 2.2; length=Nz)),
+        CO₂ = fill(1, Nz),
     ),
     surface = (temperature=Tᵢ[end],),
     geometry = (cos_zenith=μ₀,),
@@ -56,7 +56,7 @@ atmosphere = ColumnAtmosphere(;
 FT = Float64
 pressure_grid = FT[10_000, 100_000]
 temperature_grid = FT[220, 300]
-names = (:h2o, :co2)
+names = (:H₂O, :CO₂)
 
 function synthetic_absorption(Ng, Ngases, pressure_grid, temperature_grid; scale)
     table = zeros(FT, Ng, Ngases, length(pressure_grid), length(temperature_grid))

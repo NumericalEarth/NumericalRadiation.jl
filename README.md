@@ -178,7 +178,7 @@ model = PrimitiveWetModel(spectral_grid; radiation = Radiation(spectral_grid; lo
 
 CO₂ follows the model's `greenhouse_gases`, ozone comes from an analytic default
 profile (`ozone = p -> ...` to override), and further gases of the ecCKD model are
-prescribed with `mole_fractions = (; ch4 = 1.8e-6)`; see `ClearSkyEcCKDRadiation`.
+prescribed with `mole_fractions = (; CH₄ = 1.8e-6)`; see `ClearSkyEcCKDRadiation`.
 The full tests of the coupling (`test/speedyweather/`, an environment of its own
 because they need SpeedyWeather ≥ 0.23 with its NumericalRadiation extension), the
 example `examples/speedyweather_ecckd.jl` and the validation scripts in

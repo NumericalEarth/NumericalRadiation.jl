@@ -430,17 +430,17 @@ using Dates
     @test AbstractRadiationBackend isa DataType
 
     Nz = 4
-    pressure_interfaces = collect(range(1_000.0, 100_000.0, length=Nz + 1))
-    pressure_layers = @views (pressure_interfaces[1:end-1] .+ pressure_interfaces[2:end]) ./ 2
-    temperature_interfaces = collect(range(210.0, 290.0, length=Nz + 1))
-    temperature_layers = @views (temperature_interfaces[1:end-1] .+ temperature_interfaces[2:end]) ./ 2
+    interface_pressures = collect(range(1_000.0, 100_000.0, length=Nz + 1))
+    layer_pressures = @views (interface_pressures[1:end-1] .+ interface_pressures[2:end]) ./ 2
+    interface_temperatures = collect(range(210.0, 290.0, length=Nz + 1))
+    layer_temperatures = @views (interface_temperatures[1:end-1] .+ interface_temperatures[2:end]) ./ 2
 
     atmosphere = ColumnAtmosphere(
-        pressure_layers = pressure_layers,
-        pressure_interfaces = pressure_interfaces,
-        temperature_layers = temperature_layers,
-        temperature_interfaces = temperature_interfaces,
-        gases = (; h2o=fill(0.005, Nz), co2=420.0),
+        layer_pressures = layer_pressures,
+        interface_pressures = interface_pressures,
+        layer_temperatures = layer_temperatures,
+        interface_temperatures = interface_temperatures,
+        gases = (; H₂O=fill(0.005, Nz), CO₂=420.0),
         surface = (; temperature=290.0, emissivity=1.0),
         geometry = (; cos_zenith=0.5),
     )
@@ -461,15 +461,15 @@ end
 
 @testset "RadiativeFluxes to heating rates" begin
     Nz = 2
-    pressure_interfaces = [0.0, 50_000.0, 100_000.0]
-    pressure_layers = [25_000.0, 75_000.0]
-    temperature_interfaces = fill(280.0, Nz + 1)
-    temperature_layers = fill(280.0, Nz)
+    interface_pressures = [0.0, 50_000.0, 100_000.0]
+    layer_pressures = [25_000.0, 75_000.0]
+    interface_temperatures = fill(280.0, Nz + 1)
+    layer_temperatures = fill(280.0, Nz)
     atmosphere = ColumnAtmosphere(
-        pressure_layers = pressure_layers,
-        pressure_interfaces = pressure_interfaces,
-        temperature_layers = temperature_layers,
-        temperature_interfaces = temperature_interfaces,
+        layer_pressures = layer_pressures,
+        interface_pressures = interface_pressures,
+        layer_temperatures = layer_temperatures,
+        interface_temperatures = interface_temperatures,
         gases = (;),
         surface = (;),
         geometry = (;),
@@ -487,7 +487,7 @@ end
 
     @test heating[1] ≈ 1.0e-5
     @test heating[2] == 0.0
-    column_energy = sum(heating .* diff(pressure_interfaces)) * 1000.0 / 10.0
+    column_energy = sum(heating .* diff(interface_pressures)) * 1000.0 / 10.0
     @test column_energy ≈ 50.0
 
     fluxes.longwave_up .= [100.0, 110.0, 110.0]
@@ -504,7 +504,7 @@ end
     heating_rates!(heating, fluxes, atmosphere; gravity=10.0, heat_capacity=1000.0)
 
     net_flux = fluxes.longwave_down .- fluxes.longwave_up .+ fluxes.shortwave_down .- fluxes.shortwave_up
-    layer_energy = heating .* diff(pressure_interfaces) .* 1000.0 ./ 10.0
+    layer_energy = heating .* diff(interface_pressures) .* 1000.0 ./ 10.0
     @test layer_energy ≈ net_flux[1:end-1] .- net_flux[2:end]
     @test maximum(abs.(layer_energy .- (net_flux[1:end-1] .- net_flux[2:end]))) < 1.0e-12
 end

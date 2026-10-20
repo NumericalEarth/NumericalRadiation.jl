@@ -21,7 +21,7 @@ const σ_SB = 5.670374419e-8
     radiation = ClearSkyEcCKDRadiation(spectral_grid, "32x32")
     @test radiation isa ClearSkyEcCKDRadiation{NF}
     @test eltype(radiation.gas_optics) === NF
-    @test NumericalRadiation.gas_names(radiation.gas_optics) == (:composite, :h2o, :o3, :co2)
+    @test NumericalRadiation.gas_names(radiation.gas_optics) == (:dry_air, :H₂O, :O₃, :CO₂)
 
     model = PrimitiveWetModel(spectral_grid; radiation)
     @test model.radiation === radiation
@@ -36,9 +36,9 @@ const σ_SB = 5.670374419e-8
     @test haskey(variables.parameterizations, :outgoing_shortwave)
 
     # a model gas without a mole fraction is rejected at construction
-    gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :co2, :ch4))
+    gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:dry_air, :H₂O, :CO₂, :CH₄))
     @test_throws ArgumentError ClearSkyEcCKDRadiation(spectral_grid, gas_optics)
-    @test ClearSkyEcCKDRadiation(spectral_grid, gas_optics; mole_fractions = (; ch4 = 1.8e-6)) isa
+    @test ClearSkyEcCKDRadiation(spectral_grid, gas_optics; mole_fractions = (; CH₄ = 1.8e-6)) isa
           ClearSkyEcCKDRadiation
 end
 
@@ -89,13 +89,13 @@ end
     net(k) = W.longwave_down[ij, k] - W.longwave_up[ij, k] + W.shortwave_down[ij, k] - W.shortwave_up[ij, k]
     convergence = net(1) - net(nlayers + 1)
     integrated = sum(dTdt[ij, k] * model.atmosphere.heat_capacity *
-                     (W.pressure_interfaces[ij, k + 1] - W.pressure_interfaces[ij, k]) / model.planet.gravity
+                     (W.interface_pressures[ij, k + 1] - W.interface_pressures[ij, k]) / model.planet.gravity
                      for k in 1:nlayers)
     @test integrated ≈ convergence rtol = 1e-3
 
     # the same column through the staged API directly gives the same fluxes
-    p = W.pressure_layers[ij, :]
-    p_half = W.pressure_interfaces[ij, :]
+    p = W.layer_pressures[ij, :]
+    p_half = W.interface_pressures[ij, :]
     T = Float64.(variables.grid.temperature[ij, :, 1])
     q = Float64.(variables.grid.humidity[ij, :, 1])
     f = model.land_sea_mask.land_fraction[ij]
@@ -104,17 +104,17 @@ end
     SWExt.interface_temperatures!(T_half, T, Float64.(p), Float64.(p_half))
     @test T_half[1] == T[1]
     @test T_half[end] ≈ T[end] + (T[end] - T[end - 1]) * (p_half[end] - p[end]) / (p[end] - p[end - 1])
-    gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:composite, :h2o, :o3, :co2))
+    gas_optics = read_reference_ecckd_gas_optics("32x32"; names = (:dry_air, :H₂O, :O₃, :CO₂))
     amounts = zeros(nlayers, 4)
     constants = PhysicalConstants(Float64; gravity = model.planet.gravity,
                                   dry_air_molar_mass = model.atmosphere.mol_mass_dry_air / 1000,
                                   water_molar_mass = model.atmosphere.mol_mass_vapor / 1000)
-    SWExt.gas_amounts!(amounts, Val((:composite, :h2o, :o3, :co2)),
-                           (; mole_fractions = (; o3 = default_ozone_profile)),
+    SWExt.gas_amounts!(amounts, Val((:dry_air, :H₂O, :O₃, :CO₂)),
+                           (; mole_fractions = (; O₃ = default_ozone_profile)),
                            q, Float64.(p), Float64.(p_half), 280e-6, constants)
-    atmosphere = ColumnAtmosphere(pressure_layers = Float64.(p), pressure_interfaces = Float64.(p_half),
-                                  temperature_layers = T, temperature_interfaces = T_half,
-                                  gases = (composite = amounts[:, 1], h2o = amounts[:, 2], o3 = amounts[:, 3], co2 = amounts[:, 4]),
+    atmosphere = ColumnAtmosphere(layer_pressures = Float64.(p), interface_pressures = Float64.(p_half),
+                                  layer_temperatures = T, interface_temperatures = T_half,
+                                  gases = (dry_air = amounts[:, 1], H₂O = amounts[:, 2], O₃ = amounts[:, 3], CO₂ = amounts[:, 4]),
                                   surface = (; temperature = T_surface), geometry = (; cos_zenith = 0.5), constants = constants)
     longwave = LongwaveOptics(zeros(32, nlayers), zeros(32, nlayers); source_top = zeros(32, nlayers),
                               source_bottom = zeros(32, nlayers), weights = zeros(32))
@@ -147,7 +147,7 @@ end
     # a clear-sky atmosphere emits more longwave than it absorbs: the mass-weighted
     # column heating (longwave only at night) is negative everywhere
     dTdt_night = variables.tendencies.grid.temperature[:, :, 1]
-    column_heating = [sum(dTdt_night[ij, k] * (W.pressure_interfaces[ij, k + 1] - W.pressure_interfaces[ij, k])
+    column_heating = [sum(dTdt_night[ij, k] * (W.interface_pressures[ij, k + 1] - W.interface_pressures[ij, k])
                           for k in 1:nlayers) for ij in 1:spectral_grid.npoints]
     @test all(column_heating .< 0)
 

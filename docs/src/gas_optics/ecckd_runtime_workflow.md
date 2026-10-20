@@ -41,12 +41,12 @@ using NumericalRadiation
 using NCDatasets
 
 gas_optics = read_reference_ecckd_gas_optics("32x32";
-                                             names = (:composite, :h2o, :co2),
+                                             names = (:dry_air, :H₂O, :CO₂),
                                              water_vapor_mole_fraction = 0.005)
 ```
 
 Gases omitted from `names` are not removed: their reference abundances
-remain represented through the `:composite` background. Include a gas
+remain represented through the `:dry_air` background. Include a gas
 explicitly to vary its amount — or to set it to zero.
 
 The loader returns an `EcCKDTabulatedGasOpticsModel`. That object is independent
@@ -82,9 +82,9 @@ exit, so whole longwave and shortwave column kernels compile with Reactant
 (`test/reactant/`). Reverse-mode gradients through such kernels currently also
 compile, but two Reactant bugs make them wrong; see `test/reactant/runtests.jl`.
 
-Because `:h2o` is in `names`, the reference H₂O mole-fraction table
+Because `:H₂O` is in `names`, the reference H₂O mole-fraction table
 dimension is kept: at each radiation update, `optical_properties!` computes
-the layer H₂O mole fraction from the `h2o` and `composite` gas amounts and
+the layer H₂O mole fraction from the `H₂O` and `dry_air` gas amounts and
 interpolates the table per layer. The `water_vapor_mole_fraction` keyword is
 not a gas input — it is accepted for compatibility/fallback sampling of
 non-dynamic H₂O tables.
