@@ -84,9 +84,14 @@ diffuse longwave surface albedo. Each g point's fluxes are added with
 `weights[g]` for `g in 1:Ng`. `transmittance` and `source_up` are caller
 scratch of length `Nz` that carry the layer coefficients from the
 downward sweep to the upward one. Allocation-free.
+
+`arithmetic` (an [`AbstractArithmetic`](@ref), default [`IEEEArithmetic`](@ref))
+sets the arithmetic of the sweeps and of the layer sources; it does not reach into
+`layer_optics` or `surface_emission`.
 """
 @inline function streaming_longwave_fluxes!(flux_up, flux_down, layer_optics, surface_emission, surface_albedo, toa_down,
-                                            weights, Ng, Nz, transmittance, source_up)
+                                            weights, Ng, Nz, transmittance, source_up,
+                                            arithmetic = IEEEArithmetic())
     FT = eltype(flux_up)
 
     @inbounds for k in 1:Nz + 1
@@ -94,7 +99,7 @@ downward sweep to the upward one. Allocation-free.
         flux_down[k] = zero(FT)
     end
 
-    @inbounds for g in 1:Ng
+    @arithmetic arithmetic @inbounds for g in 1:Ng
         w = FT(weights[g])
 
         # Downward sweep from the top of the atmosphere, keeping each layer's
@@ -103,7 +108,7 @@ downward sweep to the upward one. Allocation-free.
         flux_down[1] += w * down
         for k in 1:Nz
             τ, Bₖ, Bₖ₊₁ = layer_optics(g, k)
-            transmittance[k], source_up[k], source_down = no_scattering_longwave_sources(FT, τ, Bₖ, Bₖ₊₁)
+            transmittance[k], source_up[k], source_down = no_scattering_longwave_sources(FT, τ, Bₖ, Bₖ₊₁, arithmetic)
             down = down * transmittance[k] + source_down
             flux_down[k + 1] += w * down
         end
