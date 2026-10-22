@@ -258,6 +258,8 @@ is stored on the model for the gray `σT⁴` source fallback of g points without
 a Planck source table, so a host passes its own value here.
 The `lookup_search` keyword is forwarded to `EcCKDTabulatedGasOpticsModel`;
 `FixedBinarySearch()` selects a fixed-count binary search and `BinarySearch()` is the default.
+The `arithmetic` keyword is forwarded too; `FastArithmetic()` selects `@fastmath` arithmetic
+and `IEEEArithmetic()` is the default.
 """
 function read_ecckd_tabulated_gas_optics(FT::DataType,
                                          longwave_path::String,
@@ -265,6 +267,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
                                          names = (:H₂O, :CO₂),
                                          water_vapor_mole_fraction = 0.005,
                                          lookup_search::AbstractLookupSearch = BinarySearch(),
+                                         arithmetic::AbstractArithmetic = IEEEArithmetic(),
                                          stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     gas_name_tuple = Tuple(Symbol.(names))
     longwave = NCDataset(longwave_path, "r") do dataset
@@ -355,6 +358,7 @@ function read_ecckd_tabulated_gas_optics(FT::DataType,
         longwave_weights = longwave.weights,
         shortwave_weights = shortwave.weights,
         lookup_search = lookup_search,
+        arithmetic = arithmetic,
         stefan_boltzmann = stefan_boltzmann,
     )
     return EcCKDTabulatedGasOpticsModel{FT}(model)

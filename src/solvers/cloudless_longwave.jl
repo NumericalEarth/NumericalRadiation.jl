@@ -165,19 +165,21 @@ end
 # non-scattering layer whose Planck source is linear in optical depth between
 # Bₖ and Bₖ₊₁, with diffusivity factor D = 1.66 (ecRad's half-level
 # Planck path); the thin-layer limit below τ = 10⁻³ emits Dτ (Bₖ + Bₖ₊₁)/2
-# in each direction.
-@inline function no_scattering_longwave_sources(::Type{FT}, τ, Bₖ, Bₖ₊₁) where FT
-    D = FT(1.66)
-    Dτ = D * FT(τ)
-    𝒯 = exp(-Dτ)
-    if τ > FT(1.0e-3)
-        ∂B = (FT(Bₖ₊₁) - FT(Bₖ)) / Dτ
-        Sꜛ = ∂B + FT(Bₖ) - 𝒯 * (∂B + FT(Bₖ₊₁))
-        Sꜜ = -∂B + FT(Bₖ₊₁) - 𝒯 * (-∂B + FT(Bₖ))
-        return 𝒯, Sꜛ, Sꜜ
+# in each direction. `arithmetic` is an [`AbstractArithmetic`](@ref).
+@inline function no_scattering_longwave_sources(::Type{FT}, τ, Bₖ, Bₖ₊₁, arithmetic = IEEEArithmetic()) where FT
+    @arithmetic arithmetic begin
+        D = FT(1.66)
+        Dτ = D * FT(τ)
+        𝒯 = exp(-Dτ)
+        if τ > FT(1.0e-3)
+            ∂B = (FT(Bₖ₊₁) - FT(Bₖ)) / Dτ
+            Sꜛ = ∂B + FT(Bₖ) - 𝒯 * (∂B + FT(Bₖ₊₁))
+            Sꜜ = -∂B + FT(Bₖ₊₁) - 𝒯 * (-∂B + FT(Bₖ))
+            return 𝒯, Sꜛ, Sꜜ
+        end
+        S = Dτ * FT(0.5) * (FT(Bₖ) + FT(Bₖ₊₁))
+        return 𝒯, S, S
     end
-    S = Dτ * FT(0.5) * (FT(Bₖ) + FT(Bₖ₊₁))
-    return 𝒯, S, S
 end
 
 # Reflectance ℛ, transmittance 𝒯 and upward and downward emission Sꜛ, Sꜜ of

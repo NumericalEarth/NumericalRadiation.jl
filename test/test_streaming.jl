@@ -126,7 +126,7 @@ end
 
 # Synthetic tabulated model with every optional table populated (matrix
 # temperature grid, H₂O table, Rayleigh, Planck source table) in one `FT`.
-function tabulated_fixture(FT)
+function tabulated_fixture(FT; arithmetic = IEEEArithmetic())
     Npressures, Ntemperatures, Nwater_vapor = 4, 3, 3
     Ngˡʷ, Ngˢʷ, Ngases = 3, 2, 3
     pressure_grid = FT.(exp.(range(log(5_000.0), log(100_000.0), length=Npressures)))
@@ -153,6 +153,7 @@ function tabulated_fixture(FT)
         longwave_source_table = FT[(g + 2) * st^2 for g in 1:Ngˡʷ, st in source_temperature_grid],
         longwave_weights = FT[0.2, 0.3, 0.5],
         shortwave_weights = FT[0.45, 0.55],
+        arithmetic = arithmetic,
     )
     atmosphere = ColumnAtmosphere(
         layer_pressures = FT[7_500, 33_000, 88_000],
@@ -1333,6 +1334,90 @@ Base.@noinline measure_streaming_shortwave(up, down, layer_optics, μ₀, toa, �
     streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, toa, direct_albedo, diffuse_albedo,
                                 weights, Ng, Nz, scratch)
     @test view_up == up && view_down == down
+end
+
+Base.@noinline measure_fast_streaming_longwave(args...) =
+    @allocated streaming_longwave_fluxes!(args..., FastArithmetic())
+Base.@noinline measure_fast_streaming_shortwave(args...) =
+    @allocated streaming_shortwave_fluxes!(args..., FastArithmetic())
+
+@testset "FastArithmetic, $FT" for FT in (Float64, Float32)
+    tolerance = sqrt(eps(FT))
+
+    @testset "the gas optics model carries its arithmetic" begin
+        model, _ = tabulated_fixture(FT)
+        @test model.arithmetic === IEEEArithmetic()
+        fast, _ = tabulated_fixture(FT; arithmetic = FastArithmetic())
+        @test fast.arithmetic === FastArithmetic()
+        other = FT === Float64 ? Float32 : Float64
+        @test EcCKDTabulatedGasOpticsModel{other}(fast).arithmetic === FastArithmetic()
+        for T in FT[150, 200, 255, 300, 320], g in 1:length(model.longwave_weights)
+            b = @inferred source_table_bracket(fast, T)
+            @test b[1:2] == source_table_bracket(model, T)[1:2]
+            @test (@inferred longwave_source(fast, g, T, b)) ≈
+                  longwave_source(model, g, T, source_table_bracket(model, T)) rtol = tolerance
+        end
+    end
+
+    @testset "longwave" begin
+        model, atmosphere = tabulated_fixture(FT)
+        Nz = length(atmosphere.layer_temperatures)
+        Ng = length(model.longwave_weights)
+        longwave, shortwave = optics_arrays(FT, Ng, 2, Nz; interface_sources=true)
+        optical_properties!(longwave, shortwave, model, atmosphere)
+        layer = MatrixLayerOptics(longwave)
+        surface = TabulatedSurfaceEmission(model, FT(290); emissivity=FT(0.98))
+        args(up, down) = (up, down, layer, surface, FT(0.02), FT(3), model.longwave_weights, Ng, Nz,
+                          zeros(FT, Nz), zeros(FT, Nz))
+        up, down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
+        fast_up, fast_down = fill(FT(NaN), Nz + 1), fill(FT(NaN), Nz + 1)
+        streaming_longwave_fluxes!(args(up, down)...)
+        @inferred streaming_longwave_fluxes!(args(fast_up, fast_down)..., FastArithmetic())
+        @test fast_up ≈ up rtol = tolerance
+        @test fast_down ≈ down rtol = tolerance
+        streaming_longwave_fluxes!(args(fast_up, fast_down)..., IEEEArithmetic())
+        @test fast_up == up && fast_down == down
+        for _ in 1:2   # compile, then measure
+            @test measure_fast_streaming_longwave(args(fast_up, fast_down)...) == 0
+        end
+
+        # Thin and thick layers take both branches of the layer sources.
+        for τ in FT[0, 1e-4, 1e-2, 1, 30]
+            exact = NumericalRadiation.no_scattering_longwave_sources(FT, τ, FT(250), FT(270))
+            fast = NumericalRadiation.no_scattering_longwave_sources(FT, τ, FT(250), FT(270), FastArithmetic())
+            @test all(map((a, b) -> isapprox(a, b; rtol = tolerance, atol = 10eps(FT)), fast, exact))
+        end
+    end
+
+    @testset "shortwave" begin
+        fixture = shortwave_fixture(FT)
+        (; Ng, Nz, layer_optics, weights, direct_albedo, diffuse_albedo) = fixture
+        S₀ = FT(SOLAR_CONSTANT)
+        scratch = ShortwaveColumnScratch(FT, Nz)
+        for μ₀ in FT[1, 0.5, 0.1, 0.01]
+            up, down = streamed_shortwave(fixture, FT, μ₀, S₀ * μ₀)
+            fast_up, fast_down = fill(FT(NaN), Nz + 1), fill(FT(NaN), Nz + 1)
+            @inferred streaming_shortwave_fluxes!(fast_up, fast_down, layer_optics, μ₀, S₀ * μ₀,
+                                                  direct_albedo, diffuse_albedo, weights, Ng, Nz, scratch,
+                                                  FastArithmetic())
+            @test fast_up ≈ up rtol = tolerance
+            @test fast_down ≈ down rtol = tolerance
+        end
+
+        # The night convention still gives exact zeros.
+        for μ₀ in FT[0, -0.3, -1]
+            up, down = fill(FT(NaN), Nz + 1), fill(FT(NaN), Nz + 1)
+            streaming_shortwave_fluxes!(up, down, layer_optics, μ₀, S₀ * max(μ₀, zero(FT)),
+                                        direct_albedo, diffuse_albedo, weights, Ng, Nz, scratch, FastArithmetic())
+            @test all(iszero, up) && all(iszero, down)
+        end
+
+        up, down = zeros(FT, Nz + 1), zeros(FT, Nz + 1)
+        for _ in 1:2   # compile, then measure
+            @test measure_fast_streaming_shortwave(up, down, layer_optics, FT(0.5), S₀ / 2, direct_albedo,
+                                                   diffuse_albedo, weights, Ng, Nz, scratch) == 0
+        end
+    end
 end
 
 end # module TestStreaming
