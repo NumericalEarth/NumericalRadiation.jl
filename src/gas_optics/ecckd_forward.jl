@@ -107,8 +107,14 @@ search, for uniformly spaced grids (checked here), such as the Planck-source gri
 ecCKD reference tables. All use the same interpolation and endpoint behavior; pressure,
 H₂O, and matrix temperature grids retain their direct indexing.
 
+Set `arithmetic=FastArithmetic()` to evaluate the Planck source with `@fastmath`; see
+[`FastArithmetic`](@ref). The model carries its `arithmetic` as a type parameter, so a
+host kernel that receives the model can pass `model.arithmetic` on to
+[`streaming_longwave_fluxes!`](@ref) and [`streaming_shortwave_fluxes!`](@ref).
+The default is [`IEEEArithmetic`](@ref).
+
 """
-struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LHWA, SHWA, SWR, LWS, LST, LSTB, LWW, SWW, S} <:
+struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LHWA, SHWA, SWR, LWS, LST, LSTB, LWW, SWW, S, A} <:
        AbstractGasOpticsModel
     pressure_grid::PG   # Positive, increasing, log-uniform pressure grid for coefficient tables.
     temperature_grid::TG   # Increasing temperature grid, or pressure-dependent matrix with one common increment.
@@ -125,6 +131,7 @@ struct EcCKDTabulatedGasOpticsModel{FT, GasNames, PG, TG, HG, GREF, LWA, SWA, LH
     longwave_weights::LWW   # Longwave spectral weights.
     shortwave_weights::SWW   # Shortwave spectral weights.
     lookup_search::S   # Concrete search strategy, chosen at construction.
+    arithmetic::A   # Arithmetic of the Planck source and of the solvers a host runs with this model.
     stefan_boltzmann::FT   # Stefan–Boltzmann constant of the gray source fallback, W m⁻² K⁻⁴.
 end
 
@@ -149,7 +156,7 @@ function Adapt.adapt_structure(to, model::EcCKDTabulatedGasOpticsModel{<:Any, Ga
               shortwave_absorption, longwave_water_vapor_absorption,
               shortwave_water_vapor_absorption, shortwave_rayleigh_molar_scattering,
               longwave_source_scale, longwave_source_temperature_grid,
-              longwave_source_table, longwave_weights, shortwave_weights, model.lookup_search)
+              longwave_source_table, longwave_weights, shortwave_weights, model.lookup_search, model.arithmetic)
     FT = eltype(pressure_grid)
     return EcCKDTabulatedGasOpticsModel{FT, GasNames, map(typeof, fields)...}(fields..., FT(model.stefan_boltzmann))
 end
@@ -195,6 +202,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
                                         longwave_weights = nothing,
                                         shortwave_weights = nothing,
                                         lookup_search::AbstractLookupSearch = BinarySearch(),
+                                        arithmetic::AbstractArithmetic = IEEEArithmetic(),
                                         stefan_boltzmann = PhysicalConstants().stefan_boltzmann)
     source_types = longwave_source_table === nothing ?
         () :
@@ -277,7 +285,7 @@ function EcCKDTabulatedGasOpticsModel(; names,
     fields = (pressure_grid, temperature_grid, water_vapor_grid, gas_reference_mole_fractions,
               longwave_absorption, shortwave_absorption, longwave_water_vapor, shortwave_water_vapor,
               shortwave_rayleigh_molar_scattering, longwave_source_scale, longwave_source_temperature_grid,
-              longwave_source_table, longwave_weights, shortwave_weights, lookup_search)
+              longwave_source_table, longwave_weights, shortwave_weights, lookup_search, arithmetic)
     model = EcCKDTabulatedGasOpticsModel{FT, gas_name_tuple, map(typeof, fields)...}(fields..., FT(stefan_boltzmann))
     return EcCKDTabulatedGasOpticsModel{FT}(model)
 end

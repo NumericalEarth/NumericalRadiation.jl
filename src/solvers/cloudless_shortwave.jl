@@ -171,17 +171,19 @@ layer solution then creates energy, by as much as 13% of the incident beam at
 Backscattering layers have no forward peak to remove, so `𝒢 ≤ 0` — including the
 `𝒢 = 0` Rayleigh case — passes through unscaled.
 """
-@inline function shortwave_delta_eddington(::Type{FT}, τ, ω, 𝒢) where FT
-    τ = FT(τ)
-    ω = FT(ω)
-    𝒢 = FT(𝒢)
-    f = max(𝒢, zero(FT))^2
-    # A pure forward peak scatters nothing back into either stream, leaving a
-    # purely absorbing layer. Taking it separately also keeps the ω = 𝒢 = 1
-    # corner, where the rescaling below is 0/0, finite.
-    f >= one(FT) && return (one(FT) - ω) * τ, zero(FT), zero(FT)
-    scale = one(FT) - ω * f
-    return scale * τ, (one(FT) - f) * ω / scale, (𝒢 - f) / (one(FT) - f)
+@inline function shortwave_delta_eddington(::Type{FT}, τ, ω, 𝒢, arithmetic = IEEEArithmetic()) where FT
+    @arithmetic arithmetic begin
+        τ = FT(τ)
+        ω = FT(ω)
+        𝒢 = FT(𝒢)
+        f = max(𝒢, zero(FT))^2
+        # A pure forward peak scatters nothing back into either stream, leaving a
+        # purely absorbing layer. Taking it separately also keeps the ω = 𝒢 = 1
+        # corner, where the rescaling below is 0/0, finite.
+        f >= one(FT) && return (one(FT) - ω) * τ, zero(FT), zero(FT)
+        scale = one(FT) - ω * f
+        return scale * τ, (one(FT) - f) * ω / scale, (𝒢 - f) / (one(FT) - f)
+    end
 end
 
 """
@@ -190,23 +192,27 @@ $(TYPEDSIGNATURES)
 Delta-Eddington-scale a layer and return its two-stream reflectance and
 transmittance. This is the single entry point every shortwave two-stream path
 uses, so the scaling cannot be skipped by one caller and applied by another.
+`arithmetic` is an [`AbstractArithmetic`](@ref).
 """
-@inline function shortwave_two_stream_layer(::Type{FT}, μ₀, τ, ω, 𝒢, direct_source_limit=Val(:unit)) where FT
-    τ, ω, 𝒢 = shortwave_delta_eddington(FT, τ, ω, 𝒢)
-    γ₁, γ₂, γ₃ = shortwave_two_stream_coefficients(FT, μ₀, ω, 𝒢)
-    return shortwave_reflectance_transmittance(FT, μ₀, τ, ω, γ₁, γ₂, γ₃, direct_source_limit)
+@inline function shortwave_two_stream_layer(::Type{FT}, μ₀, τ, ω, 𝒢, direct_source_limit = Val(:unit),
+                                            arithmetic = IEEEArithmetic()) where FT
+    τ, ω, 𝒢 = shortwave_delta_eddington(FT, τ, ω, 𝒢, arithmetic)
+    γ₁, γ₂, γ₃ = shortwave_two_stream_coefficients(FT, μ₀, ω, 𝒢, arithmetic)
+    return shortwave_reflectance_transmittance(FT, μ₀, τ, ω, γ₁, γ₂, γ₃, direct_source_limit, arithmetic)
 end
 
 # Practical-improved-flux-method (Zdunkowski et al. 1980) two-stream
 # coefficients of a layer with single-scattering albedo ω and asymmetry
 # factor 𝒢 for cosine zenith μ₀:
 #     γ₁ = 2 - ω (1.25 + 0.75 𝒢),   γ₂ = ω (0.75 - 0.75 𝒢),   γ₃ = 0.5 - 0.75 μ₀ 𝒢.
-@inline function shortwave_two_stream_coefficients(::Type{FT}, μ₀, ω, 𝒢) where FT
-    factor = FT(0.75) * FT(𝒢)
-    γ₁ = FT(2) - FT(ω) * (FT(1.25) + factor)
-    γ₂ = FT(ω) * (FT(0.75) - factor)
-    γ₃ = FT(0.5) - FT(μ₀) * factor
-    return γ₁, γ₂, γ₃
+@inline function shortwave_two_stream_coefficients(::Type{FT}, μ₀, ω, 𝒢, arithmetic = IEEEArithmetic()) where FT
+    @arithmetic arithmetic begin
+        factor = FT(0.75) * FT(𝒢)
+        γ₁ = FT(2) - FT(ω) * (FT(1.25) + factor)
+        γ₂ = FT(ω) * (FT(0.75) - factor)
+        γ₃ = FT(0.5) - FT(μ₀) * factor
+        return γ₁, γ₂, γ₃
+    end
 end
 
 # Diffuse reflectance ℛ and transmittance 𝒯, direct-beam reflectance ℛ⁰ and
@@ -214,44 +220,47 @@ end
 # of one layer (Meador and Weaver 1980, as written in ecRad), with
 # λ = √((γ₁ - γ₂)(γ₁ + γ₂)) the two-stream eigenvalue.
 @inline function shortwave_reflectance_transmittance(::Type{FT}, μ₀, τ, ω, γ₁, γ₂, γ₃,
-                                                     direct_source_limit = Val(:unit)) where FT
-    γ₄ = one(FT) - γ₃
-    α₁ = γ₁ * γ₄ + γ₂ * γ₃
-    α₂ = γ₁ * γ₃ + γ₂ * γ₄
-    λ = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
+                                                     direct_source_limit = Val(:unit),
+                                                     arithmetic = IEEEArithmetic()) where FT
+    @arithmetic arithmetic begin
+        γ₄ = one(FT) - γ₃
+        α₁ = γ₁ * γ₄ + γ₂ * γ₃
+        α₂ = γ₁ * γ₃ + γ₂ * γ₄
+        λ = sqrt(max((γ₁ - γ₂) * (γ₁ + γ₂), FT(1.0e-12)))
 
-    # ℛ⁰ and 𝒯⁰ divide by 1 - (λμ₀)², a removable singularity of the Meador-Weaver
-    # solution. Step μ₀ to the edge of the band that detects the pole, not by a fraction
-    # of it: a smaller step can leave λμ₀ on the pole itself and divide by zero.
-    δ = FT(1000) * eps(FT)
-    μ₀ = FT(μ₀)
-    μ₀ = ifelse(abs(one(FT) - λ * μ₀) < δ, (one(FT) - δ) / λ, μ₀)
+        # ℛ⁰ and 𝒯⁰ divide by 1 - (λμ₀)², a removable singularity of the Meador-Weaver
+        # solution. Step μ₀ to the edge of the band that detects the pole, not by a fraction
+        # of it: a smaller step can leave λμ₀ on the pole itself and divide by zero.
+        δ = FT(1000) * eps(FT)
+        μ₀ = FT(μ₀)
+        μ₀ = ifelse(abs(one(FT) - λ * μ₀) < δ, (one(FT) - δ) / λ, μ₀)
 
-    τ = max(FT(τ), zero(FT))
-    𝒟 = exp(-τ / μ₀)
-    e = exp(-λ * τ)
-    e₂ = e * e
+        τ = max(FT(τ), zero(FT))
+        𝒟 = exp(-τ / μ₀)
+        e = exp(-λ * τ)
+        e₂ = e * e
 
-    # expm1 keeps m₁, m₂ and d accurate as λ → 0, where 1 - e^{-2λτ} would cancel.
-    m₁ = -expm1(-λ * τ)
-    m₂ = -expm1(-FT(2) * λ * τ)
-    d = -expm1(-τ / μ₀)
-    one_plus_e₂ = one(FT) + e₂
-    inverse_denominator = inv(λ * one_plus_e₂ + γ₁ * m₂)
+        # expm1 keeps m₁, m₂ and d accurate as λ → 0, where 1 - e^{-2λτ} would cancel.
+        m₁ = -expm1(-λ * τ)
+        m₂ = -expm1(-FT(2) * λ * τ)
+        d = -expm1(-τ / μ₀)
+        one_plus_e₂ = one(FT) + e₂
+        inverse_denominator = inv(λ * one_plus_e₂ + γ₁ * m₂)
 
-    ℛ = γ₂ * m₂ * inverse_denominator
-    𝒯 = FT(2) * λ * e * inverse_denominator
+        ℛ = γ₂ * m₂ * inverse_denominator
+        𝒯 = FT(2) * λ * e * inverse_denominator
 
-    λμ₀ = λ * μ₀
-    direct_factor = μ₀ * FT(ω) * inverse_denominator / (one(FT) - λμ₀ * λμ₀)
+        λμ₀ = λ * μ₀
+        direct_factor = μ₀ * FT(ω) * inverse_denominator / (one(FT) - λμ₀ * λμ₀)
 
-    ℛ⁰ = direct_factor * ((α₂ - λμ₀ * λ * γ₃) * m₂ + λ * (γ₃ - μ₀ * α₂) * (m₁ * m₁ + FT(2) * e * d))
-    𝒯⁰ = direct_factor * (λ * (γ₄ + μ₀ * α₁) * (d * one_plus_e₂ - m₁ * m₁) - 𝒟 * (α₁ + λμ₀ * λ * γ₄) * m₂)
+        ℛ⁰ = direct_factor * ((α₂ - λμ₀ * λ * γ₃) * m₂ + λ * (γ₃ - μ₀ * α₂) * (m₁ * m₁ + FT(2) * e * d))
+        𝒯⁰ = direct_factor * (λ * (γ₄ + μ₀ * α₁) * (d * one_plus_e₂ - m₁ * m₁) - 𝒟 * (α₁ + λμ₀ * λ * γ₄) * m₂)
 
-    direct_scattering_limit = direct_source_limit isa Val{:horizontal} ? μ₀ * (one(FT) - 𝒟) : one(FT)
-    ℛ⁰ = clamp(ℛ⁰, zero(FT), direct_scattering_limit)
-    𝒯⁰ = clamp(𝒯⁰, zero(FT), direct_scattering_limit - ℛ⁰)
-    return ℛ, 𝒯, ℛ⁰, 𝒯⁰, 𝒟
+        direct_scattering_limit = direct_source_limit isa Val{:horizontal} ? μ₀ * (one(FT) - 𝒟) : one(FT)
+        ℛ⁰ = clamp(ℛ⁰, zero(FT), direct_scattering_limit)
+        𝒯⁰ = clamp(𝒯⁰, zero(FT), direct_scattering_limit - ℛ⁰)
+        return ℛ, 𝒯, ℛ⁰, 𝒯⁰, 𝒟
+    end
 end
 
 """

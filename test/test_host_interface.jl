@@ -62,8 +62,8 @@ end
     for name in fieldnames(typeof(model))
         a, b = getfield(model, name), getfield(model32, name)
         a === nothing && (@test b === nothing; continue)
-        # Precision conversion preserves the concrete lookup strategy.
-        a isa AbstractLookupSearch && (@test b === a; continue)
+        # Precision conversion preserves the concrete lookup strategy and arithmetic.
+        a isa Union{AbstractLookupSearch, AbstractArithmetic} && (@test b === a; continue)
         @test eltype(b) === Float32
         @test size(b) == size(a)
         @test b ≈ a rtol = 1e-6
